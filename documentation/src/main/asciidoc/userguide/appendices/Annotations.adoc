@@ -1,0 +1,1227 @@
+[[annotations]]
+== Mapping annotations
+
+[[annotations-jpa]]
+=== JPA annotations
+
+[[annotations-jpa-access]]
+==== `@Access`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Access.html[`@Access`] annotation is used to specify the access type of the associated entity class, mapped superclass, or embeddable class, or entity attribute.
+
+See the <<chapters/domain/access.adoc#access,Access type>> section for more info.
+
+[[annotations-jpa-associationoverride]]
+==== `@AssociationOverride`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/AssociationOverride.html[`@AssociationOverride`] annotation is used to override an association mapping (e.g. `@ManyToOne`, `@OneToOne`, `@OneToMany`, `@ManyToMany`) inherited from a mapped superclass or an embeddable.
+
+[[annotations-jpa-associationoverrides]]
+==== `@AssociationOverrides`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/AssociationOverrides.html[`@AssociationOverrides`] is used to group several <<annotations-jpa-associationoverride>> annotations.
+
+[[annotations-jpa-attributeoverride]]
+==== `@AttributeOverride`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/AttributeOverride.html[`@AttributeOverride`] annotation is used to override an attribute mapping inherited from a mapped superclass or an embeddable.
+
+[[annotations-jpa-attributeoverrides]]
+==== `@AttributeOverrides`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/AttributeOverrides.html[`@AttributeOverrides`] is used to group several <<annotations-jpa-attributeoverride>> annotations.
+
+[[annotations-jpa-basic]]
+==== `@Basic`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Basic.html[`@Basic`] annotation is used to map a basic attribute type to a database column.
+
+See the <<chapters/domain/basic_types.adoc#basic,Basic types>> chapter for more info.
+
+[[annotations-jpa-cacheable]]
+==== `@Cacheable`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Cacheable.html[`@Cacheable`] annotation is used to specify whether an entity should be stored in the second-level cache.
+
+If the `persistence.xml` `shared-cache-mode` XML attribute is set to `ENABLE_SELECTIVE`, then only the entities annotated with the `@Cacheable` are going to be stored in the second-level cache.
+
+If `shared-cache-mode` XML attribute value is `DISABLE_SELECTIVE`, then the entities marked with the `@Cacheable` annotation are not going to be stored in the second-level cache, while all the other entities are stored in the cache.
+
+See the <<chapters/caching/Caching.adoc#caching,Caching>> chapter for more info.
+
+[[annotations-jpa-collectiontable]]
+==== `@CollectionTable`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/CollectionTable.html[`@CollectionTable`] annotation is used to specify the database table that stores the values of a basic or an embeddable type collection.
+
+See the <<chapters/domain/embeddables.adoc#embeddable-collections,Collections of embeddable types>> section for more info.
+
+[[annotations-jpa-column]]
+==== `@Column`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Column.html[`@Column`] annotation is used to specify the mapping between a basic entity attribute and the database table column.
+
+See the <<chapters/domain/basic_types.adoc#basic-column-annotation, `@Column` annotation>> section for more info.
+
+[[annotations-jpa-columnresult]]
+==== `@ColumnResult`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/ColumnResult.html[`@ColumnResult`] annotation is used in conjunction with the <<annotations-jpa-sqlresultsetmapping>> or <<annotations-jpa-constructorresult>> annotations to map a SQL column for a given SELECT query.
+
+See the <<chapters/query/native/Native.adoc#sql-composite-key-entity-associations_named-query-example, Entity associations with named native queries>> section for more info.
+
+[[annotations-jpa-constructorresult]]
+==== `@ConstructorResult`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/ConstructorResult.html[`@ConstructorResult`] annotation is used in conjunction with the <<annotations-jpa-sqlresultsetmapping>> annotations to map columns of a given SELECT query to a certain object constructor.
+
+[[annotations-jpa-convert]]
+==== `@Convert`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Convert.html[`@Convert`] annotation is used to specify the http://docs.oracle.com/javaee/7/api/javax/persistence/AttributeConverter.html[`AttributeConverter`] implementation used to convert the current annotated basic attribute.
+
+If the `AttributeConverter` uses http://docs.oracle.com/javaee/7/api/javax/persistence/Converter.html#autoApply--[`autoApply`], then all entity attributes with the same target type are going to be converted automatically.
+
+See the <<chapters/domain/basic_types.adoc#basic-enums-attribute-converter, `AttributeConverter`>> section for more info.
+
+[[annotations-jpa-converter]]
+==== `@Converter`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Converter.html[`@Converter`] annotation is used to specify that the current annotate http://docs.oracle.com/javaee/7/api/javax/persistence/AttributeConverter.html[`AttributeConverter`] implementation can be used as a JPA basic attribute converter.
+
+If the http://docs.oracle.com/javaee/7/api/javax/persistence/Converter.html#autoApply--[`autoApply`] attribute is set to `true`, then the JPA provider will automatically convert all basic attributes with the same Java type as defined by the current converter.
+
+See the <<chapters/domain/basic_types.adoc#basic-enums-attribute-converter, `AttributeConverter`>> section for more info.
+
+[[annotations-jpa-converts]]
+==== `@Converts`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Converts.html[`@Converts`] annotation is used to group multiple <<annotations-jpa-convert>> annotations.
+
+See the <<chapters/domain/basic_types.adoc#basic-enums-attribute-converter, `AttributeConverter`>> section for more info.
+
+[[annotations-jpa-discriminatorcolumn]]
+==== `@DiscriminatorColumn`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/DiscriminatorColumn.html[`@DiscriminatorColumn`] annotation is used to specify the discriminator column name and the http://docs.oracle.com/javaee/7/api/javax/persistence/DiscriminatorColumn.html#discriminatorType--[discriminator type] for the `SINGLE_TABLE` and `JOINED` Inheritance strategies.
+
+See the <<chapters/domain/inheritance.adoc#entity-inheritance-discriminator, Discriminator>> section for more info.
+
+[[annotations-jpa-discriminatorvalue]]
+==== `@DiscriminatorValue`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/DiscriminatorValue.html[`@DiscriminatorValue`] annotation is used to specify what value of the discriminator column is used for mapping the current annotated entity.
+
+See the <<chapters/domain/inheritance.adoc#entity-inheritance-discriminator, Discriminator>> section for more info.
+
+[[annotations-jpa-elementcollection]]
+==== `@ElementCollection`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/ElementCollection.html[`@ElementCollection`] annotation is used to specify a collection of a basic or embeddable types.
+
+See the <<chapters/domain/collections.adoc#collections, Collections>> section for more info.
+
+[[annotations-jpa-embeddable]]
+==== `@Embeddable`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Embeddable.html[`@Embeddable`] annotation is used to specify embeddable types. Like basic types, embeddable types do not have any identity, being managed by their owning entity.
+
+See the <<chapters/domain/embeddables.adoc#embeddables, Embeddables>> section for more info.
+
+[[annotations-jpa-embedded]]
+==== `@Embedded`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Embedded.html[`@Embedded`] annotation is used to specify that a given entity attribute represents an embeddable type.
+
+See the <<chapters/domain/embeddables.adoc#embeddables, Embeddables>> section for more info.
+
+[[annotations-jpa-embeddedid]]
+==== `@EmbeddedId`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/EmbeddedId.html[`@EmbeddedId`] annotation is used to specify the entity identifier is an embeddable type.
+
+See the <<chapters/domain/identifiers.adoc#identifiers-composite-aggregated, Composite identifiers with `@EmbeddedId`>> section for more info.
+
+[[annotations-jpa-entity]]
+==== `@Entity`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Entity.html[`@Entity`] annotation is used to specify that the currently annotate class represents an entity type.
+Unlike basic and embeddable types, entity types have an identity and their state is managed by the underlying Persistence Context.
+
+See the <<chapters/domain/entity.adoc#entity, Entity>> section for more info.
+
+[[annotations-jpa-entitylisteners]]
+==== `@EntityListeners`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/EntityListeners.html[`@EntityListeners`] annotation is used to specify an array of callback listener classes that are used by the current annotated entity.
+
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+
+[[annotations-jpa-entityresult]]
+==== `@EntityResult`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/EntityResult.html[`@EntityResult`] annotation is used with the <<annotations-jpa-sqlresultsetmapping>> annotation to map the selected columns to an entity.
+
+See the <<chapters/query/native/Native.adoc#sql-composite-key-entity-associations_named-query-example, Entity associations with named native queries>> section for more info.
+
+[[annotations-jpa-enumerated]]
+==== `@Enumerated`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Enumerated.html[`@Enumerated`] annotation is used to specify that an entity attribute represents an enumerated type.
+
+See the <<chapters/domain/basic_types.adoc#basic-enums-Enumerated, `@Enumerated` basic type>> section for more info.
+
+[[annotations-jpa-excludedefaultlisteners]]
+==== `@ExcludeDefaultListeners`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/ExcludeDefaultListeners.html[`@ExcludeDefaultListeners`] annotation is used to specify that the current annotated entity skips the invocation of any default listener.
+
+[[annotations-jpa-excludesuperclasslisteners]]
+==== `@ExcludeSuperclassListeners`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/ExcludeSuperclassListeners.html[`@ExcludeSuperclassListeners`]  annotation is used to specify that the current annotated entity skips the invocation of listeners declared by its superclass.
+
+[[annotations-jpa-fieldresult]]
+==== `@FieldResult`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/FieldResult.html[`@FieldResult`] annotation is used with the <<annotations-jpa-entityresult>> annotation to map the selected columns to the fields of some specific entity.
+
+See the <<chapters/query/native/Native.adoc#sql-composite-key-entity-associations_named-query-example, Entity associations with named native queries>> section for more info.
+
+[[annotations-jpa-foreignkey]]
+==== `@ForeignKey`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/ForeignKey.html[`@ForeignKey`] annotation is used to specify the associated foreign key of a <<annotations-jpa-joincolumn>> mapping.
+The `@ForeignKey` annotation is only used if the automated schema generation tool is enabled, in which case, it allows you to customize the underlying foreign key definition.
+
+See the <<chapters/domain/associations.adoc#associations-many-to-one-example,`@ManyToOne` with `@ForeignKey`>> section for more info.
+
+[[annotations-jpa-generatedvalue]]
+==== `@GeneratedValue`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/GeneratedValue.html[`@GeneratedValue`] annotation specifies that the entity identifier value is automatically generated using an identity column, a database sequence, or a table generator.
+Hibernate supports the `@GeneratedValue` mapping even for `UUID` identifiers.
+
+See the <<chapters/domain/identifiers.adoc#identifiers-simple-generated,Automatically-generated identifiers>> section for more info.
+
+[[annotations-jpa-id]]
+==== `@Id`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Id.html[`@Id`] annotation specifies the entity identifier.
+An entity must always have an identifier attribute which is used when loading the entity in a given Persistence Context.
+
+See the <<chapters/domain/identifiers.adoc#identifiers,Identifiers>> section for more info.
+
+[[annotations-jpa-idclass]]
+==== `@IdClass`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/IdClass.html[`@IdClass`] annotation is used if the current entity defined a composite identifier.
+A separate class encapsulates all the identifier attributes, which are mirrored by the current entity mapping.
+
+See the <<chapters/domain/identifiers.adoc#identifiers-composite-nonaggregated,Composite identifiers with `@IdClass`>> section for more info.
+
+[[annotations-jpa-index]]
+==== `@Index`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Index.html[`@Index`] annotation is used by the automated schema generation tool to create a database index.
+
+[[annotations-jpa-inheritance]]
+==== `@Inheritance`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Inheritance.html[`@Inheritance`] annotation is used to specify the inheritance strategy of a given entity class hierarchy.
+
+See the <<chapters/domain/inheritance.adoc#entity-inheritance,Inheritance>> section for more info.
+
+[[annotations-jpa-joincolumn]]
+==== `@JoinColumn`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/JoinColumn.html[`@JoinColumn`] annotation is used to specify the FOREIGN KEY column used when joining an entity association or an embeddable collection.
+
+See the <<chapters/domain/associations.adoc#associations-many-to-one-example,`@ManyToOne` with `@JoinColumn`>> section for more info.
+
+[[annotations-jpa-joincolumns]]
+==== `@JoinColumns`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/JoinColumns.html[`@JoinColumns`] annotation is used to group multiple <<annotations-jpa-joincolumn>> annotations, which are used when mapping entity association or an embeddable collection using a composite identifier
+
+[[annotations-jpa-jointable]]
+==== `@JoinTable`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/JoinTable.html[`@JoinTable`] annotation is used to specify the link table between two other database tables.
+
+See the <<chapters/domain/collections.adoc#collections-map-unidirectional-example, `@JoinTable` mapping>> section for more info.
+
+[[annotations-jpa-lob]]
+==== `@Lob`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Lob.html[`@Lob`] annotation is used to specify that the current annotated entity attribute represents a large object type.
+
+See the <<chapters/domain/basic_types.adoc#basic-blob-example, `BLOB` mapping>> section for more info.
+
+[[annotations-jpa-manytomany]]
+==== `@ManyToMany`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToMany.html[`@ManyToMany`] annotation is used to specify a many-to-many database relationship.
+
+See the <<chapters/domain/associations.adoc#associations-many-to-many, `@ManyToMany` mapping>> section for more info.
+
+[[annotations-jpa-manytoone]]
+==== `@ManyToOne`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html[`@ManyToOne`] annotation is used to specify a many-to-one database relationship.
+
+See the <<chapters/domain/associations.adoc#associations-many-to-one, `@ManyToOne` mapping>> section for more info.
+
+[[annotations-jpa-mapkey]]
+==== `@MapKey`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/MapKey.html[`@MapKey`] annotation is used to specify the key of a `java.util.Map` association for which the key type is either the primary key or an attribute of the entity which represents the value of the map.
+
+See the <<chapters/domain/collections.adoc#collections-map-unidirectional-example, `@MapKey` mapping>> section for more info.
+
+[[annotations-jpa-mapkeyclass]]
+==== `@MapKeyClass`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/MapKeyClass.html[`@MapKeyClass`] annotation is used to specify the type of the map key of a `java.util.Map` associations.
+
+[[annotations-jpa-mapkeycolumn]]
+==== `@MapKeyColumn`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/MapKeyColumn.html[`@MapKeyColumn`] annotation is used to specify the database column which stores the key of a `java.util.Map` association for which the map key is a basic type.
+
+[[annotations-jpa-mapkeyenumerated]]
+==== `@MapKeyEnumerated`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/MapKeyEnumerated.html[`@MapKeyEnumerated`] annotation is used to specify that the key of `java.util.Map` association is a Java Enum.
+
+See the <<chapters/domain/collections.adoc#collections-map-bidirectional-example, `@MapKeyEnumerated` mapping>> section for more info.
+
+[[annotations-jpa-mapkeyjoincolumn]]
+==== `@MapKeyJoinColumn`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/MapKeyJoinColumn.html[`@MapKeyJoinColumn`] annotation is used to specify that the key of `java.util.Map` association is an entity association.
+The map key column is a FOREIGN KEY in a link table that also joins the `Map` owner's table with the table where the `Map` value resides.
+
+See the <<chapters/domain/collections.adoc#collections-map-value-type-entity-key-example, `@MapKeyJoinColumn` mapping>> section for more info.
+
+[[annotations-jpa-mapkeyjoincolumns]]
+==== `@MapKeyJoinColumns`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/MapKeyJoinColumns.html[`@MapKeyJoinColumns`] annotation is used to group several <<annotations-jpa-mapkeyjoincolumn>> mappings when the `java.util.Map` association key uses a composite identifier.
+
+[[annotations-jpa-mapkeytemporal]]
+==== `@MapKeyTemporal`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/MapKeyTemporal.html[`@MapKeyTemporal`] annotation is used to specify that the key of `java.util.Map` association is a http://docs.oracle.com/javaee/7/api/javax/persistence/TemporalType.html[`@TemporalType`] (e.g. `DATE`, `TIME`, `TIMESTAMP`).
+
+See the <<chapters/domain/collections.adoc#collections-map-unidirectional-example, `@MapKeyTemporal` mapping>> section for more info.
+
+[[annotations-jpa-mappedsuperclass]]
+==== `@MappedSuperclass`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/MappedSuperclass.html[`@MappedSuperclass`] annotation is used to specify that the current annotated type attributes are inherited by any subclass entity.
+
+See the <<chapters/domain/inheritance.adoc#entity-inheritance-mapped-superclass, `@MappedSuperclass`>> section for more info.
+
+[[annotations-jpa-mapsid]]
+==== `@MapsId`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/MapsId.html[`@MapsId`] annotation is used to specify that the entity identifier is mapped by the current annotated `@ManyToOne` or `@OneToOne` association.
+
+See the <<chapters/domain/identifiers.adoc#identifiers-derived-mapsid, `@MapsId` mapping>> section for more info.
+
+[[annotations-jpa-namedattributenode]]
+==== `@NamedAttributeNode`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedAttributeNode.html[`@NamedAttributeNode`] annotation is used to specify each individual attribute node that needs to be fetched by an Entity Graph.
+
+See the <<chapters/fetching/Fetching.adoc#fetching-strategies-dynamic-fetching-entity-graph-example, Fetch graph>> section for more info.
+
+[[annotations-jpa-namedentitygraph]]
+==== `@NamedEntityGraph`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedEntityGraph.html[`@NamedEntityGraph`] annotation is used to specify an Entity Graph that can be used by an entity query to override the default fetch plan.
+
+See the <<chapters/fetching/Fetching.adoc#fetching-strategies-dynamic-fetching-entity-graph-example, Fetch graph>> section for more info.
+
+[[annotations-jpa-namedentitygraphs]]
+==== `@NamedEntityGraphs`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedEntityGraphs.html[`@NamedEntityGraphs`] annotation is used to group multiple <<annotations-jpa-namedentitygraph>> annotations.
+
+[[annotations-jpa-namednativequeries]]
+==== `@NamedNativeQueries`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedNativeQueries.html[`@NamedNativeQueries`] annotation is used to group multiple <<annotations-jpa-namednativequery>> annotations.
+
+See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
+
+[[annotations-jpa-namednativequery]]
+==== `@NamedNativeQuery`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedNativeQuery.html[`@NamedNativeQuery`] annotation is used to specify a native SQL query that can be retrieved later by its name.
+
+See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
+
+[[annotations-jpa-namedqueries]]
+==== `@NamedQueries`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedQueries.html[`@NamedQueries`] annotation is used to group multiple <<annotations-jpa-namedquery>> annotations.
+
+[[annotations-jpa-namedquery]]
+==== `@NamedQuery`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedQuery.html[`@NamedQuery`] annotation is used to specify a JPQL query that can be retrieved later by its name.
+
+[[annotations-jpa-namedstoredprocedurequeries]]
+==== `@NamedStoredProcedureQueries`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedStoredProcedureQueries.html[`@NamedStoredProcedureQueries`] annotation is used to group multiple <<annotations-jpa-namedstoredprocedurequery>> annotations.
+
+[[annotations-jpa-namedstoredprocedurequery]]
+==== `@NamedStoredProcedureQuery`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedStoredProcedureQuery.html[`@NamedStoredProcedureQuery`] annotation is used to specify a stored procedure query that can be retrieved later by its name.
+
+[[annotations-jpa-namedsubgraph]]
+==== `@NamedSubgraph`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/NamedSubgraph.html[`@NamedSubgraph`] annotation used to specify a subgraph in an Entity Graph.
+
+[[annotations-jpa-onetomany]]
+==== `@OneToMany`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/OneToMany.html[`@OneToMany`] annotation is used to specify a one-to-many database relationship.
+
+See the <<chapters/domain/associations.adoc#associations-one-to-many, `@OneToMany` mapping>> section for more info.
+
+[[annotations-jpa-onetoone]]
+==== `@OneToOne`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html[`@OneToOne`] annotation is used to specify a one-to-one database relationship.
+
+See the <<chapters/domain/associations.adoc#associations-one-to-one, `@OneToOne` mapping>> section for more info.
+
+[[annotations-jpa-orderby]]
+==== `@OrderBy`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/OrderBy.html[`@OrderBy`] annotation is used to specify the entity attributes used for sorting when fetching the current annotated collection.
+
+See the <<chapters/domain/collections.adoc#collections-unidirectional-ordered-list, `@OrderBy` mapping>> section for more info.
+
+[[annotations-jpa-ordercolumn]]
+==== `@OrderColumn`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/OrderColumn.html[`@OrderColumn`] annotation is used to specify that the current annotation collection order should be materialized in the database.
+
+See the <<chapters/domain/collections.adoc#collections-unidirectional-ordered-list-order-column-example, `@OrderColumn` mapping>> section for more info.
+
+[[annotations-jpa-persistencecontext]]
+==== `@PersistenceContext`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceContext.html[`@PersistenceContext`] annotation is used to specify the `EntityManager` that needs to be injected as a dependency.
+
+[[annotations-jpa-persistencecontexts]]
+==== `@PersistenceContexts`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceContexts.html[`@PersistenceContexts`] annotation is used to group multiple <<annotations-jpa-persistencecontext>> annotations.
+
+[[annotations-jpa-persistenceproperty]]
+==== `@PersistenceProperty`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceProperty.html[`@PersistenceProperty`] annotation is used by the <<annotations-jpa-persistencecontext>> annotation to declare JPA provider properties that are passed to the underlying container when the `EntityManager` instance is created.
+
+[[annotations-jpa-persistenceunit]]
+==== `@PersistenceUnit`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceUnit.html[`@PersistenceUnit`] annotation is used to specify the `EntityManagerFactory` that needs to be injected as a dependency.
+
+[[annotations-jpa-persistenceunits]]
+==== `@PersistenceUnits`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PersistenceUnits.html[`@PersistenceUnits`] annotation is used to group multiple <<annotations-jpa-persistenceunit>> annotations.
+
+[[annotations-jpa-postload]]
+==== `@PostLoad`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PostLoad.html[`@PostLoad`] annotation is used to specify a callback method that fires after an entity is loaded.
+
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+
+[[annotations-jpa-postpersist]]
+==== `@PostPersist`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PostPersist.html[`@PostPersist`] annotation is used to specify a callback method that fires after an entity is persisted.
+
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+
+[[annotations-jpa-postremove]]
+==== `@PostRemove`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PostRemove.html[`@PostRemove`] annotation is used to specify a callback method that fires after an entity is removed.
+
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+
+[[annotations-jpa-postupdate]]
+==== `@PostUpdate`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PostUpdate.html[`@PostUpdate`] annotation is used to specify a callback method that fires after an entity is updated.
+
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+
+[[annotations-jpa-prepersist]]
+==== `@PrePersist`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PrePersist.html[`@PrePersist`] annotation is used to specify a callback method that fires before an entity is persisted.
+
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+
+[[annotations-jpa-preremove]]
+==== `@PreRemove`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PreRemove.html[`@PreRemove`] annotation is used to specify a callback method that fires before an entity is removed.
+
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+
+[[annotations-jpa-preupdate]]
+==== `@PreUpdate`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PreUpdate.html[`@PreUpdate`] annotation is used to specify a callback method that fires before an entity is updated.
+
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+
+[[annotations-jpa-primarykeyjoincolumn]]
+==== `@PrimaryKeyJoinColumn`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PrimaryKeyJoinColumn.html[`@PrimaryKeyJoinColumn`] annotation is used to specify that the primary key column of the current annotated entity is also a foreign key to some other entity
+(e.g. a base class table in a `JOINED` inheritance strategy, the primary table in a secondary table mapping, or the parent table in a `@OneToOne` relationship).
+
+See the <<chapters/domain/identifiers.adoc#identifiers-derived-primarykeyjoincolumn, `@PrimaryKeyJoinColumn` mapping>> section for more info.
+
+[[annotations-jpa-primarykeyjoincolumns]]
+==== `@PrimaryKeyJoinColumns`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/PrimaryKeyJoinColumns.html[`@PrimaryKeyJoinColumns`] annotation is used to group multiple <<annotations-jpa-primarykeyjoincolumn>> annotations.
+
+[[annotations-jpa-queryhint]]
+==== `@QueryHint`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/QueryHint.html[`@QueryHint`] annotation is used to specify a JPA provider hint used by a `@NamedQuery` or a `@NamedNativeQuery` annotation.
+
+[[annotations-jpa-secondarytable]]
+==== `@SecondaryTable`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/SecondaryTable.html[`@SecondaryTable`] annotation is used to specify a secondary table for the current annotated entity.
+
+See the <<chapters/query/native/Native.adoc#sql-custom-crud-secondary-table-example, `@SecondaryTable` mapping>> section for more info.
+
+[[annotations-jpa-secondarytables]]
+==== `@SecondaryTables`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/SecondaryTables.html[`@SecondaryTables`] annotation is used to group multiple <<annotations-jpa-secondarytable>> annotations.
+
+[[annotations-jpa-sequencegenerator]]
+==== `@SequenceGenerator`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/SequenceGenerator.html[`@SequenceGenerator`] annotation is used to specify the database sequence used by the identifier generator of the current annotated entity.
+
+[[annotations-jpa-sqlresultsetmapping]]
+==== `@SqlResultSetMapping`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/SqlResultSetMapping.html[`@SqlResultSetMapping`] annotation is used to specify the `ResultSet` mapping of a native SQL query or stored procedure.
+
+See the <<chapters/query/native/Native.adoc#sql-composite-key-entity-associations_named-query-example, `SqlResultSetMapping` mapping>> section for more info.
+
+[[annotations-jpa-sqlresultsetmappings]]
+==== `@SqlResultSetMappings`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/SqlResultSetMappings.html[`@SqlResultSetMappings`] annotation is group multiple <<annotations-jpa-sqlresultsetmapping>> annotations.
+
+[[annotations-jpa-storedprocedureparameter]]
+==== `@StoredProcedureParameter`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/StoredProcedureParameter.html[`@StoredProcedureParameter`] annotation is used to specify a parameter of a <<annotations-jpa-namedstoredprocedurequery>>.
+
+[[annotations-jpa-table]]
+==== `@Table`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Table.html[`@Table`] annotation is used to specify the primary table of the current annotated entity.
+
+See the <<chapters/query/native/Native.adoc#sql-custom-crud-secondary-table-example, `@Table` mapping>> section for more info.
+
+[[annotations-jpa-tablegenerator]]
+==== `@TableGenerator`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/TableGenerator.html[`@TableGenerator`] annotation is used to specify the database table used by the identity generator of the current annotated entity.
+
+[[annotations-jpa-temporal]]
+==== `@Temporal`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Temporal.html[`@Temporal`] annotation is used to specify the `TemporalType` of the current annotated `java.util.Date` or `java.util.Calendar` entity attribute.
+
+See the <<chapters/domain/basic_types.adoc#basic-datetime,Basic temporal types>> chapter for more info.
+
+[[annotations-jpa-transient]]
+==== `@Transient`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Transient.html[`@Transient`] annotation is used to specify that a given entity attribute should not be persisted.
+
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, `@Transient` mapping>> section for more info.
+
+[[annotations-jpa-uniqueconstraint]]
+==== `@UniqueConstraint`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/UniqueConstraint.html[`@UniqueConstraint`] annotation is used to specify a unique constraint to be included by the automated schema generator for the primary or secondary table associated with the current annotated entity.
+
+[[annotations-jpa-version]]
+==== `@Version`
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/Version.html[`@Version`] annotation is used to specify the version attribute used for optimistic locking.
+
+See the <<chapters/domain/entity.adoc#entity-pojo-optlock, Optimistic locking mapping>> section for more info.
+
+[[annotations-hibernate]]
+=== Hibernate annotations
+
+[[annotations-hibernate-accesstype]]
+==== [line-through]#`@AccessType`#
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AccessType.html[[line-through]#`@AccessType`#] annotation is deprecated.
+You should use either the JPA <<annotations-jpa-access>> or the Hibernate native <<annotations-hibernate-attributeaccessor>> annotation.
+
+[[annotations-hibernate-any]]
+==== `@Any`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Any.html[`@Any`] annotation is used to define the *any-to-one* association
+which can point to one one of several entity types.
+
+See the <<chapters/domain/basic_types.adoc#mapping-column-any,`@Any` mapping>> section for more info.
+
+[[annotations-hibernate-anymetadef]]
+==== `@AnyMetaDef`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyMetaDef.html[`@AnyMetaDef`] annotation is used to provide metadata about an `@Any` or `@ManyToAny` mapping.
+
+See the <<chapters/domain/basic_types.adoc#mapping-column-any,`@Any` mapping>> section for more info.
+
+[[annotations-hibernate-anymetadefs]]
+==== `@AnyMetaDefs`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyMetaDefs.html[`@AnyMetaDefs`] annotation is used to group multiple <<annotations-hibernate-anymetadef>> annotations.
+
+[[annotations-hibernate-attributeaccessor]]
+==== `@AttributeAccessor`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AttributeAccessor.html[`@AttributeAccessor`] annotation is used to specify a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/property/access/spi/PropertyAccessStrategy.html[`PropertyAccessStrategy`].
+
+Should only be used to name a custom `PropertyAccessStrategy`.
+For property/field access type, the JPA <<annotations-jpa-access>> annotation should be preferred.
+
+However, if this annotation is used with either value="property" or value="field", it will act just as the corresponding usage of the JPA <<annotations-jpa-access>> annotation.
+
+[[annotations-hibernate-batchsize]]
+==== `@BatchSize`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/BatchSize.html[`@BatchSize`] annotation is used to specify the size for batch loading the entries of a lazy collection.
+
+[[annotations-hibernate-cache]]
+==== `@Cache`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cache.html[`@Cache`] annotation is used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CacheConcurrencyStrategy.html[`CacheConcurrencyStrategy`] of a root entity or a collection.
+
+See the <<chapters/caching/Caching.adoc#caching,Caching>> chapter for more info.
+
+[[annotations-hibernate-cascade]]
+==== `@Cascade`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cascade.html[`@Cascade`] annotation is used to apply the Hibernate specific http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CascadeType.html[`CascadeType`] strategies (e.g. `CascadeType.LOCK`, `CascadeType.SAVE_UPDATE`, `CascadeType.REPLICATE`) on a given association.
+
+For JPA cascading, prefer using the http://docs.oracle.com/javaee/7/api/javax/persistence/CascadeType.html[`javax.persistence.CascadeType`] instead.
+
+When combining both JPA and Hibernate `CascadeType` strategies, Hibernate will merge both sets of cascades.
+
+[[annotations-hibernate-check]]
+==== `@Check`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Check.html[`@Check`] annotation is used to specify an arbitrary SQL CHECK constraint which can be defined at the class, property or collection level.
+
+[[annotations-hibernate-collectionid]]
+==== `@CollectionId`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CollectionId.html[`@CollectionId`] annotation is used to specify an identifier column for an idbag collection.
+
+You might want to use the JPA <<annotations-jpa-ordercolumn>> instead.
+
+[[annotations-hibernate-collectiontype]]
+==== `@CollectionType`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CollectionType.html[`@CollectionType`] annotation is used to specify a custom collection type.
+
+The collection can also name a <<annotations-hibernate-type>>, which defines the Hibernate Type of the collection elements.
+
+[[annotations-hibernate-columndefault]]
+==== `@ColumnDefault`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnDefault.html[`@ColumnDefault`] annotation is used to specify the `DEFAULT` DDL value to apply when using the automated schema generator.
+
+The same behavior can be achieved using the `definition` attribute of the JPA <<annotations-jpa-column>> annotation.
+
+[[annotations-hibernate-columns]]
+==== `@Columns`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Columns.html[`@Columns`] annotation is used to group multiple JPA <<annotations-jpa-column>> annotations.
+
+See the <<chapters/domain/basic_types.adoc#mapping-column-read-and-write-composite-type-example,`@Columns` mapping>> section for more info.
+
+[[annotations-hibernate-columntransformer]]
+==== `@ColumnTransformer`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnTransformer.html[`@ColumnTransformer`] annotation is used to customize how a given column value is read from or write into the database.
+
+See the <<chapters/domain/basic_types.adoc#mapping-column-read-and-write-example,`@ColumnTransformer` mapping>> section for more info.
+
+[[annotations-hibernate-columntransformers]]
+==== `@ColumnTransformers`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnTransformers.html[`@ColumnTransformers`] annotation iis used to group multiple <<annotations-hibernate-columntransformer>> annotations.
+
+[[annotations-hibernate-creationtimestamp]]
+==== `@CreationTimestamp`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CreationTimestamp.html[`@CreationTimestamp`] annotation is used to specify that the current annotated temporal type must be initialized with the current JVM timestamp value.
+
+Supported attribute types:
+
+- `java.util.Date`
+- `java.util.Calendar`
+- `java.sql.Date`
+- `java.sql.Time`
+- `java.sql.Timestamp`
+
+[[annotations-hibernate-discriminatorformula]]
+==== `@DiscriminatorFormula`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DiscriminatorFormula.html[`@DiscriminatorFormula`] annotation is used to specify a Hibernate <<annotations-hibernate-formula>> to resolve the inheritance discriminator value.
+
+See the <<chapters/domain/inheritance.adoc#entity-inheritance-single-table-discriminator-formula-example, `@DiscriminatorFormula`>> section for more info.
+
+[[annotations-hibernate-discriminatoroptions]]
+==== `@DiscriminatorOptions`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DiscriminatorOptions.html[`@DiscriminatorOptions`] annotation is used to provide the `force` and `insert` Discriminator properties.
+
+See the <<chapters/domain/inheritance.adoc#entity-inheritance-discriminator, Discriminator>> section for more info.
+
+[[annotations-hibernate-dynamicinsert]]
+==== `@DynamicInsert`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DynamicInsert.html[`@DynamicInsert`] annotation is used to specify that the `INSERT` SQL statement should be generated whenever an entity is to be persisted.
+
+By default, Hibernate uses a cached `INSERT` statement that sets all table columns.
+When the entity is annotated with the `@DynamicInsert` annotation, the `PreparedStatement` is going to include only the non-null columns.
+
+[[annotations-hibernate-dynamicupdate]]
+==== `@DynamicUpdate`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/DynamicUpdate.html[`@DynamicUpdate`] annotation is used to specify that the `UPDATE` SQL statement should be generated whenever an entity is modified.
+
+By default, Hibernate uses a cached `UPDATE` statement that sets all table columns.
+When the entity is annotated with the `@DynamicUpdate` annotation, the `PreparedStatement` is going to include only the columns whose values have been changed.
+
+[NOTE]
+====
+For reattachment of detached entities, the dynamic update is not possible without having the <<annotations-hibernate-selectbeforeupdate>> annotation as well.
+====
+
+[[annotations-hibernate-entity]]
+==== [line-through]#`@Entity`#
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Entity.html[[line-through]#`@Entity`#] annotation is deprecated. Use the JPA <<annotations-jpa-entity>> annotation instead.
+
+[[annotations-hibernate-fetch]]
+==== `@Fetch`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Fetch.html[`@Fetch`] annotation is used to specify the Hibernate specific https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchMode.html[`FetchMode`] (e.g. `JOIN`, `SELECT`, `SUBSELECT`) used for the current annotated association:
+
+[[annotations-hibernate-fetchprofile]]
+==== `@FetchProfile`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchProfile.html[`@FetchProfile`] annotation is used to specify a custom fetching profile, similar to a JPA Entity Graph.
+
+See the <<chapters/fetching/Fetching.adoc#fetching-strategies-dynamic-fetching-profile-example, Fetch mapping>> section for more info.
+
+[[annotations-hibernate-fetchprofile-fetchoverride]]
+==== `@FetchProfile.FetchOverride`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchProfile.FetchOverride.html[`@FetchProfile.FetchOverride`] annotation is used in conjunction with the <<annotations-hibernate-fetchprofile>> annotation,
+and it's used for overriding the fetching strategy of a particular entity association.
+
+See the <<chapters/fetching/Fetching.adoc#fetching-strategies-dynamic-fetching-profile-example, Fetch profile>> section for more info.
+
+[[annotations-hibernate-fetchprofiles]]
+==== `@FetchProfiles`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchProfiles.html[`@FetchProfiles`] annotation is used to group multiple <<annotations-hibernate-fetchprofile>> annotations.
+
+[[annotations-hibernate-filter]]
+==== `@Filter`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Filter.html[`@Filter`] annotation is used to add filters to an entity or the target entity of a collection.
+
+See the <<chapters/domain/basic_types.adoc#mapping-filter-example,Filter mapping>> section for more info.
+
+[[annotations-hibernate-filterdef]]
+==== `@FilterDef`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterDef.html[`@FilterDef`] annotation is used to specify a `@Filter` definition (name, default condition and parameter types, if any).
+
+See the <<chapters/domain/basic_types.adoc#mapping-filter-example,Filter mapping>> section for more info.
+
+[[annotations-hibernate-filterdefs]]
+==== `@FilterDefs`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterDefs.html[`@FilterDefs`] annotation is used to group multiple <<annotations-hibernate-filterdef>> annotations.
+[[annotations-hibernate-filterjointable]]
+==== `@FilterJoinTable`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterJoinTable.html[`@FilterJoinTable`] annotation is used to add `@Filter` capabilities to a join table collection.
+
+[[annotations-hibernate-filterjointables]]
+==== `@FilterJoinTables`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterJoinTables.html[`@FilterJoinTables`] annotation is used to group multiple <<annotations-hibernate-filterjointable>> annotations.
+
+[[annotations-hibernate-filters]]
+==== `@Filters`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Filters.html[`@Filters`] annotation is used to group multiple <<annotations-hibernate-filter>> annotations.
+
+==== [line-through]#`@ForeignKey`#
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ForeignKey.html[[line-through]#`@ForeignKey`#] annotation is deprecated. Use the JPA 2.1 <<annotations-jpa-foreignkey>> annotation instead.
+
+[[annotations-hibernate-formula]]
+==== `@Formula`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Formula.html[`@Formula`] annotation is used to specify an SQL fragment that is executed in order to populate a given entity attribute.
+
+See the <<chapters/domain/basic_types.adoc#mapping-column-formula-example,`@Formula` mapping>> section for more info.
+
+[[annotations-hibernate-generated]]
+==== `@Generated`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Generated.html[`@Generated`] annotation is used to specify that the current annotated entity attribute is generated by the database.
+
+[[annotations-hibernate-generatortype]]
+==== `@GeneratorType`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratorType.html[`@GeneratorType`] annotation is used to provide a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/ValueGenerator.html[`ValueGenerator`]
+and a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] for the current annotated generated attribute.
+
+[[annotations-hibernate-genericgenerator]]
+==== `@GenericGenerator`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenericGenerator.html[`@GenericGenerator`] annotation can be used to configure any Hibernate identifier generator.
+
+[[annotations-hibernate-genericgenerators]]
+==== `@GenericGenerators`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenericGenerators.html[`@GenericGenerators`] annotation is used to group multiple <<annotations-hibernate-genericgenerator>> annotations.
+
+[[annotations-hibernate-immutable]]
+==== `@Immutable`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Immutable.html[`@Immutable`] annotation is used to specify that the annotated entity, attribute, or collection is immutable.
+
+See the <<chapters/domain/immutability.adoc#entity-immutability,`@Immutable` mapping>> section for more info.
+
+[[annotations-hibernate-index]]
+==== [line-through]#`@Index`#
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Index.html[[line-through]#`@Index`#] annotation is deprecated. Use the JPA <<annotations-jpa-index>> annotation instead.
+
+[[annotations-hibernate-indexcolumn]]
+==== [line-through]#`@IndexColumn`#
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/IndexColumn.html[[line-through]#`@IndexColumn`#] annotation is deprecated. Use the JPA <<annotations-jpa-ordercolumn>> annotation instead.
+
+[[annotations-hibernate-joincolumnorformula]]
+==== `@JoinColumnOrFormula`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to specify that the entity association is resolved either through a FOREIGN KEY join (e.g. <<annotations-jpa-joincolumn>>) or using the result of a given SQL formula (e.g. <<annotations-hibernate-joinformula>>).
+
+[[annotations-hibernate-joincolumnsorformulas]]
+==== `@JoinColumnsOrFormulas`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnsOrFormulas.html[`@JoinColumnsOrFormulas`] annotation is used to group multiple <<annotations-hibernate-joincolumnorformula>> annotations.
+[[annotations-hibernate-joinformula]]
+==== `@JoinFormula`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinFormula.html[`@JoinFormula`] annotation is used as a replacement for <<annotations-jpa-joincolumn>> when the association does not have a dedicated FOREIGN KEY column.
+
+[[annotations-hibernate-lazycollection]]
+==== `@LazyCollection`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollection.html[`@LazyCollection`] annotation is used to specify the lazy fetching behavior of a given collection.
+The possible values are given by the `https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollectionOption.html[LazyCollectionOption]` enumeration:
+
+`TRUE`:: Load it when the state is requested.
+`FALSE`:: Eagerly load it.
+`EXTRA`:: Prefer extra queries over full collection loading.
+
+The `TRUE` and `FALSE` values are deprecated since you should be using the JPA http://docs.oracle.com/javaee/7/api/javax/persistence/FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
+
+The `EXTRA` value has no equivalent in the JPA specification, and it's used to avoid loading the entire collection even when the collection is accessed for the first time.
+Each element is fetched individually using a secondary query.
+
+[[annotations-hibernate-lazygroup]]
+==== `@LazyGroup`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyGroup.html[`@LazyGroup`] annotation is used to specify that an entity attribute should be fetched along with all the other attributes belonging to the same group.
+
+To load entity attributes lazily, bytecode enhancement is needed.
+By default, all non-collection attributes are loaded in one group named "DEFAULT".
+
+This annotation allows defining different groups of attributes to be initialized together when access one attribute in the group.
+
+See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement-lazy-loading-example,`@LazyGroup` mapping>> section for more info.
+
+[[annotations-hibernate-lazytoone]]
+==== `@LazyToOne`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyToOne.html[`@LazyToOne`] annotation is used to specify the laziness options, represented by https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyToOneOption.html[`LazyToOneOption`], available for a `@OneToOne` or `@ManyToOne` association.
+
+`LazyToOneOption` defines the following alternatives:
+
+FALSE:: Eagerly load the association. This one is not needed since the JPA `FetchType.EAGER` offers the same behavior.
+NO_PROXY:: This option will fetch the association lazily while returning real entity object.
+PROXY:: This option will fetch the association lazily while returning a proxy instead.
+
+[[annotations-hibernate-listindexbase]]
+==== `@ListIndexBase`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ListIndexBase.html[`@ListIndexBase`] annotation is used to specify the start value for a list index, as stored in the database.
+
+By default, `List` indexes are stored starting at zero. Generally used in conjunction with <<annotations-jpa-ordercolumn>>.
+
+[[annotations-hibernate-loader]]
+==== `@Loader`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Loader.html[`@Loader`] annotation is used to override the default `SELECT` query used for loading an entity loading.
+
+See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
+
+[[annotations-hibernate-manytoany]]
+==== `@ManyToAny`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ManyToAny.html[`@ManyToAny`] annotation is used to specify a many-to-one association when the target type is dynamically resolved.
+
+See the <<chapters/domain/basic_types.adoc#mapping-column-many-to-any, `@ManyToAny` mapping>> section for more info.
+
+[[annotations-hibernate-mapkeytype]]
+==== `@MapKeyType`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MapKeyType.html[`@MapKeyType`] annotation is used to specify the map key type.
+
+[[annotations-hibernate-metavalue]]
+==== `@MetaValue`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MetaValue.html[`@MetaValue`] annotation is used by the <<annotations-hibernate-anymetadef>> annotation to specify the association between a given discriminator value and an entity type.
+
+See the <<chapters/domain/basic_types.adoc#mapping-column-any,`@Any` mapping>> section for more info.
+
+[[annotations-hibernate-namednativequeries]]
+==== `@NamedNativeQueries`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQueries.html[`@NamedNativeQueries`] annotation is used to group multiple <<annotations-hibernate-namednativequery>> annotations.
+
+[[annotations-hibernate-namednativequery]]
+==== `@NamedNativeQuery`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQuery.html[`@NamedNativeQuery`] annotation extends the JPA <<annotations-jpa-namednativequery>> with Hibernate specific features.
+
+[[annotations-hibernate-namedqueries]]
+==== `@NamedQueries`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQueries.html[`@NamedQueries`] annotation is used to group multiple <<annotations-hibernate-namedquery>> annotations.
+
+[[annotations-hibernate-namedquery]]
+==== `@NamedQuery`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation extends the JPA <<annotations-jpa-namedquery>> with Hibernate specific features.
+
+[[annotations-hibernate-nationalized]]
+==== `@Nationalized`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Nationalized.html[`@Nationalized`] annotation is used to specify that the current annotated attribute is a character type (e.g. `String`, `Character`, `Clob`) that is stored in a nationalized column type (`NVARCHAR`, `NCHAR`, `NCLOB`).
+
+See the <<chapters/domain/basic_types.adoc#basic-nationalized-example,`@Nationalized` mapping>> section for more info.
+
+[[annotations-hibernate-naturalid]]
+==== `@NaturalId`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NaturalId.html[`@NaturalId`] annotation is used to specify that the current annotated attribute is part of the natural id of the entity.
+
+See the <<chapters/domain/natural_id.adoc#naturalid,Natural Ids>> section for more info.
+
+[[annotations-hibernate-naturalidcache]]
+==== `@NaturalIdCache`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NaturalIdCache.html[`@NaturalIdCache`] annotation is used to specify that the natural id values associated with the annotated entity should be stored in the second-level cache.
+
+See the <<chapters/domain/natural_id.adoc#naturalid-caching,`@NaturalIdCache` mapping>> section for more info.
+
+[[annotations-hibernate-notfound]]
+==== `@NotFound`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NotFound.html[`@NotFound`] annotation is used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NotFoundAction.html[`NotFoundAction`] strategy for when an element is not found in a given association.
+
+The `NotFoundAction` defines with two possibilities:
+
+`EXCEPTION`:: An exception is thrown when an element is not found (default and recommended).
+`IGNORE`:: Ignore the element when not found in the database.
+
+[[annotations-hibernate-ondelete]]
+==== `@OnDelete`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OnDelete.html[`@OnDelete`] annotation is used to specify the delete strategy employed by the current annotated collection, array or joined subclasses.
+This annotation is used by the automated schema generation tool to generated the appropriate FOREIGN KEY DDL cascade directive.
+
+The two possible strategies are defined by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OnDeleteAction.html[`OnDeleteAction`] enumeration:
+
+CASCADE:: Use the database FOREIGN KEY cascade capabilities.
+NO_ACTION:: Take no action.
+
+[[annotations-hibernate-optimisticlock]]
+==== `@OptimisticLock`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLock.html[`@OptimisticLock`] annotation is used to specify if the current annotated attribute will trigger an entity version increment upon being modified.
+
+[[annotations-hibernate-optimisticlocking]]
+==== `@OptimisticLocking`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLocking.html[`@OptimisticLocking`] annotation is used to specify the current annotated an entity optimistic locking strategy.
+
+The four possible strategies are defined by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLockType.html[`OptimisticLockType`] enumeration:
+
+NONE:: The implicit optimistic locking mechanism is disabled.
+VERSION:: The implicit optimistic locking mechanism is using a dedicated version column.
+ALL:: The implicit optimistic locking mechanism is using *all* attributes as part of an expanded WHERE clause restriction for the `UPDATE` and `DELETE` SQL statements.
+DIRTY:: The implicit optimistic locking mechanism is using the *dirty* attributes (the attributes that were modified) as part of an expanded WHERE clause restriction for the `UPDATE` and `DELETE` SQL statements.
+
+[[annotations-hibernate-orderby]]
+==== `@OrderBy`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* ordering directive for sorting the current annotated collection.
+
+It differs from the JPA <<annotations-jpa-orderby>> annotation because the JPA annotation expects a JPQL order-by fragment, not an SQL directive.
+
+[[annotations-hibernate-paramdef]]
+==== `@ParamDef`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ParamDef.html[`@ParamDef`] annotation is used in conjunction with <<annotations-hibernate-filterdef>> so that the Hibernate Filter can be customized with runtime-provided parameter values.
+
+See the <<chapters/domain/basic_types.adoc#mapping-filter-example,Filter mapping>> section for more info.
+
+[[annotations-hibernate-parameter]]
+==== `@Parameter`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Parameter.html[`@Parameter`] annotation is generic parameter (basically a key/value combination) tused to parametrize other annotations,
+like <<annotations-hibernate-collectiontype>>, <<annotations-hibernate-genericgenerator>>, and <<annotations-hibernate-type>>, <<annotations-hibernate-typedef>>.
+
+[[annotations-hibernate-parent]]
+==== `@Parent`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Parent.html[`@Parent`] annotation is used to specify that the current annotated embeddable attribute references back the owning entity.
+
+[[annotations-hibernate-persister]]
+==== `@Persister`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Persister.html[`@Persister`] annotation is used to specify a custom entity or collection persister.
+
+For entities, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/entity/EntityPersister.html[`EntityPersister`] interface.
+
+For collections, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/collection/CollectionPersister.html[`CollectionPersister`] interface.
+
+[[annotations-hibernate-polymorphism]]
+==== `@Polymorphism`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Polymorphism.html[`@Polymorphism`] annotation is used to define the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/PolymorphismType.html[`PolymorphismType`] Hibernate will apply to entity hierarchies.
+
+There are two possible `PolymorphismType` options:
+
+EXPLICIT:: The current annotated entity is retrieved only if explicitly asked.
+IMPLICIT:: The current annotated entity is retrieved if any of its super entity are retrieved. This is the default option.
+
+[[annotations-hibernate-proxy]]
+==== `@Proxy`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`] annotation is used to specify a custom Proxy implementation for the current annotated entity.
+
+[[annotations-hibernate-rowid]]
+==== `@RowId`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/RowId.html[`@RowId`] annotation is used to specify the database column used as a `ROWID` pseudocolumn.
+For instance, Oracle defines the https://docs.oracle.com/cd/B19306_01/server.102/b14200/pseudocolumns008.htm[`ROWID` pseudocolumn] which provides the address of every table row.
+
+According to Oracle documentation, `ROWID` is the fastest way to access a single row from a table.
+
+[[annotations-hibernate-selectbeforeupdate]]
+==== `@SelectBeforeUpdate`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SelectBeforeUpdate.html[`@SelectBeforeUpdate`] annotation is used to specify that the current annotated entity state be selected from the database when determining whether to perform an update when the detached entity is reattached.
+
+[[annotations-hibernate-sort]]
+==== [line-through]#`@Sort`#
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Sort.html[[line-through]#`@Sort`#] annotation is deprecated. Use the Hibernate specific <<annotations-hibernate-sortcomparator>> or <<annotations-hibernate-sortnatural>> annotations instead.
+
+[[annotations-hibernate-sortcomparator]]
+==== `@SortComparator`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SortComparator.html[`@SortComparator`] annotation is used to specify a `Comparator` for sorting the `Set`/`Map` in-memory.
+
+See the <<chapters/domain/collections.adoc#collections-unidirectional-sorted-set-custom-comparator-example, `@SortComparator` mapping>> section for more info.
+
+[[annotations-hibernate-sortnatural]]
+==== `@SortNatural`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SortNatural.html[`@SortNatural`] annotation is used to specify that the `Set`/`Map` should be sorted using natural sorting.
+
+See the <<chapters/domain/collections.adoc#collections-bidirectional-sorted-set-example, `@SortNatural` mapping>> section for more info.
+
+[[annotations-hibernate-source]]
+==== `@Source`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Source.html[`@Source`] annotation is used in conjunction with a `@Version` timestamp entity attribute indicating
+the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SourceType.html[`SourceType`] of the timestamp value.
+
+The `SourceType` offers two options:
+
+DB:: Get the timestamp from the database.
+VM:: Get the timestamp from the current JVM.
+
+[[annotations-hibernate-sqldelete]]
+==== `@SQLDelete`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLDelete.html[`@SQLDelete`] annotation is used to specify a custom SQL `DELETE` statement for the current annotated entity or collection.
+
+See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
+
+[[annotations-hibernate-sqldeleteall]]
+==== `@SQLDeleteAll`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLDeleteAll.html[`@SQLDeleteAll`] annotation is used to specify a custom SQL `DELETE` statement when removing all elements of the current annotated collection.
+
+See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
+
+[[annotations-hibernate-sqlfragmentalias]]
+==== `@SqlFragmentAlias`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SqlFragmentAlias.html[`@SqlFragmentAlias`] annotation is used to specify an alias for a Hibernate <<annotations-hibernate-filter>>.
+
+The alias (e.g. `myAlias`) can then be used in the `@Filter` `condition` clause using the `{alias}` (e.g. `{myAlias}`) placeholder.
+
+[[annotations-hibernate-sqlinsert]]
+==== `@SQLInsert`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLInsert.html[`@SQLInsert`] annotation is used to specify a custom SQL `INSERT` statement for the current annotated entity or collection.
+
+See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
+
+[[annotations-hibernate-sqlupdate]]
+==== `@SQLUpdate`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLUpdate.html[`@SQLUpdate`] annotation is used to specify a custom SQL `UPDATE` statement for the current annotated entity or collection.
+
+See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
+
+[[annotations-hibernate-subselect]]
+==== `@Subselect`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Subselect.html[`@Subselect`] annotation is used to specify an immutable and read-only entity using a custom SQL `SELECT` statement.
+
+[[annotations-hibernate-synchronize]]
+==== `@Synchronize`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Synchronize.html[`@Synchronize`] annotation is usually used in conjunction with the <<annotations-hibernate-subselect>> annotation to specify the list of database tables used by the `@Subselect` SQL query.
+
+With this information in place, Hibernate will properly trigger an entity flush whenever a query targeting the `@Subselect` entity is to be executed while the Persistence Context has scheduled some insert/update/delete actions against the database tables used by the `@Subselect` SQL query.
+
+Therefore, the `@Synchronize` annotation prevents the derived entity from returning stale data when executing entity queries against the `@Subselect` entity.
+
+[[annotations-hibernate-table]]
+==== `@Table`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Table.html[`@Table`] annotation is used to specify additional information to a JPA <<annotations-hibernate-table>> annotation, like custom `INSERT`, `UPDATE` or `DELETE` statements or a specific https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/FetchMode.html[`FetchMode`].
+
+[[annotations-hibernate-tables]]
+==== `@Tables`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tables.html[`@Tables`] annotation is used to group multiple <<annotations-hibernate-table>> annotations.
+
+[[annotations-hibernate-target]]
+==== `@Target`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify an explicit target implementation when the current annotated association is using an interface type.
+
+[[annotations-hibernate-tuplizer]]
+==== `@Tuplizer`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tuplizer.html[`@Tuplizer`] annotation is used to specify a custom tuplizer for the current annotated entity or embeddable.
+
+For entities, the tupelizer must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/entity/EntityTuplizer.html[`EntityTuplizer`] interface.
+
+For embeddables, the tupelizer must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/component/ComponentTuplizer.html[`ComponentTuplizer`] interface.
+
+[[annotations-hibernate-tuplizers]]
+==== `@Tuplizers`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tuplizers.html[`@Tuplizers`] annotation is used to group multiple <<annotations-hibernate-tuplizer>> annotations.
+
+[[annotations-hibernate-type]]
+==== `@Type`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Type.html[`@Type`] annotation is used to specify the Hibernate https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/Type.html[`@Type`] used by the current annotated basic attribute.
+
+See the <<chapters/domain/basic_types.adoc#collections-comma-delimited-collection-example, `@Type` mapping>> section for more info.
+
+[[annotations-hibernate-typedef]]
+==== `@TypeDef`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TypeDef.html[`@TypeDef`] annotation is used to specify a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/Type.html[`@Type`] definition which can later be reused for multiple basic attribute mappings.
+
+[[annotations-hibernate-typedefs]]
+==== `@TypeDefs`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TypeDefs.html[`@TypeDefs`] annotation is used to group multiple <<annotations-hibernate-typedef>> annotations.
+
+[[annotations-hibernate-updatetimestamp]]
+==== `@UpdateTimestamp`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/UpdateTimestamp.html[`@UpdateTimestamp`] annotation is used to specify that the current annotated timestamp attribute should be updated with the current JVM timestamp whenever the owning entity gets modified.
+
+- `java.util.Date`
+- `java.util.Calendar`
+- `java.sql.Date`
+- `java.sql.Time`
+- `java.sql.Timestamp`
+
+[[annotations-hibernate-valuegenerationtype]]
+==== `@ValueGenerationType`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ValueGenerationType.html[`@ValueGenerationType`] annotation is used to specify that the current annotation type should be used as a generator annotation type.
+
+See the <<chapters/domain/basic_types.adoc#mapping-database-generated-value-example,`@ValueGenerationType` mapping>> section for more info.
+
+[[annotations-hibernate-where]]
+==== `@Where`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Where.html[`@Where`] annotation is used to specify a custom SQL `WHERE` clause used when fetching an entity or a collection.
+
+See the <<chapters/domain/basic_types.adoc#mapping-where-example,`@Where` mapping>> section for more info.
+
+[[annotations-hibernate-wherejointable]]
+==== `@WhereJoinTable`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/WhereJoinTable.html[`@WhereJoinTable`] annotation is used to specify a custom SQL `WHERE` clause used when fetching a join collection table.

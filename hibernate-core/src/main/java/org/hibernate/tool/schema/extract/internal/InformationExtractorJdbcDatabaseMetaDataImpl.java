@@ -205,7 +205,6 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 				isPhysicalTableType( resultSet.getString( "TABLE_TYPE" ) ),
 				resultSet.getString( "REMARKS" )
 		);
-		addColumns( tableInformation );
 		return tableInformation;
 	}
 
@@ -495,6 +494,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 					else {
 						found = true;
 						tableInformation = extractTableInformation( resultSet );
+						addColumns( tableInformation );
 					}
 				}
 			}

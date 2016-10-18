@@ -11,7 +11,6 @@ import java.io.Serializable;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.Session;
 import org.hibernate.SessionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.spi.EntityKey;
@@ -155,11 +154,11 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			else {
 				target = session.immediateLoad( entityName, id );
 				initialized = true;
-				checkTargetState();
+				checkTargetState(session);
 			}
 		}
 		else {
-			checkTargetState();
+			checkTargetState(session);
 		}
 	}
 
@@ -184,36 +183,36 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 					// be created even if a current session and transaction are
 					// open (ex: session.clear() was used).  We must prevent
 					// multiple transactions.
-					( ( Session) session ).beginTransaction();
+					session.beginTransaction();
 				}
 
 				try {
 					target = session.immediateLoad( entityName, id );
+					initialized = true;
+					checkTargetState(session);
 				}
 				finally {
 					// make sure the just opened temp session gets closed!
 					try {
 						if ( !isJTA ) {
-							( ( Session) session ).getTransaction().commit();
+							session.getTransaction().commit();
 						}
-						( (Session) session ).close();
+						session.close();
 					}
 					catch (Exception e) {
 						log.warn( "Unable to close temporary session used to load lazy proxy associated to no session" );
 					}
 				}
-				initialized = true;
-				checkTargetState();
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				log.error( "Initialization failure", e );
 				throw new LazyInitializationException( e.getMessage() );
 			}
 		}
 		else if ( session.isOpen() && session.isConnected() ) {
 			target = session.immediateLoad( entityName, id );
 			initialized = true;
-			checkTargetState();
+			checkTargetState(session);
 		}
 		else {
 			throw new LazyInitializationException( "could not initialize proxy - Session was closed or disced" );
@@ -230,10 +229,10 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	private void checkTargetState() {
+	private void checkTargetState(SharedSessionContractImplementor session) {
 		if ( !unwrap ) {
 			if ( target == null ) {
-				getSession().getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
+				session.getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
 			}
 		}
 	}

@@ -214,7 +214,9 @@ public class Document {
 
 Both `@CreationTimestamp` and `@UpdateTimestamp` perform in-memory generation of the timestamp (using the VM time).
 
-Let's also add an annotation for tracking the username who last modified the entity:
+Let's also add an annotation for tracking the username who created or last modified the entity. A generator annotation
+type can define arbitrary attributes which can be accessed from within the `initialize()` method of the generation
+implementation. For the `@ModifiedBy` annotation we leverage that to make the generation timing configurable by the user.
 
 [[in-memory-example2]]
 .Another In-memory Generation Example
@@ -224,6 +226,7 @@ Let's also add an annotation for tracking the username who last modified the ent
 @ValueGenerationType(generatedBy = ModifiedByValueGeneration.class)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ModifiedBy {
+    GenerationTiming when() default GenerationTiming.ALWAYS;
 }
 
 public class ModifiedByValueGeneration
@@ -237,14 +240,17 @@ public class ModifiedByValueGeneration
                     .getService( UserService.class );
             return userService.getCurrentUserName();
         }
-    }
+    };
+
+    private GenerationTiming generationTiming;
 
     @Override
     public void initialize(ModifiedBy annotation, Class<?> propertyType) {
+        generationTiming = annotation.when();
     }
 
     public GenerationTiming getGenerationTiming() {
-        return GenerationTiming.ALWAYS;
+        return generationTiming;
     }
 
     public ValueGenerator<?> getValueGenerator() {
@@ -261,13 +267,19 @@ public class ModifiedByValueGeneration
         return null;
     }
 }
+
 @Entity
 public class Document {
     ...
     @CreationTimestamp
     private Date created;
+
     @UpdateTimestamp
     private Date lastModified;
+
+    @ModifiedBy(when = GenerationTiming.INSERT)
+    private String createdBy;
+
     @ModifiedBy
     private String lastModifiedBy;
 }

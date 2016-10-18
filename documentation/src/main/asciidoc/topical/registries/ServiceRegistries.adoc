@@ -173,7 +173,7 @@ powerful.  For more information on this aspect, see:
 * +BootstrapServiceRegistryBuilder#withStrategySelector+
 * +BootstrapServiceRegistryBuilder#withStrategySelectors+
 * +org.hibernate.boot.registry.selector.StrategyRegistrationProvider+ (via +ServiceLoader+ discovery)
-* 'StrategySelector#registerStrategyImplementor` / 'StrategySelector#unRegisterStrategyImplementor`
+* +StrategySelector#registerStrategyImplementor+ / +StrategySelector#unRegisterStrategyImplementor+
 
 The service role for this service is +org.hibernate.boot.registry.selector.spi.StrategySelector+.
 
@@ -282,7 +282,7 @@ lifecycle of a Service is:
 === Initiation (creation)
 
 A Service needs to be initiated/created.  We'll explore the details a little more when we discuss
-<<serviceregistry-building>>.  But generally speaking, either
+<<serviceregistry-building,building the service registry>>.  But generally speaking, either
 
 * a Service can be instantiated directly and handed to the ServiceRegistry
 * A `ServiceInitiator` can be handed to the ServiceRegistry to initiate the Service on-demand.
@@ -343,12 +343,12 @@ service to be injected is optional, use `InjectService#required=false`.
 Once built, a ServiceRegistry is generally considered immutable.  The Services themselves might accept
 re-configuration, but immutability here means adding/replacing services.  So all the services hosted in a particular
 ServiceRegistry must be known up-front.  To this end, building a ServiceRegistry usually employees a
-http://en.wikipedia.org/wiki/Builder_pattern[builder^].
+http://en.wikipedia.org/wiki/Builder_pattern[builder].
 
 === Building BootstrapServiceRegistry
 
-Building the `BootstrapServiceRegistry` is normally done via the 'org.hibernate.boot.registry.BootstrapServiceRegistryBuilder`
-class which exposes methods for defining `ClassLoaders`	to use, non-discoverable `Integrators` to incorporate, etc.
+Building the `BootstrapServiceRegistry` is normally done via the `org.hibernate.boot.registry.BootstrapServiceRegistryBuilder`
+class which exposes methods for defining `ClassLoaders` to use, non-discoverable `Integrators` to incorporate, etc.
 
 By default Hibernate will use the Thread-context ClassLoader (TCCL), if one, as well as the ClassLoader of its classes
 as the ClassLoaders it will consult when asked to load classes or resources or to perform ServiceLoader resolutions.
@@ -434,7 +434,7 @@ BootstrapServiceRegistry bootstrapServiceRegistry = new BootstrapServiceRegistry
 === Building StandardServiceRegistry
 
 Building the `StandardServiceRegistry` is normally done via the
-'org.hibernate.boot.registry.StandardServiceRegistryBuilder` which exposes methods for managing settings and
+`org.hibernate.boot.registry.StandardServiceRegistryBuilder` which exposes methods for managing settings and
 controlling the services hosted by the built StandardServiceRegistry.
 
 Managing settings can be as simple as telling the builder about one or more settings directly:

@@ -155,11 +155,11 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			else {
 				target = session.immediateLoad( entityName, id );
 				initialized = true;
-				checkTargetState();
+				checkTargetState(session);
 			}
 		}
 		else {
-			checkTargetState();
+			checkTargetState(session);
 		}
 	}
 
@@ -189,6 +189,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 				try {
 					target = session.immediateLoad( entityName, id );
+					initialized = true;
+					checkTargetState(session);
 				}
 				finally {
 					// make sure the just opened temp session gets closed!
@@ -202,8 +204,6 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 						log.warn( "Unable to close temporary session used to load lazy proxy associated to no session" );
 					}
 				}
-				initialized = true;
-				checkTargetState();
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -213,7 +213,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		else if ( session.isOpen() && session.isConnected() ) {
 			target = session.immediateLoad( entityName, id );
 			initialized = true;
-			checkTargetState();
+			checkTargetState(session);
 		}
 		else {
 			throw new LazyInitializationException( "could not initialize proxy - Session was closed or disced" );
@@ -230,10 +230,10 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	private void checkTargetState() {
+	private void checkTargetState(SharedSessionContractImplementor sharedSession) {
 		if ( !unwrap ) {
 			if ( target == null ) {
-				getSession().getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
+				sharedSession.getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
 			}
 		}
 	}

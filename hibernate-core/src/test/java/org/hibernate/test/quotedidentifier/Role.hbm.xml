@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping
+        SYSTEM
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+<hibernate-mapping package="org.hibernate.test.quotedidentifier">
+	<class name="Role" table="`role`">
+		<id column="ID" name="id" type="long">
+			<generator class="native" />
+		</id>
+		<property name="fooProp" type="java.lang.String" >
+			<column name="fooProp" length="256" />
+		</property>
+	</class>
+</hibernate-mapping>

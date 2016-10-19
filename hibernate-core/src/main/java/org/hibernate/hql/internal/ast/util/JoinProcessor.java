@@ -164,7 +164,9 @@ public class JoinProcessor implements SqlTokenTypes {
 		}
 
 		// If there is a FROM fragment and the FROM element is an explicit, then add the from part.
-		if ( fromElement.useFromFragment() /*&& StringHelper.isNotEmpty( frag )*/ ) {
+		if ( fromElement.useFromFragment() ||
+				( fromElement.getFromClause().isSubQuery()
+						&& fromElement.isDereferencedBySuperclassOrSubclassProperty() ) /*&& StringHelper.isNotEmpty( frag )*/ ) {
 			String fromFragment = processFromFragment( frag, join ).trim();
 			LOG.debugf( "Using FROM fragment [%s]", fromFragment );
 			processDynamicFilterParameters(

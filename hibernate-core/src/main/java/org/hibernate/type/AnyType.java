@@ -18,10 +18,12 @@ import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FetchMode;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.TransientObjectException;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -304,11 +306,14 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	@Override
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
 		//TODO: terrible implementation!
-		return value == null
-				? "null"
-				: factory.getTypeHelper()
-				.entity( HibernateProxyHelper.getClassWithoutInitializingProxy( value ) )
-				.toLoggableString( value, factory );
+		if ( value == null ) {
+			return "null";
+		}
+		if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY || !Hibernate.isInitialized( value ) ) {
+			return  "<uninitialized>";
+		}
+		Class valueClass = HibernateProxyHelper.getClassWithoutInitializingProxy( value );
+		return factory.getTypeHelper().entity( valueClass ).toLoggableString( value, factory );
 	}
 
 	@Override

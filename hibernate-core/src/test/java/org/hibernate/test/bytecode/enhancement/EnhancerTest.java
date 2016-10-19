@@ -41,6 +41,7 @@ import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyProxyOnEnhancedEntityTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicFieldAccessTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.basic.LazyBasicPropertyAccessTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.cache.LazyInCacheTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.group.LazyGroupAccessTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.group.LazyGroupUpdateTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.group.SimpleLazyGroupUpdateTestTask;
@@ -117,6 +118,12 @@ public class EnhancerTest extends BaseUnitTestCase {
 				return false;
 			}
 		} );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11173" )
+	public void testLazyCache() {
+		EnhancerTestUtils.runEnhancerTestTask( LazyInCacheTestTask.class );
 	}
 
 	@Test

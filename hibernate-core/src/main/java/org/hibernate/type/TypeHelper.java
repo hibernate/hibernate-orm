@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Map;
 
+import org.hibernate.Hibernate;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -374,7 +375,14 @@ public class TypeHelper {
 			if ( i > 0 ) {
 				buff.append( ", " );
 			}
-			buff.append( types[i].toLoggableString( state[i], factory ) );
+
+			// HHH-11173 - Instead of having to account for unfectched lazy properties in all types, it's done here
+			if ( state[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || !Hibernate.isInitialized( state[i] ) ) {
+				buff.append( "<uninitialized>" );
+			}
+			else {
+				buff.append( types[i].toLoggableString( state[i], factory ) );
+			}
 		}
 		return buff.toString();
 	}

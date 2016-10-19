@@ -20,6 +20,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
@@ -472,7 +473,12 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		Map<String, String> result = new HashMap<>();
 		Object[] values = getPropertyValues( value, entityMode );
 		for ( int i = 0; i < propertyTypes.length; i++ ) {
-			result.put( propertyNames[i], propertyTypes[i].toLoggableString( values[i], factory ) );
+			if ( values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				result.put( propertyNames[i], "<uninitialized>" );
+			}
+			else {
+				result.put( propertyNames[i], propertyTypes[i].toLoggableString( values[i], factory ) );
+			}
 		}
 		return StringHelper.unqualify( getName() ) + result.toString();
 	}

@@ -8,8 +8,9 @@ package org.hibernate.testing.logger;
 
 public interface Triggerable {
 
+	String triggerMessage();
+
 	boolean wasTriggered();
 
 	void reset();
-
 }

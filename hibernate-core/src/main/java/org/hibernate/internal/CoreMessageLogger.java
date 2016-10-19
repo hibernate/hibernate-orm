@@ -445,8 +445,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	void invalidOnDeleteAnnotation(String entityName);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Root entity should not hold an PrimaryKeyJoinColum(s), will be ignored", id = 137)
-	void invalidPrimaryKeyJoinColumnAnnotation();
+	@Message(value = "Root entity should not hold an PrimaryKeyJoinColum(s), will be ignored: %s", id = 137)
+	void invalidPrimaryKeyJoinColumnAnnotation(String className);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Mixing inheritance strategy in a entity hierarchy is not allowed, ignoring sub strategy in: %s",

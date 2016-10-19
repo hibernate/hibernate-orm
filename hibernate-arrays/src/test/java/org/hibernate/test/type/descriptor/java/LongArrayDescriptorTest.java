@@ -29,5 +29,5 @@ public class LongArrayDescriptorTest extends AbstractDescriptorTest<Long[]> {
 	protected boolean shouldBeMutable() {
 		return false;
 	}
-	
+
 }

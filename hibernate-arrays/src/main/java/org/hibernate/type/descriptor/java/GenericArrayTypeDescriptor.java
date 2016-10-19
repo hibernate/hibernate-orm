@@ -121,7 +121,6 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 		StringBuilder sb = new StringBuilder();
 		sb.append( '{' );
 		String glue = "";
-		char[] buf = new char[2];
 		for ( T v : value ) {
 			sb.append( glue );
 			if ( v == null ) {
@@ -132,15 +131,13 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 			sb.append( '"' );
 			String valstr = this.componentDescriptor.toString( v );
 			// using replaceAll is a shorter, but much slower way to do this
-			for (int i = 0, len = valstr.length(), charsn = 0, cp = 0; i < len;) {
-				cp = valstr.codePointAt( i );
+			for (int i = 0, len = valstr.length(); i < len; i ++ ) {
+				char c = valstr.charAt( i );
 				// Surrogate pairs. This is how they're done.
-				charsn = Character.toChars( cp, buf, 0 );
-				if (cp == '\\' || cp == '"') {
+				if (c == '\\' || c == '"') {
 					sb.append( '\\' );
 				}
-				sb.append( buf, 0, charsn );
-				i += charsn;
+				sb.append( c );
 			}
 			sb.append( '"' );
 			glue = ",";
@@ -164,13 +161,12 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 			throw new IllegalArgumentException( "Cannot parse given string into array of strings. First and last character must be { and }" );
 		}
 		int len = string.length();
-		char[] duo = new char[ 2 ];
 		int applen;
 		boolean inquote = false;
-		for ( int i = 1, charsn = 0; i < len; i ++ ) {
-			int cp = string.codePointAt( i );
+		for ( int i = 1; i < len; i ++ ) {
+			char c = string.charAt( i );
 			char quote;
-			if ( cp == '"' ) {
+			if ( c == '"' ) {
 				if (inquote) {
 					lst.add( sb.toString() );
 				}
@@ -181,10 +177,10 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 				continue;
 			}
 			else if ( !inquote ) {
-				if ( Character.isWhitespace( cp ) ) {
+				if ( Character.isWhitespace( c ) ) {
 					continue;
 				}
-				else if ( cp == ',' ) {
+				else if ( c == ',' ) {
 					// treat no-value between commas to mean null
 					if ( sb == null ) {
 						lst.add( null );
@@ -202,6 +198,7 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 							&& string.charAt( i + 2 ) == 'l'
 							&& string.charAt( i + 3 ) == 'l') {
 						lst.add( null );
+						i += 4;
 						continue;
 					}
 					if (i + 1 == len) {
@@ -211,13 +208,11 @@ public class GenericArrayTypeDescriptor<T> extends AbstractTypeDescriptor<T[]> {
 							+ " Outside of quote, but neither whitespace, comma, array end, nor null found." );
 				}
 			}
-			else if ( cp == '\\' && i + 2 < len && (string.charAt( i + 1 ) == '\\' || string.charAt( i + 1 ) == '"')) {
-				// no need to use codePointAt here, we already know it's not a surrogate pair
-				cp = string.charAt( ++i );
+			else if ( c == '\\' && i + 2 < len && (string.charAt( i + 1 ) == '\\' || string.charAt( i + 1 ) == '"')) {
+				c = string.charAt( ++i );
 			}
 			// If there is ever a null-pointer here, the if-else logic before is incomplete
-			charsn = Character.toChars( cp, duo, 0 );
-			sb.append( duo, 0, charsn );
+			sb.append( c );
 		}
 		String[] objects = lst.toArray( new String[lst.size()] );
 		T[] result = (T[]) Array.newInstance( componentClass, lst.size() );

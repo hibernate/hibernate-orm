@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -49,7 +50,7 @@ public class JoinedSubclassSubQueryTest extends BaseCoreFunctionalTestCase {
 			s.getTransaction().commit();
 		}
 		catch (Exception e) {
-			if ( s.getTransaction() != null && s.getTransaction().isActive() ) {
+			if ( s.getTransaction() != null && s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
 				s.getTransaction().rollback();
 			}
 			throw e;
@@ -75,7 +76,7 @@ public class JoinedSubclassSubQueryTest extends BaseCoreFunctionalTestCase {
 			s.createQuery( queryHQL ).uniqueResult();
 		}
 		catch (Exception e) {
-			if ( s.getTransaction() != null && s.getTransaction().isActive() ) {
+			if ( s.getTransaction() != null && s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
 				s.getTransaction().rollback();
 			}
 			throw e;

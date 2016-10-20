@@ -40,7 +40,7 @@ public class LocalDateTimeJavaDescriptor extends AbstractTypeDescriptor<LocalDat
 
 	@Override
 	public LocalDateTime fromString(String string) {
-		return (LocalDateTime) LocalDateTimeType.FORMATTER.parse( string );
+		return LocalDateTime.from( LocalDateTimeType.FORMATTER.parse( string ) );
 	}
 
 	@Override

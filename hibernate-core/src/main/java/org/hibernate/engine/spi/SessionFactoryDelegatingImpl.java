@@ -305,7 +305,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 
 	@Override
 	public void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition) {
-		delegate.registerNamedQueryDefinition( name, definition );
+		delegate.registerNamedSQLQueryDefinition( name, definition );
 	}
 
 	@Override

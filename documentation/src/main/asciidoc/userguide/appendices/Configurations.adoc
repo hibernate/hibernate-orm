@@ -770,5 +770,7 @@ Accepts two values:
 true:: allows to flush an update out of a transaction
 false:: does not allow
 
+|`hibernate.collection_join_subquery`| `true` (default value) or `false` | Setting which indicates whether or not the new JOINS over collection tables should be rewritten to subqueries.
+
 |=====================================================================================================================================================================================================================================================
 

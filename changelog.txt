@@ -5,6 +5,14 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.25 (2016.10.21)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    [HHH-11072] : Skip CriteriaLiteralInSelectExpressionTest#testStringLiteral2 for Oracle, DB2, SQL Server, and Sybase dialects       
+    [HHH-11073] : Casting to boolean in HQL query fails on MySQL
+    [HHH-11182] - HQL subquery with constraint property in superclass does not join superclass table
+
 Changes in version 4.2.24 (2016.07.21)
 ------------------------------------------------------------------------------------------------------------------------
 

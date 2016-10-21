@@ -868,7 +868,7 @@ public abstract class CollectionBinder {
 			LOG.debugf( "Mapping collection: %s -> %s", collection.getRole(), collection.getCollectionTable().getName() );
 		}
 		bindFilters( false );
-		bindCollectionSecondPass( collection, null, fkJoinColumns, cascadeDeleteEnabled, property, buildingContext );
+		bindCollectionSecondPass( collection, null, fkJoinColumns, cascadeDeleteEnabled, property, propertyHolder, buildingContext );
 		if ( !collection.isInverse()
 				&& !collection.getKey().isNullable() ) {
 			// for non-inverse one-to-many, with a not-null fk, add a backref!
@@ -1085,6 +1085,7 @@ public abstract class CollectionBinder {
 			Ejb3JoinColumn[] joinColumns,
 			boolean cascadeDeleteEnabled,
 			XProperty property,
+			PropertyHolder propertyHolder,
 			MetadataBuildingContext buildingContext) {
 		//binding key reference using column
 		KeyValue keyVal;
@@ -1160,14 +1161,26 @@ public abstract class CollectionBinder {
 						}
 					}
 					else {
-						final JoinColumn joinColumnAnn = property.getAnnotation( JoinColumn.class );
-						if ( joinColumnAnn != null ) {
-							if ( joinColumnAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
-								key.setForeignKeyName( "none" );
-							}
-							else {
-								key.setForeignKeyName( StringHelper.nullIfEmpty( joinColumnAnn.foreignKey().name() ) );
-								key.setForeignKeyDefinition( StringHelper.nullIfEmpty( joinColumnAnn.foreignKey().foreignKeyDefinition() ) );
+						final javax.persistence.ForeignKey fkOverride = propertyHolder.getOverriddenForeignKey(
+								StringHelper.qualify( propertyHolder.getPath(), property.getName() )
+						);
+						if ( fkOverride != null && fkOverride.value() == ConstraintMode.NO_CONSTRAINT ) {
+							key.setForeignKeyName( "none" );
+						}
+						else if ( fkOverride != null ) {
+							key.setForeignKeyName( StringHelper.nullIfEmpty( fkOverride.name() ) );
+							key.setForeignKeyDefinition( StringHelper.nullIfEmpty( fkOverride.foreignKeyDefinition() ) );
+						}
+						else {
+							final JoinColumn joinColumnAnn = property.getAnnotation( JoinColumn.class );
+							if ( joinColumnAnn != null ) {
+								if ( joinColumnAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+									key.setForeignKeyName( "none" );
+								}
+								else {
+									key.setForeignKeyName( StringHelper.nullIfEmpty( joinColumnAnn.foreignKey().name() ) );
+									key.setForeignKeyDefinition( StringHelper.nullIfEmpty( joinColumnAnn.foreignKey().foreignKeyDefinition() ) );
+								}
 							}
 						}
 					}
@@ -1319,7 +1332,7 @@ public abstract class CollectionBinder {
 			collValue.setCollectionTable( associationTableBinder.bind() );
 		}
 		bindFilters( isCollectionOfEntities );
-		bindCollectionSecondPass( collValue, collectionEntity, joinColumns, cascadeDeleteEnabled, property, buildingContext );
+		bindCollectionSecondPass( collValue, collectionEntity, joinColumns, cascadeDeleteEnabled, property, propertyHolder, buildingContext );
 
 		ManyToOne element = null;
 		if ( isCollectionOfEntities ) {
@@ -1348,7 +1361,7 @@ public abstract class CollectionBinder {
 				if ( joinTableAnn != null ) {
 					String foreignKeyName = joinTableAnn.inverseForeignKey().name();
 					String foreignKeyDefinition = joinTableAnn.inverseForeignKey().foreignKeyDefinition();
-					ConstraintMode foreignKeyValue = joinTableAnn.foreignKey().value();
+					ConstraintMode foreignKeyValue = joinTableAnn.inverseForeignKey().value();
 					if ( joinTableAnn.inverseJoinColumns().length != 0 ) {
 						final JoinColumn joinColumnAnn = joinTableAnn.inverseJoinColumns()[0];
 						if ( "".equals( foreignKeyName ) ) {
@@ -1359,7 +1372,7 @@ public abstract class CollectionBinder {
 							foreignKeyValue = joinColumnAnn.foreignKey().value();
 						}
 					}
-					if ( joinTableAnn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+					if ( joinTableAnn.inverseForeignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
 						element.setForeignKeyName( "none" );
 					}
 					else {
@@ -1575,6 +1588,7 @@ public abstract class CollectionBinder {
 			Ejb3JoinColumn[] joinColumns,
 			boolean cascadeDeleteEnabled,
 			XProperty property,
+			PropertyHolder propertyHolder,
 			MetadataBuildingContext buildingContext) {
 		try {
 			BinderHelper.createSyntheticPropertyReference(
@@ -1589,7 +1603,7 @@ public abstract class CollectionBinder {
 		catch (AnnotationException ex) {
 			throw new AnnotationException( "Unable to map collection " + collValue.getOwner().getClassName() + "." + property.getName(), ex );
 		}
-		SimpleValue key = buildCollectionKey( collValue, joinColumns, cascadeDeleteEnabled, property, buildingContext );
+		SimpleValue key = buildCollectionKey( collValue, joinColumns, cascadeDeleteEnabled, property, propertyHolder, buildingContext );
 		if ( property.isAnnotationPresent( ElementCollection.class ) && joinColumns.length > 0 ) {
 			joinColumns[0].setJPA2ElementCollection( true );
 		}

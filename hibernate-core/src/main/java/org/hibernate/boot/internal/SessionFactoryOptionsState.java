@@ -117,6 +117,8 @@ public interface SessionFactoryOptionsState {
 
 	boolean isProcedureParameterNullPassingEnabled();
 
+	boolean isCollectionJoinSubqueryRewriteEnabled();
+
 	boolean isSecondLevelCacheEnabled();
 
 	boolean isQueryCacheEnabled();

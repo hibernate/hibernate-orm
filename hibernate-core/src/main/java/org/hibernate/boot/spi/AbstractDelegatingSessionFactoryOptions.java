@@ -215,6 +215,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isCollectionJoinSubqueryRewriteEnabled() {
+		return delegate.isCollectionJoinSubqueryRewriteEnabled();
+	}
+
+	@Override
 	public boolean isAllowOutOfTransactionUpdateOperations() {
 		return delegate.isAllowOutOfTransactionUpdateOperations();
 	}

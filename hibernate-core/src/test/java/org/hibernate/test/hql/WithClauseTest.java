@@ -7,6 +7,7 @@
 package org.hibernate.test.hql;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,6 +16,7 @@ import org.hibernate.Query;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.hql.internal.ast.InvalidWithClauseException;
 
 import org.hibernate.testing.TestForIssue;
@@ -213,6 +215,29 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 		List list = s.createQuery( "from Human h left join h.family as f with key(f) like 'son1' where h.description = 'father'" )
 				.list();
 		assertEquals( "subquery rewriting of join table did not take effect", 1, list.size() );
+
+		txn.commit();
+		s.close();
+
+		data.cleanup();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11157")
+	public void testWithClauseAsNonSubqueryWithKey() {
+		rebuildSessionFactory( Collections.singletonMap( AvailableSettings.COLLECTION_JOIN_SUBQUERY, "false" ) );
+
+		TestData data = new TestData();
+		data.prepare();
+
+		Session s = openSession();
+		Transaction txn = s.beginTransaction();
+
+		// Since family has a join table, we will first left join all family members and then do the WITH clause on the target entity table join
+		// Normally this produces 2 results which is wrong and can only be circumvented by converting the join table and target entity table join to a subquery
+		List list = s.createQuery("from Human h left join h.family as f with key(f) like 'son1' where h.description = 'father'")
+				.list();
+		assertEquals("subquery rewriting of join table was not disabled", 2, list.size());
 
 		txn.commit();
 		s.close();

@@ -261,8 +261,10 @@ As you can see the question of equals/hashCode is not trivial, nor is there a on
 ====
 Although using a natural-id is best for `equals` and `hashCode`, sometimes you only have the entity identifier that provides a unique constraint.
 
-It's possible to use the entity identifier for equality check, but it needs a workaround.
-Check out https://vladmihalcea.com/2016/06/06/how-to-implement-equals-and-hashcode-using-the-entity-identifier/[this article for more details about the best way of mapping `equals` and `hashCode` using the entity identifier].
+It's possible to use the entity identifier for equality check, but it needs a workaround:
+
+- you need to provide a constant value for `hashCode` so that the hash code value does not change before and after the entity is flushed.
+- you need to compare the entity identifier equality only for non-transient entities.
 ====
 
 For details on mapping the identifier, see the <<chapters/domain/identifiers.adoc#identifiers,Identifiers>> chapter.

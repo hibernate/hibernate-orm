@@ -39,7 +39,7 @@ log4j.logger.org.hibernate.type=trace
 log4j.logger.org.hibernate.type.descriptor.sql=trace
 ----
 
-However, there are some other alternatives like using https://vladmihalcea.com/2016/05/03/the-best-way-of-logging-jdbc-statements/[datasource-proxy or p6spy].
+However, there are some other alternatives like using datasource-proxy or p6spy.
 The advantage of using a JDBC `Driver` or `DataSource` Proxy is that you can go beyond simple SQL logging:
 
 - statement execution time
@@ -47,7 +47,7 @@ The advantage of using a JDBC `Driver` or `DataSource` Proxy is that you can go 
 - https://github.com/vladmihalcea/flexy-pool[database connection monitoring]
 
 Another advantage of using a `DataSource` proxy is that you can assert the number of executed statements at test time.
-This way, you can have the integration tests fail https://vladmihalcea.com/2014/02/01/how-to-detect-the-n-plus-one-query-problem-during-testing/[when a N+1 query issue is automatically detected].
+This way, you can have the integration tests fail when a N+1 query issue is automatically detected.
 
 [TIP]
 ====
@@ -62,9 +62,9 @@ This saves database roundtrips, and so it https://leanpub.com/high-performance-j
 
 Not only `INSERT` and `UPDATE` statements, but even `DELETE` statements can be batched as well.
 For `INSERT` and `UPDATE` statements, make sure that you have all the right configuration properties in place, like ordering inserts and updates and activating batching for versioned data.
-Check out https://vladmihalcea.com/2015/03/18/how-to-batch-insert-and-update-statements-with-hibernate/[this article] for more details on this topic.
+Check out this article for more details on this topic.
 
-For `DELETE` statements, there is no option to order parent and child statements, so https://vladmihalcea.com/2015/03/26/how-to-batch-delete-statements-with-hibernate/[cascading can interfere with the JDBC batching process].
+For `DELETE` statements, there is no option to order parent and child statements, so cascading can interfere with the JDBC batching process.
 
 Unlike any other framework which doesn't automate SQL statement generation, Hibernate makes it very easy to activate JDBC-level batching as indicated in the <<chapters/batch/Batching.adoc#batch,Batching chapter>>.
 
@@ -100,7 +100,7 @@ However, you should keep in mind that the `IDENTITY` generators disables JDBC ba
 ====
 
 If you're using the `SEQUENCE` generator, then you should be using the enhanced identifier generators that were enabled by default in Hibernate 5.
-The https://vladmihalcea.com/2014/07/21/hibernate-hidden-gem-the-pooled-lo-optimizer/[*pooled* and the *pooled-lo* optimizers] are very useful to reduce the number of database roundtrips when writing multiple entities per database transaction.
+The *pooled* and the *pooled-lo* optimizers are very useful to reduce the number of database roundtrips when writing multiple entities per database transaction.
 
 [[best-practices-mapping-associations]]
 ==== Associations
@@ -126,10 +126,10 @@ On the other hand, the more exotic the association mapping, the better the chanc
 
 Therefore, the `@ManyToOne` and the `@OneToOne` child-side association are best to represent a `FOREIGN KEY` relationship.
 
-The parent-side `@OneToOne` association requires https://vladmihalcea.com/2016/02/11/how-to-enable-bytecode-enhancement-dirty-checking-in-hibernate/[bytecode enhancement]
+The parent-side `@OneToOne` association requires bytecode enhancement
 so that the association can be loaded lazily. Otherwise, the parent-side is always fetched even if the association is marked with `FetchType.LAZY`.
 
-For this reason, https://vladmihalcea.com/2016/07/26/the-best-way-to-map-a-onetoone-relationship-with-jpa-and-hibernate/[it's best to map `@OneToOne` association using `@MapsId`] so that the `PRIMARY KEY` is shared between the child and the parent entities.
+For this reason, it's best to map `@OneToOne` association using `@MapsId` so that the `PRIMARY KEY` is shared between the child and the parent entities.
 When using `@MapsId`, the parent-side becomes redundant since the child-entity can be easily fetched using the parent entity identifier.
 
 For collections, the association can be either:
@@ -138,7 +138,7 @@ For collections, the association can be either:
 - bidirectional
 
 For unidirectional collections, `Sets` are the best choice because they generate the most efficient SQL statements.
-https://vladmihalcea.com/2015/05/04/how-to-optimize-unidirectional-collections-with-jpa-and-hibernate/[Unidirectional `Lists`] are less efficient than a `@ManyToOne` association.
+Unidirectional `Lists` are less efficient than a `@ManyToOne` association.
 
 Bidirectional associations are usually a better choice because the `@ManyToOne` side controls the association.
 
@@ -177,7 +177,7 @@ Fetching too much data is the number one performance issue for the vast majority
 ====
 
 Hibernate supports both entity queries (JPQL/HQL and Criteria API) and native SQL statements.
-Entity queries are useful only if you need to modify the fetched entities, therefore benefiting from the https://vladmihalcea.com/2014/08/21/the-anatomy-of-hibernate-dirty-checking/[automatic dirty checking mechanism].
+Entity queries are useful only if you need to modify the fetched entities, therefore benefiting from the automatic dirty checking mechanism.
 
 For read-only transactions, you should fetch DTO projections because they allow you to select just as many columns as you need to fulfill a certain business use case.
 This has many benefits like reducing the load on the currently running Persistence Context because DTO projections don't need to be managed.
@@ -190,7 +190,7 @@ Related to associations, there are two major fetch strategies:
 - `EAGER`
 - `LAZY`
 
-https://vladmihalcea.com/2014/12/15/eager-fetching-is-a-code-smell/[`EAGER` fetching is almost always a bad choice].
+`EAGER` fetching is almost always a bad choice.
 
 [TIP]
 ====
@@ -198,7 +198,7 @@ Prior to JPA, Hibernate used to have all associations as `LAZY` by default.
 However, when JPA 1.0 specification emerged, it was thought that not all providers would use Proxies. Hence, the `@ManyToOne` and the `@OneToOne` associations are now `EAGER` by default.
 
 The `EAGER` fetching strategy cannot be overwritten on a per query basis, so the association is always going to be retrieved even if you don't need it.
-More, if you forget to `JOIN FETCH` an `EAGER` association in a JPQL query, Hibernate will initialize it with a secondary statement, which in turn can lead to https://vladmihalcea.com/2014/02/01/how-to-detect-the-n-plus-one-query-problem-during-testing/[N+1 query issues].
+More, if you forget to `JOIN FETCH` an `EAGER` association in a JPQL query, Hibernate will initialize it with a secondary statement, which in turn can lead to N+1 query issues.
 ====
 
 So, `EAGER` fetching is to be avoided. For this reason, it's better if all associations are marked as `LAZY` by default.
@@ -206,7 +206,7 @@ So, `EAGER` fetching is to be avoided. For this reason, it's better if all assoc
 However, `LAZY` associations must be initialized prior to being accessed. Otherwise, a `LazyInitializationException` is thrown.
 There are good and bad ways to treat the `LazyInitializationException`.
 
-https://vladmihalcea.com/2016/09/13/the-best-way-to-handle-the-lazyinitializationexception/[The best way to deal with `LazyInitializationException`] is to fetch all the required associations prior to closing the Persistence Context.
+The best way to deal with `LazyInitializationException` is to fetch all the required associations prior to closing the Persistence Context.
 The `JOIN FETCH` directive is good for `@ManyToOne` and `OneToOne` associations, and for at most one collection (e.g. `@OneToMany` or `@ManyToMany`).
 If you need to fetch multiple collections, to avoid a Cartesian Product, you should use secondary queries which are triggered either by navigating the `LAZY` association or by calling `Hibernate#initialize(proxy)` method.
 
@@ -215,16 +215,16 @@ If you need to fetch multiple collections, to avoid a Cartesian Product, you sho
 
 Hibernate has two caching layers:
 
-- the first-level cache (Persistence Context) which is a https://vladmihalcea.com/2015/04/20/a-beginners-guide-to-cache-synchronization-strategies/[transactional write-behind cache] providing https://vladmihalcea.com/2014/10/23/hibernate-application-level-repeatable-reads/[application-level repeatable reads].
-- the second-level cache which, unlike application-level caches, https://vladmihalcea.com/2015/04/09/how-does-hibernate-store-second-level-cache-entries/[it doesn't store entity aggregates but normalized dehydrated entity entries].
+- the first-level cache (Persistence Context) which is a application-level repeatable reads.
+- the second-level cache which, unlike application-level caches, it doesn't store entity aggregates but normalized dehydrated entity entries.
 
-The first-level cache is not a caching solution "per se", being more useful for ensuring https://vladmihalcea.com/2014/01/05/a-beginners-guide-to-acid-and-database-transactions/[`REPEATABLE READ(s)`] even when using the https://vladmihalcea.com/2014/12/23/a-beginners-guide-to-transaction-isolation-levels-in-enterprise-java/[`READ COMMITTED` isolation level].
+The first-level cache is not a caching solution "per se", being more useful for ensuring `READ COMMITTED` isolation level.
 
 While the first-level cache is short lived, being cleared when the underlying `EntityManager` is closed, the second-level cache is tied to an `EntityManagerFactory`.
 Some second-level caching providers offer support for clusters. Therefore, a node needs only to store a subset of the whole cached data.
 
 Although the second-level cache can reduce transaction response time since entities are retrieved from the cache rather than from the database,
-https://vladmihalcea.com/2015/04/16/things-to-consider-before-jumping-to-enterprise-caching/[there are other options] to achieve the same goal,
+there are other options to achieve the same goal,
 and you should consider these alternatives prior to jumping to a second-level cache layer:
 
 - tuning the underlying database cache so that the working set fits into memory, therefore reducing Disk I/O traffic.
@@ -243,10 +243,10 @@ Changing a parent entity only requires a single entry cache update, as opposed t
 
 The second-level cache provides four cache concurrency strategies:
 
-- https://vladmihalcea.com/2015/04/27/how-does-hibernate-read_only-cacheconcurrencystrategy-work/[`READ_ONLY`]
-- https://vladmihalcea.com/2015/05/18/how-does-hibernate-nonstrict_read_write-cacheconcurrencystrategy-work/[`NONSTRICT_READ_WRITE`]
-- https://vladmihalcea.com/2015/05/25/how-does-hibernate-read_write-cacheconcurrencystrategy-work/[`READ_WRITE`]
-- https://vladmihalcea.com/2015/06/01/how-does-hibernate-transactional-cacheconcurrencystrategy-work/[`TRANSACTIONAL`]
+- `READ_ONLY`
+- `NONSTRICT_READ_WRITE`
+- `READ_WRITE`
+- `TRANSACTIONAL`
 
 `READ_WRITE` is a very good default concurrency strategy since it provides strong consistency guarantees without compromising throughput.
 The `TRANSACTIONAL` concurrency strategy uses JTA. Hence, it's more suitable when entities are frequently modified.

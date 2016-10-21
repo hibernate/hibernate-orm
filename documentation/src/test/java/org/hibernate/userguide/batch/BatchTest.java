@@ -206,7 +206,7 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 				Person Person = new Person( String.format( "Person %d", i ) );
 				entityManager.persist( Person );
 
-				if ( i % batchSize == 0 ) {
+				if ( i > 0 && i % batchSize == 0 ) {
 					//flush a batch of inserts and release memory
 					entityManager.flush();
 					entityManager.clear();

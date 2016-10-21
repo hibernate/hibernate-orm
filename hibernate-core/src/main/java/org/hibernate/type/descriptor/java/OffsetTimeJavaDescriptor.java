@@ -44,7 +44,7 @@ public class OffsetTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetTime>
 
 	@Override
 	public OffsetTime fromString(String string) {
-		return (OffsetTime) OffsetTimeType.FORMATTER.parse( string );
+		return OffsetTime.from( OffsetTimeType.FORMATTER.parse( string ) );
 	}
 
 	@Override

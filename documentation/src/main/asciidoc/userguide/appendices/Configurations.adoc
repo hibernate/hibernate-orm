@@ -218,7 +218,7 @@ Allowable values include:
 `class`:: scan classes (e.g. `.class`) to extract entity mapping metadata
 `hbm`:: scan `hbm` mapping files (e.g. `hbm.xml`) to extract entity mapping metadata
 
-Bu default both HBM, annotations, and JPA XML mappings are scanned.
+By default both HBM, annotations, and JPA XML mappings are scanned.
 
 When using JPA, to disable the automatic scanning of all entity classes, the `exclude-unlisted-classes` `persistence.xml` element must be set to false.
 

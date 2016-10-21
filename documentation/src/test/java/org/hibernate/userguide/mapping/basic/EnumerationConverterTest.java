@@ -83,7 +83,8 @@ public class EnumerationConverterTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Converter
-	public static class GenderConverter implements AttributeConverter<Gender, Character> {
+	public static class GenderConverter
+			implements AttributeConverter<Gender, Character> {
 
 		public Character convertToDatabaseColumn( Gender value ) {
 			if ( value == null ) {

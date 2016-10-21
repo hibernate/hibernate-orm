@@ -27,6 +27,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.type.StringType;
 import org.hibernate.userguide.model.AddressType;
@@ -2304,6 +2305,43 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			.getResultList();
 			//end::hql-order-by-example[]
 			assertEquals(1, personTotalCallDurations.size());
+		});
+	}
+
+	@Test
+	public void test_hql_read_only_entities_example() {
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-read-only-entities-example[]
+			List<Call> calls = entityManager.createQuery(
+				"select c " +
+				"from Call c " +
+				"join c.phone p " +
+				"where p.number = :phoneNumber ", Call.class )
+			.setParameter( "phoneNumber", "123-456-7890" )
+			.setHint( "org.hibernate.readOnly", true )
+			.getResultList();
+
+			calls.forEach( c -> c.setDuration( 0 ) );
+			//end::hql-read-only-entities-example[]
+		});
+	}
+
+	@Test
+	public void test_hql_read_only_entities_native_example() {
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-read-only-entities-native-example[]
+			List<Call> calls = entityManager.createQuery(
+				"select c " +
+				"from Call c " +
+				"join c.phone p " +
+				"where p.number = :phoneNumber ", Call.class )
+			.setParameter( "phoneNumber", "123-456-7890" )
+			.unwrap( org.hibernate.query.Query.class )
+			.setReadOnly( true )
+			.getResultList();
+			//end::hql-read-only-entities-native-example[]
 		});
 	}
 }

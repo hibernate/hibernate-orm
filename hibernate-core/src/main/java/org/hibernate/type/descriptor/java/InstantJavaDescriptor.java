@@ -11,11 +11,11 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import org.hibernate.type.InstantType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -36,12 +36,12 @@ public class InstantJavaDescriptor extends AbstractTypeDescriptor<Instant> {
 
 	@Override
 	public String toString(Instant value) {
-		return InstantType.FORMATTER.format( ZonedDateTime.ofInstant( value, ZoneId.of( "UTC" ) ) );
+		return DateTimeFormatter.ISO_INSTANT.format( value );
 	}
 
 	@Override
 	public Instant fromString(String string) {
-		return (Instant) InstantType.FORMATTER.parse( string );
+		return Instant.from( DateTimeFormatter.ISO_INSTANT.parse( string ) );
 	}
 
 	@Override

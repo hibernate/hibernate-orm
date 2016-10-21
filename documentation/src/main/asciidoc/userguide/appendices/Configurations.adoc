@@ -740,5 +740,8 @@ disabled:: Do not do the population
 ignoreUnsupported:: Do the population, but ignore any non-JPA features that would otherwise result in the population failing (e.g. `@Any` annotation).
 
 |`hibernate.delay_cdi_access`| `true` or `false` (default value) | Defines delayed access to CDI `BeanManager`. Starting in 5.1 the preferred means for CDI bootstrapping is through `org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager`.
+
+|`hibernate.collection_join_subquery`| `true` (default value) or `false` | Setting which indicates whether or not the new JOINS over collection tables should be rewritten to subqueries.
+
 |=====================================================================================================================================================================================================================================================
 

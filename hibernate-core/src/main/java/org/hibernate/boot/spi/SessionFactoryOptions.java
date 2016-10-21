@@ -202,6 +202,8 @@ public interface SessionFactoryOptions {
 
 	boolean isProcedureParameterNullPassingEnabled();
 
+	boolean isCollectionJoinSubqueryRewriteEnabled();
+
 	boolean isAllowOutOfTransactionUpdateOperations();
 
 	boolean isReleaseResourcesOnCloseEnabled();

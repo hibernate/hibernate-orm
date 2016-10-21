@@ -1548,4 +1548,14 @@ public interface AvailableSettings {
 	 * @since 5.2
 	 */
 	String ALLOW_UPDATE_OUTSIDE_TRANSACTION = "hibernate.allow_update_outside_transaction";
+
+	/**
+	 * Setting which indicates whether or not the new JOINS over collection tables should be rewritten to subqueries.
+	 * <p/>
+	 * Default is {@code true}.  Existing applications may want to disable this (set it {@code false}) for
+	 * upgrade compatibility.
+	 *
+	 * @since 5.2
+	 */
+	String COLLECTION_JOIN_SUBQUERY = "hibernate.collection_join_subquery";
 }

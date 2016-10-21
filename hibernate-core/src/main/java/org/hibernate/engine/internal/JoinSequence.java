@@ -34,6 +34,7 @@ import org.hibernate.type.AssociationType;
  */
 public class JoinSequence {
 	private final SessionFactoryImplementor factory;
+	private final boolean collectionJoinSubquery;
 
 	private final StringBuilder conditions = new StringBuilder();
 	private final List<Join> joins = new ArrayList<Join>();
@@ -52,6 +53,7 @@ public class JoinSequence {
 	 */
 	public JoinSequence(SessionFactoryImplementor factory) {
 		this.factory = factory;
+		this.collectionJoinSubquery = factory.getSessionFactoryOptions().isCollectionJoinSubqueryRewriteEnabled();
 	}
 
 	/**
@@ -192,7 +194,8 @@ public class JoinSequence {
 			last = rootJoinable;
 		}
 		else if (
-				withClauseFragment != null
+				collectionJoinSubquery
+				&& withClauseFragment != null
 				&& joins.size() > 1
 				&& withClauseFragment.contains( withClauseJoinAlias )
 				&& ( first = ( iter = joins.iterator() ).next() ).joinType == JoinType.LEFT_OUTER_JOIN
@@ -208,6 +211,7 @@ public class JoinSequence {
 					"([a-zA-Z0-9_]+) | " + // Normal identifiers
 					"('[a-zA-Z0-9_]+' ((''[a-zA-Z0-9_]+)+')?) | " + // Single quoted identifiers
 					"(\"[a-zA-Z0-9_]+\" ((\"\"[a-zA-Z0-9_]+)+\")?) | " + // Double quoted identifiers
+					"(`[a-zA-Z0-9_]+` ((``[a-zA-Z0-9_]+)+`)?) | " + // MySQL quoted identifiers
 					"(\\[[a-zA-Z0-9_\\s]+\\])" + // MSSQL quoted identifiers
 				")"
 			);

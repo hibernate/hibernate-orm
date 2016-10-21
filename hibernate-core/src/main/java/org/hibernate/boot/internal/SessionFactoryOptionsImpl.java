@@ -8,7 +8,6 @@ package org.hibernate.boot.internal;
 
 import java.util.Map;
 
-import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -90,6 +89,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean strictJpaQueryLanguageCompliance;
 	private final boolean namedQueryStartupCheckingEnabled;
 	private final boolean procedureParameterNullPassingEnabled;
+	private final boolean collectionJoinSubqueryRewriteEnabled;
 
 	// Caching
 	private final boolean secondLevelCacheEnabled;
@@ -161,6 +161,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.strictJpaQueryLanguageCompliance = state.isStrictJpaQueryLanguageCompliance();
 		this.namedQueryStartupCheckingEnabled = state.isNamedQueryStartupCheckingEnabled();
 		this.procedureParameterNullPassingEnabled = state.isProcedureParameterNullPassingEnabled();
+		this.collectionJoinSubqueryRewriteEnabled = state.isCollectionJoinSubqueryRewriteEnabled();
 
 		this.secondLevelCacheEnabled = state.isSecondLevelCacheEnabled();
 		this.queryCacheEnabled = state.isQueryCacheEnabled();
@@ -341,6 +342,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isProcedureParameterNullPassingEnabled() {
 		return procedureParameterNullPassingEnabled;
+	}
+
+	@Override
+	public boolean isCollectionJoinSubqueryRewriteEnabled() {
+		return collectionJoinSubqueryRewriteEnabled;
 	}
 
 	@Override

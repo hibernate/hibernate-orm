@@ -204,6 +204,10 @@ public abstract class AbstractDelegatingSessionFactoryOptions implements Session
 	}
 
 	@Override
+	public boolean isCollectionJoinSubqueryRewriteEnabled() {
+		return delegate.isCollectionJoinSubqueryRewriteEnabled();
+	}
+
 	public boolean isSecondLevelCacheEnabled() {
 		return delegate.isSecondLevelCacheEnabled();
 	}

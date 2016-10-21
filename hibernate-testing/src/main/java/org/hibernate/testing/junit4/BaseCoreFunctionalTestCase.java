@@ -9,10 +9,7 @@ package org.hibernate.testing.junit4;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
@@ -97,8 +94,17 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	@BeforeClassOnce
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected void buildSessionFactory() {
+		buildSessionFactory( emptyPropertyMap() );
+	}
+
+	protected void buildSessionFactory(Map<String, String> properties) {
 		// for now, build the configuration to get all the property settings
 		configuration = constructAndConfigureConfiguration();
+		if ( properties != null && !properties.isEmpty() ) {
+			for ( Map.Entry<String, String> entry : properties.entrySet() ) {
+				configuration.setProperty( entry.getKey(), entry.getValue() );
+			}
+		}
 		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
 		serviceRegistry = buildServiceRegistry( bootRegistry, configuration );
 		// this is done here because Configuration does not currently support 4.0 xsd
@@ -108,6 +114,15 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void rebuildSessionFactory() {
+		rebuildSessionFactory( emptyPropertyMap() );
+	}
+
+	private Map<String,String> emptyPropertyMap() {
+		Map<String, String> map = Collections.emptyMap();
+		return map;
+	}
+
+	protected void rebuildSessionFactory(Map<String, String> properties) {
 		if ( sessionFactory == null ) {
 			return;
 		}
@@ -121,7 +136,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		catch (Exception ignore) {
 		}
 
-		buildSessionFactory();
+		buildSessionFactory( properties );
 	}
 
 	protected Configuration buildConfiguration() {

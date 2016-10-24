@@ -8,8 +8,6 @@ package org.hibernate.test.bytecode.enhancement;
 
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 
-import org.hibernate.test.bytecode.enhancement.detached.DetachedGetIdentifierTestTask;
-import org.hibernate.test.bytecode.enhancement.cascade.CascadeWithFkConstraintTestTask;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -21,10 +19,13 @@ import org.hibernate.test.bytecode.enhancement.access.MixedAccessTestTask;
 import org.hibernate.test.bytecode.enhancement.association.InheritedAttributeAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.association.ManyToManyAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.association.OneToManyAssociationTestTask;
+import org.hibernate.test.bytecode.enhancement.association.OneToManyBidirectionalAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.association.OneToOneAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.basic.BasicEnhancementTestTask;
 import org.hibernate.test.bytecode.enhancement.basic.HHH9529TestTask;
 import org.hibernate.test.bytecode.enhancement.cascade.CascadeDeleteTestTask;
+import org.hibernate.test.bytecode.enhancement.cascade.CascadeWithFkConstraintTestTask;
+import org.hibernate.test.bytecode.enhancement.detached.DetachedGetIdentifierTestTask;
 import org.hibernate.test.bytecode.enhancement.dirty.DirtyTrackingCollectionTestTask;
 import org.hibernate.test.bytecode.enhancement.dirty.DirtyTrackingTestTask;
 import org.hibernate.test.bytecode.enhancement.eviction.EvictionTestTask;
@@ -109,6 +110,12 @@ public class EnhancerTest extends BaseUnitTestCase {
 		EnhancerTestUtils.runEnhancerTestTask( OneToManyAssociationTestTask.class );
 		EnhancerTestUtils.runEnhancerTestTask( ManyToManyAssociationTestTask.class );
 		EnhancerTestUtils.runEnhancerTestTask( InheritedAttributeAssociationTestTask.class );
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-11196" )
+	public void testHHH11196() {
+		EnhancerTestUtils.runEnhancerTestTask( OneToManyBidirectionalAssociationTestTask.class );
 	}
 
 	@Test

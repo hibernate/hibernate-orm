@@ -14,6 +14,9 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.Target;
 
@@ -28,7 +31,8 @@ import static org.junit.Assert.assertThat;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10373")
-public class IdBagSequenceTest {
+@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
+public class IdBagSequenceTest extends BaseUnitTestCase {
 
 	@Test
 	public void testIdBagSequenceGeneratorIsCreated() throws Exception {

@@ -73,6 +73,7 @@ import org.hibernate.TypeHelper;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.criterion.NaturalIdentifier;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -1264,7 +1265,7 @@ public final class SessionImpl
 
 	private void fireRefresh(RefreshEvent event) {
 		try {
-			if ( getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+			if ( !getSessionFactory().getSessionFactoryOptions().isAllowDetachedInstanceRefresh()  ) {
 				if ( !contains( event.getObject() ) ) {
 					throw new IllegalArgumentException( "Entity not managed" );
 				}

@@ -30,6 +30,9 @@ public interface SessionFactoryBuilderImplementor extends SessionFactoryBuilder 
 
 	void disableJtaTransactionAccess();
 
+	default void disableDetachedInstanceRefresh() {
+	}
+
 	/**
 	 * Build the SessionFactoryOptions that will ultimately be passed to SessionFactoryImpl constructor.
 	 *

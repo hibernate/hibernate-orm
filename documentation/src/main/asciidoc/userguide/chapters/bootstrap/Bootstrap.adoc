@@ -82,6 +82,42 @@ http://docs.oracle.com/javaee/7/api/javax/persistence/spi/PersistenceUnitInfo.ht
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/HibernatePersistenceProvider.html#createContainerEntityManagerFactory-javax.persistence.spi.PersistenceUnitInfo-java.util.Map-[HibernatePersistenceProvider.html#createContainerEntityManagerFactory].
 ====
 
+[[bootstrap-jpa-xml-files]]
+==== Externalizing XML mapping files
+
+JPA offers two mapping options:
+
+- annotations
+- XML mappings
+
+Although annotations are much more common, there are projects were XML mappings are preferred.
+You can even mix annotations and XML mappings so that you can override annotation mappings with XML configurations that can be easily changed without recompiling the project source code.
+This is possible because if there are two conflicting mappings, the XML mappings takes precedence over its annotation counterpart.
+
+The JPA specifications requires the XML mappings to be located on the class path:
+
+[quote, Section 8.2.1.6.2 of the JPA 2.1 Specification]
+____
+An object/relational mapping XML file named `orm.xml` may be specified in the `META-INF` directory in the root of the persistence unit or in the `META-INF` directory of any jar file referenced by the `persistence.xml`.
+
+Alternatively, or in addition, one or more mapping files may be referenced by the mapping-file elements of the persistence-unit element. These mapping files may be present anywhere on the class path.
+____
+
+Therefore, the mapping files can reside in the application jar artifacts, or they can be stored in an external folder location with the cogitation that that location be included in the class path.
+
+Hibernate is more lenient in this regard so you can use any external location even outside of the application configured class path.
+
+[[bootstrap-jpa-compliant-persistence-xml-external-mappings-example]]
+.META-INF/persistence.xml configuration file for external XML mappings
+====
+[source, JAVA, indent=0]
+----
+include::{extrasdir}/persistence-external.xml[]
+----
+====
+
+In the `persistence.xml` configuration file above, the `orm.xml` XML file containing all JPA entity mappings is located in the `/etc/opt/app/mappings/` folder.
+
 [[bootstrap-native]]
 === Native Bootstrapping
 

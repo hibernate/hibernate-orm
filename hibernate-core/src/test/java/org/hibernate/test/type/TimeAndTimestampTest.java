@@ -8,6 +8,7 @@ package org.hibernate.test.type;
 
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.concurrent.TimeUnit;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -43,8 +44,8 @@ public class TimeAndTimestampTest extends BaseNonConfigCoreFunctionalTestCase {
 		} );
 		doInHibernate( this::sessionFactory, session -> {
 			Event event = session.find( Event.class, 1L );
-			assertEquals(123, event.timeValue.getTime());
-			assertEquals(456, event.timestampValue.getTime());
+			assertEquals(123, event.timeValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
+			assertEquals(456, event.timestampValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
 		} );
 	}
 

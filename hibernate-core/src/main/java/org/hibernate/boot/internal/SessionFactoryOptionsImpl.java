@@ -53,6 +53,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean flushBeforeCompletionEnabled;
 	private final boolean autoCloseSessionEnabled;
 	private boolean jtaTransactionAccessEnabled;
+	private boolean allowDetachedInstanceRefresh;
 
 	private boolean allowOutOfTransactionUpdateOperations;
 	private boolean releaseResourcesOnCloseEnabled;
@@ -132,6 +133,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 		this.jpaBootstrap = state.isJpaBootstrap();
 		this.jtaTransactionAccessEnabled = state.isJtaTransactionAccessEnabled();
+		this.allowDetachedInstanceRefresh = state.isAllowDetachedInstanceRefresh();
 		this.allowOutOfTransactionUpdateOperations = state.isAllowOutOfTransactionUpdateOperations();
 		this.sessionFactoryName = state.getSessionFactoryName();
 		this.sessionFactoryNameAlsoJndiName = state.isSessionFactoryNameAlsoJndiName();
@@ -213,6 +215,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isJtaTransactionAccessEnabled() {
 		return jtaTransactionAccessEnabled;
+	}
+
+	@Override
+	public boolean isAllowDetachedInstanceRefresh() {
+		return allowDetachedInstanceRefresh;
 	}
 
 	@Override

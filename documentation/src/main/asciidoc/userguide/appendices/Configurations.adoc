@@ -772,5 +772,7 @@ false:: does not allow
 
 |`hibernate.collection_join_subquery`| `true` (default value) or `false` | Setting which indicates whether or not the new JOINS over collection tables should be rewritten to subqueries.
 
+|`hibernate.allow_detached_instance_refresh`| `false` (default value when not JPA bootstrapped) or `false` (default value when JPA bootstrapped) | Setting that allows to call `javax.persistence.EntityManager#refresh()` (or `org.hibernate.Session#refresh()` when the `org.hibernate.Session` is obtained from a `javax.persistence.EntityManager`) on a detached instance.
+
 |=====================================================================================================================================================================================================================================================
 

@@ -901,6 +901,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			( ( SessionFactoryBuilderImplementor ) sfBuilder ).disableJtaTransactionAccess();
 		}
 
+		final boolean allowDetachedInstanceRefresh = readBooleanConfigurationValue( org.hibernate.cfg.AvailableSettings.ALLOW_DETACHED_INSTANCE_REFRESH );
+		if(!allowDetachedInstanceRefresh ){
+			( ( SessionFactoryBuilderImplementor ) sfBuilder ).disableDetachedInstanceRefresh();
+		}
+
 		// Locate and apply any requested SessionFactoryObserver
 		final Object sessionFactoryObserverSetting = configurationValues.remove( AvailableSettings.SESSION_FACTORY_OBSERVER );
 		if ( sessionFactoryObserverSetting != null ) {

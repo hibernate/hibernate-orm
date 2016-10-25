@@ -103,7 +103,6 @@ import static org.hibernate.internal.HEMLogging.messageLogger;
 import static org.hibernate.jpa.AvailableSettings.CFG_FILE;
 import static org.hibernate.jpa.AvailableSettings.CLASS_CACHE_PREFIX;
 import static org.hibernate.jpa.AvailableSettings.COLLECTION_CACHE_PREFIX;
-import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
 import static org.hibernate.jpa.AvailableSettings.PERSISTENCE_UNIT_NAME;
 
 /**
@@ -899,6 +898,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		final boolean jtaTransactionAccessEnabled = readBooleanConfigurationValue( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS );
 		if ( !jtaTransactionAccessEnabled ) {
 			( ( SessionFactoryBuilderImplementor ) sfBuilder ).disableJtaTransactionAccess();
+		}
+
+		final boolean allowRefreshDetachedEntity = readBooleanConfigurationValue( org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY );
+		if ( !allowRefreshDetachedEntity ) {
+			( (SessionFactoryBuilderImplementor) sfBuilder ).disableRefreshDetachedEntity();
 		}
 
 		// Locate and apply any requested SessionFactoryObserver

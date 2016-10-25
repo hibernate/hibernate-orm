@@ -451,6 +451,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public void disableRefreshDetachedEntity() {
+		this.options.allowRefreshDetachedEntity = false;
+	}
+
+	@Override
 	public void disableJtaTransactionAccess() {
 		this.options.jtaTransactionAccessEnabled = false;
 	}
@@ -482,6 +487,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean jtaTransactionAccessEnabled;
 		private boolean allowOutOfTransactionUpdateOperations;
 		private boolean releaseResourcesOnCloseEnabled;
+		private boolean allowRefreshDetachedEntity;
 
 		// (JTA) transaction handling
 		private boolean jtaTrackByThread;
@@ -577,6 +583,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			);
 			this.jtaTransactionAccessEnabled = cfgService.getSetting(
 					ALLOW_JTA_TRANSACTION_ACCESS,
+					BOOLEAN,
+					true
+			);
+
+			this.allowRefreshDetachedEntity = cfgService.getSetting(
+					ALLOW_REFRESH_DETACHED_ENTITY,
 					BOOLEAN,
 					true
 			);
@@ -869,6 +881,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		@Override
 		public boolean isJtaTransactionAccessEnabled() {
 			return jtaTransactionAccessEnabled;
+		}
+
+		public boolean isAllowRefreshDetachedEntity() {
+			return allowRefreshDetachedEntity;
 		}
 
 		public boolean isAllowOutOfTransactionUpdateOperations() {
@@ -1179,6 +1195,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public boolean isJtaTransactionAccessEnabled() {
 		return options.isJtaTransactionAccessEnabled();
+	}
+
+	public boolean isAllowRefreshDetachedEntity() {
+		return options.isAllowRefreshDetachedEntity();
 	}
 
 	public boolean isAllowOutOfTransactionUpdateOperations() {

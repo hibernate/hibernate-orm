@@ -49,6 +49,8 @@ public interface SessionFactoryOptionsState {
 
 	boolean isJtaTransactionAccessEnabled();
 
+	boolean isAllowRefreshDetachedEntity();
+
 	boolean isAllowOutOfTransactionUpdateOperations();
 
 	boolean isReleaseResourcesOnCloseEnabled();

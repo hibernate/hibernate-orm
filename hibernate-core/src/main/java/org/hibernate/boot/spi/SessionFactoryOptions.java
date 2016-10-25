@@ -61,6 +61,10 @@ public interface SessionFactoryOptions {
 
 	boolean isJtaTransactionAccessEnabled();
 
+	default boolean isAllowRefreshDetachedEntity() {
+		return false;
+	}
+
 	/**
 	 * The name to be used for the SessionFactory.  This is use both in:<ul>
 	 *     <li>in-VM serialization</li>

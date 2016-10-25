@@ -1558,4 +1558,18 @@ public interface AvailableSettings {
 	 * @since 5.2
 	 */
 	String COLLECTION_JOIN_SUBQUERY = "hibernate.collection_join_subquery";
+
+	/**
+	 * Setting that allows to call {@link javax.persistence.EntityManager#refresh(Object)}	 *
+	 * (or {@link org.hibernate.Session#refresh(Object)} on a detached entity instance when the {@link org.hibernate.Session} is obtained from
+	 * a JPA {@link javax.persistence.EntityManager}).
+	 * <p>
+	 * <p/>
+	 * Values are {@code true} permits the refresh, {@code false} does not permit the detached instance refresh and an {@link IllegalArgumentException} is thrown.
+	 * <p/>
+	 * The default value is {@code false} when the Session is bootstrapped via JPA {@link javax.persistence.EntityManagerFactory}, otherwise is {@code true}
+	 *
+	 * @since 5.2
+	 */
+	String ALLOW_REFRESH_DETACHED_ENTITY = "hibernate.allow_refresh_detached_entity";
 }

@@ -285,6 +285,21 @@ However, please note that Hibernate has the capability to handle this automatica
 See the discussion of non-identifier <<chapters/domain/basic_types.adoc#mapping-generated,generated attributes>>.
 ====
 
+[IMPORTANT]
+====
+Traditionally, Hibernate has been allowing detached entities to be refreshed.
+Unfortunately, JPA prohibits this practice and specifies that an `IllegalArgumentException` should be thrown instead.
+
+For this reason, when bootstrapping the Hibernate `SessionFactory` using the native API, the legacy detached entity refresh behavior is going to be preserved.
+On the other hand, when bootstrapping Hibernate through JPA `EntityManagerFactory` building process, detached entities are not allowed to be refreshed by default.
+
+However, this default behavior can be overwritten through the `hibernate.allow_refresh_detached_entity` configuration property.
+If this property is explicitly set to `true`, then you can refresh detached entities even when using the JPA bootstraps mechanism, therefore bypassing the JPA specification restriction.
+
+For more about the `hibernate.allow_refresh_detached_entity` configuration property,
+check out the <<appendices/Configurations.adoc#misc,Configurations>> section as well.
+====
+
 [[pc-detach]]
 === Working with detached data
 

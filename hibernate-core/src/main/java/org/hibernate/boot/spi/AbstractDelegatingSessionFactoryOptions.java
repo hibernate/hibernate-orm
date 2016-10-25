@@ -60,6 +60,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isAllowRefreshDetachedEntity() {
+		return delegate.isAllowRefreshDetachedEntity();
+	}
+
+	@Override
 	public Object getBeanManagerReference() {
 		return delegate.getBeanManagerReference();
 	}

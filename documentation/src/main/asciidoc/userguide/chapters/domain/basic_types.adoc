@@ -1136,7 +1136,7 @@ include::{extrasdir}/basic/basic-auto-quoting-persistence-example.sql[indent=0]
 
 As you can see, both the table name and all the column have been quoted.
 
-For more about quoting-related configuration properties, checkout the <<appendices/Configurations.adoc#configurations-mapping,Mapping configurations>> section as well.
+For more about quoting-related configuration properties, check out the <<appendices/Configurations.adoc#configurations-mapping,Mapping configurations>> section as well.
 
 [[mapping-generated]]
 ==== Generated properties

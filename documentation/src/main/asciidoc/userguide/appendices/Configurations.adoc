@@ -773,6 +773,23 @@ false:: does not allow
 |`hibernate.collection_join_subquery`| `true` (default value) or `false` | Setting which indicates whether or not the new JOINS over collection tables should be rewritten to subqueries.
 
 |`hibernate.allow_refresh_detached_entity`| `true` (default value when using Hibernate native bootstrapping) or `false` (default value when using JPA bootstrapping) | Setting that allows to call `javax.persistence.EntityManager#refresh()` or `org.hibernate.Session#refresh()` on a detached instance even when the `org.hibernate.Session` is obtained from a JPA `javax.persistence.EntityManager`.
+|`hibernate.event.merge.entity_copy_observer`| `disallow` (default value), `allow`, `log` (testing purpose only) or fully-qualified class name a|
+
+Setting that specifies how Hibernate will respond when multiple representations of the same persistent entity ("entity copy") is detected while merging.
+
+The possible values are:
+
+disallow (the default):: throws `IllegalStateException` if an entity copy is detected
+allow:: performs the merge operation on each entity copy that is detected
+log:: (provided for testing only) performs the merge operation on each entity copy that is detected and logs information about the entity copies.
+This setting requires DEBUG logging be enabled for `org.hibernate.event.internal.EntityCopyAllowedLoggedObserver`.
+
+In addition, the application may customize the behavior by providing an implementation of `org.hibernate.event.spi.EntityCopyObserver` and setting `hibernate.event.merge.entity_copy_observer` to the class name.
+When this property is set to `allow` or `log`, Hibernate will merge each entity copy detected while cascading the merge operation.
+In the process of merging each entity copy, Hibernate will cascade the merge operation from each entity copy to its associations with `cascade=CascadeType.MERGE` or `CascadeType.ALL`.
+The entity state resulting from merging an entity copy will be overwritten when another entity copy is merged.
+
+For more details, check out the <<chapters/pc/PersistenceContext.adoc#pc-merge-gotchas,Merge gotchas>> section.
 
 |=====================================================================================================================================================================================================================================================
 

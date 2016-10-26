@@ -15,6 +15,7 @@ import org.hibernate.ObjectDeletedException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -80,7 +81,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			final ConfigurationService configurationService
 					= serviceRegistry.getService( ConfigurationService.class );
 			entityCopyObserverStrategy = configurationService.getSetting(
-					"hibernate.event.merge.entity_copy_observer",
+					AvailableSettings.MERGE_ENTITY_COPY_OBSERVER,
 					new ConfigurationService.Converter<String>() {
 						@Override
 						public String convert(Object value) {

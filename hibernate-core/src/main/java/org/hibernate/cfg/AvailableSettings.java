@@ -1560,8 +1560,8 @@ public interface AvailableSettings {
 	String COLLECTION_JOIN_SUBQUERY = "hibernate.collection_join_subquery";
 
 	/**
-	 * Setting that allows to call {@link javax.persistence.EntityManager#refresh(Object)}	 *
-	 * (or {@link org.hibernate.Session#refresh(Object)} on a detached entity instance when the {@link org.hibernate.Session} is obtained from
+	 * Setting that allows to call {@link javax.persistence.EntityManager#refresh(Object)}
+	 * or {@link org.hibernate.Session#refresh(Object)} on a detached entity instance when the {@link org.hibernate.Session} is obtained from
 	 * a JPA {@link javax.persistence.EntityManager}).
 	 * <p>
 	 * <p/>
@@ -1572,4 +1572,32 @@ public interface AvailableSettings {
 	 * @since 5.2
 	 */
 	String ALLOW_REFRESH_DETACHED_ENTITY = "hibernate.allow_refresh_detached_entity";
+
+	/**
+	 * Setting that specifies how Hibernate will respond when multiple representations of the same persistent entity ("entity copy") is detected while merging.
+	 * <p/>
+	 * The possible values are:
+	 *
+	 * <ul>
+	 *     <li>disallow (the default): throws {@link java.lang.IllegalStateException} if an entity copy is detected</li>
+	 *     <li>allow: performs the merge operation on each entity copy that is detected</li>
+	 *     <li>log: (provided for testing only) performs the merge operation on each entity copy that is detected and logs information about the entity copies.
+	 *     This setting requires DEBUG logging be enabled for {@link org.hibernate.event.internal.EntityCopyAllowedLoggedObserver}.
+	 *     </li>
+	 * </ul>
+	 *
+	 * <p/>
+	 * In addition, the application may customize the behavior by providing an implementation of {@link org.hibernate.event.spi.EntityCopyObserver} and setting {@code hibernate.event.merge.entity_copy_observer} to the class name.
+	 * When this property is set to {@code allow} or {@code log}, Hibernate will merge each entity copy detected while cascading the merge operation.
+	 * In the process of merging each entity copy, Hibernate will cascade the merge operation from each entity copy to its associations with {@code CascadeType.MERGE} or {@code CascadeType.ALL}.
+	 * The entity state resulting from merging an entity copy will be overwritten when another entity copy is merged.
+	 *
+	 * @since 4.3
+	 */
+	String MERGE_ENTITY_COPY_OBSERVER = "hibernate.event.merge.entity_copy_observer";
+
+
+
+
+
 }

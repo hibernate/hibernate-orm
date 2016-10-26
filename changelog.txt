@@ -3,6 +3,54 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.2.4.Final (October 26, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/25400
+
+** Bug
+    * [HHH-8512] - Hibernate documentation is not clear what Java/JDBC version is required
+    * [HHH-9864] - foreign key violation with order_inserts=true and batches with mixed subclass entities
+    * [HHH-11012] - Hibernate Spatial Geometry Not Serializable
+    * [HHH-11050] - Gradle Enhancement Task RuntimeException: class is frozen
+    * [HHH-11087] - MySQL56SpatialDialect does not register geometry types causing Geometry types are not correctly deserialized
+    * [HHH-11107] - Audit table schema generation creates foreign key constraint to Entity table for EmbeddedId containing ManyToOne
+    * [HHH-11145] - SQLServer2005LimitHandler creates invalid query when quoted column uses keywords.
+    * [HHH-11149] - Update plugin parameters for maven enhancer plugin
+    * [HHH-11157] - Invalid identifiers generated in org.hibernate.engine.internal.JoinSequence
+    * [HHH-11159] - JPA CriteriaUpdate - NullLiteral causes IllegalArgumentException: Could not convert java type to Hibernate type
+    * [HHH-11166] - JPA & JTA - java.lang.IllegalStateException: Session/EntityManager is closed when EntityManager is closed with an active Transaction
+    * [HHH-11171] - Java 8 time types fail Externalization
+    * [HHH-11179] - NullPointerException on lazy load of non-existed entity outside transaction
+    * [HHH-11182] - HQL subquery with constraint property in superclass does not join superclass table
+    * [HHH-11184] - SessionFactoryDelegatingImpl.registerNamedSQLQueryDefinition call wrong delegate method
+    * [HHH-11188] - SessionImpl.refresh() throws IllegalArgumentException, "Entity not managed" for detached instances when JPA bootstrapped
+    * [HHH-11203] - UniqueConstraintGenerationTest fails on db2
+
+
+** New Feature
+    * [HHH-3771] - Best practice for equals/hashCode implementation
+
+** Task
+    * [HHH-5152] - Update Configuration chapter (chapter 3) to reflect Hibernate Annotations
+    * [HHH-7010] - Document mapping annotations
+    * [HHH-9216] - Add documentation about merging multiple detached representations of the same entity
+    * [HHH-10243] - document package registration for Hibernate 5
+    * [HHH-11105] - Update Ehcache to 2.10.3
+
+** Improvement
+    * [HHH-5037] - Improve documentation for immutable/read-only entity and immutable collection functionality
+    * [HHH-10489] - DB2400Dialect could use the same LimitHandler as DB2Dialect
+    * [HHH-11066] - Documentation regarding the reason @Filter is not supported with @Cache for collections
+    * [HHH-11127] - Confused batch processing doc example
+    * [HHH-11142] - Document supported use/implications of @Cache / @Cacheable
+    * [HHH-11148] - Migrate HikariCP from Java 1.6 to Java 1.8
+    * [HHH-11151] - Update Getting Started guide to Hibernate 5.2
+    * [HHH-11174] - Document that XML file mappings can reside outside of JAR
+    * [HHH-11175] - Remove the Cartesian Product note from JOINED inheritance
+    * [HHH-11177] - Duplicate queries during startup
+    * [HHH-11189] - Remove all links to external blog posts from User Guide
+
+
 Changes in 5.2.3.Final (September 30, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/24650

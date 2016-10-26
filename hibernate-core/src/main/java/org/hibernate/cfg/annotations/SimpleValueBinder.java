@@ -281,7 +281,8 @@ public class SimpleValueBinder {
 				type = StringNVarcharType.INSTANCE.getName();
 				explicitType = type;
 			}
-			else if ( buildingContext.getBuildingOptions().getReflectionManager().equals( returnedClassOrElement, Character.class ) ) {
+			else if ( buildingContext.getBuildingOptions().getReflectionManager().equals( returnedClassOrElement, Character.class ) ||
+					buildingContext.getBuildingOptions().getReflectionManager().equals( returnedClassOrElement, char.class ) ) {
 				if ( isArray ) {
 					// nvarchar
 					type = StringNVarcharType.INSTANCE.getName();

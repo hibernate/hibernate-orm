@@ -676,6 +676,28 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 
 	}
 
+	@Test
+	public void test_extent_on_jts() throws SQLException {
+		extent( JTS );
+	}
+
+	@Test
+	public void test_extent_on_geolatte() throws SQLException {
+		extent( GEOLATTE );
+	}
+
+	public void extent(String pckg) throws SQLException {
+		if ( !isSupportedByDialect( SpatialFunction.extent ) ) {
+			return;
+		}
+		// here we just check if we get a result, and can read it
+		String hql = format(
+				"SELECT id, extent(geom) from org.hibernate.spatial.integration.%s.GeomEntity group by id", pckg
+		);
+		Map<Integer, Object> hsreceived = new HashMap<Integer, Object>();
+		doInSession( hql, hsreceived, new HashMap<String, Object>() );
+	}
+
 	public <T> void retrieveHQLResultsAndCompare(Map<Integer, T> dbexpected, String hql, String geometryType) {
 		retrieveHQLResultsAndCompare( dbexpected, hql, null, geometryType );
 	}

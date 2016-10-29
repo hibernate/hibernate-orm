@@ -7,10 +7,12 @@
 package org.hibernate.spatial.dialect.postgis;
 
 
+import java.util.List;
+
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
-
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.JTSGeometryType;
@@ -19,6 +21,7 @@ import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
 
 /**
  * A Dialect for Postgresql with support for the Postgis spatial types, functions and operators (release 1.3 or higher)
@@ -63,138 +66,138 @@ public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialec
 		// it occurs in the spatial dialect
 		registerFunction(
 				"dimension", new StandardSQLFunction(
-				"st_dimension",
-				StandardBasicTypes.INTEGER
-		)
+						"st_dimension",
+						StandardBasicTypes.INTEGER
+				)
 		);
 		registerFunction(
 				"geometrytype", new StandardSQLFunction(
-				"st_geometrytype", StandardBasicTypes.STRING
-		)
+						"st_geometrytype", StandardBasicTypes.STRING
+				)
 		);
 		registerFunction(
 				"srid", new StandardSQLFunction(
-				"st_srid",
-				StandardBasicTypes.INTEGER
-		)
+						"st_srid",
+						StandardBasicTypes.INTEGER
+				)
 		);
 		registerFunction(
 				"envelope", new StandardSQLFunction(
-				"st_envelope"
-		)
+						"st_envelope"
+				)
 		);
 		registerFunction(
 				"astext", new StandardSQLFunction(
-				"st_astext",
-				StandardBasicTypes.STRING
-		)
+						"st_astext",
+						StandardBasicTypes.STRING
+				)
 		);
 		registerFunction(
 				"asbinary", new StandardSQLFunction(
-				"st_asbinary",
-				StandardBasicTypes.BINARY
-		)
+						"st_asbinary",
+						StandardBasicTypes.BINARY
+				)
 		);
 		registerFunction(
 				"isempty", new StandardSQLFunction(
-				"st_isempty",
-				StandardBasicTypes.BOOLEAN
-		)
+						"st_isempty",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"issimple", new StandardSQLFunction(
-				"st_issimple",
-				StandardBasicTypes.BOOLEAN
-		)
+						"st_issimple",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"boundary", new StandardSQLFunction(
-				"st_boundary"
-		)
+						"st_boundary"
+				)
 		);
 
 		// Register functions for spatial relation constructs
 		registerFunction(
 				"overlaps", new StandardSQLFunction(
-				"st_overlaps",
-				StandardBasicTypes.BOOLEAN
-		)
+						"st_overlaps",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"intersects", new StandardSQLFunction(
-				"st_intersects",
-				StandardBasicTypes.BOOLEAN
-		)
+						"st_intersects",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"equals", new StandardSQLFunction(
-				"st_equals",
-				StandardBasicTypes.BOOLEAN
-		)
+						"st_equals",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"contains", new StandardSQLFunction(
-				"st_contains",
-				StandardBasicTypes.BOOLEAN
-		)
+						"st_contains",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"crosses", new StandardSQLFunction(
-				"st_crosses",
-				StandardBasicTypes.BOOLEAN
-		)
+						"st_crosses",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"disjoint", new StandardSQLFunction(
-				"st_disjoint",
-				StandardBasicTypes.BOOLEAN
-		)
+						"st_disjoint",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"touches", new StandardSQLFunction(
-				"st_touches",
-				StandardBasicTypes.BOOLEAN
-		)
+						"st_touches",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"within", new StandardSQLFunction(
-				"st_within",
-				StandardBasicTypes.BOOLEAN
-		)
+						"st_within",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"relate", new StandardSQLFunction(
-				"st_relate",
-				StandardBasicTypes.BOOLEAN
-		)
+						"st_relate",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 
 		// register the spatial analysis functions
 		registerFunction(
 				"distance", new StandardSQLFunction(
-				"st_distance",
-				StandardBasicTypes.DOUBLE
-		)
+						"st_distance",
+						StandardBasicTypes.DOUBLE
+				)
 		);
 		registerFunction(
 				"buffer", new StandardSQLFunction(
-				"st_buffer"
-		)
+						"st_buffer"
+				)
 		);
 		registerFunction(
 				"convexhull", new StandardSQLFunction(
-				"st_convexhull"
-		)
+						"st_convexhull"
+				)
 		);
 		registerFunction(
 				"difference", new StandardSQLFunction(
-				"st_difference"
-		)
+						"st_difference"
+				)
 		);
 		registerFunction(
 				"intersection", new StandardSQLFunction(
-				"st_intersection"
-		)
+						"st_intersection"
+				)
 		);
 		registerFunction(
 				"symdifference",
@@ -202,28 +205,26 @@ public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialec
 		);
 		registerFunction(
 				"geomunion", new StandardSQLFunction(
-				"st_union"
-		)
+						"st_union"
+				)
 		);
 
 		//register Spatial Aggregate function
 		registerFunction(
-				"extent", new StandardSQLFunction(
-				"extent"
-		)
+				"extent", new ExtentFunction()
 		);
 
 		//other common functions
 		registerFunction(
 				"dwithin", new StandardSQLFunction(
-				"st_dwithin",
-				StandardBasicTypes.BOOLEAN
-		)
+						"st_dwithin",
+						StandardBasicTypes.BOOLEAN
+				)
 		);
 		registerFunction(
 				"transform", new StandardSQLFunction(
-				"st_transform"
-		)
+						"st_transform"
+				)
 		);
 	}
 
@@ -281,7 +282,7 @@ public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialec
 		switch ( aggregation ) {
 			case SpatialAggregate.EXTENT:
 				final StringBuilder stbuf = new StringBuilder();
-				stbuf.append( "extent(" ).append( columnName ).append( ")" );
+				stbuf.append( "st_extent(" ).append( columnName ).append( ")::geometry" );
 				return stbuf.toString();
 			default:
 				throw new IllegalArgumentException(
@@ -298,6 +299,22 @@ public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialec
 
 	@Override
 	public boolean supports(SpatialFunction function) {
-		return ( getFunctions().get( function.toString() ) != null );
+		return (getFunctions().get( function.toString() ) != null);
+	}
+
+	private static class ExtentFunction extends StandardSQLFunction {
+
+		public ExtentFunction() {
+			super( "st_extent" );
+		}
+
+		@Override
+		public String render(
+				Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
+			String rendered = super.render( firstArgumentType, arguments, sessionFactory );
+			//add cast
+			return rendered + "::geometry";
+		}
 	}
 }
+

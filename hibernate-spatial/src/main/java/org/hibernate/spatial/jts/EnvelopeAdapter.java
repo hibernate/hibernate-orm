@@ -12,7 +12,6 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
 
-//TODO -- put into Geolatte?
 /**
  * Converts an {@code Envelope} to a {@code Polygon}
  */

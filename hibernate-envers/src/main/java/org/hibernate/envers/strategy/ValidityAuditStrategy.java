@@ -267,9 +267,15 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			// Handling collection of components.
 			if ( collectionPropertyType.getElementType( sessionFactory ) instanceof ComponentType ) {
 				// Adding restrictions to compare data outside of primary key.
+				// todo: is it necessary that non-primary key attributes be compared?
 				for ( Map.Entry<String, Object> dataEntry : persistentCollectionChangeData.getData().entrySet() ) {
 					if ( !originalIdPropName.equals( dataEntry.getKey() ) ) {
-						qb.getRootParameters().addWhereWithParam( dataEntry.getKey(), true, "=", dataEntry.getValue() );
+						if ( dataEntry.getValue() != null ) {
+							qb.getRootParameters().addWhereWithParam( dataEntry.getKey(), true, "=", dataEntry.getValue() );
+						}
+						else {
+							qb.getRootParameters().addNullRestriction( dataEntry.getKey(), true );
+						}
 					}
 				}
 			}

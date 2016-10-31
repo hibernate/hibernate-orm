@@ -262,6 +262,29 @@ However, please note that Hibernate has the capability to handle this automatica
 See the discussion of non-identifier <<chapters/domain/basic_types.adoc#mapping-generated,generated attributes>>.
 ====
 
+[[pc-refresh-gotchas]]
+==== Refresh gotchas
+
+The `refresh` entity state transition is meant to overwrite the entity attributes according to the info currently contained in the associated database record.
+
+However, you have to be very careful when cascading the refresh action to any transient entity.
+
+For instance, consider the following example:
+
+[[pc-refresh-child-entity-jpa-example]]
+.Refreshing entity state gotcha
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-refresh-child-entity-jpa-example]
+----
+====
+
+In the aforementioned example, an `EntityNotFoundException` is thrown because the `Book` entity is still in a transient state.
+When the refresh action is cascaded from the `Person` entity, Hibernate will not be able to locate the `Book` entity in the database.
+
+For this reason, you should be very careful when mixing the refresh action with transient child entity objects.
+
 [[pc-detach]]
 === Working with detached data
 

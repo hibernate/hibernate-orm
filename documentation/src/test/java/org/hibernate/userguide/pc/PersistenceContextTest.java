@@ -9,7 +9,9 @@ package org.hibernate.userguide.pc;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -28,6 +30,8 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
+import org.jboss.logging.Logger;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -36,6 +40,8 @@ import static org.junit.Assert.assertTrue;
  * @author Vlad Mihalcea
  */
 public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase {
+
+	private static final Logger log = Logger.getLogger( PersistenceContextTest.class );
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -171,6 +177,31 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			assertEquals("JOHN DOE", person.getName() );
 			//end::pc-refresh-jpa-example[]
 		} );
+
+		try {
+			doInJPA( this::entityManagerFactory, entityManager -> {
+				Long personId = _personId;
+
+				//tag::pc-refresh-child-entity-jpa-example[]
+				try {
+					Person person = entityManager.find( Person.class, personId );
+
+					Book book = new Book();
+					book.setId( 100L );
+					book.setTitle( "Hibernate User Guide" );
+					book.setAuthor( person );
+					person.getBooks().add( book );
+
+					entityManager.refresh( person );
+				}
+				catch ( EntityNotFoundException expected ) {
+					log.info( "Beware when cascading the refresh associations to transient entities!" );
+				}
+				//end::pc-refresh-child-entity-jpa-example[]
+			} );
+		}
+		catch ( Exception expected ) {
+		}
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
@@ -335,7 +366,7 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 
 		private String name;
 
-		@OneToMany(mappedBy = "author")
+		@OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
 		private List<Book> books = new ArrayList<>(  );
 
 		public Long getId() {

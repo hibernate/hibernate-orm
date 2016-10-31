@@ -317,4 +317,3 @@ public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialec
 		}
 	}
 }
-

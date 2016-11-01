@@ -16,9 +16,7 @@ import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 
 /**
- *  A Dialect for Postgresql with support for the Postgis spatial types, functions and operators (release 1.3 or higher).
- *
- * This dialect extends the PostgreSQL82Dialect.
+ *  Extends the {@code PostgreSQL82Dialect} to add support for the Postgis spatial types, functions and operators .
  *
  * Created by Karel Maesen, Geovise BVBA on 01/11/16.
  */

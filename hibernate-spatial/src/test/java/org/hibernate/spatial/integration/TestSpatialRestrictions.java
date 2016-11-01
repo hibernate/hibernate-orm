@@ -13,8 +13,6 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
-import org.junit.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -25,6 +23,9 @@ import org.hibernate.spatial.criterion.SpatialRestrictions;
 import org.hibernate.spatial.integration.jts.GeomEntity;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
+
+import org.junit.Test;
+
 import org.hibernate.testing.Skip;
 
 import static junit.framework.Assert.assertEquals;

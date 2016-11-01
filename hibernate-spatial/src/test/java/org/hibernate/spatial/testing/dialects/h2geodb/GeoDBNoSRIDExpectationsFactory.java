@@ -10,14 +10,14 @@
  */
 package org.hibernate.spatial.testing.dialects.h2geodb;
 
-import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.NativeSQLStatement;
-
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 import org.geolatte.geom.ByteBuffer;
 import org.geolatte.geom.codec.Wkb;
 import org.geolatte.geom.jts.JTS;
+
+import org.hibernate.spatial.testing.AbstractExpectationsFactory;
+import org.hibernate.spatial.testing.NativeSQLStatement;
 
 /**
  * A Factory class that generates expected {@link org.hibernate.spatial.testing.NativeSQLStatement}s for GeoDB
@@ -25,8 +25,9 @@ import org.geolatte.geom.jts.JTS;
  * the geometry.
  *
  * @author Jan Boonen, Geodan IT b.v.
+ * @deprecated No longer used
  */
-@Deprecated //Class no longer used. Remove.
+@Deprecated
 public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory {
 
 	public GeoDBNoSRIDExpectationsFactory(GeoDBDataSourceUtils dataSourceUtils) {
@@ -54,7 +55,7 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
 		return createNativeSQLStatement(
 				"select t.id, ST_Buffer(t.geom,?) from GEOMTEST t where ST_SRID(t.geom) = 4326",
-				new Object[] { distance }
+				new Object[] {distance}
 		);
 	}
 
@@ -192,8 +193,9 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeRelateStatement(Geometry geom,
-															 String matrix) {
+	protected NativeSQLStatement createNativeRelateStatement(
+			Geometry geom,
+			String matrix) {
 		throw new UnsupportedOperationException(
 				"Method ST_Relate() is not implemented in the current version of GeoDB."
 		);

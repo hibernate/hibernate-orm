@@ -15,15 +15,15 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.spatial.HSMessageLogger;
-
-import org.jboss.logging.Logger;
-
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
+
+import org.jboss.logging.Logger;
+
+import org.hibernate.spatial.HSMessageLogger;
 
 /**
  * An <code>AbstractExpectationsFactory</code> provides the expected
@@ -754,7 +754,7 @@ public abstract class AbstractExpectationsFactory {
 			polygon.setSRID( getTestSrid() );
 			return polygon;
 		}
-		catch ( ParseException e ) {
+		catch (ParseException e) {
 			throw new RuntimeException( e );
 		}
 	}
@@ -771,7 +771,7 @@ public abstract class AbstractExpectationsFactory {
 			point.setSRID( getTestSrid() );
 			return point;
 		}
-		catch ( ParseException e ) {
+		catch (ParseException e) {
 			throw new RuntimeException( e );
 		}
 	}
@@ -814,7 +814,7 @@ public abstract class AbstractExpectationsFactory {
 						//this code is a hack to deal with Oracle Spatial that returns Blob's for asWKB() function
 						//TODO -- clean up
 						if ( val instanceof Blob ) {
-							val = (T) ( (Blob) val ).getBytes( 1, MAX_BYTE_LEN );
+							val = (T) ((Blob) val).getBytes( 1, MAX_BYTE_LEN );
 						}
 						expected.put( id, val );
 				}
@@ -822,20 +822,26 @@ public abstract class AbstractExpectationsFactory {
 			return expected;
 		}
 		finally {
-			if (results != null) {
+			if ( results != null ) {
 				try {
 					results.close();
-				}catch(SQLException e) {}
+				}
+				catch (SQLException e) {
+				}
 			}
 			if ( preparedStatement != null ) {
 				try {
 					preparedStatement.close();
-				}catch(SQLException e) {}
+				}
+				catch (SQLException e) {
+				}
 			}
 			if ( cn != null ) {
 				try {
 					cn.close();
-				}catch(SQLException e){}
+				}
+				catch (SQLException e) {
+				}
 			}
 		}
 	}

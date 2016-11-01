@@ -43,14 +43,14 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeBoundaryStatement() {
-		return createNativeSQLStatement("select id, ST_Boundary(geom) from GEOMTEST");
+		return createNativeSQLStatement( "select id, ST_Boundary(geom) from GEOMTEST" );
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
 		return createNativeSQLStatement(
 				"select t.id, ST_Buffer(t.geom,?) from GEOMTEST t where ST_SRID(t.geom) = 4326",
-				new Object[] { distance }
+				new Object[] {distance}
 		);
 	}
 
@@ -87,7 +87,7 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeDimensionSQL() {
-		return createNativeSQLStatement("select id, ST_Dimension(geom) from GEOMTEST");
+		return createNativeSQLStatement( "select id, ST_Dimension(geom) from GEOMTEST" );
 	}
 
 	@Override
@@ -277,15 +277,17 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 		  */
 
 	@Override
-	protected NativeSQLStatement createNativeRelateStatement(Geometry geom,
-															 String matrix) {
+	protected NativeSQLStatement createNativeRelateStatement(
+			Geometry geom,
+			String matrix) {
 		String sql = "select t.id, ST_Relate(t.geom, ST_GeomFromText(?, 4326), '" + matrix + "' ) from GEOMTEST t where ST_Relate(t.geom, ST_GeomFromText(?, 4326), '" + matrix + "') = 'true' and ST_SRID(t.geom) = 4326";
-			return createNativeSQLStatementAllWKTParams(sql, geom.toText());
+		return createNativeSQLStatementAllWKTParams( sql, geom.toText() );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDwithinStatement(Point geom,
-															  double distance) {
+	protected NativeSQLStatement createNativeDwithinStatement(
+			Point geom,
+			double distance) {
 		String sql = "select t.id, ST_DWithin(t.geom, ST_GeomFromText(?, 4326), "
 				+ distance
 				+ " ) from GEOMTEST t where st_dwithin(t.geom, ST_GeomFromText(?, 4326), "

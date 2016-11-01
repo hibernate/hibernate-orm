@@ -16,6 +16,7 @@ import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 
 /**
+ *
  * Created by Karel Maesen, Geovise BVBA on 01/11/16.
  */
 public class PostgisPG9Dialect extends PostgreSQL9Dialect implements SpatialDialect {

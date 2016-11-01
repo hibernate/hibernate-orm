@@ -10,20 +10,20 @@ import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 
 /**
- *  Extends the {@code PostgreSQL82Dialect} to add support for the Postgis spatial types, functions and operators .
- *
+ * Extends the {@code PostgreSQL82Dialect} to add support for the Postgis spatial types, functions and operators .
+ * <p>
  * Created by Karel Maesen, Geovise BVBA on 01/11/16.
  */
 public class PostgisPG82Dialect extends PostgreSQL82Dialect implements SpatialDialect {
 
 
-	private PostgisSupport support = new PostgisSupport();
+	transient private PostgisSupport support = new PostgisSupport();
 
 	/**
 	 * Creates an instance
@@ -34,7 +34,7 @@ public class PostgisPG82Dialect extends PostgreSQL82Dialect implements SpatialDi
 				PGGeometryTypeDescriptor.INSTANCE.getSqlType(),
 				"GEOMETRY"
 		);
-		for ( Map.Entry<String, StandardSQLFunction> entry : support.functionsToRegister() ) {
+		for ( Map.Entry<String, SQLFunction> entry : support.functionsToRegister() ) {
 			registerFunction( entry.getKey(), entry.getValue() );
 		}
 	}

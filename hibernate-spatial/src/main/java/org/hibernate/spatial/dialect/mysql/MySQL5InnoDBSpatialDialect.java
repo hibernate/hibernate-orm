@@ -11,7 +11,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.MySQL5InnoDBDialect;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
@@ -36,7 +36,7 @@ public class MySQL5InnoDBSpatialDialect extends MySQL5InnoDBDialect implements S
 				MySQLGeometryTypeDescriptor.INSTANCE.getSqlType(),
 				"GEOMETRY"
 		);
-		for ( Map.Entry<String, StandardSQLFunction> entry : new MySQLSpatialFunctions() ) {
+		for ( Map.Entry<String, SQLFunction> entry : new MySQLSpatialFunctions() ) {
 			registerFunction( entry.getKey(), entry.getValue() );
 		}
 	}

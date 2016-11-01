@@ -6,6 +6,7 @@
  */
 package org.hibernate.spatial.dialect;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -18,15 +19,15 @@ import org.hibernate.dialect.function.StandardSQLFunction;
  *
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
  */
-public abstract class SpatialFunctionsRegistry implements Iterable<Map.Entry<String, StandardSQLFunction>> {
-	protected final Map<String, StandardSQLFunction> functionMap = new HashMap<String, StandardSQLFunction>();
+public abstract class SpatialFunctionsRegistry implements Iterable<Map.Entry<String, SQLFunction>>, Serializable {
+	protected final Map<String, SQLFunction> functionMap = new HashMap<String, SQLFunction>();
 
 	public void put(String name, StandardSQLFunction function ) {
 		this.functionMap.put( name, function );
 	}
 
 	@Override
-	public Iterator<Map.Entry<String, StandardSQLFunction>> iterator() {
+	public Iterator<Map.Entry<String, SQLFunction>> iterator() {
 		return functionMap.entrySet().iterator();
 	}
 

@@ -16,6 +16,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
@@ -48,7 +49,7 @@ public class MySQL56SpatialDialect extends MySQL5Dialect implements SpatialDiale
 				"GEOMETRY"
 		);
 		final MySQLSpatialFunctions functionsToRegister = overrideObjectShapeFunctions( new MySQLSpatialFunctions() );
-		for ( Map.Entry<String, StandardSQLFunction> entry : functionsToRegister ) {
+		for ( Map.Entry<String, SQLFunction> entry : functionsToRegister ) {
 			registerFunction( entry.getKey(), entry.getValue() );
 		}
 	}

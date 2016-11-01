@@ -6,11 +6,8 @@
  */
 package org.hibernate.spatial.dialect.mysql;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -19,113 +16,111 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Karel Maesen, Geovise BVBA
  *
  */
-class MySQLSpatialFunctions implements Iterable<Map.Entry<String, StandardSQLFunction>> {
-
-	private final Map<String, StandardSQLFunction> functionsToRegister = new HashMap<String, StandardSQLFunction>();
+class MySQLSpatialFunctions extends SpatialFunctionsRegistry {
 
 	MySQLSpatialFunctions(){
-		functionsToRegister.put(
+		functionMap.put(
 				"dimension", new StandardSQLFunction(
 				"dimension",
 				StandardBasicTypes.INTEGER
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"geometrytype", new StandardSQLFunction(
 				"geometrytype", StandardBasicTypes.STRING
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"srid", new StandardSQLFunction(
 				"srid",
 				StandardBasicTypes.INTEGER
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"envelope", new StandardSQLFunction(
 				"envelope"
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"astext", new StandardSQLFunction(
 				"astext",
 				StandardBasicTypes.STRING
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"asbinary", new StandardSQLFunction(
 				"asbinary",
 				StandardBasicTypes.BINARY
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"isempty", new StandardSQLFunction(
 				"isempty",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"issimple", new StandardSQLFunction(
 				"issimple",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
-//		functionsToRegister.put(
+//		functionMap.put(
 //				"boundary", new StandardSQLFunction(
 //				"boundary"
 //		)
 //		);
 
 		// Register functions for spatial relation constructs
-		functionsToRegister.put(
+		functionMap.put(
 				"overlaps", new StandardSQLFunction(
 				"overlaps",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"intersects", new StandardSQLFunction(
 				"intersects",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"equals", new StandardSQLFunction(
 				"equals",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"contains", new StandardSQLFunction(
 				"contains",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"crosses", new StandardSQLFunction(
 				"crosses",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"disjoint", new StandardSQLFunction(
 				"disjoint",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"touches", new StandardSQLFunction(
 				"touches",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
-		functionsToRegister.put(
+		functionMap.put(
 				"within", new StandardSQLFunction(
 				"within",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
-//		functionsToRegister.put(
+//		functionMap.put(
 //				"relate", new StandardSQLFunction(
 //				"relate",
 //				StandardBasicTypes.BOOLEAN
@@ -133,50 +128,42 @@ class MySQLSpatialFunctions implements Iterable<Map.Entry<String, StandardSQLFun
 //		);
 //
 //		// register the spatial analysis functions
-//		functionsToRegister.put(
+//		functionMap.put(
 //				"distance", new StandardSQLFunction(
 //				"distance",
 //				StandardBasicTypes.DOUBLE
 //		)
 //		);
-//		functionsToRegister.put(
+//		functionMap.put(
 //				"buffer", new StandardSQLFunction(
 //				"buffer"
 //		)
 //		);
-//		functionsToRegister.put(
+//		functionMap.put(
 //				"convexhull", new StandardSQLFunction(
 //				"convexhull"
 //		)
 //		);
-//		functionsToRegister.put(
+//		functionMap.put(
 //				"difference", new StandardSQLFunction(
 //				"difference"
 //		)
 //		);
-//		functionsToRegister.put(
+//		functionMap.put(
 //				"intersection", new StandardSQLFunction(
 //				"intersection"
 //		)
 //		);
-//		functionsToRegister.put(
+//		functionMap.put(
 //				"symdifference", new StandardSQLFunction(
 //				"symdifference"
 //		)
 //		);
-//		functionsToRegister.put(
+//		functionMap.put(
 //				"geomunion", new StandardSQLFunction(
 //				"union"
 //		)
 //		);
 	}
 
-	public void put(String name, StandardSQLFunction function ) {
-		this.functionsToRegister.put( name, function );
-	}
-
-	@Override
-	public Iterator<Map.Entry<String, StandardSQLFunction>> iterator() {
-		return functionsToRegister.entrySet().iterator();
-	}
 }

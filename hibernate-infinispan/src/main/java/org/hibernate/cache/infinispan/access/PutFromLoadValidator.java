@@ -404,7 +404,7 @@ public class PutFromLoadValidator {
 	 * released the lock. This allows the caller to be certain the putFromLoad will not execute afterQuery this method returns,
 	 * possibly caching stale data. </p>
 	 *
-	 * @return <code>true</code> if the invalidation was successful; <code>false</code> if a problem occured (which the
+	 * @return <code>true</code> if the invalidation was successful; <code>false</code> if a problem occurred (which the
 	 *         caller should treat as an exception condition)
 	 */
 	public boolean beginInvalidatingRegion() {
@@ -539,7 +539,7 @@ public class PutFromLoadValidator {
 	 *
 	 * @param key key identifying data whose pending puts should be invalidated
 	 *
-	 * @return <code>true</code> if the invalidation was successful; <code>false</code> if a problem occured (which the
+	 * @return <code>true</code> if the invalidation was successful; <code>false</code> if a problem occurred (which the
 	 *         caller should treat as an exception condition)
 	 */
 	public boolean beginInvalidatingKey(Object lockOwner, Object key) {

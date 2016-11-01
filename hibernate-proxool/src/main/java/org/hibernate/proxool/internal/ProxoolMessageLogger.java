@@ -66,7 +66,7 @@ public interface ProxoolMessageLogger extends ConnectionPoolingLogger {
 	 *
 	 * @return The message
 	 */
-	@Message(value = "Exception occured when closing the Proxool pool", id = 30006)
+	@Message(value = "Exception occurred when closing the Proxool pool", id = 30006)
 	String exceptionClosingProxoolPool();
 
 	/**

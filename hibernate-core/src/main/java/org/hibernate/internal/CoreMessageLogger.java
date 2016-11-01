@@ -299,7 +299,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void factoryUnboundFromName(String name);
 
 	@LogMessage(level = ERROR)
-	@Message(value = "an assertion failure occured" + " (this may indicate a bug in Hibernate, but is more likely due"
+	@Message(value = "an assertion failure occurred" + " (this may indicate a bug in Hibernate, but is more likely due"
 			+ " to unsafe use of the session): %s", id = 99)
 	void failed(Throwable throwable);
 

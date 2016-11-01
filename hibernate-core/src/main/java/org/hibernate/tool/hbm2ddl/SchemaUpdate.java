@@ -92,9 +92,9 @@ public class SchemaUpdate {
 	}
 
 	/**
-	 * Returns a List of all Exceptions which occured during the export.
+	 * Returns a List of all Exceptions which occurred during the export.
 	 *
-	 * @return A List containing the Exceptions occured during the export
+	 * @return A List containing the Exceptions occurred during the export
 	 */
 	public List getExceptions() {
 		return exceptions;

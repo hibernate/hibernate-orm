@@ -220,7 +220,8 @@ Allowable values include:
 
 By default both HBM, annotations, and JPA XML mappings are scanned.
 
-When using JPA, to disable the automatic scanning of all entity classes, the `exclude-unlisted-classes` `persistence.xml` element must be set to false.
+When using JPA, to disable the automatic scanning of all entity classes, the `exclude-unlisted-classes` `persistence.xml` element must be set to true.
+Therefore, when setting `exclude-unlisted-classes` to true, only the classes that are explicitly declared in the `persistence.xml` configuration files are going to be taken into consideration.
 
 |`hibernate.mapping.precedence` | `hbm,class` (default value)  |
 

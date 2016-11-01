@@ -49,13 +49,18 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	@Override
 	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
 		if ( hasNullable( uniqueKey ) ) {
-			return org.hibernate.mapping.Index.buildSqlDropIndexString(
+			String buildSqlCreateIndexString = org.hibernate.mapping.Index.buildSqlCreateIndexString(
+					dialect,
 					uniqueKey.getName(),
-					metadata.getDatabase().getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-							uniqueKey.getTable().getQualifiedTableName(),
-							metadata.getDatabase().getJdbcEnvironment().getDialect()
-					)
+					uniqueKey.getTable(),
+					uniqueKey.columnIterator(),
+					uniqueKey.getColumnOrderMap(),
+					true,
+					defaultCatalog,
+					defaultSchema
 			);
+			buildSqlCreateIndexString = buildSqlCreateIndexString.concat(" " + "exclude null keys" ); 
+			return buildSqlCreateIndexString;
 		}
 		else {
 			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata );

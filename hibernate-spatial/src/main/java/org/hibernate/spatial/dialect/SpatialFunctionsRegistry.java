@@ -12,17 +12,16 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.StandardSQLFunction;
 
 /**
  * Registers all available spatial functions for a <code>Dialect</code>
- *
+ * <p>
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
  */
 public abstract class SpatialFunctionsRegistry implements Iterable<Map.Entry<String, SQLFunction>>, Serializable {
 	protected final Map<String, SQLFunction> functionMap = new HashMap<String, SQLFunction>();
 
-	public void put(String name, StandardSQLFunction function ) {
+	public void put(String name, SQLFunction function) {
 		this.functionMap.put( name, function );
 	}
 

@@ -25,6 +25,55 @@ crit.setMaxResults(50);
 List cats = crit.list();
 ----
 
+[[criteria-entity-name]]
+=== JPA vs Hibernate entity name
+
+When using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/SharedSessionContract.html#createCriteria-java.lang.String-[`Session#createCriteria(String entityName)` or `StatelessSession#createCriteria(String entityName)`],
+the *entityName* means the fully-qualified name of the underlying entity and not the name denoted by the `name` attribute of the JPA `@Entity` annotation.
+
+Considering you have the following entity:
+
+[source,java]
+----
+@Entity(name = "ApplicationEvent")
+public static class Event {
+
+    @Id
+    private Long id;
+
+    private String name;
+}
+----
+
+If you provide the JPA entity name to a legacy Criteria query:
+
+[source,java]
+----
+List<Event> events =
+    entityManager.unwrap( Session.class )
+.createCriteria( "ApplicationEvent" )
+.list();
+----
+
+Hibernate is going to throw the following `MappingException`:
+
+[source,bash]
+----
+org.hibernate.MappingException: Unknown entity: ApplicationEvent
+----
+
+On the other hand, the Hibernate entity name (the fully qualified class name) works just fine:
+
+[source,java]
+----
+List<Event> events =
+    entityManager.unwrap( Session.class )
+.createCriteria( Event.class.getName() )
+.list();
+----
+
+For more about this topic, check out the https://hibernate.atlassian.net/browse/HHH-2597[HHH-2597] JIRA issue.
+
 [[criteria-narrowing]]
 === Narrowing the result set
 

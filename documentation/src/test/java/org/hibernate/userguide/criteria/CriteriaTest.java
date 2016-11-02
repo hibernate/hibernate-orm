@@ -11,6 +11,8 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -22,6 +24,9 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
+import org.hibernate.Session;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.userguide.model.AddressType;
 import org.hibernate.userguide.model.Call;
@@ -54,7 +59,8 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
             Phone.class,
 			Call.class,
 			CreditCardPayment.class,
-			WireTransferPayment.class
+			WireTransferPayment.class,
+			Event.class
 		};
 	}
 
@@ -393,5 +399,48 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 			//end::criteria-group-by-example[]
 			assertEquals(2, tuples.size());
 		});
+	}
+
+	@Test
+	public void testLegacyCriteriaJpavsHibernateEntityName() {
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Event event1 = new Event();
+			event1.id = 1L;
+			event1.name = "E1";
+			entityManager.persist( event1 );
+
+			Event event2 = new Event();
+			event2.id = 2L;
+			event2.name = "E2";
+			entityManager.persist( event2 );
+
+			List<String> eventNames = entityManager.unwrap( Session.class )
+					.createQuery( "select ae.name from ApplicationEvent ae" )
+					.list();
+
+			try {
+				List<Event> events = entityManager.unwrap( Session.class )
+				.createCriteria( "ApplicationEvent" )
+				.list();
+			}
+			catch ( MappingException expected ) {
+				assertEquals( "Unknown entity: ApplicationEvent", expected.getMessage() );
+			}
+
+			List<Event> events = entityManager.unwrap( Session.class )
+			.createCriteria( Event.class.getName() )
+			.list();
+
+		});
+	}
+
+	@Entity(name = "ApplicationEvent")
+	public static class Event {
+
+		@Id
+		private Long id;
+
+		private String name;
 	}
 }

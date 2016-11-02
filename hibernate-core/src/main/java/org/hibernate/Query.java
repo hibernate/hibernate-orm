@@ -382,7 +382,12 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	/**
 	 * Return the query results as <tt>ScrollableResults</tt>. The
 	 * scrollability of the returned results depends upon JDBC driver
-	 * support for scrollable <tt>ResultSet</tt>s.<br>
+	 * support for scrollable <tt>ResultSet</tt>s.
+	 *
+	 * <p>
+	 *
+	 * You should call {@link ScrollableResults#close()} after processing the <tt>ScrollableResults</tt>
+	 * so that the underlying resources are deallocated right away.
 	 *
 	 * @see ScrollableResults
 	 *
@@ -393,6 +398,11 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	/**
 	 * Return the query results as ScrollableResults. The scrollability of the returned results
 	 * depends upon JDBC driver support for scrollable ResultSets.
+	 *
+	 * <p>
+	 *
+	 * You should call {@link ScrollableResults#close()} after processing the <tt>ScrollableResults</tt>
+	 * so that the underlying resources are deallocated right away.
 	 *
 	 * @param scrollMode The scroll mode
 	 *

@@ -91,6 +91,11 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 * In the initial implementation (5.2) this returns a simple sequential Stream.  The plan
 	 * is to return a a smarter stream in 6.0 leveraging the SQM model.
 	 *
+	 * <p>
+	 *
+	 * You should call {@link java.util.stream.Stream#close()} after processing the stream
+	 * so that the underlying resources are deallocated right away.
+	 *
 	 * @return The results Stream
 	 *
 	 * @since 5.2

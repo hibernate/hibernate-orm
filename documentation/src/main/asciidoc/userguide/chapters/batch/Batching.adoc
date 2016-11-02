@@ -107,7 +107,9 @@ include::{sourcedir}/BatchTest.java[tags=batch-session-scroll-example]
 
 [IMPORTANT]
 ====
-You should always close the `ScrollableResults`, to deallocate the associated `PreparedStatement` and avoid resource leaking.
+If left unclosed by the application, Hibernate will automatically close the underlying resources (e.g. `ResultSet` and `PreparedStatement`) used internally by the `ScrollableResults` when the current transaction is ended (either commit or rollback).
+
+However, it is good practice to close the `ScrollableResults` explicitly.
 ====
 
 ==== StatelessSession

@@ -295,12 +295,81 @@ include::{sourcedir}/HQLTest.java[tags=hql-api-list-example]
 ----
 ====
 
+It is also possible to extract a single result from a `Query`.
+
+[[hql-api-unique-result-example]]
+.Hibernate `uniqueResult()`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-api-unique-result-example]
+----
+====
+
 [NOTE]
 ====
+If the unique result is used often and the attributes upon which it is based are unique, you may want to consider mapping a natural-id and using the natural-id loading API.
+See the <<chapters/domain/natural_id.adoc#naturalid,Natural Ids>> for more information on this topic.
+====
+
+[[hql-api-scroll]]
+==== Query scrolling
+
+Hibernate offers additional, specialized methods for scrolling the query and handling results using a server-side cursor.
+
+`Query#scroll` works in tandem with the JDBC notion of a scrollable `ResultSet`.
+
+The `Query#scroll` method is overloaded:
+
+* Then main form accepts a single argument of type `org.hibernate.ScrollMode` which indicates the type of scrolling to be used.
+See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/ScrollMode.html[Javadocs] for the details on each.
+* The second form takes no argument and will use the `ScrollMode` indicated by `Dialect#defaultScrollMode`.
+
+`Query#scroll` returns a `org.hibernate.ScrollableResults` which wraps the underlying JDBC (scrollable) `ResultSet` and provides access to the results.
+Unlike a typical forward-only `ResultSet`, the `ScrollableResults` allows you to navigate the `ResultSet` in any direction.
+
+[[hql-api-scroll-example]]
+.Scrolling through a `ResultSet` containing entities
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-api-scroll-example]
+----
+====
+
+[IMPORTANT]
+====
+Since this form holds the JDBC `ResultSet` open, the application should indicate when it is done with the `ScrollableResults` by calling its `close()` method (as inherited from `java.io.Closeable`
+so that `ScrollableResults` will work with https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html[try-with-resources] blocks).
+
+If left unclosed by the application, Hibernate will automatically close the underlying resources (e.g. `ResultSet` and `PreparedStatement`) used internally by the `ScrollableResults` when the current transaction is ended (either commit or rollback).
+
+However, it is good practice to close the `ScrollableResults` explicitly.
+====
+
+[NOTE]
+====
+If you plan to use `Query#scroll` with collection fetches it is important that your query explicitly order the results so that the JDBC results contain the related rows sequentially.
+====
+
+Hibernate also supports `Query#iterate`, which is intended for loading entities when it is known that the loaded entries are already stored in the second-level cache.
+The idea behind iterate is that just the matching identifiers will be obtained in the SQL query.
+From these the identifiers are resolved by second-level cache lookup.
+If these second-level cache lookups fail, additional queries will need to be issued against the database.
+
+[NOTE]
+====
+This operation can perform significantly better for loading large numbers of entities that for certain already exist in the second-level cache.
+In cases where many of the entities do not exist in the second-level cache, this operation will almost definitely perform worse.
+====
+
+The `Iterator` returned from `Query#iterate` is actually a specially typed Iterator: `org.hibernate.engine.HibernateIterator`.
+It is specialized to expose a `close()` method (again, inherited from `java.io.Closeable`).
+When you are done with this `Iterator` you should close it, either by casting to `HibernateIterator` or `Closeable`, or by calling https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Hibernate.html#close-java.util.Iterator-[`Hibernate#close(java.util.Iterator)`].
+
 Since 5.2, Hibernate offers support for returning a `Stream` which can be later used to transform the underlying `ResultSet`.
 
 Internally, the `stream()` behaves like a `Query#scroll` and the underlying result is backed by a `ScrollableResults`.
-====
 
 Fetching a projection using the `Query#stream` method can be done as follows:
 
@@ -324,53 +393,10 @@ include::{sourcedir}/HQLTest.java[tags=hql-api-stream-example]
 ----
 ====
 
-It is also possible to extract a single result from a `Query`.
-
-[[hql-api-unique-result-example]]
-.Hibernate `uniqueResult()`
+[IMPORTANT]
 ====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-api-unique-result-example]
-----
+Just like with `ScrollableResults`, you should always close a Hibernate `Stream` either explicitly or using a https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html[try-with-resources] block.
 ====
-
-[NOTE]
-====
-If the unique result is used often and the attributes upon which it is based are unique, you may want to consider mapping a natural-id and using the natural-id loading API.
-See the <<chapters/domain/natural_id.adoc#naturalid,Natural Ids>> for more information on this topic.
-====
-
-Hibernate offers 2 additional, specialized methods for performing the query and handling results.
-`Query#scroll` works in tandem with the JDBC notion of a scrollable `ResultSet`.
-The `scroll` method is overloaded.
-
-* Then main form accepts a single argument of type `org.hibernate.ScrollMode` which indicates the type of scrolling to be used.
-See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/ScrollMode.html[Javadocs] for the details on each.
-* The second form takes no argument and will use the `ScrollMode` indicated by `Dialect#defaultScrollMode`.
-`Query#scroll` returns a `org.hibernate.ScrollableResults` which wraps the underlying JDBC (scrollable) `ResultSet` and provides access to the results.
-Since this form holds the JDBC `ResultSet` open, the application should indicate when it is done with the `ScrollableResults` by calling its `close()` method (as inherited from `java.io.Closeable` so that `ScrollableResults` will work with try-with-resources blocks!).
-If left unclosed by the application, Hibernate will automatically close the `ScrollableResults` when the current transaction completes.
-
-[NOTE]
-====
-If you plan to use `Query#scroll` with collection fetches it is important that your query explicitly order the results so that the JDBC results contain the related rows sequentially.
-====
-
-The last is `Query#iterate`, which is intended for loading entities which the application feels certain will be in the second-level cache.
-The idea behind iterate is that just the matching identifiers will be obtained in the SQL query.
-From these the identifiers are resolved by second-level cache lookup.
-If these second-level cache lookups fail, additional queries will need to be issued against the database.
-
-[NOTE]
-====
-This operation can perform significantly better for loading large numbers of entities that for certain already exist in the second-level cache.
-In cases where many of the entities do not exist in the second-level cache, this operation will almost definitely perform worse.
-====
-
-The `Iterator` returned from `Query#iterate` is actually a specially typed Iterator: `org.hibernate.engine.HibernateIterator`.
-It is specialized to expose a `close()` method (again, inherited from `java.io.Closeable`).
-When you are done with this `Iterator` you should close it, either by casting to `HibernateIterator` or `Closeable`, or by calling https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Hibernate.html#close-java.util.Iterator-[`Hibernate#close(java.util.Iterator)`].
 
 [[hql-case-sensitivity]]
 === Case Sensitivity

@@ -1008,6 +1008,8 @@ NONE:: The implicit optimistic locking mechanism is disabled.
 VERSION:: The implicit optimistic locking mechanism is using a dedicated version column.
 ALL:: The implicit optimistic locking mechanism is using *all* attributes as part of an expanded WHERE clause restriction for the `UPDATE` and `DELETE` SQL statements.
 DIRTY:: The implicit optimistic locking mechanism is using the *dirty* attributes (the attributes that were modified) as part of an expanded WHERE clause restriction for the `UPDATE` and `DELETE` SQL statements.
++
+When using `DIRTY`, you should also add the <<annotations-hibernate-dynamicupdate>> annotation and also <<annotations-hibernate-selectbeforeupdate>> so that detached entities are properly handled as well.
 
 [[annotations-hibernate-orderby]]
 ==== `@OrderBy`

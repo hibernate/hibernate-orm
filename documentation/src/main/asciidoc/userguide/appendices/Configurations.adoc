@@ -636,6 +636,7 @@ Therefore, the `org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy`
 `SKIP`::
 	Does not attempt to create unique constraints on a schema update.
 |`hibernate.hbm2ddl.charset_name` |`Charset.defaultCharset()` |Defines the charset (encoding) used for all input/output schema generation resources. By default, Hibernate uses the default charset given by `Charset.defaultCharset()`. This configuration property allows you to override the default JVM setting so that you can specify which encoding is used when reading and writing schema generation resources (e.g. File, URL).
+|`hibernate.hbm2ddl.halt_on_error` |`true` or `false` (default value) |Whether the schema migration tool should halt on error, therefore terminating the bootstrap process. By default, the `EntityManagerFactory` or `SessionFactory` are created even if the schema migration throws exceptions. To prevent this default behavior, set this property value to `true`.
 
 |===================================================================================================================================================================================================================================
 

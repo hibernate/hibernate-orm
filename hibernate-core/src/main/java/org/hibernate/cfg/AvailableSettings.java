@@ -1332,6 +1332,12 @@ public interface AvailableSettings {
 	 */
 	String HBM2DDL_CHARSET_NAME = "hibernate.hbm2ddl.charset_name";
 
+	/**
+	 * Whether the schema migration tool should halt on error, therefore terminating the bootstrap process.
+	 *
+	 * @since 5.2.4
+	 */
+	String HBM2DDL_HALT_ON_ERROR = "hibernate.hbm2ddl.halt_on_error";
 
 	String JMX_ENABLED = "hibernate.jmx.enabled";
 	String JMX_PLATFORM_SERVER = "hibernate.jmx.usePlatformServer";

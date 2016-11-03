@@ -12,10 +12,12 @@ import java.util.Map;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
+import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.Helper;
 
@@ -56,10 +58,14 @@ public class SchemaManagementToolCoordinator {
 		}
 
 		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
+		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+
+		boolean haltOnError = configService.getSetting( AvailableSettings.HBM2DDL_HALT_ON_ERROR, Boolean.class, false);
 
 		final ExecutionOptions executionOptions = buildExecutionOptions(
 				configurationValues,
-				ExceptionHandlerLoggedImpl.INSTANCE
+				haltOnError ? ExceptionHandlerHaltImpl.INSTANCE :
+						ExceptionHandlerLoggedImpl.INSTANCE
 		);
 
 		performScriptAction( actions.getScriptAction(), metadata, tool, serviceRegistry, executionOptions );

@@ -44,14 +44,16 @@ public class SchemaGenerationTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Override
-	protected void addConfigOptions(Map options) {
+	protected Map buildSettings() {
+		Map settings = super.buildSettings();
 		if ( getDialect().getClass().equals( H2Dialect.class ) ) {
-			options.put(
+			settings.put(
 					AvailableSettings.HBM2DDL_IMPORT_FILES,
 					"schema-generation.sql"
 			);
-			options.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "update" );
+			settings.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "update" );
 		}
+		return settings;
 	}
 
 	@Override

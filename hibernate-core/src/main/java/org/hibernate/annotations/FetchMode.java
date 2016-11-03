@@ -14,7 +14,7 @@ package org.hibernate.annotations;
  */
 public enum FetchMode {
 	/**
-	 * use a select for each individual entity, collection, or join load.
+	 * use a secondary select for each individual entity, collection, or join load.
 	 */
 	SELECT,
 	/**
@@ -22,7 +22,7 @@ public enum FetchMode {
 	 */
 	JOIN,
 	/**
-	 * use a subselect query to load the additional collections.
+	 * use a secondary select so that, for a given collection, it can load all child entities associated with every parent table record using a single secondary select statement.
 	 */
 	SUBSELECT
 }

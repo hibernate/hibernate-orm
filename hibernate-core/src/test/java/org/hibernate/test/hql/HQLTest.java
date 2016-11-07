@@ -6,68 +6,31 @@
  */
 package org.hibernate.test.hql;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import antlr.RecognitionException;
+import antlr.collections.AST;
 import org.hibernate.QueryException;
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.IngresDialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.Sybase11Dialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.dialect.*;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.ReturnMetadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlTokenTypes;
-import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
-import org.hibernate.hql.internal.ast.DetailedSemanticException;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
-import org.hibernate.hql.internal.ast.QueryTranslatorImpl;
-import org.hibernate.hql.internal.ast.SqlGenerator;
-import org.hibernate.hql.internal.ast.tree.ConstructorNode;
-import org.hibernate.hql.internal.ast.tree.DotNode;
-import org.hibernate.hql.internal.ast.tree.FromReferenceNode;
-import org.hibernate.hql.internal.ast.tree.IndexNode;
-import org.hibernate.hql.internal.ast.tree.QueryNode;
-import org.hibernate.hql.internal.ast.tree.SelectClause;
+import org.hibernate.hql.internal.ast.*;
+import org.hibernate.hql.internal.ast.tree.*;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
+import org.hibernate.testing.*;
 import org.hibernate.type.CalendarDateType;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.StringType;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import antlr.RecognitionException;
-import antlr.collections.AST;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Tests cases where the AST based query translator and the 'classic' query translator generate identical SQL.
@@ -1536,6 +1499,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 	public void testComponentNoAlias() throws Exception {
 		// The classic translator doesn't do this right, so don't bother asserting.
 		compileWithAstQueryTranslator( "from Human where name.first = 'Gavin'", false);
+	}
+
+	@Test
+	public void testCountDistinctOfSubquery(){
+		createNewQueryTranslator(
+				"select count (DISTINCT (SELECT function('lower', 'DAY') from Bar)) from Bar"
+				);
 	}
 
 }

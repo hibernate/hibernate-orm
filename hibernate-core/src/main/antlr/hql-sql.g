@@ -436,7 +436,7 @@ selectExpr
 	;
 
 count
-    : #(COUNT  { inCount = true; } ( DISTINCT { inCountDistinct = true; } | ALL )? ( aggregateExpr | ROW_STAR ) ) {
+    : #(COUNT  { inCount = true; } ( DISTINCT { inCountDistinct = true; } | ALL )? ( aggregateExpr | ROW_STAR | query) ) {
         inCount = false;
         inCountDistinct = false;
     }

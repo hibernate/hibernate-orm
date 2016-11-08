@@ -202,6 +202,26 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-11230")
+	public void testWithClauseAsSubqueryWithEqualOperator() {
+		TestData data = new TestData();
+		data.prepare();
+
+		Session s = openSession();
+		Transaction txn = s.beginTransaction();
+
+		// Like testWithClauseAsSubquery but uses equal operator since it render differently in SQL
+		List list = s.createQuery( "from Human h left join h.friends as f with f.nickName = 'bubba' where h.description = 'father'" )
+				.list();
+		assertEquals( "subquery rewriting of join table did not take effect", 1, list.size() );
+
+		txn.commit();
+		s.close();
+
+		data.cleanup();
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-9329")
 	public void testWithClauseAsSubqueryWithKey() {
 		TestData data = new TestData();

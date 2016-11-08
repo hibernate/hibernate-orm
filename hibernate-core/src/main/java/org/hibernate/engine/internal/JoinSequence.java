@@ -207,11 +207,14 @@ public class JoinSequence {
 			subqueryJoinFragment.addFromFragmentString( ".*" );
 
 			// Re-alias columns of withClauseJoinAlias and rewrite withClauseFragment
+			// A list of possible delimited identifier types: https://en.wikibooks.org/wiki/SQL_Dialects_Reference/Data_structure_definition/Delimited_identifiers
 			Pattern p = Pattern.compile( Pattern.quote( withClauseJoinAlias + "." ) + "(" +
-					"([a-zA-Z0-9_]+) | " + // Normal identifiers
-					"('[a-zA-Z0-9_]+' ((''[a-zA-Z0-9_]+)+')?) | " + // Single quoted identifiers
-					"(\"[a-zA-Z0-9_]+\" ((\"\"[a-zA-Z0-9_]+)+\")?) | " + // Double quoted identifiers
-					"(`[a-zA-Z0-9_]+` ((``[a-zA-Z0-9_]+)+`)?) | " + // MySQL quoted identifiers
+					"([a-zA-Z0-9_]+)|" + // Normal identifiers
+					// Ignore single quoted identifiers to avoid possible clashes with string literals
+					// and since SQLLite is the only DB supporting that style, we simply decide to not support it
+					//"('[a-zA-Z0-9_]+'((''[a-zA-Z0-9_]+)+')?)|" + // Single quoted identifiers
+					"(\"[a-zA-Z0-9_]+\"((\"\"[a-zA-Z0-9_]+)+\")?)|" + // Double quoted identifiers
+					"(`[a-zA-Z0-9_]+`((``[a-zA-Z0-9_]+)+`)?)|" + // MySQL quoted identifiers
 					"(\\[[a-zA-Z0-9_\\s]+\\])" + // MSSQL quoted identifiers
 				")"
 			);

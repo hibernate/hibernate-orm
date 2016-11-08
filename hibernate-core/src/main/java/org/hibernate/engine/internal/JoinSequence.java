@@ -208,10 +208,10 @@ public class JoinSequence {
 
 			// Re-alias columns of withClauseJoinAlias and rewrite withClauseFragment
 			Pattern p = Pattern.compile( Pattern.quote( withClauseJoinAlias + "." ) + "(" +
-					"([a-zA-Z0-9_]+) | " + // Normal identifiers
-					"('[a-zA-Z0-9_]+' ((''[a-zA-Z0-9_]+)+')?) | " + // Single quoted identifiers
-					"(\"[a-zA-Z0-9_]+\" ((\"\"[a-zA-Z0-9_]+)+\")?) | " + // Double quoted identifiers
-					"(`[a-zA-Z0-9_]+` ((``[a-zA-Z0-9_]+)+`)?) | " + // MySQL quoted identifiers
+					"([a-zA-Z0-9_]+)|" + // Normal identifiers
+					"('[a-zA-Z0-9_]+'((''[a-zA-Z0-9_]+)+')?)|" + // Single quoted identifiers
+					"(\"[a-zA-Z0-9_]+\"((\"\"[a-zA-Z0-9_]+)+\")?)|" + // Double quoted identifiers
+					"(`[a-zA-Z0-9_]+`((``[a-zA-Z0-9_]+)+`)?)|" + // MySQL quoted identifiers
 					"(\\[[a-zA-Z0-9_\\s]+\\])" + // MSSQL quoted identifiers
 				")"
 			);

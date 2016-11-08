@@ -7,7 +7,6 @@
 package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
-import java.util.Collection;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
@@ -20,20 +19,28 @@ import org.hibernate.query.criteria.internal.path.PluralAttributePath;
  *
  * @author Steve Ebersole
  */
-public class SizeOfCollectionExpression<C extends Collection>
+public class SizeOfPluralAttributeExpression
 		extends ExpressionImpl<Integer>
 		implements Serializable {
-	private final PluralAttributePath<C> collectionPath;
+	private final PluralAttributePath path;
 
-	public SizeOfCollectionExpression(
+	public SizeOfPluralAttributeExpression(
 			CriteriaBuilderImpl criteriaBuilder,
-			PluralAttributePath<C> collectionPath) {
+			PluralAttributePath path) {
 		super( criteriaBuilder, Integer.class);
-		this.collectionPath = collectionPath;
+		this.path = path;
 	}
 
-	public PluralAttributePath<C> getCollectionPath() {
-		return collectionPath;
+	/**
+	 * @deprecated Use {@link #getPluralAttributePath()} instead
+	 */
+	@Deprecated
+	public PluralAttributePath getCollectionPath() {
+		return path;
+	}
+
+	public PluralAttributePath getPluralAttributePath() {
+		return path;
 	}
 
 	public void registerParameters(ParameterRegistry registry) {
@@ -41,7 +48,7 @@ public class SizeOfCollectionExpression<C extends Collection>
 	}
 
 	public String render(RenderingContext renderingContext) {
-		return "size(" + getCollectionPath().render( renderingContext ) + ")";
+		return "size(" + getPluralAttributePath().render( renderingContext ) + ")";
 	}
 
 	public String renderProjection(RenderingContext renderingContext) {

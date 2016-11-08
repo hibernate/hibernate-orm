@@ -727,7 +727,7 @@ primaryExpression
 	;
 
 jpaFunctionSyntax!
-    : i:IDENT OPEN n:QUOTED_STRING COMMA a:exprList CLOSE {
+    : i:IDENT OPEN n:QUOTED_STRING (COMMA a:exprList)? CLOSE {
     	final String functionName = unquote( #n.getText() );
 
     	if ( functionName.equalsIgnoreCase( "cast" ) ) {

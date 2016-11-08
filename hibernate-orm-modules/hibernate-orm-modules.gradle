@@ -149,12 +149,6 @@ build.dependsOn createModulesZip
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // tasks related to in-container (Arquillian + WF) testing
 
-if ( JavaVersion.current().isJava9Compatible() ) {
-    logger.lifecycle( "WARNING - Skipping hibernate-orm-modules tests for Java 9" )
-    // WildFly has problems booting in Java 9
-    test.enabled = false
-}
-
 task installWildFly(type: Copy) {
     description = 'Downloads the WildFly distribution and installs it into a local directory (if needed)'
 

@@ -18,10 +18,10 @@ ext {
     elVersion = '2.2.4'
     cdiVersion = '1.1'
 
-    javassistVersion = '3.20.0-GA'
+    javassistVersion = '3.22.0-CR1'
 
     // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for CDI testing and testing the module ZIP
-    wildflyVersion = '10.0.0.Final'
+    wildflyVersion = '10.1.0.Final'
     arquillianVersion = '1.1.10.Final'
     shrinkwrapVersion = '1.2.6'
     shrinkwrapDescriptorsVersion = '2.0.0-alpha-8'

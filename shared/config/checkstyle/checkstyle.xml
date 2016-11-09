@@ -8,7 +8,7 @@
 <!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.1//EN" "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
 <module name="Checker">
 
-    <!-- See http://checkstyle.sourceforge.net/checks.html for details of the various checks -->
+    <!-- Only defines "fatal" violations; there are additional "non-fatal" rules in checkstyle-non-fatal.xml -->
 
     <module name="Header">
         <property name="header" value="/*\n * Hibernate, Relational Persistence for Idiomatic Java\n *\n * License: GNU Lesser General Public License (LGPL), version 2.1 or later.\n * See the lgpl.txt file in the root directory or &lt;http://www.gnu.org/licenses/lgpl-2.1.html&gt;.\n */"/>
@@ -63,153 +63,6 @@
             <property name="illegalPkgs" value="java.awt, sun, org.slf4j"/>
         </module>
 
-
-        <!--
-            Medium and low priority warnings : do not fail build
-        -->
-
-        <module name="AvoidStarImport">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="RedundantImport">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="UnusedImports">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="AvoidNestedBlocks">
-            <property name="allowInSwitchCase" value="true" />
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="HideUtilityClassConstructor">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="MutableException">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="EmptyStatement">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="MissingSwitchDefault">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="DefaultComesLast">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="ModifiedControlVariable">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="SimplifyBooleanExpression">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="SimplifyBooleanReturn">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="ExplicitInitialization">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="FallThrough">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="ArrayTypeStyle">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="TrailingComment">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="ModifierOrder">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="AbstractClassName">
-            <!-- we are just using this to make sure that classes matching the pattern (Abstract*) have the abstract modifier -->
-            <property name="format" value="^Abstract.*$" />
-            <property name="ignoreName" value="true" />
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="ClassTypeParameterName">
-            <property name="format" value="^[A-Z][A-Z0-9]*$" />
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="ConstantName">
-            <property name="format" value="^[A-Z](_?[A-Z0-9]+)*$|log" />
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="LocalFinalVariableName">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="LocalVariableName">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="MemberName">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="MethodTypeParameterName">
-            <property name="format" value="^[A-Z][A-Z0-9]*$" />
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="PackageName">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="ParameterName">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="StaticVariableName">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="TypeName">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="AbbreviationAsWordInName">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="MethodParamPad">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="TypecastParenPad">
-            <property name="severity" value="warning" />
-        </module>
-
-        <module name="ParenPad">
-            <property name="tokens" value="CTOR_CALL, METHOD_CALL, SUPER_CTOR_CALL" />
-            <property name="option" value="space" />
-            <property name="severity" value="warning" />
-        </module>
-
-    </module>
-
-    <module name="JavadocPackage">
-        <property name="allowLegacy" value="true" />
-        <property name="severity" value="warning" />
     </module>
 
     <!-- We are not using NewLineAtEndOfFile because the new line chars change
@@ -224,16 +77,6 @@
     <module name="RegexpMultiline">
         <property name="format" value="\S\r?\n(\r?\n)+\z" />
         <property name="message" value="Only one new line is allowed at the end of a file" />
-    </module>
-
-    <!--
-        Used to collect "todo" comments into a single location
-    -->
-    <module name="TreeWalker">
-        <module name="TodoComment">
-            <property name="format" value="[Tt][Oo][Dd][Oo]"/>
-            <property name="severity" value="info" />
-        </module>
     </module>
 
 

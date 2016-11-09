@@ -149,19 +149,32 @@ public class StandardDialectResolver implements DialectResolver {
 			final int majorVersion = info.getDatabaseMajorVersion();
 
 			switch ( majorVersion ) {
-				case 8:
+				case 8: {
 					return new SQLServerDialect();
-				case 9:
+				}
+				case 9: {
 					return new SQLServer2005Dialect();
-				case 10:
+				}
+				case 10: {
 					return new SQLServer2008Dialect();
+				}
 				case 11:
 				case 12:
+				case 13: {
 					return new SQLServer2012Dialect();
-				default:
-					LOG.unknownSqlServerVersion( majorVersion );
+				}
+				default: {
+					if ( majorVersion < 8 ) {
+						LOG.unknownSqlServerVersion( majorVersion, SQLServerDialect.class );
+						return new SQLServerDialect();
+					}
+					else {
+						// assume `majorVersion > 13`
+						LOG.unknownSqlServerVersion( majorVersion, SQLServer2012Dialect.class );
+						return new SQLServer2012Dialect();
+					}
+				}
 			}
-			return new SQLServerDialect();
 		}
 
 		if ( "Sybase SQL Server".equals( databaseName ) || "Adaptive Server Enterprise".equals( databaseName ) ) {

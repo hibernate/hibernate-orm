@@ -1054,6 +1054,58 @@ include::{extrasdir}/basic/basic-jpa-convert-period-string-converter-sql-example
 ----
 ====
 
+[[basic-jpa-convert-mutability]]
+===== JPA 2.1 `AttributeConverter` Mutability Plan
+
+A basic type that's converted by a JPA `AttributeConverter` is immutable if the underlying Java type is immutable
+and is mutable if the associated attribute type is mutable as well.
+
+Therefore, mutability is given by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/descriptor/java/JavaTypeDescriptor.html#getMutabilityPlan--[`JavaTypeDescriptor#getMutabilityPlan`]
+of the associated entity attribute type.
+
+====== Immutable types
+
+If the entity attribute is a `String`, a primitive wrapper (e.g. `Integer`, `Long`) an Enum type, or any other immutable `Object` type,
+then you can only change the entity attribute value by reassigning it to a new value.
+
+Considering we have the same `Period` entity attribute as illustrated in the <<basic-jpa-convert>> section:
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-mapping-example]
+----
+
+The only way to change the `span` attribute is to reassign it to a different value:
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-immutability-plan-example]
+----
+
+====== Mutable types
+
+On the other hand, consider the following example where the `Money` type is a mutable.
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-money-converter-mapping-example]
+----
+
+A mutable `Object` allows you to modify its internal structure, and Hibernate dirty checking mechanism is going to propagate the change to the database:
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-money-converter-mutability-plan-example]
+----
+
+[TIP]
+====
+Although the `AttributeConverter` types can be mutable so that dirty checking, deep copying and second-level caching work properly,
+treating these as immutable (when they really are) is more efficient.
+
+For this reason, prefer immutable types over mutable ones whenever possible.
+====
+
 [[mapping-quoted-identifiers]]
 ==== SQL quoted identifiers
 

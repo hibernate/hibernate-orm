@@ -25,58 +25,73 @@ import static org.junit.Assert.assertEquals;
  */
 public class PeriodStringTest extends BaseEntityManagerFunctionalTestCase {
 
-	private Period period = Period.ofYears( 1 ).plusMonths( 2 ).plusDays( 3 );
+    private Period period = Period.ofYears( 1 ).plusMonths( 2 ).plusDays( 3 );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Event.class
-		};
-	}
+    @Override
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class<?>[] {
+                Event.class
+        };
+    }
 
-	@Test
-	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Event event = new Event( period );
-			entityManager.persist( event );
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Event event = entityManager.createQuery( "from Event", Event.class ).getSingleResult();
-			assertEquals( period, event.getSpan() );
-		} );
-	}
+    @Test
+    public void testLifecycle() {
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Event event = new Event( period );
+            entityManager.persist( event );
+        } );
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            Event event = entityManager.createQuery( "from Event", Event.class ).getSingleResult();
+            assertEquals( period, event.getSpan() );
+        } );
+        doInJPA( this::entityManagerFactory, entityManager -> {
+            //tag::basic-jpa-convert-period-string-converter-immutability-plan-example[]
+            Event event = entityManager.createQuery( "from Event", Event.class ).getSingleResult();
+            event.setSpan(Period
+                .ofYears( 3 )
+                .plusMonths( 2 )
+                .plusDays( 1 )
+            );
+            //end::basic-jpa-convert-period-string-converter-immutability-plan-example[]
+        } );
+    }
 
-	//tag::basic-jpa-convert-period-string-converter-mapping-example[]
-	@Entity(name = "Event")
-	public static class Event {
+    //tag::basic-jpa-convert-period-string-converter-mapping-example[]
+    @Entity(name = "Event")
+    public static class Event {
 
-		@Id
-		@GeneratedValue
-		private Long id;
+        @Id
+        @GeneratedValue
+        private Long id;
 
-		@Convert(converter = PeriodStringConverter.class)
-		@Column(columnDefinition = "")
-		private Period span;
+        @Convert(converter = PeriodStringConverter.class)
+        @Column(columnDefinition = "")
+        private Period span;
 
-		//Getters and setters are omitted for brevity
+        //Getters and setters are omitted for brevity
 
-	//end::basic-jpa-convert-period-string-converter-mapping-example[]
+    //end::basic-jpa-convert-period-string-converter-mapping-example[]
 
-		public Event() {
-		}
+        public Event() {
+        }
 
-		public Event(Period span) {
-			this.span = span;
-		}
+        public Event(Period span) {
+            this.span = span;
+        }
 
-		public Long getId() {
-			return id;
-		}
+        public Long getId() {
+            return id;
+        }
 
-		public Period getSpan() {
-			return span;
-		}
-	//tag::basic-jpa-convert-period-string-converter-mapping-example[]
-	}
-	//end::basic-jpa-convert-period-string-converter-mapping-example[]
+        public Period getSpan() {
+            return span;
+        }
+
+        public void setSpan(Period span) {
+            this.span = span;
+        }
+
+        //tag::basic-jpa-convert-period-string-converter-mapping-example[]
+    }
+    //end::basic-jpa-convert-period-string-converter-mapping-example[]
 }

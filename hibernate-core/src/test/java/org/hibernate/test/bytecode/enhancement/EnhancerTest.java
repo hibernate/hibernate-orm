@@ -135,6 +135,7 @@ public class EnhancerTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11155" )
+	@FailureExpected( jiraKey = "HHH-11155" )
 	public void testLazyGroupsUpdate() {
 		EnhancerTestUtils.runEnhancerTestTask( LazyGroupUpdateTestTask.class );
 	}

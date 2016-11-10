@@ -35,8 +35,8 @@ public class LazyAttributesMetadata implements Serializable {
 	 * @return The built LazyFetchGroupMetadata
 	 */
 	public static LazyAttributesMetadata from(PersistentClass mappedEntity) {
-		final Map<String, LazyAttributeDescriptor> lazyAttributeDescriptorMap = new LinkedHashMap<String, LazyAttributeDescriptor>();
-		final Map<String, Set<String>> fetchGroupToAttributesMap = new HashMap<String, Set<String>>();
+		final Map<String, LazyAttributeDescriptor> lazyAttributeDescriptorMap = new LinkedHashMap<>();
+		final Map<String, Set<String>> fetchGroupToAttributesMap = new HashMap<>();
 
 		int i = -1;
 		int x = 0;
@@ -48,11 +48,10 @@ public class LazyAttributesMetadata implements Serializable {
 				final LazyAttributeDescriptor lazyAttributeDescriptor = LazyAttributeDescriptor.from( property, i, x++ );
 				lazyAttributeDescriptorMap.put( lazyAttributeDescriptor.getName(), lazyAttributeDescriptor );
 
-				Set<String> attributeSet = fetchGroupToAttributesMap.get( lazyAttributeDescriptor.getFetchGroupName() );
-				if ( attributeSet == null ) {
-					attributeSet = new LinkedHashSet<String>();
-					fetchGroupToAttributesMap.put( lazyAttributeDescriptor.getFetchGroupName(), attributeSet );
-				}
+				final Set<String> attributeSet = fetchGroupToAttributesMap.computeIfAbsent(
+						lazyAttributeDescriptor.getFetchGroupName(),
+						k -> new LinkedHashSet<>()
+				);
 				attributeSet.add( lazyAttributeDescriptor.getName() );
 			}
 		}
@@ -82,7 +81,7 @@ public class LazyAttributesMetadata implements Serializable {
 	private final Map<String,Set<String>> fetchGroupToAttributeMap;
 
 	public LazyAttributesMetadata(String entityName) {
-		this( entityName, Collections.<String, LazyAttributeDescriptor>emptyMap(), Collections.<String, Set<String>>emptyMap() );
+		this( entityName, Collections.emptyMap(), Collections.emptyMap() );
 	}
 
 	public LazyAttributesMetadata(

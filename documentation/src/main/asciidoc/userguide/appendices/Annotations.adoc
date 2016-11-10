@@ -624,6 +624,8 @@ However, if this annotation is used with either value="property" or value="field
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/BatchSize.html[`@BatchSize`] annotation is used to specify the size for batch loading the entries of a lazy collection.
 
+See the <<chapters/fetching/Fetching.adoc#fetching-batch, Batch fetching>> section for more info.
+
 [[annotations-hibernate-cache]]
 ==== `@Cache`
 
@@ -643,7 +645,9 @@ When combining both JPA and Hibernate `CascadeType` strategies, Hibernate will m
 [[annotations-hibernate-check]]
 ==== `@Check`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Check.html[`@Check`] annotation is used to specify an arbitrary SQL CHECK constraint which can be defined at the class, property or collection level.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Check.html[`@Check`] annotation is used to specify an arbitrary SQL CHECK constraint which can be defined at the class level.
+
+See the <<chapters/schema/Schema.adoc#schema-generation-database-checks,Database-level checks>> chapter for more info.
 
 [[annotations-hibernate-collectionid]]
 ==== `@CollectionId`

@@ -38,6 +38,7 @@ include::{extrasdir}/sql-schema-generation-domain-model-example.sql[]
 ----
 ====
 
+[[schema-generation-script-files]]
 === Importing script files
 
 To customize the schema generation process, the `hibernate.hbm2ddl.import_files` configuration property must be used to provide other scripts files that Hibernate can use when the `SessionFactory` is started.
@@ -68,6 +69,7 @@ If we configure Hibernate to import the script above:
 
 Hibernate is going to execute the script file after the schema is automatically generated.
 
+[[schema-generation-database-objects]]
 === Database objects
 
 Hibernate allows you to customize the schema generation process via the HBM `database-object` element.
@@ -83,5 +85,40 @@ include::{sourcedir}/SchemaGenerationTest.hbm.xml[]
 ----
 ====
 
-When the `SessionFactory` is bootstrapped, Hibernate is going to execute the `database-object`, therefore creating the `sp_count_books` funtion.
+When the `SessionFactory` is bootstrapped, Hibernate is going to execute the `database-object`, therefore creating the `sp_count_books` function.
+
+[[schema-generation-database-checks]]
+=== Database-level checks
+
+Hibernate offers the `@Check` annotation so that you can specify an arbitrary SQL CHECK constraint which can be defined as follows:
+
+[[schema-generation-database-checks-example]]
+.Database check entity mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CheckTest.java[tag=schema-generation-database-checks-example]
+----
+====
+
+Now, if you try to add a `Book` entity with an `isbn` attribute whose length is not 13 characters,
+a `ConstraintViolationException` is going to be thrown.
+
+[[stag::schema-generation-database-checks-persist-example]]
+.Database check failure example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CheckTest.java[tag=schema-generation-database-checks-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/schema-generation-database-checks-persist-example.sql[]
+----
+====
+
+
+
+
 

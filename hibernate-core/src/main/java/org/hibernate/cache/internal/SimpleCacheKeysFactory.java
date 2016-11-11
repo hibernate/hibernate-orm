@@ -18,8 +18,8 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class SimpleCacheKeysFactory implements CacheKeysFactory {
-
-public static CacheKeysFactory INSTANCE = new SimpleCacheKeysFactory();
+	public static final String SHORT_NAME = "simple";
+	public static CacheKeysFactory INSTANCE = new SimpleCacheKeysFactory();
 
 	@Override
 	public Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {

@@ -453,14 +453,10 @@ public class InfinispanRegionFactory implements RegionFactory {
 	}
 
 	private CacheKeysFactory determineCacheKeysFactory(SessionFactoryOptions settings, Properties properties) {
-		final CacheKeysFactory implicitFactory = settings.getMultiTenancyStrategy() != MultiTenancyStrategy.NONE
-				? DefaultCacheKeysFactory.INSTANCE
-				: SimpleCacheKeysFactory.INSTANCE;
-
 		return settings.getServiceRegistry().getService( StrategySelector.class ).resolveDefaultableStrategy(
 				CacheKeysFactory.class,
 				properties.get( AvailableSettings.CACHE_KEYS_FACTORY ),
-				implicitFactory
+				DefaultCacheKeysFactory.INSTANCE
 		);
 	}
 
@@ -686,8 +682,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 				log.debugf("Region '%s' has additional configuration set through properties.", regionName);
 				builder.read(override.build(false));
 			}
-			// with multi-tenancy the keys will be wrapped
-			if (settings.getMultiTenancyStrategy() == MultiTenancyStrategy.NONE) {
+			if (getCacheKeysFactory() instanceof SimpleCacheKeysFactory) {
 				// the keys may not define hashCode/equals correctly (e.g. arrays)
 				if (metadata != null && metadata.getKeyType() != null) {
 					builder.dataContainer().keyEquivalence(new TypeEquivalance(metadata.getKeyType()));

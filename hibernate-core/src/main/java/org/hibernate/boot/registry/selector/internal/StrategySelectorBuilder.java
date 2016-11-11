@@ -20,6 +20,9 @@ import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
+import org.hibernate.cache.internal.SimpleCacheKeysFactory;
+import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.Cache71Dialect;
 import org.hibernate.dialect.DB2390Dialect;
@@ -157,6 +160,7 @@ public class StrategySelectorBuilder {
 		addMultiTableBulkIdStrategies( strategySelector );
 		addEntityCopyObserverStrategies( strategySelector );
 		addImplicitNamingStrategies( strategySelector );
+		addCacheKeysFactories( strategySelector );
 
 		// apply auto-discovered registrations
 		for ( StrategyRegistrationProvider provider : classLoaderService.loadJavaServices( StrategyRegistrationProvider.class ) ) {
@@ -434,6 +438,19 @@ public class StrategySelectorBuilder {
 				ImplicitNamingStrategy.class,
 				"component-path",
 				ImplicitNamingStrategyComponentPathImpl.class
+		);
+	}
+
+	private void addCacheKeysFactories(StrategySelectorImpl strategySelector) {
+		strategySelector.registerStrategyImplementor(
+			CacheKeysFactory.class,
+			DefaultCacheKeysFactory.SHORT_NAME,
+			DefaultCacheKeysFactory.class
+		);
+		strategySelector.registerStrategyImplementor(
+			CacheKeysFactory.class,
+			SimpleCacheKeysFactory.SHORT_NAME,
+			SimpleCacheKeysFactory.class
 		);
 	}
 }

@@ -18,6 +18,7 @@ dependencies {
     compile( libraries.infinispan )
 
     testCompile project( ':hibernate-testing' )
+    testCompile project( ':hibernate-entitymanager' )
     testCompile( libraries.infinispan_test )
     testCompile( libraries.jboss_common_core )
     testCompile( libraries.jnp_client )

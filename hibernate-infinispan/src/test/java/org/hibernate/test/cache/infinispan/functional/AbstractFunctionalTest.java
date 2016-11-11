@@ -13,6 +13,7 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
@@ -181,6 +182,7 @@ public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctional
 		settings.put( Environment.GENERATE_STATISTICS, "true" );
 		settings.put( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );
 		settings.put( Environment.CACHE_REGION_FACTORY, getRegionFactoryClass().getName() );
+		settings.put( Environment.CACHE_KEYS_FACTORY, SimpleCacheKeysFactory.SHORT_NAME );
 		settings.put( TestInfinispanRegionFactory.TRANSACTIONAL, useTransactionalCache );
 		settings.put( TestInfinispanRegionFactory.CACHE_MODE, cacheMode);
 

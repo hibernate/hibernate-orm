@@ -1265,9 +1265,16 @@ public final class SessionImpl
 
 	private void fireRefresh(RefreshEvent event) {
 		try {
-			if ( !getSessionFactory().getSessionFactoryOptions().isAllowRefreshDetachedEntity()  ) {
-				if ( !contains( event.getObject() ) ) {
-					throw new IllegalArgumentException( "Entity not managed" );
+			if ( !getSessionFactory().getSessionFactoryOptions().isAllowRefreshDetachedEntity() ) {
+				if ( event.getEntityName() != null ) {
+					if ( !contains( event.getEntityName(), event.getObject() ) ) {
+						throw new IllegalArgumentException( "Entity not managed" );
+					}
+				}
+				else {
+					if ( !contains( event.getObject() ) ) {
+						throw new IllegalArgumentException( "Entity not managed" );
+					}
 				}
 			}
 			checkOpen();

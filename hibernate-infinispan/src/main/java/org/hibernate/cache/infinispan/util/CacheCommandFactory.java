@@ -36,7 +36,6 @@ public class CacheCommandFactory implements ExtendedModuleCommandFactory {
    /**
     * Add region so that commands can be cleared on shutdown.
     *
-    * @param regionName name of the region
     * @param region instance to keep track of
     */
 	public void addRegion(BaseRegion region) {
@@ -46,7 +45,7 @@ public class CacheCommandFactory implements ExtendedModuleCommandFactory {
    /**
     * Clear all regions from this command factory.
     *
-    * @param regionNames collection of regions to clear
+    * @param regions collection of regions to clear
     */
 	public void clearRegions(Collection<BaseRegion> regions) {
 		regions.forEach( region -> allRegions.remove( region.getName() ) );

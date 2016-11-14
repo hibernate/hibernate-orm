@@ -48,5 +48,5 @@ appreciated btw), please use rebasing rather than merging.  Merging creates
 
 * If you have not already, sign the [Contributor License Agreement](https://cla.jboss.org).
 * Push your changes to the topic branch in your fork of the repository.
-* Initiate a [pull request](http://help.github.com/send-pull-requests/)
+* Initiate a [pull request](http://help.github.com/articles/creating-a-pull-request)
 * Update the JIRA issue, adding a comment including a link to the created pull request

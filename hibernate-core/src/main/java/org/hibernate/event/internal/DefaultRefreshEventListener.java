@@ -56,8 +56,13 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	public void onRefresh(RefreshEvent event, Map refreshedAlready) {
 
 		final EventSource source = event.getSession();
-
-		boolean isTransient = !source.contains( event.getObject() );
+		boolean isTransient;
+		if ( event.getEntityName() != null ) {
+			isTransient = !source.contains( event.getEntityName(), event.getObject() );
+		}
+		else {
+			isTransient = !source.contains( event.getObject() );
+		}
 		if ( source.getPersistenceContext().reassociateIfUninitializedProxy( event.getObject() ) ) {
 			if ( isTransient ) {
 				source.setReadOnly( event.getObject(), source.isDefaultReadOnly() );

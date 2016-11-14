@@ -663,6 +663,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The collection can also name a <<annotations-hibernate-type>>, which defines the Hibernate Type of the collection elements.
 
+See the <<chapters/domain/collections.adoc#collections-custom,Custom collection types>> chapter for more info.
+
 [[annotations-hibernate-columndefault]]
 ==== `@ColumnDefault`
 

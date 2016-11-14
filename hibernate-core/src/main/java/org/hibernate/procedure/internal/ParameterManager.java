@@ -19,7 +19,6 @@ import org.hibernate.QueryException;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.streams.StingArrayCollector;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.streams.StreamUtils;
@@ -27,16 +26,15 @@ import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
+import org.hibernate.procedure.spi.ParameterRegistry;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.query.spi.QueryParameterBindings;
 
 /**
  * @author Steve Ebersole
  */
-public class ParameterManager implements ParameterMetadata, QueryParameterBindings {
+public class ParameterManager implements ParameterRegistry {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ParameterManager.class );
 
 	private final ProcedureCallImpl procedureCall;
@@ -45,16 +43,17 @@ public class ParameterManager implements ParameterMetadata, QueryParameterBindin
 	private ParameterStrategy parameterStrategy = ParameterStrategy.UNKNOWN;
 	private Collection<ParameterRegistrationImplementor<?>> parameterRegistrations;
 
-
 	public ParameterManager(ProcedureCallImpl procedureCall) {
 		this.procedureCall = procedureCall;
 		this.globalParameterPassNullsSetting = procedureCall.getProducer().getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 	}
 
+	@Override
 	public ProcedureCallImpl getProcedureCall() {
 		return procedureCall;
 	}
 
+	@Override
 	public ParameterStrategy getParameterStrategy() {
 		return parameterStrategy;
 	}
@@ -189,6 +188,11 @@ public class ParameterManager implements ParameterMetadata, QueryParameterBindin
 						globalParameterPassNullsSetting
 				)
 		);
+	}
+
+	@Override
+	public boolean hasAnyParameterRegistrations() {
+		return !parameterRegistrations.isEmpty();
 	}
 
 	@Override
@@ -356,7 +360,12 @@ public class ParameterManager implements ParameterMetadata, QueryParameterBindin
 
 	@Override
 	public void validate() {
-
+		if ( getParameterStrategy() == ParameterStrategy.UNKNOWN ) {
+			// should indicate we have no registrations
+			if ( hasAnyParameterRegistrations() ) {
+				throw new IllegalStateException( "ParameterStrategy indicated no registrations, but registrations were found" );
+			}
+		}
 	}
 
 	public <T> ParameterBindImpl<T> makeBinding(QueryParameter<T> parameter) {
@@ -367,6 +376,31 @@ public class ParameterManager implements ParameterMetadata, QueryParameterBindin
 				parameter,
 				procedureCall.getProducer().getFactory()
 		);
+	}
+
+	@Override
+	public List<ParameterRegistrationImplementor> getParameterRegistrations() {
+		switch ( parameterStrategy ) {
+			case NAMED: {
+				return parameterRegistrations.stream().collect( Collectors.toList() );
+			}
+			case POSITIONAL: {
+				// todo : verify there are no gaps
+				final ArrayList<ParameterRegistrationImplementor> copy = CollectionHelper.arrayList( parameterRegistrations.size() );
+				for ( ParameterRegistrationImplementor<?> parameterRegistration : parameterRegistrations ) {
+					final int position = parameterRegistration.getPosition();
+//					copy.ensureCapacity( position );
+					// the parameter labels are 1-based, whereas List indexes are 0-based
+					copy.add( position-1, parameterRegistration );
+				}
+				return copy;
+			}
+			default: {
+				// should indicate no registered params
+				assert parameterRegistrations == null || parameterRegistrations.isEmpty();
+				return Collections.emptyList();
+			}
+		}
 	}
 
 	public List<ParameterRegistration> collectParameterRegistrations() {

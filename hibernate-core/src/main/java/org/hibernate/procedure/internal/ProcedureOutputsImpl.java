@@ -8,8 +8,15 @@ package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
+import javax.persistence.ParameterMode;
+
+import org.hibernate.AssertionFailure;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
+import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
@@ -25,30 +32,56 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 	private final ProcedureCallImpl procedureCall;
 	private final CallableStatement callableStatement;
 
-	private final ParameterRegistrationImplementor[] refCursorParameters;
+	private final boolean shouldUseJdbcNamedParameters;
+	private final Map<ParameterRegistration, JdbcParameterExtractor> jdbcParameterExtractorMap;
+	private final Iterator<JdbcRefCursorExtractor> jdbcRefCursorExtractorIterator;
+
 	private int refCursorParamIndex;
 
-	ProcedureOutputsImpl(ProcedureCallImpl procedureCall, CallableStatement callableStatement) {
+	ProcedureOutputsImpl(
+			ProcedureCallImpl procedureCall,
+			CallableStatement callableStatement,
+			boolean shouldUseJdbcNamedParameters,
+			Map<ParameterRegistration, JdbcParameterExtractor> jdbcParameterExtractorMap,
+			List<JdbcRefCursorExtractor> jdbcRefCursorExtractors) {
 		super( procedureCall, callableStatement );
 		this.procedureCall = procedureCall;
 		this.callableStatement = callableStatement;
+		this.shouldUseJdbcNamedParameters = shouldUseJdbcNamedParameters;
 
-		this.refCursorParameters = procedureCall.getParameterMetadata().collectRefCursorParameters();
+		this.jdbcParameterExtractorMap = jdbcParameterExtractorMap;
+		this.jdbcRefCursorExtractorIterator = jdbcRefCursorExtractors.iterator();
 	}
 
 	@Override
 	public <T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration) {
-		return ( (ParameterRegistrationImplementor<T>) parameterRegistration ).extract( callableStatement );
+		final JdbcParameterExtractor<T> extractor = resolveJdbcParameterExtractor( parameterRegistration );
+		return extractor.extractValue( callableStatement, shouldUseJdbcNamedParameters, procedureCall.getSession() );
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> JdbcParameterExtractor<T> resolveJdbcParameterExtractor(ParameterRegistration<T> parameterRegistration) {
+		final JdbcParameterExtractor<T> extractor = jdbcParameterExtractorMap.get( parameterRegistration );
+		if ( extractor == null ) {
+			if ( parameterRegistration.getMode() == ParameterMode.IN ) {
+				throw new ParameterMisuseException( "Cannot extract value from parameter registered as IN parameter" );
+			}
+			if ( parameterRegistration.getMode() == ParameterMode.REF_CURSOR ) {
+				throw new ParameterMisuseException( "Cannot extract value from parameter registered as REF_CURSOR parameter" );
+			}
+			throw new AssertionFailure( "Could not locate JdbcParameterExtractor for given ParameterRegistration :  " + parameterRegistration );
+		}
+		return extractor;
 	}
 
 	@Override
 	public Object getOutputParameterValue(String name) {
-		return procedureCall.getParameterRegistration( name ).extract( callableStatement );
+		return getOutputParameterValue( procedureCall.getParameterRegistration( name ) );
 	}
 
 	@Override
 	public Object getOutputParameterValue(int position) {
-		return procedureCall.getParameterRegistration( position ).extract( callableStatement );
+		return getOutputParameterValue( procedureCall.getParameterRegistration( position ) );
 	}
 
 	@Override
@@ -66,18 +99,29 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 
 		@Override
 		public boolean indicatesMoreOutputs() {
-			return super.indicatesMoreOutputs()
-					|| ProcedureOutputsImpl.this.refCursorParamIndex < ProcedureOutputsImpl.this.refCursorParameters.length;
+			return super.indicatesMoreOutputs() || jdbcRefCursorExtractorIterator.hasNext();
 		}
 
 		@Override
 		protected boolean hasExtendedReturns() {
-			return refCursorParamIndex < refCursorParameters.length;
+			return jdbcRefCursorExtractorIterator.hasNext();
 		}
 
 		@Override
 		protected Output buildExtendedReturn() {
-			ProcedureOutputsImpl.this.refCursorParamIndex++;
+			if ( !jdbcRefCursorExtractorIterator.hasNext() ) {
+				throw new IllegalStateException( "No more REF_CURSOR results to process" );
+			}
+
+			final JdbcRefCursorExtractor next = jdbcRefCursorExtractorIterator.next();
+			return buildResultSetOutput(
+					next.extractResults(
+							callableStatement,
+							procedureCall.getSession(),
+							getLoader()
+					)
+			);
+
 			final ParameterRegistrationImplementor refCursorParam = ProcedureOutputsImpl.this.refCursorParameters[refCursorParamIndex];
 			ResultSet resultSet;
 			if ( refCursorParam.getName() != null ) {

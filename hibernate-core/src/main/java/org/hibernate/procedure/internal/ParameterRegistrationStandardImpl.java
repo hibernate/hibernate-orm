@@ -6,13 +6,12 @@
  */
 package org.hibernate.procedure.internal;
 
-import java.sql.CallableStatement;
-import java.sql.SQLException;
 import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
 
-import org.hibernate.procedure.ParameterBind;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.ParameterMisuseException;
+import org.hibernate.procedure.spi.ParameterBindImplementor;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -50,22 +49,6 @@ public class ParameterRegistrationStandardImpl<T> implements ParameterRegistrati
 		return parameterManager.getProcedureCall();
 	}
 
-
-	@Override
-	public void prepare(CallableStatement statement, int i) throws SQLException {
-
-	}
-
-	@Override
-	public int[] getSqlTypes() {
-		return new int[0];
-	}
-
-	@Override
-	public T extract(CallableStatement statement) {
-		return null;
-	}
-
 	@Override
 	public boolean isPassNullsEnabled() {
 		return passNulls;
@@ -77,7 +60,7 @@ public class ParameterRegistrationStandardImpl<T> implements ParameterRegistrati
 	}
 
 	@Override
-	public ParameterBind<T> getBind() {
+	public ParameterBindImplementor<T> getBind() {
 		return binding;
 	}
 
@@ -139,5 +122,13 @@ public class ParameterRegistrationStandardImpl<T> implements ParameterRegistrati
 			throw new IllegalArgumentException( "Type cannot be null" );
 		}
 		this.hibernateType = type;
+	}
+
+	private ProcedureCallImpl procedureCall() {
+		return parameterManager.getProcedureCall();
+	}
+
+	private SharedSessionContractImplementor session() {
+		return procedureCall().getSession();
 	}
 }

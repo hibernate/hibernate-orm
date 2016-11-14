@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.sqm.exec.spi.QueryOptions;
+import org.hibernate.query.QueryOptions;
 
 /**
  * General contract for performing execution of a query returning results

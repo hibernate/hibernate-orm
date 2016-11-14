@@ -8,6 +8,8 @@ package org.hibernate.procedure;
 
 import javax.persistence.TemporalType;
 
+import org.hibernate.type.mapper.spi.Type;
+
 /**
  * Describes an input value binding for any IN/INOUT parameters.
  */
@@ -18,6 +20,8 @@ public interface ParameterBind<T> {
 	 * @return The bound value.
 	 */
 	T getValue();
+
+	Type getBindType();
 
 	/**
 	 * If {@code <T>} represents a DATE/TIME type value, JPA usually allows specifying the particular parts of

@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.QueryOptions;
 import org.hibernate.sql.sqm.convert.spi.Return;
 
 /**

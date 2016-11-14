@@ -15,7 +15,7 @@ import org.hibernate.loader.plan.spi.Fetch;
 import org.hibernate.sql.sqm.exec.results.spi.EntityReferenceProcessingState;
 import org.hibernate.sql.sqm.exec.results.spi.ResultSetProcessingState;
 import org.hibernate.sql.sqm.exec.results.spi.RowProcessingState;
-import org.hibernate.sql.sqm.exec.spi.QueryOptions;
+import org.hibernate.query.QueryOptions;
 import org.hibernate.sql.sqm.convert.spi.Return;
 
 /**

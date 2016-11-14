@@ -10,7 +10,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.sql.sqm.exec.spi.QueryOptions;
+import org.hibernate.query.QueryOptions;
 
 /**
  * @author Steve Ebersole

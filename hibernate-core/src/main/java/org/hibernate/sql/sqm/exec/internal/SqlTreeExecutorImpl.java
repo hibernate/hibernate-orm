@@ -22,7 +22,7 @@ import org.hibernate.sql.spi.ParameterBinder;
 import org.hibernate.sql.sqm.convert.spi.SqlTreeWalker;
 import org.hibernate.sql.sqm.exec.spi.PreparedStatementCreator;
 import org.hibernate.sql.sqm.exec.spi.PreparedStatementExecutor;
-import org.hibernate.sql.sqm.exec.spi.QueryOptions;
+import org.hibernate.query.QueryOptions;
 import org.hibernate.sql.sqm.exec.spi.RowTransformer;
 import org.hibernate.sql.sqm.exec.spi.SqlTreeExecutor;
 

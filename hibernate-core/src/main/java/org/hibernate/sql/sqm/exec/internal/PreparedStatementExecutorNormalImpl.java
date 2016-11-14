@@ -22,7 +22,7 @@ import org.hibernate.sql.sqm.exec.results.spi.ResultSetProcessingOptions;
 import org.hibernate.sql.sqm.exec.results.spi.ResultSetProcessingState;
 import org.hibernate.sql.sqm.exec.results.spi.RowReader;
 import org.hibernate.sql.sqm.exec.spi.PreparedStatementExecutor;
-import org.hibernate.sql.sqm.exec.spi.QueryOptions;
+import org.hibernate.query.QueryOptions;
 import org.hibernate.sql.sqm.exec.spi.RowTransformer;
 
 /**

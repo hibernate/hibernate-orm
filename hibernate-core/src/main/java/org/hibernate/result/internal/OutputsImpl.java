@@ -130,6 +130,10 @@ public class OutputsImpl implements Outputs {
 		}
 	}
 
+	protected CustomLoaderExtension getLoader() {
+		return loader;
+	}
+
 	protected List extractResults(ResultSet resultSet) {
 		try {
 			return loader.processResultSet( resultSet );
@@ -258,7 +262,7 @@ public class OutputsImpl implements Outputs {
 		);
 	}
 
-	private static class CustomLoaderExtension extends CustomLoader {
+	protected static class CustomLoaderExtension extends CustomLoader {
 		private QueryParameters queryParameters;
 		private SharedSessionContractImplementor session;
 

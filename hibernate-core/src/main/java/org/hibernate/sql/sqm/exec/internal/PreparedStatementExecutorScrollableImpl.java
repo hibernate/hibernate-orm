@@ -12,11 +12,10 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.ScrollableResults;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.sqm.exec.spi.PreparedStatementExecutor;
-import org.hibernate.sql.sqm.exec.spi.QueryOptions;
+import org.hibernate.query.QueryOptions;
 import org.hibernate.sql.sqm.exec.spi.RowTransformer;
 import org.hibernate.sql.sqm.convert.spi.NotYetImplementedException;
 import org.hibernate.sql.sqm.convert.spi.Return;

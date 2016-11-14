@@ -8,7 +8,7 @@ package org.hibernate.query.spi;
 
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.ParameterMetadata;
-import org.hibernate.sql.sqm.exec.spi.QueryOptions;
+import org.hibernate.query.QueryOptions;
 import org.hibernate.sqm.query.SqmStatement;
 
 /**

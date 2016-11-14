@@ -15,16 +15,17 @@ import org.hibernate.sql.sqm.ast.from.EntityTableGroup;
 import org.hibernate.sql.sqm.ast.from.TableSpace;
 import org.hibernate.sql.sqm.convert.internal.FromClauseIndex;
 import org.hibernate.sql.sqm.convert.internal.SqlAliasBaseManager;
-import org.hibernate.sqm.domain.EntityType;
+import org.hibernate.sqm.domain.AttributeReference;
+import org.hibernate.sqm.domain.EntityReference;
 import org.hibernate.sqm.query.JoinType;
-import org.hibernate.sqm.query.from.FromElement;
+import org.hibernate.sqm.query.from.SqmFrom;
 
 /**
  * Isolate things we think are involved in an "improved design" for EntityPersister.
  *
  * @author Steve Ebersole
  */
-public interface ImprovedEntityPersister extends EntityType, IdentifiableTypeImplementor, SqmTypeImplementor {
+public interface ImprovedEntityPersister extends EntityReference, IdentifiableTypeImplementor, SqmTypeImplementor {
 	/**
 	 * In integrating this upstream, the methods here would all be part of EntityPersister
 	 * but here we cannot do that and therefore still need access to EntityPersister
@@ -33,13 +34,14 @@ public interface ImprovedEntityPersister extends EntityType, IdentifiableTypeImp
 	 */
 	EntityPersister getEntityPersister();
 
-	@Override
+	AttributeReference findAttribute(String name);
+
 	EntityIdentifier getIdentifierDescriptor();
 
 	AbstractTable getRootTable();
 
 	EntityTableGroup buildTableGroup(
-			FromElement fromElement,
+			SqmFrom fromElement,
 			TableSpace tableSpace,
 			SqlAliasBaseManager sqlAliasBaseManager,
 			FromClauseIndex fromClauseIndex);

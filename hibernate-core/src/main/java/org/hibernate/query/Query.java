@@ -36,8 +36,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.sql.sqm.exec.spi.QueryOptions;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.mapper.spi.Type;
 

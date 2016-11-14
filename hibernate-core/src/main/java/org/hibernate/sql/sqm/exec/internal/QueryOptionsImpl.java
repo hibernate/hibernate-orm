@@ -13,10 +13,10 @@ import java.util.List;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
+import org.hibernate.query.Limit;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.MutableQueryOptions;
-import org.hibernate.sql.sqm.exec.spi.Limit;
 
 /**
  * @author Steve Ebersole

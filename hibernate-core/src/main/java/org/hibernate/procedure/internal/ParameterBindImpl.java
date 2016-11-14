@@ -36,4 +36,9 @@ public class ParameterBindImpl<T> extends QueryParameterBindingImpl<T> implement
 	public T getValue() {
 		return super.getBindValue();
 	}
+
+	@Override
+	public Type getBindType() {
+		return super.getBindType();
+	}
 }

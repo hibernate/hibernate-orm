@@ -9,17 +9,18 @@ package org.hibernate.persister.collection.spi;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.common.internal.DatabaseModel;
 import org.hibernate.persister.common.internal.DomainMetamodelImpl;
+import org.hibernate.persister.common.spi.SqmTypeImplementor;
 import org.hibernate.sql.sqm.ast.from.CollectionTableGroup;
 import org.hibernate.sql.sqm.ast.from.TableSpace;
 import org.hibernate.sql.sqm.convert.internal.FromClauseIndex;
 import org.hibernate.sql.sqm.convert.internal.SqlAliasBaseManager;
-import org.hibernate.sqm.domain.PluralAttribute;
-import org.hibernate.sqm.query.from.JoinedFromElement;
+import org.hibernate.sqm.domain.PluralAttributeReference;
+import org.hibernate.sqm.query.from.SqmAttributeJoin;
 
 /**
  * @author Steve Ebersole
  */
-public interface ImprovedCollectionPersister extends PluralAttribute {
+public interface ImprovedCollectionPersister extends PluralAttributeReference, SqmTypeImplementor {
 	CollectionPersister getPersister();
 
 	void finishInitialization(DatabaseModel databaseModel, DomainMetamodelImpl domainMetamodel);
@@ -30,7 +31,7 @@ public interface ImprovedCollectionPersister extends PluralAttribute {
 	PluralAttributeElement getElementDescriptor();
 
 	CollectionTableGroup buildTableGroup(
-			JoinedFromElement joinedFromElement,
+			SqmAttributeJoin joinedFromElement,
 			TableSpace tableSpace,
 			SqlAliasBaseManager sqlAliasBaseManager,
 			FromClauseIndex fromClauseIndex);

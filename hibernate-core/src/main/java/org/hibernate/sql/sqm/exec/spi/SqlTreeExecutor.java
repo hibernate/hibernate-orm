@@ -7,8 +7,8 @@
 package org.hibernate.sql.sqm.exec.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.result.Outputs;
 import org.hibernate.sql.sqm.ast.SelectQuery;

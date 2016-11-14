@@ -14,7 +14,7 @@ import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryInterpretations;
-import org.hibernate.sql.sqm.exec.spi.Limit;
+import org.hibernate.query.Limit;
 
 /**
  * @author Steve Ebersole

@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.internal.sql;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 
@@ -17,8 +16,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.sql.spi.ParameterBinder;
-import org.hibernate.sql.sqm.convert.spi.Return;
-import org.hibernate.sql.sqm.exec.spi.QueryOptions;
+import org.hibernate.query.QueryOptions;
 import org.hibernate.sql.sqm.exec.spi.RowTransformer;
 
 /**

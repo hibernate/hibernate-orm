@@ -7,7 +7,7 @@
 package org.hibernate.query.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.sqm.exec.spi.QueryOptions;
+import org.hibernate.query.QueryOptions;
 
 /**
  * @author Steve Ebersole

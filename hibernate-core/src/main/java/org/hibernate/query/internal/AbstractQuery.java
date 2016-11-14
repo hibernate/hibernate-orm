@@ -92,7 +92,7 @@ import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
  * @author Steve Ebersole
  */
 public abstract class AbstractQuery<R> implements QueryImplementor<R> {
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractProducedQuery.class );
+	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
 
 	private final SharedSessionContractImplementor producer;
 

@@ -12,8 +12,8 @@ import java.util.Stack;
 
 import org.hibernate.sql.sqm.ast.from.FromClause;
 import org.hibernate.sql.sqm.ast.from.TableGroup;
-import org.hibernate.sqm.path.AttributeBindingSource;
-import org.hibernate.sqm.query.from.FromElement;
+import org.hibernate.sqm.parser.common.DomainReferenceBinding;
+import org.hibernate.sqm.query.from.SqmFrom;
 
 import org.jboss.logging.Logger;
 
@@ -27,8 +27,7 @@ public class FromClauseIndex {
 
 	private final Stack<FromClauseStackNode> fromClauseStackNodes = new Stack<>();
 
-	private final Map<FromElement, TableGroup> fromElementTableSpecificationGroupXref = new HashMap<>();
-	private final Map<AttributeBindingSource,TableGroup> attributeBindingSourceTableGroupXref = new HashMap<>();
+	private final Map<SqmFrom, TableGroup> tableSpecificationGroupXref = new HashMap<>();
 
 	public void pushFromClause(FromClause fromClause) {
 		FromClauseStackNode parent = null;
@@ -59,8 +58,8 @@ public class FromClauseIndex {
 		}
 	}
 
-	public void crossReference(FromElement fromElement, TableGroup tableGroup) {
-		TableGroup old = fromElementTableSpecificationGroupXref.put( fromElement, tableGroup );
+	public void crossReference(SqmFrom fromElement, TableGroup tableGroup) {
+		TableGroup old = tableSpecificationGroupXref.put( fromElement, tableGroup );
 		if ( old != null ) {
 			log.debugf(
 					"FromElement [%s] was already cross-referenced to TableSpecificationGroup - old : [%s]; new : [%s]",
@@ -69,23 +68,27 @@ public class FromClauseIndex {
 					tableGroup
 			);
 		}
-		crossReference( (AttributeBindingSource) fromElement, tableGroup );
+		crossReference( (DomainReferenceBinding) fromElement, tableGroup );
 	}
 
-	public TableGroup findResolvedTableGroup(FromElement fromElement) {
-		return fromElementTableSpecificationGroupXref.get( fromElement );
+	public TableGroup findResolvedTableGroup(SqmFrom fromElement) {
+		return tableSpecificationGroupXref.get( fromElement );
 	}
 
-	public void crossReference(AttributeBindingSource attributeBindingSource, TableGroup group) {
-		attributeBindingSourceTableGroupXref.put( attributeBindingSource, group );
+	public void crossReference(DomainReferenceBinding binding, TableGroup group) {
+		tableSpecificationGroupXref.put( binding.getFromElement(), group );
 	}
 
-	public TableGroup findResolvedTableGroup(AttributeBindingSource attributeBindingSource) {
-		return attributeBindingSourceTableGroupXref.get( attributeBindingSource );
+	public TableGroup findResolvedTableGroup(DomainReferenceBinding binding) {
+		return findResolvedTableGroup( binding.getFromElement() );
 	}
 
-	public boolean isResolved(FromElement fromElement) {
-		return fromElementTableSpecificationGroupXref.containsKey( fromElement );
+	public boolean isResolved(DomainReferenceBinding binding) {
+		return isResolved( binding.getFromElement() );
+	}
+
+	public boolean isResolved(SqmFrom fromElement) {
+		return tableSpecificationGroupXref.containsKey( fromElement );
 	}
 
 	public static class FromClauseStackNode {

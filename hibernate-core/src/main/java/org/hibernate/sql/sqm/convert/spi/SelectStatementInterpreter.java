@@ -15,9 +15,9 @@ import org.hibernate.persister.collection.spi.ImprovedCollectionPersister;
 import org.hibernate.persister.common.spi.SingularAttributeImplementor;
 import org.hibernate.persister.common.spi.SqmTypeImplementor;
 import org.hibernate.persister.entity.spi.ImprovedEntityPersister;
+import org.hibernate.query.QueryOptions;
 import org.hibernate.sql.sqm.ast.QuerySpec;
 import org.hibernate.sql.sqm.ast.SelectQuery;
-import org.hibernate.sql.sqm.ast.expression.AttributeReference;
 import org.hibernate.sql.sqm.ast.expression.AvgFunction;
 import org.hibernate.sql.sqm.ast.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.sqm.ast.expression.CaseSearchedExpression;
@@ -51,16 +51,18 @@ import org.hibernate.sql.sqm.ast.select.SelectClause;
 import org.hibernate.sql.sqm.ast.select.Selection;
 import org.hibernate.sql.sqm.convert.internal.FromClauseIndex;
 import org.hibernate.sql.sqm.convert.internal.SqlAliasBaseManager;
-import org.hibernate.sql.sqm.exec.spi.QueryOptions;
 import org.hibernate.sqm.BaseSemanticQueryWalker;
-import org.hibernate.sqm.domain.PluralAttribute;
-import org.hibernate.sqm.domain.SingularAttribute;
+import org.hibernate.sqm.domain.DomainReference;
+import org.hibernate.sqm.domain.PluralAttributeReference;
+import org.hibernate.sqm.domain.SingularAttributeReference;
+import org.hibernate.sqm.domain.SingularAttributeReference.SingularAttributeClassification;
+import org.hibernate.sqm.parser.common.AttributeBinding;
+import org.hibernate.sqm.parser.common.EntityBinding;
 import org.hibernate.sqm.query.SqmDeleteStatement;
 import org.hibernate.sqm.query.SqmInsertSelectStatement;
 import org.hibernate.sqm.query.SqmQuerySpec;
 import org.hibernate.sqm.query.SqmSelectStatement;
 import org.hibernate.sqm.query.SqmUpdateStatement;
-import org.hibernate.sqm.query.expression.AttributeReferenceSqmExpression;
 import org.hibernate.sqm.query.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.sqm.query.expression.CaseSearchedSqmExpression;
 import org.hibernate.sqm.query.expression.CaseSimpleSqmExpression;
@@ -90,13 +92,13 @@ import org.hibernate.sqm.query.expression.function.CountStarFunctionSqmExpressio
 import org.hibernate.sqm.query.expression.function.MaxFunctionSqmExpression;
 import org.hibernate.sqm.query.expression.function.MinFunctionSqmExpression;
 import org.hibernate.sqm.query.expression.function.SumFunctionSqmExpression;
-import org.hibernate.sqm.query.from.CrossJoinedFromElement;
 import org.hibernate.sqm.query.from.FromElementSpace;
-import org.hibernate.sqm.query.from.JoinedFromElement;
-import org.hibernate.sqm.query.from.QualifiedAttributeJoinFromElement;
-import org.hibernate.sqm.query.from.QualifiedEntityJoinFromElement;
-import org.hibernate.sqm.query.from.RootEntityFromElement;
+import org.hibernate.sqm.query.from.SqmAttributeJoin;
+import org.hibernate.sqm.query.from.SqmCrossJoin;
+import org.hibernate.sqm.query.from.SqmEntityJoin;
 import org.hibernate.sqm.query.from.SqmFromClause;
+import org.hibernate.sqm.query.from.SqmJoin;
+import org.hibernate.sqm.query.from.SqmRoot;
 import org.hibernate.sqm.query.order.OrderByClause;
 import org.hibernate.sqm.query.order.SortSpecification;
 import org.hibernate.sqm.query.predicate.AndSqmPredicate;
@@ -129,6 +131,12 @@ import org.hibernate.sqm.query.select.SqmSelection;
  * @author John O'Hara
  */
 public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
+
+	// todo : need to move to a more Binding-centric approach to resolving types (needs to be ORM types)
+	//		search for `todo (binding) `
+
+	// todo : relatedly ^^ see in-line notes regarding direct casts to persister and the need to move to Binding interpretation
+	//		search for `todo (binding) (persister) : `
 
 	/**
 	 * Main entry point into SQM SelectStatement interpretation
@@ -264,8 +272,8 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 		tableSpace = fromClauseIndex.currentFromClause().makeTableSpace();
 		try {
 			visitRootEntityFromElement( fromElementSpace.getRoot() );
-			for ( JoinedFromElement joinedFromElement : fromElementSpace.getJoins() ) {
-				tableSpace.addJoinedTableGroup( (TableGroupJoin) joinedFromElement.accept(
+			for ( SqmJoin sqmJoin : fromElementSpace.getJoins() ) {
+				tableSpace.addJoinedTableGroup( (TableGroupJoin) sqmJoin.accept(
 						this ) );
 			}
 			return tableSpace;
@@ -276,15 +284,16 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 	}
 
 	@Override
-	public Object visitRootEntityFromElement(RootEntityFromElement rootEntityFromElement) {
-		if ( fromClauseIndex.isResolved( rootEntityFromElement ) ) {
-			final TableGroup resolvedTableGroup = fromClauseIndex.findResolvedTableGroup( rootEntityFromElement );
+	public Object visitRootEntityFromElement(SqmRoot sqmRoot) {
+		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
+			final TableGroup resolvedTableGroup = fromClauseIndex.findResolvedTableGroup( sqmRoot );
 			return resolvedTableGroup.resolveEntityReference();
 		}
 
-		final ImprovedEntityPersister entityPersister = (ImprovedEntityPersister) rootEntityFromElement.getBoundModelType();
+		final EntityBinding binding = sqmRoot.getDomainReferenceBinding();
+		final ImprovedEntityPersister entityPersister = (ImprovedEntityPersister) binding;
 		final EntityTableGroup group = entityPersister.buildTableGroup(
-				rootEntityFromElement,
+				sqmRoot,
 				tableSpace,
 				sqlAliasBaseManager,
 				fromClauseIndex
@@ -295,7 +304,7 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 	}
 
 	@Override
-	public Object visitQualifiedAttributeJoinFromElement(QualifiedAttributeJoinFromElement joinedFromElement) {
+	public Object visitQualifiedAttributeJoinFromElement(SqmAttributeJoin joinedFromElement) {
 		if ( fromClauseIndex.isResolved( joinedFromElement ) ) {
 			final TableGroup resolvedTableGroup = fromClauseIndex.findResolvedTableGroup( joinedFromElement );
 			return resolvedTableGroup.resolveEntityReference();
@@ -304,8 +313,8 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
 		final TableGroup group;
 
-		if ( joinedFromElement.getBoundAttribute() instanceof PluralAttribute ) {
-			final ImprovedCollectionPersister improvedCollectionPersister = (ImprovedCollectionPersister) joinedFromElement.getBoundAttribute();
+		if ( joinedFromElement.getAttributeBinding().getAttribute() instanceof PluralAttributeReference ) {
+			final ImprovedCollectionPersister improvedCollectionPersister = (ImprovedCollectionPersister) joinedFromElement.getAttributeBinding();
 			group = improvedCollectionPersister.buildTableGroup(
 					joinedFromElement,
 					tableSpace,
@@ -313,9 +322,9 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 					fromClauseIndex
 			);
 
-			final TableGroup lhsTableGroup = fromClauseIndex.findResolvedTableGroup( joinedFromElement.getAttributeBindingSource() );
+			final TableGroup lhsTableGroup = fromClauseIndex.findResolvedTableGroup( joinedFromElement.getAttributeBinding().getLhs() );
 			// I *think* it is a valid assumption here that the underlying TableGroup for an attribute is ultimately an EntityTableGroup
-			// todo : verify this
+			// todo : verify this ^^
 			final ColumnBinding[] joinLhsColumns = ( (EntityTableGroup) lhsTableGroup ).resolveIdentifierColumnBindings();
 			final ColumnBinding[] joinRhsColumns = ( (CollectionTableGroup) group ).resolveKeyColumnBindings();
 			assert joinLhsColumns.length == joinRhsColumns.length;
@@ -331,9 +340,9 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 			}
 		}
 		else {
-			final SingularAttributeImplementor singularAttribute = (SingularAttributeImplementor) joinedFromElement.getBoundAttribute();
-			if ( singularAttribute.getAttributeTypeClassification() == SingularAttribute.Classification.EMBEDDED ) {
-				group = fromClauseIndex.findResolvedTableGroup( joinedFromElement.getAttributeBindingSource() );
+			final SingularAttributeImplementor singularAttribute = (SingularAttributeImplementor) joinedFromElement.getAttributeBinding().getAttribute();
+			if ( singularAttribute.getAttributeTypeClassification() == SingularAttributeClassification.EMBEDDED ) {
+				group = fromClauseIndex.findResolvedTableGroup( joinedFromElement.getAttributeBinding().getLhs() );
 			}
 			else {
 				final ImprovedEntityPersister entityPersister = (ImprovedEntityPersister) joinedFromElement.getIntrinsicSubclassIndicator();
@@ -344,7 +353,7 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 						fromClauseIndex
 				);
 
-				final TableGroup lhsTableGroup = fromClauseIndex.findResolvedTableGroup( joinedFromElement.getAttributeBindingSource() );
+				final TableGroup lhsTableGroup = fromClauseIndex.findResolvedTableGroup( joinedFromElement.getAttributeBinding().getLhs() );
 				final ColumnBinding[] joinLhsColumns = lhsTableGroup.resolveBindings( singularAttribute );
 				final ColumnBinding[] joinRhsColumns;
 
@@ -355,7 +364,7 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 				else {
 					final ImprovedEntityPersister associatedPersister = ( (EntityTableGroup) lhsTableGroup ).getPersister();
 					joinRhsColumns = group.resolveBindings(
-							(SingularAttribute) associatedPersister.findAttribute( ormType.getRHSUniqueKeyPropertyName() )
+							(SingularAttributeImplementor) associatedPersister.findAttribute( ormType.getRHSUniqueKeyPropertyName() )
 					);
 				}
 				assert joinLhsColumns.length == joinRhsColumns.length;
@@ -383,7 +392,9 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 	}
 
 	@Override
-	public TableGroupJoin visitCrossJoinedFromElement(CrossJoinedFromElement joinedFromElement) {
+	public TableGroupJoin visitCrossJoinedFromElement(SqmCrossJoin joinedFromElement) {
+		// todo : this cast will not ultimately work.
+		// 		Instead we will need to resolve the Bindable+intrinsicSubclassIndicator to its ImprovedEntityPersister/EntityPersister
 		final ImprovedEntityPersister entityPersister = (ImprovedEntityPersister) joinedFromElement.getIntrinsicSubclassIndicator();
 		TableGroup group = entityPersister.buildTableGroup(
 				joinedFromElement,
@@ -395,7 +406,7 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 	}
 
 	@Override
-	public Object visitQualifiedEntityJoinFromElement(QualifiedEntityJoinFromElement joinedFromElement) {
+	public Object visitQualifiedEntityJoinFromElement(SqmEntityJoin joinedFromElement) {
 		throw new NotYetImplementedException();
 	}
 
@@ -449,12 +460,9 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 	}
 
 	@Override
-	public AttributeReference visitAttributeReferenceExpression(AttributeReferenceSqmExpression expression) {
-		// WARNING : works on the assumption that the referenced attribute is always singular.
-		// I believe that is valid, but we will need to test
-		// todo : verify if this is a valid assumption
-		final SingularAttributeImplementor attribute = (SingularAttributeImplementor) expression.getBoundAttribute();
-		final TableGroup tableGroup = fromClauseIndex.findResolvedTableGroup( expression.getAttributeBindingSource() );
+	public Object visitAttributeReferenceExpression(AttributeBinding expression) {
+		final SingularAttributeImplementor attribute = (SingularAttributeImplementor) expression.getAttribute();
+		final TableGroup tableGroup = fromClauseIndex.findResolvedTableGroup( expression.getLhs() );
 		return tableGroup.resolve( attribute );
 	}
 
@@ -466,7 +474,7 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 		);
 	}
 
-	protected Type extractOrmType(org.hibernate.sqm.domain.Type sqmType) {
+	protected Type extractOrmType(DomainReference sqmType) {
 		if ( sqmType == null ) {
 			return null;
 		}

@@ -37,7 +37,7 @@ import org.hibernate.sql.sqm.exec.internal.RowTransformerTupleImpl;
 import org.hibernate.sql.sqm.exec.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.sqm.exec.internal.SqlTreeExecutorImpl;
 import org.hibernate.sql.sqm.exec.spi.PreparedStatementCreator;
-import org.hibernate.sql.sqm.exec.spi.QueryOptions;
+import org.hibernate.query.QueryOptions;
 import org.hibernate.sql.sqm.exec.spi.RowTransformer;
 import org.hibernate.sqm.query.SqmSelectStatement;
 import org.hibernate.sqm.query.select.SqmSelection;

@@ -15,6 +15,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Steve Ebersole
  */
 public interface CallableStatementSupport {
+	boolean shouldUseFunctionSyntax(ParameterRegistry parameterRegistry);
+
 	String renderCallableStatement(
 			String name,
 			ParameterStrategy parameterStrategy,

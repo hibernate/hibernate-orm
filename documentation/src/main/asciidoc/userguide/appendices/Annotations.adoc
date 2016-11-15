@@ -722,6 +722,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 By default, Hibernate uses a cached `INSERT` statement that sets all table columns.
 When the entity is annotated with the `@DynamicInsert` annotation, the `PreparedStatement` is going to include only the non-null columns.
 
+See the <<chapters/domain/basic_types.adoc#mapping-generated-CreationTimestamp,`@CreationTimestamp` mapping>> section for more info on how `@DynamicInsert` works.
+
 [[annotations-hibernate-dynamicupdate]]
 ==== `@DynamicUpdate`
 
@@ -729,6 +731,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 By default, Hibernate uses a cached `UPDATE` statement that sets all table columns.
 When the entity is annotated with the `@DynamicUpdate` annotation, the `PreparedStatement` is going to include only the columns whose values have been changed.
+
+See the <<chapters/domain/entity.adoc#locking-optimistic-lock-type-dirty-example, `OptimisticLockType.DIRTY` mapping>> section for more info on how `@DynamicUpdate` works.
 
 [NOTE]
 ====
@@ -1010,8 +1014,8 @@ NONE:: The implicit optimistic locking mechanism is disabled.
 VERSION:: The implicit optimistic locking mechanism is using a dedicated version column.
 ALL:: The implicit optimistic locking mechanism is using *all* attributes as part of an expanded WHERE clause restriction for the `UPDATE` and `DELETE` SQL statements.
 DIRTY:: The implicit optimistic locking mechanism is using the *dirty* attributes (the attributes that were modified) as part of an expanded WHERE clause restriction for the `UPDATE` and `DELETE` SQL statements.
-+
-When using `DIRTY`, you should also add the <<annotations-hibernate-dynamicupdate>> annotation and also <<annotations-hibernate-selectbeforeupdate>> so that detached entities are properly handled as well.
+
+See the <<chapters/domain/entity.adoc#entity-pojo-optlock-versionless, Versionless optimistic locking>> section for more info.
 
 [[annotations-hibernate-orderby]]
 ==== `@OrderBy`
@@ -1074,6 +1078,8 @@ According to Oracle documentation, `ROWID` is the fastest way to access a single
 ==== `@SelectBeforeUpdate`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SelectBeforeUpdate.html[`@SelectBeforeUpdate`] annotation is used to specify that the current annotated entity state be selected from the database when determining whether to perform an update when the detached entity is reattached.
+
+See the <<chapters/domain/entity.adoc#locking-optimistic-lock-type-dirty-example, `OptimisticLockType.DIRTY` mapping>> section for more info on how `@SelectBeforeUpdate` works.
 
 [[annotations-hibernate-sort]]
 ==== [line-through]#`@Sort`#

@@ -672,6 +672,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The same behavior can be achieved using the `definition` attribute of the JPA <<annotations-jpa-column>> annotation.
 
+See the <<chapters/schema/Schema.adoc#schema-generation-column-default-value,Default value for database column>> chapter for more info.
+
 [[annotations-hibernate-columns]]
 ==== `@Columns`
 
@@ -696,13 +698,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CreationTimestamp.html[`@CreationTimestamp`] annotation is used to specify that the current annotated temporal type must be initialized with the current JVM timestamp value.
 
-Supported attribute types:
-
-- `java.util.Date`
-- `java.util.Calendar`
-- `java.sql.Date`
-- `java.sql.Time`
-- `java.sql.Timestamp`
+See the <<chapters/domain/basic_types.adoc#mapping-generated-CreationTimestamp,`@CreationTimestamp` mapping>> section for more info.
 
 [[annotations-hibernate-discriminatorformula]]
 ==== `@DiscriminatorFormula`

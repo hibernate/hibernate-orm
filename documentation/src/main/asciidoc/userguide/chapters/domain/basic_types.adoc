@@ -1207,8 +1207,47 @@ Only `@Version` and `@Basic` types can be marked as generated.
 
 To mark a property as generated, use The Hibernate specific `@Generated` annotation.
 
+[[mapping-generated-CreationTimestamp]]
+===== `@CreationTimestamp` annotation
+
+The `@CreationTimestamp` annotation instructs Hibernate to set the annotated entity attribute with the current timestamp value of the JVM
+when the entity is being persisted.
+
+The supported property types are:
+
+- `java.util.Date`
+- `java.util.Calendar`
+- `java.sql.Date`
+- `java.sql.Time`
+- `java.sql.Timestamp`
+
+[[mapping-generated-CreationTimestamp-example]]
+.`@CreationTimestamp` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/CreationTimestampTest.java[tags=mapping-generated-CreationTimestamp-example]
+----
+====
+
+When the `Event` entity is persisted, Hibernate is going to populate the underlying `timestamp` column with the current JVM timestamp value:
+
+[[mapping-generated-CreationTimestamp-persist-example]]
+.`@CreationTimestamp` persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/CreationTimestampTest.java[tags=mapping-generated-CreationTimestamp-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-generated-CreationTimestamp-persist-example.sql[]
+----
+====
+
 [[mapping-generated-ValueGenerationType]]
-===== @ValueGenerationType meta-annotation
+===== `@ValueGenerationType` meta-annotation
 
 Hibernate 4.3 introduced the `@ValueGenerationType` meta-annotation, which is a new approach to declaring generated attributes or customizing generators.
 

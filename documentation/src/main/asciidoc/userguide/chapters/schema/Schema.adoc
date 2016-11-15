@@ -118,7 +118,44 @@ include::{extrasdir}/schema-generation-database-checks-persist-example.sql[]
 ----
 ====
 
+[[schema-generation-column-default-value]]
+=== Default value for database column
 
+With Hibernate, you can specify a default value for a given database column using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnDefault.html[`@ColumnDefault`] annotation.
 
+[[schema-generation-column-default-value-mapping-example]]
+.`@ColumnDefault` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-mapping-example]
+----
 
+[source, SQL, indent=0]
+----
+include::{extrasdir}/schema-generation-column-default-value-mapping-example.sql[]
+----
+====
 
+In the mapping above, both the `name` and `clientId` table columns are going to use a `DEFAULT` value.
+
+[NOTE]
+====
+The entity is annotated with the `@DynamicInsert` annotation so that the `INSERT` statement does not include the entity attribute that have not been set.
+====
+
+This way, when omitting the `name` and the `clientId` attribute, the database is going to set them according to their default values.
+
+[[schema-generation-column-default-value-persist-example]]
+.`@ColumnDefault` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/schema-generation-column-default-value-persist-example.sql[]
+----
+====

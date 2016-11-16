@@ -26,7 +26,7 @@ public class TimestampTypeOverrides extends TypeOverrides {
 			throw new CacheException( "Timestamp cache cannot be configured with invalidation" );
 		}
 		final EvictionStrategy strategy = cfg.eviction().strategy();
-		if ( !strategy.equals( EvictionStrategy.NONE ) ) {
+		if ( strategy.isEnabled() ) {
 			throw new CacheException( "Timestamp cache cannot be configured with eviction" );
 		}
 	}

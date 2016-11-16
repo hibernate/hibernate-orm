@@ -132,7 +132,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 			if ( c.clustering().cacheMode().isInvalidation() ) {
 				throw log.timestampsMustNotUseInvalidation();
 			}
-			if (c.eviction().strategy() != EvictionStrategy.NONE) {
+			if (c.eviction().strategy().isEnabled()) {
 				throw log.timestampsMustNotUseEviction();
 			}
 		}),

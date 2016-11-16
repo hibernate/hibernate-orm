@@ -1327,8 +1327,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unexpectedRowCounts();
 
 	@LogMessage(level = WARN)
-	@Message(value = "unrecognized bytecode provider [%s], using 'bytebuddy' by default", id = 382)
-	void unknownBytecodeProvider(String providerName);
+	@Message(value = "unrecognized bytecode provider [%s], using [%s] by default", id = 382)
+	void unknownBytecodeProvider(String providerName, String defaultProvider);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Unknown Ingres major version [%s]; using Ingres 9.2 dialect", id = 383)

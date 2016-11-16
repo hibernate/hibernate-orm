@@ -151,7 +151,7 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public final class Environment implements AvailableSettings {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Environment.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Environment.class.getName());
 
 	private static final BytecodeProvider BYTECODE_PROVIDER_INSTANCE;
 	private static final boolean ENABLE_BINARY_STREAMS;
@@ -313,21 +313,31 @@ public final class Environment implements AvailableSettings {
 		return ConnectionProviderInitiator.toIsolationNiceName( isolation );
 	}
 
+
+	public static final String BYTECODE_PROVIDER_NAME_JAVASSIST = "javassist";
+	public static final String BYTECODE_PROVIDER_NAME_BYTEBUDDY = "bytebuddy";
+	public static final String BYTECODE_PROVIDER_NAME_DEFAULT = BYTECODE_PROVIDER_NAME_JAVASSIST;
+
 	public static BytecodeProvider buildBytecodeProvider(Properties properties) {
-		String provider = ConfigurationHelper.getString( BYTECODE_PROVIDER, properties, "bytebuddy" );
-		LOG.bytecodeProvider( provider );
+		String provider = ConfigurationHelper.getString( BYTECODE_PROVIDER, properties, BYTECODE_PROVIDER_NAME_DEFAULT );
 		return buildBytecodeProvider( provider );
 	}
 
 	private static BytecodeProvider buildBytecodeProvider(String providerName) {
-		if ( "bytebuddy".equals( providerName ) ) {
+		if ( BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( providerName ) ) {
 			return new org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl();
 		}
-		if ( "javassist".equals( providerName ) ) {
+
+		if ( BYTECODE_PROVIDER_NAME_JAVASSIST.equals( providerName ) ) {
 			return new org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl();
 		}
 
-		LOG.unknownBytecodeProvider( providerName );
-		return new org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl();
+		LOG.bytecodeProvider( providerName );
+
+		// todo : allow a custom class name - just check if the config is a FQN
+		//		currently we assume it is only ever the Strings "javassist" or "bytebuddy"...
+
+		LOG.unknownBytecodeProvider( providerName, BYTECODE_PROVIDER_NAME_DEFAULT );
+		return new org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl();
 	}
 }

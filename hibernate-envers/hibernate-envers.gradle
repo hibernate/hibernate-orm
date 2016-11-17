@@ -71,6 +71,9 @@ sourceSets {
 jar {
     manifest {
         instructionFirst 'Import-Package',
+            // TODO: Remove after Javassist is blown away in ORM 6
+            "javassist;version=\"${javassistVersion}\"",
+            "javassist.util.proxy;version=\"${javassistVersion}\"",
             // TODO: Shouldn't have to explicitly list the JPA packages, but
             // the plugin generates them with [1.0,2) versions.
             'javax.persistence;version="2.1.0"',

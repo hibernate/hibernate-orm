@@ -218,3 +218,137 @@ However, although `@BatchSize` is better than running into an N+1 query issue,
 most of the time, a DTO projection or a `JOIN FETCH` is a much better alternative since
 it allows you to fetch all the required data with a single query.
 ====
+
+[[fetching-fetch-annotation]]
+=== The `@Fetch` annotation mapping
+
+Besides the `FetchType.LAZY` or `FetchType.EAGER` JPA annotations,
+you can also use the Hibernate-specific `@Fetch` annotation that accepts one of the following `FetchMode`s:
+
+SELECT::
+	Use a secondary select for each individual entity, collection, or join load.
+JOIN::
+	Use an outer join to load the related entities, collections or joins.
+SUBSELECT::
+	Available for collections only.  
+	When accessing a non-initialized collection, this fetch mode will trigger loading all elements of all collections of the same role
+	for all owners associated with the persistence context using a single secondary select.
+
+[[fetching-fetchmode-select]]
+=== `FetchMode.SELECT`
+
+To demonstrate how `FetchMode.SELECT` works, consider the following entity mapping:
+
+[[fetching-strategies-fetch-mode-select-mapping-example]]
+.`FetchMode.SELECT` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FetchModeSelectTest.java[tags=fetching-strategies-fetch-mode-select-mapping-example]
+----
+====
+
+Considering there are multiple `Department` entities, each one having multiple `Employee` entities,
+when executing the following test case, Hibernate fetches every uninitialized `Employee`
+collection using a secondary `SELECT` statement upon accessing the child collection for the first time:
+
+[[fetching-strategies-fetch-mode-select-example]]
+.`FetchMode.SELECT` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FetchModeSelectTest.java[tags=fetching-strategies-fetch-mode-select-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/fetching-strategies-fetch-mode-select-example.sql[]
+----
+====
+
+The more `Department` entities are fetched by the first query, the more secondary `SELECT` statements are executed to initialize the `employees` collections.
+Therefore, `FetchMode.SELECT` can lead to N+1 query issues.
+
+[[fetching-fetchmode-subselect]]
+=== `FetchMode.SUBSELECT`
+
+To demonstrate how `FetchMode.SUBSELECT` works, we are going to modify the <<fetching-strategies-fetch-mode-select-mapping-example>> to use
+`FetchMode.SUBSELECT`:
+
+[[fetching-strategies-fetch-mode-subselect-mapping-example]]
+.`FetchMode.SUBSELECT` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-mode-subselect-mapping-example]
+----
+====
+
+Now, we are going to fetch all `Department` entities that match a given filtering criteria
+and then navigate their `employees` collections.
+
+Hibernate is going to avoid the N+1 query issue by generating a single SQL statement to initialize all `employees` collections
+for all `Department` entities that were previously fetched.
+Instead of using passing all entity identifiers, Hibernate simply reruns the previous query that fetched the `Department` entities.
+
+[[fetching-strategies-fetch-mode-subselect-example]]
+.`FetchMode.SUBSELECT` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-mode-subselect-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/fetching-strategies-fetch-mode-subselect-example.sql[]
+----
+====
+
+[[fetching-fetchmode-join]]
+=== `FetchMode.JOIN`
+
+To demonstrate how `FetchMode.JOIN` works, we are going to modify the <<fetching-strategies-fetch-mode-select-mapping-example>> to use
+`FetchMode.JOIN` instead:
+
+[[fetching-strategies-fetch-mode-join-mapping-example]]
+.`FetchMode.JOIN` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FetchModeJoinTest.java[tags=fetching-strategies-fetch-mode-join-mapping-example]
+----
+====
+
+Now, we are going to fetch one `Department` and navigate its `employees` collections.
+
+[NOTE]
+====
+The reason why we are not using a JPQL query to fetch multiple `Department` entities is because
+the `FetchMode.JOIN` strategy would be overridden by the query fetching directive.
+
+To fetch multiple relationships with a JPQL query, the `JOIN FETCH` directive must be used instead.
+
+Therefore, `FetchMode.JOIN` is useful for when entities are fetched directly, via their identifier or natural-id.
+
+Also, the `FetchMode.JOIN` acts as a `FetchType.EAGER` strategy.
+Even if we mark the association as `FetchType.LAZY`, the `FetchMode.JOIN` will load the association eagerly.
+====
+
+Hibernate is going to avoid the secondary query by issuing an OUTER JOIN for the `employees` collection.
+
+[[fetching-strategies-fetch-mode-join-example]]
+.`FetchMode.JOIN` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FetchModeJoinTest.java[tags=fetching-strategies-fetch-mode-join-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/fetching-strategies-fetch-mode-join-example.sql[]
+----
+====
+
+This time, there was no secondary query because the child collection was loaded along with the parent entity.

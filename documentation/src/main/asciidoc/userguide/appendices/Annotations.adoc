@@ -749,6 +749,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Fetch.html[`@Fetch`] annotation is used to specify the Hibernate specific https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchMode.html[`FetchMode`] (e.g. `JOIN`, `SELECT`, `SUBSELECT`) used for the current annotated association:
 
+See the <<chapters/fetching/Fetching.adoc#fetching-fetch-annotation, `@Fetch` mapping>> section for more info.
+
 [[annotations-hibernate-fetchprofile]]
 ==== `@FetchProfile`
 

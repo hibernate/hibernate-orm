@@ -52,7 +52,7 @@ public class JdbcTransaction extends AbstractTransactionImpl {
 
 	private Connection managedConnection;
 	private boolean wasInitiallyAutoCommit;
-	private boolean isDriver;
+	private boolean driver;
 
 	protected JdbcTransaction(TransactionCoordinator transactionCoordinator) {
 		super( transactionCoordinator );
@@ -76,7 +76,7 @@ public class JdbcTransaction extends AbstractTransactionImpl {
 			throw new TransactionException( "JDBC begin transaction failed: ", e );
 		}
 
-		isDriver = transactionCoordinator().takeOwnership();
+		driver = transactionCoordinator().takeOwnership();
 	}
 
 	@Override
@@ -85,7 +85,7 @@ public class JdbcTransaction extends AbstractTransactionImpl {
 			transactionCoordinator().getJdbcCoordinator().setTransactionTimeOut( getTimeout() );
 		}
 		transactionCoordinator().sendAfterTransactionBeginNotifications( this );
-		if ( isDriver ) {
+		if ( driver ) {
 			transactionCoordinator().getTransactionContext().afterTransactionBegin( this );
 		}
 	}
@@ -96,12 +96,12 @@ public class JdbcTransaction extends AbstractTransactionImpl {
 
 		// basically, if we are the driver of the transaction perform a managed flush prior to
 		// physically committing the transaction
-		if ( isDriver && !transactionCoordinator().getTransactionContext().isFlushModeNever() ) {
+		if ( driver && !transactionCoordinator().getTransactionContext().isFlushModeNever() ) {
 			// if an exception occurs during flush, user must call rollback()
 			transactionCoordinator().getTransactionContext().managedFlush();
 		}
 
-		if ( isDriver ) {
+		if ( driver ) {
 			transactionCoordinator().getTransactionContext().beforeTransactionCompletion( this );
 		}
 	}
@@ -140,7 +140,7 @@ public class JdbcTransaction extends AbstractTransactionImpl {
 
 	@Override
 	protected void afterAfterCompletion() {
-		if ( isDriver
+		if ( driver
 				&& transactionCoordinator().getTransactionContext().shouldAutoClose()
 				&& !transactionCoordinator().getTransactionContext().isClosed() ) {
 			try {
@@ -204,5 +204,9 @@ public class JdbcTransaction extends AbstractTransactionImpl {
 	@Override
 	public boolean isActive() throws HibernateException {
 		return getLocalStatus() == LocalStatus.ACTIVE;
+	}
+	
+	protected boolean isDriver(){
+		return driver;
 	}
 }

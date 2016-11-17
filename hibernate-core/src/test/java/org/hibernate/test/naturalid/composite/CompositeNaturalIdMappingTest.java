@@ -12,25 +12,27 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 /**
  * @author Steve Ebersole
  */
+@TestForIssue(jiraKey = "HHH-11255")
 public class CompositeNaturalIdMappingTest extends BaseUnitTestCase {
+
 	@Test
-	@FailureExpected( jiraKey = "tbd" )
 	public void test() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+				.build();
 
 		try {
 			Metadata meta = new MetadataSources( ssr )
 					.addAnnotatedClass( PostalCarrier.class )
 					.addAnnotatedClass( PostalCode.class )
 					.buildMetadata();
-			( ( MetadataImplementor) meta ).validate();
+			( (MetadataImplementor) meta ).validate();
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

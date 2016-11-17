@@ -24,6 +24,9 @@ public class PostalCarrier {
 	@Embedded
 	private PostalCode postalCode;
 
+	public PostalCarrier() {
+	}
+
 	public PostalCarrier(long id, PostalCode postalCode) {
 		this.id = id;
 		this.postalCode = postalCode;

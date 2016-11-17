@@ -6,13 +6,20 @@
  */
 package org.hibernate.cfg;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Index;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
 
 /**
  * @author Emmanuel Bernard
@@ -64,10 +71,27 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 		}
 		if ( column != null ) {
 			this.table = column.getTable();
-			addConstraintToColumn(
-					buildingContext.getMetadataCollector()
+
+			PersistentClass persistentClass = (PersistentClass) persistentClasses.get( column.getPropertyHolder().getEntityName() );
+			Property property = persistentClass.getProperty( column.getPropertyName() );
+
+			if ( property.getValue() instanceof Component ) {
+				Component component = (Component) property.getValue();
+
+				List<Column> columns = new ArrayList<>();
+				component.getColumnIterator().forEachRemaining( selectable -> {
+					if ( selectable instanceof Column ) {
+						columns.add( (Column) selectable );
+					}
+				} );
+				addConstraintToColumns( columns );
+			}
+			else {
+				addConstraintToColumn(
+						buildingContext.getMetadataCollector()
 							.getLogicalColumnName( table, column.getMappingColumn().getQuotedName() )
-			);
+				);
+			}
 		}
 	}
 
@@ -87,6 +111,21 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 		}
 		else {
 			table.getOrCreateIndex( indexName ).addColumn( column );
+		}
+	}
+
+	private void addConstraintToColumns(List<Column> columns) {
+		if ( unique ) {
+			UniqueKey uniqueKey = table.getOrCreateUniqueKey( indexName );
+			for ( Column column : columns ) {
+				uniqueKey.addColumn( column );
+			}
+		}
+		else {
+			Index index = table.getOrCreateIndex( indexName );
+			for ( Column column : columns ) {
+				index.addColumn( column );
+			}
 		}
 	}
 }

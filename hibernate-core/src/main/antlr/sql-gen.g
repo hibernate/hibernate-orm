@@ -28,7 +28,7 @@ options {
 	private StringBuilder buf = new StringBuilder();
 
 	private boolean captureExpression = false;
-	private StringBuilder expr = new StringBuilder();
+	protected java.util.List<StringBuilder> exprs = new java.util.ArrayList<StringBuilder>(java.util.Arrays.asList(new StringBuilder()));
 
 	protected void out(String s) {
 		getStringBuilder().append( s );
@@ -75,7 +75,7 @@ options {
 	}
 
 	protected StringBuilder getStringBuilder() {
-		return captureExpression ? expr : buf;
+		return captureExpression ? exprs.get(exprs.size() - 1) : buf;
 	}
 
 	protected void nyi(AST n) {
@@ -97,16 +97,27 @@ options {
 	}
 
 	protected void captureExpressionStart() {
-		captureExpression = true;
+	    if ( captureExpression ) {
+            exprs.add( new StringBuilder() );
+	    } else {
+		    captureExpression = true;
+		}
 	}
 
 	protected void captureExpressionFinish() {
-		captureExpression = false;
+	    // Capturing will only stop when we leave the last capture context
+	    if ( exprs.size() == 1 ) {
+		    captureExpression = false;
+		}
 	}
 
 	protected String resetCapture() {
-		final String expression = expr.toString();
-		expr = new StringBuilder();
+	    StringBuilder sb = exprs.remove( exprs.size() - 1 );
+		final String expression = sb.toString();
+		if ( exprs.isEmpty() ) {
+		    sb.setLength(0);
+		    exprs.add( sb );
+		}
 		return expression;
 	}
 

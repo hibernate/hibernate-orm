@@ -163,18 +163,14 @@ subprojects { subProject ->
 		testRuntime( libraries.postgresql )
 		testRuntime( libraries.mysql )
 		testRuntime( libraries.mariadb )
+		testRuntime( libraries.mssql )
 		testRuntime( libraries.informix )
+
 		if (db.equalsIgnoreCase("oracle")) {
 			dependencies {
 				testRuntime( libraries.oracle )
 			}
 		}
-		if (db.equalsIgnoreCase("mssql")) {
-			dependencies {
-				testRuntime( libraries.mssql )
-			}
-		}
-
 		// 6.6 gave me some NPE problems from within checkstyle...
 		checkstyle 'com.puppycrawl.tools:checkstyle:6.5'
 	}

@@ -135,7 +135,7 @@ public class SQLServerStoredProcedureTest extends BaseEntityManagerFunctionalTes
 						"AS " +
 						"BEGIN " +
 						"   SELECT @phoneCount = COUNT(*)  " +
-						"   FROM phone  " +
+						"   FROM Phone  " +
 						"   WHERE person_id = @personId " +
 						"END"
 					);
@@ -147,7 +147,7 @@ public class SQLServerStoredProcedureTest extends BaseEntityManagerFunctionalTes
 						"BEGIN  " +
 						"    DECLARE @phoneCount int;  " +
 						"    SELECT @phoneCount = COUNT(*) " +
-						"    FROM phone   " +
+						"    FROM Phone   " +
 						"    WHERE person_id = @personId;  " +
 						"    RETURN(@phoneCount);  " +
 						"END"
@@ -162,7 +162,7 @@ public class SQLServerStoredProcedureTest extends BaseEntityManagerFunctionalTes
 						"    SET @phones = CURSOR " +
 						"    FORWARD_ONLY STATIC FOR " +
 						"        SELECT *  " +
-						"        FROM phone   " +
+						"        FROM Phone   " +
 						"        WHERE person_id = @personId;  " +
 						"    OPEN @phones;"
 					);

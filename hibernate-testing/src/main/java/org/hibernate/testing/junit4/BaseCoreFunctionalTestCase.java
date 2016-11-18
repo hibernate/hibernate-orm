@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Consumer;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
@@ -95,16 +96,14 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	@BeforeClassOnce
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected void buildSessionFactory() {
-		buildSessionFactory( Collections.emptyMap() );
+		buildSessionFactory( null );
 	}
 
-	protected void buildSessionFactory(Map<String, String> properties) {
+	protected void buildSessionFactory(Consumer<Configuration> configurationAdapter) {
 		// for now, build the configuration to get all the property settings
 		configuration = constructAndConfigureConfiguration();
-		if ( properties != null && !properties.isEmpty() ) {
-			for ( Map.Entry<String, String> entry : properties.entrySet() ) {
-				configuration.setProperty( entry.getKey(), entry.getValue() );
-			}
+		if ( configurationAdapter != null ) {
+			configurationAdapter.accept(configuration);
 		}
 		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
 		serviceRegistry = buildServiceRegistry( bootRegistry, configuration );
@@ -115,10 +114,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void rebuildSessionFactory() {
-		rebuildSessionFactory( Collections.emptyMap() );
+		rebuildSessionFactory( null );
 	}
 
-	protected void rebuildSessionFactory(Map<String, String> properties) {
+	protected void rebuildSessionFactory(Consumer<Configuration> configurationAdapter) {
 		if ( sessionFactory == null ) {
 			return;
 		}
@@ -132,7 +131,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		catch (Exception ignore) {
 		}
 
-		buildSessionFactory( properties );
+		buildSessionFactory( configurationAdapter );
 	}
 
 	protected Configuration buildConfiguration() {

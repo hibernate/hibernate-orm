@@ -245,7 +245,7 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-11157")
 	public void testWithClauseAsNonSubqueryWithKey() {
-		rebuildSessionFactory( Collections.singletonMap( AvailableSettings.COLLECTION_JOIN_SUBQUERY, "false" ) );
+		rebuildSessionFactory( c -> c.setProperty( AvailableSettings.COLLECTION_JOIN_SUBQUERY, "false" ) );
 
 		try {
 			TestData data = new TestData();

@@ -102,7 +102,11 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	@Override
 	protected void out(String s) {
-		writer.clause( s );
+		if ( exprs.size() > 1 ) {
+			super.out( s );
+		} else {
+			writer.clause( s );
+		}
 	}
 
 	@Override

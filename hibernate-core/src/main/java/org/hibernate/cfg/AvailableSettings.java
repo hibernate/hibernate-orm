@@ -176,8 +176,30 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to pass along the CDI BeanManager, if any, to be used.
+	 *
+	 * @see #CDI_BEAN_REGISTRY
 	 */
 	String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
+
+	/**
+	 * Used to pass along a {@link ManagedBeanRegistry} implementation.  Can refer to:<ul>
+	 *     <li>A {@link ManagedBeanRegistry} instance</li>
+	 *     <li>A {@link ManagedBeanRegistry} implementation Class reference</li>
+	 *     <li>A {@link ManagedBeanRegistry} implementation FQN</li>
+	 *     <li>
+	 *         A recognized short name:<ul>
+	 *             <li>{@code "no-cdi"}</li>
+	 *             <li>{@code "cdi"}</li>
+	 *         </ul>
+	 *     </li>
+	 * </ul>
+	 * <p/>
+	 * For the first cases it is expected that the named Class define a ctor accepting the BeanManager
+	 * reference *as an {@link Object}*.
+	 *
+	 * @see #CDI_BEAN_MANAGER
+	 */
+	String CDI_BEAN_REGISTRY = "hibernate.cdi.bean_registry";
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -25,9 +25,9 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.jpa.event.spi.jpa.Callback;
-import org.hibernate.jpa.event.spi.jpa.CallbackType;
 import org.hibernate.jpa.event.spi.jpa.CallbackBuilder;
-import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
+import org.hibernate.jpa.event.spi.jpa.CallbackType;
+import org.hibernate.resource.cdi.spi.ManagedBeanRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -40,11 +40,11 @@ import org.jboss.logging.Logger;
 public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 	private static final Logger log = Logger.getLogger( CallbackBuilderLegacyImpl.class );
 
-	private final ListenerFactory jpaListenerFactory;
+	private final ManagedBeanRegistry managedBeanRegistry;
 	private final ReflectionManager reflectionManager;
 
-	public CallbackBuilderLegacyImpl(ListenerFactory jpaListenerFactory, ReflectionManager reflectionManager) {
-		this.jpaListenerFactory = jpaListenerFactory;
+	public CallbackBuilderLegacyImpl(ManagedBeanRegistry managedBeanRegistry, ReflectionManager reflectionManager) {
+		this.managedBeanRegistry = managedBeanRegistry;
 		this.reflectionManager = reflectionManager;
 	}
 
@@ -81,9 +81,9 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 	}
 
 	public Callback[] resolveCallbacks(XClass beanClass, CallbackType callbackType, ReflectionManager reflectionManager) {
-		List<Callback> callbacks = new ArrayList<Callback>();
-		List<String> callbacksMethodNames = new ArrayList<String>(); //used to track overridden methods
-		List<Class> orderedListeners = new ArrayList<Class>();
+		List<Callback> callbacks = new ArrayList<>();
+		List<String> callbacksMethodNames = new ArrayList<>(); //used to track overridden methods
+		List<Class> orderedListeners = new ArrayList<>();
 		XClass currentClazz = beanClass;
 		boolean stopListeners = false;
 		boolean stopDefaultListeners = false;
@@ -157,7 +157,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 			Callback callback = null;
 			if ( listener != null ) {
 				XClass xListener = reflectionManager.toXClass( listener );
-				callbacksMethodNames = new ArrayList<String>();
+				callbacksMethodNames = new ArrayList<>();
 				List<XMethod> methods = xListener.getDeclaredMethods();
 				for ( final XMethod xMethod : methods ) {
 					if ( xMethod.isAnnotationPresent( callbackType.getCallbackAnnotation() ) ) {
@@ -167,7 +167,7 @@ public class CallbackBuilderLegacyImpl implements CallbackBuilder {
 							//overridden method, remove the superclass overridden method
 							if ( callback == null ) {
 								callback = new ListenerCallback(
-										jpaListenerFactory.buildListener( listener ),
+										managedBeanRegistry.getBean( listener ),
 										method,
 										callbackType
 								);

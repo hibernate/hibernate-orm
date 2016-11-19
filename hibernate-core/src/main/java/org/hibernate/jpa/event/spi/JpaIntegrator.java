@@ -43,9 +43,8 @@ import org.hibernate.jpa.event.internal.jpa.CallbackBuilderLegacyImpl;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.internal.jpa.CallbackRegistryImpl;
 import org.hibernate.jpa.event.spi.jpa.CallbackBuilder;
-import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
-import org.hibernate.jpa.event.spi.jpa.ListenerFactoryBuilder;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.resource.cdi.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
@@ -55,7 +54,6 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * @author Steve Ebersole
  */
 public class JpaIntegrator implements Integrator {
-	private ListenerFactory jpaListenerFactory;
 	private CallbackBuilder callbackBuilder;
 	private CallbackRegistryImpl callbackRegistry;
 	private CascadeStyle oldPersistCascadeStyle;
@@ -132,8 +130,7 @@ public class JpaIntegrator implements Integrator {
 				.getReflectionManager();
 
 		this.callbackRegistry = new CallbackRegistryImpl();
-		this.jpaListenerFactory = ListenerFactoryBuilder.buildListenerFactory( sessionFactory.getSessionFactoryOptions() );
-		this.callbackBuilder = new CallbackBuilderLegacyImpl( jpaListenerFactory, reflectionManager );
+		this.callbackBuilder = new CallbackBuilderLegacyImpl( serviceRegistry.getService( ManagedBeanRegistry.class ), reflectionManager );
 		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
 			if ( persistentClass.getClassName() == null ) {
 				// we can have non java class persisted by hibernate
@@ -170,9 +167,6 @@ public class JpaIntegrator implements Integrator {
 		}
 		if ( callbackBuilder != null ) {
 			callbackBuilder.release();
-		}
-		if ( jpaListenerFactory != null ) {
-			jpaListenerFactory.release();
 		}
 	}
 

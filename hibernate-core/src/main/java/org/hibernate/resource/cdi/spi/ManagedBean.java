@@ -4,14 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.event.spi.jpa;
+package org.hibernate.resource.cdi.spi;
 
 /**
- * Encapsulates access to the listener instance for listener callbacks
- * ({@link javax.persistence.EntityListeners}).
+ * Generalized contract for a CDI ManagedBean as seen by Hibernate
  *
  * @author Steve Ebersole
  */
-public interface Listener<T> {
-	T getListener();
+public interface ManagedBean<T> {
+	Class<T> getBeanClass();
+	T getBeanInstance();
+	void release();
 }

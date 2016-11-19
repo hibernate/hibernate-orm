@@ -10,6 +10,7 @@ import java.sql.Types;
 import java.util.Comparator;
 import javax.persistence.AttributeConverter;
 
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;

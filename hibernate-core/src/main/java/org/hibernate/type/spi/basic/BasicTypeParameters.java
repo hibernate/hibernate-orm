@@ -8,6 +8,7 @@ package org.hibernate.type.spi.basic;
 
 import java.util.Comparator;
 
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;

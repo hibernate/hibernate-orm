@@ -9,7 +9,7 @@ package org.hibernate.boot.spi;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.type.spi.basic.AttributeConverterDefinition;
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 
 /**
  * Internal descriptor for an AttributeConverter implementation.

@@ -6,48 +6,100 @@
  */
 package org.hibernate.cfg;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
+import org.hibernate.boot.internal.ClassmateContext;
+
+import com.fasterxml.classmate.ResolvedType;
 
 /**
- * Externalized representation of an AttributeConverter
+ * Representation of an {@link AttributeConverter} from externalized sources.  Generally
+ * speaking these are contributed from:<ul>
+ *     <li>converters discovered via {@link Converter} discovery</li>
+ *     <li>application / integration contributions - {@link org.hibernate.boot.MetadataBuilder#applyAttributeConverter}</li>
+ * </ul>
+ * <p/>
+ * Regardless of how they are known, the set of AttributeConverterDefinition instances
+ * as known to {@link org.hibernate.boot.spi.MetadataBuildingOptions#getAttributeConverters()}
+ * represents the complete set of "a priori converters".  After that point the only additional
+ * converters recognized would come from local {@link javax.persistence.Convert} annotations.
  *
  * @author Steve Ebersole
  *
  * @see org.hibernate.boot.spi.AttributeConverterDescriptor
+ *
+ * @param <O> The Java type in the application's domain model.  Labelled "O" to
+ * refer to the "O" portion of "ORM"
+ * @param <R> The Java type used to represent these converted values on the JDBC
+ * side. Labelled "R" to refer to the "R" portion of "ORM".
  */
-public class AttributeConverterDefinition {
-	private final AttributeConverter attributeConverter;
-	private final boolean autoApply;
-	private final Class entityAttributeType;
-	private final Class databaseColumnType;
+public class AttributeConverterDefinition<O,R> {
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Static factory methods
 
 	/**
 	 * Build an AttributeConverterDefinition from the AttributeConverter Class reference and
 	 * whether or not to auto-apply it.
+	 * <p/>
+	 * Skips looking for any {@link Converter} annotation to check {@link Converter#autoApply()}.
+	 * The assumption is that check already having been done by the caller and the appropriate
+	 * value being passed as the {@code autoApply} param.
 	 *
-	 * @param attributeConverterClass The AttributeConverter Class
+	 * @param classmateContext Classmate type resolution context
+	 * @param converterClass The AttributeConverter Class
+	 *
+	 * @return The constructed definition
+	 */
+	public static <O,R> AttributeConverterDefinition<O,R> from(
+			ClassmateContext classmateContext,
+			Class<? extends AttributeConverter<O,R>> converterClass) {
+		return from( classmateContext, converterClass, determineAutoApply( converterClass ) );
+	}
+
+	@SuppressWarnings("SimplifiableIfStatement")
+	private static boolean determineAutoApply(Class<? extends AttributeConverter> converterClass) {
+		// look for the converter's @Converter annotation to resolve its Converter#autoApply value
+		final Converter converterAnnotation = converterClass.getAnnotation( Converter.class );
+		if ( converterAnnotation == null ) {
+			// assume false in keeping with its defined default
+			return false;
+		}
+		else {
+			return converterAnnotation.autoApply();
+		}
+	}
+
+
+	/**
+	 * Build an AttributeConverterDefinition from the AttributeConverter Class reference and
+	 * whether or not to auto-apply it.
+	 * <p/>
+	 * Skips looking for any {@link Converter} annotation to check {@link Converter#autoApply()}.
+	 * The assumption is that check already having been done by the caller and the appropriate
+	 * value being passed as the {@code autoApply} param.
+	 *
+	 * @param classmateContext Classmate type resolution context
+	 * @param converterClass The AttributeConverter Class
 	 * @param autoApply Should the AttributeConverter be auto-applied?
 	 *
 	 * @return The constructed definition
 	 */
-	public static AttributeConverterDefinition from(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
-		return new AttributeConverterDefinition(
-				instantiateAttributeConverter( attributeConverterClass ),
+	public static <O,R> AttributeConverterDefinition<O,R> from(
+			ClassmateContext classmateContext,
+			Class<? extends AttributeConverter<O,R>> converterClass,
+			boolean autoApply) {
+		return from(
+				classmateContext,
+				instantiateAttributeConverter( converterClass ),
 				autoApply
 		);
 	}
 
-	private static AttributeConverter instantiateAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
+	private static <O,R> AttributeConverter<O,R> instantiateAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass) {
 		try {
 			return attributeConverterClass.newInstance();
 		}
@@ -60,164 +112,79 @@ public class AttributeConverterDefinition {
 	}
 
 	/**
-	 * Build an AttributeConverterDefinition from the AttributeConverter Class reference.  The
-	 * converter is searched for a {@link Converter} annotation	 to determine whether it should
-	 * be treated as auto-apply.  If the annotation is present, {@link Converter#autoApply()} is
-	 * used to make that determination.  If the annotation is not present, {@code false} is assumed.
-	 *
-	 * @param attributeConverterClass The converter class
-	 *
-	 * @return The constructed definition
-	 */
-	public static AttributeConverterDefinition from(Class<? extends AttributeConverter> attributeConverterClass) {
-		return from( instantiateAttributeConverter( attributeConverterClass ) );
-	}
-
-	/**
 	 * Build an AttributeConverterDefinition from an AttributeConverter instance.  The
 	 * converter is searched for a {@link Converter} annotation	 to determine whether it should
 	 * be treated as auto-apply.  If the annotation is present, {@link Converter#autoApply()} is
 	 * used to make that determination.  If the annotation is not present, {@code false} is assumed.
 	 *
+	 * @param classmateContext Classmate type resolution context
 	 * @param attributeConverter The AttributeConverter instance
 	 *
 	 * @return The constructed definition
 	 */
-	public static AttributeConverterDefinition from(AttributeConverter attributeConverter) {
-		boolean autoApply = false;
-		Converter converterAnnotation = attributeConverter.getClass().getAnnotation( Converter.class );
-		if ( converterAnnotation != null ) {
-			autoApply = converterAnnotation.autoApply();
-		}
-
-		return new AttributeConverterDefinition( attributeConverter, autoApply );
+	public static <O,R> AttributeConverterDefinition<O,R> from(
+			ClassmateContext classmateContext,
+			AttributeConverter<O,R> attributeConverter) {
+		return from( classmateContext, attributeConverter, determineAutoApply( attributeConverter.getClass() ) );
 	}
 
 	/**
 	 * Build an AttributeConverterDefinition from the AttributeConverter instance and
 	 * whether or not to auto-apply it.
 	 *
+	 * @param classmateContext Classmate type resolution context
 	 * @param attributeConverter The AttributeConverter instance
 	 * @param autoApply Should the AttributeConverter be auto-applied?
 	 *
 	 * @return The constructed definition
 	 */
-	public static AttributeConverterDefinition from(AttributeConverter attributeConverter, boolean autoApply) {
-		return new AttributeConverterDefinition( attributeConverter, autoApply );
+	public static <O,R> AttributeConverterDefinition<O,R> from(
+			ClassmateContext classmateContext,
+			AttributeConverter<O,R> attributeConverter,
+			boolean autoApply) {
+		final Class converterClass = attributeConverter.getClass();
+
+		final ResolvedType converterType = classmateContext.getTypeResolver().resolve( converterClass );
+		final List<ResolvedType> converterParamTypes = converterType.typeParametersFor( AttributeConverter.class );
+		if ( converterParamTypes == null ) {
+			throw new AnnotationException(
+					"Could not extract type parameter information from AttributeConverter implementation ["
+							+ converterClass.getName() + "]"
+			);
+		}
+		else if ( converterParamTypes.size() != 2 ) {
+			throw new AnnotationException(
+					"Unexpected type parameter information for AttributeConverter implementation [" +
+							converterClass.getName() + "]; expected 2 parameter types, but found " + converterParamTypes.size()
+			);
+		}
+
+		return new AttributeConverterDefinition<>(
+				attributeConverter,
+				autoApply,
+				converterParamTypes.get( 0 ),
+				converterParamTypes.get( 1 )
+		);
 	}
 
-	public AttributeConverterDefinition(AttributeConverter attributeConverter, boolean autoApply) {
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Instance definition
+
+	private final AttributeConverter<O,R> attributeConverter;
+	private final boolean autoApply;
+	private final ResolvedType domainType;
+	private final ResolvedType jdbcType;
+
+	public AttributeConverterDefinition(
+			AttributeConverter<O, R> attributeConverter,
+			boolean autoApply,
+			ResolvedType domainType,
+			ResolvedType jdbcType) {
 		this.attributeConverter = attributeConverter;
 		this.autoApply = autoApply;
-
-		final Class attributeConverterClass = attributeConverter.getClass();
-		final ParameterizedType attributeConverterSignature = extractAttributeConverterParameterizedType( attributeConverterClass );
-		if ( attributeConverterSignature == null ) {
-			throw new AssertionFailure(
-					"Could not extract ParameterizedType representation of AttributeConverter definition " +
-							"from AttributeConverter implementation class [" + attributeConverterClass.getName() + "]"
-			);
-		}
-
-		if ( attributeConverterSignature.getActualTypeArguments().length < 2 ) {
-			throw new AnnotationException(
-					"AttributeConverter [" + attributeConverterClass.getName()
-							+ "] did not retain parameterized type information"
-			);
-		}
-
-		if ( attributeConverterSignature.getActualTypeArguments().length > 2 ) {
-			throw new AnnotationException(
-					"AttributeConverter [" + attributeConverterClass.getName()
-							+ "] specified more than 2 parameterized types"
-			);
-		}
-		entityAttributeType = extractClass( attributeConverterSignature.getActualTypeArguments()[0] );
-		if ( entityAttributeType == null ) {
-			throw new AnnotationException(
-					"Could not determine 'entity attribute' type from given AttributeConverter [" +
-							attributeConverterClass.getName() + "]"
-			);
-		}
-
-		databaseColumnType = extractClass(attributeConverterSignature.getActualTypeArguments()[1]);
-		if ( databaseColumnType == null ) {
-			throw new AnnotationException(
-					"Could not determine 'database column' type from given AttributeConverter [" +
-							attributeConverterClass.getName() + "]"
-			);
-		}
-	}
-
-	private ParameterizedType extractAttributeConverterParameterizedType(Type base) {
-		if ( base != null ) {
-			Class clazz = extractClass( base );
-			List<Type> types = new ArrayList<Type>();
-			types.add( clazz.getGenericSuperclass() );
-			types.addAll( Arrays.asList( clazz.getGenericInterfaces() ) );
-			for ( Type type : types ) {
-				type = resolveType( type, base );
-				if ( ParameterizedType.class.isInstance( type ) ) {
-					final ParameterizedType parameterizedType = (ParameterizedType) type;
-					if ( AttributeConverter.class.equals( parameterizedType.getRawType() ) ) {
-						return parameterizedType;
-					}
-				}
-				ParameterizedType parameterizedType = extractAttributeConverterParameterizedType( type );
-				if ( parameterizedType != null ) {
-					return parameterizedType;
-				}
-			}
-		}
-		return null;
-	}
-
-	private static Type resolveType(Type target, Type context) {
-		if ( target instanceof ParameterizedType ) {
-			return resolveParameterizedType( (ParameterizedType) target, context );
-		}
-		else if ( target instanceof TypeVariable ) {
-			return resolveTypeVariable( (TypeVariable) target, (ParameterizedType) context );
-		}
-		return target;
-	}
-
-	private static ParameterizedType resolveParameterizedType(final ParameterizedType parameterizedType, Type context) {
-		Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-
-		final Type[] resolvedTypeArguments = new Type[actualTypeArguments.length];
-		for ( int idx = 0; idx < actualTypeArguments.length; idx++ ) {
-			resolvedTypeArguments[idx] = resolveType( actualTypeArguments[idx], context );
-		}
-		return new ParameterizedType() {
-
-			@Override
-			public Type[] getActualTypeArguments() {
-				return resolvedTypeArguments;
-			}
-
-			@Override
-			public Type getRawType() {
-				return parameterizedType.getRawType();
-			}
-
-			@Override
-			public Type getOwnerType() {
-				return parameterizedType.getOwnerType();
-			}
-
-		};
-	}
-
-	private static Type resolveTypeVariable(TypeVariable typeVariable, ParameterizedType context) {
-		Class clazz = extractClass( context.getRawType() );
-		TypeVariable[] typeParameters = clazz.getTypeParameters();
-		for ( int idx = 0; idx < typeParameters.length; idx++ ) {
-			if ( typeVariable.getName().equals( typeParameters[idx].getName() ) ) {
-				return resolveType( context.getActualTypeArguments()[idx], context );
-			}
-		}
-		return typeVariable;
+		this.domainType = domainType;
+		this.jdbcType = jdbcType;
 	}
 
 	public AttributeConverter getAttributeConverter() {
@@ -228,41 +195,48 @@ public class AttributeConverterDefinition {
 		return autoApply;
 	}
 
-	public Class getEntityAttributeType() {
-		return entityAttributeType;
+	public ResolvedType getDomainClassmateType() {
+		return domainType;
 	}
 
-	public Class getDatabaseColumnType() {
-		return databaseColumnType;
+	@SuppressWarnings("unchecked")
+	public Class<O> getDomainJavaType() {
+		return (Class<O>) getDomainClassmateType().getErasedType();
 	}
 
-	private static Class extractType(TypeVariable typeVariable) {
-		java.lang.reflect.Type[] boundTypes = typeVariable.getBounds();
-		if ( boundTypes == null || boundTypes.length != 1 ) {
-			return null;
-		}
-
-		return (Class) boundTypes[0];
+	public ResolvedType getJdbcClassmateType() {
+		return jdbcType;
 	}
 
-	private static Class extractClass(Type type) {
-		if ( type instanceof Class ) {
-			return (Class) type;
-		}
-		else if ( type instanceof ParameterizedType ) {
-			return extractClass( ( (ParameterizedType) type ).getRawType() );
-		}
-		return null;
+	@SuppressWarnings("unchecked")
+	public Class<R> getJdbcJavaType() {
+		return (Class<R>) getJdbcClassmateType().getErasedType();
 	}
 
 	@Override
 	public String toString() {
 		return String.format(
-				"%s[converterClass=%s, domainType=%s, jdbcType=%s]",
+				"%s[converterClass=%s, domainJavaType=%s, jdbcJavaType=%s]",
 				this.getClass().getName(),
-				attributeConverter.getClass().getName(),
-				entityAttributeType.getName(),
-				databaseColumnType.getName()
+				getAttributeConverter().getClass().getName(),
+				getDomainJavaType().getName(),
+				getJdbcJavaType().getName()
 		);
+	}
+
+	/**
+	 * @deprecated Use {@link #getDomainJavaType()} instead
+	 */
+	@Deprecated
+	public Class getEntityAttributeType() {
+		return getDomainJavaType();
+	}
+
+	/**
+	 * @deprecated Use {@link #getJdbcJavaType()} instead
+	 */
+	@Deprecated
+	public Class getDatabaseColumnType() {
+		return getJdbcJavaType();
 	}
 }

@@ -6,18 +6,9 @@
  */
 package org.hibernate.boot.model.type.internal;
 
-import java.util.Comparator;
-import java.util.Map;
-
 import org.hibernate.boot.model.type.spi.BasicTypeProducer;
 import org.hibernate.boot.model.type.spi.BasicTypeSiteContext;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.basic.AttributeConverterDefinition;
-import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
-import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
  * BasicTypeProducer implementation for cases where we are handed a {@link BasicType} directly.

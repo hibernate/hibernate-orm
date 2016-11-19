@@ -22,7 +22,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sqm.domain.BasicType;
 import org.hibernate.sqm.domain.DomainMetamodel;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.basic.AttributeConverterDefinition;
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.basic.BasicTypeParameters;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;

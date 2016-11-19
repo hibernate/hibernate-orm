@@ -25,7 +25,9 @@ from an API perspective.
 *  I think SqlTypeDescriptor should have some say in determining the JdbcLiteralFormatter to use.  Currently this is
 	defined on the mapper Type and the JavaTypeDescriptor.  But really its the fact that its a VARCHAR that dictates
 	that a literal should be quoted, e.g.
-* Moved `org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager` to `org.hibernate.resource.cdi.spi.ExtendedBeanManager`
+* Moved `org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager` to `org.hibernate.resource.cdi.spi.ExtendedBeanManager` although
+	`org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager` was left in placce as a shadow (deprecated, extending the new
+	contract) to ease migrations
 
 
 == todo

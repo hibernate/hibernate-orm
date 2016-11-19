@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.AttributeConverter;
@@ -44,6 +45,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService.TCCLLookupBehavior;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
@@ -388,6 +390,15 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				}
 				else if ( ClassLoader.class.isInstance( classLoadersSetting ) ) {
 					bsrBuilder.applyClassLoader( (ClassLoader) classLoadersSetting );
+				}
+			}
+                        
+			//configurationValues not assigned yet, using directly the properties of the PU
+			Properties puProperties = persistenceUnit.getProperties();
+			if( puProperties != null ) {
+				final String tcclBehavior = puProperties.getProperty( org.hibernate.cfg.AvailableSettings.TC_CLASSLOADER );
+				if( tcclBehavior != null ) {
+					bsrBuilder.applyTCCLBehavior( TCCLLookupBehavior.valueOf( tcclBehavior.toUpperCase() ) );
 				}
 			}
 		}

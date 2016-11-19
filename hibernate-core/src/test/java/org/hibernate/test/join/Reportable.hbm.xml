@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.test.join">
+
+    <class name="Reportable">
+        <id name="id" type="java.lang.Long">
+            <generator class="increment"/>
+        </id>
+        <discriminator column="disc" type="string"/>
+        <property name="reportedBy" />
+
+        <subclass name="Bug">
+            <list cascade="all" name="detail">
+                <key column="BUG_ID" />
+                <index column="BUG_INDEX" type="int" />
+                <element type="string"/>
+            </list>
+        </subclass>
+
+        <subclass name="BlogEntry">
+            <join fetch="select" table="BLOG_ENTRY">
+                <key column="BLOG_ENTRY_ID" />
+                <property name="detail"/>
+            </join>
+        </subclass>
+
+    </class>
+
+</hibernate-mapping>

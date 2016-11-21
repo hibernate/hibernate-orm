@@ -262,7 +262,7 @@ public class OutputsImpl implements Outputs {
 		);
 	}
 
-	protected static class CustomLoaderExtension extends CustomLoader {
+	public static class CustomLoaderExtension extends CustomLoader {
 		private QueryParameters queryParameters;
 		private SharedSessionContractImplementor session;
 

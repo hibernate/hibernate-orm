@@ -8,12 +8,14 @@ package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.result.internal.OutputsImpl;
+import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -42,18 +44,33 @@ class JdbcRefCursorExtractor {
 			SharedSessionContractImplementor session,
 			OutputsImpl.CustomLoaderExtension loader) {
 		ResultSet resultSet;
-		if ( shouldUseJdbcNamedParameters && registration.getName() != null ) {
 
-			if ( refCursorParam.getName() != null ) {
-				resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
-						.getService( RefCursorSupport.class )
-						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getName() );
-			}
-			else {
-				resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
-						.getService( RefCursorSupport.class )
-						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getPosition() );
-			}
+		final boolean supportsNamedParameters = session.getJdbcServices()
+				.getJdbcEnvironment()
+				.getExtractedDatabaseMetaData()
+				.supportsNamedParameters();
+		final boolean useNamed = supportsNamedParameters
+				&& ProcedureParameterExtractionAware.class.isInstance( hibernateType )
+				&& registration.getName() != null;
+
+		if ( useNamed ) {
+			resultSet = session.getFactory()
+					.getServiceRegistry()
+					.getService( RefCursorSupport.class )
+					.getResultSet( callableStatement, registration.getName() );
+		}
+		else {
+			resultSet = session.getFactory()
+					.getServiceRegistry()
+					.getService( RefCursorSupport.class )
+					.getResultSet( callableStatement, registration.getPosition() );
+		}
+
+		try {
+			return loader.processResultSet( resultSet );
+		}
+		catch (SQLException e) {
+			throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "Error processing REF_CURSOR ResultSet" );
 		}
 	}
 }

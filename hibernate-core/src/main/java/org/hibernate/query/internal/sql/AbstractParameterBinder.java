@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.spi.ParameterBinder;
-import org.hibernate.type.mapper.spi.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Abstract ParameterBinder implementation for QueryParameter binding.

@@ -7,7 +7,7 @@
 package org.hibernate.query.internal;
 
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.type.mapper.spi.Type;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 

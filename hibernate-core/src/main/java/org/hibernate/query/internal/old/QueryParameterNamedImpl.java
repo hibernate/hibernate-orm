@@ -7,7 +7,7 @@
 package org.hibernate.query.internal.old;
 
 import org.hibernate.query.QueryParameter;
-import org.hibernate.type.mapper.spi.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Models a named query parameter

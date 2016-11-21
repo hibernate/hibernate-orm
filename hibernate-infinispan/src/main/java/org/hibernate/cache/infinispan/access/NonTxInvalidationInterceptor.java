@@ -8,7 +8,6 @@ package org.hibernate.cache.infinispan.access;
 
 import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
-import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.FlagAffectedCommand;
 import org.infinispan.commands.write.ClearCommand;
 import org.infinispan.commands.write.InvalidateCommand;
@@ -21,18 +20,8 @@ import org.infinispan.commons.util.InfinispanCollections;
 import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.annotations.Inject;
-import org.infinispan.factories.annotations.Start;
 import org.infinispan.interceptors.InvalidationInterceptor;
-import org.infinispan.interceptors.base.BaseRpcInterceptor;
-import org.infinispan.jmx.JmxStatisticsExposer;
-import org.infinispan.jmx.annotations.DataType;
 import org.infinispan.jmx.annotations.MBean;
-import org.infinispan.jmx.annotations.ManagedAttribute;
-import org.infinispan.jmx.annotations.ManagedOperation;
-import org.infinispan.jmx.annotations.MeasurementType;
-import org.infinispan.jmx.annotations.Parameter;
-
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This interceptor should completely replace default InvalidationInterceptor.
@@ -45,12 +34,9 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Galder Zamarreño
  */
 @MBean(objectName = "Invalidation", description = "Component responsible for invalidating entries on remote caches when entries are written to locally.")
-public class NonTxInvalidationInterceptor extends BaseRpcInterceptor implements JmxStatisticsExposer {
-	private final AtomicLong invalidations = new AtomicLong(0);
+public class NonTxInvalidationInterceptor extends BaseInvalidationInterceptor {
 	private final PutFromLoadValidator putFromLoadValidator;
-	private CommandsFactory commandsFactory;
 	private CacheCommandInitializer commandInitializer;
-	private boolean statisticsEnabled;
 
 	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(InvalidationInterceptor.class);
 
@@ -59,14 +45,8 @@ public class NonTxInvalidationInterceptor extends BaseRpcInterceptor implements 
 	}
 
 	@Inject
-	public void injectDependencies(CommandsFactory commandsFactory, CacheCommandInitializer commandInitializer) {
-		this.commandsFactory = commandsFactory;
+	public void injectDependencies(CacheCommandInitializer commandInitializer) {
 		this.commandInitializer = commandInitializer;
-	}
-
-	@Start
-	private void start() {
-		this.setStatisticsEnabled(cacheConfiguration.jmxStatistics().enabled());
 	}
 
 	@Override
@@ -93,7 +73,7 @@ public class NonTxInvalidationInterceptor extends BaseRpcInterceptor implements 
 		if (!isLocalModeForced(command)) {
 			// just broadcast the clear command - this is simplest!
 			if (ctx.isOriginLocal()) {
-				rpcManager.invokeRemotely(null, command, rpcManager.getDefaultRpcOptions(defaultSynchronous));
+				rpcManager.invokeRemotely(getMembers(), command, isSynchronous(command) ? syncRpcOptions : asyncRpcOptions);
 			}
 		}
 		return retval;
@@ -132,13 +112,7 @@ public class NonTxInvalidationInterceptor extends BaseRpcInterceptor implements 
 				log.debug("Cache [" + rpcManager.getAddress() + "] replicating " + invalidateCommand);
 			}
 
-			rpcManager.invokeRemotely(null, invalidateCommand, rpcManager.getDefaultRpcOptions(isSynchronous(command)));
-		}
-	}
-
-	private void incrementInvalidations() {
-		if (statisticsEnabled) {
-			invalidations.incrementAndGet();
+			rpcManager.invokeRemotely(getMembers(), invalidateCommand, isSynchronous(command) ? syncRpcOptions : asyncRpcOptions);
 		}
 	}
 
@@ -148,37 +122,6 @@ public class NonTxInvalidationInterceptor extends BaseRpcInterceptor implements 
 			return true;
 		}
 		return false;
-	}
-
-	@ManagedOperation(
-			description = "Resets statistics gathered by this component",
-			displayName = "Reset statistics"
-	)
-	public void resetStatistics() {
-		invalidations.set(0);
-	}
-
-	@ManagedAttribute(
-			displayName = "Statistics enabled",
-			description = "Enables or disables the gathering of statistics by this component",
-			dataType = DataType.TRAIT,
-			writable = true
-	)
-	public boolean getStatisticsEnabled() {
-		return this.statisticsEnabled;
-	}
-
-	public void setStatisticsEnabled(@Parameter(name = "enabled", description = "Whether statistics should be enabled or disabled (true/false)") boolean enabled) {
-		this.statisticsEnabled = enabled;
-	}
-
-	@ManagedAttribute(
-			description = "Number of invalidations",
-			displayName = "Number of invalidations",
-			measurementType = MeasurementType.TRENDSUP
-	)
-	public long getInvalidations() {
-		return invalidations.get();
 	}
 
 }

@@ -622,7 +622,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 		}
 		else if ( (suffixLoc = key.indexOf( MAX_ENTRIES_SUFFIX )) != -1 ) {
 			builder = getOrCreateConfig( prefixLoc, key, suffixLoc );
-			builder.eviction().maxEntries( Long.parseLong(value) );
+			builder.eviction().size( Long.parseLong(value) );
 		}
 		else if ( (suffixLoc = key.indexOf( LIFESPAN_SUFFIX )) != -1 ) {
 			builder = getOrCreateConfig( prefixLoc, key, suffixLoc );

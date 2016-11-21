@@ -129,6 +129,12 @@ ext {
             proxool:         "proxool:proxool:0.8.3",
             hikaricp:        "com.zaxxer:HikariCP:2.5.1",
 
+            // Spring
+            spring_context:  "org.springframework:spring-context:4.3.4.RELEASE",
+            spring_orm:  "org.springframework:spring-orm:4.3.4.RELEASE",
+            spring_boot_autoconfigure: "org.springframework.boot:spring-boot-autoconfigure:1.4.2.RELEASE",
+            spring_boot_test: "org.springframework.boot:spring-boot-test:1.4.2.RELEASE",
+
             // Arquillian/Shrinkwrap
             arquillian_junit_container: "org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}",
             arquillian_protocol_servlet: "org.jboss.arquillian.protocol:arquillian-protocol-servlet:${arquillianVersion}",

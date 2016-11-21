@@ -18,11 +18,17 @@ import org.infinispan.commands.write.WriteCommand;
 import org.infinispan.container.DataContainer;
 import org.infinispan.context.impl.TxInvocationContext;
 import org.infinispan.factories.annotations.Inject;
+import org.infinispan.factories.annotations.Start;
 import org.infinispan.interceptors.base.BaseRpcInterceptor;
 import org.infinispan.remoting.inboundhandler.DeliverOrder;
+import org.infinispan.remoting.rpc.ResponseMode;
 import org.infinispan.remoting.rpc.RpcManager;
+import org.infinispan.remoting.rpc.RpcOptions;
+import org.infinispan.remoting.transport.Address;
+import org.infinispan.statetransfer.StateTransferManager;
 
 import java.util.Set;
+import java.util.List;
 
 /**
  * Intercepts transactions in Infinispan, calling {@link PutFromLoadValidator#beginInvalidatingKey(Object, Object)}
@@ -39,6 +45,8 @@ class TxPutFromLoadInterceptor extends BaseRpcInterceptor {
 	private RpcManager rpcManager;
 	private CacheCommandInitializer cacheCommandInitializer;
 	private DataContainer dataContainer;
+	private StateTransferManager stateTransferManager;
+	private RpcOptions asyncUnordered;
 
 	public TxPutFromLoadInterceptor(PutFromLoadValidator putFromLoadValidator, String cacheName) {
 		this.putFromLoadValidator = putFromLoadValidator;
@@ -46,10 +54,16 @@ class TxPutFromLoadInterceptor extends BaseRpcInterceptor {
 	}
 
 	@Inject
-	public void injectDependencies(RpcManager rpcManager, CacheCommandInitializer cacheCommandInitializer, DataContainer dataContainer) {
+	public void injectDependencies(RpcManager rpcManager, CacheCommandInitializer cacheCommandInitializer, DataContainer dataContainer, StateTransferManager stateTransferManager) {
 		this.rpcManager = rpcManager;
 		this.cacheCommandInitializer = cacheCommandInitializer;
 		this.dataContainer = dataContainer;
+		this.stateTransferManager = stateTransferManager;
+	}
+
+	@Start
+	public void start() {
+		asyncUnordered = rpcManager.getRpcOptionsBuilder(ResponseMode.ASYNCHRONOUS, DeliverOrder.NONE).build();
 	}
 
 	// We need to intercept PrepareCommand, not InvalidateCommand since the interception takes
@@ -134,7 +148,8 @@ class TxPutFromLoadInterceptor extends BaseRpcInterceptor {
 				if (!affectedKeys.isEmpty()) {
 					EndInvalidationCommand commitCommand = cacheCommandInitializer.buildEndInvalidationCommand(
 							cacheName, affectedKeys.toArray(), ctx.getGlobalTransaction());
-					rpcManager.invokeRemotely(null, commitCommand, rpcManager.getDefaultRpcOptions(false, DeliverOrder.NONE));
+					List<Address> members = stateTransferManager.getCacheTopology().getMembers();
+					rpcManager.invokeRemotely(members, commitCommand, asyncUnordered);
 				}
 			}
 		}

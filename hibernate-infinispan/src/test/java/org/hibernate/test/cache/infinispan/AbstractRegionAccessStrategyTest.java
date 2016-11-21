@@ -156,6 +156,7 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 			NonJtaTransactionCoordinator txOwner = mock(NonJtaTransactionCoordinator.class);
 			when(txOwner.getResourceLocalTransaction()).thenReturn(new JdbcResourceTransactionMock());
 			when(txOwner.getJdbcSessionOwner()).thenReturn(jdbcSessionOwner);
+			when(txOwner.isActive()).thenReturn(true);
 			TransactionCoordinator txCoord = JdbcResourceLocalTransactionCoordinatorBuilderImpl.INSTANCE
 							.buildTransactionCoordinator(txOwner, null);
 			when(session.getTransactionCoordinator()).thenReturn(txCoord);

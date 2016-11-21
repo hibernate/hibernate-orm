@@ -6,8 +6,8 @@
   ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
   -->
 <infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xmlns="urn:infinispan:config:8.0"
-            xsi:schemaLocation="urn:infinispan:config:8.0 http://www.infinispan.org/schemas/infinispan-config-8.0.xsd">
+            xmlns="urn:infinispan:config:8.2"
+            xsi:schemaLocation="urn:infinispan:config:8.2 http://www.infinispan.org/schemas/infinispan-config-8.2.xsd">
 
    <jgroups>
       <stack-file name="hibernate-jgroups" path="${hibernate.cache.infinispan.jgroups_cfg:default-configs/default-jgroups-tcp.xml}"/>
@@ -23,7 +23,7 @@
       <invalidation-cache-configuration name="entity" mode="SYNC" remote-timeout="20000" statistics="false" statistics-available="false">
          <locking concurrency-level="1000" acquire-timeout="15000"/>
          <transaction mode="NONE" />
-         <eviction max-entries="10000" strategy="LRU"/>
+         <eviction size="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
       </invalidation-cache-configuration>
 
@@ -31,7 +31,7 @@
       <local-cache-configuration name="local-query" statistics="false" statistics-available="false">
          <locking concurrency-level="1000" acquire-timeout="15000"/>
          <transaction mode="NONE" />
-         <eviction max-entries="10000" strategy="LRU"/>
+         <eviction size="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
       </local-cache-configuration>
 
@@ -39,7 +39,7 @@
       <replicated-cache-configuration name="replicated-query" mode="ASYNC" statistics="false" statistics-available="false">
          <locking concurrency-level="1000" acquire-timeout="15000"/>
          <transaction mode="NONE" />
-         <eviction max-entries="10000" strategy="LRU"/>
+         <eviction size="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
       </replicated-cache-configuration>
 

@@ -304,14 +304,16 @@ public class InfinispanRegionFactoryTestCase  {
 
 	@Test(expected = CacheException.class)
 	public void testTimestampValidation() {
+		final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
 		Properties p = createProperties();
 		final DefaultCacheManager manager = new DefaultCacheManager(GlobalConfigurationBuilder.defaultClusteredBuilder().build());
 		ConfigurationBuilder builder = new ConfigurationBuilder();
 		builder.clustering().cacheMode(CacheMode.INVALIDATION_SYNC);
 		manager.defineConfiguration( DEF_TIMESTAMPS_RESOURCE, builder.build() );
 		try {
-			InfinispanRegionFactory factory = createRegionFactory(manager, p, null);
-			factory.start(null, p);
+			InfinispanRegionFactory factory = createRegionFactory( manager, p, null );
+			factory.start( CacheTestUtil.sfOptionsForStart(), p );
+			TimestampsRegionImpl region = (TimestampsRegionImpl) factory.buildTimestampsRegion( timestamps, p );
 			fail( "Should have failed saying that invalidation is not allowed for timestamp caches." );
 		} finally {
 			TestingUtil.killCacheManagers( manager );

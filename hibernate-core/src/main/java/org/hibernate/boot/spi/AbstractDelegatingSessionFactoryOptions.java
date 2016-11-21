@@ -310,6 +310,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public Integer getJdbcScrollableResultsFetchSize() {
+		return delegate.getJdbcScrollableResultsFetchSize();
+	}
+
+	@Override
 	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
 		return delegate.getPhysicalConnectionHandlingMode();
 	}

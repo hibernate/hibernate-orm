@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -36,6 +37,23 @@ public class PreparedStatementSpyConnectionProvider
 
 	private final List<Connection> acquiredConnections = new ArrayList<>( );
 
+	private final Consumer<Connection> prepareStatementMatcher;
+
+	public PreparedStatementSpyConnectionProvider(Consumer<Connection> prepareStatementMatcher) {
+		this.prepareStatementMatcher = prepareStatementMatcher;
+	}
+
+	public PreparedStatementSpyConnectionProvider() {
+		this.prepareStatementMatcher = connection -> {
+			try {
+				connection.prepareStatement( anyString() );
+			}
+			catch ( SQLException e ) {
+				throw new IllegalArgumentException( e );
+			}
+		};
+	}
+
 	@Override
 	public Connection getConnection() throws SQLException {
 		Connection connection = spy( super.getConnection() );
@@ -54,18 +72,15 @@ public class PreparedStatementSpyConnectionProvider
 			return connection;
 		}
 		Connection connectionSpy = Mockito.spy( connection );
-		try {
-			doAnswer( invocation -> {
+		prepareStatementMatcher.accept(
+			doAnswer(invocation -> {
 				PreparedStatement statement = (PreparedStatement) invocation.callRealMethod();
 				PreparedStatement statementSpy = Mockito.spy( statement );
 				String sql = (String) invocation.getArguments()[0];
 				preparedStatementMap.put( statementSpy, sql );
 				return statementSpy;
-			} ).when( connectionSpy ).prepareStatement( anyString() );
-		}
-		catch ( SQLException e ) {
-			throw new IllegalArgumentException( e );
-		}
+			}).when( connectionSpy )
+		);
 		return connectionSpy;
 	}
 
@@ -73,7 +88,6 @@ public class PreparedStatementSpyConnectionProvider
 	 * Clears the recorded PreparedStatements and reset the associated Mocks.
 	 */
 	public void clear() {
-		acquiredConnections.clear();
 		preparedStatementMap.keySet().forEach( Mockito::reset );
 		preparedStatementMap.clear();
 	}

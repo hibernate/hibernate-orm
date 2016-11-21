@@ -549,6 +549,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private int jdbcBatchSize;
 		private boolean jdbcBatchVersionedData;
 		private Integer jdbcFetchSize;
+		private Integer jdbcScrollableResultsFetchSize;
 		private boolean scrollableResultSetsEnabled;
 		private boolean commentsEnabled;
 		private PhysicalConnectionHandlingMode connectionHandlingMode;
@@ -719,6 +720,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 					meta.supportsGetGeneratedKeys()
 			);
 			this.jdbcFetchSize = ConfigurationHelper.getInteger( STATEMENT_FETCH_SIZE, configurationSettings );
+			this.jdbcScrollableResultsFetchSize = ConfigurationHelper.getInteger(
+					SCROLLABLE_RESULTS_FETCH_SIZE, configurationSettings );
 
 			this.connectionHandlingMode = interpretConnectionHandlingMode( configurationSettings, serviceRegistry );
 
@@ -1137,6 +1140,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
+		public Integer getJdbcScrollableResultsFetchSize() {
+			return jdbcScrollableResultsFetchSize;
+		}
+
+		@Override
 		public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
 			return connectionHandlingMode;
 		}
@@ -1448,6 +1456,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public Integer getJdbcFetchSize() {
 		return options.getJdbcFetchSize();
+	}
+
+	@Override
+	public Integer getJdbcScrollableResultsFetchSize() {
+		return options.getJdbcScrollableResultsFetchSize();
 	}
 
 	@Override

@@ -7,6 +7,7 @@
 package org.hibernate.cfg;
 
 import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.query.Query;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -1602,8 +1603,15 @@ public interface AvailableSettings {
 	 */
 	String MERGE_ENTITY_COPY_OBSERVER = "hibernate.event.merge.entity_copy_observer";
 
-
-
-
-
+	/**
+	 * Setting which indicates the {@link java.sql.Statement#setFetchSize(int)} used when using {@link Query#scroll()} or {@link Query#stream()}.
+	 * <p/>
+	 * Some RDBMS like Oracle or SQL Server, do not require setting the statement fetch size to enable a database cursor.
+	 * However, on MySQL, the {@link Integer#MIN_VALUE} needs to be used to allow scrolling.
+	 * <p/>
+	 * You should set this property for those databases (e.g. PostgreSQL) that require a custom fetch size to enable a database cursor.
+	 *
+	 * @since 5.2
+	 */
+	String SCROLLABLE_RESULTS_FETCH_SIZE = "hibernate.jdbc.scrollable_results_fetch_size";
 }

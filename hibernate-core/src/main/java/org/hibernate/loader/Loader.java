@@ -1943,6 +1943,14 @@ public abstract class Loader {
 				scrollMode
 		);
 
+		if ( scroll ) {
+			Integer fetchSize = getFactory().getSessionFactoryOptions()
+					.getJdbcScrollableResultsFetchSize();
+			if ( fetchSize != null ) {
+				st.setFetchSize( fetchSize );
+			}
+		}
+
 		try {
 
 			int col = 1;

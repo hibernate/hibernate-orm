@@ -177,6 +177,8 @@ public interface SessionFactoryOptions {
 
 	Integer getJdbcFetchSize();
 
+	Integer getJdbcScrollableResultsFetchSize();
+
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
 	/**

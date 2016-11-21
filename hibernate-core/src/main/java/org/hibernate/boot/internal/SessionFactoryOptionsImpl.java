@@ -117,6 +117,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final int jdbcBatchSize;
 	private final boolean jdbcBatchVersionedData;
 	private final Integer jdbcFetchSize;
+	private final Integer jdbcScrollableResultsFetchSize;
 	private final boolean scrollableResultSetsEnabled;
 	private final boolean commentsEnabled;
 	private final PhysicalConnectionHandlingMode physicalConnectionHandlingMode;
@@ -193,6 +194,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.jdbcBatchSize = state.getJdbcBatchSize();
 		this.jdbcBatchVersionedData = state.isJdbcBatchVersionedData();
 		this.jdbcFetchSize = state.getJdbcFetchSize();
+		this.jdbcScrollableResultsFetchSize = state.getJdbcScrollableResultsFetchSize();
 		this.scrollableResultSetsEnabled = state.isScrollableResultSetsEnabled();
 		this.wrapResultSetsEnabled = state.isWrapResultSetsEnabled();
 		this.commentsEnabled = state.isCommentsEnabled();
@@ -468,6 +470,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public Integer getJdbcFetchSize() {
 		return jdbcFetchSize;
+	}
+
+	@Override
+	public Integer getJdbcScrollableResultsFetchSize() {
+		return jdbcScrollableResultsFetchSize;
 	}
 
 	@Override

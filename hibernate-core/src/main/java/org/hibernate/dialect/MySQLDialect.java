@@ -61,6 +61,11 @@ public class MySQLDialect extends Dialect {
 	 */
 	public MySQLDialect() {
 		super();
+		getDefaultProperties().setProperty(
+				Environment.SCROLLABLE_RESULTS_FETCH_SIZE,
+				String.valueOf( Integer.MIN_VALUE )
+		);
+
 		registerColumnType( Types.BIT, "bit" );
 		registerColumnType( Types.BIGINT, "bigint" );
 		registerColumnType( Types.SMALLINT, "smallint" );

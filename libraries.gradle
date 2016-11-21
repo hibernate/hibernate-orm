@@ -13,7 +13,7 @@ ext {
 //    h2Version = '1.2.145'
     h2Version = '1.3.176'
     bytemanVersion = '2.1.2'
-    infinispanVersion = '8.2.4.Final'
+    infinispanVersion = '8.2.5.Final'
     jnpVersion = '5.0.6.CR1'
     elVersion = '2.2.4'
 

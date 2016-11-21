@@ -6,8 +6,8 @@
   ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
   -->
 <infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xmlns="urn:infinispan:config:8.0"
-            xsi:schemaLocation="urn:infinispan:config:8.0 http://www.infinispan.org/schemas/infinispan-config-8.0.xsd">
+            xmlns="urn:infinispan:config:8.2"
+            xsi:schemaLocation="urn:infinispan:config:8.2 http://www.infinispan.org/schemas/infinispan-config-8.2.xsd">
 
    <!-- This configuration is suitable for non-clustered environments, where only single instance accesses the DB -->
    <cache-container name="SampleCacheManager" statistics="false" default-cache="the-default-cache" shutdown-hook="DEFAULT">
@@ -18,14 +18,14 @@
       <!-- Default configuration is appropriate for entity/collection caching. -->
       <local-cache-configuration name="entity" simple-cache="true" statistics="false" statistics-available="false">
          <transaction mode="NONE" />
-         <eviction max-entries="10000" strategy="LRU"/>
+         <eviction size="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
       </local-cache-configuration>
 
       <!-- A config appropriate for query caching. Does not replicate queries. -->
       <local-cache-configuration name="local-query" simple-cache="true" statistics="false" statistics-available="false">
          <transaction mode="NONE" />
-         <eviction max-entries="10000" strategy="LRU"/>
+         <eviction size="10000" strategy="LRU"/>
          <expiration max-idle="100000" interval="5000"/>
       </local-cache-configuration>
 

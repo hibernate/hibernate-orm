@@ -26,6 +26,7 @@ import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatfor
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.service.ServiceRegistry;
 
+import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -307,14 +308,16 @@ public class InfinispanRegionFactoryTestCase  {
 
 	@Test(expected = CacheException.class)
 	public void testTimestampValidation() {
+		final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
 		Properties p = createProperties();
 		final DefaultCacheManager manager = new DefaultCacheManager(GlobalConfigurationBuilder.defaultClusteredBuilder().build());
+		ConfigurationBuilder builder = new ConfigurationBuilder();
+		builder.clustering().cacheMode(CacheMode.INVALIDATION_SYNC);
+		manager.defineConfiguration( "timestamps", builder.build() );
 		try {
-			InfinispanRegionFactory factory = createRegionFactory(manager, p);
-			ConfigurationBuilder builder = new ConfigurationBuilder();
-			builder.clustering().cacheMode(CacheMode.INVALIDATION_SYNC);
-			manager.defineConfiguration( "timestamps", builder.build() );
-			factory.start(null, p);
+			InfinispanRegionFactory factory = createRegionFactory( manager, p );
+			factory.start( CacheTestUtil.sfOptionsForStart(), p );
+			TimestampsRegionImpl region = (TimestampsRegionImpl) factory.buildTimestampsRegion( timestamps, p );
 			fail( "Should have failed saying that invalidation is not allowed for timestamp caches." );
 		} finally {
 			TestingUtil.killCacheManagers( manager );

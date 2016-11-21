@@ -12,13 +12,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.hibernate.PessimisticLockException;
-import org.hibernate.StaleStateException;
+import javax.persistence.OptimisticLockException;
+import javax.persistence.PessimisticLockException;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.spi.Region;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
@@ -66,6 +68,18 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
    }
 
    @Override
+   protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
+      // This applies to manually set LOCK_TIMEOUT for H2 DB. AvailableSettings.JPA_LOCK_TIMEOUT
+      // works only for queries, not for CRUDs, so we have to modify the connection URL.
+      // Alternative could be executing SET LOCK_TIMEOUT 1000 as a native query.
+      String url = (String) ssrb.getSettings().get(AvailableSettings.URL);
+      if (url != null && url.contains("LOCK_TIMEOUT")) {
+         url = url.replaceAll("LOCK_TIMEOUT=[^;]*", "LOCK_TIMEOUT=1000");
+      }
+      ssrb.applySetting(AvailableSettings.URL, url);
+   }
+
+   @Override
    protected void startUp() {
       super.startUp();
       InfinispanRegionFactory regionFactory = (InfinispanRegionFactory) sessionFactory().getSettings().getRegionFactory();
@@ -105,7 +119,7 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
                awaitOrThrow(preFlushLatch);
             }
             s.flush();
-         } catch (StaleStateException e) {
+         } catch (OptimisticLockException e) {
             log.info("Exception thrown: ", e);
             markRollbackOnly(s);
             return false;
@@ -135,7 +149,7 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
                awaitOrThrow(preFlushLatch);
             }
             s.flush();
-         } catch (StaleStateException e) {
+         } catch (OptimisticLockException e) {
             log.info("Exception thrown: ", e);
             markRollbackOnly(s);
             return false;

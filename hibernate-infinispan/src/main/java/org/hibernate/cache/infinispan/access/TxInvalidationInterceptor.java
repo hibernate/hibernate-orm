@@ -11,12 +11,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 
 import org.infinispan.commands.AbstractVisitor;
-import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.FlagAffectedCommand;
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.control.LockControlCommand;
@@ -33,16 +31,8 @@ import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.LocalTxInvocationContext;
 import org.infinispan.context.impl.TxInvocationContext;
-import org.infinispan.factories.annotations.Inject;
-import org.infinispan.factories.annotations.Start;
-import org.infinispan.interceptors.base.BaseRpcInterceptor;
-import org.infinispan.jmx.JmxStatisticsExposer;
-import org.infinispan.jmx.annotations.DataType;
 import org.infinispan.jmx.annotations.MBean;
-import org.infinispan.jmx.annotations.ManagedAttribute;
-import org.infinispan.jmx.annotations.ManagedOperation;
-import org.infinispan.jmx.annotations.MeasurementType;
-import org.infinispan.jmx.annotations.Parameter;
+import org.infinispan.remoting.transport.Address;
 
 /**
  * This interceptor acts as a replacement to the replication interceptor when the CacheImpl is configured with
@@ -58,23 +48,8 @@ import org.infinispan.jmx.annotations.Parameter;
  * @since 4.0
  */
 @MBean(objectName = "Invalidation", description = "Component responsible for invalidating entries on remote caches when entries are written to locally.")
-public class TxInvalidationInterceptor extends BaseRpcInterceptor implements JmxStatisticsExposer {
-
-	private final AtomicLong invalidations = new AtomicLong( 0 );
-	private CommandsFactory commandsFactory;
-	private boolean statisticsEnabled;
-
+public class TxInvalidationInterceptor extends BaseInvalidationInterceptor {
 	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( TxInvalidationInterceptor.class );
-
-	@Inject
-	public void injectDependencies(CommandsFactory commandsFactory) {
-		this.commandsFactory = commandsFactory;
-	}
-
-	@Start
-	private void start() {
-		this.setStatisticsEnabled( cacheConfiguration.jmxStatistics().enabled() );
-	}
 
 	@Override
 	public Object visitPutKeyValueCommand(InvocationContext ctx, PutKeyValueCommand command) throws Throwable {
@@ -100,7 +75,7 @@ public class TxInvalidationInterceptor extends BaseRpcInterceptor implements Jmx
 		if ( !isLocalModeForced( command ) ) {
 			// just broadcast the clear command - this is simplest!
 			if ( ctx.isOriginLocal() ) {
-				rpcManager.invokeRemotely( null, command, rpcManager.getDefaultRpcOptions( defaultSynchronous ) );
+				rpcManager.invokeRemotely( getMembers(), command, isSynchronous(command) ? syncRpcOptions : asyncRpcOptions );
 			}
 		}
 		return retval;
@@ -137,8 +112,9 @@ public class TxInvalidationInterceptor extends BaseRpcInterceptor implements Jmx
 		if ( ctx.isOriginLocal() ) {
 			//unlock will happen async as it is a best effort
 			boolean sync = !command.isUnlock();
-			( (LocalTxInvocationContext) ctx ).remoteLocksAcquired( rpcManager.getTransport().getMembers() );
-			rpcManager.invokeRemotely( null, command, rpcManager.getDefaultRpcOptions( sync ) );
+			List<Address> members = getMembers();
+			( (LocalTxInvocationContext) ctx ).remoteLocksAcquired(members);
+			rpcManager.invokeRemotely(members, command, sync ? syncRpcOptions : asyncRpcOptions );
 		}
 		return retVal;
 	}
@@ -244,13 +220,7 @@ public class TxInvalidationInterceptor extends BaseRpcInterceptor implements Jmx
 			// but this does not impact consistency and the speed benefit is worth it.
 			command = commandsFactory.buildPrepareCommand( txCtx.getGlobalTransaction(), Collections.<WriteCommand>singletonList( invalidateCommand ), true );
 		}
-		rpcManager.invokeRemotely( null, command, rpcManager.getDefaultRpcOptions( synchronous ) );
-	}
-
-	private void incrementInvalidations() {
-		if ( statisticsEnabled ) {
-			invalidations.incrementAndGet();
-		}
+		rpcManager.invokeRemotely( getMembers(), command, synchronous ? syncRpcOptions : asyncRpcOptions );
 	}
 
 	private boolean isPutForExternalRead(FlagAffectedCommand command) {
@@ -259,37 +229,5 @@ public class TxInvalidationInterceptor extends BaseRpcInterceptor implements Jmx
 			return true;
 		}
 		return false;
-	}
-
-	@ManagedOperation(
-			description = "Resets statistics gathered by this component",
-			displayName = "Reset statistics"
-	)
-	public void resetStatistics() {
-		invalidations.set( 0 );
-	}
-
-	@ManagedAttribute(
-			displayName = "Statistics enabled",
-			description = "Enables or disables the gathering of statistics by this component",
-			dataType = DataType.TRAIT,
-			writable = true
-	)
-	public boolean getStatisticsEnabled() {
-		return this.statisticsEnabled;
-	}
-
-	public void setStatisticsEnabled(
-			@Parameter(name = "enabled", description = "Whether statistics should be enabled or disabled (true/false)") boolean enabled) {
-		this.statisticsEnabled = enabled;
-	}
-
-	@ManagedAttribute(
-			description = "Number of invalidations",
-			displayName = "Number of invalidations",
-			measurementType = MeasurementType.TRENDSUP
-	)
-	public long getInvalidations() {
-		return invalidations.get();
 	}
 }

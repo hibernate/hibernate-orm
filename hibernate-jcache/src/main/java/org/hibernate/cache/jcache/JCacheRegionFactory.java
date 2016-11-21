@@ -49,7 +49,39 @@ public class JCacheRegionFactory implements RegionFactory {
 
 	private final AtomicBoolean started = new AtomicBoolean( false );
 	private volatile CacheManager cacheManager;
-	private SessionFactoryOptions options;
+	protected SessionFactoryOptions options;
+	
+	protected CachingProvider getCachingProvider(final Properties properties){
+		final CachingProvider cachingProvider;
+		final String provider = getProp( properties, PROVIDER );
+		if ( provider != null ) {
+			cachingProvider = Caching.getCachingProvider( provider );
+		}
+		else {
+			cachingProvider = Caching.getCachingProvider();
+		}
+		return cachingProvider;
+	}
+
+	protected CacheManager getCacheManager(final Properties properties){
+		final CachingProvider cachingProvider = getCachingProvider( properties );
+		final CacheManager cacheManager;
+		final String cacheManagerUri = getProp( properties, CONFIG_URI );
+		if ( cacheManagerUri != null ) {
+			URI uri;
+			try {
+				uri = new URI( cacheManagerUri );
+			}
+			catch ( URISyntaxException e ) {
+				throw new CacheException( "Couldn't create URI from " + cacheManagerUri, e );
+			}
+			cacheManager = cachingProvider.getCacheManager( uri, cachingProvider.getDefaultClassLoader() );
+		}
+		else {
+			cacheManager = cachingProvider.getCacheManager();
+		}
+		return cacheManager;
+	}
 
 	@Override
 	public void start(final SessionFactoryOptions options, final Properties properties) throws CacheException {
@@ -57,30 +89,7 @@ public class JCacheRegionFactory implements RegionFactory {
 			synchronized ( this ) {
 				this.options = options;
 				try {
-					final CachingProvider cachingProvider;
-					final String provider = getProp( properties, PROVIDER );
-					if ( provider != null ) {
-						cachingProvider = Caching.getCachingProvider( provider );
-					}
-					else {
-						cachingProvider = Caching.getCachingProvider();
-					}
-					final CacheManager cacheManager;
-					final String cacheManagerUri = getProp( properties, CONFIG_URI );
-					if ( cacheManagerUri != null ) {
-						URI uri;
-						try {
-							uri = new URI( cacheManagerUri );
-						}
-						catch ( URISyntaxException e ) {
-							throw new CacheException( "Couldn't create URI from " + cacheManagerUri, e );
-						}
-						cacheManager = cachingProvider.getCacheManager( uri, cachingProvider.getDefaultClassLoader() );
-					}
-					else {
-						cacheManager = cachingProvider.getCacheManager();
-					}
-					this.cacheManager = cacheManager;
+					this.cacheManager = getCacheManager( properties );
 				}
 				finally {
 					if ( this.cacheManager == null ) {
@@ -183,7 +192,7 @@ public class JCacheRegionFactory implements RegionFactory {
 		return new MutableConfiguration<Object, Object>();
 	}
 
-	CacheManager getCacheManager() {
+	protected CacheManager getCacheManager() {
 		return cacheManager;
 	}
 
@@ -195,11 +204,11 @@ public class JCacheRegionFactory implements RegionFactory {
 		return (int) TimeUnit.SECONDS.toMillis( 60 ) * Timestamper.ONE_MS;
 	}
 
-	private String getProp(Properties properties, String prop) {
+	protected String getProp(Properties properties, String prop) {
 		return properties != null ? properties.getProperty( prop ) : null;
 	}
 
-	private void checkStatus() {
+	protected void checkStatus() {
 		if(!isStarted()) {
 			throw new IllegalStateException("JCacheRegionFactory not yet started!");
 		}

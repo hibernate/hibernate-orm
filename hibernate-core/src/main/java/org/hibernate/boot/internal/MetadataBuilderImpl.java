@@ -56,13 +56,11 @@ import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.basic.RegistryKey;
 import org.hibernate.type.spi.basic.RegistryKeyImpl;
@@ -243,7 +241,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyBasicType(org.hibernate.type.spi.BasicType type, RegistryKey registryKey) {
-		options.typeConfiguration.getBasicTypeRegistry().register( type, registryKey );
+		bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register( type, registryKey );
 		return this;
 	}
 
@@ -264,20 +262,9 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public void contributeType(org.hibernate.type.spi.BasicType type, String... registrationKeys) {
+	public void contributeType(org.hibernate.type.spi.BasicType type, RegistryKey registryKey) {
 		// register the BasicType with the BasicTypeRegistry
 		this.bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register( type, RegistryKey.from( type ) );
-
-		// then, register the BasicType with the BasicTypeProducerRegistry using the
-		// "registration keys"
-
-		// first the BasicType class name
-		this.bootstrapContext.getBasicTypeProducerRegistry().register( type, type.getClass().getName() );
-
-		// and then the passed keys, if any
-		if ( registrationKeys != null ) {
-			this.bootstrapContext.getBasicTypeProducerRegistry().register( type, registrationKeys );
-		}
 	}
 
 	@Override
@@ -403,8 +390,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataImplementor build() {
-		CascadeStyles.initialize( bootstrapContext.isJpaBootstrap() );
-
 		final CfgXmlAccessService cfgXmlAccessService = options.serviceRegistry.getService( CfgXmlAccessService.class );
 		if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
 			if ( cfgXmlAccessService.getAggregatedConfig().getMappingReferences() != null ) {

@@ -47,6 +47,7 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.spi.Type;
+
 import org.jboss.logging.Logger;
 
 import org.dom4j.Element;
@@ -749,7 +750,7 @@ public final class AuditMetadataGenerator {
 	}
 
 	void throwUnsupportedTypeException(Type type, String entityName, String propertyName) {
-		final String message = "Type not supported for auditing: " + type.getClass().getName() +
+		final String message = "Type not supported for auditing: " + type.getReturnedClass().getClass().getName() +
 				", on entity " + entityName + ", property '" + propertyName + "'.";
 
 		throw new MappingException( message );

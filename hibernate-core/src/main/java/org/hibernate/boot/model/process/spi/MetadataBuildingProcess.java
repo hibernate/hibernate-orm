@@ -35,6 +35,7 @@ import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.basic.RegistryKey;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
@@ -109,7 +110,7 @@ public class MetadataBuildingProcess {
 			final ManagedResources managedResources,
 			final BootstrapContext bootstrapContext,
 			final MetadataBuildingOptions options) {
-		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( options );
+		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, options );
 		handleTypes( bootstrapContext, options );
 
 		for ( AttributeConverterDefinition attributeConverterDefinition : managedResources.getAttributeConverterDefinitions() ) {
@@ -333,20 +334,9 @@ public class MetadataBuildingProcess {
 			}
 
 			@Override
-			public void contributeType(org.hibernate.type.spi.BasicType type, String... registrationKeys) {
+			public void contributeType(BasicType type, RegistryKey key) {
 				// register the BasicType with the BasicTypeRegistry
 				bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register( type, RegistryKey.from( type ) );
-
-				// then, register the BasicType with the BasicTypeProducerRegistry using the
-				// "registration keys"
-
-				// first the BasicType class name
-				bootstrapContext.getBasicTypeProducerRegistry().register( type, type.getClass().getName() );
-
-				// and then the passed keys, if any
-				if ( registrationKeys != null ) {
-					bootstrapContext.getBasicTypeProducerRegistry().register( type, registrationKeys );
-				}
 			}
 
 			@Override

@@ -11,13 +11,13 @@ import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
-import org.hibernate.sqm.domain.BasicType;
 import org.hibernate.type.spi.basic.BasicTypeRegistry;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptorRegistry;
@@ -93,12 +93,21 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 		return scope.getSessionFactory();
 	}
 
+	public MetadataBuildingContext getMetadataBuildingContext() {
+		return scope.getMetadataBuildingContext();
+	}
+
 	public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
 		return this;
 	}
 
 	public BasicTypeRegistry getBasicTypeRegistry() {
 		return basicTypeRegistry;
+	}
+
+	public void scope(MetadataBuildingContext metadataBuildingContext) {
+		log.debugf( "Scoping TypeConfiguration [%s] to MetadataBuildingContext [%s]", this, metadataBuildingContext );
+		scope.setMetadataBuildingContext( metadataBuildingContext );
 	}
 
 	public void scope(SessionFactoryImplementor factory) {
@@ -142,10 +151,31 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 
 	/**
 	 * Encapsulation of lifecycle concerns for a TypeConfiguration, mainly in regards to
-	 * eventually being associated with a SessionFactory.
+	 * eventually being associated with a SessionFactory.  Goes through the following stages:<ol>
+	 *     <li>
+	 *         TypeConfiguration initialization - during this phase {@link #getMapping()} will
+	 *         return a non-null, no-op impl.  Calls to {@link #getMetadataBuildingContext()} will
+	 *         simply return {@code null}, while calls to {@link #getSessionFactory()} will throw
+	 *         an exception.
+	 *     </li>
+	 *     <li>
+	 *         Metadata building - during this phase {@link #getMetadataBuildingContext()} will
+	 *         return a non-null value and the {@link #getMapping()} return will be the
+	 *         {@link MetadataBuildingContext#getMetadataCollector()} reference.  Calls to
+	 *         {@link #getSessionFactory()} will throw an exception.
+	 *     </li>
+	 *     <li>
+	 *         live SessionFactory - this is the only phase where calls to {@link #getSessionFactory()}
+	 *         are allowed and {@link #getMapping()} returns the SessionFactory itself (since it
+	 *         implements that Mapping contract (for now) too.  Calls to {@link #getMetadataBuildingContext()}
+	 *         will simply return {@code null}.
+	 *     </li>
+	 * </ol>
 	 */
 	private static class Scope {
 		private transient Mapping mapping;
+
+		private transient MetadataBuildingContext metadataBuildingContext;
 
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;
@@ -156,6 +186,18 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 
 		public Mapping getMapping() {
 			return mapping;
+		}
+
+		public MetadataBuildingContext getMetadataBuildingContext() {
+			if ( metadataBuildingContext == null ) {
+				throw new HibernateException( "TypeConfiguration is not currently scoped to MetadataBuildingContext" );
+			}
+			return metadataBuildingContext;
+		}
+
+		public void setMetadataBuildingContext(MetadataBuildingContext metadataBuildingContext) {
+			this.metadataBuildingContext = metadataBuildingContext;
+			this.mapping = metadataBuildingContext.getMetadataCollector();
 		}
 
 		public SessionFactoryImplementor getSessionFactory() {
@@ -191,6 +233,8 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 				log.scopingTypesToSessionFactoryAfterAlreadyScoped( (SessionFactoryImplementor) mapping, factory );
 			}
 			else {
+				metadataBuildingContext = null;
+
 				sessionFactoryUuid = factory.getUuid();
 				String sfName = factory.getSessionFactoryOptions().getSessionFactoryName();
 				if ( sfName == null ) {

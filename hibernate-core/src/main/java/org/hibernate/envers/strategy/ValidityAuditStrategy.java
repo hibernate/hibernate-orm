@@ -171,7 +171,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 						originalIdEntry.getValue()
 				);
 			}
-		} 
+		}
 
 		final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) session ).getFactory();
 		final Type propertyType = sessionFactory.getMetamodel().entityPersister( entityName ).getPropertyType( propertyName );
@@ -190,7 +190,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 							qb.getRootParameters().addNullRestriction( dataEntry.getKey(), true );
 						}
 					}
-				} );
+				}
 			}
 		}
 

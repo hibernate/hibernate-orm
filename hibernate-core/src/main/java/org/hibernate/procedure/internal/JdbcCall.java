@@ -6,7 +6,7 @@
  */
 package org.hibernate.procedure.internal;
 
-import org.hibernate.type.mapper.spi.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Models the actual call, allowing iterative building of the parts.

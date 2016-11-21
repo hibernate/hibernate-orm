@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.type.ProcedureParameterExtractionAware;
-import org.hibernate.type.mapper.spi.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Controls extracting values from OUT/INOUT parameters.

@@ -14,7 +14,7 @@ import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.result.internal.OutputsImpl;
-import org.hibernate.type.mapper.spi.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Controls extracting values from REF_CURSOR parameters.
@@ -45,14 +45,15 @@ class JdbcRefCursorExtractor {
 		if ( shouldUseJdbcNamedParameters && registration.getName() != null ) {
 
 			if ( refCursorParam.getName() != null ) {
-			resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
-					.getService( RefCursorSupport.class )
-					.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getName() );
-		}
-		else {
-			resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
-					.getService( RefCursorSupport.class )
-					.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getPosition() );
+				resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
+						.getService( RefCursorSupport.class )
+						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getName() );
+			}
+			else {
+				resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
+						.getService( RefCursorSupport.class )
+						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getPosition() );
+			}
 		}
 	}
 }

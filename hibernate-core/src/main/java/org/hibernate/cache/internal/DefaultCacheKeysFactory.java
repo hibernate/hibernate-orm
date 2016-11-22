@@ -43,27 +43,27 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 	public static final DefaultCacheKeysFactory INSTANCE = new DefaultCacheKeysFactory();
 
 	public static Object staticCreateCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return new OldCacheKeyImplementation( id, persister.getKeyType(), persister.getRole(), tenantIdentifier, factory );
+		return new CacheKeyImplementation( id, persister.getKeyType(), persister.getRole(), tenantIdentifier, factory );
 	}
 
 	public static Object staticCreateEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return new OldCacheKeyImplementation( id, persister.getIdentifierType(), persister.getRootEntityName(), tenantIdentifier, factory );
+		return new CacheKeyImplementation( id, persister.getIdentifierType(), persister.getRootEntityName(), tenantIdentifier, factory );
 	}
 
 	public static Object staticCreateNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
-		return new OldNaturalIdCacheKey( naturalIdValues,  persister.getPropertyTypes(), persister.getNaturalIdentifierProperties(), persister.getRootEntityName(), session );
+		return new NaturalIdCacheKey( naturalIdValues,  persister.getPropertyTypes(), persister.getNaturalIdentifierProperties(), persister.getRootEntityName(), session );
 	}
 
 	public static Object staticGetEntityId(Object cacheKey) {
-		return ((OldCacheKeyImplementation) cacheKey).getId();
+		return ((CacheKeyImplementation) cacheKey).getId();
 	}
 
 	public static Object staticGetCollectionId(Object cacheKey) {
-		return ((OldCacheKeyImplementation) cacheKey).getId();
+		return ((CacheKeyImplementation) cacheKey).getId();
 	}
 
 	public static Object[] staticGetNaturalIdValues(Object cacheKey) {
-		return ((OldNaturalIdCacheKey) cacheKey).getNaturalIdValues();
+		return ((NaturalIdCacheKey) cacheKey).getNaturalIdValues();
 	}
 
 	@Override

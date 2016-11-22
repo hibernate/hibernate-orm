@@ -21,11 +21,8 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  * @author Steve Ebersole
- *
- * @deprecated In optimized implementations, wrapping the id is not necessary.
  */
-@Deprecated
-final class OldCacheKeyImplementation implements Serializable {
+final class CacheKeyImplementation implements Serializable {
 	private final Object id;
 	private final Type type;
 	private final String entityOrRoleName;
@@ -43,7 +40,7 @@ final class OldCacheKeyImplementation implements Serializable {
 	 * @param tenantId The tenant identifier associated this data.
 	 * @param factory The session factory for which we are caching
 	 */
-	OldCacheKeyImplementation(
+	CacheKeyImplementation(
 			final Object id,
 			final Type type,
 			final String entityOrRoleName,
@@ -74,11 +71,11 @@ final class OldCacheKeyImplementation implements Serializable {
 		if ( this == other ) {
 			return true;
 		}
-		if ( hashCode != other.hashCode() || !( other instanceof OldCacheKeyImplementation ) ) {
+		if ( hashCode != other.hashCode() || !( other instanceof CacheKeyImplementation) ) {
 			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}
-		final OldCacheKeyImplementation that = (OldCacheKeyImplementation) other;
+		final CacheKeyImplementation that = (CacheKeyImplementation) other;
 		return EqualsHelper.equals( entityOrRoleName, that.entityOrRoleName )
 				&& type.isEqual( id, that.id)
 				&& EqualsHelper.equals( tenantId, that.tenantId );

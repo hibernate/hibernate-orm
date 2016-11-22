@@ -1146,8 +1146,12 @@ public class ActionQueue {
 				}
 				else if ( type.isCollectionType() && value != null ) {
 					CollectionType collectionType = (CollectionType) type;
-					String entityName = collectionType.getAssociatedEntityName( ( (SessionImplementor) action.getSession() ).getSessionFactory() );
-					batchIdentifier.getChildEntityNames().add( entityName );
+					final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) action.getSession() )
+							.getSessionFactory();
+					if ( collectionType.getElementType( sessionFactory ).isEntityType() ) {
+						String entityName = collectionType.getAssociatedEntityName( sessionFactory );
+						batchIdentifier.getChildEntityNames().add( entityName );
+					}
 				}
 			}
 		}

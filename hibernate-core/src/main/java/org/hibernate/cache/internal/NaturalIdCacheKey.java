@@ -26,11 +26,8 @@ import org.hibernate.type.Type;
  *
  * @author Eric Dalquist
  * @author Steve Ebersole
- *
- * @deprecated Cache implementation should provide optimized key.
  */
-@Deprecated
-public class OldNaturalIdCacheKey implements Serializable {
+public class NaturalIdCacheKey implements Serializable {
 	private final Serializable[] naturalIdValues;
 	private final String entityName;
 	private final String tenantId;
@@ -45,7 +42,7 @@ public class OldNaturalIdCacheKey implements Serializable {
 	 * @param naturalIdPropertyIndexes
 	 * @param session The originating session
 	 */
-	public OldNaturalIdCacheKey(
+	public NaturalIdCacheKey(
 			final Object[] naturalIdValues,
 			Type[] propertyTypes, int[] naturalIdPropertyIndexes, final String entityName,
 			final SessionImplementor session) {
@@ -139,12 +136,12 @@ public class OldNaturalIdCacheKey implements Serializable {
 			return true;
 		}
 
-		if ( hashCode != o.hashCode() || !( o instanceof OldNaturalIdCacheKey ) ) {
+		if ( hashCode != o.hashCode() || !( o instanceof NaturalIdCacheKey) ) {
 			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}
 
-		final OldNaturalIdCacheKey other = (OldNaturalIdCacheKey) o;
+		final NaturalIdCacheKey other = (NaturalIdCacheKey) o;
 		return EqualsHelper.equals( entityName, other.entityName )
 				&& EqualsHelper.equals( tenantId, other.tenantId )
 				&& Arrays.deepEquals( this.naturalIdValues, other.naturalIdValues );

@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.xml.XMLConstants;
@@ -65,7 +65,7 @@ public class PersistenceXmlParser {
 				PersistenceUnitTransactionType.RESOURCE_LOCAL
 		);
 
-		return new ArrayList<>( parser.doResolve( integration ).values() );
+		return parser.doResolve( integration );
 	}
 
 	public static ParsedPersistenceXmlDescriptor locateIndividualPersistenceUnit(URL persistenceXmlUrl) {
@@ -85,10 +85,10 @@ public class PersistenceXmlParser {
 				transactionType
 		);
 
-		final Map<String,ParsedPersistenceXmlDescriptor> persistenceUnits = parser.parsePersistenceXml( persistenceXmlUrl, integration );
-		assert persistenceUnits.size() == 1;
+		final List<ParsedPersistenceXmlDescriptor> persistenceUnits = parser.parsePersistenceXml( persistenceXmlUrl, integration );
+		assert persistenceUnits.size() > 0;
 
-		return persistenceUnits.values().iterator().next();
+		return persistenceUnits.iterator().next();
 	}
 
 	public static ParsedPersistenceXmlDescriptor locateNamedPersistenceUnit(URL persistenceXmlUrl, String name) {
@@ -111,10 +111,12 @@ public class PersistenceXmlParser {
 				transactionType
 		);
 
-		final Map<String,ParsedPersistenceXmlDescriptor> persistenceUnits = parser.parsePersistenceXml( persistenceXmlUrl, integration );
-		assert persistenceUnits.containsKey( name );
-
-		return persistenceUnits.get( name );
+		final List<ParsedPersistenceXmlDescriptor> persistenceUnits = parser.parsePersistenceXml( persistenceXmlUrl, integration )
+				.stream().filter(
+				parsedPersistenceXmlDescriptor -> name.equals( parsedPersistenceXmlDescriptor.getName() ) ).collect(
+				Collectors.toList() );
+		assert persistenceUnits.size() > 0;
+		return persistenceUnits.get( 0 );
 	}
 
 	/**
@@ -122,13 +124,13 @@ public class PersistenceXmlParser {
 	 * <p/>
 	 * Parses a specific persistence.xml file...
 	 */
-	public static Map<String,ParsedPersistenceXmlDescriptor> parse(
+	public static List<ParsedPersistenceXmlDescriptor> parse(
 			URL persistenceXmlUrl,
 			PersistenceUnitTransactionType transactionType) {
 		return parse( persistenceXmlUrl, transactionType, Collections.emptyMap() );
 	}
 
-	public static Map<String,ParsedPersistenceXmlDescriptor> parse(
+	public static List<ParsedPersistenceXmlDescriptor> parse(
 			URL persistenceXmlUrl,
 			PersistenceUnitTransactionType transactionType,
 			Map integration) {
@@ -146,8 +148,8 @@ public class PersistenceXmlParser {
 		this.defaultTransactionType = defaultTransactionType;
 	}
 
-	public Map<String,ParsedPersistenceXmlDescriptor> doResolve(Map integration) {
-		final Map<String,ParsedPersistenceXmlDescriptor> persistenceUnits = new ConcurrentHashMap<>();
+	public List<ParsedPersistenceXmlDescriptor> doResolve(Map integration) {
+		final List<ParsedPersistenceXmlDescriptor> persistenceUnits = new ArrayList<>();
 
 		final List<URL> xmlUrls = classLoaderService.locateResources( "META-INF/persistence.xml" );
 		if ( xmlUrls.isEmpty() ) {
@@ -155,20 +157,20 @@ public class PersistenceXmlParser {
 		}
 		else {
 			for ( URL xmlUrl : xmlUrls ) {
-				persistenceUnits.putAll( parsePersistenceXml( xmlUrl, integration ) );
+				persistenceUnits.addAll( parsePersistenceXml( xmlUrl, integration ) );
 			}
 		}
 
 		return persistenceUnits;
 	}
 
-	private Map<String,ParsedPersistenceXmlDescriptor> parsePersistenceXml(URL xmlUrl, Map integration) {
+	private List<ParsedPersistenceXmlDescriptor> parsePersistenceXml(URL xmlUrl, Map integration) {
 		LOG.tracef( "Attempting to parse persistence.xml file : %s", xmlUrl.toExternalForm() );
 
 		final Document doc = loadUrl( xmlUrl );
 		final Element top = doc.getDocumentElement();
 
-		final Map<String,ParsedPersistenceXmlDescriptor> persistenceUnits = new ConcurrentHashMap<>();
+		final List<ParsedPersistenceXmlDescriptor> persistenceUnits = new ArrayList<>();
 
 		final NodeList children = top.getChildNodes();
 		for ( int i = 0; i < children.getLength() ; i++ ) {
@@ -201,10 +203,7 @@ public class PersistenceXmlParser {
 					Properties properties = persistenceUnit.getProperties();
 					ConfigurationHelper.overrideProperties( properties, integration );
 
-					persistenceUnits.put(
-							persistenceUnit.getName(),
-							persistenceUnit
-					);
+					persistenceUnits.add( persistenceUnit );
 				}
 			}
 		}

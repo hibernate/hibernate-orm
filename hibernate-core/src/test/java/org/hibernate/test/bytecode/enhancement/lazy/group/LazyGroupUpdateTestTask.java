@@ -80,7 +80,7 @@ public class LazyGroupUpdateTestTask extends AbstractEnhancerTestTask {
 		// Now lets update nickName which ought to initialize nickName and parent, but not alternateParent
 		c1.setNickName( "new nickName" );
 		assertLoaded( c1, "nickName" );
-		assertLoaded( c1, "parent" );
+		assertNotLoaded( c1, "parent" );
 		assertNotLoaded( c1, "alternateParent" );
 		assertEquals( "Hibernate", c1.getParent().getNombre() );
 		assertFalse( c1.getParent() instanceof HibernateProxy );

@@ -68,6 +68,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -1058,26 +1059,40 @@ public abstract class AbstractEntityPersister
 					final Object[] snapshot = entry.getLoadedState();
 					for ( LazyAttributeDescriptor fetchGroupAttributeDescriptor : fetchGroupAttributeDescriptors ) {
 						final boolean previousInitialized = initializedLazyAttributeNames.contains( fetchGroupAttributeDescriptor.getName() );
-						final Object loadedValue = fetchGroupAttributeDescriptor.getType().nullSafeGet(
+
+						if ( previousInitialized ) {
+							// todo : one thing we should consider here is potentially un-marking an attribute as dirty based on the selected value
+							// 		we know the current value - getPropertyValue( entity, fetchGroupAttributeDescriptor.getAttributeIndex() );
+							// 		we know the selected value (see selectedValue below)
+							//		we can use the attribute Type to tell us if they are the same
+							//
+							//		assuming entity is a SelfDirtinessTracker we can also know if the attribute is
+							//			currently considered dirty, and if really not dirty we would do the un-marking
+							//
+							//		of course that would mean a new method on SelfDirtinessTracker to allow un-marking
+
+							// its already been initialized (e.g. by a write) so we don't want to overwrite
+							continue;
+						}
+
+
+						final Object selectedValue = fetchGroupAttributeDescriptor.getType().nullSafeGet(
 								rs,
 								lazyPropertyColumnAliases[fetchGroupAttributeDescriptor.getLazyIndex()],
 								session,
 								entity
 						);
+
 						final boolean set = initializeLazyProperty(
 								fieldName,
 								entity,
 								session,
 								snapshot,
 								fetchGroupAttributeDescriptor.getLazyIndex(),
-								loadedValue
+								selectedValue
 						);
-						if ( previousInitialized ) {
-							// its already been initialized (e.g. by a write) so we don't want to overwrite
-							continue;
-						}
 						if ( set ) {
-							result = loadedValue;
+							result = selectedValue;
 							interceptor.attributeInitialized( fetchGroupAttributeDescriptor.getName() );
 						}
 

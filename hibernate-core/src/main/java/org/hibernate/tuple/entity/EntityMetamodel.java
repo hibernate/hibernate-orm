@@ -337,8 +337,11 @@ public class EntityMetamodel implements Serializable {
 				LOG.entityMappedAsNonAbstract(name);
 			}
 		}
+
 		selectBeforeUpdate = persistentClass.hasSelectBeforeUpdate();
-		dynamicUpdate = persistentClass.useDynamicUpdate();
+
+		dynamicUpdate = persistentClass.useDynamicUpdate()
+				|| ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() && getBytecodeEnhancementMetadata().getLazyAttributesMetadata().getFetchGroupNames().size() > 1 );
 		dynamicInsert = persistentClass.useDynamicInsert();
 
 		polymorphic = persistentClass.isPolymorphic();

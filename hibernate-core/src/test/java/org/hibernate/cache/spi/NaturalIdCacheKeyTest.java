@@ -12,7 +12,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
-import org.hibernate.cache.internal.OldNaturalIdCacheKey;
+import org.hibernate.cache.internal.NaturalIdCacheKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -61,14 +61,14 @@ public class NaturalIdCacheKeyTest {
             }
         });
 
-        final OldNaturalIdCacheKey key = (OldNaturalIdCacheKey) DefaultCacheKeysFactory.createNaturalIdKey( new Object[] {"a", "b", "c"}, entityPersister, sessionImplementor );
+        final NaturalIdCacheKey key = (NaturalIdCacheKey) DefaultCacheKeysFactory.staticCreateNaturalIdKey( new Object[] {"a", "b", "c"}, entityPersister, sessionImplementor );
 
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         final ObjectOutputStream oos = new ObjectOutputStream(baos);
         oos.writeObject(key);
         
         final ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
-        final OldNaturalIdCacheKey keyClone = (OldNaturalIdCacheKey) ois.readObject();
+        final NaturalIdCacheKey keyClone = (NaturalIdCacheKey) ois.readObject();
         
         assertEquals(key, keyClone);
         assertEquals(key.hashCode(), keyClone.hashCode());

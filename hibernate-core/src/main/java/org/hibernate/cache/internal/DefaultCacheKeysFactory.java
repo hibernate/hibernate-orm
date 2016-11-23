@@ -38,61 +38,61 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Sanne Grinovero
  * @since 5.0
  */
-public class DefaultCacheKeysFactory {
+public class DefaultCacheKeysFactory implements CacheKeysFactory {
+	public static final String SHORT_NAME = "default";
+	public static final DefaultCacheKeysFactory INSTANCE = new DefaultCacheKeysFactory();
 
-	public static Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return new OldCacheKeyImplementation( id, persister.getKeyType(), persister.getRole(), tenantIdentifier, factory );
+	public static Object staticCreateCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return new CacheKeyImplementation( id, persister.getKeyType(), persister.getRole(), tenantIdentifier, factory );
 	}
 
-	public static Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return new OldCacheKeyImplementation( id, persister.getIdentifierType(), persister.getRootEntityName(), tenantIdentifier, factory );
+	public static Object staticCreateEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return new CacheKeyImplementation( id, persister.getIdentifierType(), persister.getRootEntityName(), tenantIdentifier, factory );
 	}
 
-	public static Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
-		return new OldNaturalIdCacheKey( naturalIdValues,  persister.getPropertyTypes(), persister.getNaturalIdentifierProperties(), persister.getRootEntityName(), session );
+	public static Object staticCreateNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
+		return new NaturalIdCacheKey( naturalIdValues,  persister.getPropertyTypes(), persister.getNaturalIdentifierProperties(), persister.getRootEntityName(), session );
 	}
 
-	public static Object getEntityId(Object cacheKey) {
-		return ((OldCacheKeyImplementation) cacheKey).getId();
+	public static Object staticGetEntityId(Object cacheKey) {
+		return ((CacheKeyImplementation) cacheKey).getId();
 	}
 
-	public static Object getCollectionId(Object cacheKey) {
-		return ((OldCacheKeyImplementation) cacheKey).getId();
+	public static Object staticGetCollectionId(Object cacheKey) {
+		return ((CacheKeyImplementation) cacheKey).getId();
 	}
 
-	public static Object[] getNaturalIdValues(Object cacheKey) {
-		return ((OldNaturalIdCacheKey) cacheKey).getNaturalIdValues();
+	public static Object[] staticGetNaturalIdValues(Object cacheKey) {
+		return ((NaturalIdCacheKey) cacheKey).getNaturalIdValues();
 	}
 
-	public static CacheKeysFactory INSTANCE = new CacheKeysFactory() {
-		@Override
-		public Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-			return DefaultCacheKeysFactory.createCollectionKey(id, persister, factory, tenantIdentifier);
-		}
+	@Override
+	public Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return staticCreateCollectionKey(id, persister, factory, tenantIdentifier);
+	}
 
-		@Override
-		public Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-			return DefaultCacheKeysFactory.createEntityKey(id, persister, factory, tenantIdentifier);
-		}
+	@Override
+	public Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		return staticCreateEntityKey(id, persister, factory, tenantIdentifier);
+	}
 
-		@Override
-		public Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
-			return DefaultCacheKeysFactory.createNaturalIdKey(naturalIdValues, persister, session);
-		}
+	@Override
+	public Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
+		return staticCreateNaturalIdKey(naturalIdValues, persister, session);
+	}
 
-		@Override
-		public Object getEntityId(Object cacheKey) {
-			return DefaultCacheKeysFactory.getEntityId(cacheKey);
-		}
+	@Override
+	public Object getEntityId(Object cacheKey) {
+		return staticGetEntityId(cacheKey);
+	}
 
-		@Override
-		public Object getCollectionId(Object cacheKey) {
-			return DefaultCacheKeysFactory.getCollectionId(cacheKey);
-		}
+	@Override
+	public Object getCollectionId(Object cacheKey) {
+		return staticGetCollectionId(cacheKey);
+	}
 
-		@Override
-		public Object[] getNaturalIdValues(Object cacheKey) {
-			return DefaultCacheKeysFactory.getNaturalIdValues(cacheKey);
-		}
-	};
+	@Override
+	public Object[] getNaturalIdValues(Object cacheKey) {
+		return staticGetNaturalIdValues(cacheKey);
+	}
 }

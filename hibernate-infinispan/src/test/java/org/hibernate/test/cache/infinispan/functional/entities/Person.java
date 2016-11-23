@@ -1,5 +1,6 @@
 package org.hibernate.test.cache.infinispan.functional.entities;
 
+import javax.persistence.Cacheable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Transient;
@@ -12,6 +13,7 @@ import java.io.Serializable;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Entity
+@Cacheable
 public class Person implements Serializable {
     @EmbeddedId
     Name name;

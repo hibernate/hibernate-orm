@@ -82,10 +82,10 @@ public interface ClassLoaderService extends Service, Stoppable {
 	<T> T workWithClassLoader(Work<T> work);
         
 	/**
-	 * Defines of the lookup in the current thread context {@link ClassLoader} should be
-	 * used.
+	 * Defines when the lookup in the current thread context {@link ClassLoader} should be
+	 * done according to the other ones.
 	 */
-	enum TCCLLookupBehavior {
+	enum TcclLookupPrecedence {
     
 		/**
 		 * The current thread context {@link ClassLoader} will never be used during
@@ -106,7 +106,4 @@ public interface ClassLoaderService extends Service, Stoppable {
 		 */
 		AFTER
 	}
-        
-	TCCLLookupBehavior getTTCLLookupBehavior();
-	void setTCCLLookupBehavior(TCCLLookupBehavior behavior);
 }

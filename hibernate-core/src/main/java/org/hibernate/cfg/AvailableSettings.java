@@ -700,6 +700,8 @@ public interface AvailableSettings {
 	 *     <li>an Object implementing {@link org.hibernate.cache.spi.CacheKeysFactory}</li>
 	 *     <li>a Class implementing {@link org.hibernate.cache.spi.CacheKeysFactory}</li>
 	 *     <li>FQN of a Class implementing {@link org.hibernate.cache.spi.CacheKeysFactory}</li>
+	 *     <li>'default' as a short name for {@link org.hibernate.cache.internal.DefaultCacheKeysFactory}</li>
+	 *     <li>'simple' as a short name for {@link org.hibernate.cache.internal.SimpleCacheKeysFactory}</li>
 	 * </ul>
 	 *
 	 * @since 5.0.10, 5.1.1 - note that currently this is only honored for hibernate-infinispan

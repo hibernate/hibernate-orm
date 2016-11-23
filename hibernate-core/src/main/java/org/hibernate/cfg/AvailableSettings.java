@@ -7,7 +7,7 @@
 package org.hibernate.cfg;
 
 import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -195,9 +195,9 @@ public interface AvailableSettings {
 	 * Used to define how the current thread context {@link ClassLoader} must be used
 	 * for class lookup.
 	 * 
-	 * @see ClassLoaderService#TCCLLookupBehavior
+	 * @see TcclLookupPrecedence
 	 */
-	String TC_CLASSLOADER = "hibernate.classloader.tccl_lookup_precedence";
+	String TC_CLASSLOADER = "hibernate.classLoader.tccl_lookup_precedence";
         
 	/**
 	 * Names the {@link ClassLoader} used to load user application classes.

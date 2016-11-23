@@ -23,8 +23,6 @@ import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
-import javassist.CtClass;
-import javassist.CtField;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -44,8 +42,8 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService.TcclLookupPrecedence;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;

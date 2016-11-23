@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService.TcclLookupPrecedence;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;

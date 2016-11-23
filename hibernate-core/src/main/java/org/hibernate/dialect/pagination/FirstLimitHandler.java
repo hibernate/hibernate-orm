@@ -6,14 +6,13 @@
  */
 package org.hibernate.dialect.pagination;
 
-import java.util.Locale;
 import org.hibernate.engine.spi.RowSelection;
 
 
 /**
  * @author Brett Meyer
  */
-public class FirstLimitHandler extends AbstractLimitHandler {
+public class FirstLimitHandler extends LegacyFirstLimitHandler {
 
 	public static final FirstLimitHandler INSTANCE = new FirstLimitHandler();
 
@@ -27,29 +26,6 @@ public class FirstLimitHandler extends AbstractLimitHandler {
 		if ( hasOffset ) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
-		return new StringBuilder( sql.length() + 16 )
-				.append( sql )
-				.insert( sql.toLowerCase(Locale.ROOT).indexOf( "select" ) + 6, " first " + getMaxOrLimit( selection ) )
-				.toString();
-	}
-
-	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
+		return super.processSql( sql, selection );
 	}
 }

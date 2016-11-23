@@ -343,6 +343,12 @@ This configuration property is used by the https://docs.jboss.org/hibernate/orm/
 It follows a pattern similar to the ANSI SQL definition of global temporary table using a "session id" column to segment rows from the various sessions.
 
 This configuration property defines the database catalog used for storing the temporary tables used for bulk HQL operations.
+|`hibernate.legacy_limit_handler` | `true` or `false` (default value) |
+Setting which indicates whether or not to use `org.hibernate.dialect.pagination.LimitHandler`
+implementations that sacrifices performance optimizations to allow legacy 4.x limit behavior.
+
+Legacy 4.x behavior favored performing pagination in-memory by avoiding the use of the offset value, which is overall poor performance.
+In 5.x, the limit handler behavior favors performance, thus, if the dialect doesn't support offsets, an exception is thrown instead.
 |===================================================================================================================================================================================================================================
 
 [[configurations-batch]]

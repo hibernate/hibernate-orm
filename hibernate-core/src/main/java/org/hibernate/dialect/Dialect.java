@@ -34,6 +34,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastFunction;
 import org.hibernate.dialect.function.SQLFunction;
@@ -53,6 +54,8 @@ import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.internal.DefaultSchemaNameResolver;
 import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
@@ -146,6 +149,7 @@ public abstract class Dialect implements ConversionContext {
 
 	private final UniqueDelegate uniqueDelegate;
 
+	private boolean legacyLimitHandlerBehavior;
 
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -307,7 +311,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @param serviceRegistry The service registry
 	 */
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		// by default, nothing to do
+		resolveLegacyLimitHandlerBehavior( serviceRegistry );
 	}
 
 	/**
@@ -2858,5 +2862,20 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean supportsNationalizedTypes() {
 		return true;
+	}
+
+	public boolean isLegacyLimitHandlerBehaviorEnabled() {
+		return legacyLimitHandlerBehavior;
+	}
+
+	private void resolveLegacyLimitHandlerBehavior(ServiceRegistry serviceRegistry) {
+		// HHH-11194
+		// Temporary solution to set whether legacy limit handler behavior should be used.
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+		legacyLimitHandlerBehavior = configurationService.getSetting(
+				AvailableSettings.USE_LEGACY_LIMIT_HANDLERS,
+				StandardConverters.BOOLEAN,
+				false
+		);
 	}
 }

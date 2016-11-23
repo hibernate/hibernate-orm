@@ -1604,8 +1604,17 @@ public interface AvailableSettings {
 	 */
 	String MERGE_ENTITY_COPY_OBSERVER = "hibernate.event.merge.entity_copy_observer";
 
-
-
-
-
+	/**
+	 * Setting which indicates whether or not to use {@link org.hibernate.dialect.pagination.LimitHandler}
+	 * implementations that sacrifices performance optimizations to allow legacy 4.x limit behavior.
+	 * </p>
+	 * Legacy 4.x behavior favored performing pagination in-memory by avoiding the use of the offset
+	 * value, which is overall poor performance.  In 5.x, the limit handler behavior favors performance
+	 * thus if the dialect doesn't support offsets, an exception is thrown instead.
+	 * </p>
+	 * Default is {@code false}.
+	 *
+	 * @since 5.2.5
+	 */
+	String USE_LEGACY_LIMIT_HANDLERS = "hibernate.legacy_limit_handler";
 }

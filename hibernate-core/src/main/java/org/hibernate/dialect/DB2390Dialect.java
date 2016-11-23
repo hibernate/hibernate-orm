@@ -47,6 +47,28 @@ public class DB2390Dialect extends DB2Dialect {
 		}
 	};
 
+	private static final AbstractLimitHandler LEGACY_LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			return sql + " fetch first " + getMaxOrLimit( selection ) + " rows only";
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean useMaxForLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean supportsVariableLimit() {
+			return false;
+		}
+	};
+
 	@Override
 	public boolean supportsSequences() {
 		return false;
@@ -86,12 +108,16 @@ public class DB2390Dialect extends DB2Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LIMIT_HANDLER;
+		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
+			return LEGACY_LIMIT_HANDLER;
+		}
+		else {
+			return LIMIT_HANDLER;
+		}
 	}
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new DB2390IdentityColumnSupport();
 	}
-
 }

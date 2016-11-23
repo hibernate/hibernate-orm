@@ -149,51 +149,37 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		}
 
 		private Iterator<ClassLoader> newClassLoaderIterator() {
-			final ClassLoader sysClassLoader = locateSystemClassLoader();	
 			final ClassLoader threadClassLoader = locateTCCL();
-			
-			final TcclLookupPrecedence behavior;
-			if ( threadClassLoader == null ) {
-				behavior = TcclLookupPrecedence.NEVER;
-			} 
-			else {
-				behavior = tcclLookupPrecedence;
+			if ( tcclLookupPrecedence == TcclLookupPrecedence.NEVER || threadClassLoader == null ) {
+				return newTcclNeverIterator();
 			}
-			
+			else if ( tcclLookupPrecedence == TcclLookupPrecedence.AFTER ) {
+				return newTcclAfterIterator(threadClassLoader);
+			}
+			else if ( tcclLookupPrecedence == TcclLookupPrecedence.BEFORE ) {
+				return newTcclBeforeIterator(threadClassLoader);
+			}
+			else {
+				throw new RuntimeException( "Unknown precedence: "+tcclLookupPrecedence );
+			}
+		}
+		
+		private Iterator<ClassLoader> newTcclBeforeIterator(final ClassLoader threadContextClassLoader) {
+			final ClassLoader systemClassLoader = locateSystemClassLoader();
 			return new Iterator<ClassLoader>() {
-				private boolean tcclReturned = false;
-				private boolean sysclReturned = false;
 				private int currentIndex = 0;
-
-				private ClassLoader nextClassLoader;
-				
+				private boolean tcCLReturned = false;
+				private boolean sysCLReturned = false;
+			    
 				@Override
 				public boolean hasNext() {
-					if ( nextClassLoader != null ) {
+					if ( !tcCLReturned ) {
 						return true;
 					}
-					
-					if ( currentIndex == 0 && behavior == TcclLookupPrecedence.BEFORE && !tcclReturned ) {
-						tcclReturned = true;
-						nextClassLoader = threadClassLoader;
+					else if ( currentIndex < individualClassLoaders.length ) {
 						return true;
 					}
-					
-					if ( currentIndex < individualClassLoaders.length ) {
-						nextClassLoader = individualClassLoaders[ currentIndex ];
-						++currentIndex;
-						return true;
-					}
-					
-					if ( behavior == TcclLookupPrecedence.AFTER && !tcclReturned ) {
-						tcclReturned = true;
-						nextClassLoader = threadClassLoader;
-						return true;
-					}
-					
-					if ( !sysclReturned ) {
-						sysclReturned = true;
-						nextClassLoader = sysClassLoader;
+					else if ( !sysCLReturned && systemClassLoader != null ) {
 						return true;
 					}
 					
@@ -202,17 +188,97 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 				@Override
 				public ClassLoader next() {
-					if ( nextClassLoader == null ) {
-						throw new IllegalStateException( "No more ClassLoader to return" );
+					if ( !tcCLReturned ) {
+						tcCLReturned = true;
+						return threadContextClassLoader;
+					}
+					else if ( currentIndex < individualClassLoaders.length ) {
+						currentIndex += 1;
+						return individualClassLoaders[ currentIndex - 1 ];
+					}
+					else if ( !sysCLReturned && systemClassLoader != null ) {
+						sysCLReturned = true;
+						return systemClassLoader;
+					}
+					throw new IllegalStateException( "No more item" );
+				}
+			};
+		}
+		
+		private Iterator<ClassLoader> newTcclAfterIterator(final ClassLoader threadContextClassLoader) {
+			final ClassLoader systemClassLoader = locateSystemClassLoader();
+			return new Iterator<ClassLoader>() {
+				private int currentIndex = 0;
+				private boolean tcCLReturned = false;
+				private boolean sysCLReturned = false;
+			    
+				@Override
+				public boolean hasNext() {
+					if ( currentIndex < individualClassLoaders.length ) {
+						return true;
+					}
+					else if ( !tcCLReturned ) {
+						return true;
+					}
+					else if ( !sysCLReturned && systemClassLoader != null ) {
+						return true;
 					}
 					
-					ClassLoader result = nextClassLoader;
-					nextClassLoader = null;
-					return result;
+					return false;
+				}
+
+				@Override
+				public ClassLoader next() {
+					if ( currentIndex < individualClassLoaders.length ) {
+						currentIndex += 1;
+						return individualClassLoaders[ currentIndex - 1 ];
+					}
+					else if ( !tcCLReturned ) {
+						tcCLReturned = true;
+						return threadContextClassLoader;
+					}
+					else if ( !sysCLReturned && systemClassLoader != null ) {
+						sysCLReturned = true;
+						return systemClassLoader;
+					}
+					throw new IllegalStateException( "No more item" );
 				}
 			};
 		}
                 
+		private Iterator<ClassLoader> newTcclNeverIterator() {
+			final ClassLoader systemClassLoader = locateSystemClassLoader();
+			return new Iterator<ClassLoader>() {
+				private int currentIndex = 0;
+				private boolean sysCLReturned = false;
+			    
+				@Override
+				public boolean hasNext() {
+					if ( currentIndex < individualClassLoaders.length ) {
+						return true;
+					}
+					else if ( !sysCLReturned && systemClassLoader != null ) {
+						return true;
+					}
+					
+					return false;
+				}
+
+				@Override
+				public ClassLoader next() {
+					if ( currentIndex < individualClassLoaders.length ) {
+						currentIndex += 1;
+						return individualClassLoaders[ currentIndex - 1 ];
+					}
+					else if ( !sysCLReturned && systemClassLoader != null ) {
+						sysCLReturned = true;
+						return systemClassLoader;
+					}
+					throw new IllegalStateException( "No more item" );
+				}
+			};
+		}
+		
 		@Override
 		public Enumeration<URL> getResources(String name) throws IOException {
 			final LinkedHashSet<URL> resourceUrls = new LinkedHashSet<URL>();

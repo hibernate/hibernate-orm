@@ -41,17 +41,17 @@ public class CacheKeysFactoryTest extends BaseUnitTestCase {
 
    @Test
    public void testNotSet() throws Exception {
-      test(null, "OldCacheKeyImplementation");
+      test(null, "CacheKeyImplementation");
    }
 
    @Test
    public void testDefault() throws Exception {
-      test(DefaultCacheKeysFactory.SHORT_NAME, "OldCacheKeyImplementation");
+      test(DefaultCacheKeysFactory.SHORT_NAME, "CacheKeyImplementation");
    }
 
    @Test
    public void testDefaultClass() throws Exception {
-      test(DefaultCacheKeysFactory.class.getName(), "OldCacheKeyImplementation");
+      test(DefaultCacheKeysFactory.class.getName(), "CacheKeyImplementation");
    }
 
    @Test

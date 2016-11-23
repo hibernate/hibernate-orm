@@ -104,7 +104,8 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	protected void out(String s) {
 		if ( exprs.size() > 1 ) {
 			super.out( s );
-		} else {
+		}
+		else {
 			writer.clause( s );
 		}
 	}

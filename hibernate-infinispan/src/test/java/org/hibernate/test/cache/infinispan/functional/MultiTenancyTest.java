@@ -4,7 +4,8 @@ import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
-import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
@@ -12,13 +13,13 @@ import org.hibernate.test.cache.infinispan.functional.entities.Item;
 import org.hibernate.test.cache.infinispan.tm.XaConnectionProvider;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.infinispan.AdvancedCache;
-import org.infinispan.commons.util.CloseableIterable;
 import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.context.Flag;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -38,6 +39,12 @@ public class MultiTenancyTest extends SingleNodeTest {
 	 @Override
 	 public List<Object[]> getParameters() {
 		  return Collections.singletonList(READ_ONLY_INVALIDATION);
+	 }
+
+	 @Override
+	 protected void addSettings(Map settings) {
+		  super.addSettings( settings );
+		  settings.put( Environment.CACHE_KEYS_FACTORY, DefaultCacheKeysFactory.SHORT_NAME );
 	 }
 
 	 @Override
@@ -104,7 +111,7 @@ public class MultiTenancyTest extends SingleNodeTest {
 		  AdvancedCache localCache = region.getCache().withFlags(Flag.CACHE_MODE_LOCAL);
 		  assertEquals(1, localCache.size());
 		  try (CloseableIterator iterator = localCache.keySet().iterator()) {
-			  assertEquals("OldCacheKeyImplementation", iterator.next().getClass().getSimpleName());
+			  assertEquals("CacheKeyImplementation", iterator.next().getClass().getSimpleName());
 		  }
 	 }
 }

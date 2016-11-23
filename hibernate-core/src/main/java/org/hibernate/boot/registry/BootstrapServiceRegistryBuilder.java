@@ -14,7 +14,7 @@ import java.util.Set;
 
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService.TCCLLookupBehavior;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService.TcclLookupPrecedence;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
@@ -40,7 +40,7 @@ public class BootstrapServiceRegistryBuilder {
 	private List<ClassLoader> providedClassLoaders;
 	private ClassLoaderService providedClassLoaderService;
 	private StrategySelectorBuilder strategySelectorBuilder = new StrategySelectorBuilder();
-	private TCCLLookupBehavior tcclLookupBehaviour = TCCLLookupBehavior.AFTER;
+	private TcclLookupPrecedence tcclLookupPrecedence = TcclLookupPrecedence.AFTER;
 
 	private boolean autoCloseRegistry = true;
 
@@ -88,12 +88,12 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * Defines when the lookup in the thread context {@code ClassLoader} is done.
+	 * Defines when the lookup in the thread context {@code ClassLoader} is done
 	 * 
-	 * @param behavior The behavior.
+	 * @param precedence The lookup precedence
 	 */
-	public void applyTCCLBehavior(TCCLLookupBehavior behavior) {
-		tcclLookupBehaviour = behavior;
+	public void applyTcclLookupPrecedence(TcclLookupPrecedence precedence) {
+		tcclLookupPrecedence = precedence;
 	}
 
 	/**
@@ -215,8 +215,7 @@ public class BootstrapServiceRegistryBuilder {
 				classLoaders.addAll( providedClassLoaders );
 			}
 			
-			classLoaderService = new ClassLoaderServiceImpl( classLoaders );
-			classLoaderService.setTCCLLookupBehavior( tcclLookupBehaviour );
+			classLoaderService = new ClassLoaderServiceImpl( classLoaders,tcclLookupPrecedence );
 		}
 		else {
 			classLoaderService = providedClassLoaderService;

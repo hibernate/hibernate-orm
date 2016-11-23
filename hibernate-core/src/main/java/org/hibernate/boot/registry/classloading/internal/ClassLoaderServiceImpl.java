@@ -55,15 +55,16 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	 * @param classLoader The ClassLoader to use
 	 */
 	public ClassLoaderServiceImpl(ClassLoader classLoader) {
-		this( Collections.singletonList( classLoader ) );
+		this( Collections.singletonList( classLoader ),TcclLookupPrecedence.AFTER );
 	}
 
 	/**
 	 * Constructs a ClassLoaderServiceImpl with the given ClassLoader instances
 	 *
 	 * @param providedClassLoaders The ClassLoader instances to use
+	 * @param lookupPrecedence The lookup precedence of the thread context {@code ClassLoader}
 	 */
-	public ClassLoaderServiceImpl(Collection<ClassLoader> providedClassLoaders) {
+	public ClassLoaderServiceImpl(Collection<ClassLoader> providedClassLoaders, TcclLookupPrecedence lookupPrecedence) {
 		final LinkedHashSet<ClassLoader> orderedClassLoaderSet = new LinkedHashSet<ClassLoader>();
 
 		// first, add all provided class loaders, if any
@@ -80,7 +81,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		orderedClassLoaderSet.add( ClassLoaderServiceImpl.class.getClassLoader() );
 
 		// now build the aggregated class loader...
-		this.aggregatedClassLoader = new AggregatedClassLoader( orderedClassLoaderSet );
+		this.aggregatedClassLoader = new AggregatedClassLoader( orderedClassLoaderSet,lookupPrecedence );
 	}
 
 	/**
@@ -109,7 +110,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		addIfSet( providedClassLoaders, AvailableSettings.HIBERNATE_CLASSLOADER, configValues );
 		addIfSet( providedClassLoaders, AvailableSettings.ENVIRONMENT_CLASSLOADER, configValues );
 
-		return new ClassLoaderServiceImpl( providedClassLoaders );
+		return new ClassLoaderServiceImpl( providedClassLoaders,TcclLookupPrecedence.AFTER );
 	}
 
 	private static void addIfSet(List<ClassLoader> providedClassLoaders, String name, Map configVales) {
@@ -137,35 +138,26 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		}
 	}
 
-	@Override
-	public TCCLLookupBehavior getTTCLLookupBehavior() {
-		return getAggregatedClassLoader().tcclLookupBehavior;
-	}
-
-	@Override
-	public void setTCCLLookupBehavior(TCCLLookupBehavior behavior) {
-		getAggregatedClassLoader().tcclLookupBehavior = behavior;
-	}
-
 	private static class AggregatedClassLoader extends ClassLoader {
 		private final ClassLoader[] individualClassLoaders;
-		private volatile TCCLLookupBehavior tcclLookupBehavior = TCCLLookupBehavior.AFTER;
+		private final TcclLookupPrecedence tcclLookupPrecedence;
 
-		private AggregatedClassLoader(final LinkedHashSet<ClassLoader> orderedClassLoaderSet) {
+		private AggregatedClassLoader(final LinkedHashSet<ClassLoader> orderedClassLoaderSet, TcclLookupPrecedence precedence) {
 			super( null );
 			individualClassLoaders = orderedClassLoaderSet.toArray( new ClassLoader[orderedClassLoaderSet.size()] );
+			tcclLookupPrecedence = precedence;
 		}
 
 		private Iterator<ClassLoader> newClassLoaderIterator() {
 			final ClassLoader sysClassLoader = locateSystemClassLoader();	
 			final ClassLoader threadClassLoader = locateTCCL();
 			
-			final TCCLLookupBehavior behavior;
+			final TcclLookupPrecedence behavior;
 			if ( threadClassLoader == null ) {
-				behavior = TCCLLookupBehavior.NEVER;
+				behavior = TcclLookupPrecedence.NEVER;
 			} 
 			else {
-				behavior = tcclLookupBehavior;
+				behavior = tcclLookupPrecedence;
 			}
 			
 			return new Iterator<ClassLoader>() {
@@ -181,7 +173,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 						return true;
 					}
 					
-					if ( currentIndex == 0 && behavior == TCCLLookupBehavior.BEFORE && !tcclReturned ) {
+					if ( currentIndex == 0 && behavior == TcclLookupPrecedence.BEFORE && !tcclReturned ) {
 						tcclReturned = true;
 						nextClassLoader = threadClassLoader;
 						return true;
@@ -193,7 +185,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 						return true;
 					}
 					
-					if ( behavior == TCCLLookupBehavior.AFTER && !tcclReturned ) {
+					if ( behavior == TcclLookupPrecedence.AFTER && !tcclReturned ) {
 						tcclReturned = true;
 						nextClassLoader = threadClassLoader;
 						return true;
@@ -419,7 +411,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		return work.doWork( getAggregatedClassLoader() );
 	}
 
-	private AggregatedClassLoader getAggregatedClassLoader() {
+	private ClassLoader getAggregatedClassLoader() {
 		final AggregatedClassLoader aggregated = this.aggregatedClassLoader;
 		if ( aggregated == null ) {
 			throw log.usingStoppedClassLoaderService();

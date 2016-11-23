@@ -126,4 +126,11 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
 	)
 	void deprecatedInstrumentationProperty();
 
+	@LogMessage(level = WARN)
+	@Message(
+			id = 15018,
+			value = "Encountered multiple persistence-unit stanzas defining same name [%s]; persistence-unit names must be unique"
+	)
+	void duplicatedPersistenceUnitName(String name);
+
 }

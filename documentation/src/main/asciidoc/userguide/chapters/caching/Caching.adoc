@@ -69,8 +69,8 @@ Besides specific provider configuration, there are a number of configurations op
     <entity type, tenant, identifier> to guarantee uniqueness in case that second-level cache stores all entities
     in single space. These tuples are then used as keys in the cache. When the second-level cache implementation
     (incl. its configuration) guarantees that different entity types are stored separately and multi-tenancy is not
-    used, you can omit this wrapping to achieve better performance. This hint can be ignored by the second-level
-    cache implementation, though. Valid values are:
+    used, you can omit this wrapping to achieve better performance. Currently, this property is only supported when
+    Infinispan is configured as the second-level cache implementation. Valid values are:
 * `default` (wraps identitifers in the tuple)
 * `simple` (uses identifiers as keys without any wrapping)
 * fully qualified class name that implements `org.hibernate.cache.spi.CacheKeysFactory`

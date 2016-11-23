@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -396,7 +397,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			if( puProperties != null ) {
 				final String tcclLookupPrecedence = puProperties.getProperty( org.hibernate.cfg.AvailableSettings.TC_CLASSLOADER );
 				if( tcclLookupPrecedence != null ) {
-					bsrBuilder.applyTcclLookupPrecedence( TcclLookupPrecedence.valueOf( tcclLookupPrecedence.toUpperCase() ) );
+					bsrBuilder.applyTcclLookupPrecedence( TcclLookupPrecedence.valueOf( tcclLookupPrecedence.toUpperCase( Locale.ROOT ) ) );
 				}
 			}
 		}

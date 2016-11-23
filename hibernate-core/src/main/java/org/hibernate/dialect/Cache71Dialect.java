@@ -31,6 +31,7 @@ import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
+import org.hibernate.dialect.pagination.LegacySupportDelegatingLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.exception.internal.CacheSQLExceptionConversionDelegate;
@@ -198,7 +199,7 @@ import org.hibernate.type.StandardBasicTypes;
 
 public class Cache71Dialect extends Dialect {
 
-	private final TopLimitHandler limitHandler;
+	private final LimitHandler limitHandler;
 
 	/**
 	 * Creates new <code>Cache71Dialect</code> instance. Sets up the JDBC /
@@ -208,7 +209,11 @@ public class Cache71Dialect extends Dialect {
 		super();
 		commonRegistration();
 		register71Functions();
-		this.limitHandler = new TopLimitHandler(true, true);
+		this.limitHandler = new LegacySupportDelegatingLimitHandler(
+				this,
+				super.getLimitHandler(),
+				new TopLimitHandler( true, true )
+		);
 	}
 
 	protected final void commonRegistration() {

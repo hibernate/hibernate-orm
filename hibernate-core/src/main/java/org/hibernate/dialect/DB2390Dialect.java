@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LegacySupportDelegatingLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
@@ -21,6 +22,8 @@ import org.hibernate.engine.spi.RowSelection;
  * @author Kristoffer Dyrkorn
  */
 public class DB2390Dialect extends DB2Dialect {
+
+	private final LimitHandler limitHandler;
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -46,6 +49,38 @@ public class DB2390Dialect extends DB2Dialect {
 			return false;
 		}
 	};
+
+	private static final AbstractLimitHandler LEGACY_LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			return sql + " fetch first " + getMaxOrLimit( selection ) + " rows only";
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean useMaxForLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean supportsVariableLimit() {
+			return false;
+		}
+	};
+
+	public DB2390Dialect() {
+		super();
+
+		this.limitHandler = new LegacySupportDelegatingLimitHandler(
+				this,
+				LEGACY_LIMIT_HANDLER,
+				LIMIT_HANDLER
+		);
+	}
 
 	@Override
 	public boolean supportsSequences() {
@@ -86,7 +121,7 @@ public class DB2390Dialect extends DB2Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LIMIT_HANDLER;
+		return limitHandler;
 	}
 
 	@Override

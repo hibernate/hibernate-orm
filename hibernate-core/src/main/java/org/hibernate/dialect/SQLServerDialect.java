@@ -16,6 +16,8 @@ import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
+import org.hibernate.dialect.pagination.LegacyLimitHandler;
+import org.hibernate.dialect.pagination.LegacySupportDelegatingLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.type.StandardBasicTypes;
@@ -57,7 +59,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		registerKeyword( "top" );
 		registerKeyword( "key" );
 
-		this.limitHandler = new TopLimitHandler( false, false );
+		this.limitHandler = new LegacySupportDelegatingLimitHandler(
+				this,
+				new LegacyLimitHandler( this ),
+				new TopLimitHandler( false, false )
+		);
 	}
 
 	@Override

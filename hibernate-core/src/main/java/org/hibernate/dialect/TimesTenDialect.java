@@ -21,6 +21,8 @@ import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
+import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
+import org.hibernate.dialect.pagination.LegacySupportDelegatingLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
@@ -48,6 +50,9 @@ import org.hibernate.type.StandardBasicTypes;
  */
 @SuppressWarnings("deprecation")
 public class TimesTenDialect extends Dialect {
+
+	private final LimitHandler limitHandler;
+
 	/**
 	 * Constructs a TimesTenDialect
 	 */
@@ -85,6 +90,11 @@ public class TimesTenDialect extends Dialect {
 		registerFunction( "getdate", new NoArgSQLFunction( "getdate", StandardBasicTypes.TIMESTAMP, false ) );
 		registerFunction( "nvl", new StandardSQLFunction( "nvl" ) );
 
+		this.limitHandler = new LegacySupportDelegatingLimitHandler(
+				this,
+				LegacyFirstLimitHandler.INSTANCE,
+				FirstLimitHandler.INSTANCE
+		);
 	}
 
 	@Override
@@ -159,7 +169,7 @@ public class TimesTenDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return FirstLimitHandler.INSTANCE;
+		return limitHandler;
 	}
 
 	@Override

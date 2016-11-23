@@ -197,7 +197,7 @@ public interface AvailableSettings {
 	 * 
 	 * @see ClassLoaderService#TCCLLookupBehavior
 	 */
-	String TC_CLASSLOADER = "hibernate.classloader.tccl_lookup";
+	String TC_CLASSLOADER = "hibernate.classloader.tccl_lookup_precedence";
         
 	/**
 	 * Names the {@link ClassLoader} used to load user application classes.

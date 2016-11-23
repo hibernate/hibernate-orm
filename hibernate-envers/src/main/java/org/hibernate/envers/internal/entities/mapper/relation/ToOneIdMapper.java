@@ -104,7 +104,15 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 				boolean ignoreNotFound = false;
 				if ( !referencedEntity.isAudited() ) {
 					final String referencingEntityName = enversService.getEntitiesConfigurations().getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
-					ignoreNotFound = enversService.getEntitiesConfigurations().getRelationDescription( referencingEntityName, getPropertyData().getName() ).isIgnoreNotFound();
+					if ( referencingEntityName == null && primaryKey == null ) {
+						// HHH-11215 - Fix for NPE when Embeddable with ManyToOne inside ElementCollection
+						// an embeddable in an element-collection
+						// todo: perhaps the mapper should account for this instead?
+						ignoreNotFound = true;
+					}
+					else {
+						ignoreNotFound = enversService.getEntitiesConfigurations().getRelationDescription( referencingEntityName, getPropertyData().getName() ).isIgnoreNotFound();
+					}
 				}
 				if ( ignoreNotFound ) {
 					// Eagerly loading referenced entity to silence potential (in case of proxy)

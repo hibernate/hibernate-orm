@@ -3,6 +3,69 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.2.5.Final (November 24, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/25600
+
+** Sub-task
+    * [HHH-2705] - optimistic-lock = "dirty" does not support detached objects
+
+** Bug
+    * [HHH-5467] - API documentation for @Fetch(SUBSELECT) is ambiguous.
+    * [HHH-6941] - Erroneous Javadoc for getReferencedProperty, getReferenceablePropertyIterator
+    * [HHH-9816] - Document exclude-unlisted-classes and hibernate.archive.autodetection in the manual
+    * [HHH-11083] - WrongClassException using Infinispan and sharing cache regions
+    * [HHH-11155] - Lazy properties are not updated if not all lazy properties (e.g. collections) are initialized
+    * [HHH-11194] - [Regression] SQLServerDialect no longer supports setFirstResult(n)
+    * [HHH-11197] - Hibernate Spatial cannot parse WKT from PostGIS
+    * [HHH-11205] - char is not treated as nationalized character
+    * [HHH-11214] - ValidityAuditStrategy not audit properly nested collection with nulls
+    * [HHH-11215] - NullPointerException when reading an audited entity that has a collection of embeddables with a ManyToOne to an unaudited entity.
+    * [HHH-11216] - @ElementCollection for enumerations is failing when enabling insert ordering
+    * [HHH-11217] - SessionImpl.refresh() throws IllegalArgumentException, "not an Entity" when using custom entity name
+    * [HHH-11226] - Hibernate cache throws NullPointerException during wildfly app server startup
+    * [HHH-11230] - Aggregate on (mappedBy) joined column produces invalid query
+    * [HHH-11232] - Session closed exception when using Envers in a JTA transaction
+    * [HHH-11248] - Warn user when multiple persistence-units use the same name
+    * [HHH-11250] - NPE occurs when using filters whose name contains a dot
+    * [HHH-11254] - Timestamps cache fails validation if eviction strategy = MANUAL
+    * [HHH-11258] - Using nested order by in a function context produces wrong sql
+    * [HHH-11267] - hibernate-infinispan testsuite is broken
+    * [HHH-11269] -  JPA & JTA - Error during managed flush [Session/EntityManager is closed] on flush-time cascades
+
+** New Feature
+    * [HHH-3674] - Expose SchemaUpdate#haltOnError as a configuration property
+
+** Task
+    * [HHH-7424] - document HHH-2576
+    * [HHH-11238] - Upgrade JBoss Logging Tools to 2.0.1.Final
+    * [HHH-11239] - Upgrade Jandex to version 2.0.3.Final
+    * [HHH-11240] - Upgrade Infinispan to version 8.2.4.Final
+    * [HHH-11268] - Changes required after upgrading to Infinispan to 8.2
+    * [HHH-11270] - Upgrade to Infinispan 8.2.5.Final
+    * [HHH-11271] - Fix hidden failure in InfinispanRegionFactoryTestCase#testTimestampValidation
+
+** Improvement
+    * [HHH-476] - Event System documentation
+    * [HHH-4465] - Document @Entity.name != Hibernate entity name
+    * [HHH-10127] - Allow indication that converted types are immutable
+    * [HHH-10211] - Create Postgis9Dialect, Postgis92Dialect and Postgis94Dialect
+    * [HHH-11034] - Query.stream() Javadoc should specify whether the resulting Stream contains resources
+    * [HHH-11152] - ByteBuddy BytecodeProvider
+    * [HHH-11204] - Fix typo for all "occured" error message to occurred
+    * [HHH-11206] - Document all configurations that are not present in AvailableSettings
+    * [HHH-11220] - Auto-detect SQL Server 2016 when the major version is 13
+    * [HHH-11221] - Add more authors to the User Guide header
+    * [HHH-11225] - Add CriteriaBuilder overloads for methods dealing with Collection to also deal with Map
+    * [HHH-11233] - JPA SQL function with no arguments can only be called if we provide a comma
+    * [HHH-11235] - split checkstyles into fatal and non-fatal configs
+    * [HHH-11245] - Usage of a closed Thread Context ClassLoader
+    * [HHH-11255] - @NaturalId mapping fails when using a composite natural identifier
+
+** Patch
+    * [HHH-2123] - clarification on the way interceptors and event system interact.
+
+
 Changes in 5.2.4.Final (October 26, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/25400

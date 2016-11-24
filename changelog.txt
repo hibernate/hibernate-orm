@@ -3,6 +3,38 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.1.3.Final (November 23, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/25350
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2025350%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-10659] - Natural Id 2nd level Cache not working when Identity is database generated
+    * [HHH-10998] - NullPointerException when using join with subselect in hbm mapping
+    * [HHH-11012] - Hibernate Spatial Geometry Not Serializable
+    * [HHH-11083] - WrongClassException using Infinispan and sharing cache regions
+    * [HHH-11087] - MySQL56SpatialDialect does not register geometry types causing Geometry types are not correctly deserialized
+    * [HHH-11149] - Update plugin parameters for maven enhancer plugin
+    * [HHH-11155] - Lazy properties are not updated if not all lazy properties (e.g. collections) are initialized
+    * [HHH-11159] - JPA CriteriaUpdate - NullLiteral causes IllegalArgumentException: Could not convert java type to Hibernate type
+    * [HHH-11182] - HQL subquery with constraint property in superclass does not join superclass table
+    * [HHH-11197] - Hibernate Spatial cannot parse WKT from PostGIS
+    * [HHH-11226] - Hibernate cache throws NullPointerException during wildfly app server startup
+    * [HHH-11254] - Timestamps cache fails validation if eviction strategy = MANUAL
+    * [HHH-11267] - hibernate-infinispan testsuite is broken
+
+** Task
+    * [HHH-11238] - Upgrade JBoss Logging Tools to 2.0.1.Final
+    * [HHH-11239] - Upgrade Jandex to version 2.0.3.Final
+    * [HHH-11240] - Upgrade Infinispan to version 8.2.4.Final
+    * [HHH-11268] - Changes required after upgrading to Infinispan to 8.2
+    * [HHH-11270] - Upgrade to Infinispan 8.2.5.Final
+    * [HHH-11271] - Fix hidden failure in InfinispanRegionFactoryTestCase#testTimestampValidation
+
+** Improvement
+    * [HHH-11116] - Improve the JPA bootstrapping section in the User Guide
+    * [HHH-11142] - Document supported use/implications of @Cache / @Cacheable
+
 Changes in 5.1.2.Final (September 19, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/24051

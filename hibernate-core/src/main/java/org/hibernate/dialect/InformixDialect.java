@@ -18,7 +18,6 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
-import org.hibernate.dialect.pagination.LegacySupportDelegatingLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -42,7 +41,6 @@ import org.hibernate.type.StandardBasicTypes;
 public class InformixDialect extends Dialect {
 	
 	private final UniqueDelegate uniqueDelegate;
-	private final LimitHandler limitHandler;
 
 	/**
 	 * Creates new <code>InformixDialect</code> instance. Sets up the JDBC /
@@ -86,12 +84,6 @@ public class InformixDialect extends Dialect {
 		registerFunction( "current_date", new NoArgSQLFunction( "today", StandardBasicTypes.DATE, false ) );
 
 		uniqueDelegate = new InformixUniqueDelegate( this );
-
-		this.limitHandler = new LegacySupportDelegatingLimitHandler(
-				this,
-				LegacyFirstLimitHandler.INSTANCE,
-				FirstLimitHandler.INSTANCE
-		);
 	}
 
 	@Override
@@ -187,7 +179,10 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return limitHandler;
+		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
+			return LegacyFirstLimitHandler.INSTANCE;
+		}
+		return FirstLimitHandler.INSTANCE;
 	}
 
 	@Override

@@ -15,7 +15,6 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
-import org.hibernate.dialect.pagination.LegacySupportDelegatingLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
@@ -49,7 +48,6 @@ import org.hibernate.type.StandardBasicTypes;
  */
 @SuppressWarnings("deprecation")
 public class IngresDialect extends Dialect {
-	private final LimitHandler limitHandler;
 
 	/**
 	 * Constructs a IngresDialect
@@ -165,12 +163,6 @@ public class IngresDialect extends Dialect {
 		// of true, false or unknown. Using the tinyint type requires
 		// substitions of true and false.
 		getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
-
-		this.limitHandler = new LegacySupportDelegatingLimitHandler(
-				this,
-				LegacyFirstLimitHandler.INSTANCE,
-				FirstLimitHandler.INSTANCE
-		);
 	}
 
 	@Override
@@ -230,7 +222,10 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return limitHandler;
+		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
+			return LegacyFirstLimitHandler.INSTANCE;
+		}
+		return FirstLimitHandler.INSTANCE;
 	}
 
 	@Override

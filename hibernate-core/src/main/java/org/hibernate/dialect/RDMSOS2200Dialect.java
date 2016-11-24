@@ -21,7 +21,6 @@ import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.dialect.pagination.LegacySupportDelegatingLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
@@ -99,8 +98,6 @@ public class RDMSOS2200Dialect extends Dialect {
 			return false;
 		}
 	};
-
-	private final LimitHandler limitHandler;
 
 	/**
 	 * Constructs a RDMSOS2200Dialect
@@ -253,12 +250,6 @@ public class RDMSOS2200Dialect extends Dialect {
 		// registerColumnType(Types.VARBINARY, "CHARACTER($l)");
 		// registerColumnType(Types.BLOB, "CHARACTER($l)" );  // For use prior to CP 11.0
 		// registerColumnType(Types.CLOB, "CHARACTER($l)" );
-
-		this.limitHandler = new LegacySupportDelegatingLimitHandler(
-				this,
-				LEGACY_LIMIT_HANDLER,
-				LIMIT_HANDLER
-		);
 	}
 
 
@@ -374,7 +365,10 @@ public class RDMSOS2200Dialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return limitHandler;
+		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
+			return LEGACY_LIMIT_HANDLER;
+		}
+		return LIMIT_HANDLER;
 	}
 
 	@Override

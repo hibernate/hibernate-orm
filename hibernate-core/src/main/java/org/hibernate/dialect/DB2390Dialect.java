@@ -9,7 +9,6 @@ package org.hibernate.dialect;
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.dialect.pagination.LegacySupportDelegatingLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
@@ -22,8 +21,6 @@ import org.hibernate.engine.spi.RowSelection;
  * @author Kristoffer Dyrkorn
  */
 public class DB2390Dialect extends DB2Dialect {
-
-	private final LimitHandler limitHandler;
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -72,16 +69,6 @@ public class DB2390Dialect extends DB2Dialect {
 		}
 	};
 
-	public DB2390Dialect() {
-		super();
-
-		this.limitHandler = new LegacySupportDelegatingLimitHandler(
-				this,
-				LEGACY_LIMIT_HANDLER,
-				LIMIT_HANDLER
-		);
-	}
-
 	@Override
 	public boolean supportsSequences() {
 		return false;
@@ -121,12 +108,16 @@ public class DB2390Dialect extends DB2Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return limitHandler;
+		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
+			return LEGACY_LIMIT_HANDLER;
+		}
+		else {
+			return LIMIT_HANDLER;
+		}
 	}
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new DB2390IdentityColumnSupport();
 	}
-
 }

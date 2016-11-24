@@ -60,6 +60,29 @@ implement JPA methods now in core I decided to implement more of a composition a
 	has been moved into the `org.hibernate.Cache` and `org.hibernate.engine.spi.CacheImplementor` contracts
 	helping implement JPA's `javax.persistence.Cache` role.
 
+== LimitHandler changes
+
+In Hibernate 4.3, dialect implementations that did not support a limit offset would fetch all rows for a query and
+perform pagination in-memory.  This solution, while functional, could have severe performance penalties.  In 5.x,
+we prefered to favor performance optimizations which meant dialect implementations would throw an exception if a
+limit offset was specified but the dialect didn't support such syntax.
+
+As of 5.2.5.Final, we have introduced a new setting, `hibernate.legacy_limit_handler`, that is designed to allow
+users to enable the legacy 4.3 limit handler behavior.  By default, this setting is _false_.
+
+The specific dialects impacted by this change are restricted to the following.
+
+* Cache71Dialect
+* DB2390Dialect
+* InformixDialect
+* IngresDialect
+* RDMSOS2200Dialect
+* SQLServerDialect
+* TimesTenDialect
+
+NOTE: If a dialect that extends any in the above list but overrides the limit handler implementation, then those
+dialects remain unchanged, e.g. SQLServer2005Dialect.
+
 
 == Misc
 

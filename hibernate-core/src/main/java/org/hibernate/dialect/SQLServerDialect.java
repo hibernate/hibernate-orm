@@ -88,6 +88,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
 			return new LegacyLimitHandler( this );
 		}
+		return getDefaultLimitHandler();
+	}
+
+	protected LimitHandler getDefaultLimitHandler() {
 		return limitHandler;
 	}
 

@@ -58,7 +58,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	}
 
 	@Override
-	public LimitHandler getLimitHandler() {
+	protected LimitHandler getDefaultLimitHandler() {
 		return new SQLServer2005LimitHandler();
 	}
 

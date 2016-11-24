@@ -225,6 +225,10 @@ public class IngresDialect extends Dialect {
 		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
 			return LegacyFirstLimitHandler.INSTANCE;
 		}
+		return getDefaultLimitHandler();
+	}
+
+	protected LimitHandler getDefaultLimitHandler() {
 		return FirstLimitHandler.INSTANCE;
 	}
 

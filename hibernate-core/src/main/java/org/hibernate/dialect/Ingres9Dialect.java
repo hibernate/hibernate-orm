@@ -165,7 +165,7 @@ public class Ingres9Dialect extends IngresDialect {
 	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public LimitHandler getLimitHandler() {
+	public LimitHandler getDefaultLimitHandler() {
 		return LIMIT_HANDLER;
 	}
 

@@ -740,21 +740,23 @@ public final class SessionImpl
 
 	@Override
 	public void persist(String entityName, Object object) throws HibernateException {
+		checkOpen();
 		firePersist( new PersistEvent( entityName, object, this ) );
 	}
 
 	@Override
 	public void persist(Object object) throws HibernateException {
-		persist( null, object );
+		checkOpen();
+		firePersist( new PersistEvent( null, object, this ) );
 	}
 
 	@Override
 	public void persist(String entityName, Object object, Map copiedAlready) throws HibernateException {
+		checkOpenOrWaitingForAutoClose();
 		firePersist( copiedAlready, new PersistEvent( entityName, object, this ) );
 	}
 
 	private void firePersist(PersistEvent event) {
-		checkOpen();
 		try {
 			checkTransactionSynchStatus();
 			checkNoUnresolvedActionsBeforeOperation();
@@ -780,7 +782,6 @@ public final class SessionImpl
 	}
 
 	private void firePersist(Map copiedAlready, PersistEvent event) {
-		checkOpen();
 		checkTransactionSynchStatus();
 
 		try {
@@ -841,21 +842,23 @@ public final class SessionImpl
 
 	@Override
 	public Object merge(String entityName, Object object) throws HibernateException {
+		checkOpen();
 		return fireMerge( new MergeEvent( entityName, object, this ) );
 	}
 
 	@Override
 	public Object merge(Object object) throws HibernateException {
-		return merge( null, object );
+		checkOpen();
+		return fireMerge( new MergeEvent( null, object, this ));
 	}
 
 	@Override
 	public void merge(String entityName, Object object, Map copiedAlready) throws HibernateException {
+		checkOpenOrWaitingForAutoClose();
 		fireMerge( copiedAlready, new MergeEvent( entityName, object, this ) );
 	}
 
 	private Object fireMerge(MergeEvent event) {
-		checkOpen();
 		try {
 			checkTransactionSynchStatus();
 			checkNoUnresolvedActionsBeforeOperation();
@@ -879,8 +882,6 @@ public final class SessionImpl
 	}
 
 	private void fireMerge(Map copiedAlready, MergeEvent event) {
-		checkOpen();
-
 		try {
 			checkTransactionSynchStatus();
 			for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
@@ -907,17 +908,20 @@ public final class SessionImpl
 
 	@Override
 	public void delete(Object object) throws HibernateException {
+		checkOpen();
 		fireDelete( new DeleteEvent( object, this ) );
 	}
 
 	@Override
 	public void delete(String entityName, Object object) throws HibernateException {
+		checkOpen();
 		fireDelete( new DeleteEvent( entityName, object, this ) );
 	}
 
 	@Override
 	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, Set transientEntities)
 			throws HibernateException {
+		checkOpenOrWaitingForAutoClose();
 		if ( TRACE_ENABLED && persistenceContext.isRemovingOrphanBeforeUpates() ) {
 			logRemoveOrphanBeforeUpdates( "beforeQuery continuing", entityName, object );
 		}
@@ -945,6 +949,7 @@ public final class SessionImpl
 		}
 		persistenceContext.beginRemoveOrphanBeforeUpdates();
 		try {
+			checkOpenOrWaitingForAutoClose();
 			fireDelete( new DeleteEvent( entityName, child, false, true, this ) );
 		}
 		finally {
@@ -965,7 +970,6 @@ public final class SessionImpl
 	}
 
 	private void fireDelete(DeleteEvent event) {
-		checkOpen();
 		try{
 		checkTransactionSynchStatus();
 		for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
@@ -988,7 +992,6 @@ public final class SessionImpl
 	}
 
 	private void fireDelete(DeleteEvent event, Set transientEntities) {
-		checkOpen();
 		try{
 		checkTransactionSynchStatus();
 		for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
@@ -1235,31 +1238,37 @@ public final class SessionImpl
 
 	@Override
 	public void refresh(Object object) throws HibernateException {
-		refresh( null, object );
+		checkOpen();
+		fireRefresh( new RefreshEvent( null, object, this ) );
 	}
 
 	@Override
 	public void refresh(String entityName, Object object) throws HibernateException {
+		checkOpen();
 		fireRefresh( new RefreshEvent( entityName, object, this ) );
 	}
 
 	@Override
 	public void refresh(Object object, LockMode lockMode) throws HibernateException {
+		checkOpen();
 		fireRefresh( new RefreshEvent( object, lockMode, this ) );
 	}
 
 	@Override
 	public void refresh(Object object, LockOptions lockOptions) throws HibernateException {
+		checkOpen();
 		refresh( null, object, lockOptions );
 	}
 
 	@Override
 	public void refresh(String entityName, Object object, LockOptions lockOptions) throws HibernateException {
+		checkOpen();
 		fireRefresh( new RefreshEvent( entityName, object, lockOptions, this ) );
 	}
 
 	@Override
 	public void refresh(String entityName, Object object, Map refreshedAlready) throws HibernateException {
+		checkOpenOrWaitingForAutoClose();
 		fireRefresh( refreshedAlready, new RefreshEvent( entityName, object, this ) );
 	}
 
@@ -1277,7 +1286,6 @@ public final class SessionImpl
 					}
 				}
 			}
-			checkOpen();
 			checkTransactionSynchStatus();
 			for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
 				listener.onRefresh( event );
@@ -1299,7 +1307,6 @@ public final class SessionImpl
 
 	private void fireRefresh(Map refreshedAlready, RefreshEvent event) {
 		try {
-			checkOpen();
 			checkTransactionSynchStatus();
 			for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
 				listener.onRefresh( event, refreshedAlready );

@@ -21,6 +21,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 
@@ -38,6 +39,7 @@ import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Andrea Boriero
@@ -53,7 +55,7 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
-				Book.class, Container.class, Box.class, Muffin.class
+				Book.class, Container.class, Box.class, Muffin.class, SmallBox.class
 		};
 	}
 
@@ -166,6 +168,55 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-11269")
+	public void testMergeWithDeletionOrphanRemovalThenCloseWithAnActiveTransaction() throws Exception {
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
+		EntityManager em = getOrCreateEntityManager();
+		try {
+			Muffin muffin = new Muffin();
+			muffin.setKind( "blueberry" );
+			SmallBox box = new SmallBox(muffin);
+			box.setColor( "red-and-white" );
+			em.persist( box );
+			em.close();
+			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+
+			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
+			em = getOrCreateEntityManager();
+
+			box.emptyBox();
+
+			em.merge( box );
+
+			em.close();
+
+			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+		}
+		catch (Exception e) {
+			final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+			if ( transactionManager.getTransaction() != null && transactionManager.getTransaction()
+					.getStatus() == Status.STATUS_ACTIVE ) {
+				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
+			}
+			throw e;
+		}
+		finally {
+			if ( em.isOpen() ) {
+				em.close();
+			}
+		}
+		em = getOrCreateEntityManager();
+		try {
+			final List<SmallBox> boxes = em.createQuery( "from SmallBox" ).getResultList();
+			assertThat( boxes.size(), is( 1 ) );
+			assertTrue( boxes.get( 0 ).isEmpty());
+		}
+		finally {
+			em.close();
+		}
+	}
+
+	@Test
 	@TestForIssue( jiraKey = "HHH-11166")
 	public void testUpdateThenCloseWithAnActiveTransaction() throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
@@ -220,6 +271,9 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 			Box box = new Box();
 			box.setColor( "red-and-white" );
 			em.persist( box );
+			Muffin muffin = new Muffin();
+			muffin.setKind( "blueberry" );
+			box.addMuffin( muffin );
 			em.close();
 			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
@@ -337,6 +391,33 @@ public class CloseEntityManagerWithActiveTransactionTest extends BaseEntityManag
 			return muffinSet;
 		}
 	}
+
+	@Entity(name = "SmallBox")
+	public static class SmallBox extends Container {
+
+		@OneToOne(cascade = {CascadeType.MERGE,
+				CascadeType.REMOVE,
+				CascadeType.REFRESH,
+				CascadeType.PERSIST
+		}, orphanRemoval = true)
+		private Muffin muffin;
+
+		public SmallBox(){}
+
+		public SmallBox(Muffin muffin) {
+			this.muffin = muffin;
+		}
+
+		public void emptyBox(){
+			muffin = null;
+		}
+
+		public boolean isEmpty(){
+			return muffin == null;
+		}
+	}
+
+
 
 	@Entity(name = "Muffin")
 	public static class Muffin {

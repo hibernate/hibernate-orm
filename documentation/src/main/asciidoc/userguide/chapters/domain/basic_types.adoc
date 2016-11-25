@@ -1514,7 +1514,7 @@ include::{extrasdir}/basic/mapping-filter-entity-query-example.sql[]
 ----
 ====
 
-Jut like with entities, collections can be filtered as well, but only if the filter is explicilty enabled on the currently running Hibernate `Session`.
+Just like with entities, collections can be filtered as well, but only if the filter is explicitly enabled on the currently running Hibernate `Session`.
 This way, when fetching the `accounts` collections, Hibernate is going to apply the `@Filter` clause filtering criteria to the associated collection entries.
 
 [[mapping-filter-collection-query-example]]
@@ -1545,6 +1545,56 @@ If caching was allowed for a currently filtered collection, then the second-leve
 Afterward, every other Session will get the filtered collection from the cache, even if the Session-level filters have not been explicitly activated.
 
 For this reason, the second-level collection cache is limited to storing whole collections, and not subsets.
+====
+
+[[mapping-column-filter-join-table]]
+==== @FilterJoinTable
+
+When using the `@Filter` annotation with collections, the filtering is done against the child entries (entities or embeddables).
+However, if you have a link table between the parent entity and the child table, then you need to use the `@FilterJoinTable` to filter child entries according to some column contained in the join table.
+
+The `@FilterJoinTable` annotation can be, therefore, applied to a unidirectional `@OneToMany` collection as illustrate din the following mapping:
+
+[[mapping-filter-join-table-example]]
+.`@FilterJoinTable` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterJoinTableTest.java[tags=mapping-filter-join-table-example]
+----
+====
+
+If the database contains the following entities:
+
+[[mapping-filter-join-table-persistence-example]]
+.Persisting an fetching entities with a `@FilterJoinTable` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterJoinTableTest.java[tags=mapping-filter-join-table-persistence-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-filter-join-table-persistence-example.sql[]
+----
+====
+
+The collections can be filtered if the associated filter is enabled on the currently running Hibernate `Session`.
+This way, when fetching the `accounts` collections, Hibernate is going to apply the `@FilterJoinTable` clause filtering criteria to the associated collection entries.
+
+[[mapping-filter-collection-query-example]]
+.Traversing collections mapped with `@FilterJoinTable`
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterJoinTableTest.java[tags=mapping-filter-join-table-collection-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-filter-join-table-collection-query-example.sql[]
+----
 ====
 
 [[mapping-column-any]]

@@ -789,10 +789,13 @@ See the <<chapters/domain/basic_types.adoc#mapping-filter-example,Filter mapping
 ==== `@FilterDefs`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterDefs.html[`@FilterDefs`] annotation is used to group multiple <<annotations-hibernate-filterdef>> annotations.
+
 [[annotations-hibernate-filterjointable]]
 ==== `@FilterJoinTable`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FilterJoinTable.html[`@FilterJoinTable`] annotation is used to add `@Filter` capabilities to a join table collection.
+
+See the <<chapters/domain/basic_types.adoc#mapping-column-filter-join-table,FilterJoinTable mapping>> section for more info.
 
 [[annotations-hibernate-filterjointables]]
 ==== `@FilterJoinTables`

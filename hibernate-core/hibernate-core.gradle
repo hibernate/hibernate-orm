@@ -77,6 +77,7 @@ dependencies {
     testCompile( libraries.classmate )
     testCompile( libraries.mockito )
     testCompile( 'joda-time:joda-time:2.3' )
+    testCompile( 'org.assertj:assertj-core:3.6.1')
 //    testCompile( "org.jboss.weld:weld-core:2.3.4.Final" )
 //    testCompile( "org.jboss.arquillian.container:arquillian-weld-ee-embedded-1.1:1.0.0.CR9" )
     compile( "javax.enterprise:cdi-api:${cdiVersion}" ) {

@@ -75,7 +75,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 		return properties.size();
 	}
 
-	public Iterator getPropertyIterator() {
+	public Iterator<Property> getPropertyIterator() {
 		return properties.iterator();
 	}
 

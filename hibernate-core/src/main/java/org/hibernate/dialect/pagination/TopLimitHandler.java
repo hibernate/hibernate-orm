@@ -8,8 +8,6 @@ package org.hibernate.dialect.pagination;
 
 import java.util.Locale;
 
-import javax.persistence.Entity;
-
 import org.hibernate.engine.spi.RowSelection;
 
 

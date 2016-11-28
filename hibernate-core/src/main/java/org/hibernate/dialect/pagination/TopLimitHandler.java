@@ -58,7 +58,8 @@ public class TopLimitHandler extends AbstractLimitHandler {
 		
 		if ( supportsVariableLimit ) {
 			sb.insert( insertionPoint, " TOP ? " );
-		} else {
+		}
+		else {
 			sb.insert( insertionPoint, " TOP " + getMaxOrLimit( selection ) + " " );
 		}
 		

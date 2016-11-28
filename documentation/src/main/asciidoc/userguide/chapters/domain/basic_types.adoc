@@ -1201,11 +1201,62 @@ When Hibernate issues an SQL INSERT or UPDATE for an entity that has defined gen
 Properties marked as generated must additionally be _non-insertable_ and _non-updateable_.
 Only `@Version` and `@Basic` types can be marked as generated.
 
-`never` (the default):: the given property value is not generated within the database.
-`insert`:: the given property value is generated on insert, but is not regenerated on subsequent updates. Properties like _creationTimestamp_ fall into this category.
-`always`:: the property value is generated both on insert and on update.
+`NEVER` (the default):: the given property value is not generated within the database.
+`INSERT`:: the given property value is generated on insert, but is not regenerated on subsequent updates. Properties like _creationTimestamp_ fall into this category.
+`ALWAYS`:: the property value is generated both on insert and on update.
 
 To mark a property as generated, use The Hibernate specific `@Generated` annotation.
+
+[[mapping-generated-Generated]]
+===== `@Generated` annotation
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Generated.html[`@Generated`] annotation is used so that Hibernate can fetch the currently annotated property after the entity has been persisted or updated.
+For this reason, the `@Generated` annotation accepts a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] enum value.
+
+Considering the following entity:
+
+[[mapping-generated-Generated-example]]
+.`@Generated` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/GeneratedTest.java[tags=mapping-generated-Generated-example]
+----
+====
+
+When the `Person` entity is persisted, Hibernate is going to fetch the calculated `fullName` column from the database,
+which concatenates the first, middle, and last name.
+
+[[mapping-generated-Generated-persist-example]]
+.`@Generated` persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/GeneratedTest.java[tags=mapping-generated-Generated-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-generated-Generated-persist-example.sql[]
+----
+====
+
+The same goes when the `Person` entity is updated.
+Hibernate is going to fetch the calculated `fullName` column from the database after the entity is modified.
+
+[[mapping-generated-Generated-update-example]]
+.`@Generated` update example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/GeneratedTest.java[tags=mapping-generated-Generated-update-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-generated-Generated-update-example.sql[]
+----
+====
 
 [[mapping-generated-CreationTimestamp]]
 ===== `@CreationTimestamp` annotation

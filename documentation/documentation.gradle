@@ -68,16 +68,11 @@ dependencies {
 	testRuntime( libraries.postgresql )
 	testRuntime( libraries.mysql )
 	testRuntime( libraries.mariadb )
+	testRuntime( libraries.mssql )
 
 	if (db.equalsIgnoreCase("oracle")) {
 		dependencies {
 			testRuntime( libraries.oracle )
-		}
-	}
-
-	if (db.equalsIgnoreCase("mssql")) {
-		dependencies {
-			testRuntime( libraries.mssql )
 		}
 	}
 

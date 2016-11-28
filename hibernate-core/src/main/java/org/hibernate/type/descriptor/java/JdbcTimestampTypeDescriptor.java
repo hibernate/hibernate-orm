@@ -24,6 +24,8 @@ import org.hibernate.type.descriptor.WrapperOptions;
 public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	public static final JdbcTimestampTypeDescriptor INSTANCE = new JdbcTimestampTypeDescriptor();
 	public static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	public static final String LONG_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+	public static final int LONG_FORMAT_LENGTH = LONG_FORMAT.length();
 
 	public static class TimestampMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final TimestampMutabilityPlan INSTANCE = new TimestampMutabilityPlan();
@@ -46,12 +48,15 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	}
 	@Override
 	public String toString(Date value) {
-		return new SimpleDateFormat( TIMESTAMP_FORMAT ).format( value );
+		return new SimpleDateFormat( LONG_FORMAT ).format( value );
 	}
 	@Override
 	public Date fromString(String string) {
 		try {
-			return new Timestamp( new SimpleDateFormat( TIMESTAMP_FORMAT ).parse( string ).getTime() );
+                        if (LONG_FORMAT_LENGTH == string.length()) {
+                            return new Timestamp( new SimpleDateFormat( LONG_FORMAT ).parse( string ).getTime() );
+                        }
+                        return new Timestamp( new SimpleDateFormat( TIMESTAMP_FORMAT ).parse( string ).getTime() );
 		}
 		catch ( ParseException pe) {
 			throw new HibernateException( "could not parse timestamp string" + string, pe );

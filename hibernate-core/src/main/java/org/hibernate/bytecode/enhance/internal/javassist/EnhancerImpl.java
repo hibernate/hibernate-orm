@@ -18,6 +18,7 @@ import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
+import javassist.NotFoundException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
@@ -174,6 +175,8 @@ public class EnhancerImpl implements Enhancer {
 		}
 		// HHH-10977 - When a mapped superclass gets enhanced before a subclassing entity, the entity does not get enhanced, but it implements the Managed interface
 		return enhancementContext.isEntityClass( managedCtClass ) && PersistentAttributesHelper.isAssignable( managedCtClass, ManagedEntity.class.getName() )
+				// HHH-11284 - require that this class is enhanced, not only its superclass(es)
+				&& hasDeclaredMethod( managedCtClass, EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME )
 				|| enhancementContext.isCompositeClass( managedCtClass ) && PersistentAttributesHelper.isAssignable(
 				managedCtClass,
 				ManagedComposite.class.getName()
@@ -182,6 +185,16 @@ public class EnhancerImpl implements Enhancer {
 				managedCtClass,
 				ManagedMappedSuperclass.class.getName()
 		);
+	}
+
+	private boolean hasDeclaredMethod(CtClass ctClass, String name) {
+		try {
+			ctClass.getDeclaredMethod( name );
+			return true;
+		}
+		catch (NotFoundException e) {
+			return false;
+		}
 	}
 
 	private byte[] getByteCode(CtClass managedCtClass) {

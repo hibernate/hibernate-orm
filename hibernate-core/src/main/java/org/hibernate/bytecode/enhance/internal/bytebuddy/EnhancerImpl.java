@@ -310,8 +310,14 @@ public class EnhancerImpl implements Enhancer {
 		}
 		// HHH-10977 - When a mapped superclass gets enhanced before a subclassing entity, the entity does not get enhanced, but it implements the Managed interface
 		return enhancementContext.isEntityClass( managedCtClass ) && managedCtClass.isAssignableTo( ManagedEntity.class )
+				// HHH-11284 - require that this class is enhanced, not only its superclass(es)
+				&& hasDeclaredMethod( managedCtClass, EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME )
 				|| enhancementContext.isCompositeClass( managedCtClass ) && managedCtClass.isAssignableTo( ManagedComposite.class )
 				|| enhancementContext.isMappedSuperclassClass( managedCtClass ) && managedCtClass.isAssignableTo( ManagedMappedSuperclass.class );
+	}
+
+	private boolean hasDeclaredMethod(TypeDescription ctClass, String name) {
+		return ! ctClass.getDeclaredMethods().filter( named( name ) ).isEmpty();
 	}
 
 	private DynamicType.Builder<?> addInterceptorHandling(DynamicType.Builder<?> builder, TypeDescription managedCtClass) {

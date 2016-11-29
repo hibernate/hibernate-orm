@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.spi.descriptor.sql;
 
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
@@ -54,6 +55,8 @@ public interface SqlTypeDescriptor {
 	 * @return the recommended Java type descriptor.
 	 */
 	JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration);
+
+	<T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor);
 
 	/**
 	 * Get the binder (setting JDBC in-going parameter values) capable of handling values of the type described by the

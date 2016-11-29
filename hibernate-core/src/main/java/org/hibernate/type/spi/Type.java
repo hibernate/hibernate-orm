@@ -32,7 +32,7 @@ import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
  *
  * @since 6.0
  */
-public interface Type<T> extends org.hibernate.sqm.domain.Type {
+public interface Type<T> extends org.hibernate.sqm.domain.DomainReference {
 	/**
 	 * Enumerated values for the classification of the Type.
 	 */

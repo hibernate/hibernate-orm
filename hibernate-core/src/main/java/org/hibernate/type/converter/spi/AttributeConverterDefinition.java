@@ -14,13 +14,13 @@ import javax.persistence.AttributeConverter;
  *
  * @author Steve Ebersole
  */
-public interface AttributeConverterDefinition {
+public interface AttributeConverterDefinition<O,R> {
 	/**
 	 * Access to the AttributeConverter instance to be used by the built BasicType.
 	 *
 	 * @return The AttributeConverter
 	 */
-	AttributeConverter getAttributeConverter();
+	AttributeConverter<O,R> getAttributeConverter();
 
 	/**
 	 * The Java type of the user's domain model attribute, as defined by the AttributeConverter's

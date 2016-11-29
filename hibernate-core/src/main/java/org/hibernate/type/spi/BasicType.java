@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.SingleColumnType;
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
@@ -32,7 +33,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @since 6.0
  */
-public interface BasicType<T> extends Type<T>, SingleColumnType<T>, org.hibernate.sqm.domain.BasicType<T> {
+public interface BasicType<T> extends SingleColumnType<T>, org.hibernate.sqm.domain.BasicType {
 	@Override
 	JavaTypeDescriptor<T> getJavaTypeDescriptor();
 
@@ -54,18 +55,15 @@ public interface BasicType<T> extends Type<T>, SingleColumnType<T>, org.hibernat
 	 *
 	 * @return The applied converter.
 	 */
-	AttributeConverter<T,?> getAttributeConverter();
+	AttributeConverterDefinition<T,?> getAttributeConverterDefinition();
 
 	JdbcLiteralFormatter<T> getJdbcLiteralFormatter();
+
+	String getTypeName();
 
 	@Override
 	default Classification getClassification() {
 		return Classification.BASIC;
-	}
-
-	@Override
-	default String getName() {
-		return getTypeName();
 	}
 
 	@Override

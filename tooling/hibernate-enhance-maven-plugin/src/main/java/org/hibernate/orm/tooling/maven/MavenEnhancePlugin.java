@@ -9,8 +9,8 @@ package org.hibernate.orm.tooling.maven;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -23,6 +23,7 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -36,6 +37,8 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.cfg.Environment;
+
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 /**
  * This plugin will enhance Entity objects.
@@ -51,6 +54,9 @@ public class MavenEnhancePlugin extends AbstractMojo {
 	 * The contexts to use during enhancement.
 	 */
 	private List<File> sourceSet = new ArrayList<File>();
+
+	@Component
+	private BuildContext buildContext;
 
 	@Parameter(property = "dir", defaultValue = "${project.build.outputDirectory}")
 	private String dir;
@@ -201,7 +207,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			if ( failOnError ) {
 				throw new MojoExecutionException( msg, e );
 			}
-			getLog().warn( msg );
+			buildContext.addMessage( javaClassFile, 0, 0, msg, BuildContext.SEVERITY_WARNING, e );
 			return null;
 		}
 	}
@@ -240,44 +246,38 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		try {
 			if ( file.delete() ) {
 				if ( !file.createNewFile() ) {
-					getLog().error( "Unable to recreate class file [" + file.getName() + "]" );
+					buildContext.addMessage( file, 0, 0, "Unable to recreate class file", BuildContext.SEVERITY_ERROR, null );
 				}
 			}
 			else {
-				getLog().error( "Unable to delete class file [" + file.getName() + "]" );
+				buildContext.addMessage( file, 0, 0, "Unable to delete class file", BuildContext.SEVERITY_ERROR, null );
 			}
 		}
 		catch (IOException e) {
-			getLog().warn( "Problem preparing class file for writing out enhancements [" + file.getName() + "]" );
+			buildContext.addMessage( file, 0, 0, "Problem preparing class file for writing out enhancements", BuildContext.SEVERITY_WARNING, e );
 		}
 
+		OutputStream outputStream = null;
 		try {
-			FileOutputStream outputStream = new FileOutputStream( file, false );
-			try {
-				outputStream.write( enhancedBytecode );
-				outputStream.flush();
-			}
-			catch (IOException e) {
-				String msg = String.format( "Error writing to enhanced class [%s] to file [%s]", file.getName(), file.getAbsolutePath() );
-				if ( failOnError ) {
-					throw new MojoExecutionException( msg, e );
-				}
-				getLog().warn( msg );
-			}
-			finally {
-				try {
-					outputStream.close();
-				}
-				catch (IOException ignore) {
-				}
-			}
+			outputStream = buildContext.newFileOutputStream( file );
+			outputStream.write( enhancedBytecode );
+			outputStream.flush();
 		}
-		catch (FileNotFoundException e) {
-			String msg = "Error opening class file for writing: " + file.getAbsolutePath();
+		catch (IOException e) {
+			String msg = String.format( "Error writing to enhanced class [%s] to file [%s]", file.getName(), file.getAbsolutePath() );
 			if ( failOnError ) {
 				throw new MojoExecutionException( msg, e );
 			}
-			getLog().warn( msg );
+			buildContext.addMessage( file, 0, 0, msg, BuildContext.SEVERITY_WARNING, e );
+		}
+		finally {
+			try {
+				if( outputStream != null ) {
+					outputStream.close();
+				}
+			}
+			catch (IOException ignore) {
+			}
 		}
 	}
 }

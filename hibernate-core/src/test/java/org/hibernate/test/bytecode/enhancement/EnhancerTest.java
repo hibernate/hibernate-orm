@@ -26,6 +26,7 @@ import org.hibernate.test.bytecode.enhancement.dirty.DirtyTrackingTestTask;
 import org.hibernate.test.bytecode.enhancement.eviction.EvictionTestTask;
 import org.hibernate.test.bytecode.enhancement.extended.ExtendedAssociationManagementTestTasK;
 import org.hibernate.test.bytecode.enhancement.extended.ExtendedEnhancementTestTask;
+import org.hibernate.test.bytecode.enhancement.inherited.InheritedTestTask;
 import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask1;
 import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask2;
 import org.hibernate.test.bytecode.enhancement.join.HHH3949TestTask3;
@@ -183,6 +184,19 @@ public class EnhancerTest extends BaseUnitTestCase {
 	public void testMappedSuperclass() {
 		EnhancerTestUtils.runEnhancerTestTask( MappedSuperclassTestTask.class );
 		EnhancerTestUtils.runEnhancerTestTask( MappedSuperclassTestTask.class, new EnhancerTestContext() {
+			@Override
+			public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
+				// HHH-10981 - Without lazy loading, the generation of getters and setters has a different code path
+				return false;
+			}
+		} );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11284" )
+	public void testInherited() {
+		EnhancerTestUtils.runEnhancerTestTask( InheritedTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( InheritedTestTask.class, new EnhancerTestContext() {
 			@Override
 			public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
 				// HHH-10981 - Without lazy loading, the generation of getters and setters has a different code path

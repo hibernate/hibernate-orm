@@ -84,6 +84,12 @@
         <enableAssociationManagement>false</enableAssociationManagement>
         <enableExtendedEnhancement>false</enableExtendedEnhancement>
       </configuration>
+      <requirements>
+        <requirement>
+          <role>org.sonatype.plexus.build.incremental.BuildContext</role>
+          <field-name>buildContext</field-name>
+        </requirement>
+      </requirements>
     </mojo>
   </mojos>
   <dependencies>
@@ -95,6 +101,12 @@
       <artifactId>plexus-utils</artifactId>
       <type>jar</type>
       <version>3.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-build-api</artifactId>
+      <type>jar</type>
+      <version>0.0.7</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>

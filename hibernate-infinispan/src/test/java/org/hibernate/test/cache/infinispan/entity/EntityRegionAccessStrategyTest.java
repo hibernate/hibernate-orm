@@ -19,6 +19,7 @@ import org.hibernate.test.cache.infinispan.AbstractRegionAccessStrategyTest;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.TestSynchronization;
 import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 import junit.framework.AssertionFailedError;
 
@@ -359,6 +360,14 @@ public class EntityRegionAccessStrategyTest extends
 				new TestSynchronization.AfterUpdate(strategy, session, key, value, version, softLock));
 	}
 
+	/**
+	 * This test fails in CI too often because it depends on very short timeout. The behaviour is basically
+	 * non-testable as we want to make sure that the "Putter" is always progressing; however, it is sometimes
+	 * progressing in different thread (on different node), and sometimes even in system, sending a message
+	 * over network. Therefore even checking that some OOB/remote thread is in RUNNABLE/RUNNING state is prone
+	 * to spurious failure (and we can't grab the state of all threads atomically).
+    */
+	@Ignore
 	@Test
 	public void testContestedPutFromLoad() throws Exception {
 		if (accessType == AccessType.READ_ONLY) {
@@ -423,7 +432,7 @@ public class EntityRegionAccessStrategyTest extends
 		blocker.start();
 		assertTrue("Active tx has done an update", pferLatch.await(1, TimeUnit.SECONDS));
 		putter.start();
-		assertTrue("putFromLoadreturns promtly", pferCompletionLatch.await(10, TimeUnit.MILLISECONDS));
+		assertTrue("putFromLoad returns promptly", pferCompletionLatch.await(10, TimeUnit.MILLISECONDS));
 
 		commitLatch.countDown();
 

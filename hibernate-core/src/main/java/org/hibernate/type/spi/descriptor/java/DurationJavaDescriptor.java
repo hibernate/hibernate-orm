@@ -9,7 +9,6 @@ package org.hibernate.type.spi.descriptor.java;
 import java.sql.Types;
 import java.time.Duration;
 
-import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;

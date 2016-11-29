@@ -6,7 +6,7 @@
  */
 package org.hibernate.type.spi.descriptor.java;
 
-import java.util.Comparator;q
+import java.util.Comparator;
 import javax.persistence.metamodel.BasicType;
 
 /**

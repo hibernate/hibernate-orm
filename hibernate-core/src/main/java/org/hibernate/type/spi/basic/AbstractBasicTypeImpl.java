@@ -13,11 +13,17 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.VersionSupport;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractBasicTypeImpl<T> implements BasicType<T> {
+
+	@Override
+	public VersionSupport<T> getVersionSupport() {
+		return null;
+	}
 
 	@Override
 	public String getTypeName() {

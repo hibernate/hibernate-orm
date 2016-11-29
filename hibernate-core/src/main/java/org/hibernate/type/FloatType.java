@@ -8,6 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.FloatTypeDescriptor;
 
 /**
@@ -16,13 +17,13 @@ import org.hibernate.type.spi.descriptor.java.FloatTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class FloatType extends AbstractSingleColumnStandardBasicType<Float> implements JdbcLiteralFormatter<Float> {
+public class FloatType extends BasicTypeImpl<Float> implements JdbcLiteralFormatter<Float> {
 	public static final FloatType INSTANCE = new FloatType();
 
 	public static final Float ZERO = 0.0f;
 
 	public FloatType() {
-		super( org.hibernate.type.spi.descriptor.sql.FloatTypeDescriptor.INSTANCE, FloatTypeDescriptor.INSTANCE );
+		super( FloatTypeDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.FloatTypeDescriptor.INSTANCE );
 	}
 	@Override
 	public String getName() {

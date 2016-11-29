@@ -8,6 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
 
@@ -17,11 +18,11 @@ import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class StringType extends AbstractSingleColumnStandardBasicType<String> implements JdbcLiteralFormatter<String> {
+public class StringType extends BasicTypeImpl<String> implements JdbcLiteralFormatter<String> {
 	public static final StringType INSTANCE = new StringType();
 
 	public StringType() {
-		super( VarcharTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
+		super( StringTypeDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
 	}
 
 	@Override

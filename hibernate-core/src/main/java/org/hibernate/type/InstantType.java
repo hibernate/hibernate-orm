@@ -16,7 +16,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.VersionType;
+import org.hibernate.type.spi.VersionSupport;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.InstantJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
@@ -26,15 +27,15 @@ import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
  * @author Steve Ebersole
  */
 public class InstantType
-		extends AbstractSingleColumnStandardBasicType<Instant>
-		implements VersionType<Instant>,JdbcLiteralFormatter<Instant> {
+		extends BasicTypeImpl<Instant>
+		implements VersionSupport<Instant>,JdbcLiteralFormatter<Instant> {
 	/**
 	 * Singleton access
 	 */
 	public static final InstantType INSTANCE = new InstantType();
 
 	protected InstantType() {
-		super( TimestampTypeDescriptor.INSTANCE, InstantJavaDescriptor.INSTANCE );
+		super( InstantJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
 	}
 
 	@Override

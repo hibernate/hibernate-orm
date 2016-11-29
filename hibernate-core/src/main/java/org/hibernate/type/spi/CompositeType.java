@@ -11,6 +11,6 @@ import org.hibernate.persister.embeddable.EmbeddablePersister;
 /**
  * @author Steve Ebersole
  */
-public interface CompositeType extends Type, org.hibernate.sqm.domain.EmbeddableType {
+public interface CompositeType extends Type	 {
 	EmbeddablePersister getEmbeddablePersister();
 }

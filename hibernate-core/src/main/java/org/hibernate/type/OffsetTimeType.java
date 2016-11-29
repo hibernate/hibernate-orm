@@ -11,13 +11,14 @@ import java.time.OffsetTime;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.OffsetTimeJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class OffsetTimeType extends AbstractSingleColumnStandardBasicType<OffsetTime> implements JdbcLiteralFormatter<OffsetTime> {
+public class OffsetTimeType extends BasicTypeImpl<OffsetTime> implements JdbcLiteralFormatter<OffsetTime> {
 
 	/**
 	 * Singleton access
@@ -29,7 +30,7 @@ public class OffsetTimeType extends AbstractSingleColumnStandardBasicType<Offset
 	 */
 	@SuppressWarnings("WeakerAccess")
 	protected OffsetTimeType() {
-		super( TimeTypeDescriptor.INSTANCE, OffsetTimeJavaDescriptor.INSTANCE );
+		super( OffsetTimeJavaDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE );
 	}
 
 	@Override

@@ -10,6 +10,7 @@ import java.util.Date;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.JdbcDateTypeDescriptor;
 
 /**
@@ -19,12 +20,12 @@ import org.hibernate.type.spi.descriptor.java.JdbcDateTypeDescriptor;
  * @author Steve Ebersole
  */
 public class DateType
-		extends AbstractSingleColumnStandardBasicType<Date> implements JdbcLiteralFormatter<Date> {
+		extends BasicTypeImpl<Date> implements JdbcLiteralFormatter<Date> {
 
 	public static final DateType INSTANCE = new DateType();
 
 	protected DateType() {
-		super( org.hibernate.type.spi.descriptor.sql.DateTypeDescriptor.INSTANCE, JdbcDateTypeDescriptor.INSTANCE );
+		super( JdbcDateTypeDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.DateTypeDescriptor.INSTANCE );
 	}
 
 	@Override

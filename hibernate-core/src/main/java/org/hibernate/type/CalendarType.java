@@ -8,15 +8,15 @@ package org.hibernate.type;
 
 import java.util.Calendar;
 import java.util.Comparator;
-import java.util.GregorianCalendar;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.CalendarTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
-import org.hibernate.type.spi.VersionType;
+import org.hibernate.type.spi.VersionSupport;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Calendar}
@@ -25,13 +25,13 @@ import org.hibernate.type.spi.VersionType;
  * @author Steve Ebersole
  */
 public class CalendarType
-		extends AbstractSingleColumnStandardBasicType<Calendar>
-		implements VersionType<Calendar>,JdbcLiteralFormatter<Calendar> {
+		extends BasicTypeImpl<Calendar>
+		implements VersionSupport<Calendar>,JdbcLiteralFormatter<Calendar> {
 
 	public static final CalendarType INSTANCE = new CalendarType();
 
 	public CalendarType() {
-		super( TimestampTypeDescriptor.INSTANCE, CalendarTypeDescriptor.INSTANCE );
+		super( CalendarTypeDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
 	}
 
 	@Override

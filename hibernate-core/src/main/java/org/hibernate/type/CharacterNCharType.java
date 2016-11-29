@@ -8,6 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.CharacterTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.NCharTypeDescriptor;
 
@@ -18,12 +19,12 @@ import org.hibernate.type.spi.descriptor.sql.NCharTypeDescriptor;
  * @author Steve Ebersole
  */
 public class CharacterNCharType
-		extends AbstractSingleColumnStandardBasicType<Character> implements JdbcLiteralFormatter<Character> {
+		extends BasicTypeImpl<Character> implements JdbcLiteralFormatter<Character> {
 
 	public static final CharacterNCharType INSTANCE = new CharacterNCharType();
 
 	public CharacterNCharType() {
-		super( NCharTypeDescriptor.INSTANCE, CharacterTypeDescriptor.INSTANCE );
+		super( CharacterTypeDescriptor.INSTANCE, NCharTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

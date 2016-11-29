@@ -10,6 +10,7 @@ import java.sql.NClob;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.NClobTypeDescriptor;
 
 /**
@@ -18,11 +19,11 @@ import org.hibernate.type.spi.descriptor.java.NClobTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class NClobType extends AbstractSingleColumnStandardBasicType<NClob> {
+public class NClobType extends BasicTypeImpl<NClob> {
 	public static final NClobType INSTANCE = new NClobType();
 
 	protected NClobType() {
-		super( org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor.DEFAULT, NClobTypeDescriptor.INSTANCE );
+		super( NClobTypeDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor.DEFAULT );
 	}
 
 	@Override

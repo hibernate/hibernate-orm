@@ -33,7 +33,7 @@ import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.BigIntegerType;
 import org.hibernate.type.BinaryType;
 import org.hibernate.type.BooleanType;
-import org.hibernate.type.ByteType;
+import org.hibernate.type.ByteSupport;
 import org.hibernate.type.CalendarDateType;
 import org.hibernate.type.CalendarType;
 import org.hibernate.type.CharArrayType;
@@ -138,7 +138,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Byte copy = new Byte( (byte) 0 );
 		final Byte different = 9;
 
-		runBasicTests( ByteType.INSTANCE, original, copy, different );
+		runBasicTests( ByteSupport.INSTANCE, original, copy, different );
 	}
 
 	@Test

@@ -6,10 +6,9 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.CharTypeDescriptor;
 
@@ -19,13 +18,13 @@ import org.hibernate.type.spi.descriptor.sql.CharTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class TrueFalseType extends AbstractSingleColumnStandardBasicType<Boolean>
+public class TrueFalseType extends BasicTypeImpl<Boolean>
 		implements JdbcLiteralFormatter<Boolean> {
 
 	public static final TrueFalseType INSTANCE = new TrueFalseType();
 
 	public TrueFalseType() {
-		super( CharTypeDescriptor.INSTANCE, new BooleanTypeDescriptor( 'T', 'F' ) );
+		super( new BooleanTypeDescriptor( 'T', 'F' ), CharTypeDescriptor.INSTANCE );
 	}
 
 	@Override

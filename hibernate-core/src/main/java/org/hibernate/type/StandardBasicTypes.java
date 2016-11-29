@@ -30,10 +30,11 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.basic.RegistryKeyImpl;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Centralizes access to the standard set of basic {@link Type types}.
@@ -53,7 +54,7 @@ public final class StandardBasicTypes {
 	private StandardBasicTypes() {
 	}
 
-	private static final Set<SqlTypeDescriptor> SQL_TYPE_DESCRIPTORS = new HashSet<SqlTypeDescriptor>();
+	private static final Set<SqlTypeDescriptor> SQL_TYPE_DESCRIPTORS = new HashSet<>();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// boolean data
@@ -77,14 +78,14 @@ public final class StandardBasicTypes {
 	 *
 	 * @see TrueFalseType
 	 */
-	public static final org.hibernate.type.spi.BasicType<Boolean> TRUE_FALSE = TrueFalseType.INSTANCE;
+	public static final BasicType<Boolean> TRUE_FALSE = TrueFalseType.INSTANCE;
 
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#CHAR CHAR(1)} (using 'Y'/'N').
 	 *
 	 * @see YesNoType
 	 */
-	public static final org.hibernate.type.spi.BasicType<Boolean> YES_NO = YesNoType.INSTANCE;
+	public static final BasicType<Boolean> YES_NO = YesNoType.INSTANCE;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -93,7 +94,7 @@ public final class StandardBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Byte} to JDBC {@link java.sql.Types#TINYINT TINYINT}.
 	 */
-	public static final org.hibernate.type.spi.BasicType<Byte> BYTE = ByteType.INSTANCE;
+	public static final org.hibernate.type.spi.BasicType<Byte> BYTE = ByteSupport.INSTANCE;
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.

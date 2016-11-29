@@ -8,6 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.DoubleTypeDescriptor;
 
 /**
@@ -16,13 +17,13 @@ import org.hibernate.type.spi.descriptor.java.DoubleTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class DoubleType extends AbstractSingleColumnStandardBasicType<Double> implements JdbcLiteralFormatter<Double> {
+public class DoubleType extends BasicTypeImpl<Double> implements JdbcLiteralFormatter<Double> {
 	public static final DoubleType INSTANCE = new DoubleType();
 
 	public static final Double ZERO = 0.0;
 
 	public DoubleType() {
-		super( org.hibernate.type.spi.descriptor.sql.DoubleTypeDescriptor.INSTANCE, DoubleTypeDescriptor.INSTANCE );
+		super( DoubleTypeDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.DoubleTypeDescriptor.INSTANCE );
 	}
 
 	@Override

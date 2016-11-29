@@ -11,7 +11,8 @@ import java.util.Comparator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.VersionType;
+import org.hibernate.type.spi.VersionSupport;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.ByteTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TinyIntTypeDescriptor;
 
@@ -22,15 +23,15 @@ import org.hibernate.type.spi.descriptor.sql.TinyIntTypeDescriptor;
  * @author Steve Ebersole
  */
 public class ByteType
-		extends AbstractSingleColumnStandardBasicType<Byte>
-		implements VersionType<Byte>,JdbcLiteralFormatter<Byte> {
+		extends BasicTypeImpl<Byte>
+		implements VersionSupport<Byte>,JdbcLiteralFormatter<Byte> {
 
 	public static final ByteType INSTANCE = new ByteType();
 
 	private static final Byte ZERO = (byte) 0;
 
 	protected ByteType() {
-		super( TinyIntTypeDescriptor.INSTANCE, ByteTypeDescriptor.INSTANCE );
+		super( ByteTypeDescriptor.INSTANCE, TinyIntTypeDescriptor.INSTANCE );
 	}
 
 	@Override

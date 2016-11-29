@@ -4,9 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type;
-
-import java.util.Comparator;
+package org.hibernate.type.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -16,7 +14,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface VersionType<T> extends Type {
+public interface VersionSupport<T> {
 	/**
 	 * Generate an initial version.
 	 *
@@ -33,11 +31,4 @@ public interface VersionType<T> extends Type {
 	 * @return an instance of the type
 	 */
 	T next(T current, SharedSessionContractImplementor session);
-
-	/**
-	 * Get a comparator for version values.
-	 *
-	 * @return The comparator to use to compare different version values.
-	 */
-	Comparator<T> getComparator();
 }

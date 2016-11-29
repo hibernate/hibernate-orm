@@ -10,6 +10,7 @@ import java.time.Duration;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.DurationJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.BigIntTypeDescriptor;
 
@@ -17,7 +18,7 @@ import org.hibernate.type.spi.descriptor.sql.BigIntTypeDescriptor;
  * @author Steve Ebersole
  */
 public class DurationType
-		extends AbstractSingleColumnStandardBasicType<Duration>
+		extends BasicTypeImpl<Duration>
 		implements JdbcLiteralFormatter<Duration> {
 
 	/**
@@ -26,7 +27,7 @@ public class DurationType
 	public static final DurationType INSTANCE = new DurationType();
 
 	protected DurationType() {
-		super( BigIntTypeDescriptor.INSTANCE, DurationJavaDescriptor.INSTANCE );
+		super( DurationJavaDescriptor.INSTANCE, BigIntTypeDescriptor.INSTANCE );
 	}
 
 	@Override

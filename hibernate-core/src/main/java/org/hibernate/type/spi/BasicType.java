@@ -11,14 +11,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Map;
-import javax.persistence.AttributeConverter;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.SingleColumnType;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
@@ -33,7 +31,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @since 6.0
  */
-public interface BasicType<T> extends SingleColumnType<T>, org.hibernate.sqm.domain.BasicType {
+public interface BasicType<T> extends Type<T>, org.hibernate.sqm.domain.BasicType {
 	@Override
 	JavaTypeDescriptor<T> getJavaTypeDescriptor();
 
@@ -59,11 +57,18 @@ public interface BasicType<T> extends SingleColumnType<T>, org.hibernate.sqm.dom
 
 	JdbcLiteralFormatter<T> getJdbcLiteralFormatter();
 
+	VersionSupport<T> getVersionSupport();
+
 	String getTypeName();
 
 	@Override
 	default Classification getClassification() {
 		return Classification.BASIC;
+	}
+
+	@Override
+	default String getName() {
+		return getTypeName();
 	}
 
 	@Override
@@ -83,11 +88,6 @@ public interface BasicType<T> extends SingleColumnType<T>, org.hibernate.sqm.dom
 	@Override
 	default int getColumnSpan() {
 		return 1;
-	}
-
-	@Override
-	default int sqlType() {
-		return getColumnMapping().getSqlTypeDescriptor().getSqlType();
 	}
 
 	@Override
@@ -111,17 +111,11 @@ public interface BasicType<T> extends SingleColumnType<T>, org.hibernate.sqm.dom
 	}
 
 	@Override
-	default Object get(ResultSet rs, String name, SharedSessionContractImplementor session) throws SQLException {
-		return nullSafeGet( rs, name, session );
-	}
-
-	@Override
 	default Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException {
 		return nullSafeGet( rs, name, session );
 	}
 
-	@Override
 	default T nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session) throws SQLException {
 		return remapSqlTypeDescriptor( session ).getExtractor( getJavaTypeDescriptor() ).extract( rs, name, session );
 	}
@@ -134,11 +128,6 @@ public interface BasicType<T> extends SingleColumnType<T>, org.hibernate.sqm.dom
 
 	default SqlTypeDescriptor remapSqlTypeDescriptor(WrapperOptions options) {
 		return options.remapSqlTypeDescriptor( getColumnMapping().getSqlTypeDescriptor() );
-	}
-
-	@Override
-	default void set(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws SQLException {
-		nullSafeSet( st, value, index, session );
 	}
 
 	@Override
@@ -161,12 +150,10 @@ public interface BasicType<T> extends SingleColumnType<T>, org.hibernate.sqm.dom
 	// temporary stuff
 	// 		- mainly stuff that comes back to JavaTypeDescriptor, MutabilityPlan
 
-	@Override
 	default String toString(T value) throws HibernateException {
 		return getJavaTypeDescriptor().toString( value );
 	}
 
-	@Override
 	default T fromStringValue(String string) throws HibernateException {
 		return getJavaTypeDescriptor().fromString( string );
 	}

@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.UUIDTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
 
@@ -18,11 +19,11 @@ import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class UUIDCharType extends AbstractSingleColumnStandardBasicType<UUID> implements JdbcLiteralFormatter<UUID> {
+public class UUIDCharType extends BasicTypeImpl<UUID> implements JdbcLiteralFormatter<UUID> {
 	public static final UUIDCharType INSTANCE = new UUIDCharType();
 
 	public UUIDCharType() {
-		super( VarcharTypeDescriptor.INSTANCE, UUIDTypeDescriptor.INSTANCE );
+		super( UUIDTypeDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

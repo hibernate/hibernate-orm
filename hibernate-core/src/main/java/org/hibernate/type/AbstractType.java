@@ -16,6 +16,7 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.type.spi.Type;
 
 /**
  * Abstract superclass of the built in Type hierarchy.

@@ -7,13 +7,12 @@
 package org.hibernate.type;
 
 import java.util.Comparator;
-import java.util.Map;
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.VersionType;
+import org.hibernate.type.spi.VersionSupport;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.LongTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.BigIntTypeDescriptor;
 
@@ -24,15 +23,15 @@ import org.hibernate.type.spi.descriptor.sql.BigIntTypeDescriptor;
  * @author Steve Ebersole
  */
 public class LongType
-		extends AbstractSingleColumnStandardBasicType<Long>
-		implements VersionType<Long>,JdbcLiteralFormatter<Long> {
+		extends BasicTypeImpl<Long>
+		implements VersionSupport<Long>,JdbcLiteralFormatter<Long> {
 
 	public static final LongType INSTANCE = new LongType();
 
 	private static final Long ZERO = (long) 0;
 
 	public LongType() {
-		super( BigIntTypeDescriptor.INSTANCE, LongTypeDescriptor.INSTANCE );
+		super( LongTypeDescriptor.INSTANCE, BigIntTypeDescriptor.INSTANCE );
 	}
 
 	@Override

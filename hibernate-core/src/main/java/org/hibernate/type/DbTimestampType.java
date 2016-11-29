@@ -44,11 +44,6 @@ public class DbTimestampType extends TimestampType {
 	}
 
 	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] {getName()};
-	}
-
-	@Override
 	public Date seed(SharedSessionContractImplementor session) {
 		if ( session == null ) {
 			LOG.trace( "Incoming session was null; using current jvm time" );

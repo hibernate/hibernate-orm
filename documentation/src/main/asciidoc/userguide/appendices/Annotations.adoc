@@ -831,6 +831,8 @@ See the <<chapters/domain/basic_types.adoc#mapping-generated-Generated,`@Generat
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratorType.html[`@GeneratorType`] annotation is used to provide a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/ValueGenerator.html[`ValueGenerator`]
 and a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] for the current annotated generated attribute.
 
+See the <<chapters/domain/basic_types.adoc#mapping-generated-GeneratorType-example,`@GeneratorType` mapping>> section for more info.
+
 [[annotations-hibernate-genericgenerator]]
 ==== `@GenericGenerator`
 

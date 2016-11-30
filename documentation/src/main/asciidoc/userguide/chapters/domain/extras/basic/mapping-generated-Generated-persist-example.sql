@@ -19,7 +19,7 @@ values
 -- binding parameter [5] as [VARCHAR] - [Frederico]
 -- binding parameter [6] as [VARCHAR] - [Rúben]
 -- binding parameter [7] as [VARCHAR] - [Artur]
--- binding parameter [8] as [BIGINT] - [1]
+-- binding parameter [8] as [BIGINT]  - [1]
 
 SELECT
     p.fullName as fullName3_0_

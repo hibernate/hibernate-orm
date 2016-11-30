@@ -1258,6 +1258,59 @@ include::{extrasdir}/basic/mapping-generated-Generated-update-example.sql[]
 ----
 ====
 
+[[mapping-generated-GeneratorType]]
+===== `@GeneratorType` annotation
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratorType.html[`@GeneratorType`] annotation is used so that
+you can provide a custom generator to ste the value of the currently annotated property.
+
+For this reason, the `@GeneratorType` annotation accepts a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] enum value
+and a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ValueGenerator.html[`ValueGenerator`] class type.
+
+Considering the following entity:
+
+[[mapping-generated-GeneratorType-example]]
+.`@GeneratorType` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/GeneratorTypeTest.java[tags=mapping-generated-GeneratorType-example]
+----
+====
+
+When the `Person` entity is persisted, Hibernate is going to populate the `createdBy` column with the currently logged user.
+
+[[mapping-generated-GeneratorType-persist-example]]
+.`@Generated` persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/GeneratorTypeTest.java[tags=mapping-generated-GeneratorType-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-generated-GeneratorType-persist-example.sql[]
+----
+====
+
+The same goes when the `Person` entity is updated.
+Hibernate is going to populate the `updatedBy` column with the currently logged user.
+
+[[mapping-generated-GeneratorType-update-example]]
+.`@Generated` update example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/GeneratorTypeTest.java[tags=mapping-generated-GeneratorType-update-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-generated-GeneratorType-update-example.sql[]
+----
+====
+
 [[mapping-generated-CreationTimestamp]]
 ===== `@CreationTimestamp` annotation
 

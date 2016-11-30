@@ -1514,6 +1514,21 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_hql_collection_expressions_example_10() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-collection-expressions-example[]
+
+			List<Person> persons = entityManager.createQuery(
+				"select p " +
+				"from Person p " +
+				"where size( p.phones ) = 2", Person.class )
+			.getResultList();
+			//end::hql-collection-expressions-example[]
+			assertEquals(1, persons.size());
+		});
+	}
+
+	@Test
 	public void test_collection_index_operator_example_1() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-collection-index-operator-example[]

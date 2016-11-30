@@ -62,7 +62,6 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -671,7 +670,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			// Similarly, if the original HibernateProxy is initialized, there
 			// is again no point in creating a proxy.  Just return the impl
-			final HibernateProxy originalHibernateProxy = (HibernateProxy) proxy;
+			HibernateProxy originalHibernateProxy = (HibernateProxy) proxy;
 			if ( !originalHibernateProxy.getHibernateLazyInitializer().isUninitialized() ) {
 				final Object impl = originalHibernateProxy.getHibernateLazyInitializer().getImplementation();
 				// can we return it?
@@ -684,11 +683,21 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			// Otherwise, create the narrowed proxy
 			final HibernateProxy narrowedProxy = (HibernateProxy) persister.createProxy( key.getIdentifier(), session );
-			this.addProxy(key, narrowedProxy);
-
+			
+            final Object proxyOrig = proxiesByKey.put(key, narrowedProxy); //overwrite old proxy
+            if ( proxyOrig != null ) {
+                if ( ! ( proxyOrig instanceof HibernateProxy ) ) {
+                    throw new AssertionFailure(
+                            "proxy not of type HibernateProxy; it is " + proxyOrig.getClass()
+                    );
+                }
+                originalHibernateProxy = (HibernateProxy)proxyOrig;
+            }
+            
 			// set the read-only/modifiable mode in the new proxy to what it was in the original proxy
 			final boolean readOnlyOrig = originalHibernateProxy.getHibernateLazyInitializer().isReadOnly();
 			narrowedProxy.getHibernateLazyInitializer().setReadOnly( readOnlyOrig );
+			originalHibernateProxy.getHibernateLazyInitializer().unsetSession();
 
 			return narrowedProxy;
 		}

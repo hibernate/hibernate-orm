@@ -9,6 +9,7 @@ package org.hibernate.test.bytecode.enhancement.association;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
 import org.junit.Assert;
 
@@ -31,21 +32,34 @@ public class ManyToManyAssociationTestTask extends AbstractEnhancerTestTask {
 		User user = new User();
 		User anotherUser = new User();
 
+		EnhancerTestUtils.checkDirtyTracking( group, new String[0] );
+		EnhancerTestUtils.checkDirtyTracking( anotherGroup, new String[0] );
+		EnhancerTestUtils.checkDirtyTracking( user, new String[0] );
+		EnhancerTestUtils.checkDirtyTracking( anotherUser, new String[0] );
+
 		user.addGroup( group );
 		user.addGroup( anotherGroup );
 		anotherUser.addGroup( group );
+
+		EnhancerTestUtils.checkDirtyTracking( user, new String[0]);
+		EnhancerTestUtils.checkDirtyTracking( anotherUser, new String[0]);
+		EnhancerTestUtils.checkDirtyTracking( group, new String[0]);
+		EnhancerTestUtils.checkDirtyTracking( anotherGroup, new String[0]);
 
 		Assert.assertTrue( group.getUsers().size() == 2 );
 		Assert.assertTrue( anotherGroup.getUsers().size() == 1 );
 
 		group.setUsers( new HashSet<User>() );
+		EnhancerTestUtils.checkDirtyTracking( group, "users"); // HHH-11293
 
 		Assert.assertTrue( user.getGroups().size() == 1 );
 		Assert.assertTrue( anotherUser.getGroups().size() == 0 );
 
 		// Test remove
 		user.addGroup( group );
+		EnhancerTestUtils.checkDirtyTracking( user, new String[0]);
 		anotherUser.addGroup( group );
+		EnhancerTestUtils.checkDirtyTracking( anotherUser, new String[0]);
 
 		Assert.assertTrue( group.getUsers().size() == 2 );
 		Assert.assertTrue( anotherGroup.getUsers().size() == 1 );
@@ -53,12 +67,14 @@ public class ManyToManyAssociationTestTask extends AbstractEnhancerTestTask {
 		Set<Group> groups = new HashSet<Group>( user.getGroups() );
 		groups.remove( group );
 		user.setGroups( groups );
+		EnhancerTestUtils.checkDirtyTracking( user, new String[0]);
 
 		Assert.assertTrue( group.getUsers().size() == 1 );
 		Assert.assertTrue( anotherGroup.getUsers().size() == 1 );
 
 		groups.remove( anotherGroup );
 		user.setGroups( groups );
+		EnhancerTestUtils.checkDirtyTracking( user, "groups"); // HHH-11293
 
 		Assert.assertTrue( group.getUsers().size() == 1 );
 		// This happens (and is expected) because there was no snapshot taken beforeQuery remove

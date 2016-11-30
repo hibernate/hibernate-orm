@@ -24,6 +24,7 @@
       <aggregator>false</aggregator>
       <requiresOnline>false</requiresOnline>
       <inheritedByDefault>true</inheritedByDefault>
+      <requiresDependencyResolution>compile+runtime</requiresDependencyResolution>
       <phase>compile</phase>
       <executePhase>compile</executePhase>
       <executeGoal>enhance</executeGoal>

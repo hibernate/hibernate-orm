@@ -110,9 +110,8 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
 
    @After
    public void cleanup() throws Exception {
-      for (Runnable runnable : cleanup) {
-         runnable.run();
-      }
+      cleanup.forEach(Runnable::run);
+      cleanup.clear();
       withTxSession(s -> {
          s.createQuery("delete from Item").executeUpdate();
       });

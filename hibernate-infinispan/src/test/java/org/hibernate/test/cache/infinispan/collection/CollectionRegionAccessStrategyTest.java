@@ -95,41 +95,41 @@ public class CollectionRegionAccessStrategyTest extends
 			}
 		}).when(mockValidator).acquirePutFromLoadLock(any(), any(), anyLong());
 		PutFromLoadValidator.addToCache(localRegion.getCache(), mockValidator);
-
-		try {
-			final AccessDelegate delegate = localRegion.getCache().getCacheConfiguration().transaction().transactionMode().isTransactional() ?
-				new TxInvalidationCacheAccessDelegate(localRegion, mockValidator) :
-				new NonTxInvalidationCacheAccessDelegate(localRegion, mockValidator);
-
-			ExecutorService executorService = Executors.newCachedThreadPool();
-
-			final String KEY = "k1";
-			Future<Void> pferFuture = executorService.submit(() -> {
-				SharedSessionContractImplementor session = mockedSession();
-				delegate.putFromLoad(session, KEY, "v1", session.getTimestamp(), null);
-				return null;
-			});
-
-			Future<Void> removeFuture = executorService.submit(() -> {
-				removeLatch.await();
-				SharedSessionContractImplementor session = mockedSession();
-				withTx(localEnvironment, session, () -> {
-					delegate.remove(session, KEY);
-					return null;
-				});
-				pferLatch.countDown();
-				return null;
-			});
-
-			pferFuture.get();
-			removeFuture.get();
-
-			assertFalse(localRegion.getCache().containsKey(KEY));
-			assertFalse(remoteRegion.getCache().containsKey(KEY));
-		} finally {
+		cleanup.add(() -> {
 			PutFromLoadValidator.removeFromCache(localRegion.getCache());
 			PutFromLoadValidator.addToCache(localRegion.getCache(), originalValidator);
-		}
+		});
+
+		final AccessDelegate delegate = localRegion.getCache().getCacheConfiguration().transaction().transactionMode().isTransactional() ?
+			new TxInvalidationCacheAccessDelegate(localRegion, mockValidator) :
+			new NonTxInvalidationCacheAccessDelegate(localRegion, mockValidator);
+
+		ExecutorService executorService = Executors.newCachedThreadPool();
+		cleanup.add(() -> executorService.shutdownNow());
+
+		final String KEY = "k1";
+		Future<Void> pferFuture = executorService.submit(() -> {
+			SharedSessionContractImplementor session = mockedSession();
+			delegate.putFromLoad(session, KEY, "v1", session.getTimestamp(), null);
+			return null;
+		});
+
+		Future<Void> removeFuture = executorService.submit(() -> {
+			removeLatch.await();
+			SharedSessionContractImplementor session = mockedSession();
+			withTx(localEnvironment, session, () -> {
+				delegate.remove(session, KEY);
+				return null;
+			});
+			pferLatch.countDown();
+			return null;
+		});
+
+		pferFuture.get();
+		removeFuture.get();
+
+		assertFalse(localRegion.getCache().containsKey(KEY));
+		assertFalse(remoteRegion.getCache().containsKey(KEY));
 	}
 
 	@Test

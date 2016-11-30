@@ -30,6 +30,7 @@ import java.util.NavigableMap;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
@@ -37,6 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -160,7 +162,7 @@ public abstract class CorrectnessTestCase {
          return new HashMap<>();
       }
    };
-   private List<Exception> exceptions = Collections.synchronizedList(new ArrayList<>());
+   private BlockingDeque<Exception> exceptions = new LinkedBlockingDeque<>();
 
    public String getDbName() {
       return getClass().getName().replaceAll("\\W", "_");
@@ -408,13 +410,8 @@ public abstract class CorrectnessTestCase {
             }));
          }
       }
-      long testEnd = System.currentTimeMillis() + EXECUTION_TIME;
-      while (System.currentTimeMillis() < testEnd) {
-         if (!exceptions.isEmpty()) {
-            break;
-         }
-         Thread.sleep(1000);
-      }
+      Exception failure = exceptions.poll(EXECUTION_TIME, TimeUnit.SECONDS);
+      if (failure != null) exceptions.addFirst(failure);
       running = false;
       exec.shutdown();
       if (!exec.awaitTermination(1000, TimeUnit.SECONDS)) throw new IllegalStateException();

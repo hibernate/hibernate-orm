@@ -7,6 +7,8 @@
 package org.hibernate.test.cache.infinispan.access;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
@@ -25,28 +27,32 @@ import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
+import org.hibernate.test.cache.infinispan.util.TestTimeService;
+import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
+import org.hibernate.testing.junit4.CustomRunner;
+import org.infinispan.AdvancedCache;
+import org.infinispan.test.fwk.TestResourceTracker;
 import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.test.CacheManagerCallable;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
+import org.junit.runner.RunWith;
 
-import static org.infinispan.test.TestingUtil.withCacheManager;
+import static org.infinispan.test.Exceptions.expectException;
 import static org.infinispan.test.TestingUtil.withTx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -57,43 +63,55 @@ import static org.mockito.Mockito.mock;
  * @author Galder Zamarreño
  * @version $Revision: $
  */
+@RunWith(CustomRunner.class)
 public class PutFromLoadValidatorUnitTest {
 
 	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(
 			PutFromLoadValidatorUnitTest.class);
-
-	@Rule
-	public InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();
+	private static final TestTimeService TIME_SERVICE = new TestTimeService();
 
 	private Object KEY1 = "KEY1";
 
 	private TransactionManager tm;
+	private EmbeddedCacheManager cm;
+	private AdvancedCache<Object, Object> cache;
+	private List<Runnable> cleanup = new ArrayList<>();
 
-	@Before
+	@BeforeClassOnce
 	public void setUp() throws Exception {
+		TestResourceTracker.testStarted(getClass().getSimpleName());
 		tm = DualNodeJtaTransactionManagerImpl.getInstance("test");
+		cm = TestCacheManagerFactory.createCacheManager(true);
+		cache = cm.getCache().getAdvancedCache();
+	}
+
+	@AfterClassOnce
+	public void stop() {
+		tm = null;
+		cm.stop();
+		TestResourceTracker.testFinished(getClass().getSimpleName());
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		tm = null;
+		cleanup.forEach(Runnable::run);
+		cleanup.clear();
 		try {
 			DualNodeJtaTransactionManagerImpl.cleanupTransactions();
 		}
 		finally {
 			DualNodeJtaTransactionManagerImpl.cleanupTransactionManagers();
 		}
-	}
-
-	private static EmbeddedCacheManager createCacheManager() {
-		EmbeddedCacheManager cacheManager = TestCacheManagerFactory.createCacheManager(false);
-		return cacheManager;
+		cache.clear();
+		cm.getCache(cache.getName() + "-" + InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE).clear();
 	}
 
 	private static InfinispanRegionFactory regionFactory(EmbeddedCacheManager cm) {
-		InfinispanRegionFactory regionFactory = new InfinispanRegionFactory();
+		Properties properties = new Properties();
+		properties.put(TestInfinispanRegionFactory.TIME_SERVICE, TIME_SERVICE);
+		InfinispanRegionFactory regionFactory = new TestInfinispanRegionFactory(properties);
 		regionFactory.setCacheManager(cm);
-		regionFactory.start(CacheTestUtil.sfOptionsForStart(), new Properties());
+		regionFactory.start(CacheTestUtil.sfOptionsForStart(), properties);
 		return regionFactory;
 	}
 
@@ -107,13 +125,8 @@ public class PutFromLoadValidatorUnitTest {
 	}
 
 	private void nakedPutTest(final boolean transactional) throws Exception {
-		withCacheManager(new CacheManagerCallable(createCacheManager()) {
-			@Override
-			public void call() {
-				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
-				exec(transactional, new NakedPut(testee, true));
-			}
-		});
+		PutFromLoadValidator testee = new PutFromLoadValidator(cache, regionFactory(cm));
+		exec(transactional, new NakedPut(testee, true));
 	}
 
 	@Test
@@ -126,13 +139,8 @@ public class PutFromLoadValidatorUnitTest {
 	}
 
 	private void registeredPutTest(final boolean transactional) throws Exception {
-		withCacheManager(new CacheManagerCallable(createCacheManager()) {
-			@Override
-			public void call() {
-				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
-				exec(transactional, new RegularPut(testee));
-			}
-		});
+		PutFromLoadValidator testee = new PutFromLoadValidator(cache, regionFactory(cm));
+		exec(transactional, new RegularPut(testee));
 	}
 
 	@Test
@@ -154,17 +162,11 @@ public class PutFromLoadValidatorUnitTest {
 
 	private void nakedPutAfterRemovalTest(final boolean transactional,
 			final boolean removeRegion) throws Exception {
-		withCacheManager(new CacheManagerCallable(createCacheManager()) {
-			@Override
-			public void call() {
-				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
-				Invalidation invalidation = new Invalidation(testee, removeRegion);
-				// the naked put can succeed because it has txTimestamp after invalidation
-				NakedPut nakedPut = new NakedPut(testee, true);
-				exec(transactional, invalidation, nakedPut);
-			}
-		});
-
+		PutFromLoadValidator testee = new PutFromLoadValidator(cache, regionFactory(cm));
+		Invalidation invalidation = new Invalidation(testee, removeRegion);
+		// the naked put can succeed because it has txTimestamp after invalidation
+		NakedPut nakedPut = new NakedPut(testee, true);
+		exec(transactional, invalidation, nakedPut);
 	}
 
 	@Test
@@ -186,16 +188,10 @@ public class PutFromLoadValidatorUnitTest {
 
 	private void registeredPutAfterRemovalTest(final boolean transactional,
 			final boolean removeRegion) throws Exception {
-		withCacheManager(new CacheManagerCallable(createCacheManager()) {
-			@Override
-			public void call() {
-				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
-				Invalidation invalidation = new Invalidation(testee, removeRegion);
-				RegularPut regularPut = new RegularPut(testee);
-				exec(transactional, invalidation, regularPut);
-			}
-		});
-
+		PutFromLoadValidator testee = new PutFromLoadValidator(cache, regionFactory(cm));
+		Invalidation invalidation = new Invalidation(testee, removeRegion);
+		RegularPut regularPut = new RegularPut(testee);
+		exec(transactional, invalidation, regularPut);
 	}
 	 @Test
 	public void testRegisteredPutWithInterveningKeyRemoval() throws Exception {
@@ -217,43 +213,38 @@ public class PutFromLoadValidatorUnitTest {
 	private void registeredPutWithInterveningRemovalTest(
 			final boolean transactional, final boolean removeRegion)
 			throws Exception {
-		withCacheManager(new CacheManagerCallable(createCacheManager()) {
-			@Override
-			public void call() {
-				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
-				try {
-					long txTimestamp = System.currentTimeMillis();
-					if (transactional) {
-						tm.begin();
-					}
-					SharedSessionContractImplementor session1 = mock(SharedSessionContractImplementor.class);
-					SharedSessionContractImplementor session2 = mock(SharedSessionContractImplementor.class);
-					testee.registerPendingPut(session1, KEY1, txTimestamp);
-					if (removeRegion) {
-						testee.beginInvalidatingRegion();
-					} else {
-						testee.beginInvalidatingKey(session2, KEY1);
-					}
+		PutFromLoadValidator testee = new PutFromLoadValidator(cache, regionFactory(cm));
+		try {
+			long txTimestamp = TIME_SERVICE.wallClockTime();
+			if (transactional) {
+				tm.begin();
+			}
+			SharedSessionContractImplementor session1 = mock(SharedSessionContractImplementor.class);
+			SharedSessionContractImplementor session2 = mock(SharedSessionContractImplementor.class);
+			testee.registerPendingPut(session1, KEY1, txTimestamp);
+			if (removeRegion) {
+				testee.beginInvalidatingRegion();
+			} else {
+				testee.beginInvalidatingKey(session2, KEY1);
+			}
 
-					PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(session1, KEY1, txTimestamp);
-					try {
-						assertNull(lock);
-					}
-					finally {
-						if (lock != null) {
-							testee.releasePutFromLoadLock(KEY1, lock);
-						}
-						if (removeRegion) {
-							testee.endInvalidatingRegion();
-						} else {
-							testee.endInvalidatingKey(session2, KEY1);
-						}
-					}
-				} catch (Exception e) {
-					throw new RuntimeException(e);
+			PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(session1, KEY1, txTimestamp);
+			try {
+				assertNull(lock);
+			}
+			finally {
+				if (lock != null) {
+					testee.releasePutFromLoadLock(KEY1, lock);
+				}
+				if (removeRegion) {
+					testee.endInvalidatingRegion();
+				} else {
+					testee.endInvalidatingKey(session2, KEY1);
 				}
 			}
-		});
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Test
@@ -267,71 +258,57 @@ public class PutFromLoadValidatorUnitTest {
 	}
 
 	private void multipleRegistrationtest(final boolean transactional) throws Exception {
-		withCacheManager(new CacheManagerCallable(createCacheManager()) {
-			@Override
-			public void call() {
-				final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
+		final PutFromLoadValidator testee = new PutFromLoadValidator(cache, regionFactory(cm));
 
-				final CountDownLatch registeredLatch = new CountDownLatch(3);
-				final CountDownLatch finishedLatch = new CountDownLatch(3);
-				final AtomicInteger success = new AtomicInteger();
+		final CountDownLatch registeredLatch = new CountDownLatch(3);
+		final CountDownLatch finishedLatch = new CountDownLatch(3);
+		final AtomicInteger success = new AtomicInteger();
 
-				Runnable r = new Runnable() {
-					public void run() {
-						try {
-							long txTimestamp = System.currentTimeMillis();
-							if (transactional) {
-								tm.begin();
-							}
-							SharedSessionContractImplementor session = mock (SharedSessionContractImplementor.class);
-							testee.registerPendingPut(session, KEY1, txTimestamp);
-							registeredLatch.countDown();
-							registeredLatch.await(5, TimeUnit.SECONDS);
-							PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(session, KEY1, txTimestamp);
-							if (lock != null) {
-								try {
-									log.trace("Put from load lock acquired for key = " + KEY1);
-									success.incrementAndGet();
-								} finally {
-									testee.releasePutFromLoadLock(KEY1, lock);
-								}
-							} else {
-								log.trace("Unable to acquired putFromLoad lock for key = " + KEY1);
-							}
-							finishedLatch.countDown();
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
+		Runnable r = () -> {
+			try {
+				long txTimestamp = TIME_SERVICE.wallClockTime();
+				if (transactional) {
+					tm.begin();
+				}
+				SharedSessionContractImplementor session = mock (SharedSessionContractImplementor.class);
+				testee.registerPendingPut(session, KEY1, txTimestamp);
+				registeredLatch.countDown();
+				registeredLatch.await(5, TimeUnit.SECONDS);
+				PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(session, KEY1, txTimestamp);
+				if (lock != null) {
+					try {
+						log.trace("Put from load lock acquired for key = " + KEY1);
+						success.incrementAndGet();
+					} finally {
+						testee.releasePutFromLoadLock(KEY1, lock);
 					}
-				};
-
-				ExecutorService executor = Executors.newFixedThreadPool(3);
-
-				// Start with a removal so the "isPutValid" calls will fail if
-				// any of the concurrent activity isn't handled properly
-
-				testee.beginInvalidatingRegion();
-				testee.endInvalidatingRegion();
-				try {
-					Thread.sleep(10);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
+				} else {
+					log.trace("Unable to acquired putFromLoad lock for key = " + KEY1);
 				}
-
-				// Do the registration + isPutValid calls
-				executor.execute(r);
-				executor.execute(r);
-				executor.execute(r);
-
-				try {
-					finishedLatch.await(5, TimeUnit.SECONDS);
-				} catch (InterruptedException e) {
-					throw new RuntimeException(e);
-				}
-
-				assertEquals("All threads succeeded", 3, success.get());
+				finishedLatch.countDown();
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		});
+		};
+
+		ExecutorService executor = Executors.newFixedThreadPool(3);
+		cleanup.add(() -> executor.shutdownNow());
+
+		// Start with a removal so the "isPutValid" calls will fail if
+		// any of the concurrent activity isn't handled properly
+
+		testee.beginInvalidatingRegion();
+		testee.endInvalidatingRegion();
+		TIME_SERVICE.advance(1);
+
+		// Do the registration + isPutValid calls
+		executor.execute(r);
+		executor.execute(r);
+		executor.execute(r);
+
+		assertTrue(finishedLatch.await(5, TimeUnit.SECONDS));
+
+		assertEquals("All threads succeeded", 3, success.get());
 	}
 
 	@Test
@@ -345,71 +322,55 @@ public class PutFromLoadValidatorUnitTest {
 	}
 
 	private void invalidationBlocksForInProgressPutTest(final boolean keyOnly) throws Exception {
-		withCacheManager(new CacheManagerCallable(createCacheManager()) {
-			@Override
-			public void call() {
-				final PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
-				final CountDownLatch removeLatch = new CountDownLatch(1);
-				final CountDownLatch pferLatch = new CountDownLatch(1);
-				final AtomicReference<Object> cache = new AtomicReference<Object>("INITIAL");
+		final PutFromLoadValidator testee = new PutFromLoadValidator(cache, regionFactory(cm));
+		final CountDownLatch removeLatch = new CountDownLatch(1);
+		final CountDownLatch pferLatch = new CountDownLatch(1);
+		final AtomicReference<Object> cache = new AtomicReference<>("INITIAL");
 
-				Callable<Boolean> pferCallable = new Callable<Boolean>() {
-					public Boolean call() throws Exception {
-						long txTimestamp = System.currentTimeMillis();
-						SharedSessionContractImplementor session = mock (SharedSessionContractImplementor.class);
-						testee.registerPendingPut(session, KEY1, txTimestamp);
-						PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(session, KEY1, txTimestamp);
-						if (lock != null) {
-							try {
-								removeLatch.countDown();
-								pferLatch.await();
-								cache.set("PFER");
-								return Boolean.TRUE;
-							}
-							finally {
-								testee.releasePutFromLoadLock(KEY1, lock);
-							}
-						}
-						return Boolean.FALSE;
-					}
-				};
-
-				Callable<Void> invalidateCallable = new Callable<Void>() {
-					public Void call() throws Exception {
-						removeLatch.await();
-						if (keyOnly) {
-							SharedSessionContractImplementor session = mock (SharedSessionContractImplementor.class);
-							testee.beginInvalidatingKey(session, KEY1);
-						} else {
-							testee.beginInvalidatingRegion();
-						}
-						cache.set(null);
-						return null;
-					}
-				};
-
-				ExecutorService executorService = Executors.newCachedThreadPool();
-				Future<Boolean> pferFuture = executorService.submit(pferCallable);
-				Future<Void> invalidateFuture = executorService.submit(invalidateCallable);
-
+		Callable<Boolean> pferCallable = () -> {
+			long txTimestamp = TIME_SERVICE.wallClockTime();
+			SharedSessionContractImplementor session = mock (SharedSessionContractImplementor.class);
+			testee.registerPendingPut(session, KEY1, txTimestamp);
+			PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(session, KEY1, txTimestamp);
+			if (lock != null) {
 				try {
-					try {
-						invalidateFuture.get(1, TimeUnit.SECONDS);
-						fail("invalidateFuture did not block");
-					}
-					catch (TimeoutException good) {}
-
-					pferLatch.countDown();
-
-					assertTrue(pferFuture.get(5, TimeUnit.SECONDS));
-					invalidateFuture.get(5, TimeUnit.SECONDS);
-
-					assertNull(cache.get());
-				} catch (Exception e) {
-					throw new RuntimeException(e);
+					removeLatch.countDown();
+					pferLatch.await();
+					cache.set("PFER");
+					return Boolean.TRUE;
+				}
+				finally {
+					testee.releasePutFromLoadLock(KEY1, lock);
 				}
 			}
-		});
+			return Boolean.FALSE;
+		};
+
+		Callable<Void> invalidateCallable = () -> {
+         removeLatch.await();
+         if (keyOnly) {
+            SharedSessionContractImplementor session = mock (SharedSessionContractImplementor.class);
+            testee.beginInvalidatingKey(session, KEY1);
+         } else {
+            testee.beginInvalidatingRegion();
+         }
+         cache.set(null);
+         return null;
+      };
+
+		ExecutorService executor = Executors.newCachedThreadPool();
+		cleanup.add(() -> executor.shutdownNow());
+		Future<Boolean> pferFuture = executor.submit(pferCallable);
+		Future<Void> invalidateFuture = executor.submit(invalidateCallable);
+
+		expectException(TimeoutException.class, () -> invalidateFuture.get(1, TimeUnit.SECONDS));
+
+		pferLatch.countDown();
+
+		assertTrue(pferFuture.get(5, TimeUnit.SECONDS));
+		invalidateFuture.get(5, TimeUnit.SECONDS);
+
+		assertNull(cache.get());
 	}
 
 	protected void exec(boolean transactional, Callable<?>... callables) {
@@ -454,7 +415,7 @@ public class PutFromLoadValidatorUnitTest {
 			}
 			// if we go for the timestamp-based approach, invalidation in the same millisecond
 			// as the registerPendingPut/acquirePutFromLoad lock results in failure.
-			Thread.sleep(10);
+			TIME_SERVICE.advance(1);
 			return null;
 		}
 	}
@@ -469,7 +430,7 @@ public class PutFromLoadValidatorUnitTest {
 		@Override
 		public Void call() throws Exception {
 			try {
-				long txTimestamp = System.currentTimeMillis(); // this should be acquired before UserTransaction.begin()
+				long txTimestamp = TIME_SERVICE.wallClockTime(); // this should be acquired before UserTransaction.begin()
 				SharedSessionContractImplementor session = mock (SharedSessionContractImplementor.class);
 				putFromLoadValidator.registerPendingPut(session, KEY1, txTimestamp);
 
@@ -500,7 +461,7 @@ public class PutFromLoadValidatorUnitTest {
 		@Override
 		public Void call() throws Exception {
 			try {
-				long txTimestamp = System.currentTimeMillis(); // this should be acquired before UserTransaction.begin()
+				long txTimestamp = TIME_SERVICE.wallClockTime(); // this should be acquired before UserTransaction.begin()
 				SharedSessionContractImplementor session = mock (SharedSessionContractImplementor.class);
 				PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(session, KEY1, txTimestamp);
 				try {
@@ -525,59 +486,44 @@ public class PutFromLoadValidatorUnitTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9928")
 	public void testGetForNullReleasePuts() {
-		EmbeddedCacheManager cm = createCacheManager();
-		InfinispanRegionFactory tmp = new InfinispanRegionFactory();
-		tmp.setCacheManager(cm);
 		ConfigurationBuilder cb = new ConfigurationBuilder();
 		cb.simpleCache(true).expiration().maxIdle(500);
 		Configuration ppCfg = cb.build();
-		cm.defineConfiguration(InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE, cb.build());
+
 		InfinispanRegionFactory regionFactory = mock(InfinispanRegionFactory.class);
 		doReturn(ppCfg).when(regionFactory).getPendingPutsCacheConfiguration();
-		withCacheManager(new CacheManagerCallable(cm) {
-			@Override
-			public void call() {
-				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory, cm);
-				long lastInsert = Long.MAX_VALUE;
-				for (int i = 0; i < 100; ++i) {
-					lastInsert = System.currentTimeMillis();
-					try {
-						withTx(tm, new Callable<Object>() {
-							@Override
-							public Object call() throws Exception {
-								SharedSessionContractImplementor session = mock (SharedSessionContractImplementor.class);
-								testee.registerPendingPut(session, KEY1, 0);
-								return null;
-							}
-						});
-						Thread.sleep(10);
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
-				}
-				String ppName = cm.getCache().getName() + "-" + InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE;
-				Map ppCache = cm.getCache(ppName, false);
-				assertNotNull(ppCache);
-				Object pendingPutMap = ppCache.get(KEY1);
-				long end = System.currentTimeMillis();
-				if (end - lastInsert > 500) {
-					log.warn("Test took too long");
-					return;
-				}
-				assertNotNull(pendingPutMap);
-				int size;
-				try {
-					Method sizeMethod = pendingPutMap.getClass().getMethod("size");
-					sizeMethod.setAccessible(true);
-					size = (Integer) sizeMethod.invoke(pendingPutMap);
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-				// some of the pending puts need to be expired by now
-				assertTrue(size < 100);
-				// but some are still registered
-				assertTrue(size > 0);
+		doAnswer(invocation -> TIME_SERVICE.wallClockTime()).when(regionFactory).nextTimestamp();
+
+		PutFromLoadValidator testee = new PutFromLoadValidator(cache, regionFactory, cm);
+
+		for (int i = 0; i < 100; ++i) {
+			try {
+				withTx(tm, () -> {
+					SharedSessionContractImplementor session = mock (SharedSessionContractImplementor.class);
+					testee.registerPendingPut(session, KEY1, 0);
+					return null;
+				});
+				TIME_SERVICE.advance(10);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
-		});
+		}
+		String ppName = cm.getCache().getName() + "-" + InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE;
+		Map ppCache = cm.getCache(ppName, false);
+		assertNotNull(ppCache);
+		Object pendingPutMap = ppCache.get(KEY1);
+		assertNotNull(pendingPutMap);
+		int size;
+		try {
+			Method sizeMethod = pendingPutMap.getClass().getMethod("size");
+			sizeMethod.setAccessible(true);
+			size = (Integer) sizeMethod.invoke(pendingPutMap);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		// some of the pending puts need to be expired by now
+		assertTrue(size < 100);
+		// but some are still registered
+		assertTrue(size > 0);
 	}
 }

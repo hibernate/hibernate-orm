@@ -8,6 +8,8 @@ package org.hibernate.test.cache.infinispan.functional.cluster;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -37,8 +39,6 @@ import static org.junit.Assert.fail;
 public class NaturalIdInvalidationTest extends DualNodeTest {
 
 	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(NaturalIdInvalidationTest.class);
-
-	private static final long SLEEP_TIME = 50l;
 
 	@Override
 	public List<Object[]> getParameters() {
@@ -77,20 +77,18 @@ public class NaturalIdInvalidationTest extends DualNodeTest {
 			assertTrue(remoteListener.isEmpty());
 			assertTrue(localListener.isEmpty());
 
+			CountDownLatch remoteUpdateLatch = expectAfterUpdate(remoteNaturalIdCache.getAdvancedCache(), 2);
 			saveSomeCitizens(localFactory);
+
+			assertTrue(remoteUpdateLatch.await(2, TimeUnit.SECONDS));
 
 			assertTrue(remoteListener.isEmpty());
 			assertTrue(localListener.isEmpty());
-
-			// Sleep a bit to let async commit propagate. Really just to
-			// help keep the logs organized for debugging any issues
-			sleep( SLEEP_TIME );
 
 			log.debug("Find node 0");
 			// This actually brings the collection into the cache
 			getCitizenWithCriteria(localFactory);
 
-			sleep( SLEEP_TIME );
 			// Now the collection is in the cache so, the 2nd "get"
 			// should read everything from the cache
 			log.debug( "Find(2) node 0" );
@@ -117,8 +115,9 @@ public class NaturalIdInvalidationTest extends DualNodeTest {
 
 			// Modify customer in remote
 			remoteListener.clear();
+			CountDownLatch localUpdate = expectEvict(localNaturalIdCache.getAdvancedCache(), 1);
 			deleteCitizenWithCriteria(remoteFactory);
-			sleep(250);
+			assertTrue(localUpdate.await(2, TimeUnit.SECONDS));
 
 			Set localKeys = localNaturalIdCache.keySet();
 			assertEquals(1, localKeys.size());
@@ -222,18 +221,6 @@ public class NaturalIdInvalidationTest extends DualNodeTest {
 			log.debug( event.toString() );
 			if ( !event.isPre() ) {
 				visited.add(event.getKey().toString());
-//            Integer primKey = (Integer) cacheKey.getKey();
-//            String key = (String) cacheKey.getEntityOrRoleName() + '#' + primKey;
-//            log.debug( "MyListener[" + name + "] - Visiting key " + key );
-//            // String name = fqn.toString();
-//            String token = ".functional.";
-//            int index = key.indexOf( token );
-//            if ( index > -1 ) {
-//               index += token.length();
-//               key = key.substring( index );
-//               log.debug( "MyListener[" + name + "] - recording visit to " + key );
-//               visited.add( key );
-//            }
 			}
 		}
 	}

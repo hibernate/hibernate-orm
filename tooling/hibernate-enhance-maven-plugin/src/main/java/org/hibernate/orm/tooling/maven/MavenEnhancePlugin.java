@@ -164,13 +164,8 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		}
 
 		// HHH-10145 Add dependencies to classpath as well - all but the ones used for testing purposes
-		Set<Artifact> artifacts = null;
 		MavenProject project = ( (MavenProject) getPluginContext().get( "project" ) );
-		if ( project != null ) {
-			// Prefer execution project when available (it includes transient dependencies)
-			MavenProject executionProject = project.getExecutionProject();
-			artifacts = ( executionProject != null ? executionProject.getArtifacts() : project.getArtifacts() );
-		}
+		Set<Artifact> artifacts = project.getArtifacts();
 		if ( artifacts != null) {
 			for ( Artifact a : artifacts ) {
 				if ( !Artifact.SCOPE_TEST.equals( a.getScope() ) ) {

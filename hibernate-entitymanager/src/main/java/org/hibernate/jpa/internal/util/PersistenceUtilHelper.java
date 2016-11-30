@@ -20,9 +20,11 @@ import java.util.WeakHashMap;
 import javax.persistence.spi.LoadState;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoader;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
@@ -83,6 +85,10 @@ public final class PersistenceUtilHelper {
 			final boolean isInitialized = interceptor == null || interceptor.isInitialized();
 			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
 		}
+		else if ( reference instanceof PersistentAttributeInterceptable ) {
+			final boolean isInitialized = isInitialized( (PersistentAttributeInterceptable) reference );
+			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
+		}
 		else if ( reference instanceof PersistentCollection ) {
 			final boolean isInitialized = ( (PersistentCollection) reference ).wasInitialized();
 			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
@@ -90,6 +96,11 @@ public final class PersistenceUtilHelper {
 		else {
 			return LoadState.UNKNOWN;
 		}
+	}
+
+	private static boolean isInitialized(PersistentAttributeInterceptable interceptable) {
+		LazyAttributeLoader interceptor = (LazyAttributeLoader) interceptable.$$_hibernate_getInterceptor();
+		return interceptor == null || interceptor.isUninitialized();
 	}
 
 	/**

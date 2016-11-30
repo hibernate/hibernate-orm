@@ -8,17 +8,20 @@ package org.hibernate.jpa.test.util;
 
 import javax.persistence.spi.LoadState;
 
-import org.junit.Test;
-
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 
+import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
+
 /**
  * Tests for HHH-5094 and HHH-5334
  *
  * @author Hardy Ferentschik
  */
-public class PersistenceUtilHelperTest{
+public class PersistenceUtilHelperTest {
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
 	public static class FieldAccessBean extends FieldAccessBeanBase {
@@ -93,8 +96,27 @@ public class PersistenceUtilHelperTest{
 	public void testIsLoadedWithReferencePrivateMethod() {
 		assertEquals(
 				LoadState.UNKNOWN,
-				PersistenceUtilHelper.isLoadedWithReference(
-						new MethodAccessBean(), "privateAccessPropertyValue", cache
+				PersistenceUtilHelper.isLoadedWithReference( new MethodAccessBean(), "privateAccessPropertyValue", cache )
+		);
+	}
+
+	@Test
+	public void testIsLoadedWithNullInterceptor() {
+		assertEquals(
+				LoadState.LOADED,
+				PersistenceUtilHelper.isLoaded(
+						new PersistentAttributeInterceptable() {
+
+							@Override
+							public PersistentAttributeInterceptor $$_hibernate_getInterceptor() {
+								return null;
+							}
+
+							@Override
+							public void $$_hibernate_setInterceptor(PersistentAttributeInterceptor interceptor) {
+
+							}
+						}
 				)
 		);
 	}

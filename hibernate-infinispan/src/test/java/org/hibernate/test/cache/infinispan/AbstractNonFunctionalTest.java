@@ -189,18 +189,6 @@ public abstract class AbstractNonFunctionalTest extends org.hibernate.testing.ju
 		return testSupport;
 	}
 
-	protected void sleep(long ms) {
-		try {
-			Thread.sleep(ms);
-		} catch (InterruptedException e) {
-			log.warn("Interrupted during sleep", e);
-		}
-	}
-
-	protected void avoidConcurrentFlush() {
-		testSupport.avoidConcurrentFlush();
-	}
-
 	protected StandardServiceRegistryBuilder createStandardServiceRegistryBuilder() {
 		final StandardServiceRegistryBuilder ssrb = CacheTestUtil.buildBaselineStandardServiceRegistryBuilder(
 				REGION_PREFIX, getRegionFactoryClass(), true, false, jtaPlatform);

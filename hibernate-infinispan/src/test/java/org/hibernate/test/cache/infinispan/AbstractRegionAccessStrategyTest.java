@@ -11,7 +11,6 @@ import java.util.function.Predicate;
 
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -42,7 +41,6 @@ import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.test.cache.infinispan.util.BatchModeJtaPlatform;
 import org.hibernate.test.cache.infinispan.util.BatchModeTransactionCoordinator;
-import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.test.cache.infinispan.util.ExpectingInterceptor;
 import org.hibernate.test.cache.infinispan.util.JdbcResourceTransactionMock;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
@@ -53,11 +51,8 @@ import org.hibernate.testing.BeforeClassOnce;
 import org.infinispan.commands.write.InvalidateCommand;
 import org.infinispan.test.fwk.TestResourceTracker;
 import org.infinispan.AdvancedCache;
-import org.infinispan.commands.write.InvalidateCommand;
 import org.infinispan.commands.write.PutKeyValueCommand;
 import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import junit.framework.AssertionFailedError;
 
@@ -81,9 +76,6 @@ import static org.mockito.Mockito.when;
 public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S extends RegionAccessStrategy>
 		extends AbstractNonFunctionalTest {
 	protected final Logger log = Logger.getLogger(getClass());
-
-	@Rule
-	public InfinispanTestingSetup infinispanTestIdentifier = new InfinispanTestingSetup();
 
 	public static final String REGION_NAME = "test/com.foo.test";
 	public static final String KEY_BASE = "KEY";
@@ -117,8 +109,9 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		return false;
 	}
 
-	@Before
+	@BeforeClassOnce
 	public void prepareResources() throws Exception {
+		TestResourceTracker.testStarted( getClass().getSimpleName() );
 		// to mimic exactly the old code results, both environments here are exactly the same...
 		StandardServiceRegistryBuilder ssrb = createStandardServiceRegistryBuilder();
 		localEnvironment = new NodeEnvironment( ssrb );
@@ -131,9 +124,6 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		invalidation = Caches.isInvalidationCache(localRegion.getCache());
 		synchronous = Caches.isSynchronousCache(localRegion.getCache());
 
-		// Sleep a bit to avoid concurrent FLUSH problem
-		avoidConcurrentFlush();
-
 		remoteEnvironment = new NodeEnvironment( ssrb );
 		remoteEnvironment.prepare();
 
@@ -141,6 +131,29 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		remoteAccessStrategy = getAccessStrategy(remoteRegion);
 
 		waitForClusterToForm(localRegion.getCache(), remoteRegion.getCache());
+	}
+
+	@After
+	public void cleanup() {
+		cleanup.forEach(Runnable::run);
+		cleanup.clear();
+		if (localRegion != null) localRegion.getCache().clear();
+		if (remoteRegion != null) remoteRegion.getCache().clear();
+	}
+
+	@AfterClassOnce
+	public void releaseResources() throws Exception {
+		try {
+			if (localEnvironment != null) {
+				localEnvironment.release();
+			}
+		}
+		finally {
+			if (remoteEnvironment != null) {
+				remoteEnvironment.release();
+			}
+		}
+		TestResourceTracker.testFinished(getClass().getSimpleName());
 	}
 
 	@Override
@@ -231,7 +244,7 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		node1.setDaemon(true);
 		node2.setDaemon(true);
 
-		CountDownLatch remoteUpdate = setupExpectAfterUpdate();
+		CountDownLatch remoteUpdate = expectAfterUpdate();
 
 		node1.start();
 		node2.start();
@@ -255,11 +268,11 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		}
 	}
 
-	protected CountDownLatch setupExpectAfterUpdate() {
-		return setupExpectPutWithValue(value -> value instanceof FutureUpdate);
+	protected CountDownLatch expectAfterUpdate() {
+		return expectPutWithValue(value -> value instanceof FutureUpdate);
 	}
 
-	protected CountDownLatch setupExpectPutWithValue(Predicate<Object> valuePredicate) {
+	protected CountDownLatch expectPutWithValue(Predicate<Object> valuePredicate) {
 		if (!isUsingInvalidation() && accessType != AccessType.NONSTRICT_READ_WRITE) {
 			CountDownLatch latch = new CountDownLatch(1);
 			ExpectingInterceptor.get(remoteRegion.getCache())
@@ -272,8 +285,8 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		}
 	}
 
-	protected CountDownLatch setupExpectPutFromLoad() {
-		return setupExpectPutWithValue(value -> value instanceof TombstoneUpdate);
+	protected CountDownLatch expectPutFromLoad() {
+		return expectPutWithValue(value -> value instanceof TombstoneUpdate);
 	}
 
 	protected abstract void doUpdate(S strategy, SharedSessionContractImplementor session, Object key, Object value, Object version) throws RollbackException, SystemException;
@@ -350,27 +363,6 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		TestingUtil.blockUntilViewsReceived(10000, Arrays.asList(caches));
 	}
 
-	@After
-	public void cleanup() throws Exception {
-		for (Runnable runnable : cleanup) {
-			runnable.run();
-		}
-		cleanup.clear();
-		if (localRegion != null) localRegion.getCache().clear();
-		if (remoteRegion != null) remoteRegion.getCache().clear();
-
-		try {
-			if (localEnvironment != null) {
-				localEnvironment.release();
-			}
-		}
-		finally {
-			if (remoteEnvironment != null) {
-				remoteEnvironment.release();
-			}
-		}
-	}
-
 	protected boolean isTransactional() {
 		return transactional;
 	}
@@ -399,7 +391,7 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		SharedSessionContractImplementor s3 = mockedSession();
 		localAccessStrategy.putFromLoad(s3, KEY, VALUE1, s3.getTimestamp(), 1);
 		SharedSessionContractImplementor s5 = mockedSession();
-		remoteAccessStrategy.putFromLoad(s5, KEY, VALUE1, s5.getTimestamp(), new Integer(1));
+		remoteAccessStrategy.putFromLoad(s5, KEY, VALUE1, s5.getTimestamp(), 1);
 
 		// putFromLoad is applied on local node synchronously, but if there's a concurrent update
 		// from the other node it can silently fail when acquiring the loc . Then we could try to read
@@ -418,7 +410,7 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 				localAccessStrategy.evict(KEY);
 			}
 			else {
-				doRemove(localRegion.getTransactionManager(), localAccessStrategy, session, KEY);
+				doRemove(localAccessStrategy, session, KEY);
 			}
 			return null;
 		});
@@ -431,7 +423,7 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		assertEquals(0, remoteRegion.getCache().size());
 	}
 
-	protected void doRemove(TransactionManager tm, S strategy, SharedSessionContractImplementor session, Object key) throws SystemException, RollbackException {
+	protected void doRemove(S strategy, SharedSessionContractImplementor session, Object key) throws SystemException, RollbackException {
 		SoftLock softLock = strategy.lockItem(session, key, null);
 		strategy.remove(session, key);
 		session.getTransactionCoordinator().getLocalSynchronizations().registerSynchronization(
@@ -501,7 +493,7 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		if (invalidation && !evict) {
 			// removeAll causes transactional remove commands which trigger EndInvalidationCommands on the remote side
 			// if the cache is non-transactional, PutFromLoadValidator.registerRemoteInvalidations cannot find
-			// current session nor register tx synchronization, so it falls back to simpe InvalidationCommand.
+			// current session nor register tx synchronization, so it falls back to simple InvalidationCommand.
 			endInvalidationLatch = new CountDownLatch(1);
 			if (transactional) {
 				PutFromLoadValidator originalValidator = PutFromLoadValidator.removeFromCache(remoteRegion.getCache());

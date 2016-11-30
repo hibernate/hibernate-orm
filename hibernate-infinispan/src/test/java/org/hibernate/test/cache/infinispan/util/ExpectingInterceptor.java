@@ -8,12 +8,14 @@ import org.infinispan.interceptors.base.BaseCustomInterceptor;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.BiPredicate;
+import java.util.function.BooleanSupplier;
 
 
 public class ExpectingInterceptor extends BaseCustomInterceptor {
@@ -56,16 +58,28 @@ public class ExpectingInterceptor extends BaseCustomInterceptor {
          succeeded = true;
          return retval;
       } finally {
-         log.tracef("After command %s", command);
+         log.tracef("After command(successful=%s) %s", succeeded, command);
+         List<Runnable> toExecute = new ArrayList<>();
          synchronized (this) {
             for (Iterator<Condition> iterator = conditions.iterator(); iterator.hasNext(); ) {
                Condition condition = iterator.next();
+               log.tracef("Testing condition %s", condition);
                if ((condition.success == null || condition.success == succeeded) && condition.predicate.test(ctx, command)) {
                   assert condition.action != null;
-                  condition.action.run();
-                  iterator.remove();
+                  log.trace("Condition succeeded");
+                  toExecute.add(condition.action);
+                  if (condition.removeCheck == null || condition.removeCheck.getAsBoolean()) {
+                     iterator.remove();
+                  }
+               } else {
+                  log.trace("Condition test failed");
                }
             }
+         }
+         // execute without holding the lock
+         for (Runnable runnable : toExecute) {
+            log.tracef("Executing %s", runnable);
+            runnable.run();
          }
       }
    }
@@ -73,6 +87,7 @@ public class ExpectingInterceptor extends BaseCustomInterceptor {
    public class Condition {
       private final BiPredicate<InvocationContext, VisitableCommand> predicate;
       private final Boolean success;
+      private BooleanSupplier removeCheck;
       private Runnable action;
 
       public Condition(BiPredicate<InvocationContext, VisitableCommand> predicate, Boolean success) {
@@ -80,20 +95,36 @@ public class ExpectingInterceptor extends BaseCustomInterceptor {
          this.success = success;
       }
 
-      public void run(Runnable action) {
+      public Condition run(Runnable action) {
          assert this.action == null;
          this.action = action;
+         return this;
       }
 
-      public void countDown(CountDownLatch latch) {
-         assert action == null;
-         action = () -> latch.countDown();
+      public Condition countDown(CountDownLatch latch) {
+         return run(() -> latch.countDown()).removeWhen(() -> latch.getCount() == 0);
+      }
+
+      public Condition removeWhen(BooleanSupplier check) {
+         assert this.removeCheck == null;
+         this.removeCheck = check;
+         return this;
       }
 
       public void cancel() {
-         synchronized (ExpectingInterceptor.class) {
+         synchronized (ExpectingInterceptor.this) {
             conditions.remove(this);
          }
+      }
+
+      @Override
+      public String toString() {
+         final StringBuilder sb = new StringBuilder("Condition{");
+         sb.append("predicate=").append(predicate);
+         sb.append(", success=").append(success);
+         sb.append(", action=").append(action);
+         sb.append('}');
+         return sb.toString();
       }
    }
 }

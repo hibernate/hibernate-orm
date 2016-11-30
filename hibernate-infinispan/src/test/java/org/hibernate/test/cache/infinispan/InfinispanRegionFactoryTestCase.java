@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.cache.infinispan;
 
+import java.io.InputStream;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 
@@ -30,6 +31,9 @@ import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.infinispan.configuration.cache.ClusteringConfigurationBuilder;
+import org.infinispan.commons.util.FileLookupFactory;
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
+import org.infinispan.configuration.parsing.ParserRegistry;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -37,7 +41,6 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -298,7 +301,9 @@ public class InfinispanRegionFactoryTestCase  {
 	public void testTimestampValidation() {
 		final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
 		Properties p = createProperties();
-		final DefaultCacheManager manager = new DefaultCacheManager(GlobalConfigurationBuilder.defaultClusteredBuilder().build());
+      InputStream configStream = FileLookupFactory.newInstance().lookupFile(InfinispanRegionFactory.DEF_INFINISPAN_CONFIG_RESOURCE, getClass().getClassLoader());
+      ConfigurationBuilderHolder cbh = new ParserRegistry().parse(configStream);
+      DefaultCacheManager manager = new DefaultCacheManager(cbh, true);
 		ConfigurationBuilder builder = new ConfigurationBuilder();
 		builder.clustering().cacheMode(CacheMode.INVALIDATION_SYNC);
 		manager.defineConfiguration( DEF_TIMESTAMPS_RESOURCE, builder.build() );

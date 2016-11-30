@@ -13,6 +13,8 @@ import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
+import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
+import org.hibernate.test.cache.infinispan.util.TestTimeService;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -25,7 +27,8 @@ import static org.junit.Assert.assertEquals;
  * @since 4.1
  */
 public class ReadOnlyTest extends SingleNodeTest {
-	static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(ReadOnlyTest.class);
+	protected static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(ReadOnlyTest.class);
+	protected static final TestTimeService TIME_SERVICE = new TestTimeService();
 
 	@Override
 	public List<Object[]> getParameters() {
@@ -76,7 +79,7 @@ public class ReadOnlyTest extends SingleNodeTest {
 		log.info("Entry persisted, let's load and delete it.");
 
 		cleanupCache();
-		Thread.sleep(10);
+		TIME_SERVICE.advance(1);
 
 		withTxSession(s -> {
 			Item found = s.load(Item.class, item.getId());
@@ -87,5 +90,11 @@ public class ReadOnlyTest extends SingleNodeTest {
 			assertEquals(2, stats.getSecondLevelCachePutCount());
 			s.delete(found);
 		});
+	}
+
+	@Override
+	protected void addSettings(Map settings) {
+		super.addSettings(settings);
+		settings.put(TestInfinispanRegionFactory.TIME_SERVICE, TIME_SERVICE);
 	}
 }

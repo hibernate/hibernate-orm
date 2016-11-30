@@ -82,7 +82,7 @@ public class EntityRegionAccessStrategyTest extends
 		final CountDownLatch commitLatch = new CountDownLatch(1);
 		final CountDownLatch completionLatch = new CountDownLatch(2);
 
-		CountDownLatch asyncInsertLatch = setupExpectAfterUpdate();
+		CountDownLatch asyncInsertLatch = expectAfterUpdate();
 
 		Thread inserter = new Thread(() -> {
 				try {
@@ -154,7 +154,7 @@ public class EntityRegionAccessStrategyTest extends
 	protected void putFromLoadTestReadOnly(boolean minimal) throws Exception {
 		final Object KEY = TestingKeyFactory.generateEntityCacheKey( KEY_BASE + testCount++ );
 
-		CountDownLatch remotePutFromLoadLatch = setupExpectPutFromLoad();
+		CountDownLatch remotePutFromLoadLatch = expectPutFromLoad();
 
 		SessionImplementor session = mockedSession();
 		withTx(localEnvironment, session, () -> {
@@ -196,7 +196,7 @@ public class EntityRegionAccessStrategyTest extends
 		remoteAccessStrategy.putFromLoad(s2, KEY, VALUE1, s2.getTimestamp(), 1);
 
 		// both nodes are updated, we don't have to wait for any async replication of putFromLoad
-		CountDownLatch asyncUpdateLatch = setupExpectAfterUpdate();
+		CountDownLatch asyncUpdateLatch = expectAfterUpdate();
 
 		final CountDownLatch readLatch = new CountDownLatch(1);
 		final CountDownLatch commitLatch = new CountDownLatch(1);

@@ -63,7 +63,6 @@ import static org.mockito.Mockito.spy;
 public class EntityCollectionInvalidationTest extends DualNodeTest {
 	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( EntityCollectionInvalidationTest.class );
 
-	private static final long SLEEP_TIME = 50l;
 	private static final Integer CUSTOMER_ID = new Integer( 1 );
 
 	private EmbeddedCacheManager localManager, remoteManager;
@@ -138,15 +137,9 @@ public class EntityCollectionInvalidationTest extends DualNodeTest {
 		assertTrue( remoteListener.isEmpty() );
 		assertTrue( localListener.isEmpty() );
 
-		// Sleep a bit to let async commit propagate. Really just to
-		// help keep the logs organized for debugging any issues
-		sleep( SLEEP_TIME );
-
 		log.debug( "Find node 0" );
 		// This actually brings the collection into the cache
 		getCustomer( ids.customerId, localFactory );
-
-		sleep( SLEEP_TIME );
 
 		// Now the collection is in the cache so, the 2nd "get"
 		// should read everything from the cache
@@ -182,7 +175,6 @@ public class EntityCollectionInvalidationTest extends DualNodeTest {
 		}
 
 		ids = modifyCustomer( ids.customerId, remoteFactory );
-		sleep( 250 );
 		assertLoadedFromCache( remoteListener, ids.customerId, ids.contactIds );
 
 		if (modifyLatch != null) {

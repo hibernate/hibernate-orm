@@ -73,15 +73,11 @@ public class TimestampsRegionImplTest extends AbstractGeneralDataRegionTest {
 					  registry,
 					  getCacheTestSupport()
 			);
-			// Sleep a bit to avoid concurrent FLUSH problem
-			avoidConcurrentFlush();
 
 			InfinispanRegionFactory regionFactory2 = CacheTestUtil.startRegionFactory(
 					  registry2,
 					  getCacheTestSupport()
 			);
-			// Sleep a bit to avoid concurrent FLUSH problem
-			avoidConcurrentFlush();
 
 			TimestampsRegionImpl region = (TimestampsRegionImpl) regionFactory.buildTimestampsRegion(
 					  getStandardRegionName(REGION_PREFIX),

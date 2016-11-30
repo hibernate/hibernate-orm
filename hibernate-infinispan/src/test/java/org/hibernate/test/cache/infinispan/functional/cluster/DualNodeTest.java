@@ -116,15 +116,6 @@ public abstract class DualNodeTest extends AbstractFunctionalTest {
 		return JtaTransactionCoordinatorBuilderImpl.class;
 	}
 
-	protected void sleep(long ms) {
-		try {
-			Thread.sleep( ms );
-		}
-		catch (InterruptedException e) {
-			log.warn( "Interrupted during sleep", e );
-		}
-	}
-
 	protected void configureSecondNode(StandardServiceRegistryBuilder ssrb) {
 	}
 

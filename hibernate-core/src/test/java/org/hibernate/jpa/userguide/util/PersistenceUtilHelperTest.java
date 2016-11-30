@@ -8,17 +8,20 @@ package org.hibernate.jpa.userguide.util;
 
 import javax.persistence.spi.LoadState;
 
-import org.junit.Test;
-
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 
+import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
+
 /**
  * Tests for HHH-5094 and HHH-5334
  *
  * @author Hardy Ferentschik
  */
-public class PersistenceUtilHelperTest{
+public class PersistenceUtilHelperTest {
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
 	public static class FieldAccessBean extends FieldAccessBeanBase {
@@ -50,51 +53,96 @@ public class PersistenceUtilHelperTest{
 			return publicAccessProperty;
 		}
 	}
-    @Test
+
+	@Test
 	public void testIsLoadedWithReferencePublicField() {
 		assertEquals(
 				LoadState.UNKNOWN,
-				PersistenceUtilHelper.isLoadedWithReference( new FieldAccessBean(), "publicAccessProperty", cache )
+				PersistenceUtilHelper.isLoadedWithReference(
+						new FieldAccessBean(),
+						"publicAccessProperty",
+						cache
+				)
 		);
 	}
-    @Test
+
+	@Test
 	public void testIsLoadedWithReferencePublicMethod() {
 		assertEquals(
 				LoadState.UNKNOWN,
 				PersistenceUtilHelper.isLoadedWithReference(
-						new MethodAccessBean(), "publicAccessPropertyValue", cache
+						new MethodAccessBean(),
+						"publicAccessPropertyValue",
+						cache
 				)
 		);
 	}
-   @Test
+
+	@Test
 	public void testIsLoadedWithReferenceProtectedField() {
 		assertEquals(
 				LoadState.UNKNOWN,
-				PersistenceUtilHelper.isLoadedWithReference( new FieldAccessBean(), "protectedAccessProperty", cache )
+				PersistenceUtilHelper.isLoadedWithReference(
+						new FieldAccessBean(),
+						"protectedAccessProperty",
+						cache
+				)
 		);
 	}
-    @Test
+
+	@Test
 	public void testIsLoadedWithReferenceProtectedMethod() {
 		assertEquals(
 				LoadState.UNKNOWN,
 				PersistenceUtilHelper.isLoadedWithReference(
-						new MethodAccessBean(), "protectedAccessPropertyValue", cache
+						new MethodAccessBean(),
+						"protectedAccessPropertyValue",
+						cache
 				)
 		);
 	}
-    @Test
+
+	@Test
 	public void testIsLoadedWithReferencePrivateField() {
 		assertEquals(
 				LoadState.UNKNOWN,
-				PersistenceUtilHelper.isLoadedWithReference( new FieldAccessBean(), "privateAccessProperty", cache )
+				PersistenceUtilHelper.isLoadedWithReference(
+						new FieldAccessBean(),
+						"privateAccessProperty",
+						cache
+				)
 		);
 	}
-    @Test
+
+	@Test
 	public void testIsLoadedWithReferencePrivateMethod() {
 		assertEquals(
 				LoadState.UNKNOWN,
 				PersistenceUtilHelper.isLoadedWithReference(
-						new MethodAccessBean(), "privateAccessPropertyValue", cache
+						new MethodAccessBean(),
+						"privateAccessPropertyValue",
+						cache
+				)
+		);
+	}
+
+	@Test
+	public void testIsLoadedWithNullInterceptor() {
+		assertEquals(
+				LoadState.LOADED,
+				PersistenceUtilHelper.isLoaded(
+						new PersistentAttributeInterceptable() {
+
+							@Override
+							public PersistentAttributeInterceptor $$_hibernate_getInterceptor() {
+								return null;
+							}
+
+							@Override
+							public void $$_hibernate_setInterceptor(PersistentAttributeInterceptor interceptor) {
+
+							}
+						}
 				)
 		);
 	}

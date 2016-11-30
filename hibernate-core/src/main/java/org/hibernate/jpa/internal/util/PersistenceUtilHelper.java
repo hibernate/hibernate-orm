@@ -94,7 +94,7 @@ public final class PersistenceUtilHelper {
 	@SuppressWarnings("SimplifiableIfStatement")
 	private static boolean isInitialized(PersistentAttributeInterceptable interceptable) {
 		final LazyAttributeLoadingInterceptor interceptor = extractInterceptor( interceptable );
-		return interceptable == null || !interceptor.hasAnyUninitializedAttributes();
+		return interceptable == null || interceptor == null || !interceptor.hasAnyUninitializedAttributes();
 	}
 
 	private static LazyAttributeLoadingInterceptor extractInterceptor(PersistentAttributeInterceptable interceptable) {

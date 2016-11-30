@@ -838,6 +838,8 @@ See the <<chapters/domain/basic_types.adoc#mapping-generated-GeneratorType-examp
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenericGenerator.html[`@GenericGenerator`] annotation can be used to configure any Hibernate identifier generator.
 
+See the <<chapters/domain/identifiers.adoc#identifiers-generators-GenericGenerator,`@GenericGenerator` mapping>> section for more info.
+
 [[annotations-hibernate-genericgenerators]]
 ==== `@GenericGenerators`
 

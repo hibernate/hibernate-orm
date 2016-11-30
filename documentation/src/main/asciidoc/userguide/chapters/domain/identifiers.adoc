@@ -1,6 +1,7 @@
 [[identifiers]]
 === Identifiers
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/identifier
+:extrasdir: extras
 
 Identifiers model the primary key of an entity. They are used to uniquely identify each specific entity.
 
@@ -53,7 +54,7 @@ The expectation for assigned identifier values is that the application assigns (
 ====
 [source,java]
 ----
-include::{sourcedir}/id/SimpleAssigned.java[]
+include::{extrasdir}/id/SimpleAssigned.java[]
 ----
 ====
 
@@ -66,7 +67,7 @@ Values for simple identifiers can be generated. To denote that an identifier att
 ====
 [source,java]
 ----
-include::{sourcedir}/id/SimpleGenerated.java[]
+include::{extrasdir}/id/SimpleGenerated.java[]
 ----
 ====
 
@@ -108,7 +109,7 @@ and then exposing an attribute of that embeddable type on the entity.
 ====
 [source,java]
 ----
-include::{sourcedir}/id/EmbeddedId1.java[]
+include::{extrasdir}/id/EmbeddedId1.java[]
 ----
 ====
 
@@ -118,7 +119,7 @@ As mentioned before, EmbeddedIds can even contain ManyToOne attributes.
 ====
 [source,java]
 ----
-include::{sourcedir}/id/EmbeddedId2.java[]
+include::{extrasdir}/id/EmbeddedId2.java[]
 ----
 ====
 
@@ -139,7 +140,7 @@ The IdClass simply acts as a "shadow".
 ====
 [source,java]
 ----
-include::{sourcedir}/id/IdClass1.java[]
+include::{extrasdir}/id/IdClass1.java[]
 ----
 ====
 
@@ -149,7 +150,7 @@ Non-aggregated composite identifiers can also contain ManyToOne attributes as we
 ====
 [source,java]
 ----
-include::{sourcedir}/id/IdClass2.java[]
+include::{extrasdir}/id/IdClass2.java[]
 ----
 ====
 
@@ -159,7 +160,7 @@ With non-aggregated composite identifiers, Hibernate also supports "partial" gen
 ====
 [source,java]
 ----
-include::{sourcedir}/id/IdClass3.java[]
+include::{extrasdir}/id/IdClass3.java[]
 ----
 ====
 
@@ -180,7 +181,7 @@ In the following example, the `PersonAddress` entity identifier is formed of two
 ====
 [source,java]
 ----
-include::{sourcedir}/id/CompositeIdAssociations.java[]
+include::{extrasdir}/id/CompositeIdAssociations.java[]
 ----
 ====
 
@@ -191,7 +192,7 @@ To query this entity, an instance of the entity itself must be supplied to the p
 ====
 [source,java]
 ----
-include::{sourcedir}/id/CompositeIdAssociationsQuery.java[]
+include::{extrasdir}/id/CompositeIdAssociationsQuery.java[]
 ----
 ====
 
@@ -259,7 +260,7 @@ The simplest form is to simply request sequence generation; Hibernate will use a
 ====
 [source,java]
 ----
-include::{sourcedir}/id/UnnamedSequence.java[]
+include::{extrasdir}/id/UnnamedSequence.java[]
 ----
 ====
 
@@ -269,7 +270,7 @@ Or a specifically named sequence can be requested
 ====
 [source,java]
 ----
-include::{sourcedir}/id/NamedSequence.java[]
+include::{extrasdir}/id/NamedSequence.java[]
 ----
 ====
 
@@ -280,7 +281,7 @@ configuration.
 ====
 [source,java]
 ----
-include::{sourcedir}/id/ConfiguredSequence.java[]
+include::{extrasdir}/id/ConfiguredSequence.java[]
 ----
 ====
 
@@ -318,7 +319,7 @@ Hibernate achieves table-based identifier generation based on its `org.hibernate
 ====
 [source,sql]
 ----
-include::{sourcedir}/id/TableGenerator.sql[]
+include::{extrasdir}/id/TableGenerator.sql[]
 ----
 ====
 
@@ -328,7 +329,7 @@ The basic idea is that a given table-generator table (`hibernate_sequences` for 
 ====
 [source,java]
 ----
-include::{sourcedir}/id/UnnamedTable.java[]
+include::{extrasdir}/id/UnnamedTable.java[]
 ----
 ====
 
@@ -350,7 +351,7 @@ Hibernate does ship with an alternative strategy which is a RFC 4122 version 1 (
 ====
 [source,java]
 ----
-include::{sourcedir}/id/UUIDRandom.java[]
+include::{extrasdir}/id/UUIDRandom.java[]
 ----
 ====
 
@@ -361,14 +362,9 @@ Here we choose the RFC 4122 version 1 compliant strategy named `org.hibernate.id
 ====
 [source,java]
 ----
-include::{sourcedir}/id/UUIDCustomVersionOneStrategy.java[]
+include::{extrasdir}/id/UUIDCustomVersionOneStrategy.java[]
 ----
 ====
-
-[[identifiers-generators-generic]]
-==== Using @GenericGenerator
-
-@GenericGenerator allows integration of any Hibernate `org.hibernate.id.IdentifierGenerator` implementation, including any of the specific ones discussed here and any custom ones.
 
 [[identifiers-generators-optimizer]]
 ==== Optimizers
@@ -400,7 +396,46 @@ hilo; legacy-hilo:: Define a custom algorithm for generating pools of values bas
 +
 These optimizers are not recommended for use. They are maintained (and mentioned) here simply for use by legacy applications that used these strategies previously.
 
+[NOTE]
+====
 Applications can also implement and use their own optimizer strategies, as defined by the `org.hibernate.id.enhanced.Optimizer` contract.
+====
+
+[[identifiers-generators-GenericGenerator]]
+==== Using @GenericGenerator
+
+@GenericGenerator allows integration of any Hibernate `org.hibernate.id.IdentifierGenerator` implementation, including any of the specific ones discussed here and any custom ones.
+
+To make use of the pooled or pooled-lo optimizers,
+the entity mapping must use the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenericGenerator.html[`@GenericGenerator`] annotation:
+
+[[identifiers-generators-pooled-lo-optimizer-mapping-example]]
+.Pooled-lo optimizer mapping using `@GenericGenerator` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PooledOptimizerTest.java[tag=identifiers-generators-pooled-lo-optimizer-mapping-example]
+----
+====
+
+Now, when saving 5 `Person` entities and flushing the Persistence Context after every 3 entities:
+
+[[identifiers-generators-pooled-lo-optimizer-persist-example]]
+.Pooled-lo optimizer mapping using `@GenericGenerator` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PooledOptimizerTest.java[tag=identifiers-generators-pooled-lo-optimizer-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/id/identifiers-generators-pooled-lo-optimizer-persist-example.sql[]
+----
+====
+
+As you can see from the list of generated SQL statements, you can insert 3 entities for one database sequence call.
+This way, the pooled and the pooled-lo optimizers allow you to reduce the number of database roundtrips, therefore reducing the overall transaction response time.
 
 [[identifiers-derived]]
 ==== Derived Identifiers
@@ -412,7 +447,7 @@ JPA 2.0 added support for derived identifiers which allow an entity to borrow th
 ====
 [source,java]
 ----
-include::{sourcedir}/id/DerivedIdentifier.java[]
+include::{extrasdir}/id/DerivedIdentifier.java[]
 ----
 ====
 
@@ -427,7 +462,7 @@ The previous example can also be mapped using `@PrimaryKeyJoinColumn`.
 ====
 [source,java]
 ----
-include::{sourcedir}/id/CompositeIdAssociationPrimaryKeyJoinColumn.java[]
+include::{extrasdir}/id/CompositeIdAssociationPrimaryKeyJoinColumn.java[]
 ----
 ====
 

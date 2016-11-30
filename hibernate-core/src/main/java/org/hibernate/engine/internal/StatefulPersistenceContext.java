@@ -684,6 +684,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			// Otherwise, create the narrowed proxy
 			final HibernateProxy narrowedProxy = (HibernateProxy) persister.createProxy( key.getIdentifier(), session );
+			this.addProxy(key, narrowedProxy);
 
 			// set the read-only/modifiable mode in the new proxy to what it was in the original proxy
 			final boolean readOnlyOrig = originalHibernateProxy.getHibernateLazyInitializer().isReadOnly();

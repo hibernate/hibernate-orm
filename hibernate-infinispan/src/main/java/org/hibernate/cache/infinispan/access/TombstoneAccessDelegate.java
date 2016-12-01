@@ -20,8 +20,6 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.context.Flag;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -31,16 +29,21 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	protected final BaseTransactionalDataRegion region;
 	protected final AdvancedCache cache;
 	protected final AdvancedCache writeCache;
+	protected final AdvancedCache localWriteCache;
 	protected final AdvancedCache asyncWriteCache;
-	protected final AdvancedCache putFromLoadCache;
+	protected final AdvancedCache putFromLoadCacheLocal;
+	protected final AdvancedCache putFromLoadCacheAsync;
 	protected final boolean requiresTransaction;
 
 	public TombstoneAccessDelegate(BaseTransactionalDataRegion region) {
 		this.region = region;
 		this.cache = region.getCache();
 		this.writeCache = Caches.ignoreReturnValuesCache(cache);
-		this.asyncWriteCache = Caches.asyncWriteCache(cache, Flag.IGNORE_RETURN_VALUES);
-		this.putFromLoadCache = writeCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY );
+		// Note that correct behaviour of local and async writes depends on LockingInterceptor (see there for details)
+		this.localWriteCache = Caches.localCache(writeCache);
+		this.asyncWriteCache = Caches.asyncWriteCache(writeCache, Flag.IGNORE_RETURN_VALUES);
+		this.putFromLoadCacheLocal = localWriteCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY );
+		this.putFromLoadCacheAsync = asyncWriteCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY );
 		Configuration configuration = cache.getCacheConfiguration();
 		if (configuration.clustering().cacheMode().isInvalidation()) {
 			throw new IllegalArgumentException("For tombstone-based caching, invalidation cache is not allowed.");
@@ -98,7 +101,11 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 		}
 		// we can't use putForExternalRead since the PFER flag means that entry is not wrapped into context
 		// when it is present in the container. TombstoneCallInterceptor will deal with this.
-		putFromLoadCache.put(key, new TombstoneUpdate(session.getTimestamp(), value));
+		TombstoneUpdate update = new TombstoneUpdate(session.getTimestamp(), value);
+		// If we're the backup owner, async propagation wouldn't change the value soon enough as it goes
+		// through primary owner - therefore we'll synchronously update it locally.
+		putFromLoadCacheAsync.put(key, update);
+		putFromLoadCacheLocal.put(key, update);
 		return true;
 	}
 
@@ -114,21 +121,20 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 		return true;
 	}
 
-	protected void write(SessionImplementor session, Object key, Object value) {
-		TransactionCoordinator tc = session.getTransactionCoordinator();
-		FutureUpdateSynchronization sync = new FutureUpdateSynchronization(tc, writeCache, requiresTransaction, key, value);
-		// FutureUpdate is handled in TombstoneCallInterceptor
-		writeCache.put(key, new FutureUpdate(sync.getUuid(), null), region.getTombstoneExpiration(), TimeUnit.MILLISECONDS);
-		tc.getLocalSynchronizations().registerSynchronization(sync);
-	}
-
 	@Override
 	public void remove(SessionImplementor session, Object key) throws CacheException {
-		TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
-		TombstoneSynchronization sync = new TombstoneSynchronization(transactionCoordinator, asyncWriteCache, requiresTransaction, region, key);
-		Tombstone tombstone = new Tombstone(sync.getUuid(), session.getTimestamp() + region.getTombstoneExpiration(), false);
-		writeCache.put(key, tombstone, region.getTombstoneExpiration(), TimeUnit.MILLISECONDS);
-		transactionCoordinator.getLocalSynchronizations().registerSynchronization(sync);
+		write(session, key, null);
+	}
+
+	protected void write(SessionImplementor session, Object key, Object value) {
+		TransactionCoordinator tc = session.getTransactionCoordinator();
+		FutureUpdateSynchronization sync = new FutureUpdateSynchronization(tc, localWriteCache, asyncWriteCache, requiresTransaction, key, value, region, session.getTimestamp());
+		// The update will be invalidating all putFromLoads for the duration of expiration or until removed by the synchronization
+		Tombstone tombstone = new Tombstone(sync.getUuid(), region.nextTimestamp() + region.getTombstoneExpiration());
+		// The outcome of this operation is actually defined in TombstoneCallInterceptor
+		// Metadata in PKVC are cleared and set in the interceptor, too
+		writeCache.put(key, tombstone);
+		tc.getLocalSynchronizations().registerSynchronization(sync);
 	}
 
 	@Override
@@ -144,7 +150,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 
 	@Override
 	public void evict(Object key) throws CacheException {
-		writeCache.put(key, TombstoneUpdate.EVICT);
+		writeCache.put(key, new TombstoneUpdate<>(region.nextTimestamp(), null));
 	}
 
 	@Override

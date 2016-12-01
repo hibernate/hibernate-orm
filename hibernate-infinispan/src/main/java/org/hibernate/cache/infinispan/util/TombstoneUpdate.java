@@ -15,12 +15,16 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
+ * Request to update cache either as a result of putFromLoad (if {@link #getValue()} is non-null
+ * or evict (if it is null).
+ *
+ * This object should *not* be stored in cache.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TombstoneUpdate<T> {
-	public static TombstoneUpdate EVICT = new TombstoneUpdate(Long.MIN_VALUE, null);
-	private long timestamp;
-	private T value;
+	private final long timestamp;
+	private final T value;
 
 	public TombstoneUpdate(long timestamp, T value) {
 		this.timestamp = timestamp;
@@ -47,7 +51,7 @@ public class TombstoneUpdate<T> {
 	public static class Externalizer implements AdvancedExternalizer<TombstoneUpdate> {
 		@Override
 		public Set<Class<? extends TombstoneUpdate>> getTypeClasses() {
-			return Collections.<Class<? extends TombstoneUpdate>>singleton(TombstoneUpdate.class);
+			return Collections.singleton(TombstoneUpdate.class);
 		}
 
 		@Override
@@ -58,21 +62,14 @@ public class TombstoneUpdate<T> {
 		@Override
 		public void writeObject(ObjectOutput output, TombstoneUpdate object) throws IOException {
 			output.writeObject(object.getValue());
-			if (object.getValue() != null) {
-				output.writeLong(object.getTimestamp());
-			}
+			output.writeLong(object.getTimestamp());
 		}
 
 		@Override
 		public TombstoneUpdate readObject(ObjectInput input) throws IOException, ClassNotFoundException {
 			Object value = input.readObject();
-			if (value != null) {
-				long timestamp = input.readLong();
-				return new TombstoneUpdate(timestamp, value);
-			}
-			else {
-				return EVICT;
-			}
+			long timestamp = input.readLong();
+			return new TombstoneUpdate(timestamp, value);
 		}
 	}
 }

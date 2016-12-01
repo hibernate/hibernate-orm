@@ -36,7 +36,8 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 	private final BaseTransactionalDataRegion region;
 	private final AdvancedCache cache;
 	private final AdvancedCache writeCache;
-	private final AdvancedCache putFromLoadCache;
+	private final AdvancedCache putFromLoadCacheLocal;
+	private final AdvancedCache putFromLoadCacheAsync;
 	private final Comparator versionComparator;
 
 
@@ -44,7 +45,9 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 		this.region = region;
 		this.cache = region.getCache();
 		this.writeCache = Caches.ignoreReturnValuesCache(cache);
-		this.putFromLoadCache = writeCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY );
+		// Note that correct behaviour of local and async writes depends on LockingInterceptor (see there for details)
+		this.putFromLoadCacheLocal = writeCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY, Flag.CACHE_MODE_LOCAL );
+		this.putFromLoadCacheAsync = writeCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY, Flag.FORCE_ASYNCHRONOUS );
 		Configuration configuration = cache.getCacheConfiguration();
 		if (configuration.clustering().cacheMode().isInvalidation()) {
 			throw new IllegalArgumentException("Nonstrict-read-write mode cannot use invalidation.");
@@ -110,7 +113,10 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 		if (!(value instanceof CacheEntry)) {
 			value = new VersionedEntry(value, version, txTimestamp);
 		}
-		putFromLoadCache.put(key, value);
+		// Apply the update locally first - if we're the backup owner, async propagation wouldn't change the value
+		// for the subsequent operation soon enough as it goes through primary owner
+		putFromLoadCacheAsync.put(key, value);
+		putFromLoadCacheLocal.put(key, value);
 		return true;
 	}
 
@@ -149,7 +155,7 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 
 	@Override
 	public void evict(Object key) throws CacheException {
-		writeCache.put(key, new VersionedEntry(null, null, region.nextTimestamp()), region.getTombstoneExpiration(), TimeUnit.MILLISECONDS);
+		writeCache.put(key, new VersionedEntry(null, null, region.nextTimestamp()));
 	}
 
 	@Override

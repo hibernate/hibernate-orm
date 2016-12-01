@@ -20,15 +20,17 @@ import java.util.concurrent.TimeUnit;
 public class RemovalSynchronization extends InvocationAfterCompletion {
 	private final BaseTransactionalDataRegion region;
 	private final Object key;
+	private final AdvancedCache cache;
 
 	public RemovalSynchronization(TransactionCoordinator tc, AdvancedCache cache, boolean requiresTransaction, BaseTransactionalDataRegion region, Object key) {
-		super(tc, cache, requiresTransaction);
+		super(tc, requiresTransaction);
+		this.cache = cache;
 		this.region = region;
 		this.key = key;
 	}
 
 	@Override
-	protected void invoke(boolean success, AdvancedCache cache) {
+	protected void invoke(boolean success) {
 		if (success) {
 			cache.put(key, new VersionedEntry(null, null, region.nextTimestamp()), region.getTombstoneExpiration(), TimeUnit.MILLISECONDS);
 		}

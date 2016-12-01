@@ -6,18 +6,23 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.FutureUpdate;
 import org.hibernate.cache.infinispan.util.TombstoneUpdate;
 import org.hibernate.cache.infinispan.util.Tombstone;
 import org.infinispan.AdvancedCache;
 import org.infinispan.commands.read.SizeCommand;
 import org.infinispan.commands.write.PutKeyValueCommand;
+import org.infinispan.commands.write.ValueMatcher;
+import org.infinispan.commons.logging.Log;
+import org.infinispan.commons.logging.LogFactory;
 import org.infinispan.commons.util.CloseableIterable;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.container.entries.MVCCEntry;
 import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.annotations.Inject;
+import org.infinispan.factories.annotations.Start;
 import org.infinispan.interceptors.CallInterceptor;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.Metadata;
@@ -36,18 +41,29 @@ import java.util.concurrent.TimeUnit;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TombstoneCallInterceptor extends CallInterceptor {
+	private static final Log log = LogFactory.getLog(TombstoneCallInterceptor.class);
 	private static final UUID ZERO = new UUID(0, 0);
 
-	private AdvancedCache cache;
+	private final BaseTransactionalDataRegion region;
 	private final Metadata expiringMetadata;
+	private Metadata defaultMetadata;
+	private AdvancedCache cache;
 
-	public TombstoneCallInterceptor(long tombstoneExpiration) {
-		expiringMetadata = new EmbeddedMetadata.Builder().lifespan(tombstoneExpiration, TimeUnit.MILLISECONDS).build();
+	public TombstoneCallInterceptor(BaseTransactionalDataRegion region) {
+		this.region = region;
+		expiringMetadata = new EmbeddedMetadata.Builder().lifespan(region.getTombstoneExpiration(), TimeUnit.MILLISECONDS).build();
 	}
 
 	@Inject
 	public void injectDependencies(AdvancedCache cache) {
 		this.cache = cache;
+	}
+
+	@Start
+	public void start() {
+		defaultMetadata = new EmbeddedMetadata.Builder()
+			.lifespan(cacheConfiguration.expiration().lifespan())
+			.maxIdle(cacheConfiguration.expiration().maxIdle()).build();
 	}
 
 	@Override
@@ -56,70 +72,51 @@ public class TombstoneCallInterceptor extends CallInterceptor {
 		if (e == null) {
 			return null;
 		}
-		Object value = command.getValue();
-		if (value instanceof TombstoneUpdate) {
-			return handleTombstoneUpdate(e, (TombstoneUpdate) value);
+		log.tracef("In cache %s(%d) applying update %s to %s", cache.getName(), region.getLastRegionInvalidation(), command.getValue(), e.getValue());
+		try {
+			Object value = command.getValue();
+			if (value instanceof TombstoneUpdate) {
+				return handleTombstoneUpdate(e, (TombstoneUpdate) value, command);
+			}
+			else if (value instanceof Tombstone) {
+				return handleTombstone(e, (Tombstone) value);
+			}
+			else if (value instanceof FutureUpdate) {
+				return handleFutureUpdate(e, (FutureUpdate) value, command);
+			}
+			else {
+				return super.visitPutKeyValueCommand(ctx, command);
+			}
 		}
-		else if (value instanceof Tombstone) {
-			return handleTombstone(e, (Tombstone) value);
-		}
-		else if (value instanceof FutureUpdate) {
-			return handleFutureUpdate(e, (FutureUpdate) value, command);
-		}
-		else {
-			return super.visitPutKeyValueCommand(ctx, command);
+		finally {
+			log.tracef("Result is %s", e.getValue());
 		}
 	}
 
 	private Object handleFutureUpdate(MVCCEntry e, FutureUpdate futureUpdate, PutKeyValueCommand command) {
 		Object storedValue = e.getValue();
-		if (storedValue instanceof FutureUpdate) {
-			FutureUpdate storedFutureUpdate = (FutureUpdate) storedValue;
-			if (futureUpdate.getUuid().equals(storedFutureUpdate.getUuid())) {
-				if (futureUpdate.getValue() != null) {
-					// transaction succeeded
-					setValue(e, futureUpdate.getValue());
-				}
-				else {
-					// transaction failed
-					setValue(e, storedFutureUpdate.getValue());
-				}
-			}
-			else {
-				// two conflicting updates
-				setValue(e, new FutureUpdate(ZERO, null));
-				e.setMetadata(expiringMetadata);
-				// Infinispan always commits the entry with data with the metadata provided to the command,
-				// However, in non-conflicting case we want to keep the value not expired
-				command.setMetadata(expiringMetadata);
-			}
-		}
-		else if (storedValue instanceof Tombstone){
-			return null;
+		if (storedValue instanceof Tombstone) {
+			// Note that the update has to keep tombstone even if the transaction was unsuccessful;
+			// before write we have removed the value and we have to protect the entry against stale putFromLoads
+			Tombstone tombstone = (Tombstone) storedValue;
+			setValue(e, tombstone.applyUpdate(futureUpdate.getUuid(), futureUpdate.getTimestamp(), futureUpdate.getValue()));
+
 		}
 		else {
-			if (futureUpdate.getValue() != null) {
-				// The future update has disappeared (probably due to region invalidation) and
-				// the currently stored value was putFromLoaded (or is null).
-				// We cannot keep the possibly outdated value here but we cannot know that
-				// this command's value is the most up-to-date. Therefore, we'll remove
-				// the value and let future putFromLoad update it.
-				removeValue(e);
-			}
-			else {
-				// this is the pre-update
-				// change in logic: we don't keep the old value around anymore (for read-write strategy)
-				setValue(e, new FutureUpdate(futureUpdate.getUuid(), null));
-			}
+			// This is an async future update, and it's timestamp may be vastly outdated
+			// We need to first execute the async update and then local one, because if we're on the primary
+			// owner the local future update would fail the async one.
+			// TODO: There is some discrepancy with TombstoneUpdate handling which does not fail the update
+			setFailed(command);
 		}
 		return null;
 	}
 
 	private Object handleTombstone(MVCCEntry e, Tombstone tombstone) {
+		// Tombstones always come with lifespan in metadata
 		Object storedValue = e.getValue();
 		if (storedValue instanceof Tombstone) {
-			e.setChanged(true);
-			e.setValue(tombstone.merge((Tombstone) storedValue));
+			setValue(e, ((Tombstone) storedValue).merge(tombstone));
 		}
 		else {
 			setValue(e, tombstone);
@@ -127,24 +124,36 @@ public class TombstoneCallInterceptor extends CallInterceptor {
 		return null;
 	}
 
-	protected Object handleTombstoneUpdate(MVCCEntry e, TombstoneUpdate tombstoneUpdate) {
+	protected Object handleTombstoneUpdate(MVCCEntry e, TombstoneUpdate tombstoneUpdate, PutKeyValueCommand command) {
 		Object storedValue = e.getValue();
 		Object value = tombstoneUpdate.getValue();
 
-		if (storedValue instanceof Tombstone) {
+		if (value == null) {
+			// eviction
+			if (storedValue == null || storedValue instanceof Tombstone) {
+				setFailed(command);
+			}
+			else {
+				// We have to keep Tombstone, because otherwise putFromLoad could insert a stale entry
+				// (after it has been already updated and *then* evicted)
+				setValue(e, new Tombstone(ZERO, tombstoneUpdate.getTimestamp()));
+			}
+		}
+		else if (storedValue instanceof Tombstone) {
 			Tombstone tombstone = (Tombstone) storedValue;
 			if (tombstone.getLastTimestamp() < tombstoneUpdate.getTimestamp()) {
-				e.setChanged(true);
-				e.setValue(value);
+				setValue(e, value);
 			}
 		}
 		else if (storedValue == null) {
-			// putFromLoad (putIfAbsent)
-			setValue(e, value);
+			// async putFromLoads shouldn't cross the invalidation timestamp
+			if (region.getLastRegionInvalidation() < tombstoneUpdate.getTimestamp()) {
+				setValue(e, value);
+			}
 		}
-		else if (value == null) {
-			// evict
-			removeValue(e);
+		else {
+			// Don't do anything locally. This could be the async remote write, though, when local
+			// value has been already updated: let it propagate to remote nodes, too
 		}
 		return null;
 	}
@@ -158,15 +167,23 @@ public class TombstoneCallInterceptor extends CallInterceptor {
 		else {
 			e.setChanged(true);
 		}
+		if (value instanceof Tombstone) {
+			e.setMetadata(expiringMetadata);
+		}
+		else {
+			e.setMetadata(defaultMetadata);
+		}
 		return e.setValue(value);
 	}
 
-	private void removeValue(MVCCEntry e) {
-		e.setRemoved(true);
-		e.setChanged(true);
-		e.setCreated(false);
-		e.setValid(false);
-		e.setValue(null);
+	private void setFailed(PutKeyValueCommand command) {
+		// This sets command to be unsuccessful, since we don't want to replicate it to backup owner
+		command.setValueMatcher(ValueMatcher.MATCH_NEVER);
+		try {
+			command.perform(null);
+		}
+		catch (Throwable ignored) {
+		}
 	}
 
 	@Override
@@ -177,8 +194,7 @@ public class TombstoneCallInterceptor extends CallInterceptor {
 		AdvancedCache decoratedCache = cache.getAdvancedCache().withFlags(flags != null ? flags.toArray(new Flag[flags.size()]) : null);
 		// In non-transactional caches we don't care about context
 		CloseableIterable<CacheEntry<Object, Object>> iterable = decoratedCache
-				.filterEntries(Tombstone.EXCLUDE_TOMBSTONES)
-				.converter(FutureUpdate.VALUE_EXTRACTOR);
+				.filterEntries(Tombstone.EXCLUDE_TOMBSTONES);
 		try {
 			for (CacheEntry<Object, Object> entry : iterable) {
 				if (entry.getValue() != null && size++ == Integer.MAX_VALUE) {

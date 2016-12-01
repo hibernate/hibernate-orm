@@ -13,30 +13,27 @@ import org.infinispan.metadata.Metadata;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
 /**
+ * This is used both as the storage in entry, and for efficiency also directly in the cache.put() commands.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Tombstone {
 	public static final ExcludeTombstonesFilter EXCLUDE_TOMBSTONES = new ExcludeTombstonesFilter();
 
-	// when release == true and UUID is not found, don't insert anything, because this is a release delta
-	private final boolean release;
 	// the format of data is repeated (timestamp, UUID.LSB, UUID.MSB)
 	private final long[] data;
 
-	public Tombstone(UUID uuid, long timestamp, boolean release) {
+	public Tombstone(UUID uuid, long timestamp) {
 		this.data = new long[] { timestamp, uuid.getLeastSignificantBits(), uuid.getMostSignificantBits() };
-		this.release = release;
 	}
 
-	private Tombstone(long[] data, boolean release) {
+	private Tombstone(long[] data) {
 		this.data = data;
-		this.release = release;
 	}
 
 	public long getLastTimestamp() {
@@ -50,51 +47,113 @@ public class Tombstone {
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder("Tombstone{");
-		sb.append("release=").append(release);
-		sb.append(", data={");
 		for (int i = 0; i < data.length; i += 3) {
 			if (i != 0) {
 				sb.append(", ");
 			}
 			sb.append(new UUID(data[i + 2], data[i + 1])).append('=').append(data[i]);
 		}
-		sb.append("} }");
+		sb.append('}');
 		return sb.toString();
 	}
 
-	public Tombstone merge(Tombstone old) {
-		assert old != null;
-		assert data.length == 3;
-		if (release) {
-			int toRemove = 0;
-			for (int i = 0; i < old.data.length; i += 3) {
-				if (old.data[i] < data[0] || (data[1] == old.data[i + 1] && data[2] == old.data[i + 2])) {
-					toRemove += 3;
+	public Tombstone merge(Tombstone update) {
+		assert update != null;
+		assert update.data.length == 3;
+		int toRemove = 0;
+		for (int i = 0; i < data.length; i += 3) {
+			if (data[i] < update.data[0]) {
+				toRemove += 3;
+			}
+			else if (update.data[1] == data[i + 1] && update.data[2] == data[i + 2]) {
+				// UUID matches - second update during retry?
+				toRemove += 3;
+			}
+		}
+		if (data.length == toRemove) {
+			// applying the update second time?
+			return update;
+		}
+		else {
+			long[] newData = new long[data.length - toRemove + 3]; // 3 for the update
+			int j = 0;
+			boolean uuidMatch = false;
+			for (int i = 0; i < data.length; i += 3) {
+				if (data[i] < update.data[0]) {
+					// This is an old eviction
+					continue;
+				}
+				else if (update.data[1] == data[i + 1] && update.data[2] == data[i + 2]) {
+					// UUID matches
+					System.arraycopy(update.data, 0, newData, j, 3);
+					uuidMatch = true;
+					j += 3;
+				}
+				else {
+					System.arraycopy(data, i, newData, j, 3);
+					j += 3;
 				}
 			}
-			if (old.data.length == toRemove) {
-				// we want to remove all, but we need to keep at least ourselves
-				return this;
+			assert (uuidMatch && j == newData.length) || (!uuidMatch && j == newData.length - 3);
+			if (!uuidMatch) {
+				System.arraycopy(update.data, 0, newData, j, 3);
+			}
+			return new Tombstone(newData);
+		}
+	}
+
+	public Object applyUpdate(UUID uuid, long timestamp, Object value) {
+		int toRemove = 0;
+		for (int i = 0; i < data.length; i += 3) {
+			if (data[i] < timestamp) {
+				toRemove += 3;
+			}
+			else if (uuid.getLeastSignificantBits() == data[i + 1] && uuid.getMostSignificantBits() == data[i + 2]) {
+				toRemove += 3;
+			}
+		}
+		if (data.length == toRemove) {
+			if (value == null) {
+				return new Tombstone(uuid, timestamp);
 			}
 			else {
-				long[] newData = new long[old.data.length - toRemove];
-				int j = 0;
-				for (int i = 0; i < old.data.length; i += 3) {
-					if (old.data[i] >= data[0] && (data[1] != old.data[i + 1] || data[2] != old.data[i + 2])) {
-						newData[j] = old.data[i];
-						newData[j + 1] = old.data[i + 1];
-						newData[j + 2] = old.data[i + 2];
-						j += 3;
-					}
-				}
-				return new Tombstone(newData, false);
+				return value;
 			}
 		}
 		else {
-			long[] newData = Arrays.copyOf(old.data, old.data.length + 3);
-			System.arraycopy(data, 0, newData, old.data.length, 3);
-			return new Tombstone(newData, false);
+			long[] newData = new long[data.length - toRemove + 3]; // 3 for the update
+			int j = 0;
+			boolean uuidMatch = false;
+			for (int i = 0; i < data.length; i += 3) {
+				if (data[i] < timestamp) {
+					// This is an old eviction
+					continue;
+				}
+				else if (uuid.getLeastSignificantBits() == data[i + 1] && uuid.getMostSignificantBits() == data[i + 2]) {
+					newData[j] = timestamp;
+					newData[j + 1] = uuid.getLeastSignificantBits();
+					newData[j + 2] = uuid.getMostSignificantBits();
+					uuidMatch = true;
+					j += 3;
+				}
+				else {
+					System.arraycopy(data, i, newData, j, 3);
+					j += 3;
+				}
+			}
+			assert (uuidMatch && j == newData.length) || (!uuidMatch && j == newData.length - 3);
+			if (!uuidMatch) {
+				newData[j] = timestamp;
+				newData[j + 1] = uuid.getLeastSignificantBits();
+				newData[j + 2] = uuid.getMostSignificantBits();
+			}
+			return new Tombstone(newData);
 		}
+	}
+
+	// Used only for testing purposes
+	public int size() {
+		return data.length / 3;
 	}
 
 	public static class Externalizer implements AdvancedExternalizer<Tombstone> {
@@ -110,7 +169,6 @@ public class Tombstone {
 
 		@Override
 		public void writeObject(ObjectOutput output, Tombstone tombstone) throws IOException {
-			output.writeBoolean(tombstone.release);
 			output.writeInt(tombstone.data.length);
 			for (int i = 0; i < tombstone.data.length; ++i) {
 				output.writeLong(tombstone.data[i]);
@@ -119,14 +177,12 @@ public class Tombstone {
 
 		@Override
 		public Tombstone readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-			boolean release = input.readBoolean();
 			int length = input.readInt();
 			long[] data = new long[length];
 			for (int i = 0; i < data.length; ++i) {
 				data[i] = input.readLong();
 			}
-			return new Tombstone(data, release);
-//			return INSTANCE;
+			return new Tombstone(data);
 		}
 	}
 

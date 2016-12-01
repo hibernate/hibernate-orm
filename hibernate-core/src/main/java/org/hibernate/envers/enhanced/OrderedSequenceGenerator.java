@@ -12,7 +12,7 @@ import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.enhanced.DatabaseStructure;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Revision number generator has to produce values in ascending order (gaps may occur).

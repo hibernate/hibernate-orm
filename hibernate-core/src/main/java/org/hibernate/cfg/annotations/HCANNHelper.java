@@ -6,12 +6,12 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.annotations.common.reflection.java.JavaXMember;
 
@@ -21,22 +21,31 @@ import org.hibernate.annotations.common.reflection.java.JavaXMember;
  * @author Steve Ebersole
  */
 public class HCANNHelper {
-	private static Class javaXMemberClass = JavaXMember.class;
 	private static Method getMemberMethod;
+	static {
+		// The following is in a static block to avoid problems lazy-initializing
+		// and making accessible in a multi-threaded context. See HHH-11289.
+		final Class<?> javaXMemberClass = JavaXMember.class;
+		try {
+			getMemberMethod = javaXMemberClass.getDeclaredMethod( "getMember" );
+			getMemberMethod.setAccessible( true );
+		}
+		catch (NoSuchMethodException e) {
+			throw new AssertionFailure(
+					"Could not resolve JavaXMember#getMember method in order to access XProperty member signature",
+					e
+			);
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Could not access org.hibernate.annotations.common.reflection.java.JavaXMember#getMember method", e );
+		}
+	}
 
 	public static String annotatedElementSignature(XProperty xProperty) {
-		if ( getMemberMethod == null ) {
-			resolveGetMemberMethod();
-		}
-
 		return getUnderlyingMember( xProperty ).toString();
 	}
 
 	public static Member getUnderlyingMember(XProperty xProperty) {
-		if ( getMemberMethod == null ) {
-			resolveGetMemberMethod();
-		}
-
 		try {
 			return (Member) getMemberMethod.invoke( xProperty );
 		}
@@ -50,20 +59,6 @@ public class HCANNHelper {
 			throw new AssertionFailure(
 					"Could not resolve member signature from XProperty reference",
 					e.getCause()
-			);
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private static void resolveGetMemberMethod() {
-		try {
-			getMemberMethod = javaXMemberClass.getDeclaredMethod( "getMember" );
-			getMemberMethod.setAccessible( true );
-		}
-		catch (NoSuchMethodException e) {
-			throw new AssertionFailure(
-					"Could not resolve JavaXAnnotatedElement#toAnnotatedElement method in order to access XProperty member signature",
-					e
 			);
 		}
 	}

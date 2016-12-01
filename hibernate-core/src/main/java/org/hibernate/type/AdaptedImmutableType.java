@@ -6,7 +6,9 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
@@ -17,12 +19,17 @@ import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class AdaptedImmutableType<T> extends AbstractSingleColumnStandardBasicType<T> {
+public class AdaptedImmutableType<T> extends BasicTypeImpl<T> {
 	private final String name;
 	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
 
-	public AdaptedImmutableType(AbstractSingleColumnStandardBasicType<T> baseMutableType) {
-		super( baseMutableType.getColumnMapping().getSqlTypeDescriptor(), baseMutableType.getJavaTypeDescriptor() );
+	public AdaptedImmutableType(BasicType<T> baseMutableType) {
+		super(
+				baseMutableType.getJavaTypeDescriptor(),
+				baseMutableType.getColumnMapping().getSqlTypeDescriptor(),
+				ImmutableMutabilityPlan.INSTANCE,
+				baseMutableType.getComparator()
+		);
 		this.name = "imm_" + baseMutableType.getName();
 		this.jdbcLiteralFormatter = baseMutableType.getJdbcLiteralFormatter();
 	}

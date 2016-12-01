@@ -94,7 +94,7 @@ public final class StandardBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Byte} to JDBC {@link java.sql.Types#TINYINT TINYINT}.
 	 */
-	public static final org.hibernate.type.spi.BasicType<Byte> BYTE = ByteSupport.INSTANCE;
+	public static final org.hibernate.type.spi.BasicType<Byte> BYTE = ByteType.INSTANCE;
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.

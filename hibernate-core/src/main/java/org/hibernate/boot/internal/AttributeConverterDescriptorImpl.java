@@ -18,10 +18,10 @@ import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.annotations.common.reflection.java.JavaXMember;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AttributeConverterDefinition;
+import org.hibernate.cfg.annotations.HCANNHelper;
 
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
@@ -148,25 +148,16 @@ public class AttributeConverterDescriptorImpl implements AttributeConverterDescr
 		);
 	}
 
-	private static Method memberMethod;
 
 	private static Member toMember(XProperty xProperty) {
-		if ( memberMethod == null ) {
-			Class<JavaXMember> javaXMemberClass = JavaXMember.class;
-			try {
-				memberMethod = javaXMemberClass.getDeclaredMethod( "getMember" );
-				memberMethod.setAccessible( true );
-			}
-			catch (NoSuchMethodException e) {
-				throw new HibernateException( "Could not access org.hibernate.annotations.common.reflection.java.JavaXMember#getMember method", e );
-			}
-		}
-
 		try {
-			return (Member) memberMethod.invoke( xProperty );
+			return HCANNHelper.getUnderlyingMember( xProperty );
 		}
 		catch (Exception e) {
-			throw new HibernateException( "Could not access org.hibernate.annotations.common.reflection.java.JavaXMember#getMember method", e );
+			throw new HibernateException(
+					"Could not resolve member signature from XProperty reference",
+					e
+			);
 		}
 	}
 

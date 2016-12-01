@@ -20,7 +20,6 @@ import org.hibernate.StaleStateException;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.infinispan.util.VersionedEntry;
-import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
@@ -338,19 +337,5 @@ public class VersionedTest extends AbstractNonInvalidationTest {
       value = contents.get(itemId);
       assertEquals(VersionedEntry.class, value.getClass());
       assertNull(((VersionedEntry) value).getValue());
-   }
-
-   protected void assertEmptyCache() {
-      assertNull(entityCache.get(itemId)); // force expiration
-      Map contents = Caches.entrySet(entityCache).toMap();
-      assertEquals(Collections.EMPTY_MAP, contents);
-   }
-
-   protected Object assertSingleCacheEntry() {
-      Map contents = Caches.entrySet(entityCache).toMap();
-      assertEquals(1, contents.size());
-      Object value = contents.get(itemId);
-      assertTrue(contents.toString(), value instanceof CacheEntry);
-      return value;
    }
 }

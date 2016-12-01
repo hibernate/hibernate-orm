@@ -8,6 +8,7 @@ package org.hibernate.cache.infinispan.impl;
 
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.AccessDelegate;
+import org.hibernate.cache.infinispan.access.LockingInterceptor;
 import org.hibernate.cache.infinispan.access.NonStrictAccessDelegate;
 import org.hibernate.cache.infinispan.access.NonTxInvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
@@ -33,6 +34,7 @@ import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.filter.KeyValueFilter;
 import org.infinispan.interceptors.CallInterceptor;
 import org.infinispan.interceptors.base.CommandInterceptor;
+import org.infinispan.interceptors.locking.NonTransactionalLockingInterceptor;
 
 import javax.transaction.TransactionManager;
 
@@ -148,8 +150,11 @@ public abstract class BaseTransactionalDataRegion
 			assert strategy == Strategy.VERSIONED_ENTRIES;
 			return;
 		}
+
+		replaceLockingInterceptor();
+
 		cache.removeInterceptor(CallInterceptor.class);
-		VersionedCallInterceptor tombstoneCallInterceptor = new VersionedCallInterceptor(metadata.getVersionComparator());
+		VersionedCallInterceptor tombstoneCallInterceptor = new VersionedCallInterceptor(this, metadata.getVersionComparator());
 		cache.getComponentRegistry().registerComponent(tombstoneCallInterceptor, VersionedCallInterceptor.class);
 		List<CommandInterceptor> interceptorChain = cache.getInterceptorChain();
 		cache.addInterceptor(tombstoneCallInterceptor, interceptorChain.size());
@@ -167,13 +172,24 @@ public abstract class BaseTransactionalDataRegion
 			log.evictionWithTombstones();
 		}
 
+		replaceLockingInterceptor();
+
 		cache.removeInterceptor(CallInterceptor.class);
-		TombstoneCallInterceptor tombstoneCallInterceptor = new TombstoneCallInterceptor(tombstoneExpiration);
+		TombstoneCallInterceptor tombstoneCallInterceptor = new TombstoneCallInterceptor(this);
 		cache.getComponentRegistry().registerComponent(tombstoneCallInterceptor, TombstoneCallInterceptor.class);
 		List<CommandInterceptor> interceptorChain = cache.getInterceptorChain();
 		cache.addInterceptor(tombstoneCallInterceptor, interceptorChain.size());
 
 		strategy = Strategy.TOMBSTONES;
+	}
+
+	private void replaceLockingInterceptor() {
+		LockingInterceptor lockingInterceptor = new LockingInterceptor();
+		cache.getComponentRegistry().registerComponent(lockingInterceptor, LockingInterceptor.class);
+		if (!cache.addInterceptorBefore(lockingInterceptor, NonTransactionalLockingInterceptor.class)) {
+			throw new IllegalStateException("Misconfigured cache, interceptor chain is " + cache.getInterceptorChain());
+		}
+		cache.removeInterceptor(NonTransactionalLockingInterceptor.class);
 	}
 
 	public long getTombstoneExpiration() {
@@ -260,7 +276,7 @@ public abstract class BaseTransactionalDataRegion
 			case VALIDATION:
 				return super.toMap();
 			case TOMBSTONES:
-				return Caches.entrySet(Caches.localCache(cache), Tombstone.EXCLUDE_TOMBSTONES, FutureUpdate.VALUE_EXTRACTOR).toMap();
+				return Caches.entrySet(Caches.localCache(cache), Tombstone.EXCLUDE_TOMBSTONES).toMap();
 			case VERSIONED_ENTRIES:
 				return Caches.entrySet(Caches.localCache(cache), VersionedEntry.EXCLUDE_EMPTY_EXTRACT_VALUE, VersionedEntry.EXCLUDE_EMPTY_EXTRACT_VALUE).toMap();
 			default:

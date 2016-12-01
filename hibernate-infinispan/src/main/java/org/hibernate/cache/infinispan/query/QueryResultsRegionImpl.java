@@ -169,7 +169,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 		private final Object value;
 
 		public PostTransactionQueryUpdate(TransactionCoordinator tc, SharedSessionContractImplementor session, Object key, Object value) {
-			super(tc, putCache, putCacheRequiresTransaction);
+			super(tc, putCacheRequiresTransaction);
 			this.session = session;
 			this.key = key;
 			this.value = value;
@@ -182,9 +182,9 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 		}
 
 		@Override
-		protected void invoke(boolean success, AdvancedCache cache) {
+		protected void invoke(boolean success) {
 			if (success) {
-				cache.put(key, value);
+				putCache.put(key, value);
 			}
 		}
 	}

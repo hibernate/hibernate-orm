@@ -9,8 +9,6 @@ package org.hibernate.bytecode.enhance.internal.javassist;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,30 +68,31 @@ public class EnhancerImpl implements Enhancer {
 	 */
 	@Override
 	public synchronized byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
+		CtClass managedCtClass = null;
 		try {
-			final CtClass managedCtClass = classPool.makeClassIfNew( new ByteArrayInputStream( originalBytes ) );
-			if ( enhance( managedCtClass ) ) {
-				return getByteCode( managedCtClass );
-			}
-			else {
-				return null;
-			}
+			managedCtClass = classPool.makeClassIfNew( new ByteArrayInputStream( originalBytes ) );
+			return enhance( managedCtClass ) ? getByteCode( managedCtClass ) : null;
 		}
 		catch (IOException e) {
 			log.unableToBuildEnhancementMetamodel( className );
 			return null;
 		}
+		finally {
+			if ( managedCtClass != null ) {
+				managedCtClass.detach();
+			}
+		}
 	}
 
-	private ClassPool buildClassPool(final JavassistEnhancementContext enhancementContext) {
-		final ClassPool classPool = new ClassPool( false ) {
+	private ClassPool buildClassPool(JavassistEnhancementContext enhancementContext) {
+		ClassPool classPool = new ClassPool( false ) {
 			@Override
 			public ClassLoader getClassLoader() {
 				return enhancementContext.getLoadingClassLoader();
 			}
 		};
 
-		final ClassLoader loadingClassLoader = enhancementContext.getLoadingClassLoader();
+		ClassLoader loadingClassLoader = enhancementContext.getLoadingClassLoader();
 		if ( loadingClassLoader != null ) {
 			classPool.appendClassPath( new LoaderClassPath( loadingClassLoader ) );
 		}
@@ -177,15 +176,15 @@ public class EnhancerImpl implements Enhancer {
 	}
 
 	private byte[] getByteCode(CtClass managedCtClass) {
-		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-		final DataOutputStream out = new DataOutputStream( byteStream );
+		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+		DataOutputStream out = new DataOutputStream( byteStream );
 		try {
 			managedCtClass.toBytecode( out );
 			return byteStream.toByteArray();
 		}
 		catch (Exception e) {
 			log.unableToTransformClass( e.getMessage() );
-			throw new HibernateException( "Unable to transform class: " + e.getMessage() );
+			throw new HibernateException( "Unable to transform class: " + e.getMessage() , e );
 		}
 		finally {
 			try {

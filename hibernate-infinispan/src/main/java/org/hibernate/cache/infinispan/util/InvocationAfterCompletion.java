@@ -16,8 +16,6 @@ import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
-import org.infinispan.AdvancedCache;
-
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -25,12 +23,10 @@ public abstract class InvocationAfterCompletion implements Synchronization {
 	protected static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog( InvocationAfterCompletion.class );
 
 	protected final TransactionCoordinator tc;
-	protected final AdvancedCache cache;
 	protected final boolean requiresTransaction;
 
-	public InvocationAfterCompletion(TransactionCoordinator tc, AdvancedCache cache, boolean requiresTransaction) {
+	public InvocationAfterCompletion(TransactionCoordinator tc, boolean requiresTransaction) {
 		this.tc = tc;
-		this.cache = cache;
 		this.requiresTransaction = requiresTransaction;
 	}
 
@@ -59,7 +55,7 @@ public abstract class InvocationAfterCompletion implements Synchronization {
 			tc.createIsolationDelegate().delegateWork(new WorkExecutorVisitable<Void>() {
 				@Override
 				public Void accept(WorkExecutor<Void> executor, Connection connection) throws SQLException {
-					invoke(success, cache);
+					invoke(success);
 					return null;
 				}
 			}, requiresTransaction);
@@ -72,5 +68,5 @@ public abstract class InvocationAfterCompletion implements Synchronization {
 		}
 	}
 
-	protected abstract void invoke(boolean success, AdvancedCache cache);
+	protected abstract void invoke(boolean success);
 }

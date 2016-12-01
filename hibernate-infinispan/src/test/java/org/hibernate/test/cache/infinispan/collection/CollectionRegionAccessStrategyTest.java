@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,18 +18,17 @@ import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.access.TxInvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.hibernate.test.cache.infinispan.AbstractRegionAccessStrategyTest;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
+import org.hibernate.test.cache.infinispan.util.TestSynchronization;
 import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
 import org.junit.Test;
-import junit.framework.AssertionFailedError;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
@@ -136,78 +134,19 @@ public class CollectionRegionAccessStrategyTest extends
 
 	@Test
 	public void testPutFromLoad() throws Exception {
-		putFromLoadTest(false);
+		putFromLoadTest(false, true);
 	}
 
 	@Test
 	public void testPutFromLoadMinimal() throws Exception {
-		putFromLoadTest(true);
+		putFromLoadTest(true, true);
 	}
 
-	protected void putFromLoadTest(final boolean useMinimalAPI) throws Exception {
-
-		final Object KEY = generateNextKey();
-
-		final CountDownLatch writeLatch1 = new CountDownLatch( 1 );
-		final CountDownLatch writeLatch2 = new CountDownLatch( 1 );
-		final CountDownLatch completionLatch = new CountDownLatch( 2 );
-
-		Thread node1 = new Thread() {
-			@Override
-			public void run() {
-				try {
-					SharedSessionContractImplementor session = mockedSession();
-					withTx(localEnvironment, session, () -> {
-						assertNull(localAccessStrategy.get(session, KEY, session.getTimestamp()));
-
-						writeLatch1.await();
-
-						if (useMinimalAPI) {
-							localAccessStrategy.putFromLoad(session, KEY, VALUE2, session.getTimestamp(), 2, true);
-						} else {
-							localAccessStrategy.putFromLoad(session, KEY, VALUE2, session.getTimestamp(), 2);
-						}
-						return null;
-					});
-				}
-				catch (Exception e) {
-					log.error( "node1 caught exception", e );
-					node1Exception = e;
-				}
-				catch (AssertionFailedError e) {
-					node1Failure = e;
-				}
-				finally {
-					// Let node2 write
-					writeLatch2.countDown();
-					completionLatch.countDown();
-				}
-			}
-		};
-
-		Thread node2 = new PutFromLoadNode2(KEY, writeLatch1, writeLatch2, useMinimalAPI, completionLatch);
-
-		node1.setDaemon( true );
-		node2.setDaemon( true );
-
-		node1.start();
-		node2.start();
-
-		assertTrue( "Threads completed", completionLatch.await( 2, TimeUnit.SECONDS ) );
-
-		assertThreadsRanCleanly();
-
-		long txTimestamp = System.currentTimeMillis();
-
-		SharedSessionContractImplementor s1 = mockedSession();
-		assertEquals( VALUE2, localAccessStrategy.get(s1, KEY, s1.getTimestamp() ) );
-		SharedSessionContractImplementor s2 = mockedSession();
-		Object remoteValue = remoteAccessStrategy.get(s2, KEY, s2.getTimestamp());
-		if (isUsingInvalidation()) {
-			assertEquals( VALUE1, remoteValue);
-		}
-		else {
-			assertEquals( VALUE2, remoteValue);
-		}
+	@Override
+	protected void doUpdate(CollectionRegionAccessStrategy strategy, SharedSessionContractImplementor session, Object key, Object value, Object version) throws javax.transaction.RollbackException, javax.transaction.SystemException {
+		SoftLock softLock = strategy.lockItem(session, key, version);
+		strategy.remove(session, key);
+		session.getTransactionCoordinator().getLocalSynchronizations().registerSynchronization(
+			new TestSynchronization.UnlockItem(strategy, session, key, softLock));
 	}
 }

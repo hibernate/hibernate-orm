@@ -6,6 +6,7 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.VersionedEntry;
 import org.infinispan.AdvancedCache;
 import org.infinispan.commands.read.SizeCommand;
@@ -16,11 +17,15 @@ import org.infinispan.container.entries.MVCCEntry;
 import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.annotations.Inject;
+import org.infinispan.factories.annotations.Start;
 import org.infinispan.filter.NullValueConverter;
 import org.infinispan.interceptors.CallInterceptor;
+import org.infinispan.metadata.EmbeddedMetadata;
+import org.infinispan.metadata.Metadata;
 
 import java.util.Comparator;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Note that this does not implement all commands, only those appropriate for {@link TombstoneAccessDelegate}
@@ -32,15 +37,25 @@ import java.util.Set;
  */
 public class VersionedCallInterceptor extends CallInterceptor {
 	private final Comparator<Object> versionComparator;
+	private final Metadata expiringMetadata;
 	private AdvancedCache cache;
+	private Metadata defaultMetadata;
 
-	public VersionedCallInterceptor(Comparator<Object> versionComparator) {
+	public VersionedCallInterceptor(BaseTransactionalDataRegion region, Comparator<Object> versionComparator) {
 		this.versionComparator = versionComparator;
+		expiringMetadata = new EmbeddedMetadata.Builder().lifespan(region.getTombstoneExpiration(), TimeUnit.MILLISECONDS).build();
 	}
 
 	@Inject
 	public void injectDependencies(AdvancedCache cache) {
 		this.cache = cache;
+	}
+
+	@Start
+	public void start() {
+		defaultMetadata = new EmbeddedMetadata.Builder()
+			.lifespan(cacheConfiguration.expiration().lifespan())
+			.maxIdle(cacheConfiguration.expiration().maxIdle()).build();
 	}
 
 	@Override
@@ -84,14 +99,14 @@ public class VersionedCallInterceptor extends CallInterceptor {
 
 		if (newVersion == null) {
 			// eviction or post-commit removal: we'll store it with given timestamp
-			setValue(e, newValue);
+			setValue(e, newValue, expiringMetadata);
 			return null;
 		}
 		if (oldVersion == null) {
 			assert oldValue == null || oldTimestamp != Long.MIN_VALUE;
 			if (newTimestamp == Long.MIN_VALUE) {
 				// remove, knowing the version
-				setValue(e, newValue);
+				setValue(e, newValue, expiringMetadata);
 			}
 			else if (newTimestamp <= oldTimestamp) {
 				// either putFromLoad or regular update/insert - in either case this update might come
@@ -100,21 +115,21 @@ public class VersionedCallInterceptor extends CallInterceptor {
 				assert oldValue == null;
 			}
 			else {
-				setValue(e, newValue);
+				setValue(e, newValue, defaultMetadata);
 			}
 			return null;
 		}
 		int compareResult = versionComparator.compare(newVersion, oldVersion);
 		if (isRemoval && compareResult >= 0) {
-			setValue(e, newValue);
+			setValue(e, newValue, expiringMetadata);
 		}
 		else if (compareResult > 0) {
-			setValue(e, actualNewValue);
+			setValue(e, actualNewValue, defaultMetadata);
 		}
 		return null;
 	}
 
-	private Object setValue(MVCCEntry e, Object value) {
+	private Object setValue(MVCCEntry e, Object value, Metadata metadata) {
 		if (e.isRemoved()) {
 			e.setRemoved(false);
 			e.setCreated(true);
@@ -123,15 +138,8 @@ public class VersionedCallInterceptor extends CallInterceptor {
 		else {
 			e.setChanged(true);
 		}
+		e.setMetadata(metadata);
 		return e.setValue(value);
-	}
-
-	private void removeValue(MVCCEntry e) {
-		e.setRemoved(true);
-		e.setChanged(true);
-		e.setCreated(false);
-		e.setValid(false);
-		e.setValue(null);
 	}
 
 	@Override

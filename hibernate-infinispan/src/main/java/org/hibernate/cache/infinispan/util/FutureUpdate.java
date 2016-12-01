@@ -7,8 +7,6 @@
 package org.hibernate.cache.infinispan.util;
 
 import org.infinispan.commons.marshall.AdvancedExternalizer;
-import org.infinispan.filter.Converter;
-import org.infinispan.metadata.Metadata;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -18,18 +16,20 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * This value can be overwritten only by an entity with the same uuid
+ * Request to update the tombstone, coming from insert/update/remove operation.
+ *
+ * This object should *not* be stored in cache.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class FutureUpdate {
-	public static final ValueExtractor VALUE_EXTRACTOR = new ValueExtractor();
-
 	private final UUID uuid;
+	private final long timestamp;
 	private final Object value;
 
-	public FutureUpdate(UUID uuid, Object value) {
+	public FutureUpdate(UUID uuid, long timestamp, Object value) {
 		this.uuid = uuid;
+		this.timestamp = timestamp;
 		this.value = value;
 	}
 
@@ -37,6 +37,7 @@ public class FutureUpdate {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder("FutureUpdate{");
 		sb.append("uuid=").append(uuid);
+		sb.append(", timestamp=").append(timestamp);
 		sb.append(", value=").append(value);
 		sb.append('}');
 		return sb.toString();
@@ -50,12 +51,17 @@ public class FutureUpdate {
 		return value;
 	}
 
+	public long getTimestamp() {
+		return timestamp;
+	}
+
 	public static class Externalizer implements AdvancedExternalizer<FutureUpdate> {
 
 		@Override
 		public void writeObject(ObjectOutput output, FutureUpdate object) throws IOException {
 			output.writeLong(object.uuid.getMostSignificantBits());
 			output.writeLong(object.uuid.getLeastSignificantBits());
+			output.writeLong(object.timestamp);
 			output.writeObject(object.value);
 		}
 
@@ -63,7 +69,9 @@ public class FutureUpdate {
 		public FutureUpdate readObject(ObjectInput input) throws IOException, ClassNotFoundException {
 			long msb = input.readLong();
 			long lsb = input.readLong();
-			return new FutureUpdate(new UUID(msb, lsb), input.readObject());
+			long timestamp = input.readLong();
+			Object value = input.readObject();
+			return new FutureUpdate(new UUID(msb, lsb), timestamp, value);
 		}
 
 		@Override
@@ -74,36 +82,6 @@ public class FutureUpdate {
 		@Override
 		public Integer getId() {
 			return Externalizers.FUTURE_UPDATE;
-		}
-	}
-
-	public static class ValueExtractor implements Converter {
-		private ValueExtractor() {}
-
-		@Override
-		public Object convert(Object key, Object value, Metadata metadata) {
-			return value instanceof FutureUpdate ? ((FutureUpdate) value).getValue() : value;
-		}
-	}
-
-	public static class ValueExtractorExternalizer implements AdvancedExternalizer<ValueExtractor> {
-		@Override
-		public Set<Class<? extends ValueExtractor>> getTypeClasses() {
-			return Collections.<Class<? extends ValueExtractor>>singleton(ValueExtractor.class);
-		}
-
-		@Override
-		public Integer getId() {
-			return Externalizers.VALUE_EXTRACTOR;
-		}
-
-		@Override
-		public void writeObject(ObjectOutput output, ValueExtractor object) throws IOException {
-		}
-
-		@Override
-		public ValueExtractor readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-			return VALUE_EXTRACTOR;
 		}
 	}
 }

@@ -867,6 +867,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to specify that the entity association is resolved either through a FOREIGN KEY join (e.g. <<annotations-jpa-joincolumn>>) or using the result of a given SQL formula (e.g. <<annotations-hibernate-joinformula>>).
 
+See the <<chapters/domain/basic_types.adoc#mapping-JoinColumnOrFormula,`@JoinColumnOrFormula` mapping>> section for more info.
+
 [[annotations-hibernate-joincolumnsorformulas]]
 ==== `@JoinColumnsOrFormulas`
 
@@ -876,7 +878,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinFormula.html[`@JoinFormula`] annotation is used as a replacement for <<annotations-jpa-joincolumn>> when the association does not have a dedicated FOREIGN KEY column.
 
-See the <<chapters/domain/basic_types.adoc#mapping-JoinFormula-example,`@JoinFormula` mapping>> section for more info.
+See the <<chapters/domain/basic_types.adoc#mapping-JoinFormula,`@JoinFormula` mapping>> section for more info.
 
 [[annotations-hibernate-lazycollection]]
 ==== `@LazyCollection`

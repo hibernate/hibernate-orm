@@ -342,7 +342,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	@SuppressWarnings( {"SimplifiableIfStatement"})
 	private boolean isUnequivocallyNonDirty(Object entity) {
 		if ( entity instanceof SelfDirtinessTracker ) {
-			return ! ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
+			return ! persister.hasCollections() && ! ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
 		}
 
 		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =

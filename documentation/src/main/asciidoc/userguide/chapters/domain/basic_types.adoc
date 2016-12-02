@@ -1832,3 +1832,52 @@ include::{extrasdir}/basic/mapping-column-many-to-any-persistence-example.sql[]
 ----
 ====
 
+[[mapping-JoinFormula]]
+==== `@JoinFormula` mapping
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinFormula.html[`@JoinFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key.
+
+[[mapping-JoinFormula-example]]
+.`@JoinFormula` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/JoinFormulaTest.java[tags=mapping-JoinFormula-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-JoinFormula-example.sql[]
+----
+====
+
+The `country` association in the `User` entity is mapped by the country identifier provided by the `phoneNumber` property.
+
+Considering we have the following entities:
+
+[[mapping-JoinFormula-persistence-example]]
+.`@JoinFormula` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/JoinFormulaTest.java[tags=mapping-JoinFormula-persistence-example]
+----
+====
+
+When fetching the `User` entities, the `country` property is mapped by the `@JoinFormula` expression:
+
+[[mapping-JoinFormula-fetching-example]]
+.`@JoinFormula` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/JoinFormulaTest.java[tags=mapping-JoinFormula-fetching-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-JoinFormula-fetching-example.sql[]
+----
+====
+
+Therefore, the `@JoinFormula` annotation is used to define a custom join association between the parent-child association.

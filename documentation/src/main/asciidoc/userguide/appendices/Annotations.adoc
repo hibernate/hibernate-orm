@@ -876,6 +876,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinFormula.html[`@JoinFormula`] annotation is used as a replacement for <<annotations-jpa-joincolumn>> when the association does not have a dedicated FOREIGN KEY column.
 
+See the <<chapters/domain/basic_types.adoc#mapping-JoinFormula-example,`@JoinFormula` mapping>> section for more info.
+
 [[annotations-hibernate-lazycollection]]
 ==== `@LazyCollection`
 

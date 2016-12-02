@@ -216,14 +216,40 @@ public class ValidityAuditStrategy implements AuditStrategy {
 					);
 
 					if ( rowCount != 1 && ( !reuseEntityIdentifier || ( getRevisionType( audEntitiesCfg, data ) != RevisionType.ADD ) ) ) {
-						throw new RuntimeException(
-								"Cannot update previous revision for entity " + auditedEntityName + " and id " + id
-						);
+						if ( isPreviousRevisionUpdateRequired() ) {
+							throw new RuntimeException(
+									"Cannot update previous revision for entity " + auditedEntityName + " and id " + id
+							);
+						}
 					}
 				}
 			} );
 		}
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, data );
+	}
+
+	/**
+	 * Controls whether the previous revision row's update is required.
+	 * <p/>
+	 * By default, this strategy will set the previous revision entry's revision number and optionally the timestamp
+	 * for both {@link RevisionType#MOD} and {@link RevisionType#DEL} operations.  This strategy has an integrity
+	 * check that expects that update to aplly to a single row.  If it does not, a {@link RuntimeException} is
+	 * thrown indicating the integrity check failure of the strategy.
+	 * <p/>
+	 * There are cases where a prior revision entry may not exist, for example where rows are loaded through SQL
+	 * and later manipulated by Hibernate Envers.  In this case, this strategy will fail the integrity check all
+	 * beacuse the original {@link RevisionType#ADD} operation does not exist.
+	 * <p/>
+	 * By changing this method to return {@code false}, the strategy will not enforce the integrity constraint
+	 * for the update operation.  This could have negative side affects since the integrity check is being
+	 * disabled, but it does provide an alternative for legacy systems which wish to enable this strategy and
+	 * are comfortable without this constraint.
+	 *
+	 * @return {@code true} to enable the update constraint check behavior; {@code false} to disable it.  The
+	 * default is {@code true}.
+	 */
+	protected boolean isPreviousRevisionUpdateRequired() {
+		return true;
 	}
 
 	private Queryable getQueryable(String entityName, SessionImplementor sessionImplementor) {

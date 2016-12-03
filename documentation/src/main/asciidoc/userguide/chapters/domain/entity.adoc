@@ -227,7 +227,7 @@ include::{extrasdir}/entity/listing7.java[]
 ----
 ====
 
-The issue here is a conflict between _the use of generated identifier_, _the contract of `Set`_ and _the equals/hashCode implementations_.
+The issue here is a conflict between the use of generated identifier, the contract of `Set` and the equals/hashCode implementations.
 `Set` says that the equals/hashCode value for an object should not change while the object is part of the Set.
 But that is exactly what happened here because the equals/hasCode are based on the (generated) id, which was not set until the `session.getTransaction().commit()` call.
 

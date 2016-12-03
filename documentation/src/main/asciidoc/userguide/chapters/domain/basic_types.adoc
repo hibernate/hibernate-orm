@@ -43,7 +43,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |TimeZoneType |VARCHAR, using the TimeZone ID |java.util.TimeZone |timezone, java.util.TimeZone
 |UrlType |VARCHAR |java.net.URL |url, java.net.URL
 |ClassType |VARCHAR (class FQN) |java.lang.Class |class, java.lang.Class
-|BlobType |BLOB |java.sql.Blob |blog, java.sql.Blob
+|BlobType |BLOB |java.sql.Blob |blob, java.sql.Blob
 |ClobType |CLOB |java.sql.Clob |clob, java.sql.Clob
 |BinaryType |VARBINARY |byte[] |binary, byte[]
 |MaterializedBlobType |BLOB |byte[] |materized_blob

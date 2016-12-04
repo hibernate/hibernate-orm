@@ -193,10 +193,18 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 				data.put( propertyData.getModifiedFlagPropertyName(), true );
 			}
 			else {
+				// HHH-7949 - Performance optimization to avoid lazy-fetching collections that have
+				// not been changed for deriving the modified flags value.
+				final PersistentCollection pc = (PersistentCollection) newObj;
+				if ( ( pc != null && !pc.isDirty() ) || ( newObj == null && oldObj == null ) ) {
+					data.put( propertyData.getModifiedFlagPropertyName(), false );
+					return;
+				}
+
 				final List<PersistentCollectionChangeData> changes = mapCollectionChanges(
 						session,
 						commonCollectionMapperData.getCollectionReferencingPropertyData().getName(),
-						(PersistentCollection) newObj,
+						pc,
 						(Serializable) oldObj,
 						null
 				);

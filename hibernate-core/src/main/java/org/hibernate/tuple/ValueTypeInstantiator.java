@@ -17,7 +17,7 @@ public class ValueTypeInstantiator {
 	private final Constructor constructor;
 	private final Map<String, Integer> constructorParameterNameToIndex;
 
-	public ValueTypeInstantiator(
+	private ValueTypeInstantiator(
 			Class mappedClass,
 			Constructor constructor,
 			Map<String, Integer> constructorParameterNameToIndex) {
@@ -26,27 +26,9 @@ public class ValueTypeInstantiator {
 		this.constructorParameterNameToIndex = constructorParameterNameToIndex;
 	}
 
-	public Object instantiate(String[] propertyNames, Object[] values) {
-		Object[] arguments = new Object[values.length];
-		for ( int valueIndex = 0; valueIndex < values.length; valueIndex++ ) {
-			Object value = values[valueIndex];
-			Integer argumentIndex = constructorParameterNameToIndex.get( propertyNames[valueIndex] );
-			arguments[argumentIndex] = value;
-		}
-		try {
-			return constructor.newInstance( arguments );
-		}
-		catch (Exception e) {
-			throw new InstantiationException( "Could not instantiate entity: ", mappedClass, e );
-		}
-	}
+	public static Optional<ValueTypeInstantiator> of(Component component) {
 
-	public boolean isInstance(Object object) {
-		return mappedClass.isInstance( object );
-	}
-
-	static Optional<ValueTypeInstantiator> of(Class mappedClass, Component component) {
-
+		Class componentClass = component.getComponentClass();
 		Map<String, Class> propertyNameToType = new HashMap<>();
 		component.getPropertyIterator()
 				.forEachRemaining( property -> propertyNameToType.put(
@@ -54,7 +36,7 @@ public class ValueTypeInstantiator {
 						property.getType().getReturnedClass()
 				) );
 
-		Constructor constructor = Stream.of( mappedClass.getDeclaredConstructors() )
+		Constructor constructor = Stream.of( componentClass.getDeclaredConstructors() )
 				.filter( c -> parametersMatchProperties( c.getParameters(), propertyNameToType ) )
 				.findFirst()
 				.orElse( null );
@@ -75,7 +57,26 @@ public class ValueTypeInstantiator {
 			constructor.setAccessible( true );
 		}
 
-		return Optional.of( new ValueTypeInstantiator( mappedClass, constructor, constructorParameterNameToIndex ) );
+		return Optional.of( new ValueTypeInstantiator( componentClass, constructor, constructorParameterNameToIndex ) );
+	}
+
+	public Object instantiate(String[] propertyNames, Object[] values) {
+		Object[] arguments = new Object[values.length];
+		for ( int valueIndex = 0; valueIndex < values.length; valueIndex++ ) {
+			Object value = values[valueIndex];
+			Integer argumentIndex = constructorParameterNameToIndex.get( propertyNames[valueIndex] );
+			arguments[argumentIndex] = value;
+		}
+		try {
+			return constructor.newInstance( arguments );
+		}
+		catch (Exception e) {
+			throw new InstantiationException( "Could not instantiate entity: ", mappedClass, e );
+		}
+	}
+
+	public boolean isInstance(Object object) {
+		return mappedClass.isInstance( object );
 	}
 
 	private static boolean parametersMatchProperties(Parameter[] parameters, Map<String, Class> propertyNameToType) {

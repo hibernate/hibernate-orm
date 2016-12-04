@@ -31,22 +31,24 @@ public class ComponentMetamodel implements Serializable {
 
 	// TODO : will need reference to session factory to fully complete HHH-1907
 
-//	private final SessionFactoryImplementor sessionFactory;
+	//	private final SessionFactoryImplementor sessionFactory;
 	private final String role;
 	private final boolean isKey;
 	private final StandardProperty[] properties;
 
 	private final EntityMode entityMode;
 	private final ComponentTuplizer componentTuplizer;
+	private final Component component;
 
 	// cached for efficiency...
 	private final int propertySpan;
 	private final Map propertyIndexes = new HashMap();
 	private final boolean createEmptyCompositesEnabled;
 
-//	public ComponentMetamodel(Component component, SessionFactoryImplementor sessionFactory) {
+	//	public ComponentMetamodel(Component component, SessionFactoryImplementor sessionFactory) {
 	public ComponentMetamodel(Component component, MetadataBuildingOptions metadataBuildingOptions) {
 //		this.sessionFactory = sessionFactory;
+		this.component = component;
 		this.role = component.getRoleName();
 		this.isKey = component.isKey();
 		propertySpan = component.getPropertySpan();
@@ -54,7 +56,7 @@ public class ComponentMetamodel implements Serializable {
 		Iterator itr = component.getPropertyIterator();
 		int i = 0;
 		while ( itr.hasNext() ) {
-			Property property = ( Property ) itr.next();
+			Property property = (Property) itr.next();
 			properties[i] = PropertyFactory.buildStandardProperty( property, false );
 			propertyIndexes.put( property.getName(), i );
 			i++;
@@ -71,7 +73,7 @@ public class ComponentMetamodel implements Serializable {
 		) : componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
 
 		final ConfigurationService cs = component.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-				.getService(ConfigurationService.class);
+				.getService( ConfigurationService.class );
 
 		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
 				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
@@ -100,7 +102,7 @@ public class ComponentMetamodel implements Serializable {
 	}
 
 	public int getPropertyIndex(String propertyName) {
-		Integer index = ( Integer ) propertyIndexes.get( propertyName );
+		Integer index = (Integer) propertyIndexes.get( propertyName );
 		if ( index == null ) {
 			throw new HibernateException( "component does not contain such a property [" + propertyName + "]" );
 		}
@@ -123,4 +125,7 @@ public class ComponentMetamodel implements Serializable {
 		return createEmptyCompositesEnabled;
 	}
 
+	public Component getComponent() {
+		return component;
+	}
 }

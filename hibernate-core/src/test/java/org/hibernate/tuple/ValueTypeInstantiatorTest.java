@@ -32,9 +32,10 @@ public class ValueTypeInstantiatorTest {
 				givenProperty( "firstProperty", String.class ),
 				givenProperty( "secondProperty", Integer.class )
 		);
+		given( component.getComponentClass() ).willReturn( ValueType.class );
 
 		// when
-		ValueTypeInstantiator actual = ValueTypeInstantiator.of( ValueType.class, component )
+		ValueTypeInstantiator actual = ValueTypeInstantiator.of( component )
 				.orElse( null );
 
 		// then
@@ -49,7 +50,8 @@ public class ValueTypeInstantiatorTest {
 				givenProperty( "firstProperty", String.class ),
 				givenProperty( "secondProperty", Integer.class )
 		);
-		ValueTypeInstantiator valueTypeInstantiator = ValueTypeInstantiator.of( ValueType.class, component )
+		given( component.getComponentClass() ).willReturn( ValueType.class );
+		ValueTypeInstantiator valueTypeInstantiator = ValueTypeInstantiator.of( component )
 				.orElse( null );
 		String[] propertyNames = { "firstProperty", "secondProperty" };
 		Object[] givenArgs = { "givenFirstProperty", 1 };

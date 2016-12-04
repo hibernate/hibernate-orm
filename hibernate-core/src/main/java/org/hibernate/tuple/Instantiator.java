@@ -27,7 +27,7 @@ public interface Instantiator extends Serializable {
 	/**
 	 * Perform the requested instantiation.
 	 *
-	 * @return The instantiated data structure. 
+	 * @return The instantiated data structure.
 	 */
 	public Object instantiate();
 
@@ -40,4 +40,8 @@ public interface Instantiator extends Serializable {
 	 * entity/component.
 	 */
 	public boolean isInstance(Object object);
+
+	public default boolean canInstantiate() {
+		return true;
+	}
 }

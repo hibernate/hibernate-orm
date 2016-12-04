@@ -41,9 +41,9 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
 
 		try {
-			constructor = ReflectHelper.getDefaultConstructor(mappedClass);
+			constructor = ReflectHelper.getDefaultConstructor( mappedClass );
 		}
-		catch ( PropertyNotFoundException pnfe ) {
+		catch (PropertyNotFoundException pnfe) {
 			LOG.noDefaultConstructor( mappedClass.getName() );
 			constructor = null;
 		}
@@ -57,10 +57,10 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		this.embeddedIdentifier = false;
 
 		try {
-			constructor = ReflectHelper.getDefaultConstructor(mappedClass);
+			constructor = ReflectHelper.getDefaultConstructor( mappedClass );
 		}
-		catch ( PropertyNotFoundException pnfe ) {
-			LOG.noDefaultConstructor(mappedClass.getName());
+		catch (PropertyNotFoundException pnfe) {
+			LOG.noDefaultConstructor( mappedClass.getName() );
 			constructor = null;
 		}
 	}
@@ -84,7 +84,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 			try {
 				return applyInterception( constructor.newInstance( (Object[]) null ) );
 			}
-			catch ( Exception e ) {
+			catch (Exception e) {
 				throw new InstantiationException( "Could not instantiate entity: ", mappedClass, e );
 			}
 		}
@@ -97,11 +97,15 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	public Object instantiate(Serializable id) {
 		final boolean useEmbeddedIdentifierInstanceAsEntity = embeddedIdentifier &&
 				id != null &&
-				id.getClass().equals(mappedClass);
+				id.getClass().equals( mappedClass );
 		return useEmbeddedIdentifierInstanceAsEntity ? id : instantiate();
 	}
 
 	public boolean isInstance(Object object) {
 		return mappedClass.isInstance( object );
+	}
+
+	public boolean canInstantiate() {
+		return constructor != null;
 	}
 }

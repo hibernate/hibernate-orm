@@ -29,6 +29,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.tuple.ValueTypeInstantiator;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
 
@@ -50,6 +51,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	private final boolean isKey;
 	private boolean hasNotNullProperty;
 	private final boolean createEmptyCompositesEnabled;
+	private final ValueTypeInstantiator valueTypeInstantiator;
 
 	protected final EntityMode entityMode;
 	protected final ComponentTuplizer componentTuplizer;
@@ -82,6 +84,13 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		this.entityMode = metamodel.getEntityMode();
 		this.componentTuplizer = metamodel.getComponentTuplizer();
 		this.createEmptyCompositesEnabled = metamodel.isCreateEmptyCompositesEnabled();
+
+		if ( componentTuplizer.isComponentImmutable() ) {
+			valueTypeInstantiator = ValueTypeInstantiator.of( metamodel.getComponent() ).orElse( null );
+		}
+		else {
+			valueTypeInstantiator = null;
+		}
 	}
 
 	public boolean isKey() {
@@ -384,7 +393,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	public Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException {
 
-		return nullSafeGet( rs, new String[] {name}, session, owner );
+		return nullSafeGet( rs, new String[] { name }, session, owner );
 	}
 
 	@Override
@@ -400,7 +409,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 	public Object getPropertyValue(Object component, int i)
 			throws HibernateException {
-		if (component == null) {
+		if ( component == null ) {
 			component = new Object[propertySpan];
 		}
 		if ( component instanceof Object[] ) {
@@ -424,7 +433,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	@Override
 	public Object[] getPropertyValues(Object component, EntityMode entityMode)
 			throws HibernateException {
-		if (component == null) {
+		if ( component == null ) {
 			component = new Object[propertySpan];
 		}
 		if ( component instanceof Object[] ) {
@@ -489,6 +498,10 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			return null;
 		}
 
+		if ( componentTuplizer.isComponentImmutable() ) {
+			return component;
+		}
+
 		Object[] values = getPropertyValues( component, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
 			values[i] = propertyTypes[i].deepCopy( values[i], factory );
@@ -518,6 +531,11 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( original == null ) {
 			return null;
 		}
+
+		if ( componentTuplizer.isComponentImmutable() ) {
+			return original;
+		}
+
 		//if ( original == target ) return target;
 
 		final Object result = target == null
@@ -550,6 +568,10 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( original == null ) {
 			return null;
 		}
+
+		if ( componentTuplizer.isComponentImmutable() ) {
+			return original;
+		}
 		//if ( original == target ) return target;
 
 		final Object result = target == null ?
@@ -575,6 +597,17 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	 */
 	public Object instantiate(EntityMode entityMode) throws HibernateException {
 		return componentTuplizer.instantiate();
+	}
+
+	public Object instantiate(Object[] values) throws HibernateException {
+
+		if ( valueTypeInstantiator != null && componentTuplizer.isComponentImmutable() ) {
+			return valueTypeInstantiator.instantiate( propertyNames, values );
+		}
+
+		Object result = instantiate( entityMode );
+		setPropertyValues( result, values, entityMode );
+		return result;
 	}
 
 	public Object instantiate(Object parent, SharedSessionContractImplementor session)
@@ -632,6 +665,11 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			for ( int i = 0; i < propertyTypes.length; i++ ) {
 				assembled[i] = propertyTypes[i].assemble( (Serializable) values[i], session, owner );
 			}
+
+			if ( componentTuplizer.isComponentImmutable() ) {
+				return instantiate( assembled );
+			}
+
 			Object result = instantiate( owner, session );
 			setPropertyValues( result, assembled, entityMode );
 			return result;
@@ -678,12 +716,17 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			throws HibernateException {
 
 		if ( value != null ) {
-			Object result = instantiate( owner, session );
 			Object[] values = (Object[]) value;
 			Object[] resolvedValues = new Object[values.length]; //only really need new array during semiresolve!
 			for ( int i = 0; i < values.length; i++ ) {
 				resolvedValues[i] = propertyTypes[i].resolve( values[i], session, owner );
 			}
+
+			if ( componentTuplizer.isComponentImmutable() ) {
+				return instantiate( resolvedValues );
+			}
+
+			Object result = instantiate( owner, session );
 			setPropertyValues( result, resolvedValues, entityMode );
 			return result;
 		}
@@ -773,7 +816,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		for ( int i = 0; i < propertySpan; i++ ) {
 			// we know this cast is safe from canDoExtraction
 			final Type propertyType = propertyTypes[i];
-			final Object value = ((ProcedureParameterExtractionAware) propertyType).extract(
+			final Object value = ( (ProcedureParameterExtractionAware) propertyType ).extract(
 					statement,
 					currentIndex,
 					session
@@ -809,7 +852,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		for ( String paramName : paramNames ) {
 			// we know this cast is safe from canDoExtraction
 			final ProcedureParameterExtractionAware propertyType = (ProcedureParameterExtractionAware) propertyTypes[indx];
-			final Object value = propertyType.extract( statement, new String[] {paramName}, session );
+			final Object value = propertyType.extract( statement, new String[] { paramName }, session );
 			if ( value == null ) {
 				if ( isKey ) {
 					return null; //different nullability rules for pk/fk

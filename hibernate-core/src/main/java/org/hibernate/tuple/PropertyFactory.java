@@ -287,7 +287,8 @@ public final class PropertyFactory {
 				alwaysDirtyCheck || property.isUpdateable(),
 				property.isOptimisticLocked(),
 				property.getCascadeStyle(),
-				property.getValue().getFetchMode()
+				property.getValue().getFetchMode(),
+				property.isDeclaredFinal()
 		);
 	}
 

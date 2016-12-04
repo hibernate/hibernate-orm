@@ -68,6 +68,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		this.cascade = new CascadeStyle[propertySpan];
 		this.joinedFetch = new FetchMode[propertySpan];
 
+		boolean isImmutable = true;
 		for ( int i = 0; i < propertySpan; i++ ) {
 			StandardProperty prop = metamodel.getProperty( i );
 			this.propertyNames[i] = prop.getName();
@@ -75,6 +76,9 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			this.propertyNullability[i] = prop.isNullable();
 			this.cascade[i] = prop.getCascadeStyle();
 			this.joinedFetch[i] = prop.getFetchMode();
+			if(!prop.isDeclaredFinal()) {
+				isImmutable = false;
+			}
 			if ( !prop.isNullable() ) {
 				hasNotNullProperty = true;
 			}
@@ -85,7 +89,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		this.componentTuplizer = metamodel.getComponentTuplizer();
 		this.createEmptyCompositesEnabled = metamodel.isCreateEmptyCompositesEnabled();
 
-		if ( componentTuplizer.isComponentImmutable() ) {
+		if ( isImmutable ) {
 			valueTypeInstantiator = ValueTypeInstantiator.of( metamodel.getComponent() ).orElse( null );
 		}
 		else {
@@ -498,7 +502,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			return null;
 		}
 
-		if ( componentTuplizer.isComponentImmutable() ) {
+		if ( isComponentImmutable() ) {
 			return component;
 		}
 
@@ -532,7 +536,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			return null;
 		}
 
-		if ( componentTuplizer.isComponentImmutable() ) {
+		if ( isComponentImmutable() ) {
 			return original;
 		}
 
@@ -569,7 +573,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			return null;
 		}
 
-		if ( componentTuplizer.isComponentImmutable() ) {
+		if ( isComponentImmutable() ) {
 			return original;
 		}
 		//if ( original == target ) return target;
@@ -601,7 +605,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 	public Object instantiate(Object[] values) throws HibernateException {
 
-		if ( valueTypeInstantiator != null && componentTuplizer.isComponentImmutable() ) {
+		if ( isComponentImmutable() ) {
 			return valueTypeInstantiator.instantiate( propertyNames, values );
 		}
 
@@ -666,7 +670,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 				assembled[i] = propertyTypes[i].assemble( (Serializable) values[i], session, owner );
 			}
 
-			if ( componentTuplizer.isComponentImmutable() ) {
+			if ( isComponentImmutable() ) {
 				return instantiate( assembled );
 			}
 
@@ -722,7 +726,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 				resolvedValues[i] = propertyTypes[i].resolve( values[i], session, owner );
 			}
 
-			if ( componentTuplizer.isComponentImmutable() ) {
+			if ( isComponentImmutable() ) {
 				return instantiate( resolvedValues );
 			}
 
@@ -878,5 +882,9 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 	private boolean isCreateEmptyCompositesEnabled() {
 		return createEmptyCompositesEnabled;
+	}
+
+	private boolean isComponentImmutable() {
+		return valueTypeInstantiator != null;
 	}
 }

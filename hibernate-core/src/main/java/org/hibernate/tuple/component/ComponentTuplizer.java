@@ -16,7 +16,7 @@ import org.hibernate.tuple.Tuplizer;
  * a mapped components.
  * </p>
  * ComponentTuplizer implementations should have the following constructor signature:
- * (org.hibernate.mapping.Component)
+ *      (org.hibernate.mapping.Component)org.hibernate.mapping.Component)
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -31,13 +31,13 @@ public interface ComponentTuplizer extends Tuplizer, Serializable {
 	 */
 	public Object getParent(Object component);
 
-	/**
-	 * Set the value of the parent property.
-	 *
-	 * @param component The component instance on which to set the parent.
-	 * @param parent The parent to be set on the comonent.
-	 * @param factory The current session factory.
-	 */
+    /**
+    * Set the value of the parent property.
+    *
+    * @param component The component instance on which to set the parent.
+    * @param parent The parent to be set on the comonent.
+    * @param factory The current session factory.
+    */
 	public void setParent(Object component, Object parent, SessionFactoryImplementor factory);
 
 	/**
@@ -54,8 +54,4 @@ public interface ComponentTuplizer extends Tuplizer, Serializable {
 	 * @return True if the managed component is available from the managed component; else false.
 	 */
 	public boolean isMethodOf(Method method);
-
-	public default boolean isComponentImmutable() {
-		return false;
-	}
 }

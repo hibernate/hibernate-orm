@@ -73,6 +73,7 @@ public class PropertyBinder {
 	private EntityBinder entityBinder;
 	private boolean isXToMany;
 	private String referencedEntityName;
+	private boolean declaredFinal;
 
 	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName;
@@ -150,6 +151,10 @@ public class PropertyBinder {
 	public void setDeclaringClass(XClass declaringClass) {
 		this.declaringClass = declaringClass;
 		this.declaringClassSet = true;
+	}
+
+	public void setDeclaredFinal(boolean declaredFinal) {
+		this.declaredFinal = declaredFinal;
 	}
 
 	private void validateBind() {
@@ -256,6 +261,8 @@ public class PropertyBinder {
 		else {
 			holder.addProperty( prop, columns, declaringClass );
 		}
+
+		prop.setDeclaredFinal( declaredFinal );
 		return prop;
 	}
 

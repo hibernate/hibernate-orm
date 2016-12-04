@@ -42,7 +42,7 @@ public class ComponentMetamodel implements Serializable {
 
 	// cached for efficiency...
 	private final int propertySpan;
-	private final Map propertyIndexes = new HashMap();
+	private final Map<String, Integer> propertyIndexes = new HashMap<>();
 	private final boolean createEmptyCompositesEnabled;
 
 	//	public ComponentMetamodel(Component component, SessionFactoryImplementor sessionFactory) {
@@ -53,10 +53,10 @@ public class ComponentMetamodel implements Serializable {
 		this.isKey = component.isKey();
 		propertySpan = component.getPropertySpan();
 		properties = new StandardProperty[propertySpan];
-		Iterator itr = component.getPropertyIterator();
+		Iterator<Property> itr = component.getPropertyIterator();
 		int i = 0;
 		while ( itr.hasNext() ) {
-			Property property = (Property) itr.next();
+			Property property = itr.next();
 			properties[i] = PropertyFactory.buildStandardProperty( property, false );
 			propertyIndexes.put( property.getName(), i );
 			i++;

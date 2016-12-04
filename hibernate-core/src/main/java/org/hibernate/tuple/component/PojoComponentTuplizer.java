@@ -127,11 +127,6 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		parentSetter.set( component, parent, factory );
 	}
 
-	@Override
-	public boolean isComponentImmutable() {
-		return !instantiator.canInstantiate();
-	}
-
 	protected Instantiator buildInstantiator(Component component) {
 		if ( component.isEmbedded() && ReflectHelper.isAbstractClass( component.getComponentClass() ) ) {
 			return new ProxiedInstantiator( component );

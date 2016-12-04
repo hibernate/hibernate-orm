@@ -49,6 +49,7 @@ public class Property implements Serializable, MetaAttributable {
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
 	private boolean lob;
+	private boolean declaredFinal;
 
 	public boolean isBackRef() {
 		return false;
@@ -362,4 +363,11 @@ public class Property implements Serializable, MetaAttributable {
 		this.lob = lob;
 	}
 
+	public boolean isDeclaredFinal() {
+		return declaredFinal;
+	}
+
+	public void setDeclaredFinal(boolean declaredFinal) {
+		this.declaredFinal = declaredFinal;
+	}
 }

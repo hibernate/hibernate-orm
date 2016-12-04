@@ -7,6 +7,7 @@
 package org.hibernate.cfg;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1672,6 +1673,7 @@ public final class AnnotationBinder {
 		propertyBinder.setProperty( property );
 		propertyBinder.setReturnedClass( inferredData.getPropertyClass() );
 		propertyBinder.setBuildingContext( context );
+		propertyBinder.setDeclaredFinal( Modifier.isFinal( inferredData.getProperty().getModifiers() ) );
 		if ( isIdentifierMapper ) {
 			propertyBinder.setInsertable( false );
 			propertyBinder.setUpdatable( false );
@@ -2892,7 +2894,7 @@ public final class AnnotationBinder {
 				column.setUpdatable( false );
 			}
 		}
-		
+
 		final JoinColumn joinColumn = property.getAnnotation( JoinColumn.class );
 
 		//Make sure that JPA1 key-many-to-one columns are read only tooj

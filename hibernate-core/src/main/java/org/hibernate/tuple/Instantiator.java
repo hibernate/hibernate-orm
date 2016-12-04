@@ -40,8 +40,4 @@ public interface Instantiator extends Serializable {
 	 * entity/component.
 	 */
 	public boolean isInstance(Object object);
-
-	public default boolean canInstantiate() {
-		return true;
-	}
 }

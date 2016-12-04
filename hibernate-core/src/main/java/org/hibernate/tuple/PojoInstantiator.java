@@ -104,8 +104,4 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	public boolean isInstance(Object object) {
 		return mappedClass.isInstance( object );
 	}
-
-	public boolean canInstantiate() {
-		return constructor != null;
-	}
 }

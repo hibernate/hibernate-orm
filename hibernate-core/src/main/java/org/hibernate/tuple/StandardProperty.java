@@ -20,6 +20,8 @@ import org.hibernate.type.Type;
 @Deprecated
 public class StandardProperty extends AbstractNonIdentifierAttribute implements NonIdentifierAttribute {
 
+	private final boolean declaredFinal;
+
 	/**
 	 * Constructs NonIdentifierProperty instances.
 	 *
@@ -47,7 +49,8 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 			boolean checkable,
 			boolean versionable,
 			CascadeStyle cascadeStyle,
-			FetchMode fetchMode) {
+			FetchMode fetchMode,
+			boolean declaredFinal) {
 		super(
 				null,
 				null,
@@ -66,5 +69,10 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 						.setFetchMode( fetchMode )
 						.createInformation()
 		);
+		this.declaredFinal = declaredFinal;
+	}
+
+	public boolean isDeclaredFinal() {
+		return declaredFinal;
 	}
 }

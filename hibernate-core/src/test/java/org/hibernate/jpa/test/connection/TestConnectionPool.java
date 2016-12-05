@@ -27,9 +27,9 @@ import org.jboss.logging.Logger;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11257")
-public class TestConnectionPoolWithQueryException extends BaseEntityManagerFunctionalTestCase {
+public class TestConnectionPool extends BaseEntityManagerFunctionalTestCase {
 	private final static int CONNECTION_POOL_SIZE = 2;
-	private static final Logger log = Logger.getLogger( TestConnectionPoolWithQueryException.class );
+	private static final Logger log = Logger.getLogger( TestConnectionPool.class );
 
 	@Override
 	public Class[] getAnnotatedClasses() {
@@ -43,7 +43,6 @@ public class TestConnectionPoolWithQueryException extends BaseEntityManagerFunct
 
 	@Override
 	protected void addConfigOptions(Map options) {
-		final Integer integer = Integer.valueOf( CONNECTION_POOL_SIZE );
 		options.put( AvailableSettings.POOL_SIZE, Integer.valueOf( CONNECTION_POOL_SIZE ) );
 	}
 

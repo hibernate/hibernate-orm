@@ -406,7 +406,7 @@ public final class SessionImpl
 			// Original hibernate-entitymanager EM#close behavior
 			checkSessionFactoryOpen();
 			checkOpenOrWaitingForAutoClose();
-			if ( discardOnClose || !isTransactionInProgress() ) {
+			if ( discardOnClose || !isTransactionInProgress( false ) ) {
 				super.close();
 			}
 			else {

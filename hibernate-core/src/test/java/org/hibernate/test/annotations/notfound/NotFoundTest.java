@@ -12,6 +12,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -44,8 +45,19 @@ public class NotFoundTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	public void testOneToOne() throws Exception {
+		doInHibernate( this::sessionFactory, session -> {
+			Show show = new Show();
+			session.save( show );
+
+			ShowDescription showDescription = new ShowDescription();
+			session.save( showDescription );
+		} );
+	}
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Coin.class, Currency.class };
+		return new Class[] {Coin.class, Currency.class, Show.class, ShowDescription.class};
 	}
 }

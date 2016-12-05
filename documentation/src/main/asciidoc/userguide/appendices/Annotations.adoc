@@ -895,6 +895,8 @@ The `TRUE` and `FALSE` values are deprecated since you should be using the JPA h
 The `EXTRA` value has no equivalent in the JPA specification, and it's used to avoid loading the entire collection even when the collection is accessed for the first time.
 Each element is fetched individually using a secondary query.
 
+See the <<chapters/fetching/Fetching.adoc#fetching-LazyCollection, `@LazyCollection` mapping>> section for more info.
+
 [[annotations-hibernate-lazygroup]]
 ==== `@LazyGroup`
 

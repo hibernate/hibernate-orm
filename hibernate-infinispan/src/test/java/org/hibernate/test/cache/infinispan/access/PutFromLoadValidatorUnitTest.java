@@ -159,7 +159,7 @@ public class PutFromLoadValidatorUnitTest {
 			public void call() {
 				PutFromLoadValidator testee = new PutFromLoadValidator(cm.getCache().getAdvancedCache(), regionFactory(cm));
 				Invalidation invalidation = new Invalidation(testee, removeRegion);
-				// the naked put can succeed because it has txTimestamp afterQuery invalidation
+				// the naked put can succeed because it has txTimestamp after invalidation
 				NakedPut nakedPut = new NakedPut(testee, true);
 				exec(transactional, invalidation, nakedPut);
 			}
@@ -469,7 +469,7 @@ public class PutFromLoadValidatorUnitTest {
 		@Override
 		public Void call() throws Exception {
 			try {
-				long txTimestamp = System.currentTimeMillis(); // this should be acquired beforeQuery UserTransaction.begin()
+				long txTimestamp = System.currentTimeMillis(); // this should be acquired before UserTransaction.begin()
 				SharedSessionContractImplementor session = mock (SharedSessionContractImplementor.class);
 				putFromLoadValidator.registerPendingPut(session, KEY1, txTimestamp);
 
@@ -500,7 +500,7 @@ public class PutFromLoadValidatorUnitTest {
 		@Override
 		public Void call() throws Exception {
 			try {
-				long txTimestamp = System.currentTimeMillis(); // this should be acquired beforeQuery UserTransaction.begin()
+				long txTimestamp = System.currentTimeMillis(); // this should be acquired before UserTransaction.begin()
 				SharedSessionContractImplementor session = mock (SharedSessionContractImplementor.class);
 				PutFromLoadValidator.Lock lock = testee.acquirePutFromLoadLock(session, KEY1, txTimestamp);
 				try {

@@ -50,7 +50,7 @@ public class TombstoneTest extends AbstractNonInvalidationTest {
       first.get(WAIT_TIMEOUT, TimeUnit.SECONDS);
       second.get(WAIT_TIMEOUT, TimeUnit.SECONDS);
 
-      // afterQuery commit, the tombstone should still be in memory for some time (though, updatable)
+      // after commit, the tombstone should still be in memory for some time (though, updatable)
       contents = Caches.entrySet(entityCache).toMap();
       assertEquals(1, contents.size());
       assertEquals(Tombstone.class, contents.get(itemId).getClass());

@@ -316,7 +316,7 @@ public class EntityRegionAccessStrategyTest extends
 						log.debug("Read latch acquired, verify local access strategy");
 
 						// This won't block w/ mvc and will read the old value (if transactional as the transaction
-						// is not being committed yet, or if non-strict as we do the actual update only afterQuery transaction)
+						// is not being committed yet, or if non-strict as we do the actual update only after transaction)
 						// or null if non-transactional
 						Object expected = isTransactional() || accessType == AccessType.NONSTRICT_READ_WRITE ? VALUE1 : null;
 						assertEquals("Correct value", expected, localAccessStrategy.get(session, KEY, session.getTimestamp()));

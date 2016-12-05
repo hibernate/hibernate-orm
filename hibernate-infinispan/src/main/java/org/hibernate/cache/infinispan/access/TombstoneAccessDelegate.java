@@ -79,7 +79,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride) throws CacheException {
 		long lastRegionInvalidation = region.getLastRegionInvalidation();
 		if (txTimestamp < lastRegionInvalidation) {
-			log.tracef("putFromLoad not executed since tx started at %d, beforeQuery last region invalidation finished = %d", txTimestamp, lastRegionInvalidation);
+			log.tracef("putFromLoad not executed since tx started at %d, before last region invalidation finished = %d", txTimestamp, lastRegionInvalidation);
 			return false;
 		}
 		if (minimalPutOverride) {
@@ -88,7 +88,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 				Tombstone tombstone = (Tombstone) prev;
 				long lastTimestamp = tombstone.getLastTimestamp();
 				if (txTimestamp <= lastTimestamp) {
-					log.tracef("putFromLoad not executed since tx started at %d, beforeQuery last invalidation finished = %d", txTimestamp, lastTimestamp);
+					log.tracef("putFromLoad not executed since tx started at %d, before last invalidation finished = %d", txTimestamp, lastTimestamp);
 					return false;
 				}
 			}

@@ -33,8 +33,8 @@ import org.infinispan.statetransfer.StateTransferManager;
 
 /**
  * Intercepts transactions in Infinispan, calling {@link PutFromLoadValidator#beginInvalidatingKey(Object, Object)}
- * beforeQuery locks are acquired (and the entry is invalidated) and sends {@link EndInvalidationCommand} to release
- * invalidation throught {@link PutFromLoadValidator#endInvalidatingKey(Object, Object)} afterQuery the transaction
+ * before locks are acquired (and the entry is invalidated) and sends {@link EndInvalidationCommand} to release
+ * invalidation throught {@link PutFromLoadValidator#endInvalidatingKey(Object, Object)} after the transaction
  * is committed.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -68,14 +68,14 @@ class TxPutFromLoadInterceptor extends BaseRpcInterceptor {
 	}
 
 	// We need to intercept PrepareCommand, not InvalidateCommand since the interception takes
-	// place beforeQuery EntryWrappingInterceptor and the PrepareCommand is multiplexed into InvalidateCommands
+	// place before EntryWrappingInterceptor and the PrepareCommand is multiplexed into InvalidateCommands
 	// as part of EntryWrappingInterceptor
 	@Override
 	public Object visitPrepareCommand(TxInvocationContext ctx, PrepareCommand command) throws Throwable {
 		if (ctx.isOriginLocal()) {
 			// We can't wait to commit phase to remove the entry locally (invalidations are processed in 1pc
 			// on remote nodes, so only local case matters here). The problem is that while the entry is locked
-			// reads still can take place and we can read outdated collection afterQuery reading updated entity
+			// reads still can take place and we can read outdated collection after reading updated entity
 			// owning this collection from DB; when this happens, the version lock on entity cannot protect
 			// us against concurrent modification of the collection. Therefore, we need to remove the entry
 			// here (even without lock!) and let possible update happen in commit phase.

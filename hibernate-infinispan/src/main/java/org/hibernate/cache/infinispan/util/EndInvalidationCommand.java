@@ -14,7 +14,7 @@ import org.infinispan.commands.remote.BaseRpcCommand;
 import org.infinispan.context.InvocationContext;
 
 /**
- * Sent in commit phase (afterQuery DB commit) to remote nodes in order to stop invalidating
+ * Sent in commit phase (after DB commit) to remote nodes in order to stop invalidating
  * putFromLoads.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;

@@ -28,7 +28,7 @@ public final class TxUtil {
 			Caches.withinTx(tm, () -> {
 				withSession(sb, s -> {
 					consumer.accept(s);
-					// we need to flush the session beforeQuery close when running with JTA transactions
+					// we need to flush the session before close when running with JTA transactions
 					s.flush();
 				});
 				return null;

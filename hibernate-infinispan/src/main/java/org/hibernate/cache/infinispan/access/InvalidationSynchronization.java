@@ -9,7 +9,7 @@ package org.hibernate.cache.infinispan.access;
 import java.util.UUID;
 
 /**
- * Synchronization that should release the locks afterQuery invalidation is complete.
+ * Synchronization that should release the locks after invalidation is complete.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */

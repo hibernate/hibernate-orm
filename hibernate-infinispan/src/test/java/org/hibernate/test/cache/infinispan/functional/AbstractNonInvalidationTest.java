@@ -112,7 +112,7 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
       return executor.submit(() -> withTxSessionApply(s -> {
          try {
             Item item = s.load(Item.class, id);
-            item.getName(); // force load & putFromLoad beforeQuery the barrier
+            item.getName(); // force load & putFromLoad before the barrier
             loadBarrier.await(WAIT_TIMEOUT, TimeUnit.SECONDS);
             s.delete(item);
             if (preFlushLatch != null) {
@@ -141,7 +141,7 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
       return executor.submit(() -> withTxSessionApply(s -> {
          try {
             Item item = s.load(Item.class, id);
-            item.getName(); // force load & putFromLoad beforeQuery the barrier
+            item.getName(); // force load & putFromLoad before the barrier
             loadBarrier.await(WAIT_TIMEOUT, TimeUnit.SECONDS);
             item.setDescription("Updated item");
             s.update(item);

@@ -104,11 +104,11 @@ public class TypeOverrides implements Serializable {
 	}
 
    /**
-    * Maximum lifespan of a cache entry, afterQuery which the entry is expired
+    * Maximum lifespan of a cache entry, after which the entry is expired
     * cluster-wide, in milliseconds. -1 means the entries never expire.
     *
     * @param expirationLifespan long representing the maximum lifespan,
-    *                           in milliseconds, for a cached entry beforeQuery
+    *                           in milliseconds, for a cached entry before
     *                           it's expired
     */
 	public void setExpirationLifespan(long expirationLifespan) {
@@ -126,7 +126,7 @@ public class TypeOverrides implements Serializable {
     * cluster-wide. -1 means the entries never expire.
     *
     * @param expirationMaxIdle long representing the maximum idle time, in
-    *                          milliseconds, for a cached entry beforeQuery it's
+    *                          milliseconds, for a cached entry before it's
     *                          expired
     */
 	public void setExpirationMaxIdle(long expirationMaxIdle) {

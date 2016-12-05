@@ -477,7 +477,7 @@ public class ReadWriteTest extends ReadOnlyTest {
 	public void testNaturalIdCached() throws Exception {
 		saveSomeCitizens();
 
-		// Clear the cache beforeQuery the transaction begins
+		// Clear the cache before the transaction begins
 		ReadWriteTest.this.cleanupCache();
 		Thread.sleep(10);
 
@@ -533,7 +533,7 @@ public class ReadWriteTest extends ReadOnlyTest {
 		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
-		//Try NaturalIdLoadAccess afterQuery insert
+		//Try NaturalIdLoadAccess after insert
 		final Citizen citizen = withTxSessionApply(s -> {
 			State france = ReadWriteTest.this.getState(s, "Ile de France");
 			NaturalIdLoadAccess<Citizen> naturalIdLoader = s.byNaturalId(Citizen.class);
@@ -575,7 +575,7 @@ public class ReadWriteTest extends ReadOnlyTest {
 			markRollbackOnly(s);
 		});
 
-		// Try NaturalIdLoadAccess afterQuery load
+		// Try NaturalIdLoadAccess after load
 		withTxSession(s -> {
 			State france = ReadWriteTest.this.getState(s, "Ile de France");
 			NaturalIdLoadAccess naturalIdLoader = s.byNaturalId(Citizen.class);

@@ -71,7 +71,7 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
 	}
 
    /**
-    * Attempt to cache an object, afterQuery loading from the database, explicitly
+    * Attempt to cache an object, after loading from the database, explicitly
     * specifying the minimalPut behavior.
     *
 	 * @param session Current session

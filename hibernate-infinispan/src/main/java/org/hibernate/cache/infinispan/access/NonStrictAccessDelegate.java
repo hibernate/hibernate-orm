@@ -24,9 +24,9 @@ import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.context.Flag;
 
 /**
- * Access delegate that relaxes the consistency a bit: stale reads are prohibited only afterQuery the transaction
+ * Access delegate that relaxes the consistency a bit: stale reads are prohibited only after the transaction
  * commits. This should also be able to work with async caches, and that would allow the replication delay
- * even afterQuery the commit.
+ * even after the commit.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -80,7 +80,7 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride) throws CacheException {
 		long lastRegionInvalidation = region.getLastRegionInvalidation();
 		if (txTimestamp < lastRegionInvalidation) {
-			log.tracef("putFromLoad not executed since tx started at %d, beforeQuery last region invalidation finished = %d", txTimestamp, lastRegionInvalidation);
+			log.tracef("putFromLoad not executed since tx started at %d, before last region invalidation finished = %d", txTimestamp, lastRegionInvalidation);
 			return false;
 		}
 		assert version != null;

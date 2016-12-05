@@ -149,7 +149,7 @@ public class CollectionRegionAccessStrategyTest extends
 				try {
 					removeLatch.countDown();
 					// the remove should be blocked because the putFromLoad has been acquired
-					// and the remove can continue only afterQuery we've inserted the entry
+					// and the remove can continue only after we've inserted the entry
 					assertFalse(pferLatch.await( 2, TimeUnit.SECONDS ) );
 				}
 				catch (InterruptedException e) {

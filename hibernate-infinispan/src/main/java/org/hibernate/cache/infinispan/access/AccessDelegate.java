@@ -23,7 +23,7 @@ public interface AccessDelegate {
 	Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException;
 
 	/**
-	 * Attempt to cache an object, afterQuery loading from the database.
+	 * Attempt to cache an object, after loading from the database.
 	 *
 	 * @param session Current session
 	 * @param key The item key
@@ -35,7 +35,7 @@ public interface AccessDelegate {
 	boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version);
 
 	/**
-	 * Attempt to cache an object, afterQuery loading from the database, explicitly
+	 * Attempt to cache an object, after loading from the database, explicitly
 	 * specifying the minimalPut behavior.
 	 *
 	 * @param session Current session.
@@ -51,7 +51,7 @@ public interface AccessDelegate {
 			throws CacheException;
 
 	/**
-	 * Called afterQuery an item has been inserted (beforeQuery the transaction completes),
+	 * Called after an item has been inserted (before the transaction completes),
 	 * instead of calling evict().
 	 *
 	 * @param session Current session
@@ -64,7 +64,7 @@ public interface AccessDelegate {
 	boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version) throws CacheException;
 
 	/**
-	 * Called afterQuery an item has been updated (beforeQuery the transaction completes),
+	 * Called after an item has been updated (before the transaction completes),
 	 * instead of calling evict().
 	 *
 	 * @param session Current session
@@ -79,7 +79,7 @@ public interface AccessDelegate {
 			throws CacheException;
 
 	/**
-	 * Called afterQuery an item has become stale (beforeQuery the transaction completes).
+	 * Called after an item has become stale (before the transaction completes).
 	 *
 	 * @param session Current session
 	 * @param key The key of the item to remove
@@ -113,7 +113,7 @@ public interface AccessDelegate {
 
 	/**
 	 * Called when we have finished the attempted update/delete (which may or
-	 * may not have been successful), afterQuery transaction completion.  This method
+	 * may not have been successful), after transaction completion.  This method
 	 * is used by "asynchronous" concurrency strategies.
 	 *
 	 *
@@ -124,7 +124,7 @@ public interface AccessDelegate {
 	void unlockItem(SharedSessionContractImplementor session, Object key) throws CacheException;
 
 	/**
-	 * Called afterQuery an item has been inserted (afterQuery the transaction completes),
+	 * Called after an item has been inserted (after the transaction completes),
 	 * instead of calling release().
 	 * This method is used by "asynchronous" concurrency strategies.
 	 *
@@ -139,7 +139,7 @@ public interface AccessDelegate {
 	boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version);
 
 	/**
-	 * Called afterQuery an item has been updated (afterQuery the transaction completes),
+	 * Called after an item has been updated (after the transaction completes),
 	 * instead of calling release().  This method is used by "asynchronous"
 	 * concurrency strategies.
 	 *

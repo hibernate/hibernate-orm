@@ -688,7 +688,7 @@ public abstract class CorrectnessTestCase {
                throw e;
             }
          }
-         // cannot close beforeQuery XA commit since force increment requires open connection
+         // cannot close before XA commit since force increment requires open connection
          // s.close();
       }
 

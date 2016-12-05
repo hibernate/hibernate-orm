@@ -106,7 +106,7 @@ public class SessionRefreshTest extends DualNodeTest {
 		acct0 = dao0.getAccountWithRefresh( id );
 		assertNotNull( acct0 );
 		assertEquals( DualNodeTest.REMOTE, acct0.getBranch() );
-		log.debug( "Contents afterQuery refreshing in remote: " + TestingUtil.printCache( localCache ) );
+		log.debug( "Contents after refreshing in remote: " + TestingUtil.printCache( localCache ) );
 
 		// Double check with a brand new session, in case the other session
 		// for some reason bypassed the 2nd level cache
@@ -114,6 +114,6 @@ public class SessionRefreshTest extends DualNodeTest {
 		Account acct0A = dao0A.getAccount( id );
 		assertNotNull( acct0A );
 		assertEquals( DualNodeTest.REMOTE, acct0A.getBranch() );
-		log.debug( "Contents afterQuery creating a new session: " + TestingUtil.printCache( localCache ) );
+		log.debug( "Contents after creating a new session: " + TestingUtil.printCache( localCache ) );
 	}
 }

@@ -91,8 +91,8 @@ public class InvalidationTest extends SingleNodeTest {
       Thread getThread = new Thread(() -> {
          try {
             withTxSession(s -> {
-               // DB load should happen beforeQuery the record is deleted,
-               // putFromLoad should happen afterQuery deleteThread ends
+               // DB load should happen before the record is deleted,
+               // putFromLoad should happen after deleteThread ends
                Item loadedItem = s.get(Item.class, item.getId());
                if (getThreadBlockedInDB.get()) {
                   assertNull(loadedItem);

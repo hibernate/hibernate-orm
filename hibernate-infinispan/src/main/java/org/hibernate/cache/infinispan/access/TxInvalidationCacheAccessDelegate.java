@@ -29,7 +29,7 @@ public class TxInvalidationCacheAccessDelegate extends InvalidationCacheAccessDe
 		}
 
 		// We need to be invalidating even for regular writes; if we were not and the write was followed by eviction
-		// (or any other invalidation), naked put that was started afterQuery the eviction ended but beforeQuery this insert
+		// (or any other invalidation), naked put that was started after the eviction ended but before this insert
 		// ended could insert the stale entry into the cache (since the entry was removed by eviction).
 		if ( !putValidator.beginInvalidatingKey(session, key)) {
 			throw log.failedInvalidatePendingPut(key, region.getName());
@@ -53,7 +53,7 @@ public class TxInvalidationCacheAccessDelegate extends InvalidationCacheAccessDe
 		// be informed of the change.
 
 		// We need to be invalidating even for regular writes; if we were not and the write was followed by eviction
-		// (or any other invalidation), naked put that was started afterQuery the eviction ended but beforeQuery this update
+		// (or any other invalidation), naked put that was started after the eviction ended but before this update
 		// ended could insert the stale entry into the cache (since the entry was removed by eviction).
 		if ( !putValidator.beginInvalidatingKey(session, key)) {
 			log.failedInvalidatePendingPut(key, region.getName());

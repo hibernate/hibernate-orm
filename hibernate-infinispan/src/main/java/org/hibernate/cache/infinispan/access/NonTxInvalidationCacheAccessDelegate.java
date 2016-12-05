@@ -35,7 +35,7 @@ public class NonTxInvalidationCacheAccessDelegate extends InvalidationCacheAcces
 		}
 
 		// We need to be invalidating even for regular writes; if we were not and the write was followed by eviction
-		// (or any other invalidation), naked put that was started afterQuery the eviction ended but beforeQuery this insert
+		// (or any other invalidation), naked put that was started after the eviction ended but before this insert
 		// ended could insert the stale entry into the cache (since the entry was removed by eviction).
 		if ( !putValidator.beginInvalidatingWithPFER(session, key, value)) {
 			throw log.failedInvalidatePendingPut(key, region.getName());
@@ -59,7 +59,7 @@ public class NonTxInvalidationCacheAccessDelegate extends InvalidationCacheAcces
 		// be informed of the change.
 
 		// We need to be invalidating even for regular writes; if we were not and the write was followed by eviction
-		// (or any other invalidation), naked put that was started afterQuery the eviction ended but beforeQuery this update
+		// (or any other invalidation), naked put that was started after the eviction ended but before this update
 		// ended could insert the stale entry into the cache (since the entry was removed by eviction).
 		if ( !putValidator.beginInvalidatingWithPFER(session, key, value)) {
 			throw log.failedInvalidatePendingPut(key, region.getName());
@@ -76,7 +76,7 @@ public class NonTxInvalidationCacheAccessDelegate extends InvalidationCacheAcces
 
 	protected boolean isCommitted(SharedSessionContractImplementor session) {
 		if (session.isClosed()) {
-			// If the session has been closed beforeQuery transaction ends, so we cannot find out
+			// If the session has been closed before transaction ends, so we cannot find out
 			// if the transaction was successful and if we can do the PFER.
 			// As this can happen only in JTA environment, we can query the TransactionManager
 			// directly here.

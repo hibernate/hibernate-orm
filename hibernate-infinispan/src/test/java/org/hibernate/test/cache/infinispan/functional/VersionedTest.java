@@ -45,7 +45,7 @@ import static org.junit.Assert.assertTrue;
  * Tests specific to versioned entries -based caches.
  * Similar to {@link TombstoneTest} but some cases have been removed since
  * we are modifying the cache only once, therefore some sequences of operations
- * would fail beforeQuery touching the cache.
+ * would fail before touching the cache.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */

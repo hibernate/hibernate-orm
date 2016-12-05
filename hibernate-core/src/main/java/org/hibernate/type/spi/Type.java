@@ -392,6 +392,22 @@ public interface Type<T> extends org.hibernate.sqm.domain.DomainReference {
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
+	 * state) taking a shortcut for entity references.
+	 * <p/>
+	 * For most types this should equate to an {@link Object#equals} check on the values.  For associations
+	 * the implication is a bit different.  For most types it is conceivable to simply delegate to {@link #isEqual}
+	 *
+	 * @param x The first value
+	 * @param y The second value
+	 *
+	 * @return True if they are considered the same (see discussion above).
+	 *
+	 * @throws HibernateException A problem occurred performing the comparison
+	 */
+	boolean isSame(T x, T y) throws HibernateException;
+
+	/**
+	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
 	 * state).
 	 * <p/>
 	 * This should always equate to some form of comparison of the value's internal state.  As an example, for

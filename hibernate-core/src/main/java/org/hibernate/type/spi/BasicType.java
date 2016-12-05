@@ -159,6 +159,11 @@ public interface BasicType<T> extends Type<T>, org.hibernate.sqm.domain.BasicTyp
 	}
 
 	@Override
+	default boolean isSame(T x, T y) {
+		return isEqual( x, y );
+	}
+
+	@Override
 	default boolean isEqual(T x, T y) {
 		return getJavaTypeDescriptor().areEqual( x, y );
 	}

@@ -194,6 +194,11 @@ public class AnyType implements Type {
 	}
 
 	@Override
+	public boolean isSame(Object x, Object y) throws HibernateException {
+		return x == y;
+	}
+
+	@Override
 	public boolean isEqual(Object x, Object y) throws HibernateException {
 		return false;
 	}

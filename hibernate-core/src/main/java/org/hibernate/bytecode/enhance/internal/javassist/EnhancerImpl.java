@@ -11,8 +11,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -114,6 +116,9 @@ public class EnhancerImpl implements Enhancer {
 	protected CtClass loadCtClassFromClass(Class<?> aClass) {
 		String resourceName = aClass.getName().replace( '.', '/' ) + ".class";
 		InputStream resourceAsStream = aClass.getClassLoader().getResourceAsStream( resourceName );
+		if ( resourceAsStream == null ) {
+			throw new UncheckedIOException( new FileNotFoundException ( "Not found: " + resourceName ) );
+		}
 		try {
 			return classPool.makeClass( resourceAsStream );
 		}

@@ -73,7 +73,6 @@ import org.hibernate.TypeHelper;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.criterion.NaturalIdentifier;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -406,7 +405,7 @@ public final class SessionImpl
 			// Original hibernate-entitymanager EM#close behavior
 			checkSessionFactoryOpen();
 			checkOpenOrWaitingForAutoClose();
-			if ( discardOnClose || !isTransactionInProgress() ) {
+			if ( discardOnClose || !isTransactionInProgress( false ) ) {
 				super.close();
 			}
 			else {
@@ -423,6 +422,15 @@ public final class SessionImpl
 				getFactory().getStatistics().closeSession();
 			}
 		}
+	}
+
+	private boolean isTransactionInProgress(boolean isMarkedRollbackConsideredActive) {
+		if ( waitingForAutoClose ) {
+			return getSessionFactory().isOpen() &&
+					getTransactionCoordinator().isTransactionActive( isMarkedRollbackConsideredActive );
+		}
+		return !isClosed() &&
+				getTransactionCoordinator().isTransactionActive( isMarkedRollbackConsideredActive );
 	}
 
 	@Override

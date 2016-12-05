@@ -27,8 +27,8 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -38,8 +38,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-11302")
 @FailureExpected( jiraKey = "HHH-11302", message = "TBD")
+@Ignore
 public class EmbeddableWithOneToManyTest extends BaseCoreFunctionalTestCase {
 
 	// Add your entities here.

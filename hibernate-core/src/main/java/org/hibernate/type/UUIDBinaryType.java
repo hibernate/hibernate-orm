@@ -6,13 +6,11 @@
  */
 package org.hibernate.type;
 
-import java.util.Map;
 import java.util.UUID;
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.UUIDTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.BinaryTypeDescriptor;
 
@@ -21,11 +19,11 @@ import org.hibernate.type.spi.descriptor.sql.BinaryTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class UUIDBinaryType extends AbstractSingleColumnStandardBasicType<UUID> implements JdbcLiteralFormatter<UUID> {
+public class UUIDBinaryType extends BasicTypeImpl<UUID> implements JdbcLiteralFormatter<UUID> {
 	public static final UUIDBinaryType INSTANCE = new UUIDBinaryType();
 
 	public UUIDBinaryType() {
-		super( BinaryTypeDescriptor.INSTANCE, UUIDTypeDescriptor.INSTANCE );
+		super( UUIDTypeDescriptor.INSTANCE, BinaryTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

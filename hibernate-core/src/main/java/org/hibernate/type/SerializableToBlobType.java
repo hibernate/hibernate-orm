@@ -12,6 +12,7 @@ import java.util.Properties;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.SerializableTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor;
@@ -20,7 +21,7 @@ import org.hibernate.usertype.DynamicParameterizedType;
 /**
  * @author Brett Meyer
  */
-public class SerializableToBlobType<T extends Serializable> extends AbstractSingleColumnStandardBasicType<T> implements DynamicParameterizedType {
+public class SerializableToBlobType<T extends Serializable> extends BasicTypeImpl<T> implements DynamicParameterizedType {
 	
 	public static final String CLASS_NAME = "classname";
 	
@@ -29,7 +30,7 @@ public class SerializableToBlobType<T extends Serializable> extends AbstractSing
 	private JavaTypeDescriptor javaTypeDescriptor;
 
 	public SerializableToBlobType() {
-		super( BlobTypeDescriptor.DEFAULT, new SerializableTypeDescriptor( Serializable.class ) );
+		super( new SerializableTypeDescriptor( Serializable.class ), BlobTypeDescriptor.DEFAULT );
 	}
 
 	@Override

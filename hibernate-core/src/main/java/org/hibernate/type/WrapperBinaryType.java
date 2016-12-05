@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.ByteArrayTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.VarbinaryTypeDescriptor;
 
@@ -16,11 +17,11 @@ import org.hibernate.type.spi.descriptor.sql.VarbinaryTypeDescriptor;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class WrapperBinaryType extends AbstractSingleColumnStandardBasicType<Byte[]> {
+public class WrapperBinaryType extends BasicTypeImpl<Byte[]> {
 	public static final WrapperBinaryType INSTANCE = new WrapperBinaryType();
 
 	public WrapperBinaryType() {
-		super( VarbinaryTypeDescriptor.INSTANCE, ByteArrayTypeDescriptor.INSTANCE );
+		super( ByteArrayTypeDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

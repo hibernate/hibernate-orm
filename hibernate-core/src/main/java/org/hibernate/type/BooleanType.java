@@ -8,6 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
@@ -18,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public class BooleanType
-		extends AbstractSingleColumnStandardBasicType<Boolean> implements JdbcLiteralFormatter<Boolean> {
+		extends BasicTypeImpl<Boolean> implements JdbcLiteralFormatter<Boolean> {
 	public static final BooleanType INSTANCE = new BooleanType();
 
 	public BooleanType() {
@@ -26,7 +27,7 @@ public class BooleanType
 	}
 
 	protected BooleanType(SqlTypeDescriptor sqlTypeDescriptor, BooleanTypeDescriptor javaTypeDescriptor) {
-		super( sqlTypeDescriptor, javaTypeDescriptor );
+		super( javaTypeDescriptor, sqlTypeDescriptor );
 	}
 
 	@Override

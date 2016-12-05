@@ -6,8 +6,10 @@
  */
 package org.hibernate.type.spi;
 
+import org.hibernate.sqm.domain.EntityReference;
+
 /**
  * @author Steve Ebersole
  */
-public interface EntityType extends Type, org.hibernate.sqm.domain.Type {
+public interface EntityType extends Type, EntityReference {
 }

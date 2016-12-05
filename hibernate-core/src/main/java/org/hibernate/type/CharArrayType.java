@@ -8,6 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
 
@@ -17,12 +18,12 @@ import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class CharArrayType extends AbstractSingleColumnStandardBasicType<char[]>
+public class CharArrayType extends BasicTypeImpl<char[]>
 		implements JdbcLiteralFormatter<char[]> {
 	public static final CharArrayType INSTANCE = new CharArrayType();
 
 	public CharArrayType() {
-		super( VarcharTypeDescriptor.INSTANCE, PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
+		super( PrimitiveCharacterArrayTypeDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

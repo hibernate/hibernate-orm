@@ -16,7 +16,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.VersionType;
+import org.hibernate.type.spi.VersionSupport;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.LocalDateTimeJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
@@ -26,8 +27,8 @@ import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
  * @author Steve Ebersole
  */
 public class LocalDateTimeType
-		extends AbstractSingleColumnStandardBasicType<LocalDateTime>
-		implements VersionType<LocalDateTime>, JdbcLiteralFormatter<LocalDateTime> {
+		extends BasicTypeImpl<LocalDateTime>
+		implements VersionSupport<LocalDateTime>, JdbcLiteralFormatter<LocalDateTime> {
 	/**
 	 * Singleton access
 	 */
@@ -40,7 +41,7 @@ public class LocalDateTimeType
 	 */
 	@SuppressWarnings("WeakerAccess")
 	protected LocalDateTimeType() {
-		super( TimestampTypeDescriptor.INSTANCE, LocalDateTimeJavaDescriptor.INSTANCE );
+		super( LocalDateTimeJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
 	}
 
 	@Override

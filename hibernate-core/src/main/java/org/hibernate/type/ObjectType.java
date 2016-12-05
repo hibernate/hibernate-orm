@@ -7,6 +7,8 @@
 package org.hibernate.type;
 
 
+import org.hibernate.type.spi.BasicType;
+
 /**
  * Specific adaptation of the "any" type to the old deprecated "object" type
  *
@@ -20,7 +22,7 @@ public class ObjectType extends AnyType implements BasicType {
 	public static final ObjectType INSTANCE = new ObjectType();
 
 	private ObjectType() {
-		super( StringType.INSTANCE, SerializableType.INSTANCE );
+		super(  SerializableType.INSTANCE, StringType.INSTANCE, );
 	}
 
 	@Override

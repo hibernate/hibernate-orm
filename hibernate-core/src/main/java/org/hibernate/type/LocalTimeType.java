@@ -13,6 +13,7 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.LocalTimeJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
 
@@ -21,7 +22,7 @@ import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class LocalTimeType extends AbstractSingleColumnStandardBasicType<LocalTime> implements JdbcLiteralFormatter<LocalTime> {
+public class LocalTimeType extends BasicTypeImpl<LocalTime> implements JdbcLiteralFormatter<LocalTime> {
 	/**
 	 * Singleton access
 	 */
@@ -34,7 +35,7 @@ public class LocalTimeType extends AbstractSingleColumnStandardBasicType<LocalTi
 	 */
 	@SuppressWarnings("WeakerAccess")
 	protected LocalTimeType() {
-		super( TimeTypeDescriptor.INSTANCE, LocalTimeJavaDescriptor.INSTANCE );
+		super( LocalTimeJavaDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE );
 	}
 
 	@Override

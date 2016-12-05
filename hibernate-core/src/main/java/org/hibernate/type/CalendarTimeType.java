@@ -11,6 +11,7 @@ import java.util.Calendar;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.CalendarTimeTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
 
@@ -22,12 +23,12 @@ import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class CalendarTimeType extends AbstractSingleColumnStandardBasicType<Calendar>
+public class CalendarTimeType extends BasicTypeImpl<Calendar>
 		implements JdbcLiteralFormatter<Calendar> {
 	public static final CalendarTimeType INSTANCE = new CalendarTimeType();
 
 	public CalendarTimeType() {
-		super( TimeTypeDescriptor.INSTANCE, CalendarTimeTypeDescriptor.INSTANCE );
+		super( CalendarTimeTypeDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

@@ -10,6 +10,7 @@ import java.sql.Clob;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.ClobTypeDescriptor;
 
 /**
@@ -18,11 +19,11 @@ import org.hibernate.type.spi.descriptor.java.ClobTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> {
+public class ClobType extends BasicTypeImpl<Clob> {
 	public static final ClobType INSTANCE = new ClobType();
 
 	public ClobType() {
-		super( org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor.DEFAULT, ClobTypeDescriptor.INSTANCE );
+		super( ClobTypeDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor.DEFAULT );
 	}
 
 	@Override

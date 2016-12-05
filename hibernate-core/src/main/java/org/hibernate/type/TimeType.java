@@ -12,6 +12,7 @@ import java.util.Date;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.JdbcTimeTypeDescriptor;
 
 /**
@@ -20,12 +21,12 @@ import org.hibernate.type.spi.descriptor.java.JdbcTimeTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class TimeType extends AbstractSingleColumnStandardBasicType<Date> implements JdbcLiteralFormatter<Date> {
+public class TimeType extends BasicTypeImpl<Date> implements JdbcLiteralFormatter<Date> {
 
 	public static final TimeType INSTANCE = new TimeType();
 
 	public TimeType() {
-		super( org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor.INSTANCE, JdbcTimeTypeDescriptor.INSTANCE );
+		super( JdbcTimeTypeDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

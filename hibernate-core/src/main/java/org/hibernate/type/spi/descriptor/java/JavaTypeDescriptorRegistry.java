@@ -11,17 +11,26 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.persistence.Entity;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.type.internal.descriptor.java.JavaTypeDescriptorBasicAdaptorImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
-import org.hibernate.type.spi.descriptor.WrapperOptions;
-import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
+import org.hibernate.type.spi.descriptor.java.managed.EntityDescriptor;
+import org.hibernate.type.spi.descriptor.java.managed.EntityHierarchy;
+import org.hibernate.type.spi.descriptor.java.managed.IdentifiableTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.managed.JavaTypeDescriptorEmbeddableImplementor;
+import org.hibernate.type.spi.descriptor.java.managed.JavaTypeDescriptorEntityImplementor;
+import org.hibernate.type.spi.descriptor.java.managed.JavaTypeDescriptorMappedSuperclassImplementor;
+import org.hibernate.type.spi.descriptor.java.managed.ManagedTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.managed.MappedSuperclassTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.managed.RootEntityDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -30,90 +39,39 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class JavaTypeDescriptorRegistry {
+public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.BaselineTarget {
 	private static final Logger log = Logger.getLogger( JavaTypeDescriptorRegistry.class );
 
-	private final TypeDescriptorRegistryAccess typeConfiguration;
-
-	private ConcurrentHashMap<Class,JavaTypeDescriptor> descriptorsByClass = new ConcurrentHashMap<>();
+	private final TypeConfiguration typeConfiguration;
+	private final ConcurrentHashMap<String,JavaTypeDescriptor> descriptorsByName = new ConcurrentHashMap<>();
 
 	public JavaTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
-
-		addDescriptorInternal( ByteTypeDescriptor.INSTANCE );
-		addDescriptorInternal( BooleanTypeDescriptor.INSTANCE );
-		addDescriptorInternal( CharacterTypeDescriptor.INSTANCE );
-		addDescriptorInternal( ShortTypeDescriptor.INSTANCE );
-		addDescriptorInternal( IntegerTypeDescriptor.INSTANCE );
-		addDescriptorInternal( LongTypeDescriptor.INSTANCE );
-		addDescriptorInternal( FloatTypeDescriptor.INSTANCE );
-		addDescriptorInternal( DoubleTypeDescriptor.INSTANCE );
-		addDescriptorInternal( BigDecimalTypeDescriptor.INSTANCE );
-		addDescriptorInternal( BigIntegerTypeDescriptor.INSTANCE );
-
-		addDescriptorInternal( StringTypeDescriptor.INSTANCE );
-
-		addDescriptorInternal( BlobTypeDescriptor.INSTANCE );
-		addDescriptorInternal( ClobTypeDescriptor.INSTANCE );
-		addDescriptorInternal( NClobTypeDescriptor.INSTANCE );
-
-		addDescriptorInternal( ByteArrayTypeDescriptor.INSTANCE );
-		addDescriptorInternal( CharacterArrayTypeDescriptor.INSTANCE );
-		addDescriptorInternal( PrimitiveByteArrayTypeDescriptor.INSTANCE );
-		addDescriptorInternal( PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
-
-		addDescriptorInternal( DurationJavaDescriptor.INSTANCE );
-		addDescriptorInternal( InstantJavaDescriptor.INSTANCE );
-		addDescriptorInternal( LocalDateJavaDescriptor.INSTANCE );
-		addDescriptorInternal( LocalDateTimeJavaDescriptor.INSTANCE );
-		addDescriptorInternal( OffsetDateTimeJavaDescriptor.INSTANCE );
-		addDescriptorInternal( OffsetTimeJavaDescriptor.INSTANCE );
-		addDescriptorInternal( ZonedDateTimeJavaDescriptor.INSTANCE );
-
-		addDescriptorInternal( CalendarTypeDescriptor.INSTANCE );
-		addDescriptorInternal( DateTypeDescriptor.INSTANCE );
-		addDescriptorInternal( java.sql.Date.class, JdbcDateTypeDescriptor.INSTANCE );
-		addDescriptorInternal( java.sql.Time.class, JdbcTimeTypeDescriptor.INSTANCE );
-		addDescriptorInternal( java.sql.Timestamp.class, JdbcTimestampTypeDescriptor.INSTANCE );
-		addDescriptorInternal( TimeZoneTypeDescriptor.INSTANCE );
-
-		addDescriptorInternal( ClassTypeDescriptor.INSTANCE );
-
-		addDescriptorInternal( CurrencyTypeDescriptor.INSTANCE );
-		addDescriptorInternal( LocaleTypeDescriptor.INSTANCE );
-		addDescriptorInternal( UrlTypeDescriptor.INSTANCE );
-		addDescriptorInternal( UUIDTypeDescriptor.INSTANCE );
+		JavaTypeDescriptorBaseline.prime( this );
 	}
 
 	/**
-	 * Adds this Java type descriptor to the internal registry under it's reported
-	 * {@link JavaTypeDescriptor#getJavaTypeClass()}
+	 * Adds the given descriptor to this registry
 	 *
-	 * @param descriptor The descriptor to register.
-	 *
-	 * @return The return the old registry entry, if one, for this descriptor's Java type; otherwise, returns {@code null}
+	 * @param descriptor The descriptor to add.
 	 */
+	public void addDescriptor(JavaTypeDescriptor descriptor) {
+		addDescriptorInternal( descriptor.getTypeName(), descriptor );
+	}
+
 	private void addDescriptorInternal(JavaTypeDescriptor descriptor) {
-		addDescriptorInternal( descriptor.getJavaTypeClass(), descriptor );
+		addDescriptorInternal( descriptor.getTypeName(), descriptor );
 	}
 
-	/**
-	 *
-	 * Adds this Java type descriptor to the internal registry under the given javaType.
-	 *
-	 * @param javaType The Java type to register the descriptor under.
-	 * @param descriptor The descriptor to register.
-	 *
-	 * @return The return the old registry entry, if one, for this javaType; otherwise, returns {@code null}
-	 */
 	private void addDescriptorInternal(Class javaType, JavaTypeDescriptor descriptor) {
-		if ( descriptor instanceof TypeConfigurationAware ) {
-			// would be nice to make the JavaTypeDescriptor for an entity, e.g., aware of the the TypeConfiguration
-			( (TypeConfigurationAware) descriptor ).setTypeConfiguration( typeConfiguration.getTypeConfiguration() );
-		}
+		addDescriptorInternal( javaType.getName(), descriptor );
+	}
 
-		final JavaTypeDescriptor old = descriptorsByClass.put( javaType, descriptor );
-		if ( old != null ) {
+	private void addDescriptorInternal(String registrationKey, JavaTypeDescriptor descriptor) {
+		performInjections( descriptor );
+
+		final JavaTypeDescriptor old = descriptorsByName.put( registrationKey, descriptor );
+		if ( old != null && old!= descriptor ) {
 			log.debugf(
 					"JavaTypeDescriptorRegistry entry replaced : %s -> %s (was %s)",
 					descriptor.getJavaTypeClass(),
@@ -123,36 +81,25 @@ public class JavaTypeDescriptorRegistry {
 		}
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// basic type descriptor factory methods
+
 	@SuppressWarnings("unchecked")
-	public <T> JavaTypeDescriptor<T> makeBasicTypeDescriptor(Class<T> javaType) {
-		if ( javaType == null ) {
-			throw new IllegalArgumentException( "Class passed to locate Java type descriptor cannot be null" );
-		}
-
-		JavaTypeDescriptor<T> typeDescriptor = descriptorsByClass.get( javaType );
-		if ( typeDescriptor != null ) {
-			if ( typeDescriptor.getPersistenceType() != Type.PersistenceType.BASIC ) {
-				throw new HibernateException(
-						"JavaTypeDescriptor was already registered for " + javaType.getName() +
-								" as a non-BasicType (" + typeDescriptor.getPersistenceType().name() + ")"
-				);
-			}
-		}
-		else {
-			typeDescriptor = new JavaTypeDescriptorBasicAdaptorImpl( javaType );
-			addDescriptorInternal( javaType, typeDescriptor );
-		}
-
-		return typeDescriptor;
+	public <T> JavaTypeDescriptorBasicImplementor<T> makeBasicTypeDescriptor(Class<T> javaType) {
+		return makeBasicTypeDescriptor( javaType, null, null );
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> JavaTypeDescriptor<T> makeBasicTypeDescriptor(Class<T> javaType, MutabilityPlan<T> mutabilityPlan, Comparator comparator) {
+	public <T> JavaTypeDescriptorBasicImplementor<T> makeBasicTypeDescriptor(
+			Class<T> javaType,
+			MutabilityPlan<T> mutabilityPlan,
+			Comparator comparator) {
 		if ( javaType == null ) {
 			throw new IllegalArgumentException( "Class passed to locate Java type descriptor cannot be null" );
 		}
 
-		JavaTypeDescriptor<T> typeDescriptor = descriptorsByClass.get( javaType );
+		JavaTypeDescriptor<T> typeDescriptor = descriptorsByName.get( javaType.getName() );
 		if ( typeDescriptor != null ) {
 			if ( typeDescriptor.getPersistenceType() != Type.PersistenceType.BASIC ) {
 				throw new HibernateException(
@@ -166,16 +113,12 @@ public class JavaTypeDescriptorRegistry {
 			addDescriptorInternal( javaType, typeDescriptor );
 		}
 
-		return typeDescriptor;
+		return (JavaTypeDescriptorBasicImplementor<T>) typeDescriptor;
 	}
 
-	/**
-	 * Adds the given descriptor to this registry
-	 *
-	 * @param descriptor The descriptor to add.
-	 */
-	public void addDescriptor(JavaTypeDescriptor descriptor) {
-		addDescriptorInternal( descriptor );
+	@SuppressWarnings("unchecked")
+	public <T> JavaTypeDescriptor<T> getDescriptor(String typeName) {
+		return descriptorsByName.get( typeName );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -184,14 +127,14 @@ public class JavaTypeDescriptorRegistry {
 			throw new IllegalArgumentException( "Class passed to locate Java type descriptor cannot be null" );
 		}
 
-		JavaTypeDescriptor<T> descriptor = descriptorsByClass.get( cls );
+		JavaTypeDescriptor<T> descriptor = descriptorsByName.get( cls.getName() );
 		if ( descriptor != null ) {
 			return descriptor;
 		}
 
 		if ( cls.isEnum() ) {
-			descriptor = new EnumJavaTypeDescriptor( cls, typeConfiguration );
-			descriptorsByClass.put( cls, descriptor );
+			descriptor = new EnumJavaTypeDescriptor( cls );
+			descriptorsByName.put( cls.getName(), descriptor );
 			return descriptor;
 		}
 
@@ -200,68 +143,135 @@ public class JavaTypeDescriptorRegistry {
 		}
 
 		// find the first "assignable" match
-		for ( Map.Entry<Class,JavaTypeDescriptor> entry : descriptorsByClass.entrySet() ) {
-			if ( entry.getKey().isAssignableFrom( cls ) ) {
+		for ( Map.Entry<String,JavaTypeDescriptor> entry : descriptorsByName.entrySet() ) {
+			if ( entry.getValue().getJavaType() == null ) {
+				continue;
+			}
+
+			if ( entry.getValue().getJavaType().isAssignableFrom( cls ) ) {
 				log.debugf( "Using  cached JavaTypeDescriptor instance for Java class [%s]", cls.getName() );
 				return entry.getValue();
 			}
 		}
 
 		log.warnf( "Could not find matching type descriptor for requested Java class [%s]; using fallback", cls.getName() );
-		return new FallbackJavaTypeDescriptor<T>( cls );
+		return new JavaTypeDescriptorBasicAdaptorImpl<>( cls );
 	}
 
 
-	public static class FallbackJavaTypeDescriptor<T> extends AbstractTypeDescriptorBasicImpl<T> {
-		protected FallbackJavaTypeDescriptor(final Class<T> type) {
-			super(type, createMutabilityPlan(type));
+	private void performInjections(JavaTypeDescriptor descriptor) {
+		if ( descriptor instanceof TypeConfigurationAware ) {
+			// would be nice to make the JavaTypeDescriptor for an entity, e.g., aware of the the TypeConfiguration
+			( (TypeConfigurationAware) descriptor ).setTypeConfiguration( typeConfiguration );
 		}
+	}
 
-		@Override
-		public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-			throw new HibernateException( "Unexpected call to FallbackJavaTypeDescriptor#getJdbcRecommendedSqlType" );
+	private JavaTypeDescriptorEntityImplementor getEntityDescriptor(String typeName) {
+		throw new NotYetImplementedException();
+	}
+
+	public JavaTypeDescriptorEntityImplementor makeRootEntityDescriptor(
+			String typeName,
+			EntityHierarchy.InheritanceStyle inheritanceStyle,
+			EntityMode entityMode) {
+		if ( descriptorsByName.containsKey( typeName ) ) {
+			throw new IllegalStateException( "Root entity descriptor already registered under that name [" + typeName + "]." );
 		}
+		final RootEntityDescriptor descriptor = new RootEntityDescriptor( typeName, inheritanceStyle, entityMode );
+		performInjections( descriptor );
+		descriptorsByName.put( typeName, descriptor );
+		return descriptor;
+	}
 
-		@SuppressWarnings("unchecked")
-		private static <T> MutabilityPlan<T> createMutabilityPlan(final Class<T> type) {
-			if ( type.isAnnotationPresent( Immutable.class ) ) {
-				return ImmutableMutabilityPlan.INSTANCE;
+	public JavaTypeDescriptorEntityImplementor makeEntityDescriptor(
+			String typeName,
+			JavaTypeDescriptorEntityImplementor javaTypeDescriptor) {
+		if ( descriptorsByName.containsKey( typeName ) ) {
+			throw new IllegalStateException( "Entity descriptor already registered under that name [" + typeName + "]." );
+		}
+		final EntityDescriptor descriptor = new EntityDescriptor( typeName, javaTypeDescriptor.getEntityHierarchy(), null, (ManagedTypeDescriptor) javaTypeDescriptor );
+		performInjections( descriptor );
+		descriptorsByName.put( typeName, descriptor );
+		return descriptor;
+	}
+
+
+	/**
+	 * Legacy code here always worked on the Class for MappedSuperclass; continue that, for now...
+	 *
+	 * @param mappedSuperclassClass The Class reference to the Class annotated with MappedSuperclass
+	 *
+	 * @return The descriptor
+	 */
+	public JavaTypeDescriptorMappedSuperclassImplementor getMappedSuperclassDescriptor(Class mappedSuperclassClass) {
+		JavaTypeDescriptor descriptor = descriptorsByName.get( mappedSuperclassClass.getName() );
+		if ( descriptor == null ) {
+			// todo determine its super-type...
+			final IdentifiableTypeDescriptor superType = resolveSuperManagedTypeDescriptor( mappedSuperclassClass );
+			descriptor = new MappedSuperclassTypeDescriptor( mappedSuperclassClass, superType.getEntityHierarchy(), superType );
+			performInjections( descriptor );
+			descriptorsByName.put( mappedSuperclassClass.getName(), descriptor );
+		}
+		else {
+			if ( !JavaTypeDescriptorMappedSuperclassImplementor.class.isInstance( descriptor ) ) {
+				throw new HibernateException(
+						"Request for JavaTypeDescriptor for class [%s] as a MappedSuperclass " +
+								"encountered a previous registration [%s] that did not indicate MappedSuperclass"
+				);
 			}
-			// MutableMutabilityPlan is the "safest" option, but we do not necessarily know how to deepCopy etc...
-			return new MutableMutabilityPlan<T>() {
-				@Override
-				protected T deepCopyNotNull(T value) {
-					throw new HibernateException(
-							"Not known how to deep copy value of type: [" + type
-									.getName() + "]"
-					);
-				}
-			};
 		}
 
-		@Override
-		public String toString(T value) {
-			return value == null ? "<null>" : value.toString();
-		}
-
-		@Override
-		public T fromString(String string) {
-			throw new HibernateException(
-					"Not known how to convert String to given type [" + getJavaTypeClass().getName() + "]"
-			);
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
-			return (X) value;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public <X> T wrap(X value, WrapperOptions options) {
-			return (T) value;
-		}
+		return (JavaTypeDescriptorMappedSuperclassImplementor) descriptor;
 	}
 
+	private IdentifiableTypeDescriptor resolveSuperManagedTypeDescriptor(Class managedClassType) {
+		Class superType = managedClassType.getSuperclass();
+		while ( superType != null && !Object.class.equals( superType ) ) {
+			final XClass superTypeXClass = typeConfiguration.getTypeConfiguration()
+					.getMetadataBuildingContext()
+					.getBootstrapContext()
+					.getReflectionManager()
+					.toXClass( superType );
+
+			// NOTE - while we eventually want to support composite/embeddable inheritance, we
+			// 		currently do not.  So here we only deal with Entity/MappedSuperclass
+
+			if ( superTypeXClass.getAnnotation( Entity.class ) != null ) {
+				return (EntityDescriptor) getEntityDescriptor( superTypeXClass.getName() );
+			}
+			else if ( superTypeXClass.getAnnotation( MappedSuperclass.class ) != null ) {
+				return (MappedSuperclassTypeDescriptor) getMappedSuperclassDescriptor(
+						typeConfiguration.getTypeConfiguration()
+								.getMetadataBuildingContext()
+								.getBootstrapContext()
+								.getReflectionManager()
+								.toClass( superTypeXClass )
+				);
+			}
+
+			superType = superType.getSuperclass();
+		}
+
+		return null;
+	}
+
+
+	private JavaTypeDescriptorEmbeddableImplementor getEmbeddableDescriptor(String typeName) {
+		throw new NotYetImplementedException( "JavaTypeDescriptor support for @Embeddable not yet implemented" );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// baseline descriptors
+
+	@Override
+	public void addBaselineDescriptor(JavaTypeDescriptorBasicImplementor descriptor) {
+		addBaselineDescriptor( descriptor.getJavaType(), descriptor );
+	}
+
+	@Override
+	public void addBaselineDescriptor(Class describedJavaType, JavaTypeDescriptorBasicImplementor descriptor) {
+		performInjections( descriptor );
+		descriptorsByName.put( describedJavaType.getName(), descriptor );
+	}
 }

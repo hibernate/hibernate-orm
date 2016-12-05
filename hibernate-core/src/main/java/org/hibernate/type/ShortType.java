@@ -12,7 +12,8 @@ import java.util.Comparator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.VersionType;
+import org.hibernate.type.spi.VersionSupport;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.ShortTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.SmallIntTypeDescriptor;
 
@@ -23,15 +24,15 @@ import org.hibernate.type.spi.descriptor.sql.SmallIntTypeDescriptor;
  * @author Steve Ebersole
  */
 public class ShortType
-		extends AbstractSingleColumnStandardBasicType<Short>
-		implements VersionType<Short>,JdbcLiteralFormatter<Short> {
+		extends BasicTypeImpl<Short>
+		implements VersionSupport<Short>,JdbcLiteralFormatter<Short> {
 
 	public static final ShortType INSTANCE = new ShortType();
 
 	private static final Short ZERO = (short) 0;
 
 	public ShortType() {
-		super( SmallIntTypeDescriptor.INSTANCE, ShortTypeDescriptor.INSTANCE );
+		super( ShortTypeDescriptor.INSTANCE, SmallIntTypeDescriptor.INSTANCE );
 	}
 
 	@Override

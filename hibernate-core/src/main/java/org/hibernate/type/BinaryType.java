@@ -10,19 +10,21 @@ import java.util.Comparator;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.VersionSupport;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.VarbinaryTypeDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@code byte[]}
  *
- * Implementation of the {@link VersionType} interface should be considered deprecated.
+ * Implementation of the {@link VersionSupport} interface should be considered deprecated.
  * For binary entity versions/timestamps, {@link RowVersionType} should be used instead.
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class BinaryType extends AbstractSingleColumnStandardBasicType<byte[]> implements org.hibernate.type.spi.VersionType<byte[]> {
+public class BinaryType extends BasicTypeImpl<byte[]> implements VersionSupport<byte[]> {
 
 	public static final BinaryType INSTANCE = new BinaryType();
 
@@ -31,7 +33,7 @@ public class BinaryType extends AbstractSingleColumnStandardBasicType<byte[]> im
 	}
 
 	public BinaryType() {
-		super( VarbinaryTypeDescriptor.INSTANCE, PrimitiveByteArrayTypeDescriptor.INSTANCE );
+		super( PrimitiveByteArrayTypeDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE );
 	}
 
 	@Override

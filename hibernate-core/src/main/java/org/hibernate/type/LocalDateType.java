@@ -13,6 +13,7 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.LocalDateJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.DateTypeDescriptor;
 
@@ -20,7 +21,7 @@ import org.hibernate.type.spi.descriptor.sql.DateTypeDescriptor;
  * @author Steve Ebersole
  */
 public class LocalDateType
-		extends AbstractSingleColumnStandardBasicType<LocalDate>
+		extends BasicTypeImpl<LocalDate>
 		implements JdbcLiteralFormatter<LocalDate> {
 
 	/**
@@ -35,7 +36,7 @@ public class LocalDateType
 	 */
 	@SuppressWarnings("WeakerAccess")
 	protected LocalDateType() {
-		super( DateTypeDescriptor.INSTANCE, LocalDateJavaDescriptor.INSTANCE );
+		super( LocalDateJavaDescriptor.INSTANCE, DateTypeDescriptor.INSTANCE );
 	}
 
 	@Override

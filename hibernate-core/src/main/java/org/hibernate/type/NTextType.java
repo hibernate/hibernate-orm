@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.LongNVarcharTypeDescriptor;
 
@@ -17,11 +18,11 @@ import org.hibernate.type.spi.descriptor.sql.LongNVarcharTypeDescriptor;
  * @author Bertrand Renuart
  * @author Steve Ebersole
  */
-public class NTextType extends AbstractSingleColumnStandardBasicType<String> {
+public class NTextType extends BasicTypeImpl<String> {
 	public static final NTextType INSTANCE = new NTextType();
 
 	public NTextType() {
-		super( LongNVarcharTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
+		super( StringTypeDescriptor.INSTANCE, LongNVarcharTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() { 

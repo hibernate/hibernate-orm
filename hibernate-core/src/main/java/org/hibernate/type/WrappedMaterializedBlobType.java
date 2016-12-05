@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.ByteArrayTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor;
 
@@ -16,11 +17,11 @@ import org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor;
  *
  * @author Strong Liu
  */
-public class WrappedMaterializedBlobType extends AbstractSingleColumnStandardBasicType<Byte[]> {
+public class WrappedMaterializedBlobType extends BasicTypeImpl<Byte[]> {
 	public static final WrappedMaterializedBlobType INSTANCE = new WrappedMaterializedBlobType();
 
 	public WrappedMaterializedBlobType() {
-		super( BlobTypeDescriptor.DEFAULT, ByteArrayTypeDescriptor.INSTANCE );
+		super( ByteArrayTypeDescriptor.INSTANCE, BlobTypeDescriptor.DEFAULT );
 	}
 
 	public String getName() {

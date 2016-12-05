@@ -14,7 +14,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ZonedDateTimeComparator;
 import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.VersionType;
+import org.hibernate.type.spi.VersionSupport;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.ZonedDateTimeJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
@@ -22,8 +23,8 @@ import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
  * @author Steve Ebersole
  */
 public class ZonedDateTimeType
-		extends AbstractSingleColumnStandardBasicType<ZonedDateTime>
-		implements VersionType<ZonedDateTime>, JdbcLiteralFormatter<ZonedDateTime> {
+		extends BasicTypeImpl<ZonedDateTime>
+		implements VersionSupport<ZonedDateTime>, JdbcLiteralFormatter<ZonedDateTime> {
 
 	/**
 	 * Singleton access
@@ -35,7 +36,7 @@ public class ZonedDateTimeType
 	 */
 	@SuppressWarnings("WeakerAccess")
 	protected ZonedDateTimeType() {
-		super( TimestampTypeDescriptor.INSTANCE, ZonedDateTimeJavaDescriptor.INSTANCE );
+		super( ZonedDateTimeJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
 	}
 
 	@Override

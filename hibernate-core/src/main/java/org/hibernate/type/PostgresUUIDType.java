@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
@@ -31,11 +32,11 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  * @author David Driscoll
  */
-public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID> {
+public class PostgresUUIDType extends BasicTypeImpl<UUID> {
 	public static final PostgresUUIDType INSTANCE = new PostgresUUIDType();
 
 	public PostgresUUIDType() {
-		super( PostgresUUIDSqlTypeDescriptor.INSTANCE, UUIDTypeDescriptor.INSTANCE );
+		super( UUIDTypeDescriptor.INSTANCE, PostgresUUIDSqlTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -58,6 +59,11 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		@Override
 		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
 			return UUIDTypeDescriptor.INSTANCE;
+		}
+
+		@Override
+		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+			return null;
 		}
 
 		public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {

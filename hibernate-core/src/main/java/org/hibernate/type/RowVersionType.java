@@ -9,10 +9,10 @@ package org.hibernate.type;
 import java.util.Comparator;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.compare.RowVersionComparator;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.java.RowVersionTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
+import org.hibernate.type.spi.VersionSupport;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
+import org.hibernate.type.spi.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.VarbinaryTypeDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@code byte[]}
@@ -23,8 +23,8 @@ import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
  * @author Gail Badner
  */
 public class RowVersionType
-		extends AbstractSingleColumnStandardBasicType<byte[]>
-		implements VersionType<byte[]> {
+		extends BasicTypeImpl<byte[]>
+		implements VersionSupport<byte[]> {
 
 	public static final RowVersionType INSTANCE = new RowVersionType();
 
@@ -33,12 +33,7 @@ public class RowVersionType
 	}
 
 	public RowVersionType() {
-		super( VarbinaryTypeDescriptor.INSTANCE, RowVersionTypeDescriptor.INSTANCE );
-	}
-
-	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] { getName() };
+		super( PrimitiveByteArrayTypeDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE );
 	}
 
 	@Override

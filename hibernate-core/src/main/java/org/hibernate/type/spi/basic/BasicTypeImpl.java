@@ -6,23 +6,22 @@
  */
 package org.hibernate.type.spi.basic;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Comparator;
-import javax.persistence.AttributeConverter;
 
-import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.spi.BasicType;
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.ColumnMapping;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**
+ * AbstractBasicTypeImpl implementation based on construction binding of the delegates
+ *
  * @author Steve Ebersole
  */
-public class BasicTypeImpl<T,D> implements BasicType<T> {
+public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 	private final ColumnMapping columnMapping;
 
 	private final JavaTypeDescriptor<T> domainJavaType;
@@ -30,8 +29,29 @@ public class BasicTypeImpl<T,D> implements BasicType<T> {
 	private final MutabilityPlan<T> mutabilityPlan;
 	private final Comparator<T> comparator;
 
-	private final AttributeConverter<T,D> converter;
-	private final JavaTypeDescriptor intermediateJavaType;
+	private final AttributeConverterDefinition<T,?> attributeConverterDefinition;
+
+	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
+
+	/**
+	 * Constructor form for building a basic type without an AttributeConverter
+	 *
+	 * @param domainJavaType The descriptor for the domain model Java type.
+	 * @param sqlType The descriptor for the JDBC type.
+	 */
+	public BasicTypeImpl(JavaTypeDescriptor<T> domainJavaType, SqlTypeDescriptor sqlType) {
+		this( domainJavaType, sqlType, null );
+	}
+
+	/**
+	 * Constructor form for building a basic type without an AttributeConverter
+	 *
+	 * @param domainJavaType The descriptor for the domain model Java type.
+	 * @param sqlType The descriptor for the JDBC type.
+	 */
+	public BasicTypeImpl(JavaTypeDescriptor<T> domainJavaType, SqlTypeDescriptor sqlType, JdbcLiteralFormatter<T> jdbcLiteralFormatter) {
+		this( domainJavaType, sqlType, null, null, null, jdbcLiteralFormatter );
+	}
 
 	/**
 	 * Constructor form for building a basic type without an AttributeConverter
@@ -48,7 +68,7 @@ public class BasicTypeImpl<T,D> implements BasicType<T> {
 			SqlTypeDescriptor sqlType,
 			MutabilityPlan<T> mutabilityPlan,
 			Comparator<T> comparator) {
-		this( domainJavaType, sqlType, mutabilityPlan, comparator, null, null );
+		this( domainJavaType, sqlType, mutabilityPlan, comparator, null );
 	}
 
 	/**
@@ -66,16 +86,43 @@ public class BasicTypeImpl<T,D> implements BasicType<T> {
 	 * use the MutabilityPlan as defined by {@link JavaTypeDescriptor#getMutabilityPlan()}
 	 * @param comparator The Type-specific Comparator.  May be {@code null} indicating to
 	 * use the Comparator as defined by {@link JavaTypeDescriptor#getComparator()} ()}
-	 * @param attributeConverter The AttributeConverter to apply
-	 * @param intermediateJavaType The Java type we use to talk to JDBC.
+	 * @param attributeConverterDefinition The AttributeConverterDefinition to apply
 	 */
 	public BasicTypeImpl(
 			JavaTypeDescriptor<T> domainJavaType,
 			SqlTypeDescriptor sqlType,
 			MutabilityPlan<T> mutabilityPlan,
 			Comparator<T> comparator,
-			AttributeConverter<T,D> attributeConverter,
-			JavaTypeDescriptor intermediateJavaType) {
+			AttributeConverterDefinition<T,?> attributeConverterDefinition) {
+		this( domainJavaType, sqlType, mutabilityPlan, comparator, attributeConverterDefinition, null );
+	}
+
+	/**
+	 * The full constructor form.
+	 *
+	 * Constructor form for building a basic type with an AttributeConverter.
+	 * <p/>
+	 * Notice that 2 different JavaTypeDescriptor instances are passed in here.  {@code domainJavaType} represents
+	 * the Java type in the user's domain model.  {@code intermediateJavaType} represents the Java type expressed
+	 * by the AttributeConverter as the "database type".  We will read the database value initially using the
+	 * {@code sqlType} + {@code intermediateJavaType}.  We then pass that value along to the AttributeConverter
+	 * to convert to the domain Java type.
+	 *
+	 * @param domainJavaType The descriptor for the domain model Java type.
+	 * @param sqlType The descriptor for the JDBC type.
+	 * @param mutabilityPlan The Type-specific MutabilityPlan.  May be {@code null} indicating to
+	 * use the MutabilityPlan as defined by {@link JavaTypeDescriptor#getMutabilityPlan()}
+	 * @param comparator The Type-specific Comparator.  May be {@code null} indicating to
+	 * use the Comparator as defined by {@link JavaTypeDescriptor#getComparator()} ()}
+	 * @param attributeConverterDefinition The AttributeConverterDefinition to apply
+	 */
+	public BasicTypeImpl(
+			JavaTypeDescriptor<T> domainJavaType,
+			SqlTypeDescriptor sqlType,
+			MutabilityPlan<T> mutabilityPlan,
+			Comparator<T> comparator,
+			AttributeConverterDefinition<T,?> attributeConverterDefinition,
+			JdbcLiteralFormatter<T> jdbcLiteralFormatter) {
 		this.domainJavaType = domainJavaType;
 
 		this.columnMapping = new ColumnMapping( sqlType );
@@ -83,14 +130,32 @@ public class BasicTypeImpl<T,D> implements BasicType<T> {
 		this.mutabilityPlan = mutabilityPlan == null ? domainJavaType.getMutabilityPlan() : mutabilityPlan;
 		this.comparator = comparator == null ? domainJavaType.getComparator() : comparator;
 
-		this.converter = attributeConverter;
-		this.intermediateJavaType = intermediateJavaType;
+		this.attributeConverterDefinition = attributeConverterDefinition;
+
+		this.jdbcLiteralFormatter = resolveJdbcLiteralFormatter(
+				jdbcLiteralFormatter,
+				attributeConverterDefinition,
+				domainJavaType,
+				sqlType
+		);
 	}
 
-	@Override
-	public String getTypeName() {
-		// todo : improve this to account for converters, etc
-		return getJavaTypeDescriptor().getJavaTypeClass().getName();
+	@SuppressWarnings("unchecked")
+	protected JdbcLiteralFormatter<T> resolveJdbcLiteralFormatter(
+			JdbcLiteralFormatter<T> jdbcLiteralFormatter,
+			AttributeConverterDefinition<T, ?> attributeConverterDefinition,
+			JavaTypeDescriptor<T> domainJavaType,
+			SqlTypeDescriptor sqlType) {
+		// if there is an AttributeConverter applied we will need special handling
+		if ( attributeConverterDefinition != null ) {
+			throw new NotYetImplementedException( "Not yet implemented" );
+		}
+
+		if ( jdbcLiteralFormatter != null ) {
+			return jdbcLiteralFormatter;
+		}
+
+		return sqlType.getJdbcLiteralFormatter( domainJavaType );
 	}
 
 	@Override
@@ -103,8 +168,13 @@ public class BasicTypeImpl<T,D> implements BasicType<T> {
 		return columnMapping;
 	}
 
-	public AttributeConverter<T, D> getAttributeConverter() {
-		return converter;
+	public AttributeConverterDefinition<T,?> getAttributeConverterDefinition() {
+		return attributeConverterDefinition;
+	}
+
+	@Override
+	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
+		return jdbcLiteralFormatter;
 	}
 
 	@Override
@@ -118,32 +188,7 @@ public class BasicTypeImpl<T,D> implements BasicType<T> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public T hydrate(
-			ResultSet rs,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws HibernateException, SQLException {
-		if ( converter == null ) {
-			return getColumnMapping().getSqlTypeDescriptor().getExtractor( domainJavaType ).extract(
-					rs,
-					names[0],
-					session
-			);
-		}
-		else {
-			final D databaseValue = (D) getColumnMapping().getSqlTypeDescriptor().getExtractor( intermediateJavaType ).extract(
-					rs,
-					names[0],
-					session
-			);
-
-			return converter.convertToEntityAttribute( databaseValue );
-		}
-	}
-
-	@Override
-	public int getColumnSpan() {
-		return 1;
+	public String asLoggableText() {
+		return "BasicType(" + getJavaType() + ")";
 	}
 }

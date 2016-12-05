@@ -39,7 +39,7 @@ import org.hibernate.sql.sqm.ast.from.TableSpace;
 import org.hibernate.sql.sqm.convert.internal.FromClauseIndex;
 import org.hibernate.sql.sqm.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sqm.query.JoinType;
-import org.hibernate.sqm.query.from.FromElement;
+import org.hibernate.sqm.query.from.SqmFrom;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.spi.Type;
@@ -136,7 +136,7 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	 * @return The populated EntityTableGroup
 	 */
 	EntityTableGroup buildTableGroup(
-			FromElement fromElement,
+			SqmFrom fromElement,
 			TableSpace tableSpace,
 			SqlAliasBaseManager sqlAliasBaseManager,
 			FromClauseIndex fromClauseIndex);

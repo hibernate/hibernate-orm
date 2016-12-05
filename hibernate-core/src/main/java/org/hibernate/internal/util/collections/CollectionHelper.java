@@ -164,4 +164,14 @@ public final class CollectionHelper {
 		copy.putAll( map );
 		return copy;
 	}
+
+	public static <T> Set<T> asSet(Collection<T> values) {
+		if ( Set.class.isInstance( values ) ) {
+			return (Set<T>) values;
+		}
+
+		final HashSet<T> set = new HashSet<>();
+		set.addAll( values );
+		return set;
+	}
 }

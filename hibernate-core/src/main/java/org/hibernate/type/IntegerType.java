@@ -6,13 +6,11 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-import java.util.Comparator;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.VersionType;
+import org.hibernate.type.spi.VersionSupport;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.IntegerTypeDescriptor;
 
 /**
@@ -21,15 +19,15 @@ import org.hibernate.type.spi.descriptor.java.IntegerTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
-		implements VersionType<Integer>,JdbcLiteralFormatter<Integer> {
+public class IntegerType extends BasicTypeImpl<Integer>
+		implements VersionSupport<Integer>,JdbcLiteralFormatter<Integer> {
 
 	public static final IntegerType INSTANCE = new IntegerType();
 
 	public static final Integer ZERO = 0;
 
 	public IntegerType() {
-		super( org.hibernate.type.spi.descriptor.sql.IntegerTypeDescriptor.INSTANCE, IntegerTypeDescriptor.INSTANCE );
+		super( IntegerTypeDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.IntegerTypeDescriptor.INSTANCE );
 	}
 
 	@Override

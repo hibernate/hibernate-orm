@@ -28,7 +28,7 @@ public class SimpleEntity {
 	private String data;
 
 	@Generated(GenerationTime.INSERT)
-	@Column(columnDefinition = "integer auto_increment")
+	@Column(columnDefinition = "integer default 1")
 	private int caseNumberInsert;
 
 	public Integer getId() {

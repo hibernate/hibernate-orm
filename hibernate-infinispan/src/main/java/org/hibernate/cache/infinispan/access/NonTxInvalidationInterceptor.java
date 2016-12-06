@@ -8,7 +8,6 @@ package org.hibernate.cache.infinispan.access;
 
 import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
-import org.infinispan.commands.FlagAffectedCommand;
 import org.infinispan.commands.write.ClearCommand;
 import org.infinispan.commands.write.InvalidateCommand;
 import org.infinispan.commands.write.PutKeyValueCommand;
@@ -16,12 +15,14 @@ import org.infinispan.commands.write.PutMapCommand;
 import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commands.write.WriteCommand;
-import org.infinispan.commons.util.InfinispanCollections;
 import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.interceptors.InvalidationInterceptor;
 import org.infinispan.jmx.annotations.MBean;
+import org.infinispan.util.concurrent.locks.RemoteLockCommand;
+
+import java.util.Collections;
 
 /**
  * This interceptor should completely replace default InvalidationInterceptor.
@@ -51,20 +52,47 @@ public class NonTxInvalidationInterceptor extends BaseInvalidationInterceptor {
 
 	@Override
 	public Object visitPutKeyValueCommand(InvocationContext ctx, PutKeyValueCommand command) throws Throwable {
-		if (!isPutForExternalRead(command)) {
-			return handleInvalidate(ctx, command, new Object[] { command.getKey() });
+		if (command.hasFlag(Flag.PUT_FOR_EXTERNAL_READ)) {
+			return invokeNextInterceptor(ctx, command);
 		}
-		return invokeNextInterceptor(ctx, command);
+		else {
+			boolean isTransactional = putFromLoadValidator.registerRemoteInvalidation(command.getKey(), command.getKeyLockOwner());
+			if (!isTransactional) {
+				throw new IllegalStateException("Put executed without transaction!");
+			}
+			if (!putFromLoadValidator.beginInvalidatingWithPFER(command.getKeyLockOwner(), command.getKey(), command.getValue())) {
+				log.failedInvalidatePendingPut(command.getKey(), cacheName);
+			}
+			RemoveCommand removeCommand = commandsFactory.buildRemoveCommand(command.getKey(), null, command.getFlags());
+			Object retval = invokeNextInterceptor(ctx, removeCommand);
+			if (command.isSuccessful()) {
+				invalidateAcrossCluster(command, isTransactional, command.getKey());
+			}
+			return retval;
+		}
 	}
 
 	@Override
 	public Object visitReplaceCommand(InvocationContext ctx, ReplaceCommand command) throws Throwable {
-		return handleInvalidate(ctx, command, new Object[] { command.getKey() });
+		throw new UnsupportedOperationException("Unexpected replace");
 	}
 
 	@Override
 	public Object visitRemoveCommand(InvocationContext ctx, RemoveCommand command) throws Throwable {
-		return handleInvalidate(ctx, command, new Object[] { command.getKey() });
+		boolean isTransactional = putFromLoadValidator.registerRemoteInvalidation(command.getKey(), command.getKeyLockOwner());
+		if (isTransactional) {
+			if (!putFromLoadValidator.beginInvalidatingKey(command.getKeyLockOwner(), command.getKey())) {
+				log.failedInvalidatePendingPut(command.getKey(), cacheName);
+			}
+		}
+		else {
+			log.trace("This is an eviction, not invalidating anything");
+		}
+		Object retval = invokeNextInterceptor(ctx, command);
+		if (command.isSuccessful()) {
+			invalidateAcrossCluster(command, isTransactional, command.getKey());
+		}
+		return retval;
 	}
 
 	@Override
@@ -81,32 +109,20 @@ public class NonTxInvalidationInterceptor extends BaseInvalidationInterceptor {
 
 	@Override
 	public Object visitPutMapCommand(InvocationContext ctx, PutMapCommand command) throws Throwable {
-		if (!isPutForExternalRead(command)) {
-			return handleInvalidate(ctx, command, command.getMap().keySet().toArray());
-		}
-		return invokeNextInterceptor(ctx, command);
+		throw new UnsupportedOperationException("Unexpected putAll");
 	}
 
-	private Object handleInvalidate(InvocationContext ctx, WriteCommand command, Object[] keys) throws Throwable {
-		Object retval = invokeNextInterceptor(ctx, command);
-		if (command.isSuccessful() && keys != null && keys.length != 0) {
-			invalidateAcrossCluster(command, keys);
-		}
-		return retval;
-	}
-
-	private void invalidateAcrossCluster(FlagAffectedCommand command, Object[] keys) throws Throwable {
+	private <T extends WriteCommand & RemoteLockCommand> void invalidateAcrossCluster(T command, boolean isTransactional, Object key) throws Throwable {
 		// increment invalidations counter if statistics maintained
 		incrementInvalidations();
 		InvalidateCommand invalidateCommand;
-		Object sessionTransactionId = putFromLoadValidator.registerRemoteInvalidations(keys);
 		if (!isLocalModeForced(command)) {
-			if (sessionTransactionId == null) {
-				invalidateCommand = commandsFactory.buildInvalidateCommand(InfinispanCollections.<Flag>emptySet(), keys);
+			if (isTransactional) {
+				invalidateCommand = commandInitializer.buildBeginInvalidationCommand(
+						Collections.emptySet(), new Object[] { key }, command.getKeyLockOwner());
 			}
 			else {
-				invalidateCommand = commandInitializer.buildBeginInvalidationCommand(
-						InfinispanCollections.<Flag>emptySet(), keys, sessionTransactionId);
+				invalidateCommand = commandsFactory.buildInvalidateCommand(Collections.emptySet(), new Object[] { key });
 			}
 			if (log.isDebugEnabled()) {
 				log.debug("Cache [" + rpcManager.getAddress() + "] replicating " + invalidateCommand);
@@ -114,14 +130,6 @@ public class NonTxInvalidationInterceptor extends BaseInvalidationInterceptor {
 
 			rpcManager.invokeRemotely(getMembers(), invalidateCommand, isSynchronous(command) ? syncRpcOptions : asyncRpcOptions);
 		}
-	}
-
-	private boolean isPutForExternalRead(FlagAffectedCommand command) {
-		if (command.hasFlag(Flag.PUT_FOR_EXTERNAL_READ)) {
-			log.trace("Put for external read called.  Suppressing clustered invalidation.");
-			return true;
-		}
-		return false;
 	}
 
 }

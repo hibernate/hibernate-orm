@@ -122,9 +122,6 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
 
 	@Override
 	public void remove(SessionImplementor session, Object key) throws CacheException {
-		if ( !putValidator.beginInvalidatingKey(session, key)) {
-			throw log.failedInvalidatePendingPut(key, region.getName());
-		}
 		putValidator.setCurrentSession(session);
 		try {
 			// We update whether or not the region is valid. Other nodes
@@ -173,8 +170,5 @@ public abstract class InvalidationCacheAccessDelegate implements AccessDelegate 
 
 	@Override
 	public void unlockItem(SessionImplementor session, Object key) throws CacheException {
-		if ( !putValidator.endInvalidatingKey(session, key) ) {
-			log.failedEndInvalidating(key, region.getName());
-		}
 	}
 }

@@ -365,6 +365,14 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
+	public boolean isTransactionInProgress(boolean isMarkedRollbackConsideredActive) {
+		if ( waitingForAutoClose ) {
+			return factory.isOpen() && transactionCoordinator.isTransactionActive( isMarkedRollbackConsideredActive );
+		}
+		return !isClosed() && transactionCoordinator.isTransactionActive( isMarkedRollbackConsideredActive );
+	}
+
+	@Override
 	public Transaction getTransaction() throws HibernateException {
 		if ( getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
 			// JPA requires that we throw IllegalStateException if this is called

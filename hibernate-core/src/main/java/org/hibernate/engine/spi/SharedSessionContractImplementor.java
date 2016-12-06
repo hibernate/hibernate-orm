@@ -151,6 +151,18 @@ public interface SharedSessionContractImplementor
 	boolean isTransactionInProgress();
 
 	/**
+	 * Does this <tt>Session</tt> have an active Hibernate transaction
+	 * or is there a JTA transaction in progress?
+	 *
+	 * @param isMarkedRollbackConsideredActive, if true a transaction in a status equals to TransactionStatus.MARKED_ROLLBACK
+	 * is considered in progress
+	 * @return
+	 */
+	default boolean isTransactionInProgress(boolean isMarkedRollbackConsideredActive) {
+		return isTransactionInProgress();
+	}
+
+	/**
 	 * Provides access to the underlying transaction or creates a new transaction if
 	 * one does not already exist or is active.  This is primarily for internal or
 	 * integrator use.

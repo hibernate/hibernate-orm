@@ -1,6 +1,8 @@
 package org.hibernate.test.cache.infinispan.functional;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Phaser;
@@ -12,11 +14,11 @@ import org.hibernate.PessimisticLockException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
-import org.hibernate.cache.spi.Region;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.test.cache.infinispan.functional.entities.Item;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.infinispan.AdvancedCache;
@@ -24,9 +26,11 @@ import org.infinispan.commands.read.GetKeyValueCommand;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.interceptors.base.BaseCustomInterceptor;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests specific to invalidation mode caches
@@ -50,8 +54,6 @@ public class InvalidationTest extends SingleNodeTest {
    @Test
    @TestForIssue(jiraKey = "HHH-9868")
    public void testConcurrentRemoveAndPutFromLoad() throws Exception {
-      Region region = sessionFactory().getSecondLevelCacheRegion(Item.class.getName());
-      AdvancedCache entityCache = ((EntityRegionImpl) region).getCache();
 
       final Item item = new Item( "chris", "Chris's Item" );
       withTxSession(s -> {
@@ -62,8 +64,7 @@ public class InvalidationTest extends SingleNodeTest {
       Phaser getPhaser = new Phaser(2);
       HookInterceptor hook = new HookInterceptor();
 
-      AdvancedCache pendingPutsCache = entityCache.getCacheManager().getCache(
-            entityCache.getName() + "-" + InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE).getAdvancedCache();
+      AdvancedCache pendingPutsCache = getPendingPutsCache(Item.class);
       pendingPutsCache.addInterceptor(hook, 0);
       AtomicBoolean getThreadBlockedInDB = new AtomicBoolean(false);
 
@@ -142,14 +143,104 @@ public class InvalidationTest extends SingleNodeTest {
       // get thread puts the entry into cache
       getThread.join();
 
+      assertNoInvalidators(pendingPutsCache);
+
       withTxSession(s -> {
          Item loadedItem = s.get(Item.class, item.getId());
          assertNull(loadedItem);
       });
    }
 
+   protected AdvancedCache getPendingPutsCache(Class<Item> entityClazz) {
+      EntityRegionImpl region = (EntityRegionImpl) sessionFactory().getCache()
+         .getEntityRegionAccess(entityClazz.getName()).getRegion();
+      AdvancedCache entityCache = region.getCache();
+      return (AdvancedCache) entityCache.getCacheManager().getCache(
+            entityCache.getName() + "-" + InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE).getAdvancedCache();
+   }
+
    protected static void arriveAndAwait(Phaser phaser, int timeout) throws TimeoutException, InterruptedException {
       phaser.awaitAdvanceInterruptibly(phaser.arrive(), timeout, TimeUnit.MILLISECONDS);
+   }
+
+   @TestForIssue(jiraKey = "HHH-11304")
+   @Test
+   public void testFailedInsert() throws Exception {
+      AdvancedCache pendingPutsCache = getPendingPutsCache(Item.class);
+      assertNoInvalidators(pendingPutsCache);
+      withTxSession(s -> {
+         Item i = new Item("inserted", "bar");
+         s.persist(i);
+         s.flush();
+         s.getTransaction().setRollbackOnly();
+      });
+      assertNoInvalidators(pendingPutsCache);
+   }
+
+   @TestForIssue(jiraKey = "HHH-11304")
+   @Test
+   public void testFailedUpdate() throws Exception {
+      AdvancedCache pendingPutsCache = getPendingPutsCache(Item.class);
+      assertNoInvalidators(pendingPutsCache);
+      final Item item = new Item("before-update", "bar");
+      withTxSession(s -> s.persist(item));
+
+      withTxSession(s -> {
+         Item item2 = s.load(Item.class, item.getId());
+         assertEquals("before-update", item2.getName());
+         item2.setName("after-update");
+         s.persist(item2);
+         s.flush();
+         s.flush(); // workaround for HHH-11312
+         s.getTransaction().setRollbackOnly();
+      });
+      assertNoInvalidators(pendingPutsCache);
+
+      withTxSession(s -> {
+         Item item3 = s.load(Item.class, item.getId());
+         assertEquals("before-update", item3.getName());
+         s.remove(item3);
+      });
+      assertNoInvalidators(pendingPutsCache);
+   }
+
+   @TestForIssue(jiraKey = "HHH-11304")
+   @Test
+   public void testFailedRemove() throws Exception {
+      AdvancedCache pendingPutsCache = getPendingPutsCache(Item.class);
+      assertNoInvalidators(pendingPutsCache);
+      final Item item = new Item("before-remove", "bar");
+      withTxSession(s -> s.persist(item));
+
+      withTxSession(s -> {
+         Item item2 = s.load(Item.class, item.getId());
+         assertEquals("before-remove", item2.getName());
+         s.remove(item2);
+         s.flush();
+         s.getTransaction().setRollbackOnly();
+      });
+      assertNoInvalidators(pendingPutsCache);
+
+      withTxSession(s -> {
+         Item item3 = s.load(Item.class, item.getId());
+         assertEquals("before-remove", item3.getName());
+         s.remove(item3);
+      });
+      assertNoInvalidators(pendingPutsCache);
+   }
+
+   protected void assertNoInvalidators(AdvancedCache<Object, Object> pendingPutsCache) throws Exception {
+      Method getInvalidators = null;
+      for (Map.Entry<Object, Object> entry : pendingPutsCache.entrySet()) {
+         if (getInvalidators == null) {
+            getInvalidators = entry.getValue().getClass().getMethod("getInvalidators");
+            getInvalidators.setAccessible(true);
+         }
+         Collection invalidators = (Collection) getInvalidators.invoke(entry.getValue());
+         if (invalidators != null) {
+            assertTrue("Invalidators on key " + entry.getKey() + ": " + invalidators, invalidators.isEmpty());
+         }
+      }
    }
 
    private static class HookInterceptor extends BaseCustomInterceptor {

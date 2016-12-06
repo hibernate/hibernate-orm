@@ -7,7 +7,6 @@
 package org.hibernate.cache.infinispan.access;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -623,19 +622,19 @@ public class PutFromLoadValidator {
 		}
 	}
 
-	public Object registerRemoteInvalidations(Object[] keys) {
+	public boolean registerRemoteInvalidation(Object key, Object lockOwner) {
 		SharedSessionContractImplementor session = currentSession.get();
 		TransactionCoordinator transactionCoordinator = session == null ? null : session.getTransactionCoordinator();
 		if (transactionCoordinator != null) {
 			if (trace) {
-				log.tracef("Registering lock owner %s for %s: %s", lockOwnerToString(session), cache.getName(), Arrays.toString(keys));
+				log.tracef("Registering synchronization on transaction in %s, cache %s: %s", lockOwnerToString(session), cache.getName(), key);
 			}
-			InvalidationSynchronization sync = new InvalidationSynchronization(nonTxPutFromLoadInterceptor, keys);
+			InvalidationSynchronization sync = new InvalidationSynchronization(nonTxPutFromLoadInterceptor, key, lockOwner);
 			transactionCoordinator.getLocalSynchronizations().registerSynchronization(sync);
-			return sync.uuid;
+			return true;
 		}
 		// evict() command is not executed in session context
-		return null;
+		return false;
 	}
 
 	// ---------------------------------------------------------------- Private

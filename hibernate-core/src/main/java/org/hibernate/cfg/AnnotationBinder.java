@@ -1872,6 +1872,18 @@ public final class AnnotationBinder {
 				ManyToMany manyToManyAnn = property.getAnnotation( ManyToMany.class );
 				ElementCollection elementCollectionAnn = property.getAnnotation( ElementCollection.class );
 
+				if ( ( oneToManyAnn != null || manyToManyAnn != null || elementCollectionAnn != null ) &&
+						isToManyAssociationWithinEmbeddableCollection(
+								propertyHolder ) ) {
+					throw new AnnotationException(
+							"@OneToMany, @ManyToMany or @ElementCollection cannot be used inside an @Embeddable that is also contained within an @ElementCollection: "
+									+ BinderHelper.getPath(
+									propertyHolder,
+									inferredData
+							)
+					);
+				}
+
 				final IndexColumn indexColumn;
 
 				if ( property.isAnnotationPresent( OrderColumn.class ) ) {
@@ -2317,6 +2329,14 @@ public final class AnnotationBinder {
 				}
 			}
 		}
+	}
+
+	private static boolean isToManyAssociationWithinEmbeddableCollection(PropertyHolder propertyHolder) {
+		if(propertyHolder instanceof ComponentPropertyHolder) {
+			ComponentPropertyHolder componentPropertyHolder = (ComponentPropertyHolder) propertyHolder;
+			return componentPropertyHolder.isWithinElementCollection();
+		}
+		return false;
 	}
 
 	private static void setVersionInformation(XProperty property, PropertyBinder propertyBinder) {

@@ -6,7 +6,6 @@
  */
 package org.hibernate.cfg;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.Column;
@@ -63,6 +62,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	//     joinsPerRealTableName in ClassPropertyHolder
 	private Component component;
 	private boolean isOrWithinEmbeddedId;
+	private boolean isWithinElementCollection;
 
 //	private boolean virtual;
 	private String embeddedAttributeName;
@@ -83,6 +83,8 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 						|| ( embeddedXProperty != null &&
 						( embeddedXProperty.isAnnotationPresent( Id.class )
 								|| embeddedXProperty.isAnnotationPresent( EmbeddedId.class ) ) );
+		this.isWithinElementCollection = parent.isWithinElementCollection() ||
+			parent instanceof CollectionPropertyHolder;
 
 		if ( embeddedXProperty != null ) {
 //			this.virtual = false;
@@ -324,6 +326,10 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	public boolean isOrWithinEmbeddedId() {
 		return isOrWithinEmbeddedId;
+	}
+
+	public boolean isWithinElementCollection() {
+		return isWithinElementCollection;
 	}
 
 	public PersistentClass getPersistentClass() {

@@ -42,6 +42,11 @@ public interface PropertyHolder {
 	 */
 	boolean isOrWithinEmbeddedId();
 
+	/**
+	 * Return true if this component is withing an @ElementCollection.
+	 */
+	boolean isWithinElementCollection();
+
 	PersistentClass getPersistentClass();
 
 	boolean isComponent();

@@ -288,6 +288,11 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		return false;
 	}
 
+	@Override
+	public boolean isWithinElementCollection() {
+		return false;
+	}
+
 	public PersistentClass getPersistentClass() {
 		return collection.getOwner();
 	}

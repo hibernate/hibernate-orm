@@ -31,16 +31,9 @@ public class TxInvalidationCacheAccessDelegate extends InvalidationCacheAccessDe
 		// We need to be invalidating even for regular writes; if we were not and the write was followed by eviction
 		// (or any other invalidation), naked put that was started after the eviction ended but before this insert
 		// ended could insert the stale entry into the cache (since the entry was removed by eviction).
-		if ( !putValidator.beginInvalidatingKey(session, key)) {
-			throw log.failedInvalidatePendingPut(key, region.getName());
-		}
-		putValidator.setCurrentSession(session);
-		try {
-			writeCache.put(key, value);
-		}
-		finally {
-			putValidator.resetCurrentSession();
-		}
+
+		// The beginInvalidateKey(...) is called from TxPutFromLoadInterceptor because we need the global transaction id.
+		writeCache.put(key, value);
 		return true;
 	}
 
@@ -55,32 +48,21 @@ public class TxInvalidationCacheAccessDelegate extends InvalidationCacheAccessDe
 		// We need to be invalidating even for regular writes; if we were not and the write was followed by eviction
 		// (or any other invalidation), naked put that was started after the eviction ended but before this update
 		// ended could insert the stale entry into the cache (since the entry was removed by eviction).
-		if ( !putValidator.beginInvalidatingKey(session, key)) {
-			log.failedInvalidatePendingPut(key, region.getName());
-		}
-		putValidator.setCurrentSession(session);
-		try {
-			writeCache.put(key, value);
-		}
-		finally {
-			putValidator.resetCurrentSession();
-		}
+
+		// The beginInvalidateKey(...) is called from TxPutFromLoadInterceptor because we need the global transaction id.
+		writeCache.put(key, value);
 		return true;
 	}
 
 	@Override
 	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
-		if ( !putValidator.endInvalidatingKey(session, key) ) {
-			log.failedEndInvalidating(key, region.getName());
-		}
+		// The endInvalidatingKey(...) is called from TxPutFromLoadInterceptor because we need the global transaction id.
 		return false;
 	}
 
 	@Override
 	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
-		if ( !putValidator.endInvalidatingKey(session, key) ) {
-			log.failedEndInvalidating(key, region.getName());
-		}
+		// The endInvalidatingKey(...) is called from TxPutFromLoadInterceptor because we need the global transaction id.
 		return false;
 	}
 }

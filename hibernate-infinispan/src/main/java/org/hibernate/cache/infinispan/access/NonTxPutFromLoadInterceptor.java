@@ -10,7 +10,12 @@ import org.hibernate.cache.infinispan.util.BeginInvalidationCommand;
 import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
 import org.hibernate.cache.infinispan.util.EndInvalidationCommand;
 
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
+import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.write.InvalidateCommand;
+import org.infinispan.commands.write.PutKeyValueCommand;
+import org.infinispan.commands.write.RemoveCommand;
+import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
@@ -33,6 +38,7 @@ import java.util.List;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class NonTxPutFromLoadInterceptor extends BaseCustomInterceptor {
+	private final static InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(NonTxPutFromLoadInterceptor.class);
 	private final String cacheName;
 	private final PutFromLoadValidator putFromLoadValidator;
 	private CacheCommandInitializer commandInitializer;
@@ -61,16 +67,20 @@ public class NonTxPutFromLoadInterceptor extends BaseCustomInterceptor {
 	public Object visitInvalidateCommand(InvocationContext ctx, InvalidateCommand command) throws Throwable {
 		if (!ctx.isOriginLocal() && command instanceof BeginInvalidationCommand) {
 			for (Object key : command.getKeys()) {
-				putFromLoadValidator.beginInvalidatingKey(((BeginInvalidationCommand) command).getSessionTransactionId(), key);
+				putFromLoadValidator.beginInvalidatingKey(((BeginInvalidationCommand) command).getLockOwner(), key);
 			}
 		}
 		return invokeNextInterceptor(ctx, command);
 	}
 
-	public void broadcastEndInvalidationCommand(Object[] keys, Object sessionTransactionId) {
-		assert sessionTransactionId != null;
+	public void endInvalidating(Object key, Object lockOwner, boolean successful) {
+		assert lockOwner != null;
+		if (!putFromLoadValidator.endInvalidatingKey(lockOwner, key, successful)) {
+			log.failedEndInvalidating(key, cacheName);
+		}
+
 		EndInvalidationCommand endInvalidationCommand = commandInitializer.buildEndInvalidationCommand(
-				cacheName, keys, sessionTransactionId);
+				cacheName, new Object[] { key }, lockOwner);
 		List<Address> members = stateTransferManager.getCacheTopology().getMembers();
 		rpcManager.invokeRemotely(members, endInvalidationCommand, asyncUnordered);
 	}

@@ -66,12 +66,12 @@ public class CacheCommandInitializer implements ModuleCommandInitializer {
 		return new EvictAllCommand( regionName );
 	}
 
-	public BeginInvalidationCommand buildBeginInvalidationCommand(Set<Flag> flags, Object[] keys, Object sessionTransactionId) {
-		return new BeginInvalidationCommand(notifier, flags, CommandInvocationId.generateId(clusteringDependentLogic.getAddress()), keys, sessionTransactionId);
+	public BeginInvalidationCommand buildBeginInvalidationCommand(Set<Flag> flags, Object[] keys, Object lockOwner) {
+		return new BeginInvalidationCommand(notifier, flags, CommandInvocationId.generateId(clusteringDependentLogic.getAddress()), keys, lockOwner);
 	}
 
-	public EndInvalidationCommand buildEndInvalidationCommand(String cacheName, Object[] keys, Object sessionTransactionId) {
-		return new EndInvalidationCommand( cacheName, keys, sessionTransactionId );
+	public EndInvalidationCommand buildEndInvalidationCommand(String cacheName, Object[] keys, Object lockOwner) {
+		return new EndInvalidationCommand( cacheName, keys, lockOwner );
 	}
 
 	@Override

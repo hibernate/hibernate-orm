@@ -73,7 +73,7 @@ public class UnexpectedDeleteOneTestTask extends AbstractEnhancerTestTask {
 	protected void cleanup() {
 	}
 
-	@Entity static class Bar {
+	@Entity(name = "Bar") static class Bar {
 		static final String FOO = "foo";
 
 		@Id	@GeneratedValue
@@ -83,7 +83,7 @@ public class UnexpectedDeleteOneTestTask extends AbstractEnhancerTestTask {
 		Foo foo;
 	}
 
-	@Entity static class Foo {
+	@Entity(name = "Foo") static class Foo {
 
 		@Id	@GeneratedValue
 		int id;

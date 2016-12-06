@@ -19,16 +19,17 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Koen Aers
  */
+@RequiresDialect(H2Dialect.class)
 @TestForIssue(jiraKey = "HHH-10158")
-@RequiresDialect( H2Dialect.class )
-public class SchemaUpdateFormatterTest {
-	
+public class SchemaUpdateFormatterTest extends BaseUnitTestCase {
+
 	private static final String AFTER_FORMAT =
 			"\n\\s+create table test_entity \\(\n" +
 			"\\s+field varchar\\(255\\) not null,\n" +

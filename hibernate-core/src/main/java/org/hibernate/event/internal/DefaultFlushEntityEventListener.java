@@ -647,7 +647,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			LOG.tracev(
 					"Found dirty properties [{0}] : {1}",
 					MessageHelper.infoString( persister.getEntityName(), id ),
-					dirtyPropertyNames
+					Arrays.toString( dirtyPropertyNames )
 			);
 		}
 	}

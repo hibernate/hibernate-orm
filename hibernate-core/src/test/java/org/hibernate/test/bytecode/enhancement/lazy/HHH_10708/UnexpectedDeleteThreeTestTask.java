@@ -6,21 +6,21 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy.HHH_10708;
 
-import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
-import org.junit.Assert;
-
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+
+import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
+import org.junit.Assert;
 
 public class UnexpectedDeleteThreeTestTask extends AbstractEnhancerTestTask {
 
@@ -97,7 +97,7 @@ public class UnexpectedDeleteThreeTestTask extends AbstractEnhancerTestTask {
 
 	// --- //
 
-	@Entity public static class Child {
+	@Entity(name = "UChild") public static class Child {
 
 		private Long id;
 
@@ -114,7 +114,7 @@ public class UnexpectedDeleteThreeTestTask extends AbstractEnhancerTestTask {
 
 	}
 
-	@Entity public static class Parent {
+	@Entity(name = "UParent") public static class Parent {
 
 		private Long id;
 		private Set<String> names;

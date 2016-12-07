@@ -12,6 +12,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -100,6 +101,7 @@ public class LazyProxyOnEnhancedEntityTestTask extends AbstractEnhancerTestTask 
 	}
 
 	@Entity
+	@Table(name = "LazyProxyTask_Parent")
 	public static class Parent {
 
 		@Id
@@ -124,6 +126,7 @@ public class LazyProxyOnEnhancedEntityTestTask extends AbstractEnhancerTestTask 
 	}
 
 	@Entity
+	@Table(name = "LazyProxyTask_Child")
 	public static class Child {
 
 		@Id

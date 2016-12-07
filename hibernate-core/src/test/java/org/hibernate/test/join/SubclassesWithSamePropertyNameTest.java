@@ -11,7 +11,6 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -27,6 +26,7 @@ import static org.junit.Assert.assertEquals;
  */
 @TestForIssue( jiraKey = "HHH-11241" )
 public class SubclassesWithSamePropertyNameTest extends BaseCoreFunctionalTestCase {
+	private Long blogEntryId;
 
 	@Override
 	public String[] getMappings() {
@@ -43,11 +43,33 @@ public class SubclassesWithSamePropertyNameTest extends BaseCoreFunctionalTestCa
 		s.persist( blogEntry );
 		s.getTransaction().commit();
 		s.close();
+
+		blogEntryId = blogEntry.getId();
+	}
+
+	@Override
+	protected void cleanupTest() {
+		Session s = openSession();
+		s.getTransaction().begin();
+		s.createQuery( "delete from BlogEntry" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11241" )
-	@FailureExpected( jiraKey = "HHH-11241" )
+	public void testGetSuperclass() {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Reportable reportable = s.get( Reportable.class, blogEntryId );
+		assertEquals( "John Doe", reportable.getReportedBy() );
+		assertEquals( "detail", ( (BlogEntry) reportable ).getDetail() );
+		tx.commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11241" )
 	public void testQuerySuperclass() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -62,7 +84,6 @@ public class SubclassesWithSamePropertyNameTest extends BaseCoreFunctionalTestCa
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11241" )
-	@FailureExpected( jiraKey = "HHH-11241" )
 	public void testCriteriaSuperclass() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

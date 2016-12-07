@@ -712,12 +712,21 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	private int getSubclassPropertyTableNumber(String propertyName, String entityName) {
-		Type type = propertyMapping.toType( propertyName );
+		Type type = getPropertyType( entityName, propertyName );
 		if ( type.isAssociationType() && ( (AssociationType) type ).useLHSPrimaryKey() ) {
 			return 0;
 		}
 		final Integer tabnum = propertyTableNumbersByNameAndSubclass.get( entityName + '.' + propertyName );
 		return tabnum == null ? 0 : tabnum;
+	}
+
+	private Type getPropertyType(String entityName, String propertyName) {
+		if ( getEntityName().equals( entityName ) ) {
+			return getPropertyType( propertyName );
+		}
+		else {
+			return getFactory().getMetamodel().entityPersister( entityName ).getPropertyType( propertyName );
+		}
 	}
 
 	protected String getSequentialSelect(String entityName) {

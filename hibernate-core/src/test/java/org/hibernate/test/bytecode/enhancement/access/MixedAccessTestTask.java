@@ -8,6 +8,7 @@ import javax.persistence.AccessType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -162,6 +163,7 @@ public class MixedAccessTestTask extends AbstractEnhancerTestTask {
 	}
 
 	@Entity
+	@Table(name = "other")
 	@Access( AccessType.FIELD )
 	private static class TestOtherEntity {
 

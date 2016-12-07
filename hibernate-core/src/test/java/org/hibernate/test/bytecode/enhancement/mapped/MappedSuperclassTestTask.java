@@ -3,6 +3,7 @@ package org.hibernate.test.bytecode.enhancement.mapped;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Table;
 import javax.persistence.Version;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -62,6 +63,7 @@ public class MappedSuperclassTestTask extends AbstractEnhancerTestTask {
 		}
 	}
 
+	@Table(name="MSTT_EMPLOYEE")
 	@Entity private static class Employee extends Person {
 
 		private String title;

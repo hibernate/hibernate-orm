@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 
-import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -14,7 +13,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.AccessDelegate;
 import org.hibernate.cache.infinispan.access.NonTxInvalidationCacheAccessDelegate;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
@@ -25,21 +23,18 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.hibernate.test.cache.infinispan.AbstractRegionAccessStrategyTest;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
-import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.test.cache.infinispan.util.TestingKeyFactory;
 import org.junit.Test;
 import junit.framework.AssertionFailedError;
 
-import org.infinispan.AdvancedCache;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.test.CacheManagerCallable;
-import org.infinispan.test.fwk.TestCacheManagerFactory;
-
-import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.spy;
 
 /**
  * Base class for tests of CollectionRegionAccessStrategy impls.
@@ -73,79 +68,18 @@ public class CollectionRegionAccessStrategyTest extends
 
 	@Test
 	public void testPutFromLoadRemoveDoesNotProduceStaleData() throws Exception {
-		if (cacheMode.isInvalidation()) {
-			doPutFromLoadRemoveDoesNotProduceStaleDataInvalidation();
+		if (!cacheMode.isInvalidation()) {
+			return;
 		}
-	}
-
-	public void doPutFromLoadRemoveDoesNotProduceStaleDataInvalidation() {
 		final CountDownLatch pferLatch = new CountDownLatch( 1 );
 		final CountDownLatch removeLatch = new CountDownLatch( 1 );
-		withCacheManager(new CacheManagerCallable(createCacheManager(localRegion.getRegionFactory())) {
-			@Override
-			public void call() {
-				PutFromLoadValidator validator = getPutFromLoadValidator(remoteRegion.getCache(), cm, removeLatch, pferLatch);
-
-				final AccessDelegate delegate = localRegion.getCache().getCacheConfiguration().transaction().transactionMode().isTransactional() ?
-						new TxInvalidationCacheAccessDelegate(localRegion, validator) :
-						new NonTxInvalidationCacheAccessDelegate(localRegion, validator);
-
-				Callable<Void> pferCallable = new Callable<Void>() {
-					public Void call() throws Exception {
-						SharedSessionContractImplementor session = mockedSession();
-						delegate.putFromLoad(session, "k1", "v1", session.getTimestamp(), null );
-						return null;
-					}
-				};
-
-				Callable<Void> removeCallable = new Callable<Void>() {
-					public Void call() throws Exception {
-						removeLatch.await();
-						SharedSessionContractImplementor session = mockedSession();
-						withTx(localEnvironment, session, new Callable<Void>() {
-							@Override
-							public Void call() throws Exception {
-								delegate.remove(session, "k1");
-								return null;
-							}
-						});
-						pferLatch.countDown();
-						return null;
-					}
-				};
-
-				ExecutorService executorService = Executors.newCachedThreadPool();
-				Future<Void> pferFuture = executorService.submit( pferCallable );
-				Future<Void> removeFuture = executorService.submit( removeCallable );
-
-				try {
-					pferFuture.get();
-					removeFuture.get();
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-
-				assertFalse(localRegion.getCache().containsKey("k1"));
-			}
-		});
-	}
-
-	private static EmbeddedCacheManager createCacheManager(InfinispanRegionFactory regionFactory) {
-		EmbeddedCacheManager cacheManager = TestCacheManagerFactory.createCacheManager(false);
-		return cacheManager;
-	}
-
-	protected PutFromLoadValidator getPutFromLoadValidator(AdvancedCache cache, EmbeddedCacheManager cm,
-																			 CountDownLatch removeLatch, CountDownLatch pferLatch) {
 		// remove the interceptor inserted by default PutFromLoadValidator, we're using different one
-		PutFromLoadValidator.removeFromCache(cache);
-		InfinispanRegionFactory regionFactory = new InfinispanRegionFactory();
-		regionFactory.setCacheManager(cm);
-		regionFactory.start(CacheTestUtil.sfOptionsForStart(), new Properties());
-		return new PutFromLoadValidator(cache, regionFactory, cm) {
-			@Override
-			public Lock acquirePutFromLoadLock(SharedSessionContractImplementor session, Object key, long txTimestamp) {
-				Lock lock = super.acquirePutFromLoadLock(session, key, txTimestamp);
+		PutFromLoadValidator originalValidator = PutFromLoadValidator.removeFromCache(localRegion.getCache());
+		PutFromLoadValidator mockValidator = spy(originalValidator);
+		doAnswer(invocation -> {
+			try {
+				return invocation.callRealMethod();
+			} finally {
 				try {
 					removeLatch.countDown();
 					// the remove should be blocked because the putFromLoad has been acquired
@@ -160,9 +94,44 @@ public class CollectionRegionAccessStrategyTest extends
 					log.error( "Error", e );
 					throw new RuntimeException( "Error", e );
 				}
-				return lock;
 			}
-		};
+		}).when(mockValidator).acquirePutFromLoadLock(any(), any(), anyLong());
+		PutFromLoadValidator.addToCache(localRegion.getCache(), mockValidator);
+
+		try {
+			final AccessDelegate delegate = localRegion.getCache().getCacheConfiguration().transaction().transactionMode().isTransactional() ?
+				new TxInvalidationCacheAccessDelegate(localRegion, mockValidator) :
+				new NonTxInvalidationCacheAccessDelegate(localRegion, mockValidator);
+
+			ExecutorService executorService = Executors.newCachedThreadPool();
+
+			final String KEY = "k1";
+			Future<Void> pferFuture = executorService.submit(() -> {
+				SharedSessionContractImplementor session = mockedSession();
+				delegate.putFromLoad(session, KEY, "v1", session.getTimestamp(), null);
+				return null;
+			});
+
+			Future<Void> removeFuture = executorService.submit(() -> {
+				removeLatch.await();
+				SharedSessionContractImplementor session = mockedSession();
+				withTx(localEnvironment, session, () -> {
+					delegate.remove(session, KEY);
+					return null;
+				});
+				pferLatch.countDown();
+				return null;
+			});
+
+			pferFuture.get();
+			removeFuture.get();
+
+			assertFalse(localRegion.getCache().containsKey(KEY));
+			assertFalse(remoteRegion.getCache().containsKey(KEY));
+		} finally {
+			PutFromLoadValidator.removeFromCache(localRegion.getCache());
+			PutFromLoadValidator.addToCache(localRegion.getCache(), originalValidator);
+		}
 	}
 
 	@Test

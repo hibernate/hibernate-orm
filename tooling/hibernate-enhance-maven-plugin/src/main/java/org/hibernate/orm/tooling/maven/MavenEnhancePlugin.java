@@ -6,9 +6,10 @@
  */
 package org.hibernate.orm.tooling.maven;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
@@ -58,6 +59,9 @@ public class MavenEnhancePlugin extends AbstractMojo {
 	@Component
 	private BuildContext buildContext;
 
+	@Parameter(property = "base", defaultValue = "${project.build.outputDirectory}")
+	private String base;
+
 	@Parameter(property = "dir", defaultValue = "${project.build.outputDirectory}")
 	private String dir;
 
@@ -86,6 +90,10 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			return;
 		}
 
+		if ( !dir.startsWith( base ) ) {
+			throw new MojoExecutionException( "The enhancement directory 'dir' (" + dir + ") is no subdirectory of 'base' (" + base + ")" );
+		}
+
 		// Perform a depth first search for sourceSet
 		File root = new File( this.dir );
 		if ( !root.exists() ) {
@@ -99,7 +107,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		}
 
 		getLog().info( "Starting Hibernate enhancement for classes on " + dir );
-		final ClassLoader classLoader = toClassLoader( Collections.singletonList( root ) );
+		final ClassLoader classLoader = toClassLoader( Collections.singletonList( new File( base ) ) );
 
 		EnhancementContext enhancementContext = new DefaultEnhancementContext() {
 			@Override
@@ -195,7 +203,23 @@ public class MavenEnhancePlugin extends AbstractMojo {
 
 	private byte[] doEnhancement(File javaClassFile, Enhancer enhancer) throws MojoExecutionException {
 		try {
-			return enhancer.enhance(javaClassFile);
+			String className = javaClassFile.getAbsolutePath().substring(
+					base.length() + 1,
+					javaClassFile.getAbsolutePath().length() - ".class".length()
+			).replace( File.separatorChar, '.' );
+			ByteArrayOutputStream originalBytes = new ByteArrayOutputStream();
+			FileInputStream fileInputStream = new FileInputStream( javaClassFile );
+			try {
+				byte[] buffer = new byte[1024];
+				int length;
+				while ( ( length = fileInputStream.read( buffer ) ) != -1 ) {
+					originalBytes.write( buffer, 0, length );
+				}
+			}
+			finally {
+				fileInputStream.close();
+			}
+			return enhancer.enhance( className, originalBytes.toByteArray() );
 		}
 		catch (Exception e) {
 			String msg = "Unable to enhance class: " + javaClassFile.getName();
@@ -267,7 +291,7 @@ public class MavenEnhancePlugin extends AbstractMojo {
 		}
 		finally {
 			try {
-				if( outputStream != null ) {
+				if ( outputStream != null ) {
 					outputStream.close();
 				}
 			}

@@ -6,10 +6,6 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -61,10 +57,8 @@ import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.StubMethod;
 import net.bytebuddy.pool.TypePool;
-import net.bytebuddy.utility.StreamDrainer;
 
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
-import static net.bytebuddy.matcher.ElementMatchers.named;
 
 public class EnhancerImpl implements Enhancer {
 
@@ -115,18 +109,6 @@ public class EnhancerImpl implements Enhancer {
 			e.printStackTrace();
 			log.unableToBuildEnhancementMetamodel( className );
 			return null;
-		}
-	}
-
-	@Override
-	public byte[] enhance(File javaClassFile) throws EnhancementException, IOException {
-		String name = javaClassFile.getName().substring( 0, javaClassFile.getName().length() - ".class".length() );
-		InputStream inputStream = new FileInputStream( javaClassFile );
-		try {
-			return enhance( name, StreamDrainer.DEFAULT.drain( inputStream ) );
-		}
-		finally {
-			inputStream.close();
 		}
 	}
 

@@ -6,7 +6,9 @@
  */
 package org.hibernate.orm.tooling.gradle;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -126,7 +128,7 @@ public class HibernatePlugin implements Plugin<Project> {
 									continue;
 								}
 
-								final byte[] enhancedBytecode = doEnhancement( file, enhancer );
+								final byte[] enhancedBytecode = doEnhancement( sourceSet.getOutput().getClassesDir(), file, enhancer );
 								if ( enhancedBytecode != null ) {
 									writeOutEnhancedClass( enhancedBytecode, file );
 									logger.info( "Successfully enhanced class [" + file + "]" );
@@ -155,9 +157,25 @@ public class HibernatePlugin implements Plugin<Project> {
 		return new URLClassLoader( urls.toArray( new URL[urls.size()] ), Enhancer.class.getClassLoader() );
 	}
 
-	private byte[] doEnhancement(File javaClassFile, Enhancer enhancer) {
+	private byte[] doEnhancement(File root, File javaClassFile, Enhancer enhancer) {
 		try {
-			return enhancer.enhance( javaClassFile );
+			String className = javaClassFile.getAbsolutePath().substring(
+					root.getAbsolutePath().length() + 1,
+					javaClassFile.getAbsolutePath().length() - ".class".length()
+			).replace( File.separatorChar, '.' );
+			ByteArrayOutputStream originalBytes = new ByteArrayOutputStream();
+			FileInputStream fileInputStream = new FileInputStream( javaClassFile );
+			try {
+				byte[] buffer = new byte[1024];
+				int length;
+				while ( ( length = fileInputStream.read( buffer ) ) != -1 ) {
+					originalBytes.write( buffer, 0, length );
+				}
+			}
+			finally {
+				fileInputStream.close();
+			}
+			return enhancer.enhance( className, originalBytes.toByteArray() );
 		}
 		catch (Exception e) {
 			throw new GradleException( "Unable to enhance class : " + javaClassFile, e );

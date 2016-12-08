@@ -6,6 +6,7 @@
  */
 package org.hibernate.tool.enhance;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -60,15 +61,27 @@ public class EnhancementTask extends Task {
 					continue;
 				}
 
-				processClassFile( javaClassFile );
+				processClassFile( relativeIncludedFileName, javaClassFile );
 			}
 		}
-
 	}
 
-	private void processClassFile(File javaClassFile) {
+	private void processClassFile(String relativeIncludedFileName, File javaClassFile) {
 		try {
-			byte[] result = enhancer.enhance( javaClassFile );
+			String className = relativeIncludedFileName.substring( 0, ".class".length() ).replace( File.separatorChar, '.' );
+			ByteArrayOutputStream originalBytes = new ByteArrayOutputStream();
+			FileInputStream fileInputStream = new FileInputStream( javaClassFile );
+			try {
+				byte[] buffer = new byte[1024];
+				int length;
+				while ( ( length = fileInputStream.read( buffer ) ) != -1 ) {
+					originalBytes.write( buffer, 0, length );
+				}
+			}
+			finally {
+				fileInputStream.close();
+			}
+			byte[] result = enhancer.enhance( className, originalBytes.toByteArray() );
 			if ( result != null ) {
 				writeEnhancedClass( javaClassFile, result );
 			}

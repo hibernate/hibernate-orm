@@ -6,9 +6,6 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
-import java.io.File;
-import java.io.IOException;
-
 /**
  * Class responsible for performing enhancement.
  *
@@ -29,6 +26,4 @@ public interface Enhancer {
 	 * @throws EnhancementException Indicates a problem performing the enhancement
 	 */
 	byte[] enhance(String className, byte[] originalBytes) throws EnhancementException;
-
-	byte[] enhance(File javaClassFile) throws EnhancementException, IOException;
 }

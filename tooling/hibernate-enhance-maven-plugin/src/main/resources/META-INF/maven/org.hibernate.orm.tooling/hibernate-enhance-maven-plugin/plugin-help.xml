@@ -32,6 +32,13 @@
       <threadSafe>false</threadSafe>
       <parameters>
         <parameter>
+          <name>base</name>
+          <type>java.lang.String</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description>The root folder for .class files</description>
+        </parameter>
+        <parameter>
           <name>dir</name>
           <type>java.lang.String</type>
           <required>false</required>
@@ -75,6 +82,7 @@
         </parameter>
       </parameters>
       <configuration>
+        <base>${project.build.outputDirectory}</base>
         <dir>${project.build.outputDirectory}</dir>
         <failOnError>true</failOnError>
         <enableLazyInitialization>false</enableLazyInitialization>

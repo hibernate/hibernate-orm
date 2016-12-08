@@ -9,12 +9,9 @@ package org.hibernate.bytecode.enhance.internal.javassist;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
@@ -80,18 +77,6 @@ public class EnhancerImpl implements Enhancer {
 		}
 		catch (IOException e) {
 			log.unableToBuildEnhancementMetamodel( className );
-			return null;
-		}
-	}
-
-	@Override
-	public byte[] enhance(File javaClassFile) throws EnhancementException, IOException {
-		final CtClass ctClass = classPool.makeClass( new FileInputStream( javaClassFile ) );
-		try {
-			return enhance( ctClass.getName(), ctClass.toBytecode() );
-		}
-		catch (CannotCompileException e) {
-			log.warn( "Unable to enhance class file [" + javaClassFile.getAbsolutePath() + "]", e );
 			return null;
 		}
 	}

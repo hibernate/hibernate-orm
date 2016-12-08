@@ -269,6 +269,14 @@ public abstract class AbstractEntityPersister
 	private final Map subclassPropertyAliases = new HashMap();
 	private final Map subclassPropertyColumnNames = new HashMap();
 
+	/**
+	 * Warning:
+	 * When there are duplicated property names in the subclasses
+	 * then propertyMapping will only contain one of those properties.
+	 * To ensure correct results, propertyMapping should only be used
+	 * for the concrete EntityPersister (since the concrete EntityPersister
+	 * cannot have duplicated property names).
+	 */
 	protected final BasicEntityPropertyMapping propertyMapping;
 
 	private final boolean useReferenceCacheEntries;
@@ -1804,18 +1812,58 @@ public abstract class AbstractEntityPersister
 		return getRootTableKeyColumnNames();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Warning:
+	 * When there are duplicated property names in the subclasses
+	 * then this method may return the wrong results.
+	 * To ensure correct results, this method should only be used when
+	 * {@literal this} is the concrete EntityPersister (since the
+	 * concrete EntityPersister cannot have duplicated property names).
+	 */
 	public String[] toColumns(String alias, String propertyName) throws QueryException {
 		return propertyMapping.toColumns( alias, propertyName );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Warning:
+	 * When there are duplicated property names in the subclasses
+	 * then this method may return the wrong results.
+	 * To ensure correct results, this method should only be used when
+	 * {@literal this} is the concrete EntityPersister (since the
+	 * concrete EntityPersister cannot have duplicated property names).
+	 */
 	public String[] toColumns(String propertyName) throws QueryException {
 		return propertyMapping.getColumnNames( propertyName );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Warning:
+	 * When there are duplicated property names in the subclasses
+	 * then this method may return the wrong results.
+	 * To ensure correct results, this method should only be used when
+	 * {@literal this} is the concrete EntityPersister (since the
+	 * concrete EntityPersister cannot have duplicated property names).
+	 */
 	public Type toType(String propertyName) throws QueryException {
 		return propertyMapping.toType( propertyName );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Warning:
+	 * When there are duplicated property names in the subclasses
+	 * then this method may return the wrong results.
+	 * To ensure correct results, this method should only be used when
+	 * {@literal this} is the concrete EntityPersister (since the
+	 * concrete EntityPersister cannot have duplicated property names).
+	 */
 	public String[] getPropertyColumnNames(String propertyName) {
 		return propertyMapping.getColumnNames( propertyName );
 	}
@@ -4502,6 +4550,16 @@ public abstract class AbstractEntityPersister
 		return false;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Warning:
+	 * When there are duplicated property names in the subclasses
+	 * then this method may return the wrong results.
+	 * To ensure correct results, this method should only be used when
+	 * {@literal this} is the concrete EntityPersister (since the
+	 * concrete EntityPersister cannot have duplicated property names).
+	 */
 	public Type getPropertyType(String propertyName) throws MappingException {
 		return propertyMapping.toType( propertyName );
 	}

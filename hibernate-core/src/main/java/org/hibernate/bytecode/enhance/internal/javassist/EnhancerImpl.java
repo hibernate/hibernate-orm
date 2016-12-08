@@ -71,6 +71,9 @@ public class EnhancerImpl implements Enhancer {
 	public synchronized byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
 		try {
 			final CtClass managedCtClass = classPool.makeClassIfNew( new ByteArrayInputStream( originalBytes ) );
+			if ( managedCtClass.isFrozen() ) {
+				managedCtClass.defrost();
+			}
 			if ( enhance( managedCtClass ) ) {
 				return getByteCode( managedCtClass );
 			}

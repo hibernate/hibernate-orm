@@ -707,7 +707,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			concreteEntityPersister = this;
 		}
 		else {
-			concreteEntityPersister = getFactory().getMetamodel().entityPersister( entityName );
+			concreteEntityPersister = getFactory().getEntityPersister( entityName );
 		}
 		Type type = concreteEntityPersister.getPropertyType( propertyName );
 		if ( type.isAssociationType() && ( (AssociationType) type ).useLHSPrimaryKey() ) {

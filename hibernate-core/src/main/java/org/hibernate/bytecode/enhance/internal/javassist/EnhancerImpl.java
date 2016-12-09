@@ -88,7 +88,9 @@ public class EnhancerImpl implements Enhancer {
 	public byte[] enhance(File javaClassFile) throws EnhancementException, IOException {
 		final CtClass ctClass = classPool.makeClass( new FileInputStream( javaClassFile ) );
 		try {
-			return enhance( ctClass.getName(), ctClass.toBytecode() );
+			byte [] bytecode = ctClass.toBytecode();
+			ctClass.defrost();
+			return enhance( ctClass.getName(), bytecode );
 		}
 		catch (CannotCompileException e) {
 			log.warn( "Unable to enhance class file [" + javaClassFile.getAbsolutePath() + "]", e );

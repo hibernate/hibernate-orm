@@ -14,6 +14,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
@@ -27,7 +28,7 @@ import org.junit.Test;
  */
 @TestForIssue(jiraKey = "HHH-10158")
 @RequiresDialect( H2Dialect.class )
-public class SchemaUpdateFormatterTest {
+public class SchemaUpdateFormatterTest extends BaseUnitTestCase {
 	
 	private static final String AFTER_FORMAT =
 			"\n\\s+create table test_entity \\(\n" +

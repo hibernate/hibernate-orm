@@ -85,7 +85,7 @@ public class InheritanceManyToManyForeignKeyTest extends BaseNonConfigCoreFuncti
 		session.close();
 	}
 
-	@Entity(name = "LocalDateEvent")
+	@Entity(name = "LDE")
 	public static class LocalDateEvent {
 
 		@Id
@@ -107,7 +107,7 @@ public class InheritanceManyToManyForeignKeyTest extends BaseNonConfigCoreFuncti
 		}
 	}
 
-	@Entity(name = "UserEvents")
+	@Entity(name = "UE")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public static class UserEvents extends AbstractEventsEntityModel {
 
@@ -117,7 +117,7 @@ public class InheritanceManyToManyForeignKeyTest extends BaseNonConfigCoreFuncti
 
 	}
 
-	@Entity(name = "ApplicationEvents")
+	@Entity(name = "AE")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public static class ApplicationEvents extends AbstractEventsEntityModel {
 

@@ -23,6 +23,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.SourceType;
@@ -55,6 +57,7 @@ import static org.junit.Assert.assertThat;
  * @author Andrea Boriero
  */
 
+@RequiresDialectFeature( value = DialectChecks.SupportSchemaCreation.class)
 public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 	private File output;
 	private StandardServiceRegistry ssr;

@@ -71,7 +71,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		Simple sim = new Simple( Long.valueOf(1) );
 		sim.setDate( new Date() );
 		session.save( sim );
-		Query q = session.createSQLQuery( "select {sim.*} from Simple {sim} where {sim}.date_ = ?" ).addEntity( "sim", Simple.class );
+		Query q = session.createSQLQuery( "select {sim.*} from SimpleEntity {sim} where {sim}.date_ = ?" ).addEntity( "sim", Simple.class );
 		q.setTimestamp( 0, sim.getDate() );
 		assertTrue ( q.list().size()==1 );
 		session.delete(sim);
@@ -112,7 +112,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.flush();
 
 		session.createSQLQuery( "select {category.*} from category {category}" ).addEntity( "category", Category.class ).list();
-		session.createSQLQuery( "select {simple.*} from Simple {simple}" ).addEntity( "simple", Simple.class ).list();
+		session.createSQLQuery( "select {simple.*} from SimpleEntity {simple}" ).addEntity( "simple", Simple.class ).list();
 		session.createSQLQuery( "select {a.*} from TA {a}" ).addEntity( "a", A.class ).list();
 
 		session.getTransaction().commit();

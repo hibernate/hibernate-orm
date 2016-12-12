@@ -27,6 +27,7 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.StandardBasicTypes;
@@ -109,6 +110,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
 	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testQueryWithNullParameter(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -149,6 +151,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10161")
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testQueryWithNullParameterTyped(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -192,6 +195,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
 	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testNativeQueryWithNullParameter(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -232,6 +236,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10161")
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testNativeQueryWithNullParameterTyped(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );

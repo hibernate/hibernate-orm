@@ -50,7 +50,7 @@ public class JoinedSubclassWithEmbeddableTest extends BaseCoreFunctionalTestCase
 	@Test
 	public void testSelectFromEmbeddedField() {
 		doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "select * from employee_embeddable_person_map" ).getResultList();
+			session.createNativeQuery( "select * from employee_emb_person_map" ).getResultList();
 		} );
 	}
 
@@ -140,20 +140,20 @@ public class JoinedSubclassWithEmbeddableTest extends BaseCoreFunctionalTestCase
 	public class EmployeeContact implements Serializable {
 
 		@ManyToOne
-		@JoinColumn(name = "employee_embeddable_alert_contact")
+		@JoinColumn(name = "employee_emb_alert_contact")
 		private Person alertContact;
 
 		@OneToMany
-		@JoinColumn(name = "employee_embeddable_alert_contact")
+		@JoinColumn(name = "employee_emb_alert_contact")
 		private Set<Employee> alerteeContacts = new HashSet<>();
 
 		@ManyToMany
 		@OrderColumn(name = "list_idx")
-		@JoinTable(name = "employee_embeddable_person_list")
+		@JoinTable(name = "employee_emb_person_list")
 		private List<Person> personList = new ArrayList<>();
 
 		@ManyToMany
-		@CollectionTable(name = "employee_embeddable_person_map")
+		@CollectionTable(name = "employee_emb_person_map")
 		@MapKeyColumn(name = "person_key", length = 20)
 		private Map<String, Person> personMap = new HashMap<>();
 	}

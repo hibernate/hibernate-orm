@@ -51,7 +51,7 @@ public class SingleTableWithEmbeddableTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testSelectFromEmbeddedField() {
 		doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "select * from employee_embeddable_person_map" ).getResultList();
+			session.createNativeQuery( "select * from employee_emb_person_map" ).getResultList();
 		} );
 	}
 
@@ -154,7 +154,7 @@ public class SingleTableWithEmbeddableTest extends BaseCoreFunctionalTestCase {
 		private List<Person> personList = new ArrayList<>();
 
 		@ManyToMany
-		@CollectionTable(name = "employee_embeddable_person_map")
+		@CollectionTable(name = "employee_emb_person_map")
 		@MapKeyColumn(name = "person_key", length = 20)
 		private Map<String, Person> personMap = new HashMap<>();
 	}

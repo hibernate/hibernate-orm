@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.Oracle9iDialect;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -33,6 +34,7 @@ import static org.junit.Assert.assertTrue;
  * @author Gail Badner
  */
 @SkipForDialect(value = MySQL5Dialect.class, comment = "BLOB/TEXT column 'id' used in key specification without a key length")
+@SkipForDialect(value = Oracle9iDialect.class, comment = "ORA-02329: column of datatype LOB cannot be unique or a primary key")
 public class PrimitiveByteArrayIdTest extends BaseCoreFunctionalTestCase {
 
 	@Override

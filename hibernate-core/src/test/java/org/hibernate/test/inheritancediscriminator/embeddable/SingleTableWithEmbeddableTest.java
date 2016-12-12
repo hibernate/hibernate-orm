@@ -51,7 +51,7 @@ public class SingleTableWithEmbeddableTest extends BaseCoreFunctionalTestCase {
 	public void testSelectFromEmbeddedField() {
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.createSQLQuery( "select * from employee_embeddable_person_map" ).list();
+		session.createSQLQuery( "select * from employee_emb_person_map" ).list();
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -159,7 +159,7 @@ public class SingleTableWithEmbeddableTest extends BaseCoreFunctionalTestCase {
 		private List<Person> personList = new ArrayList<>();
 
 		@ManyToMany
-		@CollectionTable(name = "employee_embeddable_person_map")
+		@CollectionTable(name = "employee_emb_person_map")
 		@MapKeyColumn(name = "person_key", length = 20)
 		private Map<String, Person> personMap = new HashMap<>();
 	}

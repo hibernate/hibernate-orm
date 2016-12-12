@@ -10,7 +10,7 @@
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping default-lazy="false">
 
-    <class name="org.hibernate.test.legacy.Simple">
+    <class name="org.hibernate.test.legacy.Simple" table="SimpleEntity">
         <id name="id" type="long" column="id_">
             <generator class="assigned"/>
         </id>

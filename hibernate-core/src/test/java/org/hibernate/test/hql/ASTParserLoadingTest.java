@@ -3444,7 +3444,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		List list = s.createQuery( "from Animal a left join fetch a.mother" ).setCacheable( true ).list();
+		List list = s.createQuery( "select a from Animal a left join fetch a.mother" ).setCacheable( true ).list();
 		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
 		assertEquals( 1, sessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "select a from Animal a left join fetch a.mother" ).setCacheable( true ).list();
@@ -3493,7 +3493,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		List list = s.createQuery( "from Animal a left join fetch a.offspring" ).setCacheable( true ).list();
+		List list = s.createQuery( "select a from Animal a left join fetch a.offspring" ).setCacheable( true ).list();
 		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
 		assertEquals( 1, sessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "select a from Animal a left join fetch a.offspring" ).setCacheable( true ).list();

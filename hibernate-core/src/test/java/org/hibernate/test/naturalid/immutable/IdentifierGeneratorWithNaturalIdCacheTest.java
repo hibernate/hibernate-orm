@@ -19,6 +19,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
+import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -30,6 +32,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Alex Burgel
  */
+@SkipForDialect(value = Oracle10gDialect.class, comment = "Not supported before Oracle version 12")
 public class IdentifierGeneratorWithNaturalIdCacheTest
 		extends BaseCoreFunctionalTestCase {
 

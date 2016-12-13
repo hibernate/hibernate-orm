@@ -21,6 +21,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.Distributor;
@@ -105,6 +106,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testNullPositionalParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -128,6 +130,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testNullPositionalParameterParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -166,6 +169,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testNullPositionalParameterParameterIncompatible() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -204,6 +208,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testNullNamedParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -227,6 +232,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testNullNamedParameterParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -264,6 +270,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testNullNamedParameterParameterIncompatible() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -305,7 +312,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			value = {
 					@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER"),
 					@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
-					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
+					@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 			}
 	)
 	public void testNativeQueryNullPositionalParameter() throws Exception {
@@ -334,6 +342,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10161"  )
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testNativeQueryNullPositionalParameterParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -378,7 +387,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			value = {
 					@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER"),
 					@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
-					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
+					@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 			}
 	)
 	public void testNativeQueryNullNamedParameter() throws Exception {
@@ -407,6 +417,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10161"  )
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testNativeQueryNullNamedParameterParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

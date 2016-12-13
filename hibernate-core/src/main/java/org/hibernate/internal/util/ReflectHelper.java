@@ -13,6 +13,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -32,6 +33,9 @@ import org.hibernate.type.Type;
  */
 @SuppressWarnings("unchecked")
 public final class ReflectHelper {
+
+	private static final String JAVA_CONSTANT_PATTERN = "[a-z]+\\.([A-Z]{1}[a-z]+)+\\$?([A-Z]{1}[a-z]+)*\\.[A-Z_\\$]+";
+
 	public static final Class[] NO_PARAM_SIGNATURE = new Class[0];
 	public static final Object[] NO_PARAMS = new Object[0];
 
@@ -232,6 +236,11 @@ public final class ReflectHelper {
 	public static Object getConstantValue(String name, ClassLoaderService classLoaderService) {
 		Class clazz;
 		try {
+			if ( !Pattern.compile( JAVA_CONSTANT_PATTERN )
+					.matcher( name )
+					.find() ) {
+				return null;
+			}
 			clazz = classLoaderService.classForName( StringHelper.qualifier( name ) );
 		}
 		catch ( Throwable t ) {
@@ -331,7 +340,7 @@ public final class ReflectHelper {
 		throw new PropertyNotFoundException( "no appropriate constructor in class: " + clazz.getName() );
 
 	}
-	
+
 	public static Method getMethod(Class clazz, Method method) {
 		try {
 			return clazz.getMethod( method.getName(), method.getParameterTypes() );

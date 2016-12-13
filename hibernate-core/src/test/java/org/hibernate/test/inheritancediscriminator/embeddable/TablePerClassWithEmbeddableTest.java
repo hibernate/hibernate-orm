@@ -50,7 +50,7 @@ public class TablePerClassWithEmbeddableTest extends BaseCoreFunctionalTestCase 
 	public void testSelectFromEmbeddedField() {
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.createSQLQuery( "select * from employee_embeddable_person_map" ).list();
+		session.createSQLQuery( "select * from employee_emb_person_map" ).list();
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -145,16 +145,16 @@ public class TablePerClassWithEmbeddableTest extends BaseCoreFunctionalTestCase 
 	public class EmployeeContact implements Serializable {
 
 		@ManyToOne
-		@JoinColumn(name = "employee_embeddable_alert_contact")
+		@JoinColumn(name = "employee_emb_alert_contact")
 		private Person alertContact;
 
 		@OneToMany
-		@JoinColumn(name = "employee_embeddable_alert_contact")
+		@JoinColumn(name = "employee_emb_alert_contact")
 		private Set<Employee> alerteeContacts = new HashSet<>();
 
 		@ManyToMany
 		@OrderColumn(name = "list_idx")
-		@JoinTable(name = "employee_embeddable_person_list")
+		@JoinTable(name = "employee_emb_person_list")
 		private List<Person> personList = new ArrayList<>();
 
 		@ManyToMany

@@ -60,7 +60,16 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			// this seems needless, Oracle can return an
 			// OracleCallableStatementWrapper that finds its way to this method,
 			// rather than extract(CallableStatement).  See HHH-8022.
-			final CallableStatement callableStatement = (CallableStatement) statement;
+			final CallableStatement callableStatement;
+			if (statement instanceof CallableStatement) {
+				callableStatement = (CallableStatement) statement;
+			} else {
+				try {
+					callableStatement = statement.unwrap( CallableStatement.class );
+				}catch(SQLException e){
+					throw( new RuntimeException( e ) );
+				}
+			}
 			return extract( callableStatement );
 		}
 		try {

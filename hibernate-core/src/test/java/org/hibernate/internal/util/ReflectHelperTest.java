@@ -9,7 +9,11 @@ package org.hibernate.internal.util;
 import javax.persistence.FetchType;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -24,8 +28,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * <code>ReflectHelperTest</code> -
- *
  * @author Vlad Mihalcea
  */
 public class ReflectHelperTest {
@@ -35,37 +37,90 @@ public class ReflectHelperTest {
 		OFF
 	}
 
+	private SessionFactoryImplementor sessionFactoryImplementorMock;
+
+	private SessionFactoryOptions sessionFactoryOptionsMock;
+
+	private ServiceRegistryImplementor serviceRegistryMock;
+
+	private ClassLoaderService classLoaderServiceMock;
+
+	@Before
+	public void init() {
+		sessionFactoryImplementorMock = Mockito.mock(SessionFactoryImplementor.class);
+		sessionFactoryOptionsMock = Mockito.mock(SessionFactoryOptions.class);
+		when(sessionFactoryImplementorMock.getSessionFactoryOptions()).thenReturn( sessionFactoryOptionsMock );
+
+		serviceRegistryMock = Mockito.mock(ServiceRegistryImplementor.class);
+		when( sessionFactoryImplementorMock.getServiceRegistry() ).thenReturn( serviceRegistryMock );
+
+		classLoaderServiceMock = Mockito.mock(ClassLoaderService.class);
+		when( serviceRegistryMock.getService( eq( ClassLoaderService.class ) ) ).thenReturn( classLoaderServiceMock );
+	}
+
 	@Test
-	public void testGetConstantValue() {
-		Object value;
+	public void test_getConstantValue_simpleAlias() {
+		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
 
-		ClassLoaderService classLoaderServiceMock = Mockito.mock(ClassLoaderService.class);
-		value = ReflectHelper.getConstantValue( "alias.b", classLoaderServiceMock);
+		Object value = ReflectHelper.getConstantValue( "alias.b", sessionFactoryImplementorMock);
 		assertNull(value);
 		verify(classLoaderServiceMock, never()).classForName( anyString() );
-		Mockito.reset( classLoaderServiceMock );
+	}
 
-		value = ReflectHelper.getConstantValue( "alias.b.c", classLoaderServiceMock);
+	@Test
+	public void test_getConstantValue_simpleAlias_non_conventional() {
+		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( false );
+
+		Object value = ReflectHelper.getConstantValue( "alias.b", sessionFactoryImplementorMock);
+		assertNull(value);
+		verify(classLoaderServiceMock, times(1)).classForName( eq( "alias" ) );
+	}
+
+	@Test
+	public void test_getConstantValue_nestedAlias() {
+		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
+
+		Object value = ReflectHelper.getConstantValue( "alias.b.c", sessionFactoryImplementorMock);
 		assertNull(value);
 		verify(classLoaderServiceMock, never()).classForName( anyString() );
-		Mockito.reset( classLoaderServiceMock );
+	}
+
+	@Test
+	public void test_getConstantValue_nestedAlias_non_conventional() {
+		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( false );
+
+		Object value = ReflectHelper.getConstantValue( "alias.b.c", sessionFactoryImplementorMock);
+		assertNull(value);
+		verify(classLoaderServiceMock, times(1)).classForName( eq( "alias.b" ) );
+	}
+
+	@Test
+	public void test_getConstantValue_outerEnum() {
+		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
 
 		when( classLoaderServiceMock.classForName( "javax.persistence.FetchType" ) ).thenReturn( (Class) FetchType.class );
-		value = ReflectHelper.getConstantValue( "javax.persistence.FetchType.LAZY", classLoaderServiceMock);
+		Object value = ReflectHelper.getConstantValue( "javax.persistence.FetchType.LAZY", sessionFactoryImplementorMock);
 		assertEquals( FetchType.LAZY, value );
 		verify(classLoaderServiceMock, times(1)).classForName( eq("javax.persistence.FetchType") );
-		Mockito.reset( classLoaderServiceMock );
+	}
+
+	@Test
+	public void test_getConstantValue_enumClass() {
+		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
 
 		when( classLoaderServiceMock.classForName( "org.hibernate.internal.util.ReflectHelperTest$Status" ) ).thenReturn( (Class) Status.class );
-		value = ReflectHelper.getConstantValue( "org.hibernate.internal.util.ReflectHelperTest$Status", classLoaderServiceMock);
+		Object value = ReflectHelper.getConstantValue( "org.hibernate.internal.util.ReflectHelperTest$Status", sessionFactoryImplementorMock);
 		assertNull(value);
 		verify(classLoaderServiceMock, never()).classForName( eq("org.hibernate.internal.util") );
-		Mockito.reset( classLoaderServiceMock );
+	}
 
+	@Test
+	public void test_getConstantValue_nestedEnum() {
+
+		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
 		when( classLoaderServiceMock.classForName( "org.hibernate.internal.util.ReflectHelperTest$Status" ) ).thenReturn( (Class) Status.class );
-		value = ReflectHelper.getConstantValue( "org.hibernate.internal.util.ReflectHelperTest$Status.ON", classLoaderServiceMock);
+		Object value = ReflectHelper.getConstantValue( "org.hibernate.internal.util.ReflectHelperTest$Status.ON", sessionFactoryImplementorMock);
 		assertEquals( Status.ON, value );
 		verify(classLoaderServiceMock, times(1)).classForName( eq("org.hibernate.internal.util.ReflectHelperTest$Status") );
-		Mockito.reset( classLoaderServiceMock );
 	}
 }

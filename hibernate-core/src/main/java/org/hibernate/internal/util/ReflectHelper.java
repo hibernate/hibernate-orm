@@ -20,6 +20,7 @@ import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.PrimitiveType;
@@ -34,7 +35,8 @@ import org.hibernate.type.Type;
 @SuppressWarnings("unchecked")
 public final class ReflectHelper {
 
-	private static final String JAVA_CONSTANT_PATTERN = "[a-z]+\\.([A-Z]{1}[a-z]+)+\\$?([A-Z]{1}[a-z]+)*\\.[A-Z_\\$]+";
+	private static final Pattern JAVA_CONSTANT_PATTERN = Pattern.compile(
+			"[a-z]+\\.([A-Z]{1}[a-z]+)+\\$?([A-Z]{1}[a-z]+)*\\.[A-Z_\\$]+" );
 
 	public static final Class[] NO_PARAM_SIGNATURE = new Class[0];
 	public static final Object[] NO_PARAMS = new Object[0];
@@ -233,14 +235,15 @@ public final class ReflectHelper {
 		return PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess( clazz, name ).getGetter();
 	}
 
-	public static Object getConstantValue(String name, ClassLoaderService classLoaderService) {
+	public static Object getConstantValue(String name, SessionFactoryImplementor factory) {
+		boolean conventionalJavaConstants = factory.getSessionFactoryOptions().isConventionalJavaConstants();
 		Class clazz;
 		try {
-			if ( !Pattern.compile( JAVA_CONSTANT_PATTERN )
-					.matcher( name )
-					.find() ) {
+			if ( conventionalJavaConstants &&
+				!JAVA_CONSTANT_PATTERN.matcher( name ).find() ) {
 				return null;
 			}
+			ClassLoaderService classLoaderService = factory.getServiceRegistry().getService( ClassLoaderService.class );
 			clazz = classLoaderService.classForName( StringHelper.qualifier( name ) );
 		}
 		catch ( Throwable t ) {

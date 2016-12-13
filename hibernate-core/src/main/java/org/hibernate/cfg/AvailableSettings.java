@@ -802,6 +802,16 @@ public interface AvailableSettings {
 	String QUERY_STARTUP_CHECKING = "hibernate.query.startup_check";
 
 	/**
+	 * Setting which indicates whether or not parse JAVA constant for HQL query.
+	 * <p/>
+	 * Default is {@code true}.  Existing applications may want to disable this (set it {@code false}) for
+	 * performance improvement.
+	 *
+	 * @since 5.2
+	 */
+	String PARSE_JAVA_CONSTANT = "hibernate.query.parse_java_constant";
+
+	/**
 	 * The {@link org.hibernate.exception.spi.SQLExceptionConverter} to use for converting SQLExceptions
 	 * to Hibernate's JDBCException hierarchy.  The default is to use the configured
 	 * {@link org.hibernate.dialect.Dialect}'s preferred SQLExceptionConverter.

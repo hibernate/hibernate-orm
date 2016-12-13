@@ -117,6 +117,8 @@ public interface SessionFactoryOptionsState {
 
 	boolean isNamedQueryStartupCheckingEnabled();
 
+	boolean isParseJavaConstantEnabled();
+
 	boolean isProcedureParameterNullPassingEnabled();
 
 	boolean isCollectionJoinSubqueryRewriteEnabled();

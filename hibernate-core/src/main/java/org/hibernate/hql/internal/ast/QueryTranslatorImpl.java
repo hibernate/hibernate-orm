@@ -280,8 +280,10 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 		final AST hqlAst = parser.getAST();
 
-		final NodeTraverser walker = new NodeTraverser( new JavaConstantConverter( factory ) );
-		walker.traverseDepthFirst( hqlAst );
+		if (factory.getSessionFactoryOptions().isParseJavaConstantEnabled()) {
+			final NodeTraverser walker = new NodeTraverser( new JavaConstantConverter( factory ) );
+			walker.traverseDepthFirst( hqlAst );
+		}
 
 		showHqlAst( hqlAst );
 

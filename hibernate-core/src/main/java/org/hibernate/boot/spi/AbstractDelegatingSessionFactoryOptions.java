@@ -215,6 +215,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isParseJavaConstantEnabled() {
+		return delegate.isParseJavaConstantEnabled();
+	}
+
+	@Override
 	public boolean isProcedureParameterNullPassingEnabled() {
 		return delegate.isProcedureParameterNullPassingEnabled();
 	}

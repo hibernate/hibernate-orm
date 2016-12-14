@@ -402,7 +402,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 				if ( right.getRealOrigin() == left ) {
 					// right represents a joins originating from left...
 					if ( right.getJoinSequence() != null && right.getJoinSequence().isThetaStyle() ) {
-						out( ", " );
+						writeCrossJoinSeparator();
 					}
 					else {
 						out( " " );
@@ -411,7 +411,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 				else {
 					// not so sure this is even valid subtree.  but if it was, it'd
 					// represent two unrelated table references...
-					out( ", " );
+					writeCrossJoinSeparator();
 				}
 			}
 			out( d );

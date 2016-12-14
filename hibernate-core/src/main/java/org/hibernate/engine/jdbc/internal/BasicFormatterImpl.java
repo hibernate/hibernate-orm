@@ -68,7 +68,7 @@ public class BasicFormatterImpl implements Formatter {
 	}
 
 	private static final String INDENT_STRING = "    ";
-	private static final String INITIAL = "\n    ";
+	private static final String INITIAL = System.lineSeparator() + INDENT_STRING;
 
 	@Override
 	public String format(String source) {
@@ -371,7 +371,7 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void newline() {
-			result.append( "\n" );
+			result.append( System.lineSeparator() );
 			for ( int i = 0; i < indent; i++ ) {
 				result.append( INDENT_STRING );
 			}

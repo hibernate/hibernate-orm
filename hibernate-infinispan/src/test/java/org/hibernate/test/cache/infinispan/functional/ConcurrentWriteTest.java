@@ -309,7 +309,7 @@ public class ConcurrentWriteTest extends SingleNodeTest {
 		);
 
 		for ( UserRunner r : runners ) {
-			sb.append( r.toString() + System.getProperty( "line.separator" ) );
+			sb.append( r.toString() ).append( System.lineSeparator() );
 		}
 		return sb.toString();
 	}

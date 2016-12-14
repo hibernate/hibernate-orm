@@ -9,7 +9,6 @@ package org.hibernate.tool.schema.internal.exec;
 import java.io.IOException;
 import java.io.Writer;
 
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 
@@ -17,11 +16,6 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
  * @author Steve Ebersole
  */
 public abstract class AbstractScriptTargetOutput implements ScriptTargetOutput {
-	protected static final String NEWLINE;
-	static {
-		final String systemNewLine = System.getProperty( "line.separator" );
-		NEWLINE = StringHelper.isNotEmpty( systemNewLine ) ? systemNewLine : "\n";
-	}
 
 	protected abstract Writer writer();
 
@@ -33,7 +27,7 @@ public abstract class AbstractScriptTargetOutput implements ScriptTargetOutput {
 	public void accept(String command) {
 		try {
 			writer().write( command );
-			writer().write( NEWLINE );
+			writer().write( System.lineSeparator() );
 			writer().flush();
 		}
 		catch (IOException e) {

@@ -406,6 +406,7 @@ constant
 	| QUOTED_STRING
 	| CONSTANT
 	| JAVA_CONSTANT
+	| ENUM
 	| TRUE
 	| FALSE
 	| IDENT

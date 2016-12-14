@@ -82,8 +82,7 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 	@SuppressWarnings("unchecked")
 	public String getRenderText(SessionFactoryImplementor sessionFactory) {
 		final Type type = expectedType == null
-				? heuristicType
-				: Number.class.isAssignableFrom( heuristicType.getReturnedClass() )
+				|| Number.class.isAssignableFrom( heuristicType.getReturnedClass() )
 				? heuristicType
 				: expectedType;
 		try {
@@ -129,5 +128,13 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 		catch (Exception t) {
 			throw new QueryException( QueryTranslator.ERROR_CANNOT_FORMAT_LITERAL + constantExpression, t );
 		}
+	}
+
+	protected Object getConstantValue() {
+		return constantValue;
+	}
+
+	protected void setConstantValue(Object constantValue) {
+		this.constantValue = constantValue;
 	}
 }

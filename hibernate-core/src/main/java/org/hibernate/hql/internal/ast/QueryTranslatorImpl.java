@@ -624,7 +624,12 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			final Object constant = ReflectHelper.getConstantValue( expression );
 			if ( constant != null ) {
 				dotStructureRoot.setFirstChild( null );
-				dotStructureRoot.setType( HqlTokenTypes.JAVA_CONSTANT );
+				if ( constant.getClass().isEnum() ) {
+					dotStructureRoot.setType( HqlTokenTypes.ENUM );
+				}
+				else {
+					dotStructureRoot.setType( HqlTokenTypes.JAVA_CONSTANT );
+				}
 				dotStructureRoot.setText( expression );
 			}
 		}

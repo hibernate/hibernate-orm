@@ -25,6 +25,7 @@ import org.hibernate.property.access.spi.Getter;
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Lukasz Zuchowski (author at zuchos dot com)
+ * @author Chris Cranford
  */
 public class MultiPropertyMapper implements ExtendedPropertyMapper {
 	protected final Map<PropertyData, PropertyMapper> properties;
@@ -102,6 +103,12 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
 			final PropertyData propertyData = entry.getKey();
 			final PropertyMapper propertyMapper = entry.getValue();
+
+			// synthetic properties are not part of the entity model; therefore they should be ignored.
+			if ( propertyData.isSynthetic() ) {
+				continue;
+			}
+
 			Getter getter;
 			if ( newObj != null ) {
 				getter = ReflectionTools.getGetter( newObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );
@@ -131,6 +138,12 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
 			final PropertyData propertyData = entry.getKey();
 			final PropertyMapper propertyMapper = entry.getValue();
+
+			// synthetic properties are not part of the entity model; therefore they should be ignored.
+			if ( propertyData.isSynthetic() ) {
+				continue;
+			}
+
 			Getter getter;
 			if ( newObj != null ) {
 				getter = ReflectionTools.getGetter( newObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );

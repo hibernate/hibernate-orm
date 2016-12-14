@@ -17,6 +17,7 @@ import org.hibernate.event.spi.PostCollectionRecreateEventListener;
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 public class EnversPostCollectionRecreateEventListenerImpl
 		extends BaseEnversCollectionEventListener
@@ -31,6 +32,9 @@ public class EnversPostCollectionRecreateEventListenerImpl
 		final CollectionEntry collectionEntry = getCollectionEntry( event );
 		if ( !collectionEntry.getLoadedPersister().isInverse() ) {
 			onCollectionAction( event, event.getCollection(), null, collectionEntry );
+		}
+		else {
+			onCollectionActionInversed( event, event.getCollection(), null, collectionEntry );
 		}
 	}
 }

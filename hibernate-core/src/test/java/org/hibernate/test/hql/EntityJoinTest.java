@@ -8,6 +8,7 @@ package org.hibernate.test.hql;
 
 import java.util.List;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -141,6 +142,38 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
     }
 
     @Test
+    @TestForIssue(jiraKey = "HHH-11340")
+    @SuppressWarnings("unchecked")
+    public void testJoinOnEntityJoinNode() {
+        Session session = openSession();
+        session.beginTransaction();
+
+        try {
+            // this should get all financial records even if their lastUpdateBy user is null
+            List<Object[]> result = session.createQuery(
+                    "select u.username, c.name " +
+                            "from FinancialRecord r " +
+                            "	left join User u on r.lastUpdateBy = u.username " +
+                            "   left join u.customer c " +
+                            "   order by r.id"
+            ).list();
+            assertThat(result.size(), is(2));
+
+            Object[] stevesRecord = result.get(0);
+            assertThat(stevesRecord[0], is("steve"));
+            assertThat(stevesRecord[1], is("Acme"));
+
+            Object[] noOnesRecord = result.get(1);
+            assertNull(noOnesRecord[0]);
+            assertNull(noOnesRecord[1]);
+
+        } finally {
+            session.getTransaction().commit();
+            session.close();
+        }
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void testRightOuterEntityJoins() {
         Session session = openSession();
@@ -174,10 +207,10 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
         Session session = openSession();
         session.getTransaction().begin();
 
-        session.save(new User(1, "steve"));
-        session.save(new User(2, "jane"));
         final Customer customer = new Customer(1, "Acme");
         session.save(customer);
+        session.save(new User(1, "steve", customer));
+        session.save(new User(2, "jane"));
         session.save(new FinancialRecord(1, customer, "steve"));
         session.save(new FinancialRecord(2, customer, null));
 
@@ -190,8 +223,8 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
         session.getTransaction().begin();
 
         session.createQuery("delete FinancialRecord").executeUpdate();
-        session.createQuery("delete Customer").executeUpdate();
         session.createQuery("delete User").executeUpdate();
+        session.createQuery("delete Customer").executeUpdate();
 
         session.getTransaction().commit();
         session.close();
@@ -278,6 +311,7 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
     public static class User {
         private Integer id;
         private String username;
+        private Customer customer;
 
         public User() {
         }
@@ -285,6 +319,12 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
         public User(Integer id, String username) {
             this.id = id;
             this.username = username;
+        }
+
+        public User(Integer id, String username, Customer customer) {
+            this.id = id;
+            this.username = username;
+            this.customer = customer;
         }
 
         @Id
@@ -303,6 +343,15 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
 
         public void setUsername(String username) {
             this.username = username;
+        }
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        public Customer getCustomer() {
+            return customer;
+        }
+
+        public void setCustomer(Customer customer) {
+            this.customer = customer;
         }
     }
 

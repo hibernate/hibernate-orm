@@ -17,6 +17,7 @@ import org.hibernate.event.spi.PreCollectionUpdateEventListener;
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 public class EnversPreCollectionUpdateEventListenerImpl
 		extends BaseEnversCollectionEventListener
@@ -31,6 +32,9 @@ public class EnversPreCollectionUpdateEventListenerImpl
 		final CollectionEntry collectionEntry = getCollectionEntry( event );
 		if ( !collectionEntry.getLoadedPersister().isInverse() ) {
 			onCollectionAction( event, event.getCollection(), collectionEntry.getSnapshot(), collectionEntry );
+		}
+		else {
+			onCollectionActionInversed( event, event.getCollection(), collectionEntry.getSnapshot(), collectionEntry );
 		}
 	}
 }

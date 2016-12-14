@@ -16,6 +16,7 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.RelationDescription;
+import org.hibernate.envers.internal.entities.RelationType;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
@@ -34,6 +35,7 @@ import org.hibernate.persister.collection.AbstractCollectionPersister;
  * @author Steve Ebersole
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public abstract class BaseEnversCollectionEventListener extends BaseEnversEventListener {
 	protected BaseEnversCollectionEventListener(EnversService enversService) {
@@ -99,6 +101,25 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 					);
 
 					generateBidirectionalCollectionChangeWorkUnits( auditProcess, event, workUnit, rd );
+				}
+			}
+		}
+	}
+
+	protected final void onCollectionActionInversed(
+			AbstractCollectionEvent event,
+			PersistentCollection newColl,
+			Serializable oldColl,
+			CollectionEntry collectionEntry) {
+		if ( shouldGenerateRevision( event ) ) {
+			final String entityName = event.getAffectedOwnerEntityName();
+			final String ownerEntityName = ( (AbstractCollectionPersister) collectionEntry.getLoadedPersister() ).getOwnerEntityName();
+			final String referencingPropertyName = collectionEntry.getRole().substring( ownerEntityName.length() + 1 );
+
+			final RelationDescription rd = searchForRelationDescription( entityName, referencingPropertyName );
+			if ( rd != null ) {
+				if ( rd.getRelationType().equals( RelationType.TO_MANY_NOT_OWNING ) && rd.isIndexed() ) {
+					onCollectionAction( event, newColl, oldColl, collectionEntry );
 				}
 			}
 		}

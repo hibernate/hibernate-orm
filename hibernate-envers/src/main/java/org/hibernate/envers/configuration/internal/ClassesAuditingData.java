@@ -12,18 +12,24 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.tools.MappingTools;
+import org.hibernate.mapping.List;
 import org.hibernate.mapping.PersistentClass;
 
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Value;
 import org.jboss.logging.Logger;
 
 /**
  * A helper class holding auditing meta-data for all persistent classes.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class ClassesAuditingData {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
@@ -65,6 +71,7 @@ public class ClassesAuditingData {
 	 * After all meta-data is read, updates calculated fields. This includes:
 	 * <ul>
 	 * <li>setting {@code forceInsertable} to {@code true} for properties specified by {@code @AuditMappedBy}</li>
+	 * <li>adding {@code synthetic} properties to mappedBy relations which have {@code IndexColumn} or {@code OrderColumn}.</li>
 	 * </ul>
 	 */
 	public void updateCalculatedFields() {
@@ -72,25 +79,79 @@ public class ClassesAuditingData {
 			final PersistentClass pc = classAuditingDataEntry.getKey();
 			final ClassAuditingData classAuditingData = classAuditingDataEntry.getValue();
 			for ( String propertyName : classAuditingData.getPropertyNames() ) {
-				final PropertyAuditingData propertyAuditingData = classAuditingData.getPropertyAuditingData( propertyName );
+				updateCalculatedProperty( pc, classAuditingData, propertyName );
+			}
+		}
+	}
+
+	private void updateCalculatedProperty(
+			PersistentClass pc,
+			ClassAuditingData classAuditingData,
+			String propertyName) {
+
+		final PropertyAuditingData propertyAuditingData = classAuditingData.getPropertyAuditingData( propertyName );
+
+		final boolean isAuditMappedBy = propertyAuditingData.getAuditMappedBy() != null;
+		final boolean isRelationMappedBy = propertyAuditingData.getRelationMappedBy() != null;
+
+		if ( isAuditMappedBy || isRelationMappedBy ) {
+			final Property property = pc.getProperty( propertyName );
+			final String referencedEntityName = MappingTools.getReferencedEntityName( property.getValue() );
+
+			final ClassAuditingData referencedAuditData = entityNameToAuditingData.get( referencedEntityName );
+
+			if ( isAuditMappedBy ) {
 				// If a property had the @AuditMappedBy annotation, setting the referenced fields to be always insertable.
-				if ( propertyAuditingData.getAuditMappedBy() != null ) {
-					final String referencedEntityName = MappingTools.getReferencedEntityName(
-							pc.getProperty( propertyName ).getValue()
-					);
+				setAuditMappedByInsertable( referencedEntityName, pc.getEntityName(), referencedAuditData, propertyAuditingData );
+			}
+			else if ( isRelationMappedBy && ( property.getValue() instanceof List ) ) {
+				// If a property has mappedBy= and @Indexed and isn't @AuditMappedBy, add synthetic support.
+				addSyntheticIndexProperty(
+						(List) property.getValue(),
+						property.getPropertyAccessorName(),
+						referencedAuditData
+				);
+			}
+		}
+	}
 
-					final ClassAuditingData referencedClassAuditingData = entityNameToAuditingData.get( referencedEntityName );
+	private void setAuditMappedByInsertable(
+			String referencedEntityName,
+			String entityName,
+			ClassAuditingData referencedAuditData,
+			PropertyAuditingData propertyAuditingData) {
+		forcePropertyInsertable(
+				referencedAuditData,
+				propertyAuditingData.getAuditMappedBy(),
+				entityName,
+				referencedEntityName
+		);
 
-					forcePropertyInsertable(
-							referencedClassAuditingData, propertyAuditingData.getAuditMappedBy(),
-							pc.getEntityName(), referencedEntityName
-					);
+		forcePropertyInsertable(
+				referencedAuditData,
+				propertyAuditingData.getPositionMappedBy(),
+				entityName,
+				referencedEntityName
+		);
+	}
 
-					forcePropertyInsertable(
-							referencedClassAuditingData, propertyAuditingData.getPositionMappedBy(),
-							pc.getEntityName(), referencedEntityName
-					);
-				}
+	private void addSyntheticIndexProperty(List value, String propertyAccessorName, ClassAuditingData classAuditingData) {
+		final Value indexValue = value.getIndex();
+		if ( indexValue != null && indexValue.getColumnIterator().hasNext() ) {
+			final String indexColumnName = indexValue.getColumnIterator().next().getText();
+			if ( indexColumnName != null ) {
+				final PropertyAuditingData auditingData = new PropertyAuditingData(
+						indexColumnName,
+						propertyAccessorName,
+						ModificationStore.FULL,
+						RelationTargetAuditMode.AUDITED,
+						null,
+						null,
+						false,
+						true,
+						indexValue
+				);
+				classAuditingData.addPropertyAuditingData( indexColumnName, auditingData );
 			}
 		}
 	}

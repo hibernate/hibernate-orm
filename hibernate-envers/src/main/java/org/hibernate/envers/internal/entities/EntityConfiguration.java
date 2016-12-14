@@ -16,6 +16,7 @@ import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
+ * @author Chris Cranford
  */
 public class EntityConfiguration {
 	private String versionsEntityName;
@@ -80,12 +81,13 @@ public class EntityConfiguration {
 			String toEntityName,
 			IdMapper idMapper,
 			PropertyMapper fakeBidirectionalRelationMapper,
-			PropertyMapper fakeBidirectionalRelationIndexMapper) {
+			PropertyMapper fakeBidirectionalRelationIndexMapper,
+			boolean indexed) {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toMany(
 						fromPropertyName, RelationType.TO_MANY_NOT_OWNING, toEntityName, mappedByPropertyName,
-						idMapper, fakeBidirectionalRelationMapper, fakeBidirectionalRelationIndexMapper, true
+						idMapper, fakeBidirectionalRelationMapper, fakeBidirectionalRelationIndexMapper, true, indexed
 				)
 		);
 	}
@@ -94,7 +96,7 @@ public class EntityConfiguration {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toMany(
-						fromPropertyName, RelationType.TO_MANY_MIDDLE, toEntityName, null, null, null, null, true
+						fromPropertyName, RelationType.TO_MANY_MIDDLE, toEntityName, null, null, null, null, true, false
 				)
 		);
 	}
@@ -104,7 +106,7 @@ public class EntityConfiguration {
 				fromPropertyName,
 				RelationDescription.toMany(
 						fromPropertyName, RelationType.TO_MANY_MIDDLE_NOT_OWNING, toEntityName, mappedByPropertyName,
-						null, null, null, true
+						null, null, null, true, false
 				)
 		);
 	}

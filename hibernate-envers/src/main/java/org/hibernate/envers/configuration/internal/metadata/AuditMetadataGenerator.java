@@ -694,6 +694,9 @@ public final class AuditMetadataGenerator {
 		createJoins( pc, classMapping, auditingData );
 		addJoins( pc, propertyMapper, auditingData, pc.getEntityName(), xmlMappingData, true );
 
+		// HHH-7940 - New synthetic property support for @IndexColumn/@OrderColumn dynamic properties
+		addSynthetics( classMapping, auditingData, propertyMapper, xmlMappingData, pc.getEntityName(), true );
+
 		// Storing the generated configuration
 		final EntityConfiguration entityCfg = new EntityConfiguration(
 				auditEntityName,
@@ -703,6 +706,28 @@ public final class AuditMetadataGenerator {
 				parentEntityName
 		);
 		entitiesConfigurations.put( pc.getEntityName(), entityCfg );
+	}
+
+	private void addSynthetics(
+			Element classMapping,
+			ClassAuditingData auditingData,
+			CompositeMapperBuilder currentMapper,
+			EntityXmlMappingData xmlMappingData,
+			String entityName,
+			boolean firstPass) {
+		for ( PropertyAuditingData propertyAuditingData : auditingData.getSyntheticProperties() ) {
+			addValue(
+					classMapping,
+					propertyAuditingData.getValue(),
+					currentMapper,
+					entityName,
+					xmlMappingData,
+					propertyAuditingData,
+					true,
+					firstPass,
+					false
+			);
+		}
 	}
 
 	@SuppressWarnings({"unchecked"})

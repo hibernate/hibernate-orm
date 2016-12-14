@@ -157,7 +157,7 @@ public final class CollectionMetadataGenerator {
 
 		if ( oneToManyAttachedType && (inverseOneToMany || fakeOneToManyBidirectional || owningManyToOneWithJoinTableBidirectional) ) {
 			// A one-to-many relation mapped using @ManyToOne and @OneToMany(mappedBy="...")
-			addOneToManyAttached( fakeOneToManyBidirectional );
+			addOneToManyAttached( fakeOneToManyBidirectional  );
 		}
 		else {
 			// All other kinds of relations require a middle (join) table.
@@ -182,6 +182,10 @@ public final class CollectionMetadataGenerator {
 				referencingEntityName,
 				propertyName
 		);
+
+		// check whether the property has an @IndexColumn or @OrderColumn because its part of an
+		// IndexedCollection mapping type.
+		final boolean indexed = ( propertyValue instanceof IndexedCollection ) && ( (IndexedCollection) propertyValue ).getIndex() != null;
 
 		final String mappedBy = getMappedBy( propertyValue );
 
@@ -239,10 +243,16 @@ public final class CollectionMetadataGenerator {
 
 		PropertyMapper fakeBidirectionalRelationMapper;
 		PropertyMapper fakeBidirectionalRelationIndexMapper;
-		if ( fakeOneToManyBidirectional ) {
+		if ( fakeOneToManyBidirectional || indexed ) {
 			// In case of a fake many-to-one bidirectional relation, we have to generate a mapper which maps
 			// the mapped-by property name to the id of the related entity (which is the owner of the collection).
-			final String auditMappedBy = propertyAuditingData.getAuditMappedBy();
+			final String auditMappedBy;
+			if ( fakeOneToManyBidirectional ) {
+				auditMappedBy = propertyAuditingData.getAuditMappedBy();
+			}
+			else {
+				auditMappedBy = propertyValue.getMappedByProperty();
+			}
 
 			// Creating a prefixed relation mapper.
 			final IdMapper relMapper = referencingIdMapping.getIdMapper().prefixMappedProperties(
@@ -257,9 +267,20 @@ public final class CollectionMetadataGenerator {
 					referencingEntityName, false
 			);
 
+			final String positionMappedBy;
+			if ( fakeOneToManyBidirectional ) {
+				positionMappedBy = propertyAuditingData.getPositionMappedBy();
+			}
+			else if ( indexed ) {
+				final Value indexValue = ( (IndexedCollection) propertyValue ).getIndex();
+				positionMappedBy = indexValue.getColumnIterator().next().getText();
+			}
+			else {
+				positionMappedBy = null;
+			}
+
 			// Checking if there's an index defined. If so, adding a mapper for it.
-			if ( propertyAuditingData.getPositionMappedBy() != null ) {
-				final String positionMappedBy = propertyAuditingData.getPositionMappedBy();
+			if ( positionMappedBy != null ) {
 				fakeBidirectionalRelationIndexMapper = new SinglePropertyMapper(
 						new PropertyData(
 								positionMappedBy,
@@ -294,7 +315,8 @@ public final class CollectionMetadataGenerator {
 				referencedEntityName,
 				referencingIdData.getPrefixedMapper(),
 				fakeBidirectionalRelationMapper,
-				fakeBidirectionalRelationIndexMapper
+				fakeBidirectionalRelationIndexMapper,
+				indexed
 		);
 	}
 

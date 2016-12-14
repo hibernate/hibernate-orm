@@ -29,6 +29,7 @@ import org.hibernate.property.access.spi.SetterFieldImpl;
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder {
 	private PropertyData propertyData;
@@ -71,7 +72,8 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
-		if ( propertyData.isUsingModifiedFlag() ) {
+		// Synthetic properties are not subject to withModifiedFlag analysis
+		if ( propertyData.isUsingModifiedFlag() && !propertyData.isSynthetic() ) {
 			data.put( propertyData.getModifiedFlagPropertyName(), !EqualsHelper.areEqual( newObj, oldObj ) );
 		}
 	}
@@ -88,7 +90,8 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			Object primaryKey,
 			AuditReaderImplementor versionsReader,
 			Number revision) {
-		if ( data == null || obj == null ) {
+		// synthetic properties are not part of the entity model; therefore they should be ignored.
+		if ( data == null || obj == null || propertyData.isSynthetic() ) {
 			return;
 		}
 

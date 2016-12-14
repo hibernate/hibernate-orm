@@ -21,6 +21,11 @@ import org.hibernate.internal.util.StringHelper;
  * @author Steve Ebersole
  */
 public class BasicFormatterImpl implements Formatter {
+	protected static final String NEWLINE;
+	static {
+		final String systemNewLine = System.getProperty( "line.separator" );
+		NEWLINE = StringHelper.isNotEmpty( systemNewLine ) ? systemNewLine : "\n";
+	}
 
 	private static final Set<String> BEGIN_CLAUSES = new HashSet<String>();
 	private static final Set<String> END_CLAUSES = new HashSet<String>();
@@ -68,7 +73,7 @@ public class BasicFormatterImpl implements Formatter {
 	}
 
 	private static final String INDENT_STRING = "    ";
-	private static final String INITIAL = "\n    ";
+	private static final String INITIAL = NEWLINE + "    ";
 
 	@Override
 	public String format(String source) {
@@ -371,7 +376,7 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void newline() {
-			result.append( "\n" );
+			result.append( NEWLINE );
 			for ( int i = 0; i < indent; i++ ) {
 				result.append( INDENT_STRING );
 			}

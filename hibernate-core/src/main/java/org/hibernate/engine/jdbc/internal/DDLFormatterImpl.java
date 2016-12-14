@@ -18,6 +18,14 @@ import org.hibernate.internal.util.StringHelper;
  * @author Steve Ebersole
  */
 public class DDLFormatterImpl implements Formatter {
+	protected static final String NEWLINE;
+	static {
+		final String systemNewLine = System.getProperty( "line.separator" );
+		NEWLINE = StringHelper.isNotEmpty( systemNewLine ) ? systemNewLine : "\n";
+	}
+
+	private static final String INITIAL_LINE = NEWLINE + "    ";
+	private static final String OTHER_LINES = NEWLINE + "       ";
 	/**
 	 * Singleton access
 	 */
@@ -42,12 +50,12 @@ public class DDLFormatterImpl implements Formatter {
 			return formatCommentOn( sql );
 		}
 		else {
-			return "\n    " + sql;
+			return NEWLINE + "    " + sql;
 		}
 	}
 
 	private String formatCommentOn(String sql) {
-		final StringBuilder result = new StringBuilder( 60 ).append( "\n    " );
+		final StringBuilder result = new StringBuilder( 60 ).append( INITIAL_LINE );
 		final StringTokenizer tokens = new StringTokenizer( sql, " '[]\"", true );
 
 		boolean quoted = false;
@@ -59,7 +67,7 @@ public class DDLFormatterImpl implements Formatter {
 			}
 			else if ( !quoted ) {
 				if ( "is".equals( token ) ) {
-					result.append( "\n       " );
+					result.append( OTHER_LINES );
 				}
 			}
 		}
@@ -68,7 +76,7 @@ public class DDLFormatterImpl implements Formatter {
 	}
 
 	private String formatAlterTable(String sql) {
-		final StringBuilder result = new StringBuilder( 60 ).append( "\n    " );
+		final StringBuilder result = new StringBuilder( 60 ).append( INITIAL_LINE );
 		final StringTokenizer tokens = new StringTokenizer( sql, " (,)'[]\"", true );
 
 		boolean quoted = false;
@@ -79,7 +87,7 @@ public class DDLFormatterImpl implements Formatter {
 			}
 			else if ( !quoted ) {
 				if ( isBreak( token ) ) {
-					result.append( "\n        " );
+					result.append( OTHER_LINES );
 				}
 			}
 			result.append( token );
@@ -89,7 +97,7 @@ public class DDLFormatterImpl implements Formatter {
 	}
 
 	private String formatCreateTable(String sql) {
-		final StringBuilder result = new StringBuilder( 60 ).append( "\n    " );
+		final StringBuilder result = new StringBuilder( 60 ).append( INITIAL_LINE );
 		final StringTokenizer tokens = new StringTokenizer( sql, "(,)'[]\"", true );
 
 		int depth = 0;
@@ -107,17 +115,17 @@ public class DDLFormatterImpl implements Formatter {
 				if ( ")".equals( token ) ) {
 					depth--;
 					if ( depth == 0 ) {
-						result.append( "\n    " );
+						result.append( INITIAL_LINE );
 					}
 				}
 				result.append( token );
 				if ( ",".equals( token ) && depth == 1 ) {
-					result.append( "\n       " );
+					result.append( OTHER_LINES );
 				}
 				if ( "(".equals( token ) ) {
 					depth++;
 					if ( depth == 1 ) {
-						result.append( "\n        " );
+						result.append( OTHER_LINES );
 					}
 				}
 			}

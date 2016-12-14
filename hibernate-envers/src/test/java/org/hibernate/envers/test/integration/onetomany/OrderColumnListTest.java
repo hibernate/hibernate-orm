@@ -39,7 +39,6 @@ public class OrderColumnListTest extends BaseEnversJPAFunctionalTestCase {
 	@Priority(10)
 	public void initData() {
 		// Revision 1 - Create indexed entries.
-		System.out.println( "--- REV 1 ---" );
 		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
 			Parent p = new Parent( 1 );
 			p.addChild( new Child( 1, "child1" ) );
@@ -48,7 +47,6 @@ public class OrderColumnListTest extends BaseEnversJPAFunctionalTestCase {
 			p.getChildren().forEach( entityManager::persist );
 		} );
 
-		System.out.println( "--- REV 2 ---" );
 		// Revision 2 - remove an indexed entry, resetting positions.
 		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
 			final Parent p = entityManager.find( Parent.class, 1 );
@@ -57,7 +55,6 @@ public class OrderColumnListTest extends BaseEnversJPAFunctionalTestCase {
 			entityManager.merge( p );
 		} );
 
-		System.out.println( "--- REV 3 ---" );
 		// Revision 3 - add new indexed entity to reset positions
 		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
 			final Parent p = entityManager.find( Parent.class, 1 );
@@ -69,7 +66,6 @@ public class OrderColumnListTest extends BaseEnversJPAFunctionalTestCase {
 			entityManager.merge( p );
 		} );
 
-		System.out.println( "--- REV 4 ---" );
 		// Revision 4 - remove all children
 		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
 			final Parent p = entityManager.find( Parent.class, 1 );

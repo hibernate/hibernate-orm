@@ -199,6 +199,11 @@ public abstract class AbstractDelegatingSessionFactoryOptions implements Session
 	}
 
 	@Override
+	public boolean isConventionalJavaConstants() {
+		return delegate.isConventionalJavaConstants();
+	}
+
+	@Override
 	public boolean isProcedureParameterNullPassingEnabled() {
 		return delegate.isProcedureParameterNullPassingEnabled();
 	}

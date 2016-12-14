@@ -13,13 +13,11 @@ import java.text.DecimalFormat;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.InvalidPathException;
-import org.hibernate.hql.internal.ast.tree.BooleanLiteralNode;
 import org.hibernate.hql.internal.ast.tree.DotNode;
 import org.hibernate.hql.internal.ast.tree.FromClause;
 import org.hibernate.hql.internal.ast.tree.IdentNode;
@@ -35,7 +33,6 @@ import org.jboss.logging.Logger;
 
 import antlr.SemanticException;
 import antlr.collections.AST;
-import java.util.Locale;
 
 /**
  * A delegate that handles literals and constants for HqlSqlWalker, performing the token replacement functions and
@@ -109,7 +106,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 			setSQLValue( node, text, discrim );
 		}
 		else {
-			Object value = ReflectHelper.getConstantValue( text, walker.getSessionFactoryHelper().getFactory().getServiceRegistry().getService( ClassLoaderService.class ) );
+			Object value = ReflectHelper.getConstantValue( text, walker.getSessionFactoryHelper().getFactory() );
 			if ( value == null ) {
 				throw new InvalidPathException( "Invalid path: '" + text + "'" );
 			}

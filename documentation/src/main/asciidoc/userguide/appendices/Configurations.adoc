@@ -290,6 +290,16 @@ Should we strictly adhere to JPA Query Language (JPQL) syntax, or more broadly s
 Setting this to `true` may cause valid HQL to throw an exception because it violates the JPQL subset.
 
 |`hibernate.query.startup_check` | `true` (default value) or `false` |Should named queries be checked during startup?
+|`hibernate.query.conventional_java_constants` | `true` (default value) or `false` |
+Setting which indicates whether or not Java constant follow the https://docs.oracle.com/javase/tutorial/java/nutsandbolts/variables.html[Java Naming conventions].
+
+Default is `true`.
+Existing applications may want to disable this (set it `false`) if non-conventional Java constants are used.
+However, there is a significant performance overhead for using non-conventional Java constants
+since Hibernate cannot determine if aliases should be treated as Java constants or not.
+
+Check out https://hibernate.atlassian.net/browse/HHH-4959[HHH-4959] for more details.
+
 |`hibernate.hql.bulk_id_strategy` | A fully-qualified class name, an instance, or a `Class` object reference |Provide a custom `org.hibernate.hql.spi.id.MultiTableBulkIdStrategy` implementation for handling multi-table bulk HQL operations.
 |`hibernate.proc.param_null_passing` | `true` or `false` (default value) |
 
@@ -310,7 +320,6 @@ Can reference
 * `StatementInspector` instance
 * `StatementInspector` implementation {@link Class} reference
 * `StatementInspector` implementation class name (fully-qualified class name)
-
 |===================================================================================================================================================================================================================================
 
 [[configurations-batch]]

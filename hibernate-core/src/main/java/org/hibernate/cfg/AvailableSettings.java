@@ -563,6 +563,17 @@ public interface AvailableSettings {
 	String QUERY_STARTUP_CHECKING = "hibernate.query.startup_check";
 
 	/**
+	 * Setting which indicates whether or not Java constant follow the Java Naming conventions.
+	 * <p/>
+	 * Default is {@code true}. Existing applications may want to disable this (set it {@code false}) if non-conventional Java constants are used.
+	 * However, there is a significant performance overhead for using non-conventional Java constants since Hibernate cannot determine if aliases
+	 * should be treated as Java constants or not.
+	 *
+	 * @since 5.2
+	 */
+	String CONVENTIONAL_JAVA_CONSTANTS = "hibernate.query.conventional_java_constants";
+
+	/**
 	 * The {@link org.hibernate.exception.spi.SQLExceptionConverter} to use for converting SQLExceptions
 	 * to Hibernate's JDBCException hierarchy.  The default is to use the configured
 	 * {@link org.hibernate.dialect.Dialect}'s preferred SQLExceptionConverter.

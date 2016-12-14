@@ -88,6 +88,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final Map querySubstitutions;
 	private final boolean strictJpaQueryLanguageCompliance;
 	private final boolean namedQueryStartupCheckingEnabled;
+	private final boolean conventionalJavaConstants;
 	private final boolean procedureParameterNullPassingEnabled;
 	private final boolean collectionJoinSubqueryRewriteEnabled;
 
@@ -160,6 +161,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.querySubstitutions = state.getQuerySubstitutions();
 		this.strictJpaQueryLanguageCompliance = state.isStrictJpaQueryLanguageCompliance();
 		this.namedQueryStartupCheckingEnabled = state.isNamedQueryStartupCheckingEnabled();
+		this.conventionalJavaConstants = state.isConventionalJavaConstants();
 		this.procedureParameterNullPassingEnabled = state.isProcedureParameterNullPassingEnabled();
 		this.collectionJoinSubqueryRewriteEnabled = state.isCollectionJoinSubqueryRewriteEnabled();
 
@@ -337,6 +339,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isNamedQueryStartupCheckingEnabled() {
 		return namedQueryStartupCheckingEnabled;
+	}
+
+	@Override
+	public boolean isConventionalJavaConstants() {
+		return conventionalJavaConstants;
 	}
 
 	@Override

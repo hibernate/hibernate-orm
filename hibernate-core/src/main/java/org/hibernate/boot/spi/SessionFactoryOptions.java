@@ -122,6 +122,8 @@ public interface SessionFactoryOptions {
 
 	boolean isNamedQueryStartupCheckingEnabled();
 
+	boolean isConventionalJavaConstants();
+
 	boolean isSecondLevelCacheEnabled();
 
 	boolean isQueryCacheEnabled();

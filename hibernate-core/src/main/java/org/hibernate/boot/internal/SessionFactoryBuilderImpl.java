@@ -483,6 +483,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private Map querySubstitutions;
 		private boolean strictJpaQueryLanguageCompliance;
 		private boolean namedQueryStartupCheckingEnabled;
+		private boolean conventionalJavaConstants;
 		private final boolean procedureParameterNullPassingEnabled;
 		private final boolean collectionJoinSubqueryRewriteEnabled;
 
@@ -600,6 +601,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			this.querySubstitutions = ConfigurationHelper.toMap( QUERY_SUBSTITUTIONS, " ,=;:\n\t\r\f", configurationSettings );
 			this.strictJpaQueryLanguageCompliance = cfgService.getSetting( JPAQL_STRICT_COMPLIANCE, BOOLEAN, false );
 			this.namedQueryStartupCheckingEnabled = cfgService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
+			this.conventionalJavaConstants = cfgService.getSetting(
+					CONVENTIONAL_JAVA_CONSTANTS, BOOLEAN, true );
 			this.procedureParameterNullPassingEnabled = cfgService.getSetting( PROCEDURE_NULL_PARAM_PASSING, BOOLEAN, false );
 			this.collectionJoinSubqueryRewriteEnabled = cfgService.getSetting( COLLECTION_JOIN_SUBQUERY, BOOLEAN, true );
 
@@ -849,6 +852,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		@Override
 		public boolean isNamedQueryStartupCheckingEnabled() {
 			return namedQueryStartupCheckingEnabled;
+		}
+
+		public boolean isConventionalJavaConstants() {
+			return conventionalJavaConstants;
 		}
 
 		@Override
@@ -1130,6 +1137,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public boolean isNamedQueryStartupCheckingEnabled() {
 		return options.isNamedQueryStartupCheckingEnabled();
+	}
+
+	public boolean isConventionalJavaConstants() {
+		return options.isConventionalJavaConstants();
 	}
 
 	@Override

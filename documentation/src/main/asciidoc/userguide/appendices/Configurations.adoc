@@ -349,6 +349,15 @@ implementations that sacrifices performance optimizations to allow legacy 4.x li
 
 Legacy 4.x behavior favored performing pagination in-memory by avoiding the use of the offset value, which is overall poor performance.
 In 5.x, the limit handler behavior favors performance, thus, if the dialect doesn't support offsets, an exception is thrown instead.
+|`hibernate.query.conventional_java_constants` | `true` (default value) or `false` |
+Setting which indicates whether or not Java constant follow the https://docs.oracle.com/javase/tutorial/java/nutsandbolts/variables.html[Java Naming conventions].
+
+Default is `true`.
+Existing applications may want to disable this (set it `false`) if non-conventional Java constants are used.
+However, there is a significant performance overhead for using non-conventional Java constants
+since Hibernate cannot determine if aliases should be treated as Java constants or not.
+
+Check out https://hibernate.atlassian.net/browse/HHH-4959[HHH-4959] for more details.
 |===================================================================================================================================================================================================================================
 
 [[configurations-batch]]

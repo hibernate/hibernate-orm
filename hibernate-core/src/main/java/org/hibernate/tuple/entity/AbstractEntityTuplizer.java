@@ -427,7 +427,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	private static Serializable determineEntityIdPersistIfNecessary(
 			Object entity,
 			AssociationType associationType,
-			SharedSessionContractImplementor session,
+			SessionImplementor session,
 			Iterable<PersistEventListener> persistEventListeners) {
 		if ( HibernateProxy.class.isInstance( entity ) ) {
 			// entity is a proxy, so we know it is not transient; just return ID from proxy
@@ -475,7 +475,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	private static Serializable persistTransientEntity(
 			Object entity,
-			SharedSessionContractImplementor session,
+			SessionImplementor session,
 			Iterable<PersistEventListener> persistEventListeners) {
 		LOG.debug( "Performing implicit derived identity cascade" );
 		final PersistEvent event = new PersistEvent(

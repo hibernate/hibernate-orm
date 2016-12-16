@@ -36,8 +36,7 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 	private final BaseTransactionalDataRegion region;
 	private final AdvancedCache cache;
 	private final AdvancedCache writeCache;
-	private final AdvancedCache putFromLoadCacheLocal;
-	private final AdvancedCache putFromLoadCacheAsync;
+	private final AdvancedCache putFromLoadCache;
 	private final Comparator versionComparator;
 
 
@@ -46,8 +45,7 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 		this.cache = region.getCache();
 		this.writeCache = Caches.ignoreReturnValuesCache(cache);
 		// Note that correct behaviour of local and async writes depends on LockingInterceptor (see there for details)
-		this.putFromLoadCacheLocal = writeCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY, Flag.CACHE_MODE_LOCAL );
-		this.putFromLoadCacheAsync = writeCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY, Flag.FORCE_ASYNCHRONOUS );
+		this.putFromLoadCache = writeCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY, Flag.FORCE_ASYNCHRONOUS );
 		Configuration configuration = cache.getCacheConfiguration();
 		if (configuration.clustering().cacheMode().isInvalidation()) {
 			throw new IllegalArgumentException("Nonstrict-read-write mode cannot use invalidation.");
@@ -115,8 +113,7 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 		}
 		// Apply the update locally first - if we're the backup owner, async propagation wouldn't change the value
 		// for the subsequent operation soon enough as it goes through primary owner
-		putFromLoadCacheAsync.put(key, value);
-		putFromLoadCacheLocal.put(key, value);
+		putFromLoadCache.put(key, value);
 		return true;
 	}
 

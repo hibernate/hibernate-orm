@@ -27,14 +27,13 @@ public class FutureUpdateSynchronization extends InvocationAfterCompletion {
 	private final Object value;
 	private final BaseTransactionalDataRegion region;
 	private final long sessionTimestamp;
-	private final AdvancedCache localCache;
-	private final AdvancedCache asyncCache;
+	private final AdvancedCache cache;
 
-	public FutureUpdateSynchronization(TransactionCoordinator tc, AdvancedCache localCache, AdvancedCache asyncCache,
-			boolean requiresTransaction, Object key, Object value, BaseTransactionalDataRegion region, long sessionTimestamp) {
+	public FutureUpdateSynchronization(TransactionCoordinator tc, AdvancedCache cache, boolean requiresTransaction,
+			Object key, Object value, BaseTransactionalDataRegion region, long sessionTimestamp) {
+
 		super(tc, requiresTransaction);
-		this.localCache = localCache;
-		this.asyncCache = asyncCache;
+		this.cache = cache;
 		this.key = key;
 		this.value = value;
 		this.region = region;
@@ -57,13 +56,7 @@ public class FutureUpdateSynchronization extends InvocationAfterCompletion {
 		FutureUpdate futureUpdate = new FutureUpdate(uuid, region.nextTimestamp(), success ? this.value : null);
 		for (;;) {
 			try {
-				// Similar to putFromLoad, we have to update this node synchronously because after transaction
-				// is committed it is expected that we'll retrieve cached instance until next invalidation,
-				// but the replication this node -> primary -> this node can take a while
-				// We need to first execute the async update and then local one, because if we're on the primary
-				// owner the local future update, would fail the async one.
-				asyncCache.put(key, futureUpdate);
-				localCache.put(key, futureUpdate);
+				cache.put(key, futureUpdate);
 				return;
 			}
 			catch (Exception e) {

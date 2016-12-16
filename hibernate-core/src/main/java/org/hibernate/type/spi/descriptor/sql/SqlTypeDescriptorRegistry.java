@@ -14,11 +14,11 @@ import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.type.internal.descriptor.JdbcTypeNameMapper;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.sql.JdbcTypeFamilyInformation;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -126,6 +126,12 @@ public class SqlTypeDescriptorRegistry {
 		@Override
 		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
 			throw new UnsupportedOperationException( "No recommended Java-type mapping known for JDBC type code [" + jdbcTypeCode + "]" );
+		}
+
+		@Override
+		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+			// obviously no literal support here :)
+			return null;
 		}
 
 		@Override

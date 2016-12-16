@@ -14,11 +14,16 @@ import java.sql.Time;
 import java.sql.Types;
 import java.util.Calendar;
 
+import javax.persistence.TemporalType;
+
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.TemporalTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.internal.JdbcLiteralFormatterTemporal;
 
 /**
  * Descriptor for {@link Types#TIME TIME} handling.
@@ -44,6 +49,12 @@ public class TimeTypeDescriptor implements SqlTypeDescriptor {
 	@Override
 	public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
 		return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Time.class );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+		return new JdbcLiteralFormatterTemporal( (TemporalTypeDescriptor) javaTypeDescriptor, TemporalType.TIME );
 	}
 
 	@Override

@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.engine.jdbc.BinaryStream;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
@@ -39,6 +40,12 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 	@Override
 	public boolean canBeRemapped() {
 		return true;
+	}
+
+	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+		// literal values for BLOB data is not supported.
+		return null;
 	}
 
 	@Override
@@ -190,5 +197,4 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 			};
 		}
 	};
-
 }

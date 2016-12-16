@@ -12,11 +12,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.internal.JdbcLiteralFormatterNumericData;
 
 /**
  * Descriptor for {@link Types#SMALLINT SMALLINT} handling.
@@ -42,6 +44,12 @@ public class SmallIntTypeDescriptor implements SqlTypeDescriptor {
 	@Override
 	public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
 		return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Short.class );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, Short.class );
 	}
 
 	@Override

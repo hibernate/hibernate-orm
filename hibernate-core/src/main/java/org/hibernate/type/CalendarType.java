@@ -40,6 +40,11 @@ public class CalendarType
 	}
 
 	@Override
+	public VersionSupport<Calendar> getVersionSupport() {
+		return this;
+	}
+
+	@Override
 	public Calendar next(Calendar current, SharedSessionContractImplementor session) {
 		return seed( session );
 	}

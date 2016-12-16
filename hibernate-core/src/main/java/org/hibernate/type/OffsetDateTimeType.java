@@ -44,6 +44,11 @@ public class OffsetDateTimeType
 	}
 
 	@Override
+	public VersionSupport<OffsetDateTime> getVersionSupport() {
+		return this;
+	}
+
+	@Override
 	public OffsetDateTime seed(SharedSessionContractImplementor session) {
 		return OffsetDateTime.now();
 	}

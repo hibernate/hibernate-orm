@@ -44,6 +44,11 @@ public class InstantType
 	}
 
 	@Override
+	public VersionSupport<Instant> getVersionSupport() {
+		return this;
+	}
+
+	@Override
 	public Instant seed(SharedSessionContractImplementor session) {
 		return Instant.now();
 	}

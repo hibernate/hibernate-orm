@@ -45,6 +45,11 @@ public class ByteType
 	}
 
 	@Override
+	public VersionSupport<Byte> getVersionSupport() {
+		return this;
+	}
+
+	@Override
 	public String toJdbcLiteral(Byte value, Dialect dialect) {
 		return toJdbcLiteral( value );
 	}

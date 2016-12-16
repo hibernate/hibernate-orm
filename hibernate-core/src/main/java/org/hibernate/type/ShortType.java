@@ -41,6 +41,11 @@ public class ShortType
 	}
 
 	@Override
+	public VersionSupport<Short> getVersionSupport() {
+		return this;
+	}
+
+	@Override
 	public Short seed(SharedSessionContractImplementor session) {
 		return ZERO;
 	}

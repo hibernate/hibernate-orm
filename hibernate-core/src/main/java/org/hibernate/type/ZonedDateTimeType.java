@@ -45,6 +45,11 @@ public class ZonedDateTimeType
 	}
 
 	@Override
+	public VersionSupport<ZonedDateTime> getVersionSupport() {
+		return this;
+	}
+
+	@Override
 	public ZonedDateTime seed(SharedSessionContractImplementor session) {
 		return ZonedDateTime.now();
 	}

@@ -50,6 +50,11 @@ public class LocalDateTimeType
 	}
 
 	@Override
+	public VersionSupport<LocalDateTime> getVersionSupport() {
+		return this;
+	}
+
+	@Override
 	public LocalDateTime seed(SharedSessionContractImplementor session) {
 		return LocalDateTime.now();
 	}

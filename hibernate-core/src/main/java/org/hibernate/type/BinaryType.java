@@ -37,6 +37,11 @@ public class BinaryType extends BasicTypeImpl<byte[]> implements VersionSupport<
 	}
 
 	@Override
+	public VersionSupport<byte[]> getVersionSupport() {
+		return this;
+	}
+
+	@Override
 	public byte[] seed(SharedSessionContractImplementor session) {
 		// Note : simply returns null for seed() and next() as the only known
 		// 		application of binary types for versioning is for use with the

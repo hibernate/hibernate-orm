@@ -40,6 +40,11 @@ public class LongType
 	}
 
 	@Override
+	public VersionSupport<Long> getVersionSupport() {
+		return this;
+	}
+
+	@Override
 	public Long next(Long current, SharedSessionContractImplementor session) {
 		return current + 1L;
 	}

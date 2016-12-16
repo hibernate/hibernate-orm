@@ -40,6 +40,11 @@ public class TimestampType
 	}
 
 	@Override
+	public VersionSupport<Date> getVersionSupport() {
+		return this;
+	}
+
+	@Override
 	public Date next(Date current, SharedSessionContractImplementor session) {
 		return seed( session );
 	}

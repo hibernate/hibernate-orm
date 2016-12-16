@@ -36,6 +36,11 @@ public class IntegerType extends BasicTypeImpl<Integer>
 	}
 
 	@Override
+	public VersionSupport<Integer> getVersionSupport() {
+		return this;
+	}
+
+	@Override
 	public Integer seed(SharedSessionContractImplementor session) {
 		return ZERO;
 	}

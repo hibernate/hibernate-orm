@@ -7,15 +7,16 @@
 package org.hibernate.dialect;
 
 import java.util.Locale;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.RowSelection;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -75,10 +76,10 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8507")
 	public void testGetLimitStringWithNewlineAfterColumnList() {
-		final String query = "select E.fieldA,E.fieldB" + System.lineSeparator() + "FROM Employee E WHERE E.firstName = :firstName";
+		final String query = "select E.fieldA,E.fieldB\r\nFROM Employee E WHERE E.firstName = :firstName";
 		assertEquals(
 				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
-						"select E.fieldA as page0_,E.fieldB as page1_" + System.lineSeparator() +
+						"select E.fieldA as page0_,E.fieldB as page1_\r\n" +
 						"FROM Employee E WHERE E.firstName = :firstName ) inner_query ) SELECT page0_, page1_ FROM query " +
 						"WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
 				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 25 ) )
@@ -142,6 +143,36 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 						subselectInSelectClauseSQL + " ) inner_query ) " +
 						"SELECT col_0_0_, col_1_0_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
 				dialect.getLimitHandler().processSql( subselectInSelectClauseSQL, toRowSelection( 2, 5 ) )
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11084")
+	public void testGetLimitStringWithSelectDistinctSubselect() {
+		final String selectDistinctSubselectSQL = "select page0_.CONTENTID as CONTENT1_12_ " +
+				"where page0_.CONTENTTYPE='PAGE' and (page0_.CONTENTID in " +
+				"(select distinct page2_.PREVVER from CONTENT page2_ where (page2_.PREVVER is not null)))";
+
+		assertEquals(
+				"select TOP(?) page0_.CONTENTID as CONTENT1_12_ " +
+						"where page0_.CONTENTTYPE='PAGE' and (page0_.CONTENTID in " +
+						"(select distinct page2_.PREVVER from CONTENT page2_ where (page2_.PREVVER is not null)))",
+				dialect.getLimitHandler().processSql( selectDistinctSubselectSQL, toRowSelection( 0, 5 ) )
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11084")
+	public void testGetLimitStringWithSelectDistinctSubselectNotFirst() {
+		final String selectDistinctSubselectSQL = "select page0_.CONTENTID as CONTENT1_12_ FROM CONTEXT page0_ " +
+				"where page0_.CONTENTTYPE='PAGE' and (page0_.CONTENTID in " +
+				"(select distinct page2_.PREVVER from CONTENT page2_ where (page2_.PREVVER is not null)))";
+
+		assertEquals(
+				"WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ " +
+				"FROM ( " + selectDistinctSubselectSQL + " ) inner_query ) " +
+				"SELECT CONTENT1_12_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( selectDistinctSubselectSQL, toRowSelection( 1, 5 ) )
 		);
 	}
 
@@ -296,6 +327,41 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		);
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-11145")
+	public void testGetLimitStringWithFromInColumnName() {
+		final String query = "select [Created From Nonstock Item], field2 from table1";
+
+		assertEquals( "WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						"select [Created From Nonstock Item] as page0_, field2 as page1_ from table1 ) inner_query ) " +
+						"SELECT page0_, page1_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11145")
+	public void testGetLimitStringWithQuotedColumnNamesAndAlias() {
+		final String query = "select [Created From Item] c1, field2 from table1";
+
+		assertEquals( "WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						"select [Created From Item] c1, field2 as page0_ from table1 ) inner_query ) " +
+						"SELECT c1, page0_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11145")
+	public void testGetLimitStringWithQuotedColumnNamesAndAliasWithAs() {
+		final String query = "select [Created From Item] as c1, field2 from table1";
+
+		assertEquals( "WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+						"select [Created From Item] as c1, field2 as page0_ from table1 ) inner_query ) " +
+						"SELECT c1, page0_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+		);
+	}
 	@Test
 	@TestForIssue(jiraKey = "HHH-9635")
 	public void testAppendLockHintReadPastLocking() {

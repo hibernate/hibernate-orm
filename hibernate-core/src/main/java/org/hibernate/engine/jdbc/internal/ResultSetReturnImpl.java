@@ -66,7 +66,8 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			} else {
 				try {
 					callableStatement = statement.unwrap( CallableStatement.class );
-				}catch(SQLException e){
+				}
+				catch(SQLException e){
 					throw( new RuntimeException( e ) );
 				}
 			}

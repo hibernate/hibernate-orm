@@ -26,6 +26,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.type.spi.AssociationType;
 
 /**
  * Base for types which map associations to persistent entities.

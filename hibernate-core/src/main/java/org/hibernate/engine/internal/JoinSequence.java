@@ -18,7 +18,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.QueryJoinFragment;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 
 /**
  * A sequence of {@link Join} delegates to make it "easier" to work with joins.  The "easier" part is obviously

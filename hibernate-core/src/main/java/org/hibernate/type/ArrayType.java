@@ -20,6 +20,10 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.Type;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
 /**
  * A type for persistent arrays.
@@ -88,7 +92,7 @@ public class ArrayType extends CollectionType {
 	public Object replaceElements(
 		Object original,
 		Object target,
-		Object owner, 
+		Object owner,
 		Map copyCache,
 		SharedSessionContractImplementor session) throws HibernateException {
 		
@@ -133,5 +137,4 @@ public class ArrayType extends CollectionType {
 	public boolean hasHolder() {
 		return true;
 	}
-
 }

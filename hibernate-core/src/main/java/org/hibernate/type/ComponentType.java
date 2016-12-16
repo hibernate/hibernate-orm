@@ -31,6 +31,8 @@ import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
+import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.Type;
 
 /**
  * Handles "component" mappings
@@ -97,54 +99,13 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public int getColumnSpan(Mapping mapping) throws MappingException {
+	public int getColumnSpan() throws MappingException {
 		int span = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
-			span += propertyTypes[i].getColumnSpan( mapping );
+			span += propertyTypes[i].getColumnSpan();
 		}
 		return span;
 	}
-
-	@Override
-	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
-		int[] sqlTypes = new int[getColumnSpan( mapping )];
-		int n = 0;
-		for ( int i = 0; i < propertySpan; i++ ) {
-			int[] subtypes = propertyTypes[i].sqlTypes( mapping );
-			for ( int subtype : subtypes ) {
-				sqlTypes[n++] = subtype;
-			}
-		}
-		return sqlTypes;
-	}
-
-	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
-		final Size[] sizes = new Size[getColumnSpan( mapping )];
-		int soFar = 0;
-		for ( Type propertyType : propertyTypes ) {
-			final Size[] propertySizes = propertyType.dictatedSizes( mapping );
-			System.arraycopy( propertySizes, 0, sizes, soFar, propertySizes.length );
-			soFar += propertySizes.length;
-		}
-		return sizes;
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
-		final Size[] sizes = new Size[getColumnSpan( mapping )];
-		int soFar = 0;
-		for ( Type propertyType : propertyTypes ) {
-			final Size[] propertySizes = propertyType.defaultSizes( mapping );
-			System.arraycopy( propertySizes, 0, sizes, soFar, propertySizes.length );
-			soFar += propertySizes.length;
-		}
-		return sizes;
-	}
-
 
 	@Override
 	public final boolean isComponentType() {
@@ -153,22 +114,6 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 	public Class getReturnedClass() {
 		return componentTuplizer.getMappedClass();
-	}
-
-	@Override
-	public boolean isSame(Object x, Object y) throws HibernateException {
-		if ( x == y ) {
-			return true;
-		}
-		// null value and empty component are considered equivalent
-		Object[] xvalues = getPropertyValues( x, entityMode );
-		Object[] yvalues = getPropertyValues( y, entityMode );
-		for ( int i = 0; i < propertySpan; i++ ) {
-			if ( !propertyTypes[i].isSame( xvalues[i], yvalues[i] ) ) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	@Override

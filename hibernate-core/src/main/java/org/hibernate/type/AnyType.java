@@ -7,58 +7,74 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Set;
 
+import org.hibernate.EntityMode;
+import org.hibernate.EntityNameResolver;
+import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
+import org.hibernate.PropertyNotFoundException;
+import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.spi.DiscriminatorMappings;
+import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.type.spi.AssociationType;
+import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
-import org.hibernate.type.spi.Type;
-import org.hibernate.type.spi.BasicType;
+
 /**
  * Handles "any" mappings
  * 
  * @author Gavin King
  */
-public class AnyType implements Type {
-	private BasicType identifierType;
-	private BasicType discriminatorType;
-	private DiscriminatorMappings discriminatorMappings;
+public class AnyType extends AbstractType implements CompositeType, AssociationType {
+	private final TypeFactory.TypeScope scope;
+	private final Type identifierType;
+	private final Type discriminatorType;
 
-	public AnyType(
-			BasicType identifierType,
-			BasicType discriminatorType,
-			DiscriminatorMappings discriminatorMappings) {
-		this.identifierType = identifierType;
+	/**
+	 * Intended for use only from legacy {@link ObjectType} type definition
+	 */
+	protected AnyType(Type discriminatorType, Type identifierType) {
+		this( null, discriminatorType, identifierType );
+	}
+
+	public AnyType(TypeFactory.TypeScope scope, Type discriminatorType, Type identifierType) {
+		this.scope = scope;
 		this.discriminatorType = discriminatorType;
-		this.discriminatorMappings = discriminatorMappings;
+		this.identifierType = identifierType;
 	}
 
-	public DiscriminatorMappings getDiscriminatorMappings() {
-		return discriminatorMappings;
+	public Type getIdentifierType() {
+		return identifierType;
 	}
+
+	public Type getDiscriminatorType() {
+		return discriminatorType;
+	}
+
+
+	// general Type metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public Classification getClassification() {
 		return Classification.ANY;
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return null;
-	}
-
-	@Override
-	public MutabilityPlan getMutabilityPlan() {
-		return null;
 	}
 
 	@Override
@@ -67,62 +83,124 @@ public class AnyType implements Type {
 	}
 
 	@Override
-	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
-		return "{ANY " + toString( value ) + "}";
+	public Class getReturnedClass() {
+		return Object.class;
 	}
 
 	@Override
-	public JdbcLiteralFormatter getJdbcLiteralFormatter() {
-		// we could render the id value.
-		return null;
-	}
-
-	private String toString(Object value) {
-		return value == null ? "null" : value.toString();
+	public boolean[] toColumnNullness(Object value) {
+		final boolean[] result = new boolean[ getColumnSpan( ) ];
+		if ( value != null ) {
+			Arrays.fill( result, true );
+		}
+		return result;
 	}
 
 	@Override
-	public Object nullSafeGet(
-			ResultSet rs,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws SQLException {
+	public Object[] getPropertyValues(Object component, EntityMode entityMode) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isAnyType() {
+		return true;
+	}
+
+	@Override
+	public boolean isAssociationType() {
+		return true;
+	}
+
+	@Override
+	public boolean isComponentType() {
+		return true;
+	}
+
+	@Override
+	public boolean isEmbedded() {
+		return false;
+	}
+
+	@Override
+	public boolean isMutable() {
+		return false;
+	}
+
+	@Override
+	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
+		return value;
+	}
+
+
+	// general Type functionality ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+	@Override
+	public boolean isModified(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
+			throws HibernateException {
+		if ( current == null ) {
+			return old != null;
+		}
+		else if ( old == null ) {
+			return true;
+		}
+
+		final ObjectTypeCacheEntry holder = (ObjectTypeCacheEntry) old;
+		final boolean[] idCheckable = new boolean[checkable.length-1];
+		System.arraycopy( checkable, 1, idCheckable, 0, idCheckable.length );
+		return ( checkable[0] && !holder.entityName.equals( session.bestGuessEntityName( current ) ) )
+				|| identifierType.isModified( holder.id, getIdentifier( current, session ), idCheckable, session );
+	}
+
+	@Override
+	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
+			throws HibernateException {
+		return isDirty( old, current, session );
+	}
+
+	@Override
+	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
+			throws HibernateException, SQLException {
 		return resolveAny(
-				resolveDiscriminator( discriminatorType.nullSafeGet( rs, names[0], session, owner ) ),
+				(String) discriminatorType.nullSafeGet( rs, names[0], session, owner ),
 				(Serializable) identifierType.nullSafeGet( rs, names[1], session, owner ),
 				session
 		);
 	}
 
-	private String resolveDiscriminator(Object discriminatorValue) {
-		return discriminatorMappings.discriminatorValueToEntityName( discriminatorValue );
+	@Override
+	public Object hydrate(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
+			throws HibernateException, SQLException {
+		final String entityName = (String) discriminatorType.nullSafeGet( rs, names[0], session, owner );
+		final Serializable id = (Serializable) identifierType.nullSafeGet( rs, names[1], session, owner );
+		return new ObjectTypeCacheEntry( entityName, id );
 	}
 
-	private Object resolveAny(
-			String entityName,
-			Serializable id,
-			SharedSessionContractImplementor session) {
-		return entityName == null || id == null
+	@Override
+	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+		final ObjectTypeCacheEntry holder = (ObjectTypeCacheEntry) value;
+		return resolveAny( holder.entityName, holder.id, session );
+	}
+
+	private Object resolveAny(String entityName, Serializable id, SharedSessionContractImplementor session)
+			throws HibernateException {
+		return entityName==null || id==null
 				? null
 				: session.internalLoad( entityName, id, false, false );
 	}
 
 	@Override
-	public Object nullSafeGet(
-			ResultSet rs,
-			String name,
-			SharedSessionContractImplementor session,
-			Object owner) throws SQLException {
-		throw new HibernateException( "Unexpected call to AnyType#nullSafeSet taking just one column name" );
+	public void nullSafeSet(PreparedStatement st, Object value,	int index, SharedSessionContractImplementor session)
+			throws HibernateException, SQLException {
+		nullSafeSet( st, value, index, null, session );
 	}
 
 	@Override
-	public void nullSafeSet(
-			PreparedStatement st,
-			Object value,
-			int index,
-			boolean[] settable,
-			SharedSessionContractImplementor session) throws SQLException {
+	public void nullSafeSet(PreparedStatement st, Object value,	int index, boolean[] settable, SharedSessionContractImplementor session)
+			throws HibernateException, SQLException {
 		Serializable id;
 		String entityName;
 		if ( value == null ) {
@@ -149,38 +227,63 @@ public class AnyType implements Type {
 	}
 
 	@Override
-	public void nullSafeSet(
-			PreparedStatement st,
-			Object value,
-			int index,
-			SharedSessionContractImplementor session) throws SQLException {
-		nullSafeSet( st, value, index, null, session );
+	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
+		return "{ANY " + toString( value ) + "}";
+	}
+
+	private String toString(Object value) {
+		return value == null ? "null" : value.toString();
 	}
 
 	@Override
-	public Object hydrate(
-			ResultSet rs,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws SQLException {
+	public JdbcLiteralFormatter getJdbcLiteralFormatter() {
 		return null;
 	}
 
 	@Override
-	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
+	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+		final ObjectTypeCacheEntry e = (ObjectTypeCacheEntry) cached;
+		return e == null ? null : session.internalLoad( e.entityName, e.id, false, false );
+	}
+
+	@Override
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+		if ( value == null ) {
+			return null;
+		}
+		else {
+			return new ObjectTypeCacheEntry(
+					session.bestGuessEntityName( value ),
+					ForeignKeys.getEntityIdentifierIfNotUnsaved(
+							session.bestGuessEntityName( value ),
+							value,
+							session
+					)
+			);
+		}
+	}
+
+	@Override
+	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map copyCache)
 			throws HibernateException {
-		return null;
+		if ( original == null ) {
+			return null;
+		}
+		else {
+			final String entityName = session.bestGuessEntityName( original );
+			final Serializable id = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, original, session );
+			return session.internalLoad( entityName, id, false, false );
+		}
 	}
 
 	@Override
-	public Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException {
-		return null;
+	public Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner) {
+		throw new UnsupportedOperationException( "object is a multicolumn type" );
 	}
 
 	@Override
-	public Type getSemiResolvedType(SessionFactoryImplementor factory) {
-		return null;
+	public Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner) {
+		throw new UnsupportedOperationException( "any mappings may not form part of a property-ref" );
 	}
 
 	@Override
@@ -188,10 +291,14 @@ public class AnyType implements Type {
 		return 0;
 	}
 
+	// CompositeType implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 	@Override
-	public boolean[] toColumnNullness(Object value) {
-		return new boolean[0];
+	public boolean isMethodOf(Method method) {
+		return false;
 	}
+
+	private static final String[] PROPERTY_NAMES = new String[] { "class", "id" };
 
 	@Override
 	public boolean isSame(Object x, Object y) throws HibernateException {
@@ -203,42 +310,221 @@ public class AnyType implements Type {
 		return false;
 	}
 
+	public String[] getPropertyNames() {
+		return PROPERTY_NAMES;
+	}
+
 	@Override
-	public boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) throws HibernateException {
+	public int getPropertyIndex(String name) {
+		if ( PROPERTY_NAMES[0].equals( name ) ) {
+			return 0;
+		}
+		else if ( PROPERTY_NAMES[1].equals( name ) ) {
+			return 1;
+		}
+
+		throw new PropertyNotFoundException( "Unable to locate property named " + name + " on AnyType" );
+	}
+
+	@Override
+	public Object getPropertyValue(Object component, int i, SharedSessionContractImplementor session) throws HibernateException {
+		return i==0
+				? session.bestGuessEntityName( component )
+				: getIdentifier( component, session );
+	}
+
+	@Override
+	public Object[] getPropertyValues(Object component, SharedSessionContractImplementor session) throws HibernateException {
+		return new Object[] {
+				session.bestGuessEntityName( component ),
+				getIdentifier( component, session )
+		};
+	}
+
+	private Serializable getIdentifier(Object value, SharedSessionContractImplementor session) throws HibernateException {
+		try {
+			return ForeignKeys.getEntityIdentifierIfNotUnsaved(
+					session.bestGuessEntityName( value ),
+					value,
+					session
+			);
+		}
+		catch (TransientObjectException toe) {
+			return null;
+		}
+	}
+
+	@Override
+	public void setPropertyValues(Object component, Object[] values, EntityMode entityMode) {
+		throw new UnsupportedOperationException();
+	}
+
+	private static final boolean[] NULLABILITY = new boolean[] { false, false };
+
+	@Override
+	public boolean[] getPropertyNullability() {
+		return NULLABILITY;
+	}
+
+	@Override
+	public boolean hasNotNullProperty() {
+		// both are non-nullable
+		return true;
+	}
+
+	@Override
+	public Type[] getSubtypes() {
+		return new Type[] {discriminatorType, identifierType };
+	}
+
+	@Override
+	public CascadeStyle getCascadeStyle(int i) {
+		return CascadeStyles.NONE;
+	}
+
+	@Override
+	public FetchMode getFetchMode(int i) {
+		return FetchMode.SELECT;
+	}
+
+
+	// AssociationType implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public ForeignKeyDirection getForeignKeyDirection() {
+		return ForeignKeyDirection.FROM_PARENT;
+	}
+
+	@Override
+	public boolean useLHSPrimaryKey() {
 		return false;
 	}
 
 	@Override
-	public boolean isMutable() {
+	public String getLHSPropertyName() {
+		return null;
+	}
+
+	public boolean isReferenceToPrimaryKey() {
+		return true;
+	}
+
+	@Override
+	public String getRHSUniqueKeyPropertyName() {
+		return null;
+	}
+
+	@Override
+	public boolean isAlwaysDirtyChecked() {
 		return false;
 	}
 
 	@Override
-	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
-		return null;
+	public Joinable getAssociatedJoinable(SessionFactoryImplementor factory) {
+		throw new UnsupportedOperationException("any types do not have a unique referenced persister");
 	}
 
 	@Override
-	public Object replace(
-			Object original, Object target, SharedSessionContractImplementor session, Object owner, Map copyCache)
-			throws HibernateException {
-		return null;
+	public String getAssociatedEntityName(SessionFactoryImplementor factory) {
+		throw new UnsupportedOperationException("any types do not have a unique referenced persister");
 	}
 
 	@Override
-	public Object replace(
-			Object original,
-			Object target,
-			SharedSessionContractImplementor session,
-			Object owner,
-			Map copyCache,
-			ForeignKeyDirection foreignKeyDirection) throws HibernateException {
-		return null;
+	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public String asLoggableText() {
-		return "AnyType( identifierType : " + identifierType.asLoggableText() + ", discriminatorType + " + discriminatorType
-				.asLoggableText() + ")";
+	public String getOnCondition(
+			String alias,
+			SessionFactoryImplementor factory,
+			Map enabledFilters,
+			Set<String> treatAsDeclarations) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Used to externalize discrimination per a given identifier.  For example, when writing to
+	 * second level cache we write the discrimination resolved concrete type for each entity written.
+	 */
+	public static final class ObjectTypeCacheEntry implements Serializable {
+		final String entityName;
+		final Serializable id;
+
+		ObjectTypeCacheEntry(String entityName, Serializable id) {
+			this.entityName = entityName;
+			this.id = id;
+		}
+	}
+
+	public static class AnyComparator implements Comparator<Object> {
+		private final TypeFactory.TypeScope scope;
+		private final Type identifierType;
+
+		public AnyComparator(TypeFactory.TypeScope scope, Type identifierType) {
+			this.scope = scope;
+			this.identifierType = identifierType;
+		}
+
+		@Override
+		public int compare(Object x, Object y) {
+			if ( x == null ) {
+				// if y is also null, return that they are the same (no option for "UNKNOWN")
+				// if y is not null, return that y is "greater" (-1 because the result is from the perspective of
+				// 		the first arg: x)
+				return y == null ? 0 : -1;
+			}
+			else if ( y == null ) {
+				// x is not null, but y is.  return that x is "greater"
+				return 1;
+			}
+
+			// At this point we know both are non-null.
+			final Object xId = extractIdentifier( x );
+			final Object yId = extractIdentifier( y );
+
+			return identifierType.getComparator().compare( xId, yId );
+		}
+
+		private Object extractIdentifier(Object entity) {
+			final EntityPersister concretePersister = guessEntityPersister( entity );
+			return concretePersister == null
+					? null
+					: concretePersister.getEntityTuplizer().getIdentifier( entity, null );
+		}
+
+		private EntityPersister guessEntityPersister(Object object) {
+			if ( scope == null ) {
+				return null;
+			}
+
+			String entityName = null;
+
+			// this code is largely copied from Session's bestGuessEntityName
+			Object entity = object;
+			if ( entity instanceof HibernateProxy ) {
+				final LazyInitializer initializer = ( (HibernateProxy) entity ).getHibernateLazyInitializer();
+				if ( initializer.isUninitialized() ) {
+					entityName = initializer.getEntityName();
+				}
+				entity = initializer.getImplementation();
+			}
+
+			if ( entityName == null ) {
+				for ( EntityNameResolver resolver : scope.resolveFactory().getMetamodel().getEntityNameResolvers() ) {
+					entityName = resolver.resolveEntityName( entity );
+					if ( entityName != null ) {
+						break;
+					}
+				}
+			}
+
+			if ( entityName == null ) {
+				// the old-time stand-by...
+				entityName = object.getClass().getName();
+			}
+
+			return scope.resolveFactory().getMetamodel().entityPersister( entityName );
+		}
 	}
 }

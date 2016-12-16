@@ -22,7 +22,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.Select;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 
 /**
  * Abstract walker for walkers which begin at an entity (criteria

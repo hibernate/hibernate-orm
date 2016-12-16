@@ -15,6 +15,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.tuple.NonIdentifierAttribute;
+import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.Type;
 
 /**
  * Collection of convenience methods relating to operations across arrays of types...

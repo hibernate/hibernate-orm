@@ -15,7 +15,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.pojo.BasicLazyInitializer;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.FieldValue;

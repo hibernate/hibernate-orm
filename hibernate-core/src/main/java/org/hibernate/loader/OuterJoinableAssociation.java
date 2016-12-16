@@ -17,7 +17,7 @@ import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.EntityType;
 
 /**

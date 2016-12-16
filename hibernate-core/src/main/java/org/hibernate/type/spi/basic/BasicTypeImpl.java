@@ -6,9 +6,12 @@
  */
 package org.hibernate.type.spi.basic;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
+import org.hibernate.HibernateException;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
@@ -175,6 +178,42 @@ public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 	@Override
 	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;
+	}
+
+	@Override
+	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session)
+			throws HibernateException {
+		return isDirty( old, current );
+	}
+
+	@Override
+	public boolean isDirty(
+			Object oldState, Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
+			throws HibernateException {
+		return checkable[0] && isDirty( oldState, currentState );
+	}
+
+	protected final boolean isDirty(Object old, Object current) {
+		return !getJavaTypeDescriptor().areEqual( (T) old, (T) current );
+	}
+
+	@Override
+	public boolean isModified(
+			Object dbState, Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
+			throws HibernateException {
+		return false;
+	}
+
+	@Override
+	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner)
+			throws HibernateException {
+		return getMutabilityPlan().assemble( cached );
+	}
+
+	@Override
+	public Serializable disassemble(T value, SharedSessionContractImplementor session, Object owner)
+			throws HibernateException {
+		return getMutabilityPlan().disassemble( value );
 	}
 
 	@Override

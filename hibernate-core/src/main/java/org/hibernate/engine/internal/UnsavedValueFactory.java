@@ -18,6 +18,7 @@ import org.hibernate.type.IdentifierType;
 import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.VersionType;
+import org.hibernate.type.spi.VersionSupport;
 
 /**
  * Helper for dealing with unsaved value handling
@@ -117,7 +118,7 @@ public class UnsavedValueFactory {
 	public static VersionValue getUnsavedVersionValue(
 			String versionUnsavedValue, 
 			Getter versionGetter,
-			VersionType versionType,
+			VersionSupport versionType,
 			Constructor constructor) {
 		
 		if ( versionUnsavedValue == null ) {

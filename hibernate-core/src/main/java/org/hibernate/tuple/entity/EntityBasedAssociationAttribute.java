@@ -28,7 +28,7 @@ import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.ForeignKeyDirection;
 
 import static org.hibernate.engine.internal.JoinHelper.getLHSColumnNames;

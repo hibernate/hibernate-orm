@@ -247,10 +247,10 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 	protected CountDownLatch setupExpectPutWithValue(Predicate<Object> valuePredicate) {
 		if (!isUsingInvalidation() && accessType != AccessType.NONSTRICT_READ_WRITE) {
 			CountDownLatch latch = new CountDownLatch(1);
-			remoteRegion.getCache().addInterceptor(new ExpectingInterceptor(latch,
-				cmd -> cmd instanceof PutKeyValueCommand && valuePredicate.test(((PutKeyValueCommand) cmd).getValue()),
-				null), 0);
-			cleanup.add(() -> remoteRegion.getCache().removeInterceptor(ExpectingInterceptor.class));
+			ExpectingInterceptor.get(remoteRegion.getCache())
+				.when((ctx, cmd) -> cmd instanceof PutKeyValueCommand && valuePredicate.test(((PutKeyValueCommand) cmd).getValue()))
+				.countDown(latch);
+			cleanup.add(() -> ExpectingInterceptor.cleanup(remoteRegion.getCache()));
 			return latch;
 		} else {
 			return new CountDownLatch(0);
@@ -373,8 +373,8 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		assertEquals(0, localRegion.getCache().size());
 		assertEquals(0, remoteRegion.getCache().size());
 
-		CountDownLatch localPutFromLoadLatch = expectRemotePutFromLoad(localRegion.getCache());
-		CountDownLatch remotePutFromLoadLatch = expectRemotePutFromLoad(remoteRegion.getCache());
+		CountDownLatch localPutFromLoadLatch = expectRemotePutFromLoad(remoteRegion.getCache(), localRegion.getCache());
+		CountDownLatch remotePutFromLoadLatch = expectRemotePutFromLoad(localRegion.getCache(), remoteRegion.getCache());
 
 		SharedSessionContractImplementor s1 = mockedSession();
 		assertNull("local is clean", localAccessStrategy.get(s1, KEY, s1.getTimestamp()));
@@ -391,8 +391,6 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		// before the update is fully applied.
 		assertTrue(localPutFromLoadLatch.await(1, TimeUnit.SECONDS));
 		assertTrue(remotePutFromLoadLatch.await(1, TimeUnit.SECONDS));
-		localRegion.getCache().removeInterceptor(ExpectingInterceptor.class);
-		remoteRegion.getCache().removeInterceptor(ExpectingInterceptor.class);
 
 		SharedSessionContractImplementor s4 = mockedSession();
 		assertEquals(VALUE1, localAccessStrategy.get(s4, KEY, s4.getTimestamp()));
@@ -465,8 +463,8 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		SharedSessionContractImplementor s2 = mockedSession();
 		assertNull("remote is clean", remoteAccessStrategy.get(s2, KEY, s2.getTimestamp()));
 
-		CountDownLatch localPutFromLoadLatch = expectRemotePutFromLoad(localRegion.getCache());
-		CountDownLatch remotePutFromLoadLatch = expectRemotePutFromLoad(remoteRegion.getCache());
+		CountDownLatch localPutFromLoadLatch = expectRemotePutFromLoad(remoteRegion.getCache(), localRegion.getCache());
+		CountDownLatch remotePutFromLoadLatch = expectRemotePutFromLoad(localRegion.getCache(), remoteRegion.getCache());
 
 		SharedSessionContractImplementor s3 = mockedSession();
 		localAccessStrategy.putFromLoad(s3, KEY, VALUE1, s3.getTimestamp(), 1);
@@ -478,8 +476,6 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		// before the update is fully applied.
 		assertTrue(localPutFromLoadLatch.await(1, TimeUnit.SECONDS));
 		assertTrue(remotePutFromLoadLatch.await(1, TimeUnit.SECONDS));
-		localRegion.getCache().removeInterceptor(ExpectingInterceptor.class);
-		remoteRegion.getCache().removeInterceptor(ExpectingInterceptor.class);
 
 		SharedSessionContractImplementor s4 = mockedSession();
 		SharedSessionContractImplementor s6 = mockedSession();
@@ -506,8 +502,10 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 					PutFromLoadValidator.addToCache(remoteRegion.getCache(), originalValidator);
 				});
 			} else {
-				ExpectingInterceptor ei = new ExpectingInterceptor(endInvalidationLatch, InvalidateCommand.class, null);
-				remoteRegion.getCache().addInterceptor(ei, 0);
+				ExpectingInterceptor.get(remoteRegion.getCache())
+					.when((ctx, cmd) -> cmd instanceof InvalidateCommand)
+					.countDown(endInvalidationLatch);
+				cleanup.add(() -> ExpectingInterceptor.cleanup(remoteRegion.getCache()));
 			}
 		} else {
 			endInvalidationLatch = new CountDownLatch(0);
@@ -536,9 +534,8 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 
 		// Wait for async propagation of EndInvalidationCommand before executing naked put
 		assertTrue(endInvalidationLatch.await(1, TimeUnit.SECONDS));
-		remoteRegion.getCache().removeInterceptor(ExpectingInterceptor.class);
 
-		CountDownLatch lastPutFromLoadLatch = expectRemotePutFromLoad(localRegion.getCache());
+		CountDownLatch lastPutFromLoadLatch = expectRemotePutFromLoad(remoteRegion.getCache(), localRegion.getCache());
 
 		// Test whether the get above messes up the optimistic version
 		SharedSessionContractImplementor s9 = mockedSession();
@@ -548,7 +545,6 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		assertEquals(1, remoteRegion.getCache().size());
 
 		assertTrue(lastPutFromLoadLatch.await(1, TimeUnit.SECONDS));
-		localRegion.getCache().removeInterceptor(ExpectingInterceptor.class);
 
 		SharedSessionContractImplementor s11 = mockedSession();
 		assertEquals((isUsingInvalidation() ? null : VALUE1), localAccessStrategy.get(s11, KEY, s11.getTimestamp()));
@@ -556,12 +552,25 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		assertEquals(VALUE1, remoteAccessStrategy.get(s12, KEY, s12.getTimestamp()));
 	}
 
-	private CountDownLatch expectRemotePutFromLoad(AdvancedCache cache) {
+	private CountDownLatch expectRemotePutFromLoad(AdvancedCache localCache, AdvancedCache remoteCache) {
 		CountDownLatch putFromLoadLatch;
 		if (!isUsingInvalidation()) {
 			putFromLoadLatch = new CountDownLatch(1);
-			cache.addInterceptor(new ExpectingInterceptor(putFromLoadLatch,
-				(ctx, cmd) -> !ctx.isOriginLocal() && cmd instanceof PutKeyValueCommand, null), 0);
+			// The command may fail to replicate if it can't acquire lock locally
+			ExpectingInterceptor.Condition remoteCondition = ExpectingInterceptor.get(remoteCache)
+				.when((ctx, cmd) -> !ctx.isOriginLocal() && cmd instanceof PutKeyValueCommand);
+			ExpectingInterceptor.Condition localCondition = ExpectingInterceptor.get(localCache)
+				.whenFails((ctx, cmd) -> ctx.isOriginLocal() && cmd instanceof PutKeyValueCommand);
+			remoteCondition.run(() -> {
+				localCondition.cancel();
+				putFromLoadLatch.countDown();
+			});
+			localCondition.run(() -> {
+				remoteCondition.cancel();
+				putFromLoadLatch.countDown();
+			});
+			// just for case the test fails and does not remove the interceptor itself
+			cleanup.add(() -> ExpectingInterceptor.cleanup(localCache, remoteCache));
 		} else {
 			putFromLoadLatch = new CountDownLatch(0);
 		}

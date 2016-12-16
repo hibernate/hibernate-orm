@@ -6,8 +6,6 @@
  */
 package org.hibernate.cache.infinispan.access;
 
-import java.util.concurrent.TimeUnit;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
@@ -32,10 +30,8 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	protected final BaseTransactionalDataRegion region;
 	protected final AdvancedCache cache;
 	protected final AdvancedCache writeCache;
-	protected final AdvancedCache localWriteCache;
 	protected final AdvancedCache asyncWriteCache;
-	protected final AdvancedCache putFromLoadCacheLocal;
-	protected final AdvancedCache putFromLoadCacheAsync;
+	protected final AdvancedCache putFromLoadCache;
 	protected final boolean requiresTransaction;
 
 	public TombstoneAccessDelegate(BaseTransactionalDataRegion region) {
@@ -43,10 +39,8 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 		this.cache = region.getCache();
 		this.writeCache = Caches.ignoreReturnValuesCache(cache);
 		// Note that correct behaviour of local and async writes depends on LockingInterceptor (see there for details)
-		this.localWriteCache = Caches.localCache(writeCache);
-		this.asyncWriteCache = Caches.asyncWriteCache(writeCache, Flag.IGNORE_RETURN_VALUES);
-		this.putFromLoadCacheLocal = localWriteCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY );
-		this.putFromLoadCacheAsync = asyncWriteCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY );
+		this.asyncWriteCache = writeCache.withFlags(Flag.FORCE_ASYNCHRONOUS);
+		this.putFromLoadCache = asyncWriteCache.withFlags(Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY);
 		Configuration configuration = cache.getCacheConfiguration();
 		if (configuration.clustering().cacheMode().isInvalidation()) {
 			throw new IllegalArgumentException("For tombstone-based caching, invalidation cache is not allowed.");
@@ -104,11 +98,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 		}
 		// we can't use putForExternalRead since the PFER flag means that entry is not wrapped into context
 		// when it is present in the container. TombstoneCallInterceptor will deal with this.
-		TombstoneUpdate update = new TombstoneUpdate(session.getTimestamp(), value);
-		// If we're the backup owner, async propagation wouldn't change the value soon enough as it goes
-		// through primary owner - therefore we'll synchronously update it locally.
-		putFromLoadCacheAsync.put(key, update);
-		putFromLoadCacheLocal.put(key, update);
+		putFromLoadCache.put(key, new TombstoneUpdate(session.getTimestamp(), value));
 		return true;
 	}
 
@@ -131,7 +121,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 
 	protected void write(SharedSessionContractImplementor session, Object key, Object value) {
 		TransactionCoordinator tc = session.getTransactionCoordinator();
-		FutureUpdateSynchronization sync = new FutureUpdateSynchronization(tc, localWriteCache, asyncWriteCache, requiresTransaction, key, value, region, session.getTimestamp());
+		FutureUpdateSynchronization sync = new FutureUpdateSynchronization(tc, asyncWriteCache, requiresTransaction, key, value, region, session.getTimestamp());
 		// The update will be invalidating all putFromLoads for the duration of expiration or until removed by the synchronization
 		Tombstone tombstone = new Tombstone(sync.getUuid(), region.nextTimestamp() + region.getTombstoneExpiration());
 		// The outcome of this operation is actually defined in TombstoneCallInterceptor

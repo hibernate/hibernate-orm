@@ -15,6 +15,7 @@ import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.access.TombstoneAccessDelegate;
 import org.hibernate.cache.infinispan.access.TombstoneCallInterceptor;
 import org.hibernate.cache.infinispan.access.TxInvalidationCacheAccessDelegate;
+import org.hibernate.cache.infinispan.access.UnorderedDistributionInterceptor;
 import org.hibernate.cache.infinispan.access.VersionedCallInterceptor;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.infinispan.util.FutureUpdate;
@@ -33,11 +34,14 @@ import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.filter.KeyValueFilter;
 import org.infinispan.interceptors.CallInterceptor;
+import org.infinispan.interceptors.EntryWrappingInterceptor;
 import org.infinispan.interceptors.base.CommandInterceptor;
+import org.infinispan.interceptors.distribution.NonTxDistributionInterceptor;
 import org.infinispan.interceptors.locking.NonTransactionalLockingInterceptor;
 
 import javax.transaction.TransactionManager;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -151,7 +155,7 @@ public abstract class BaseTransactionalDataRegion
 			return;
 		}
 
-		replaceLockingInterceptor();
+		replaceCommonInterceptors();
 
 		cache.removeInterceptor(CallInterceptor.class);
 		VersionedCallInterceptor tombstoneCallInterceptor = new VersionedCallInterceptor(this, metadata.getVersionComparator());
@@ -172,7 +176,7 @@ public abstract class BaseTransactionalDataRegion
 			log.evictionWithTombstones();
 		}
 
-		replaceLockingInterceptor();
+		replaceCommonInterceptors();
 
 		cache.removeInterceptor(CallInterceptor.class);
 		TombstoneCallInterceptor tombstoneCallInterceptor = new TombstoneCallInterceptor(this);
@@ -183,13 +187,35 @@ public abstract class BaseTransactionalDataRegion
 		strategy = Strategy.TOMBSTONES;
 	}
 
-	private void replaceLockingInterceptor() {
+	private void replaceCommonInterceptors() {
+		CacheMode cacheMode = cache.getCacheConfiguration().clustering().cacheMode();
+		if (!cacheMode.isReplicated() && !cacheMode.isDistributed()) {
+			return;
+		}
+
 		LockingInterceptor lockingInterceptor = new LockingInterceptor();
 		cache.getComponentRegistry().registerComponent(lockingInterceptor, LockingInterceptor.class);
 		if (!cache.addInterceptorBefore(lockingInterceptor, NonTransactionalLockingInterceptor.class)) {
 			throw new IllegalStateException("Misconfigured cache, interceptor chain is " + cache.getInterceptorChain());
 		}
 		cache.removeInterceptor(NonTransactionalLockingInterceptor.class);
+
+		UnorderedDistributionInterceptor distributionInterceptor = new UnorderedDistributionInterceptor();
+		cache.getComponentRegistry().registerComponent(distributionInterceptor, UnorderedDistributionInterceptor.class);
+		if (!cache.addInterceptorBefore(distributionInterceptor, NonTxDistributionInterceptor.class)) {
+			throw new IllegalStateException("Misconfigured cache, interceptor chain is " + cache.getInterceptorChain());
+		}
+		cache.removeInterceptor(NonTxDistributionInterceptor.class);
+
+		EntryWrappingInterceptor ewi = cache.getComponentRegistry().getComponent(EntryWrappingInterceptor.class);
+		try {
+			Field isUsingLockDelegation = EntryWrappingInterceptor.class.getDeclaredField("isUsingLockDelegation");
+			isUsingLockDelegation.setAccessible(true);
+			isUsingLockDelegation.set(ewi, false);
+		}
+		catch (NoSuchFieldException | IllegalAccessException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	public long getTombstoneExpiration() {

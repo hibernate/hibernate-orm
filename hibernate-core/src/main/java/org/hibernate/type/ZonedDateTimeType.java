@@ -9,13 +9,10 @@ package org.hibernate.type;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ZonedDateTimeComparator;
-import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
-import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.ZonedDateTimeJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
@@ -23,8 +20,8 @@ import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
  * @author Steve Ebersole
  */
 public class ZonedDateTimeType
-		extends BasicTypeImpl<ZonedDateTime>
-		implements VersionSupport<ZonedDateTime>, JdbcLiteralFormatter<ZonedDateTime> {
+		extends TemporalTypeImpl<ZonedDateTime>
+		implements VersionSupport<ZonedDateTime> {
 
 	/**
 	 * Singleton access
@@ -67,16 +64,6 @@ public class ZonedDateTimeType
 
 	@Override
 	public JdbcLiteralFormatter<ZonedDateTime> getJdbcLiteralFormatter() {
-		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(ZonedDateTime value, Dialect dialect) {
-		return toJdbcLiteral( value );
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	public String toJdbcLiteral(ZonedDateTime value) {
-		return DateTimeUtils.formatAsJdbcLiteralTimestamp( value );
+		return TimestampTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( ZonedDateTimeJavaDescriptor.INSTANCE );
 	}
 }

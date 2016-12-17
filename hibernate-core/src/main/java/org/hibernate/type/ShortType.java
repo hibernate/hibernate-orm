@@ -9,7 +9,6 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.util.Comparator;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
@@ -23,9 +22,7 @@ import org.hibernate.type.spi.descriptor.sql.SmallIntTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class ShortType
-		extends BasicTypeImpl<Short>
-		implements VersionSupport<Short>,JdbcLiteralFormatter<Short> {
+public class ShortType extends BasicTypeImpl<Short> implements VersionSupport<Short> {
 
 	public static final ShortType INSTANCE = new ShortType();
 
@@ -66,11 +63,6 @@ public class ShortType
 
 	@Override
 	public JdbcLiteralFormatter<Short> getJdbcLiteralFormatter() {
-		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(Short value, Dialect dialect) {
-		return toString( value );
+		return SmallIntTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( ShortTypeDescriptor.INSTANCE );
 	}
 }

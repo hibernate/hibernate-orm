@@ -13,8 +13,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.TemporalType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.VersionSupport;
-import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.JdbcTimestampTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
@@ -24,9 +25,7 @@ import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class TimestampType
-		extends BasicTypeImpl<Date>
-		implements VersionSupport<Date>,JdbcLiteralFormatter<Date> {
+public class TimestampType extends TemporalTypeImpl<Date> implements VersionSupport<Date> {
 
 	public static final TimestampType INSTANCE = new TimestampType();
 
@@ -56,11 +55,22 @@ public class TimestampType
 
 	@Override
 	public JdbcLiteralFormatter<Date> getJdbcLiteralFormatter() {
-		return this;
+		return TimestampTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( JdbcTimestampTypeDescriptor.INSTANCE );
 	}
 
 	@Override
-	public String toJdbcLiteral(Date value, Dialect dialect) {
-		return DateTimeUtils.formatAsJdbcLiteralTimestamp( value );
+	@SuppressWarnings("unchecked")
+	public <X> TemporalType<X> resolveTypeForPrecision(javax.persistence.TemporalType precision, TypeConfiguration typeConfiguration) {
+		switch ( precision ) {
+			case DATE: {
+				return (TemporalType<X>) DateType.INSTANCE;
+			}
+			case TIME: {
+				return (TemporalType<X>) TimeType.INSTANCE;
+			}
+			default: {
+				return (TemporalType<X>) this;
+			}
+		}
 	}
 }

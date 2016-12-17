@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.CharacterTypeDescriptor;
@@ -18,8 +17,7 @@ import org.hibernate.type.spi.descriptor.sql.CharTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class CharacterType
-		extends BasicTypeImpl<Character> implements JdbcLiteralFormatter<Character> {
+public class CharacterType extends BasicTypeImpl<Character> {
 
 	public static final CharacterType INSTANCE = new CharacterType();
 
@@ -33,11 +31,6 @@ public class CharacterType
 
 	@Override
 	public JdbcLiteralFormatter<Character> getJdbcLiteralFormatter() {
-		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(Character value, Dialect dialect) {
-		return StringType.INSTANCE.toJdbcLiteral( toString( value ), dialect );
+		return CharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( CharacterTypeDescriptor.INSTANCE );
 	}
 }

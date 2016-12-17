@@ -17,6 +17,7 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.spi.ColumnMapping;
 
 /**
  * A one-to-one association that maps to specific formula(s)
@@ -66,21 +67,16 @@ public class SpecialOneToOneType extends OneToOneType {
 	}
 	
 	public int getColumnSpan(Mapping mapping) throws MappingException {
-		return super.getIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
+		return super.getIdentifierOrUniqueKeyType().getColumnSpan();
 	}
 	
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		return super.getIdentifierOrUniqueKeyType( mapping ).sqlTypes( mapping );
+		return super.getIdentifierOrUniqueKeyType().sqlTypes();
 	}
 
 	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return super.getIdentifierOrUniqueKeyType( mapping ).dictatedSizes( mapping );
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return super.getIdentifierOrUniqueKeyType( mapping ).defaultSizes( mapping );
+	public ColumnMapping[] getColumnMappings() {
+		return getIdentifierOrUniqueKeyType().getColumnMappings();
 	}
 
 	public boolean useLHSPrimaryKey() {
@@ -130,7 +126,4 @@ public class SpecialOneToOneType extends OneToOneType {
 			return resolveIdentifier(id, session);
 		}
 	}
-	
-
-
 }

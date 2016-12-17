@@ -7,7 +7,9 @@
 package org.hibernate.type;
 
 
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.VersionSupport;
 
 /**
  * Specific adaptation of the "any" type to the old deprecated "object" type
@@ -22,16 +24,26 @@ public class ObjectType extends AnyType implements BasicType {
 	public static final ObjectType INSTANCE = new ObjectType();
 
 	private ObjectType() {
-		super(  SerializableType.INSTANCE, StringType.INSTANCE, );
+		super(  SerializableType.INSTANCE, StringType.INSTANCE );
+	}
+
+	@Override
+	public AttributeConverterDefinition getAttributeConverterDefinition() {
+		return null;
+	}
+
+	@Override
+	public VersionSupport getVersionSupport() {
+		return null;
+	}
+
+	@Override
+	public String getTypeName() {
+		return null;
 	}
 
 	@Override
 	public String getName() {
 		return "object";
-	}
-
-	@Override
-	public String[] getRegistrationKeys() {
-		return new String[] { getName(), Object.class.getName() };
 	}
 }

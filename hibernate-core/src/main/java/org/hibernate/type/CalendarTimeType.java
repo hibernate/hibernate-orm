@@ -8,10 +8,9 @@ package org.hibernate.type;
 
 import java.util.Calendar;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.basic.BasicTypeImpl;
+import org.hibernate.type.spi.TemporalType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.java.CalendarTimeTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
 
@@ -23,8 +22,7 @@ import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class CalendarTimeType extends BasicTypeImpl<Calendar>
-		implements JdbcLiteralFormatter<Calendar> {
+public class CalendarTimeType extends TemporalTypeImpl<Calendar> {
 	public static final CalendarTimeType INSTANCE = new CalendarTimeType();
 
 	public CalendarTimeType() {
@@ -37,11 +35,22 @@ public class CalendarTimeType extends BasicTypeImpl<Calendar>
 
 	@Override
 	public JdbcLiteralFormatter<Calendar> getJdbcLiteralFormatter() {
-		return this;
+		return TimeTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( CalendarTimeTypeDescriptor.INSTANCE );
 	}
 
 	@Override
-	public String toJdbcLiteral(Calendar value, Dialect dialect) {
-		return DateTimeUtils.formatAsJdbcLiteralTime( value );
+	@SuppressWarnings("unchecked")
+	public <X> TemporalType<X> resolveTypeForPrecision(javax.persistence.TemporalType precision, TypeConfiguration typeConfiguration) {
+		switch ( precision ) {
+			case TIMESTAMP: {
+				return (TemporalType<X>) CalendarType.INSTANCE;
+			}
+			case DATE: {
+				return (TemporalType<X>) CalendarDateType.INSTANCE;
+			}
+			default: {
+				return (TemporalType<X>) this;
+			}
+		}
 	}
 }

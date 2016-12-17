@@ -42,13 +42,6 @@ public interface BasicType<T> extends Type<T>, org.hibernate.sqm.domain.BasicTyp
 	Comparator<T> getComparator();
 
 	/**
-	 * Describes the column mapping for this BasicType.
-	 *
-	 * @return The column mapping for this BasicType
-	 */
-	ColumnMapping getColumnMapping();
-
-	/**
 	 * The converter applied to this type, if one.
 	 *
 	 * @return The applied converter.
@@ -127,7 +120,7 @@ public interface BasicType<T> extends Type<T>, org.hibernate.sqm.domain.BasicTyp
 	}
 
 	default SqlTypeDescriptor remapSqlTypeDescriptor(WrapperOptions options) {
-		return options.remapSqlTypeDescriptor( getColumnMapping().getSqlTypeDescriptor() );
+		return options.remapSqlTypeDescriptor( getColumnMappings()[0].getSqlTypeDescriptor() );
 	}
 
 	@Override

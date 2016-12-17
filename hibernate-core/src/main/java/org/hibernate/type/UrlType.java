@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.net.URL;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.UrlTypeDescriptor;
@@ -19,7 +18,7 @@ import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class UrlType extends BasicTypeImpl<URL> implements JdbcLiteralFormatter<URL> {
+public class UrlType extends BasicTypeImpl<URL> {
 	public static final UrlType INSTANCE = new UrlType();
 
 	public UrlType() {
@@ -33,16 +32,11 @@ public class UrlType extends BasicTypeImpl<URL> implements JdbcLiteralFormatter<
 
 	@Override
 	public JdbcLiteralFormatter<URL> getJdbcLiteralFormatter() {
-		return this;
+		return VarcharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( UrlTypeDescriptor.INSTANCE );
 	}
 
 	@Override
 	public String toString(URL value) {
 		return UrlTypeDescriptor.INSTANCE.toString( value );
-	}
-
-	@Override
-	public String toJdbcLiteral(URL value, Dialect dialect) {
-		return StringType.INSTANCE.toJdbcLiteral( toString( value ), dialect );
 	}
 }

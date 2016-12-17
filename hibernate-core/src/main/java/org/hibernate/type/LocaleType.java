@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.util.Locale;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.LocaleTypeDescriptor;
@@ -20,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class LocaleType extends BasicTypeImpl<Locale> implements JdbcLiteralFormatter<Locale> {
+public class LocaleType extends BasicTypeImpl<Locale> {
 
 	public static final LocaleType INSTANCE = new LocaleType();
 
@@ -34,11 +33,6 @@ public class LocaleType extends BasicTypeImpl<Locale> implements JdbcLiteralForm
 
 	@Override
 	public JdbcLiteralFormatter<Locale> getJdbcLiteralFormatter() {
-		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(Locale value, Dialect dialect) {
-		return StringType.INSTANCE.toJdbcLiteral( toString( value ), dialect );
+		return VarcharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( LocaleTypeDescriptor.INSTANCE );
 	}
 }

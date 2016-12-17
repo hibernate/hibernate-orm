@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
@@ -20,7 +19,7 @@ import org.hibernate.type.spi.descriptor.java.IntegerTypeDescriptor;
  * @author Steve Ebersole
  */
 public class IntegerType extends BasicTypeImpl<Integer>
-		implements VersionSupport<Integer>,JdbcLiteralFormatter<Integer> {
+		implements VersionSupport<Integer> {
 
 	public static final IntegerType INSTANCE = new IntegerType();
 
@@ -52,11 +51,8 @@ public class IntegerType extends BasicTypeImpl<Integer>
 
 	@Override
 	public JdbcLiteralFormatter<Integer> getJdbcLiteralFormatter() {
-		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(Integer value, Dialect dialect) {
-		return toString( value );
+		return org.hibernate.type.spi.descriptor.sql.IntegerTypeDescriptor.INSTANCE.getJdbcLiteralFormatter(
+				IntegerTypeDescriptor.INSTANCE
+		);
 	}
 }

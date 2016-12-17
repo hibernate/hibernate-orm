@@ -9,6 +9,7 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +28,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.spi.AssociationType;
+import org.hibernate.type.spi.Type;
 
 /**
  * Base for types which map associations to persistent entities.
@@ -41,7 +43,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	private final boolean eager;
 	private final boolean unwrapProxy;
 	private final boolean referenceToPrimaryKey;
-
+	private final Comparator comparator;
 	/**
 	 * Cached because of performance
 	 *
@@ -109,6 +111,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		this.eager = eager;
 		this.unwrapProxy = unwrapProxy;
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
+		this.comparator = new EntityComparator();
 	}
 
 	protected TypeFactory.TypeScope scope() {
@@ -156,6 +159,11 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	@Override
 	public String getName() {
 		return associatedEntityName;
+	}
+
+	@Override
+	public Comparator getComparator() {
+		return comparator;
 	}
 
 	/**
@@ -277,11 +285,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	@Override
-	public int compare(Object x, Object y) {
-		return 0; //TODO: entities CAN be compared, by PK, fix this! -> only if/when we can extract the id values....
-	}
-
-	@Override
 	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
 		return value; //special case ... this is the leaf of the containment graph, even though not immutable
 	}
@@ -326,7 +329,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 									.getName()
 					);
 				}
-				id = getIdentifierOrUniqueKeyType( session.getFactory() )
+				id = getIdentifierOrUniqueKeyType()
 						.replace( id, null, session, owner, copyCache );
 				return resolve( id, session, owner );
 			}
@@ -587,21 +590,20 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * associated entity's PK or (2) the unique key to which we refer (i.e.
 	 * the property-ref).
 	 *
-	 * @param factory The mappings...
-	 *
 	 * @return The appropriate type.
 	 *
 	 * @throws MappingException Generally, if unable to resolve the associated entity name
 	 * or unique key property name.
 	 */
-	public final Type getIdentifierOrUniqueKeyType(Mapping factory) throws MappingException {
+	public final Type getIdentifierOrUniqueKeyType() throws MappingException {
+		final SessionFactoryImplementor factory = scope.resolveFactory();
 		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return getIdentifierType( factory );
 		}
 		else {
 			Type type = factory.getReferencedPropertyType( getAssociatedEntityName(), uniqueKeyPropertyName );
 			if ( type.isEntityType() ) {
-				type = ( (EntityType) type ).getIdentifierOrUniqueKeyType( factory );
+				type = ( (EntityType) type ).getIdentifierOrUniqueKeyType();
 			}
 			return type;
 		}
@@ -611,14 +613,14 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * The name of the property on the associated entity to which our FK
 	 * refers
 	 *
-	 * @param factory The mappings...
-	 *
 	 * @return The appropriate property name.
 	 *
 	 * @throws MappingException Generally, if unable to resolve the associated entity name
 	 */
-	public final String getIdentifierOrUniqueKeyPropertyName(Mapping factory)
+	public final String getIdentifierOrUniqueKeyPropertyName()
 			throws MappingException {
+		final SessionFactoryImplementor factory = scope.resolveFactory();
+
 		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return factory.getIdentifierPropertyName( getAssociatedEntityName() );
 		}
@@ -689,7 +691,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				entityName,
 				uniqueKeyPropertyName,
 				key,
-				getIdentifierOrUniqueKeyType( factory ),
+				getIdentifierOrUniqueKeyType(),
 				persister.getEntityMode(),
 				session.getFactory()
 		);
@@ -700,6 +702,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			result = persister.loadByUniqueKey( uniqueKeyPropertyName, key, session );
 		}
 		return result == null ? null : persistenceContext.proxyFor( result );
+	}
+
+	public static class EntityComparator implements Comparator<Object> {
+		@Override
+		public int compare(Object x, Object y) {
+			return 0; //TODO: entities CAN be compared, by PK, fix this! -> only if/when we can extract the id values....
+		}
 	}
 
 }

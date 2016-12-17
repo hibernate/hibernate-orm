@@ -30,7 +30,6 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -46,13 +45,8 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.AssociationType;
+import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
-import org.hibernate.type.spi.descriptor.WrapperOptions;
-import org.hibernate.type.spi.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
-import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -72,12 +66,14 @@ public abstract class CollectionType extends AbstractType implements Association
 	private final String role;
 	private final String foreignKeyPropertyName;
 	private final Comparator comparator;
+	private final ColumnMapping[] columnMappings;
 
 	public CollectionType(TypeFactory.TypeScope typeScope, String role, String foreignKeyPropertyName) {
 		this.typeScope = typeScope;
 		this.role = role;
 		this.foreignKeyPropertyName = foreignKeyPropertyName;
 		this.comparator = new CollectionComparator();
+		this.columnMappings = new ColumnMapping[] {new ColumnMapping( null, LEGACY_DICTATED_SIZE, LEGACY_DEFAULT_SIZE )};
 	}
 
 	@Override
@@ -222,6 +218,11 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public String getName() {
 		return getReturnedClass().getName() + '(' + getRole() + ')';
+	}
+
+	@Override
+	public ColumnMapping[] getColumnMappings() {
+		return columnMappings;
 	}
 
 	/**

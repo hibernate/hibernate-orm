@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.util.Comparator;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
@@ -24,7 +23,7 @@ import org.hibernate.type.spi.descriptor.sql.BigIntTypeDescriptor;
  */
 public class LongType
 		extends BasicTypeImpl<Long>
-		implements VersionSupport<Long>,JdbcLiteralFormatter<Long> {
+		implements VersionSupport<Long> {
 
 	public static final LongType INSTANCE = new LongType();
 
@@ -61,11 +60,6 @@ public class LongType
 
 	@Override
 	public JdbcLiteralFormatter<Long> getJdbcLiteralFormatter() {
-		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(Long value, Dialect dialect) {
-		return value.toString();
+		return BigIntTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( LongTypeDescriptor.INSTANCE );
 	}
 }

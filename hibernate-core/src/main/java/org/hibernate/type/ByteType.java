@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.util.Comparator;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
@@ -24,7 +23,7 @@ import org.hibernate.type.spi.descriptor.sql.TinyIntTypeDescriptor;
  */
 public class ByteType
 		extends BasicTypeImpl<Byte>
-		implements VersionSupport<Byte>,JdbcLiteralFormatter<Byte> {
+		implements VersionSupport<Byte> {
 
 	public static final ByteType INSTANCE = new ByteType();
 
@@ -41,21 +40,12 @@ public class ByteType
 
 	@Override
 	public JdbcLiteralFormatter<Byte> getJdbcLiteralFormatter() {
-		return this;
+		return TinyIntTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( ByteTypeDescriptor.INSTANCE );
 	}
 
 	@Override
 	public VersionSupport<Byte> getVersionSupport() {
 		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(Byte value, Dialect dialect) {
-		return toJdbcLiteral( value );
-	}
-
-	public String toJdbcLiteral(Byte value) {
-		return toString( value );
 	}
 
 	@Override

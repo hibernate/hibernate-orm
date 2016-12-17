@@ -12,8 +12,10 @@ import java.util.Map;
 import javax.persistence.EnumType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.type.TemporalTypeImpl;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
@@ -78,8 +80,7 @@ import org.hibernate.type.spi.descriptor.sql.VarbinaryTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
 
 /**
- * Redesign of {@link org.hibernate.type.BasicTypeRegistry} based on idea of "composing"
- * a BasicType from JavaTypeDescriptor, SqlTypeDescriptor and AttributeConverter.
+ * Registry for BasicType instances for lookupsicType from JavaTypeDescriptor, SqlTypeDescriptor and AttributeConverter.
  *
  * @author Steve Ebersole
  * @author Chris Cranford
@@ -164,7 +165,7 @@ public class BasicTypeRegistry {
 			sqlTypeDescriptor = javaTypeDescriptor.getJdbcRecommendedSqlType( jdbcTypeResolutionContext );
 		}
 
-		final RegistryKey key = RegistryKeyImpl.from( javaTypeDescriptor, sqlTypeDescriptor, null );
+		final RegistryKey key = RegistryKey.from( javaTypeDescriptor, sqlTypeDescriptor, null );
 		BasicType impl = registrations.get( key );
 		if ( !isMatch( impl, parameters ) ) {
 			MutabilityPlan<T> mutabilityPlan = parameters.getMutabilityPlan();
@@ -202,7 +203,7 @@ public class BasicTypeRegistry {
 		}
 
 		if ( parameters.getSqlTypeDescriptor() != null ) {
-			if ( impl.getColumnMapping().getSqlTypeDescriptor() != parameters.getSqlTypeDescriptor() ) {
+			if ( impl.getColumnMappings()[0].getSqlTypeDescriptor() != parameters.getSqlTypeDescriptor() ) {
 				return false;
 			}
 		}
@@ -268,13 +269,13 @@ public class BasicTypeRegistry {
 				jdbcTypeResolutionContext
 		);
 
-		if ( !org.hibernate.type.spi.basic.TemporalType.class.isInstance( baseType ) ) {
+		if ( !TemporalType.class.isInstance( baseType ) ) {
 			throw new IllegalArgumentException( "Expecting a TemporalType, but found [" + baseType + "]" );
 		}
 
-		return ( ( org.hibernate.type.spi.basic.TemporalType<T>) baseType ).resolveTypeForPrecision(
+		return ( (TemporalType<T>) baseType ).resolveTypeForPrecision(
 				parameters.getTemporalPrecision(),
-				this
+				typeConfiguration
 		);
 	}
 
@@ -288,12 +289,8 @@ public class BasicTypeRegistry {
 		assert parameters != null;
 		assert parameters.getAttributeConverterDefinition() != null;
 
-		final JavaTypeDescriptor converterDefinedDomainTypeDescriptor = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
-				parameters.getAttributeConverterDefinition().getDomainType()
-		);
-		final JavaTypeDescriptor converterDefinedJdbcTypeDescriptor = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
-				parameters.getAttributeConverterDefinition().getJdbcType()
-		);
+		final JavaTypeDescriptor converterDefinedDomainTypeDescriptor = parameters.getAttributeConverterDefinition().getDomainType();
+		final JavaTypeDescriptor converterDefinedJdbcTypeDescriptor = parameters.getAttributeConverterDefinition().getJdbcType();
 
 		JavaTypeDescriptor javaTypeDescriptor = parameters.getJavaTypeDescriptor();
 		if ( javaTypeDescriptor == null ) {
@@ -308,7 +305,7 @@ public class BasicTypeRegistry {
 			sqlTypeDescriptor = converterDefinedJdbcTypeDescriptor.getJdbcRecommendedSqlType( jdbcTypeResolutionContext );
 		}
 
-		final RegistryKey key = RegistryKeyImpl.from( javaTypeDescriptor, sqlTypeDescriptor, parameters.getAttributeConverterDefinition() );
+		final RegistryKey key = RegistryKey.from( javaTypeDescriptor, sqlTypeDescriptor, parameters.getAttributeConverterDefinition() );
 		final BasicType existing = registrations.get( key );
 		if ( isMatch( existing, parameters ) ) {
 			return existing;
@@ -326,13 +323,13 @@ public class BasicTypeRegistry {
 
 		final BasicType<T> impl;
 		if ( TemporalTypeDescriptor.class.isInstance( javaTypeDescriptor ) ) {
+			final TemporalTypeDescriptor javaTemporalTypeDescriptor = (TemporalTypeDescriptor) javaTypeDescriptor;
 			impl = new TemporalTypeImpl(
-					(TemporalTypeDescriptor) javaTypeDescriptor,
+					javaTemporalTypeDescriptor,
 					sqlTypeDescriptor,
 					mutabilityPlan,
 					comparator,
-					parameters.getAttributeConverterDefinition().getAttributeConverter(),
-					converterDefinedJdbcTypeDescriptor
+					parameters.getAttributeConverterDefinition()
 			);
 		}
 		else {
@@ -341,8 +338,7 @@ public class BasicTypeRegistry {
 					sqlTypeDescriptor,
 					mutabilityPlan,
 					comparator,
-					parameters.getAttributeConverterDefinition().getAttributeConverter(),
-					converterDefinedJdbcTypeDescriptor
+					parameters.getAttributeConverterDefinition()
 			);
 		}
 		registrations.put( key, impl );
@@ -441,15 +437,15 @@ public class BasicTypeRegistry {
 
 	@SuppressWarnings("unchecked")
 	private void registerBasicType(JavaTypeDescriptor javaTypeDescriptor,
-			SqlTypeDescriptor sqlTypeDescriptor,
-			MutabilityPlan mutabilityPlan) {
+								   SqlTypeDescriptor sqlTypeDescriptor,
+								   MutabilityPlan mutabilityPlan) {
 		final BasicType type = new BasicTypeImpl(
 				javaTypeDescriptor,
 				sqlTypeDescriptor,
 				mutabilityPlan,
 				null
 		);
-		register( type, RegistryKeyImpl.from( javaTypeDescriptor, sqlTypeDescriptor, null ) );
+		register( type, RegistryKey.from( javaTypeDescriptor, sqlTypeDescriptor, null ) );
 	}
 
 	private void registerTemporalType(TemporalTypeDescriptor temporalTypeDescriptor, SqlTypeDescriptor sqlTypeDescriptor) {
@@ -458,14 +454,14 @@ public class BasicTypeRegistry {
 
 	@SuppressWarnings("unchecked")
 	private void registerTemporalType(TemporalTypeDescriptor temporalTypeDescriptor,
-			SqlTypeDescriptor sqlTypeDescriptor,
-			MutabilityPlan mutabilityPlan) {
+									  SqlTypeDescriptor sqlTypeDescriptor,
+									  MutabilityPlan mutabilityPlan) {
 		final TemporalType type = new TemporalTypeImpl(
 				temporalTypeDescriptor,
 				sqlTypeDescriptor,
 				mutabilityPlan,
 				null
 		);
-		register( type, RegistryKeyImpl.from( temporalTypeDescriptor, sqlTypeDescriptor, null ) );
+		register( type, RegistryKey.from( temporalTypeDescriptor, sqlTypeDescriptor, null ) );
 	}
 }

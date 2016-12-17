@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.StringTypeDescriptor;
@@ -18,7 +17,7 @@ import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class StringType extends BasicTypeImpl<String> implements JdbcLiteralFormatter<String> {
+public class StringType extends BasicTypeImpl<String> {
 	public static final StringType INSTANCE = new StringType();
 
 	public StringType() {
@@ -32,11 +31,6 @@ public class StringType extends BasicTypeImpl<String> implements JdbcLiteralForm
 
 	@Override
 	public JdbcLiteralFormatter<String> getJdbcLiteralFormatter() {
-		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(String value, Dialect dialect) {
-		return value == null ? "NULL" : dialect.quote( value );
+		return VarcharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( StringTypeDescriptor.INSTANCE );
 	}
 }

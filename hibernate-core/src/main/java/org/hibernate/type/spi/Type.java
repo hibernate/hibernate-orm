@@ -137,6 +137,13 @@ public interface Type<T> extends org.hibernate.sqm.domain.DomainReference {
 	}
 
 	/**
+	 * Describes the columns mapping for this Type.
+	 *
+	 * @return The column mapping for this Type
+	 */
+	ColumnMapping[] getColumnMappings();
+
+	/**
 	 * Obtain a descriptor for the Java side of a value mapping.
 	 *
 	 * @return The Java type descriptor.

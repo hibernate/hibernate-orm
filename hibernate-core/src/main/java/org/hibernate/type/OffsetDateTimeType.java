@@ -9,12 +9,9 @@ package org.hibernate.type;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
-import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.OffsetDateTimeJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
@@ -22,8 +19,8 @@ import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
  * @author Steve Ebersole
  */
 public class OffsetDateTimeType
-		extends BasicTypeImpl<OffsetDateTime>
-		implements VersionSupport<OffsetDateTime>, JdbcLiteralFormatter<OffsetDateTime> {
+		extends TemporalTypeImpl<OffsetDateTime>
+		implements VersionSupport<OffsetDateTime> {
 
 	/**
 	 * Singleton access
@@ -66,17 +63,6 @@ public class OffsetDateTimeType
 
 	@Override
 	public JdbcLiteralFormatter<OffsetDateTime> getJdbcLiteralFormatter() {
-		return this;
+		return TimestampTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( OffsetDateTimeJavaDescriptor.INSTANCE );
 	}
-
-	@Override
-	public String toJdbcLiteral(OffsetDateTime value, Dialect dialect) {
-		return toJdbcLiteral( value );
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	public String toJdbcLiteral(OffsetDateTime value) {
-		return DateTimeUtils.formatAsJdbcLiteralTimestamp( value );
-	}
-
 }

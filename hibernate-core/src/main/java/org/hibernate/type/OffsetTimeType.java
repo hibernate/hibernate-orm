@@ -8,17 +8,14 @@ package org.hibernate.type;
 
 import java.time.OffsetTime;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.OffsetTimeJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class OffsetTimeType extends BasicTypeImpl<OffsetTime> implements JdbcLiteralFormatter<OffsetTime> {
+public class OffsetTimeType extends TemporalTypeImpl<OffsetTime> {
 
 	/**
 	 * Singleton access
@@ -40,16 +37,7 @@ public class OffsetTimeType extends BasicTypeImpl<OffsetTime> implements JdbcLit
 
 	@Override
 	public JdbcLiteralFormatter<OffsetTime> getJdbcLiteralFormatter() {
-		return this;
+		return TimeTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( OffsetTimeJavaDescriptor.INSTANCE );
 	}
 
-	@Override
-	public String toJdbcLiteral(OffsetTime value, Dialect dialect) {
-		return toJdbcLiteral( value );
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	public String toJdbcLiteral(OffsetTime value) {
-		return DateTimeUtils.formatAsJdbcLiteralTime( value );
-	}
 }

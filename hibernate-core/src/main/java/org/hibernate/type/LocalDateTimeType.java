@@ -11,13 +11,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Locale;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
-import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.TemporalType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.VersionSupport;
-import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.LocalDateTimeJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
@@ -27,8 +26,8 @@ import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
  * @author Steve Ebersole
  */
 public class LocalDateTimeType
-		extends BasicTypeImpl<LocalDateTime>
-		implements VersionSupport<LocalDateTime>, JdbcLiteralFormatter<LocalDateTime> {
+		extends TemporalTypeImpl<LocalDateTime>
+		implements VersionSupport<LocalDateTime> {
 	/**
 	 * Singleton access
 	 */
@@ -72,16 +71,24 @@ public class LocalDateTimeType
 
 	@Override
 	public JdbcLiteralFormatter<LocalDateTime> getJdbcLiteralFormatter() {
-		return this;
+		return TimestampTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( LocalDateTimeJavaDescriptor.INSTANCE );
 	}
 
 	@Override
-	public String toJdbcLiteral(LocalDateTime value, Dialect dialect) {
-		return toJdbcLiteral( value );
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	public String toJdbcLiteral(LocalDateTime value) {
-		return DateTimeUtils.formatAsJdbcLiteralTimestamp( value );
+	@SuppressWarnings("unchecked")
+	public <X> TemporalType<X> resolveTypeForPrecision(
+			javax.persistence.TemporalType precision,
+			TypeConfiguration typeConfiguration) {
+		switch ( precision ) {
+			case DATE: {
+				return (TemporalType<X>) LocalDateType.INSTANCE;
+			}
+			case TIME: {
+				return (TemporalType<X>) LocalTimeType.INSTANCE;
+			}
+			default: {
+				return (TemporalType<X>) this;
+			}
+		}
 	}
 }

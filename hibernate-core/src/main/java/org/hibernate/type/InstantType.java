@@ -7,17 +7,12 @@
 package org.hibernate.type;
 
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Comparator;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
-import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
-import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.InstantJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
@@ -27,8 +22,8 @@ import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
  * @author Steve Ebersole
  */
 public class InstantType
-		extends BasicTypeImpl<Instant>
-		implements VersionSupport<Instant>,JdbcLiteralFormatter<Instant> {
+		extends TemporalTypeImpl<Instant>
+		implements VersionSupport<Instant> {
 	/**
 	 * Singleton access
 	 */
@@ -66,11 +61,6 @@ public class InstantType
 
 	@Override
 	public JdbcLiteralFormatter<Instant> getJdbcLiteralFormatter() {
-		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(Instant value, Dialect dialect) {
-		return DateTimeUtils.formatAsJdbcLiteralTimestamp( ZonedDateTime.ofInstant( value, ZoneId.of( "UTC" ) ) );
+		return TimestampTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( InstantJavaDescriptor.INSTANCE );
 	}
 }

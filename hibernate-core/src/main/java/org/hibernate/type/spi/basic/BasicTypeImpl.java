@@ -25,7 +25,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
-	private final ColumnMapping columnMapping;
+	private final ColumnMapping[] columnMappings;
 
 	private final JavaTypeDescriptor<T> domainJavaType;
 
@@ -128,7 +128,7 @@ public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 			JdbcLiteralFormatter<T> jdbcLiteralFormatter) {
 		this.domainJavaType = domainJavaType;
 
-		this.columnMapping = new ColumnMapping( sqlType );
+		this.columnMappings = new ColumnMapping[] {new ColumnMapping( sqlType )};
 
 		this.mutabilityPlan = mutabilityPlan == null ? domainJavaType.getMutabilityPlan() : mutabilityPlan;
 		this.comparator = comparator == null ? domainJavaType.getComparator() : comparator;
@@ -167,8 +167,8 @@ public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 	}
 
 	@Override
-	public ColumnMapping getColumnMapping() {
-		return columnMapping;
+	public ColumnMapping[] getColumnMappings() {
+		return columnMappings;
 	}
 
 	public AttributeConverterDefinition<T,?> getAttributeConverterDefinition() {

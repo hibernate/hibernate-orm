@@ -7,7 +7,6 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Map;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;

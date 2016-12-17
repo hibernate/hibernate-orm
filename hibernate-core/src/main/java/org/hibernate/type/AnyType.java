@@ -27,16 +27,16 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.AssociationType;
+import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
 /**
  * Handles "any" mappings
@@ -47,6 +47,9 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	private final TypeFactory.TypeScope scope;
 	private final Type identifierType;
 	private final Type discriminatorType;
+	private final ColumnMapping[] columnMappings;
+	private final Comparator comparator;
+
 
 	/**
 	 * Intended for use only from legacy {@link ObjectType} type definition
@@ -59,6 +62,8 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		this.scope = scope;
 		this.discriminatorType = discriminatorType;
 		this.identifierType = identifierType;
+		this.columnMappings = ArrayHelper.join( discriminatorType.getColumnMappings(), identifierType.getColumnMappings() );
+		this.comparator = new AnyComparator( scope, identifierType );
 	}
 
 	public Type getIdentifierType() {
@@ -78,8 +83,13 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
+	public ColumnMapping[] getColumnMappings() {
+		return columnMappings;
+	}
+
+	@Override
 	public Comparator getComparator() {
-		return null;
+		return comparator;
 	}
 
 	@Override
@@ -457,7 +467,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 	}
 
-	public static class AnyComparator implements Comparator<Object> {
+	public static final class AnyComparator implements Comparator<Object> {
 		private final TypeFactory.TypeScope scope;
 		private final Type identifierType;
 

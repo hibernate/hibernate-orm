@@ -8,10 +8,9 @@ package org.hibernate.type;
 
 import java.util.Date;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.JdbcDateTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.DateTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#DATE DATE} and {@link java.sql.Date}
@@ -19,8 +18,7 @@ import org.hibernate.type.spi.descriptor.java.JdbcDateTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class DateType
-		extends BasicTypeImpl<Date> implements JdbcLiteralFormatter<Date> {
+public class DateType extends TemporalTypeImpl<Date> {
 
 	public static final DateType INSTANCE = new DateType();
 
@@ -35,11 +33,6 @@ public class DateType
 
 	@Override
 	public JdbcLiteralFormatter<Date> getJdbcLiteralFormatter() {
-		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(Date value, Dialect dialect) {
-		return StringType.INSTANCE.toJdbcLiteral( toString( value ), dialect );
+		return DateTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( JdbcDateTypeDescriptor.INSTANCE );
 	}
 }

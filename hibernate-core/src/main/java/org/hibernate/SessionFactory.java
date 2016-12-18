@@ -16,11 +16,9 @@ import javax.persistence.EntityManagerFactory;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.envers.internal.AuditReaderFactory;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.stat.Statistics;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * The main contract here is the creation of {@link Session} instances.  Usually
@@ -38,7 +36,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionFactory extends EntityManagerFactory, HibernateEntityManagerFactory, AuditReaderFactory, Referenceable, Serializable, java.io.Closeable {
+public interface SessionFactory extends EntityManagerFactory, AuditReaderFactory, Referenceable, Serializable, java.io.Closeable {
 	/**
 	 * Get the special options used to build the factory.
 	 *

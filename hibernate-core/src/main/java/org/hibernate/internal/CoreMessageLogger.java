@@ -33,8 +33,8 @@ import org.hibernate.engine.loading.internal.EntityLoadContext;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.BasicLogger;

@@ -11,7 +11,7 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.sqm.query.from.FromElement;
+import org.hibernate.sqm.query.from.SqmFrom;
 
 /**
  * @author Steve Ebersole
@@ -20,14 +20,14 @@ public class SqlAliasBaseManager {
 	// an overall dictionary; used to ensure that a given FromElement instance always
 	// resolves to the same alias-base (its called base because a FromElement can encompass
 	// multiple physical tables).
-	private Map<FromElement,String> fromElementAliasMap = new HashMap<FromElement, String>();
+	private Map<SqmFrom,String> fromElementAliasMap = new HashMap<SqmFrom, String>();
 
 	// work dictionary used to map a FromElement type name to its acronym
 	private Map<String,String> typeNameAcronymMap = new HashMap<String, String>();
 	// wok dictionary used to map an acronym to the number of times it has been used.
 	private Map<String,Integer> acronymCountMap = new HashMap<String, Integer>();
 
-	public String getSqlAliasBase(FromElement fromElement) {
+	public String getSqlAliasBase(SqmFrom fromElement) {
 		String aliasBase = fromElementAliasMap.get( fromElement );
 		if ( aliasBase == null ) {
 			aliasBase = generateAliasBase( fromElement );
@@ -36,8 +36,8 @@ public class SqlAliasBaseManager {
 		return aliasBase;
 	}
 
-	private String generateAliasBase(FromElement fromElement) {
-		final String entityName = fromElement.getBoundModelType().asManagedType().getTypeName();
+	private String generateAliasBase(SqmFrom fromElement) {
+		final String entityName = fromElement.getIntrinsicSubclassIndicator().getEntityName();
 		final String acronym = determineAcronym( entityName );
 
 		Integer acronymCount = acronymCountMap.get( acronym );

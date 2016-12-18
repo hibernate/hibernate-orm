@@ -130,7 +130,7 @@ import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.TypeHelper;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.spi.VersionSupport;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -1652,12 +1652,12 @@ public abstract class AbstractEntityPersister
 			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
 		}
 
-		Object nextVersion = getVersionType().next( currentVersion, session );
+		Object nextVersion = getVersionSupport().next( currentVersion, session );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace(
 					"Forcing version increment [" + MessageHelper.infoString( this, id, getFactory() ) + "; "
-							+ getVersionType().toLoggableString( currentVersion, getFactory() ) + " -> "
-							+ getVersionType().toLoggableString( nextVersion, getFactory() ) + "]"
+							+ locateVersionType().toLoggableString( currentVersion, getFactory() ) + " -> "
+							+ locateVersionType().toLoggableString( nextVersion, getFactory() ) + "]"
 			);
 		}
 
@@ -1670,9 +1670,9 @@ public abstract class AbstractEntityPersister
 					.getStatementPreparer()
 					.prepareStatement( versionIncrementString, false );
 			try {
-				getVersionType().nullSafeSet( st, nextVersion, 1, session );
+				locateVersionType().nullSafeSet( st, nextVersion, 1, session );
 				getIdentifierType().nullSafeSet( st, id, 2, session );
-				getVersionType().nullSafeSet( st, currentVersion, 2 + getIdentifierColumnSpan(), session );
+				locateVersionType().nullSafeSet( st, currentVersion, 2 + getIdentifierColumnSpan(), session );
 				int rows = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
 				if ( rows != 1 ) {
 					throw new StaleObjectStateException( getEntityName(), id );
@@ -1731,7 +1731,7 @@ public abstract class AbstractEntityPersister
 					if ( !isVersioned() ) {
 						return this;
 					}
-					return getVersionType().nullSafeGet( rs, getVersionColumnName(), session, null );
+					return locateVersionType().nullSafeGet( rs, getVersionColumnName(), session, null );
 				}
 				finally {
 					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
@@ -2437,7 +2437,7 @@ public abstract class AbstractEntityPersister
 					// excluded from optimistic locking by optimistic-lock="false"
 					String[] propertyColumnNames = getPropertyColumnNames( i );
 					String[] propertyColumnWriters = getPropertyColumnWriters( i );
-					boolean[] propertyNullness = types[i].toColumnNullness( oldFields[i], getFactory() );
+					boolean[] propertyNullness = types[i].toColumnNullness( oldFields[i] );
 					for ( int k = 0; k < propertyNullness.length; k++ ) {
 						if ( propertyNullness[k] ) {
 							update.addWhereColumn( propertyColumnNames[k], "=" + propertyColumnWriters[k] );
@@ -2859,7 +2859,7 @@ public abstract class AbstractEntityPersister
 				.getIdentitySelectString(
 						getTableName( 0 ),
 						getKeyColumns( 0 )[0],
-						getIdentifierType().sqlTypes( getFactory() )[0]
+						getIdentifierType().sqlTypes()[0]
 				);
 	}
 
@@ -3101,7 +3101,7 @@ public abstract class AbstractEntityPersister
 				// Write any appropriate versioning conditional parameters
 				if ( useVersion && entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.VERSION ) {
 					if ( checkVersion( includeProperty ) ) {
-						getVersionType().nullSafeSet( update, oldVersion, index, session );
+						locateVersionType().nullSafeSet( update, oldVersion, index, session );
 					}
 				}
 				else if ( isAllOrDirtyOptLocking() && oldFields != null ) {
@@ -3115,7 +3115,7 @@ public abstract class AbstractEntityPersister
 								isPropertyOfTable( i, j ) &&
 								versionability[i]; //TODO: is this really necessary????
 						if ( include ) {
-							boolean[] settable = types[i].toColumnNullness( oldFields[i], getFactory() );
+							boolean[] settable = types[i].toColumnNullness( oldFields[i] );
 							types[i].nullSafeSet(
 									update,
 									oldFields[i],
@@ -3239,7 +3239,7 @@ public abstract class AbstractEntityPersister
 				// We should use the _current_ object state (ie. afterQuery any updates that occurred during flush)
 
 				if ( useVersion ) {
-					getVersionType().nullSafeSet( delete, version, index, session );
+					locateVersionType().nullSafeSet( delete, version, index, session );
 				}
 				else if ( isAllOrDirtyOptLocking() && loadedState != null ) {
 					boolean[] versionability = getPropertyVersionability();
@@ -3248,7 +3248,7 @@ public abstract class AbstractEntityPersister
 						if ( isPropertyOfTable( i, j ) && versionability[i] ) {
 							// this property belongs to the table and it is not specifically
 							// excluded from optimistic locking by optimistic-lock="false"
-							boolean[] settable = types[i].toColumnNullness( loadedState[i], getFactory() );
+							boolean[] settable = types[i].toColumnNullness( loadedState[i] );
 							types[i].nullSafeSet( delete, loadedState[i], index, settable, session );
 							index += ArrayHelper.countTrue( settable );
 						}
@@ -3521,7 +3521,7 @@ public abstract class AbstractEntityPersister
 					// this property belongs to the table and it is not specifically
 					// excluded from optimistic locking by optimistic-lock="false"
 					String[] propertyColumnNames = getPropertyColumnNames( i );
-					boolean[] propertyNullness = types[i].toColumnNullness( loadedState[i], getFactory() );
+					boolean[] propertyNullness = types[i].toColumnNullness( loadedState[i] );
 					for ( int k = 0; k < propertyNullness.length; k++ ) {
 						if ( propertyNullness[k] ) {
 							delete.addWhereFragment( propertyColumnNames[k] + " = ?" );
@@ -4252,7 +4252,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Comparator getVersionComparator() {
-		return isVersioned() ? getVersionType().getComparator() : null;
+		return isVersioned() ? locateVersionType().getComparator() : null;
 	}
 
 	// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4280,11 +4280,8 @@ public abstract class AbstractEntityPersister
 		return !entityMetamodel.getIdentifierProperty().isVirtual();
 	}
 
-	public VersionType getVersionType() {
-		return (VersionType) locateVersionType();
-	}
-
-	private Type locateVersionType() {
+	@Override
+	public Type getVersionType() {
 		return entityMetamodel.getVersionProperty() == null ?
 				null :
 				entityMetamodel.getVersionProperty().getType();
@@ -5174,11 +5171,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public EntityTuplizer getEntityTuplizer() {
 		return entityTuplizer;
-	}
-
-	@Override
-	public BytecodeEnhancementMetadata getInstrumentationMetadata() {
-		return entityMetamodel.getBytecodeEnhancementMetadata();
 	}
 
 	@Override

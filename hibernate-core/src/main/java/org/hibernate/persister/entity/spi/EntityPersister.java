@@ -43,7 +43,7 @@ import org.hibernate.sqm.query.from.SqmFrom;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.spi.VersionSupport;
 
 /**
  * Contract describing mapping information and persistence logic for a particular strategy of entity mapping.  A given
@@ -364,9 +364,9 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	 * If {@link #isVersioned()}, then what is the type of the property
 	 * holding the locking value.
 	 *
-	 * @return The type of the version property; or null, if not versioned.
+	 * @return The Type of the property; or null, if not versioned.
 	 */
-	VersionType getVersionType();
+	Type getVersionType();
 
 	/**
 	 * If {@link #isVersioned()}, then what is the index of the property

@@ -39,7 +39,6 @@ public abstract class AbstractBasicTypeProducer implements BasicTypeProducer {
 		return typeConfiguration.getBasicTypeRegistry().resolveBasicType(
 				basicTypeSiteContext,
 				basicTypeSiteContext
-
 		);
 	}
 }

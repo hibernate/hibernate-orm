@@ -1487,7 +1487,7 @@ public abstract class Loader {
 		Object version = session.getPersistenceContext().getEntry( entity ).getVersion();
 
 		if ( version != null ) { //null version means the object is in the process of being loaded somewhere else in the ResultSet
-			final VersionType versionType = persister.getVersionType();
+			final VersionType versionType = persister.getVersionSupport();
 			final Object currentVersion = versionType.nullSafeGet(
 					rs,
 					getEntityAliases()[i].getSuffixedVersionAliases(),

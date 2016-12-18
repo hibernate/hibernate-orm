@@ -101,7 +101,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 					entity,
 					realOldVersion,
 					persister.getVersion( entity ),
-					persister.getVersionType()
+					persister.getVersionSupport()
 			);
 
 			// if can replicate, will result in a SQL UPDATE

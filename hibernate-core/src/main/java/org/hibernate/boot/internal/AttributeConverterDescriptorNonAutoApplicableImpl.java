@@ -19,6 +19,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptorRegistry;
 
 /**
  * Special-use AttributeConverterDescriptor implementation for cases where the converter will never
@@ -28,13 +30,16 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  */
 public class AttributeConverterDescriptorNonAutoApplicableImpl implements AttributeConverterDescriptor {
 	private final AttributeConverter converter;
+	private final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
 
-	private Class domainType;
-	private Class jdbcType;
+	private JavaTypeDescriptor domainType;
+	private JavaTypeDescriptor jdbcType;
 
-	public AttributeConverterDescriptorNonAutoApplicableImpl(AttributeConverter converter) {
+	public AttributeConverterDescriptorNonAutoApplicableImpl(
+			AttributeConverter converter,
+			JavaTypeDescriptorRegistry javaTypeDescriptorRegistry) {
 		this.converter = converter;
-
+		this.javaTypeDescriptorRegistry = javaTypeDescriptorRegistry;
 		final Class attributeConverterClass = converter.getClass();
 		final ParameterizedType attributeConverterSignature = extractAttributeConverterParameterizedType(
 				attributeConverterClass
@@ -59,8 +64,7 @@ public class AttributeConverterDescriptorNonAutoApplicableImpl implements Attrib
 							+ "] specified more than 2 parameterized types"
 			);
 		}
-
-		this.domainType = extractClass( attributeConverterSignature.getActualTypeArguments()[0] );
+		this.domainType = extractJavaTypeDescriptor( attributeConverterSignature.getActualTypeArguments()[0] );
 		if ( this.domainType == null ) {
 			throw new AnnotationException(
 					"Could not determine domain type from given AttributeConverter [" +
@@ -68,7 +72,7 @@ public class AttributeConverterDescriptorNonAutoApplicableImpl implements Attrib
 			);
 		}
 
-		this.jdbcType = extractClass(attributeConverterSignature.getActualTypeArguments()[1]);
+		this.jdbcType = extractJavaTypeDescriptor(attributeConverterSignature.getActualTypeArguments()[1]);
 		if ( this.jdbcType == null ) {
 			throw new AnnotationException(
 					"Could not determine JDBC type from given AttributeConverter [" +
@@ -110,7 +114,17 @@ public class AttributeConverterDescriptorNonAutoApplicableImpl implements Attrib
 		return null;
 	}
 
-	private static Type resolveType(Type target, Type context) {
+	private JavaTypeDescriptor extractJavaTypeDescriptor(Type type) {
+		if ( type instanceof Class ) {
+			return javaTypeDescriptorRegistry.getDescriptor( type.getClass() );
+		}
+		else if ( type instanceof ParameterizedType ) {
+			return extractJavaTypeDescriptor( ((ParameterizedType) type).getRawType() );
+		}
+		return null;
+	}
+
+	private Type resolveType(Type target, Type context) {
 		if ( target instanceof ParameterizedType ) {
 			return resolveParameterizedType( (ParameterizedType) target, context );
 		}
@@ -120,7 +134,7 @@ public class AttributeConverterDescriptorNonAutoApplicableImpl implements Attrib
 		return target;
 	}
 
-	private static ParameterizedType resolveParameterizedType(final ParameterizedType parameterizedType, Type context) {
+	private ParameterizedType resolveParameterizedType(final ParameterizedType parameterizedType, Type context) {
 		Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
 
 		final Type[] resolvedTypeArguments = new Type[actualTypeArguments.length];
@@ -147,7 +161,7 @@ public class AttributeConverterDescriptorNonAutoApplicableImpl implements Attrib
 		};
 	}
 
-	private static Type resolveTypeVariable(TypeVariable typeVariable, ParameterizedType context) {
+	private Type resolveTypeVariable(TypeVariable typeVariable, ParameterizedType context) {
 		Class clazz = extractClass( context.getRawType() );
 		TypeVariable[] typeParameters = clazz.getTypeParameters();
 		for ( int idx = 0; idx < typeParameters.length; idx++ ) {
@@ -158,27 +172,18 @@ public class AttributeConverterDescriptorNonAutoApplicableImpl implements Attrib
 		return typeVariable;
 	}
 
-	private static Class extractType(TypeVariable typeVariable) {
-		java.lang.reflect.Type[] boundTypes = typeVariable.getBounds();
-		if ( boundTypes == null || boundTypes.length != 1 ) {
-			return null;
-		}
-
-		return (Class) boundTypes[0];
-	}
-
 	@Override
 	public AttributeConverter getAttributeConverter() {
 		return converter;
 	}
 
 	@Override
-	public Class<?> getDomainType() {
+	public JavaTypeDescriptor<?> getDomainType() {
 		return domainType;
 	}
 
 	@Override
-	public Class<?> getJdbcType() {
+	public JavaTypeDescriptor<?> getJdbcType() {
 		return jdbcType;
 	}
 

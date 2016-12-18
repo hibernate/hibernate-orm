@@ -116,10 +116,10 @@ public class TableBasedUpdateHandlerImpl
 			try {
 				try {
 					ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( idInsertSelect, false );
-					int sum = 1;
-					sum += handlePrependedParametersOnIdSelection( ps, session, sum );
+					int position = 1;
+					position += handlePrependedParametersOnIdSelection( ps, session, position );
 					for ( ParameterSpecification parameterSpecification : idSelectParameterSpecifications ) {
-						sum += parameterSpecification.bind( ps, queryParameters, session, sum );
+						position += parameterSpecification.bind( ps, queryParameters, session, position );
 					}
 					resultCount = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 				}

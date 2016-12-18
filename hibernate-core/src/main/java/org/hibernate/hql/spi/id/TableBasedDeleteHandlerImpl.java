@@ -114,10 +114,10 @@ public class TableBasedDeleteHandlerImpl
 			try {
 				try {
 					ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( idInsertSelect, false );
-					int pos = 1;
-					pos += handlePrependedParametersOnIdSelection( ps, session, pos );
+					int position = 1;
+					position += handlePrependedParametersOnIdSelection( ps, session, position );
 					for ( ParameterSpecification parameterSpecification : idSelectParameterSpecifications ) {
-						pos += parameterSpecification.bind( ps, queryParameters, session, pos );
+						position += parameterSpecification.bind( ps, queryParameters, session, position );
 					}
 					resultCount = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
 				}

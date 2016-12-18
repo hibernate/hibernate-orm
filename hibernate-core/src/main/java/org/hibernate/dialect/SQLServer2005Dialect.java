@@ -105,4 +105,9 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 			}
 		};
 	}
+
+	@Override
+	public boolean supportsNonQueryWithCTE() {
+		return true;
+	}
 }

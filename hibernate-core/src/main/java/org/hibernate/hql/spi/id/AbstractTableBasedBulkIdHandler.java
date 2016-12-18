@@ -128,6 +128,22 @@ public abstract class AbstractTableBasedBulkIdHandler {
 			ProcessedWhereClause whereClause) {
 
 		final Dialect dialect = sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect();
+		final Select select = generateIdSelect( tableAlias, whereClause );
+
+		InsertSelect insert = new InsertSelect( dialect );
+		if ( sessionFactory.getSessionFactoryOptions().isCommentsEnabled() ) {
+			insert.setComment( "insert-select for " + getTargetedQueryable().getEntityName() + " ids" );
+		}
+		insert.setTableName( idTableInfo.getQualifiedIdTableName() );
+		insert.setSelect( select );
+		return insert.toStatementString();
+	}
+
+	protected Select generateIdSelect(
+			String tableAlias,
+			ProcessedWhereClause whereClause) {
+
+		final Dialect dialect = sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect();
 
 		final Select select = new Select( dialect );
 		final SelectValues selectClause = new SelectValues( dialect ).addColumns(
@@ -160,14 +176,7 @@ public abstract class AbstractTableBasedBulkIdHandler {
 			}
 		}
 		select.setWhereClause( whereJoinFragment + whereClause.getUserWhereClauseFragment() );
-
-		InsertSelect insert = new InsertSelect( dialect );
-		if ( sessionFactory.getSessionFactoryOptions().isCommentsEnabled() ) {
-			insert.setComment( "insert-select for " + getTargetedQueryable().getEntityName() + " ids" );
-		}
-		insert.setTableName( idTableInfo.getQualifiedIdTableName() );
-		insert.setSelect( select );
-		return insert.toStatementString();
+		return select;
 	}
 
 	/**

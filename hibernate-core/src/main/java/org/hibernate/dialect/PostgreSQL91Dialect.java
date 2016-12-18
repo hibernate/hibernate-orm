@@ -17,4 +17,9 @@ public class PostgreSQL91Dialect extends PostgreSQL9Dialect {
 	public boolean supportsPartitionBy() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsNonQueryWithCTE() {
+		return true;
+	}
 }

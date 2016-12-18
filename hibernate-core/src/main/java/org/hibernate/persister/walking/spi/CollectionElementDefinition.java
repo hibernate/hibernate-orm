@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.walking.spi;
 
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -43,7 +44,7 @@ public interface CollectionElementDefinition {
 
 	/**
 	 * If the element type returned by {@link #getType()} is an
-	 * {@link org.hibernate.type.EntityType}, then the entity
+	 * {@link EntityType}, then the entity
 	 * definition for the collection element is returned;
 	 * otherwise, IllegalStateException is thrown.
 	 *
@@ -51,7 +52,7 @@ public interface CollectionElementDefinition {
 	 *
 	 * @throws IllegalStateException if the collection element type
 	 * returned by {@link #getType()} is not of type
-	 * {@link org.hibernate.type.EntityType}.
+	 * {@link EntityType}.
 	 */
 	public EntityDefinition toEntityDefinition();
 

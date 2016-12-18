@@ -12,7 +12,7 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;

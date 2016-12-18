@@ -25,7 +25,7 @@ import org.hibernate.hql.internal.ast.tree.ImpliedFromElement;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 import static org.hibernate.jpa.QueryHints.HINT_FETCHGRAPH;

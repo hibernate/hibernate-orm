@@ -6,9 +6,8 @@
  */
 package org.hibernate.persister.collection.internal;
 
-import org.hibernate.persister.common.spi.AbstractPluralAttributeIndex;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 
 /**
  * @author Steve Ebersole

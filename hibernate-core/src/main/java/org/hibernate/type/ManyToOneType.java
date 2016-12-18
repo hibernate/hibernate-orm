@@ -29,7 +29,7 @@ import org.hibernate.type.spi.Type;
  *
  * @author Gavin King
  */
-public class ManyToOneType extends EntityType {
+public class ManyToOneType extends AbstractEntityType {
 	private final boolean ignoreNotFound;
 	private boolean isLogicalOneToOne;
 

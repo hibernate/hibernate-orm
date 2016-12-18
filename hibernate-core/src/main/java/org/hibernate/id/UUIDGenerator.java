@@ -20,7 +20,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
+import org.hibernate.type.spi.descriptor.java.UUIDTypeDescriptor;
 
 /**
  * An {@link IdentifierGenerator} which generates {@link UUID} values using a pluggable

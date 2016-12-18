@@ -30,7 +30,7 @@ import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 
 import org.jboss.logging.Logger;
 

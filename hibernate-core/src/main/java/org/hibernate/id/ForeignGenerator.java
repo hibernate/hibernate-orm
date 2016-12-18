@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 /**

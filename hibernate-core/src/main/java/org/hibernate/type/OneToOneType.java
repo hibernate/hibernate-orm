@@ -23,7 +23,7 @@ import org.hibernate.type.spi.ColumnMapping;
  * A one-to-one association to an entity
  * @author Gavin King
  */
-public class OneToOneType extends EntityType {
+public class OneToOneType extends AbstractEntityType {
 	private static final ColumnMapping[] COLUMN_MAPPINGS = new ColumnMapping[0];
 
 	private final ForeignKeyDirection foreignKeyType;

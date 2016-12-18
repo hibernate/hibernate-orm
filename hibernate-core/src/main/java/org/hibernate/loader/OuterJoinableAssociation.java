@@ -18,7 +18,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.spi.AssociationType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 
 /**
  * Part of the Hibernate SQL rendering internals.  This class represents

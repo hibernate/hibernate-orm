@@ -22,7 +22,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 import antlr.SemanticException;

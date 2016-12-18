@@ -10,7 +10,7 @@ import antlr.SemanticException;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Andrea Boriero

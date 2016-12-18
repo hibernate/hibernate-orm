@@ -20,7 +20,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -165,7 +165,7 @@ public class PathExpressionParser implements Parser {
 				}
 				else if ( propertyType.isEntityType() ) {
 					if ( !isCollectionValued() ) {
-						dereferenceEntity( token, ( EntityType ) propertyType, q );
+						dereferenceEntity( token, (EntityType) propertyType, q );
 					}
 				}
 				else if ( propertyType.isCollectionType() ) {
@@ -193,7 +193,7 @@ public class PathExpressionParser implements Parser {
 		//or its the id property name
 		final String idPropertyName;
 		try {
-			idPropertyName = propertyType.getIdentifierOrUniqueKeyPropertyName( q.getFactory() );
+			idPropertyName = propertyType.getIdentifierOrUniqueKeyPropertyName();
 		}
 		catch ( MappingException me ) {
 			throw new QueryException( me );

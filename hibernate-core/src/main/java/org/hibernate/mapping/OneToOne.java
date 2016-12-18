@@ -11,7 +11,7 @@ import java.util.Iterator;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.spi.Type;
 

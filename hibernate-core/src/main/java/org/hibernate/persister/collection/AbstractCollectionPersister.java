@@ -91,7 +91,7 @@ import org.hibernate.type.AnyType;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.CompositeType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;

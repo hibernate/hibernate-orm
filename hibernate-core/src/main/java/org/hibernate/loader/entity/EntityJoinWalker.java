@@ -25,7 +25,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.CompositeType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 /**

@@ -13,7 +13,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 
 /**
  * Reassociates uninitialized proxies with the session

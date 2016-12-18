@@ -6,23 +6,21 @@
  */
 package org.hibernate.persister.collection.internal;
 
-import org.hibernate.persister.collection.spi.PluralAttributeElement;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.sqm.domain.EntityType;
-import org.hibernate.sqm.domain.PluralAttribute.ElementClassification;
+import org.hibernate.type.spi.EntityType;
 
 /**
  * @author Steve Ebersole
  */
-public class PluralAttributeElementEntity implements PluralAttributeElement<org.hibernate.type.EntityType, EntityType> {
+public class PluralAttributeElementEntity implements PluralAttributeElement<EntityType, EntityType> {
 	private final ElementClassification classification;
-	private final org.hibernate.type.EntityType type;
+	private final EntityType type;
 	private final EntityType sqmType;
 	private final Column[] columns;
 
 	public PluralAttributeElementEntity(
 			ElementClassification classification,
-			org.hibernate.type.EntityType type,
+			EntityType type,
 			EntityType sqmType,
 			Column[] columns) {
 		this.classification = classification;
@@ -42,7 +40,7 @@ public class PluralAttributeElementEntity implements PluralAttributeElement<org.
 	}
 
 	@Override
-	public org.hibernate.type.EntityType getOrmType() {
+	public EntityType getOrmType() {
 		return type;
 	}
 

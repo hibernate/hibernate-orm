@@ -33,7 +33,7 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>
@@ -207,7 +207,7 @@ public class AttributeFactory {
 				);
 			}
 			case ENTITY: {
-				final org.hibernate.type.EntityType type = (EntityType) typeContext.getValue().getType();
+				final EntityType type = (EntityType) typeContext.getValue().getType();
 				return (Type<Y>) context.locateEntityType( type.getAssociatedEntityName() );
 			}
 			case EMBEDDABLE: {

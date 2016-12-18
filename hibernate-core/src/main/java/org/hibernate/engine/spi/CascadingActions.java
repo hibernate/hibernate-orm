@@ -22,13 +22,10 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
-
-import static org.hibernate.engine.spi.CascadingActions.getAllElementsIterator;
-import static org.hibernate.engine.spi.CascadingActions.getLoadedElementsIterator;
 
 /**
  * @author Steve Ebersole

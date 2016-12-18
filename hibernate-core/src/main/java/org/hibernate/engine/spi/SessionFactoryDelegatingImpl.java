@@ -55,7 +55,9 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.sqm.domain.DomainMetamodel;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.TypeResolver;
@@ -405,6 +407,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public QueryInterpretations getQueryInterpretations() {
+		return delegate.getQueryInterpretations();
+	}
+
+	@Override
 	public EntityPersister locateEntityPersister(Class byClass) {
 		return delegate.locateEntityPersister( byClass );
 	}
@@ -507,5 +514,20 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public AuditReader openAuditReader() {
 		return delegate.openAuditReader();
+	}
+
+	@Override
+	public DomainMetamodel getDomainMetamodel() {
+		return delegate.getDomainMetamodel();
+	}
+
+	@Override
+	public Class classByName(String name) throws ClassNotFoundException {
+		return delegate.classByName( name );
+	}
+
+	@Override
+	public boolean useStrictJpaCompliance() {
+		return delegate.useStrictJpaCompliance();
 	}
 }

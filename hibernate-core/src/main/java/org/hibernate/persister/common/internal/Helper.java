@@ -24,6 +24,7 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.ImprovedEntityPersister;
 import org.hibernate.sql.sqm.convert.spi.NotYetImplementedException;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.ArrayType;
 import org.hibernate.type.BagType;
 import org.hibernate.type.spi.BasicType;
@@ -248,7 +249,7 @@ public class Helper {
 			);
 		}
 		else {
-			final org.hibernate.type.EntityType ormEntityType = (org.hibernate.type.EntityType) attributeType;
+			final EntityType ormEntityType = (EntityType) attributeType;
 			if ( ormEntityType.isOneToOne() ) {
 				// the Classification here should be ONE_TO_ONE which could represent either a real PK one-to-one
 				//		or a unique-FK one-to-one (logical).  If this is a real one-to-one then we should have
@@ -452,7 +453,7 @@ public class Helper {
 			return SingularAttribute.Classification.ANY;
 		}
 		else if ( attributeType.isEntityType() ) {
-			final org.hibernate.type.EntityType ormEntityType = (org.hibernate.type.EntityType) attributeType;
+			final EntityType ormEntityType = (EntityType) attributeType;
 			return ormEntityType.isOneToOne() || ormEntityType.isLogicalOneToOne()
 					? SingularAttribute.Classification.ONE_TO_ONE
 					: SingularAttribute.Classification.MANY_TO_ONE;

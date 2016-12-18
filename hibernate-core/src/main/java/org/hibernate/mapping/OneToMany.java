@@ -13,7 +13,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -41,7 +41,7 @@ public class OneToMany implements Value {
 	}
 
 	private EntityType getEntityType() {
-		return metadata.getTypeResolver().getTypeFactory().manyToOne(
+		return metadata.getTypeConfiguration()getTypeResolver().getTypeFactory().manyToOne(
 				getReferencedEntityName(),
 				true,
 				null,

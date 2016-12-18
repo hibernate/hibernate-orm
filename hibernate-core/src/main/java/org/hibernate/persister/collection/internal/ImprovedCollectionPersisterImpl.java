@@ -27,13 +27,12 @@ import org.hibernate.sql.sqm.ast.from.TableBinding;
 import org.hibernate.sql.sqm.ast.from.TableSpace;
 import org.hibernate.sql.sqm.convert.internal.FromClauseIndex;
 import org.hibernate.sql.sqm.convert.internal.SqlAliasBaseManager;
-import org.hibernate.sqm.domain.ManagedType;
-import org.hibernate.sqm.domain.Type;
-import org.hibernate.sqm.query.from.JoinedFromElement;
+import org.hibernate.sqm.domain.PluralAttributeElementReference;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.CompositeType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
@@ -194,7 +193,9 @@ public class ImprovedCollectionPersisterImpl extends AbstractAttributeImpl imple
 			);
 
 			return new PluralAttributeElementEntity(
-					persister.isManyToMany() ? ElementClassification.MANY_TO_MANY : ElementClassification.ONE_TO_MANY,
+					persister.isManyToMany() ?
+							PluralAttributeElementReference.ElementClassification.MANY_TO_MANY :
+							PluralAttributeElementReference.ElementClassification.ONE_TO_MANY,
 					(EntityType) elementType,
 					domainMetamodel.toSqmType( (EntityType) elementType ),
 					columns

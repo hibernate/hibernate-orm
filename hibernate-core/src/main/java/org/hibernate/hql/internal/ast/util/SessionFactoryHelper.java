@@ -27,7 +27,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 import antlr.SemanticException;
@@ -304,7 +304,7 @@ public class SessionFactoryHelper {
 	 */
 	public String getIdentifierOrUniqueKeyPropertyName(EntityType entityType) {
 		try {
-			return entityType.getIdentifierOrUniqueKeyPropertyName( sfi );
+			return entityType.getIdentifierOrUniqueKeyPropertyName();
 		}
 		catch ( MappingException me ) {
 			throw new QueryException( me );

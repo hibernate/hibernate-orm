@@ -36,7 +36,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.MatchMode;
@@ -49,8 +48,10 @@ import org.hibernate.dialect.PointbaseDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.testing.SkipForDialect;
+
+import org.hibernate.query.Query;
 import org.hibernate.transform.Transformers;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringType;
 import org.hibernate.type.spi.Type;
@@ -451,14 +452,14 @@ public class FumTest extends LegacyTestCase {
 		assertTrue(
 				s.createQuery( "select fum.id from Fum fum" ).iterate().hasNext()
 		);
-		Query qu = s.createQuery("select fum.fum, fum , fum.fum from Fum fum");
+		Query qu = s.createQuery( "select fum.fum, fum , fum.fum from Fum fum");
 		Type[] types = qu.getReturnTypes();
 		assertTrue(types.length==3);
 		for ( int k=0; k<types.length; k++) {
 			assertTrue( types[k]!=null );
 		}
 		assertTrue(types[0] instanceof StringType);
-		assertTrue(types[1] instanceof EntityType);
+		assertTrue(types[1] instanceof EntityType );
 		assertTrue(types[2] instanceof StringType);
 		Iterator iter = qu.iterate();
 		int j = 0;

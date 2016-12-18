@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 
 /**
  * Implements logic for walking a tree of associated classes.

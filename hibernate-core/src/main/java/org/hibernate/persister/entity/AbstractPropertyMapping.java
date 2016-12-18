@@ -20,7 +20,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.Template;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.CompositeType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -236,8 +236,8 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			final String[] columnReaderTemplates,
 			final Mapping factory) throws MappingException {
 
-		Type idtype = etype.getIdentifierOrUniqueKeyType( factory );
-		String idPropName = etype.getIdentifierOrUniqueKeyPropertyName( factory );
+		Type idtype = etype.getIdentifierOrUniqueKeyType();
+		String idPropName = etype.getIdentifierOrUniqueKeyPropertyName();
 		boolean hasNonIdentifierPropertyNamedId = hasNonIdentifierPropertyNamedId( etype, factory );
 
 		if ( etype.isReferenceToPrimaryKey() ) {

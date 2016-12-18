@@ -45,7 +45,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.EmbeddedComponentType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -146,7 +146,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 					final Type singleSubType = dependentIdType.getSubtypes()[0];
 					if ( singleSubType.getClassification().equals( Type.Classification.ENTITY ) ) {
 						final EntityType dependentParentType = (EntityType) singleSubType;
-						final Type dependentParentIdType = dependentParentType.getIdentifierOrUniqueKeyType( event.getSession().getFactory() );
+						final Type dependentParentIdType = dependentParentType.getIdentifierOrUniqueKeyType();
 						if ( dependentParentIdType.getJavaTypeDescriptor().getJavaType().isInstance( event.getEntityId() ) ) {
 							// yep that's what we have...
 							loadByDerivedIdentitySimplePkValue(

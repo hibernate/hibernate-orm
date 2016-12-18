@@ -127,7 +127,7 @@ import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.spi.CompositeType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.spi.VersionSupport;
@@ -1652,12 +1652,12 @@ public abstract class AbstractEntityPersister
 			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
 		}
 
-		Object nextVersion = getVersionSupport().next( currentVersion, session );
+		Object nextVersion = ((VersionSupport)getVersionType()).next( currentVersion, session );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace(
 					"Forcing version increment [" + MessageHelper.infoString( this, id, getFactory() ) + "; "
-							+ locateVersionType().toLoggableString( currentVersion, getFactory() ) + " -> "
-							+ locateVersionType().toLoggableString( nextVersion, getFactory() ) + "]"
+							+ getVersionType().toLoggableString( currentVersion, getFactory() ) + " -> "
+							+ getVersionType().toLoggableString( nextVersion, getFactory() ) + "]"
 			);
 		}
 
@@ -1670,9 +1670,9 @@ public abstract class AbstractEntityPersister
 					.getStatementPreparer()
 					.prepareStatement( versionIncrementString, false );
 			try {
-				locateVersionType().nullSafeSet( st, nextVersion, 1, session );
+				getVersionType().nullSafeSet( st, nextVersion, 1, session );
 				getIdentifierType().nullSafeSet( st, id, 2, session );
-				locateVersionType().nullSafeSet( st, currentVersion, 2 + getIdentifierColumnSpan(), session );
+				getVersionType().nullSafeSet( st, currentVersion, 2 + getIdentifierColumnSpan(), session );
 				int rows = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
 				if ( rows != 1 ) {
 					throw new StaleObjectStateException( getEntityName(), id );
@@ -1731,7 +1731,7 @@ public abstract class AbstractEntityPersister
 					if ( !isVersioned() ) {
 						return this;
 					}
-					return locateVersionType().nullSafeGet( rs, getVersionColumnName(), session, null );
+					return getVersionType().nullSafeGet( rs, getVersionColumnName(), session, null );
 				}
 				finally {
 					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
@@ -3101,7 +3101,7 @@ public abstract class AbstractEntityPersister
 				// Write any appropriate versioning conditional parameters
 				if ( useVersion && entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.VERSION ) {
 					if ( checkVersion( includeProperty ) ) {
-						locateVersionType().nullSafeSet( update, oldVersion, index, session );
+						getVersionType().nullSafeSet( update, oldVersion, index, session );
 					}
 				}
 				else if ( isAllOrDirtyOptLocking() && oldFields != null ) {
@@ -3239,7 +3239,7 @@ public abstract class AbstractEntityPersister
 				// We should use the _current_ object state (ie. afterQuery any updates that occurred during flush)
 
 				if ( useVersion ) {
-					locateVersionType().nullSafeSet( delete, version, index, session );
+					getVersionType().nullSafeSet( delete, version, index, session );
 				}
 				else if ( isAllOrDirtyOptLocking() && loadedState != null ) {
 					boolean[] versionability = getPropertyVersionability();
@@ -4252,7 +4252,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Comparator getVersionComparator() {
-		return isVersioned() ? locateVersionType().getComparator() : null;
+		return isVersioned() ? getVersionType().getComparator() : null;
 	}
 
 	// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

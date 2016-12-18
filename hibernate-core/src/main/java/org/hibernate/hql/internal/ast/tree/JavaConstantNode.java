@@ -16,8 +16,10 @@ import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.LiteralType;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 
 /**
  * A node representing a static Java constant.
@@ -33,17 +35,17 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 
 	private Type expectedType;
 
-	@Override
-	public void setText(String s) {
-		// for some reason the antlr.CommonAST initialization routines force
-		// this method to get called twice.  The first time with an empty string
-		if ( StringHelper.isNotEmpty( s ) ) {
-			constantExpression = s;
-			constantValue = ReflectHelper.getConstantValue( s, factory.getServiceRegistry().getService( ClassLoaderService.class ) );
-			heuristicType = factory.getTypeResolver().heuristicType( constantValue.getClass().getName() );
-			super.setText( s );
-		}
-	}
+//	@Override
+//	public void setText(String s) {
+//		// for some reason the antlr.CommonAST initialization routines force
+//		// this method to get called twice.  The first time with an empty string
+//		if ( StringHelper.isNotEmpty( s ) ) {
+//			constantExpression = s;
+//			constantValue = ReflectHelper.getConstantValue( s, factory.getServiceRegistry().getService( ClassLoaderService.class ) );
+//			heuristicType = factory.getTypeResolver().heuristicType( constantValue.getClass().getName() );
+//			super.setText( s );
+//		}
+//	}
 
 	@Override
 	public void setExpectedType(Type expectedType) {
@@ -63,53 +65,35 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 	@Override
 	@SuppressWarnings("unchecked")
 	public String getRenderText(SessionFactoryImplementor sessionFactory) {
-		final Type type = expectedType == null
-				? heuristicType
-				: Number.class.isAssignableFrom( heuristicType.getJavaTypeDescriptor().getJavaType() )
-				? heuristicType
-				: expectedType;
-		try {
-			if ( LiteralType.class.isInstance( type ) ) {
-				final LiteralType literalType = (LiteralType) type;
-				final Dialect dialect = factory.getDialect();
-				return literalType.objectToSQLString( constantValue, dialect );
-			}
-			else if ( AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-				final AttributeConverterTypeAdapter converterType = (AttributeConverterTypeAdapter) type;
-				if ( !converterType.getModelType().isInstance( constantValue ) ) {
-					throw new QueryException(
-							String.format(
-									Locale.ENGLISH,
-									"Recognized query constant expression [%s] was not resolved to type [%s] expected by defined AttributeConverter [%s]",
-									constantExpression,
-									constantValue.getClass().getName(),
-									converterType.getModelType().getName()
-							)
-					);
-				}
-				final Object value = converterType.getAttributeConverter().convertToDatabaseColumn( constantValue );
-				if ( String.class.equals( converterType.getJdbcType() ) ) {
-					return "'" + value + "'";
-				}
-				else {
-					return value.toString();
-				}
-			}
-			else {
-				throw new QueryException(
-						String.format(
-								Locale.ENGLISH,
-								"Unrecognized Hibernate Type for handling query constant (%s); expecting LiteralType implementation or AttributeConverter",
-								constantExpression
-						)
-				);
+		JdbcLiteralFormatter jdbcLiteralFormatter = null;
+		if ( expectedType != null ) {
+			jdbcLiteralFormatter = expectedType.getJdbcLiteralFormatter();
+		}
+		else {
+			final JavaTypeDescriptor javaTypeDescriptor = sessionFactory.getMetamodel()
+					.getTypeConfiguration()
+					.getJavaTypeDescriptorRegistry()
+					.getDescriptor( constantValue.getClass() );
+			if ( javaTypeDescriptor != null ) {
+				jdbcLiteralFormatter = javaTypeDescriptor.getJdbcRecommendedSqlType(
+						sessionFactory.getMetamodel()
+								.getTypeConfiguration()
+								.getBasicTypeRegistry()
+								.getBaseJdbcRecommendedSqlTypeMappingContext()
+				).getJdbcLiteralFormatter( javaTypeDescriptor );
 			}
 		}
-		catch (QueryException e) {
-			throw e;
+
+		if ( jdbcLiteralFormatter == null ) {
+			throw new QueryException(
+					String.format(
+							Locale.ENGLISH,
+							"Could not determine JdbcLiteralFormatter to use for constantExpression : %s",
+							constantExpression
+					)
+			);
 		}
-		catch (Exception t) {
-			throw new QueryException( QueryTranslator.ERROR_CANNOT_FORMAT_LITERAL + constantExpression, t );
-		}
+
+		return jdbcLiteralFormatter.toJdbcLiteral( constantValue, sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect() );
 	}
 }

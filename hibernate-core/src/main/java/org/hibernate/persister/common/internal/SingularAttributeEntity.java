@@ -8,15 +8,13 @@ package org.hibernate.persister.common.internal;
 
 import org.hibernate.persister.common.spi.AbstractSingularAttribute;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.sqm.domain.EntityType;
-import org.hibernate.sqm.domain.ManagedType;
-import org.hibernate.sqm.domain.SingularAttribute;
+import org.hibernate.type.spi.EntityType;
 
 /**
  * @author Steve Ebersole
  */
 public class SingularAttributeEntity
-		extends AbstractSingularAttribute<org.hibernate.type.EntityType, EntityType> {
+		extends AbstractSingularAttribute<org.hibernate.type.spi.EntityType, EntityType> {
 	private final SingularAttribute.Classification classification;
 	private final Column[] columns;
 
@@ -24,7 +22,7 @@ public class SingularAttributeEntity
 			ManagedType declaringType,
 			String name,
 			SingularAttribute.Classification classification,
-			org.hibernate.type.EntityType ormType,
+			org.hibernate.type.spi.EntityType ormType,
 			EntityType sqmType,
 			Column[] columns) {
 		super( declaringType, name, ormType, sqmType );

@@ -63,5 +63,8 @@ public abstract class AbstractBasicTypeImpl<T> implements BasicType<T> {
 		return 1;
 	}
 
-
+	@Override
+	public int getHashCode(T value) throws HibernateException {
+		return getJavaTypeDescriptor().extractHashCode( value );
+	}
 }

@@ -15,7 +15,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.ColumnMapping;
 
@@ -69,8 +68,9 @@ public class SpecialOneToOneType extends OneToOneType {
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		return super.getIdentifierOrUniqueKeyType().getColumnSpan();
 	}
-	
-	public int[] sqlTypes(Mapping mapping) throws MappingException {
+
+	@Override
+	public int[] sqlTypes() throws MappingException {
 		return super.getIdentifierOrUniqueKeyType().sqlTypes();
 	}
 
@@ -86,7 +86,7 @@ public class SpecialOneToOneType extends OneToOneType {
 	@Override
 	public Object hydrate(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException, SQLException {
-		return super.getIdentifierOrUniqueKeyType( session.getFactory() )
+		return super.getIdentifierOrUniqueKeyType()
 			.nullSafeGet(rs, names, session, owner);
 	}
 	

@@ -14,7 +14,6 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
@@ -88,7 +87,7 @@ public class OneToOneType extends EntityType {
 	}
 
 	@Override
-	public int[] sqlTypes(Mapping session) throws MappingException {
+	public int[] sqlTypes() throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
 

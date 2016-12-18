@@ -8,6 +8,7 @@ package org.hibernate.type;
 
 import java.util.Comparator;
 
+import org.hibernate.MappingException;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
@@ -35,6 +36,8 @@ public class TemporalTypeImpl<T> extends AbstractTemporalTypeImpl<T> implements 
 	private final AttributeConverterDefinition<T,?> converterDefinition;
 
 	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
+
+	private final int[] sqlTypes;
 
 	public TemporalTypeImpl(TemporalTypeDescriptor<T> domainJavaType, SqlTypeDescriptor sqlType) {
 		this( domainJavaType.getPrecision(), domainJavaType, sqlType );
@@ -106,6 +109,7 @@ public class TemporalTypeImpl<T> extends AbstractTemporalTypeImpl<T> implements 
 		this.comparator = comparator;
 		this.converterDefinition = converterDefinition;
 		this.jdbcLiteralFormatter = jdbcLiteralFormatter;
+		this.sqlTypes = new int[] { sqlType.getSqlType() };
 	}
 
 	@Override
@@ -141,6 +145,11 @@ public class TemporalTypeImpl<T> extends AbstractTemporalTypeImpl<T> implements 
 	@Override
 	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;
+	}
+
+	@Override
+	public int[] sqlTypes() throws MappingException {
+		return sqlTypes;
 	}
 
 	@Override

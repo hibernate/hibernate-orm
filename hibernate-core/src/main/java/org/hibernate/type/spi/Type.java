@@ -16,6 +16,8 @@ import java.util.Map;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
+import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.AnyType;
@@ -361,57 +363,6 @@ public interface Type<T> extends org.hibernate.sqm.domain.DomainReference {
 	int getColumnSpan();
 
 
-	/**
-	 * Should the parent be considered dirty, given both the old and current value?
-	 *
-	 * @param old the old value
-	 * @param current the current value
-	 * @param session The session from which the request originated.
-	 *
-	 * @return true if the field is dirty
-	 *
-	 * @throws HibernateException A problem occurred performing the checking
-	 */
-	boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) throws HibernateException;
-
-	/**
-	 * Should the parent be considered dirty, given both the old and current value?
-	 *
-	 * @param oldState the old value
-	 * @param currentState the current value
-	 * @param checkable An array of booleans indicating which columns making up the value are actually checkable
-	 * @param session The session from which the request originated.
-	 *
-	 * @return true if the field is dirty
-	 *
-	 * @throws HibernateException A problem occurred performing the checking
-	 */
-	boolean isDirty(Object oldState, Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
-			throws HibernateException;
-
-	/**
-	 * Has the value been modified compared to the current database state?  The difference between this
-	 * and the {@link #isDirty} methods is that here we need to account for "partially" built values.  This is really
-	 * only an issue with association types.  For most type implementations it is enough to simply delegate to
-	 * {@link #isDirty} here/
-	 *
-	 * @param dbState the database state, in a "hydrated" form, with identifiers unresolved
-	 * @param currentState the current state of the object
-	 * @param checkable which columns are actually updatable
-	 * @param session The session from which the request originated.
-	 *
-	 * @return true if the field has been modified
-	 *
-	 * @throws HibernateException A problem occurred performing the checking
-	 */
-	boolean isModified(
-			Object dbState,
-			Object currentState,
-			boolean[] checkable,
-			SharedSessionContractImplementor session)
-			throws HibernateException;
-
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -600,4 +551,75 @@ public interface Type<T> extends org.hibernate.sqm.domain.DomainReference {
 	 */
 	Serializable disassemble(T value, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 
+	/**
+	 * Should the parent be considered dirty, given both the old and current value?
+	 *
+	 * @param old the old value
+	 * @param current the current value
+	 * @param session The session from which the request originated.
+	 *
+	 * @return true if the field is dirty
+	 *
+	 * @throws HibernateException A problem occurred performing the checking
+	 */
+	boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) throws HibernateException;
+
+	/**
+	 * Should the parent be considered dirty, given both the old and current value?
+	 *
+	 * @param oldState the old value
+	 * @param currentState the current value
+	 * @param checkable An array of booleans indicating which columns making up the value are actually checkable
+	 * @param session The session from which the request originated.
+	 *
+	 * @return true if the field is dirty
+	 *
+	 * @throws HibernateException A problem occurred performing the checking
+	 */
+	boolean isDirty(Object oldState, Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
+			throws HibernateException;
+
+	/**
+	 * Has the value been modified compared to the current database state?  The difference between this
+	 * and the {@link #isDirty} methods is that here we need to account for "partially" built values.  This is really
+	 * only an issue with association types.  For most type implementations it is enough to simply delegate to
+	 * {@link #isDirty} here/
+	 *
+	 * @param dbState the database state, in a "hydrated" form, with identifiers unresolved
+	 * @param currentState the current state of the object
+	 * @param checkable which columns are actually updatable
+	 * @param session The session from which the request originated.
+	 *
+	 * @return true if the field has been modified
+	 *
+	 * @throws HibernateException A problem occurred performing the checking
+	 */
+	boolean isModified(
+			Object dbState,
+			Object currentState,
+			boolean[] checkable,
+			SharedSessionContractImplementor session)
+			throws HibernateException;
+
+	/**
+	 * Get a hash code, consistent with persistence "equality".  Again for most types the normal usage is to
+	 * delegate to the value's {@link Object#hashCode hashCode}.
+	 *
+	 * @param value The value for which to retrieve a hash code
+	 * @return The hash code
+	 *
+	 * @throws HibernateException A problem occurred calculating the hash code
+	 */
+	int getHashCode(T value) throws HibernateException;
+
+	/**
+	 * Return the JDBC types codes (per {@link java.sql.Types}) for the columns mapped by this type.
+	 * <p/>
+	 * NOTE: The number of elements in this array matches the return from {@link #getColumnSpan}.
+	 *
+	 * @return The JDBC type codes.
+	 *
+	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
+	 */
+	int[] sqlTypes() throws MappingException;
 }

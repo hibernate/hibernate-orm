@@ -9,19 +9,19 @@ package org.hibernate.persister.entity;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.Map;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.AbstractType;
+import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -42,12 +42,19 @@ public class DiscriminatorType extends AbstractType {
 		return Class.class;
 	}
 
+
+
 	public String getName() {
 		return getClass().getName();
 	}
 
 	public boolean isMutable() {
 		return false;
+	}
+
+	@Override
+	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
+		return underlyingType.deepCopy( value,factory );
 	}
 
 	public Object nullSafeGet(
@@ -105,7 +112,8 @@ public class DiscriminatorType extends AbstractType {
 		return original;
 	}
 
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	@Override
+	public boolean[] toColumnNullness(Object value) {
 		return value == null
 				? ArrayHelper.FALSE
 				: ArrayHelper.TRUE;
@@ -116,24 +124,27 @@ public class DiscriminatorType extends AbstractType {
 		return EqualsHelper.equals( old, current );
 	}
 
-
-	// simple delegation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		return underlyingType.sqlTypes( mapping );
+	@Override
+	public Classification getClassification() {
+		return underlyingType.getClassification();
 	}
 
 	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return underlyingType.dictatedSizes( mapping );
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return underlyingType.defaultSizes( mapping );
+	public int[] sqlTypes() throws MappingException {
+		return underlyingType.sqlTypes();
 	}
 
 	public int getColumnSpan() throws MappingException {
 		return underlyingType.getColumnSpan();
+	}
+
+	@Override
+	public ColumnMapping[] getColumnMappings() {
+		return underlyingType.getColumnMappings();
+	}
+
+	@Override
+	public Comparator getComparator() {
+		return underlyingType.getComparator();
 	}
 }

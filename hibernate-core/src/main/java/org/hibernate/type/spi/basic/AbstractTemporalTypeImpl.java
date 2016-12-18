@@ -12,6 +12,7 @@ import java.util.Comparator;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.TemporalType;

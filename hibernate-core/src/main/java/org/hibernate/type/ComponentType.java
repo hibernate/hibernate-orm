@@ -156,10 +156,10 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public int getHashCode(final Object x) {
+	public int getHashCode(final Object value) {
 		int result = 17;
 		for ( int i = 0; i < propertySpan; i++ ) {
-			Object y = getPropertyValue( x, i );
+			Object y = getPropertyValue( value, i );
 			result *= 37;
 			if ( y != null ) {
 				result += propertyTypes[i].getHashCode( y );
@@ -169,16 +169,17 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public int getHashCode(final Object x, final SessionFactoryImplementor factory) {
-		int result = 17;
+	public int[] sqlTypes() throws MappingException {
+		//Not called at runtime so doesn't matter if its slow :)
+		int[] sqlTypes = new int[getColumnSpan()];
+		int n = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
-			Object y = getPropertyValue( x, i );
-			result *= 37;
-			if ( y != null ) {
-				result += propertyTypes[i].getHashCode( y, factory );
+			int[] subtypes = propertyTypes[i].sqlTypes();
+			for ( int subtype : subtypes ) {
+				sqlTypes[n++] = subtype;
 			}
 		}
-		return result;
+		return sqlTypes;
 	}
 
 	@Override
@@ -203,7 +204,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		// null value and empty component are considered equivalent
 		int loc = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
-			int len = propertyTypes[i].getColumnSpan( session.getFactory() );
+			int len = propertyTypes[i].getColumnSpan();
 			if ( len <= 1 ) {
 				final boolean dirty = ( len == 0 || checkable[loc] ) &&
 						propertyTypes[i].isDirty( getPropertyValue( x, i ), getPropertyValue( y, i ), session );
@@ -244,7 +245,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		Object[] oldValues = (Object[]) old;
 		int loc = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
-			int len = propertyTypes[i].getColumnSpan( session.getFactory() );
+			int len = propertyTypes[i].getColumnSpan();
 			boolean[] subcheckable = new boolean[len];
 			System.arraycopy( checkable, loc, subcheckable, 0, len );
 			if ( propertyTypes[i].isModified( oldValues[i], getPropertyValue( current, i ), subcheckable, session ) ) {

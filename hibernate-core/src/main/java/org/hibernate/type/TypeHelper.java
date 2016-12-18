@@ -59,25 +59,6 @@ public class TypeHelper {
 	}
 
 	/**
-	 * Apply the {@link Type#beforeAssemble} operation across a series of values.
-	 *
-	 * @param row The values
-	 * @param types The value types
-	 * @param session The originating session
-	 */
-	public static void beforeAssemble(
-			final Serializable[] row,
-			final Type[] types,
-			final SharedSessionContractImplementor session) {
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( row[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-				&& row[i] != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				types[i].beforeAssemble( row[i], session );
-			}
-		}
-	}
-
-	/**
 	 * Apply the {@link Type#assemble} operation across a series of values.
 	 *
 	 * @param row The values

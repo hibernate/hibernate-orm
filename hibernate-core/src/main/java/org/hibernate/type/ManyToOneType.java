@@ -15,11 +15,12 @@ import java.util.Arrays;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.Type;
 
@@ -127,8 +128,8 @@ public class ManyToOneType extends EntityType {
 	}
 
 	@Override
-	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		return requireIdentifierOrUniqueKeyType( ).sqlTypes( mapping );
+	public int[] sqlTypes() throws MappingException {
+		return requireIdentifierOrUniqueKeyType().sqlTypes();
 	}
 
 	@Override
@@ -254,7 +255,11 @@ public class ManyToOneType extends EntityType {
 			Serializable oid,
 			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException {
-		
+		if ( oid != LazyPropertyInitializer.UNFETCHED_PROPERTY
+				&& oid != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+			scheduleBatchLoadIfNeeded( assembleId( oid, session ), session );
+		}
+
 		//TODO: currently broken for unique-key references (does not detect
 		//      change to unique key property of the associated object)
 		
@@ -271,11 +276,6 @@ public class ManyToOneType extends EntityType {
 	private Serializable assembleId(Serializable oid, SharedSessionContractImplementor session) {
 		//the owner of the association is not the owner of the id
 		return ( Serializable ) getIdentifierType( session ).assemble( oid, session, null );
-	}
-
-	@Override
-	public void beforeAssemble(Serializable oid, SharedSessionContractImplementor session) {
-		scheduleBatchLoadIfNeeded( assembleId( oid, session ), session );
 	}
 
 	@Override

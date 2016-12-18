@@ -485,8 +485,19 @@ public abstract class CollectionType extends AbstractType implements Association
 		return (Joinable) factory.getCollectionPersister( role );
 	}
 
+	@Override
 	public boolean isModified(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) throws HibernateException {
 		return false;
+	}
+
+	@Override
+	public int getHashCode(Object value) throws HibernateException {
+		throw new UnsupportedOperationException( "cannot doAfterTransactionCompletion lookups on collections" );
+	}
+
+	@Override
+	public int[] sqlTypes() throws MappingException {
+		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
 
 	@Override

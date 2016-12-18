@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
@@ -35,6 +36,8 @@ public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 	private final AttributeConverterDefinition<T,?> attributeConverterDefinition;
 
 	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
+
+	private final int[] sqlTypes;
 
 	/**
 	 * Constructor form for building a basic type without an AttributeConverter
@@ -141,6 +144,8 @@ public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 				domainJavaType,
 				sqlType
 		);
+
+		this.sqlTypes = new int[] { sqlType.getSqlType() };
 	}
 
 	@SuppressWarnings("unchecked")
@@ -229,5 +234,10 @@ public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 	@Override
 	public String asLoggableText() {
 		return "BasicType(" + getJavaType() + ")";
+	}
+
+	@Override
+	public int[] sqlTypes() throws MappingException {
+		return sqlTypes;
 	}
 }

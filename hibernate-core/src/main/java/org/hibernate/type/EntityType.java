@@ -337,26 +337,26 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	@Override
-	public int getHashCode(Object x, SessionFactoryImplementor factory) {
-		EntityPersister persister = getAssociatedEntityPersister( factory );
+	public int getHashCode(Object value) {
+		EntityPersister persister = getAssociatedEntityPersister( scope.resolveFactory() );
 		if ( !persister.canExtractIdOutOfEntity() ) {
-			return super.getHashCode( x );
+			return super.getHashCode( value );
 		}
 
 		final Serializable id;
-		if ( x instanceof HibernateProxy ) {
-			id = ( (HibernateProxy) x ).getHibernateLazyInitializer().getIdentifier();
+		if ( value instanceof HibernateProxy ) {
+			id = ( (HibernateProxy) value ).getHibernateLazyInitializer().getIdentifier();
 		}
 		else {
 			final Class mappedClass = persister.getMappedClass();
-			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
-				id = persister.getIdentifier( x );
+			if ( mappedClass.isAssignableFrom( value.getClass() ) ) {
+				id = persister.getIdentifier( value );
 			}
 			else {
-				id = (Serializable) x;
+				id = (Serializable) value;
 			}
 		}
-		return persister.getIdentifierType().getHashCode( id, factory );
+		return persister.getIdentifierType().getHashCode( id );
 	}
 
 	@Override

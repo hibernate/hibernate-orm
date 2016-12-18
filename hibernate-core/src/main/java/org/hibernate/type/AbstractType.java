@@ -110,6 +110,11 @@ public abstract class AbstractType implements Type {
 	}
 
 	@Override
+	public int getHashCode(Object value) throws HibernateException {
+		return value.hashCode();
+	}
+
+	@Override
 	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException {
 		return value;

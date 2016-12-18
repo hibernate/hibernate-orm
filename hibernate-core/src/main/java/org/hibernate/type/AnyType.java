@@ -20,6 +20,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
@@ -163,6 +164,16 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		System.arraycopy( checkable, 1, idCheckable, 0, idCheckable.length );
 		return ( checkable[0] && !holder.entityName.equals( session.bestGuessEntityName( current ) ) )
 				|| identifierType.isModified( holder.id, getIdentifier( current, session ), idCheckable, session );
+	}
+
+	@Override
+	public int getHashCode(Object value) throws HibernateException {
+		return value.hashCode();
+	}
+
+	@Override
+	public int[] sqlTypes() throws MappingException {
+		return ArrayHelper.join( discriminatorType.sqlTypes(), identifierType.sqlTypes() );
 	}
 
 	@Override

@@ -19,8 +19,8 @@ import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SmallIntTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * A dialect for Microsoft SQL Server 2000

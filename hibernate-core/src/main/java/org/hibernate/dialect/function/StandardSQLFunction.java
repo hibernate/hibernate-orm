@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * Provides a standard implementation that supports the majority of the HQL

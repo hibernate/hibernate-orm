@@ -24,16 +24,10 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.ImprovedEntityPersister;
 import org.hibernate.sql.sqm.convert.spi.NotYetImplementedException;
-import org.hibernate.sqm.domain.ManagedType;
-import org.hibernate.sqm.domain.PluralAttribute;
-import org.hibernate.sqm.domain.PluralAttribute.CollectionClassification;
-import org.hibernate.sqm.domain.SingularAttribute;
 import org.hibernate.type.ArrayType;
 import org.hibernate.type.BagType;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.CollectionType;
 import org.hibernate.type.spi.ColumnMapping;
-import org.hibernate.type.spi.EmbeddableType;
 import org.hibernate.type.IdentifierBagType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.MapType;
@@ -186,7 +180,7 @@ public class Helper {
 			if ( i > 0 ) {
 				throw new IllegalArgumentException( "BasicType can be mapped to just one column" );
 			}
-			return ( (BasicType) type ).getColumnMapping();
+			return ( (BasicType) type ).getColumnMappings()[0];
 		}
 
 		throw new NotYetImplementedException(  );
@@ -226,7 +220,7 @@ public class Helper {
 			DomainMetamodelImpl domainMetamodel,
 			ManagedType source,
 			String attributeName,
-			org.hibernate.type.Type attributeType,
+			org.hibernate.type.spi.Type attributeType,
 			Column[] columns) {
 		final SingularAttribute.Classification classification = interpretSingularAttributeClassification( attributeType );
 		if ( classification == SingularAttribute.Classification.ANY ) {

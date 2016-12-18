@@ -3401,7 +3401,13 @@ public final class SessionImpl
 		}
 	}
 
-	private LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {
+	@Override
+	public SessionImplementor getSession() {
+		return this;
+	}
+
+	@Override
+	public LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {
 		LockOptions lockOptions = new LockOptions();
 		LockOptions.copy( this.lockOptions, lockOptions );
 		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );

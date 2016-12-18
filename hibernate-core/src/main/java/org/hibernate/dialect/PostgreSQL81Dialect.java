@@ -41,9 +41,9 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * An SQL dialect for Postgres

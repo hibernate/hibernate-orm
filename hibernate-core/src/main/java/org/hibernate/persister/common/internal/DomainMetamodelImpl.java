@@ -9,7 +9,6 @@ package org.hibernate.persister.common.internal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -18,9 +17,14 @@ import org.hibernate.metamodel.spi.SqmDomainMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.internal.ImprovedCollectionPersisterImpl;
 import org.hibernate.persister.collection.spi.ImprovedCollectionPersister;
+import org.hibernate.persister.entity.internal.ImprovedEntityPersisterImpl;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.sqm.domain.AttributeReference;
 import org.hibernate.sqm.domain.BasicType;
-import org.hibernate.sqm.domain.DomainMetamodel;
+import org.hibernate.sqm.domain.DomainReference;
+import org.hibernate.sqm.domain.EntityReference;
+import org.hibernate.sqm.domain.NoSuchAttributeException;
+import org.hibernate.sqm.query.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.basic.BasicTypeParameters;
@@ -131,12 +135,12 @@ public class DomainMetamodelImpl implements SqmDomainMetamodelImplementor {
 	}
 
 	@Override
-	public org.hibernate.sqm.domain.EntityType resolveEntityType(Class javaType) {
-		return resolveEntityType( javaType.getName() );
+	public EntityReference resolveEntityReference(Class javaType) {
+		return resolveEntityReference( javaType.getName() );
 	}
 
 	@Override
-	public org.hibernate.sqm.domain.EntityType resolveEntityType(String name) {
+	public EntityReference resolveEntityReference(String name) {
 		final String importedName = sessionFactory.getMetamodel().getImportedClassName( name );
 		if ( importedName != null ) {
 			name = importedName;
@@ -185,8 +189,37 @@ public class DomainMetamodelImpl implements SqmDomainMetamodelImplementor {
 		throw new HibernateException( "Could not resolve entity reference [" + name + "] from query" );
 	}
 
+
+	@Override
+	public AttributeReference locateAttributeReference(
+			DomainReference sourceBinding, String attributeName) {
+		return null;
+	}
+
+	@Override
+	public AttributeReference resolveAttributeReference(DomainReference sourceBinding, String attributeName)
+			throws NoSuchAttributeException {
+		return null;
+	}
+
 	@Override
 	public BasicType resolveCastTargetType(String name) {
 		return sessionFactory.getMetamodel().getTypeConfiguration().resolveCastTargetType( name );
+	}
+
+	@Override
+	public BasicType resolveBasicType(Class javaType) {
+		return null;
+	}
+
+	@Override
+	public BasicType resolveArithmeticType(
+			DomainReference firstType, DomainReference secondType, BinaryArithmeticSqmExpression.Operation operation) {
+		return null;
+	}
+
+	@Override
+	public BasicType resolveSumFunctionType(DomainReference argumentType) {
+		return null;
 	}
 }

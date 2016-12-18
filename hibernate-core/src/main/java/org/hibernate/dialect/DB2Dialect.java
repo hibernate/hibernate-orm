@@ -39,8 +39,8 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SmallIntTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * An SQL dialect for DB2.

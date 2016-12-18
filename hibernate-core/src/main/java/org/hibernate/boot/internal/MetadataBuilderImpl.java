@@ -63,7 +63,6 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.basic.RegistryKey;
-import org.hibernate.type.spi.basic.RegistryKeyImpl;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
@@ -236,7 +235,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyBasicType(org.hibernate.type.spi.BasicType type) {
-		return applyBasicType( type, RegistryKeyImpl.from( type ) );
+		return applyBasicType( type, RegistryKey.from( type ) );
 	}
 
 	@Override

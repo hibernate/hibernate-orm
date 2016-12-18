@@ -34,8 +34,10 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.AssociationType;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.DiscriminatorMappings;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.Type;
 
@@ -45,26 +47,19 @@ import org.hibernate.type.spi.Type;
  * @author Gavin King
  */
 public class AnyType extends AbstractType implements CompositeType, AssociationType {
-	private final TypeFactory.TypeScope scope;
 	private final Type identifierType;
 	private final Type discriminatorType;
 	private final ColumnMapping[] columnMappings;
-	private final Comparator comparator;
+	private final DiscriminatorMappings discriminatorMappings;
 
-
-	/**
-	 * Intended for use only from legacy {@link ObjectType} type definition
-	 */
-	protected AnyType(Type discriminatorType, Type identifierType) {
-		this( null, discriminatorType, identifierType );
-	}
-
-	public AnyType(TypeFactory.TypeScope scope, Type discriminatorType, Type identifierType) {
-		this.scope = scope;
-		this.discriminatorType = discriminatorType;
+	public AnyType(
+			BasicType identifierType,
+			BasicType discriminatorType,
+			DiscriminatorMappings discriminatorMappings) {
 		this.identifierType = identifierType;
+		this.discriminatorType = discriminatorType;
+		this.discriminatorMappings = discriminatorMappings;
 		this.columnMappings = ArrayHelper.join( discriminatorType.getColumnMappings(), identifierType.getColumnMappings() );
-		this.comparator = new AnyComparator( scope, identifierType );
 	}
 
 	public Type getIdentifierType() {
@@ -90,7 +85,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 	@Override
 	public Comparator getComparator() {
-		return comparator;
+		return null;
 	}
 
 	@Override
@@ -475,77 +470,6 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		ObjectTypeCacheEntry(String entityName, Serializable id) {
 			this.entityName = entityName;
 			this.id = id;
-		}
-	}
-
-	public static final class AnyComparator implements Comparator<Object> {
-		private final TypeFactory.TypeScope scope;
-		private final Type identifierType;
-
-		public AnyComparator(TypeFactory.TypeScope scope, Type identifierType) {
-			this.scope = scope;
-			this.identifierType = identifierType;
-		}
-
-		@Override
-		public int compare(Object x, Object y) {
-			if ( x == null ) {
-				// if y is also null, return that they are the same (no option for "UNKNOWN")
-				// if y is not null, return that y is "greater" (-1 because the result is from the perspective of
-				// 		the first arg: x)
-				return y == null ? 0 : -1;
-			}
-			else if ( y == null ) {
-				// x is not null, but y is.  return that x is "greater"
-				return 1;
-			}
-
-			// At this point we know both are non-null.
-			final Object xId = extractIdentifier( x );
-			final Object yId = extractIdentifier( y );
-
-			return identifierType.getComparator().compare( xId, yId );
-		}
-
-		private Object extractIdentifier(Object entity) {
-			final EntityPersister concretePersister = guessEntityPersister( entity );
-			return concretePersister == null
-					? null
-					: concretePersister.getEntityTuplizer().getIdentifier( entity, null );
-		}
-
-		private EntityPersister guessEntityPersister(Object object) {
-			if ( scope == null ) {
-				return null;
-			}
-
-			String entityName = null;
-
-			// this code is largely copied from Session's bestGuessEntityName
-			Object entity = object;
-			if ( entity instanceof HibernateProxy ) {
-				final LazyInitializer initializer = ( (HibernateProxy) entity ).getHibernateLazyInitializer();
-				if ( initializer.isUninitialized() ) {
-					entityName = initializer.getEntityName();
-				}
-				entity = initializer.getImplementation();
-			}
-
-			if ( entityName == null ) {
-				for ( EntityNameResolver resolver : scope.resolveFactory().getMetamodel().getEntityNameResolvers() ) {
-					entityName = resolver.resolveEntityName( entity );
-					if ( entityName != null ) {
-						break;
-					}
-				}
-			}
-
-			if ( entityName == null ) {
-				// the old-time stand-by...
-				entityName = object.getClass().getName();
-			}
-
-			return scope.resolveFactory().getMetamodel().entityPersister( entityName );
 		}
 	}
 }

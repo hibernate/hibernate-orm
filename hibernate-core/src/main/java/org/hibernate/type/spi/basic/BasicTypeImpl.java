@@ -12,6 +12,7 @@ import java.util.Comparator;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.ColumnMapping;
@@ -183,6 +184,11 @@ public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 	@Override
 	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;
+	}
+
+	@Override
+	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
+		return getJavaTypeDescriptor().extractLoggableRepresentation( (T) value );
 	}
 
 	@Override

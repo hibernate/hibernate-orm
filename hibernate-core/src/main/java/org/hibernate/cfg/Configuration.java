@@ -52,7 +52,7 @@ import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
-import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.SerializationException;

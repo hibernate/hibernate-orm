@@ -103,9 +103,11 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.spi.NamedQueryRepository;
-import org.hibernate.type.internal.descriptor.AnyTypeImpl;
-import org.hibernate.type.spi.AnyType;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.DiscriminatorMappings;
+import org.hibernate.type.spi.DiscriminatorMappingsExplicitImpl;
+import org.hibernate.type.spi.DiscriminatorMappingsImplicitImpl;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.ParameterizedType;
@@ -352,9 +354,16 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public AnyType any(BasicType identifierType, BasicType discriminatorType, Map discriminatorValues) {
-		return new AnyTypeImpl( identifierType, discriminatorType, discriminatorValues );
+	public AnyType any(BasicType identifierType, BasicType discriminatorType, Map discriminatorValueToEntityNameMap) {
+		final DiscriminatorMappings discriminatorMappings;
+		if ( discriminatorValueToEntityNameMap == null || discriminatorValueToEntityNameMap.isEmpty() ) {
+			discriminatorMappings = DiscriminatorMappingsImplicitImpl.INSTANCE;
+		}
+		else {
+			discriminatorMappings = new DiscriminatorMappingsExplicitImpl( discriminatorValueToEntityNameMap );
+		}
 
+		return new AnyType( identifierType, discriminatorType, discriminatorMappings );
 	}
 
 	private Type resolveTypeByName(String typeName, Map parameters) {

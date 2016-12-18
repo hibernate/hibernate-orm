@@ -38,7 +38,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.type.mapper.spi.basic.BasicTypesBaseline;
+import org.hibernate.type.spi.BasicTypesBaseline;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;

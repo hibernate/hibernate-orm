@@ -2864,6 +2864,24 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	/**
+	 * Does this dialect/database support non-query statements (e.g. INSERT, UPDATE, DELETE) in CTE (Common Table Expressions)?
+	 *
+	 * @return {@code true} if CTE are supported
+	 */
+	public boolean supportsNonQueryInCTE() {
+		return false;
+	}
+
+	/**
+	 * Does this dialect/database support VALUES list (e.g. VALUES (1), (2), (3) )
+	 *
+	 * @return {@code true} if CTE are supported
+	 */
+	public boolean supportsValuesList() {
+		return false;
+	}
+
 	public boolean isLegacyLimitHandlerBehaviorEnabled() {
 		return legacyLimitHandlerBehavior;
 	}

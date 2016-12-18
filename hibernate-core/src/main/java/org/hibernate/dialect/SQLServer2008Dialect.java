@@ -56,4 +56,9 @@ public class SQLServer2008Dialect extends SQLServer2005Dialect {
 
 		return orderByElement.toString();
 	}
+
+	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
 }

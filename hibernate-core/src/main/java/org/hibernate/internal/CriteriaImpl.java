@@ -252,6 +252,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	public Integer getMaxResults() {
 		return maxResults;
 	}
+
 	@Override
 	public Criteria setMaxResults(int maxResults) {
 		this.maxResults = maxResults;

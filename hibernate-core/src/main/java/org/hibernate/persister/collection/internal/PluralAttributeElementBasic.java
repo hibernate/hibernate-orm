@@ -9,25 +9,25 @@ package org.hibernate.persister.collection.internal;
 import org.hibernate.persister.collection.spi.PluralAttributeElement;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.sqm.domain.BasicType;
-import org.hibernate.sqm.domain.PluralAttribute.ElementClassification;
+import org.hibernate.sqm.domain.PluralAttributeElementReference;
 
 /**
  * @author Steve Ebersole
  */
-public class PluralAttributeElementBasic implements PluralAttributeElement<org.hibernate.type.BasicType, BasicType> {
-	private final org.hibernate.type.BasicType type;
+public class PluralAttributeElementBasic implements PluralAttributeElement<org.hibernate.type.spi.BasicType, BasicType> {
+	private final org.hibernate.type.spi.BasicType type;
 	private final BasicType sqmType;
 	private final Column[] columns;
 
-	public PluralAttributeElementBasic(org.hibernate.type.BasicType type, BasicType sqmType, Column[] columns) {
+	public PluralAttributeElementBasic(org.hibernate.type.spi.BasicType type, BasicType sqmType, Column[] columns) {
 		this.type = type;
 		this.sqmType = sqmType;
 		this.columns = columns;
 	}
 
 	@Override
-	public ElementClassification getElementClassification() {
-		return ElementClassification.BASIC;
+	public PluralAttributeElementReference.ElementClassification getElementClassification() {
+		return PluralAttributeElementReference.ElementClassification.BASIC;
 	}
 
 	@Override
@@ -36,7 +36,7 @@ public class PluralAttributeElementBasic implements PluralAttributeElement<org.h
 	}
 
 	@Override
-	public org.hibernate.type.BasicType getOrmType() {
+	public org.hibernate.type.spi.BasicType getOrmType() {
 		return type;
 	}
 

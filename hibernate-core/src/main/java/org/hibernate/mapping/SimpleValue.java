@@ -61,7 +61,7 @@ public class SimpleValue implements KeyValue {
 
 	private final InFlightMetadataCollector metadata;
 
-	private final List<Selectable> columns = new ArrayList<Selectable>();
+	private final List<Selectable> columns = new ArrayList<>();
 
 	private String typeName;
 	private Properties typeParameters;

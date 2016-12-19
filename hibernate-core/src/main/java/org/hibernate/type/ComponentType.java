@@ -33,6 +33,7 @@ import org.hibernate.tuple.component.ComponentTuplizer;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.spi.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Handles "component" mappings
@@ -41,7 +42,7 @@ import org.hibernate.type.spi.Type;
  */
 public class ComponentType extends AbstractType implements CompositeType, ProcedureParameterExtractionAware {
 
-	private final TypeFactory.TypeScope typeScope;
+	private final TypeConfiguration typeConfiguration;
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
 	private final ValueGeneration[] propertyValueGenerationStrategies;
@@ -59,8 +60,8 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	protected final ColumnMapping[] columnMappings;
 	protected final ComponentComparator comparator;
 
-	public ComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {
-		this.typeScope = typeScope;
+	public ComponentType(TypeConfiguration typeConfiguration, ComponentMetamodel metamodel) {
+		this.typeConfiguration = typeConfiguration;
 		// for now, just "re-flatten" the metamodel since this is temporary stuff anyway (HHH-1907)
 		this.isKey = metamodel.isKey();
 		this.propertySpan = metamodel.getPropertySpan();
@@ -70,7 +71,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		this.propertyNullability = new boolean[propertySpan];
 		this.cascade = new CascadeStyle[propertySpan];
 		this.joinedFetch = new FetchMode[propertySpan];
-		this.columnMappings = new ColumnMapping[propertySpan];
+		this.columnMappings = new ColumnMapping[0];
 
 		for ( int i = 0; i < propertySpan; i++ ) {
 			StandardProperty prop = metamodel.getProperty( i );

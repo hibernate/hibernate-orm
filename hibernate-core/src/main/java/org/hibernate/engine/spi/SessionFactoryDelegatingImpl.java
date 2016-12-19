@@ -60,7 +60,6 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sqm.domain.DomainMetamodel;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.TypeResolver;
 
 /**
  * Base delegating implementation of the SessionFactory and SessionFactoryImplementor

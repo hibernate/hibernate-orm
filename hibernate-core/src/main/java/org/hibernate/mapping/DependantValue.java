@@ -7,7 +7,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -22,7 +22,7 @@ public class DependantValue extends SimpleValue {
 	private boolean nullable;
 	private boolean updateable;
 
-	public DependantValue(MetadataImplementor metadata, Table table, KeyValue prototype) {
+	public DependantValue(InFlightMetadataCollector metadata, Table table, KeyValue prototype) {
 		super( metadata, table );
 		this.wrappedValue = prototype;
 	}

@@ -23,6 +23,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A many-to-one association to an entity.
@@ -36,44 +37,28 @@ public class ManyToOneType extends AbstractEntityType {
 	/**
 	 * Creates a many-to-one association type with the given referenced entity.
 	 *
-	 * @param scope The scope for this instance.
+	 * @param typeConfiguration The TypeConfiguration for this instance.
 	 * @param referencedEntityName The name iof the referenced entity
 	 */
-	public ManyToOneType(TypeFactory.TypeScope scope, String referencedEntityName) {
-		this( scope, referencedEntityName, false );
+	public ManyToOneType(TypeConfiguration typeConfiguration, String referencedEntityName) {
+		this( typeConfiguration, referencedEntityName, false );
 	}
 
 	/**
 	 * Creates a many-to-one association type with the given referenced entity and the
 	 * given laziness characteristic
 	 *
-	 * @param scope The scope for this instance.
+	 * @param typeConfiguration The TypeConfiguration for this instance.
 	 * @param referencedEntityName The name iof the referenced entity
 	 * @param lazy Should the association be handled lazily
 	 */
-	public ManyToOneType(TypeFactory.TypeScope scope, String referencedEntityName, boolean lazy) {
-		this( scope, referencedEntityName, true, null, lazy, true, false, false );
+	public ManyToOneType(TypeConfiguration typeConfiguration, String referencedEntityName, boolean lazy) {
+		this( typeConfiguration, referencedEntityName, true, null, lazy, true, false, false );
 	}
 
 
-	/**
-	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, boolean, boolean, boolean, boolean ) } instead.
-	 */
-	@Deprecated
 	public ManyToOneType(
-			TypeFactory.TypeScope scope,
-			String referencedEntityName,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			boolean isEmbeddedInXML,
-			boolean ignoreNotFound,
-			boolean isLogicalOneToOne) {
-		this( scope, referencedEntityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, isLogicalOneToOne );
-	}
-
-	public ManyToOneType(
-			TypeFactory.TypeScope scope,
+			TypeConfiguration typeConfiguration,
 			String referencedEntityName,
 			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
@@ -81,7 +66,7 @@ public class ManyToOneType extends AbstractEntityType {
 			boolean unwrapProxy,
 			boolean ignoreNotFound,
 			boolean isLogicalOneToOne) {
-		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
+		super( typeConfiguration, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
 		this.ignoreNotFound = ignoreNotFound;
 		this.isLogicalOneToOne = isLogicalOneToOne;
 	}

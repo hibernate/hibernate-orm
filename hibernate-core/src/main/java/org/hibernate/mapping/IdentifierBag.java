@@ -19,8 +19,7 @@ public class IdentifierBag extends IdentifierCollection {
 	}
 
 	public CollectionType getDefaultCollectionType() {
-		return getMetadata().getTypeResolver()
-				.getTypeFactory()
+		return getMetadata().getTypeConfiguration()
 				.idbag( getRole(), getReferencedPropertyName() );
 	}
 

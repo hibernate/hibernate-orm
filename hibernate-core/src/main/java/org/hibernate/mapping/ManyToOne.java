@@ -28,7 +28,7 @@ public class ManyToOne extends ToOne {
 	}
 
 	public Type getType() throws MappingException {
-		return getMetadata().getTypeResolver().getTypeFactory().manyToOne(
+		return getMetadata().getTypeConfiguration().manyToOne(
 				getReferencedEntityName(),
 				referenceToPrimaryKey, 
 				getReferencedPropertyName(),

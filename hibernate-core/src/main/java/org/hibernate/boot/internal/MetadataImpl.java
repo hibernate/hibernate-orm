@@ -25,6 +25,7 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
@@ -82,6 +83,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, SQLFunction> sqlFunctionMap;
 	private final Database database;
 	private final AuditMetadataBuilderImplementor auditMetadataBuilder;
+	private final BootstrapContext bootstrapContext;
 
 	public MetadataImpl(
 			UUID uuid,
@@ -103,7 +105,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
 			Map<String, SQLFunction> sqlFunctionMap,
 			Database database,
-			AuditMetadataBuilderImplementor auditMetadataBuilder) {
+			AuditMetadataBuilderImplementor auditMetadataBuilder,
+			BootstrapContext bootstrapContext ) {
 		this.uuid = uuid;
 		this.metadataBuildingOptions = metadataBuildingOptions;
 		this.typeConfiguration = typeConfiguration;
@@ -124,6 +127,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.sqlFunctionMap = sqlFunctionMap;
 		this.database = database;
 		this.auditMetadataBuilder = auditMetadataBuilder;
+		this.bootstrapContext = bootstrapContext;
 	}
 
 	@Override
@@ -138,7 +142,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		final SessionFactoryBuilderImpl defaultBuilder = new SessionFactoryBuilderImpl( this );
+		final SessionFactoryBuilderImpl defaultBuilder = new SessionFactoryBuilderImpl( this, bootstrapContext );
 
 		final ClassLoaderService cls = metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class );
 		final java.util.Collection<SessionFactoryBuilderFactory> discoveredBuilderFactories = cls.loadJavaServices( SessionFactoryBuilderFactory.class );
@@ -249,11 +253,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Map<String, ResultSetMappingDefinition> getResultSetMappingDefinitions() {
 		return sqlResultSetMappingMap;
-	}
-
-	@Override
-	public TypeDefinition getTypeDefinition(String typeName) {
-		return typeDefinitionMap.get( typeName );
 	}
 
 	@Override

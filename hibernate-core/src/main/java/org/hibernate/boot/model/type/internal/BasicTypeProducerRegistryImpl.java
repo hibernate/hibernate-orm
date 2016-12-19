@@ -42,7 +42,7 @@ public class BasicTypeProducerRegistryImpl implements BasicTypeProducerRegistry 
 
 	@Override
 	public BasicTypeProducer makeUnregisteredProducer() {
-		return new BasicTypeProducerUnregisteredImpl();
+		return new BasicTypeProducerUnregisteredImpl(typeConfiguration);
 	}
 
 	@Override

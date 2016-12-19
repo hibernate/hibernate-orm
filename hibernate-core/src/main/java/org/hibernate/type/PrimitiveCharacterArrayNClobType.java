@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor;
 
@@ -15,11 +16,11 @@ import org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor;
  *
  * @author Emmanuel Bernard
  */
-public class PrimitiveCharacterArrayNClobType extends AbstractSingleColumnStandardBasicType<char[]> {
+public class PrimitiveCharacterArrayNClobType extends BasicTypeImpl<char[]> {
 	public static final CharacterArrayClobType INSTANCE = new CharacterArrayClobType();
 
 	public PrimitiveCharacterArrayNClobType() {
-		super( NClobTypeDescriptor.DEFAULT, PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
+		super( PrimitiveCharacterArrayTypeDescriptor.INSTANCE, NClobTypeDescriptor.DEFAULT );
 	}
 
 	public String getName() {

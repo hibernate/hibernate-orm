@@ -31,6 +31,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.sqm.domain.EntityReference;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Base for types which map associations to persistent entities.
@@ -39,7 +40,7 @@ import org.hibernate.type.spi.Type;
  */
 public abstract class AbstractEntityType extends AbstractType implements EntityType {
 
-	private final TypeFactory.TypeScope scope;
+	private final TypeConfiguration typeConfiguration;
 	private final String associatedEntityName;
 	protected final String uniqueKeyPropertyName;
 	private final boolean eager;
@@ -66,31 +67,7 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 	/**
 	 * Constructs the requested entity type mapping.
 	 *
-	 * @param scope The type scope
-	 * @param entityName The name of the associated entity.
-	 * @param uniqueKeyPropertyName The property-ref name, or null if we
-	 * reference the PK of the associated entity.
-	 * @param eager Is eager fetching enabled.
-	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
-	 * says to return the "implementation target" of lazy prooxies; typically only possible
-	 * with lazy="no-proxy".
-	 *
-	 * @deprecated Use {@link #AbstractEntityType(org.hibernate.type.TypeFactory.TypeScope, String, boolean, String, boolean, boolean)} instead.
-	 */
-	@Deprecated
-	protected AbstractEntityType(
-			TypeFactory.TypeScope scope,
-			String entityName,
-			String uniqueKeyPropertyName,
-			boolean eager,
-			boolean unwrapProxy) {
-		this( scope, entityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, eager, unwrapProxy );
-	}
-
-	/**
-	 * Constructs the requested entity type mapping.
-	 *
-	 * @param scope The type scope
+	 * @param typeConfiguration The type typeConfiguration
 	 * @param entityName The name of the associated entity.
 	 * @param referenceToPrimaryKey True if association references a primary key.
 	 * @param uniqueKeyPropertyName The property-ref name, or null if we
@@ -101,13 +78,13 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 	 * with lazy="no-proxy".
 	 */
 	protected AbstractEntityType(
-			TypeFactory.TypeScope scope,
+			TypeConfiguration typeConfiguration,
 			String entityName,
 			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
 			boolean eager,
 			boolean unwrapProxy) {
-		this.scope = scope;
+		this.typeConfiguration = typeConfiguration;
 		this.associatedEntityName = entityName;
 		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
 		this.eager = eager;
@@ -116,8 +93,8 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 		this.comparator = new EntityComparator();
 	}
 
-	protected TypeFactory.TypeScope scope() {
-		return scope;
+	protected TypeConfiguration typeConfiguration() {
+		return typeConfiguration;
 	}
 
 	/**
@@ -245,7 +222,7 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 			return ReflectHelper.classForName( entityName );
 		}
 		catch (ClassNotFoundException cnfe) {
-			return this.scope.resolveFactory().getMetamodel().entityPersister( entityName ).
+			return typeConfiguration.getSessionFactory().getMetamodel().entityPersister( entityName ).
 					getEntityTuplizer().getMappedClass();
 		}
 	}
@@ -332,7 +309,7 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 
 	@Override
 	public int getHashCode(Object value) {
-		EntityPersister persister = getAssociatedEntityPersister( scope.resolveFactory() );
+		EntityPersister persister = getAssociatedEntityPersister( typeConfiguration.getSessionFactory() );
 		if ( !persister.canExtractIdOutOfEntity() ) {
 			return super.getHashCode( value );
 		}
@@ -570,7 +547,7 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 
 	@Override
 	public final Type getIdentifierOrUniqueKeyType() throws MappingException {
-		final SessionFactoryImplementor factory = scope.resolveFactory();
+		final SessionFactoryImplementor factory = typeConfiguration.getSessionFactory();
 		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return getIdentifierType( factory );
 		}
@@ -586,7 +563,7 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 	@Override
 	public final String getIdentifierOrUniqueKeyPropertyName()
 			throws MappingException {
-		final SessionFactoryImplementor factory = scope.resolveFactory();
+		final SessionFactoryImplementor factory = typeConfiguration.getSessionFactory();
 
 		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return factory.getIdentifierPropertyName( getAssociatedEntityName() );

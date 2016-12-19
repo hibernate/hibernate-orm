@@ -47,6 +47,7 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -62,14 +63,14 @@ public abstract class CollectionType extends AbstractType implements Association
 	private static final Object NOT_NULL_COLLECTION = new MarkerObject( "NOT NULL COLLECTION" );
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
 
-	private final TypeFactory.TypeScope typeScope;
+	private final TypeConfiguration typeConfiguration;
 	private final String role;
 	private final String foreignKeyPropertyName;
 	private final Comparator comparator;
 	private final ColumnMapping[] columnMappings;
 
-	public CollectionType(TypeFactory.TypeScope typeScope, String role, String foreignKeyPropertyName) {
-		this.typeScope = typeScope;
+	public CollectionType(TypeConfiguration typeConfiguration, String role, String foreignKeyPropertyName) {
+		this.typeConfiguration = typeConfiguration;
 		this.role = role;
 		this.foreignKeyPropertyName = foreignKeyPropertyName;
 		this.comparator = new CollectionComparator();
@@ -200,7 +201,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	protected String renderLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
-		final List<String> list = new ArrayList<String>();
+		final List<String> list = new ArrayList<>();
 		Type elemType = getElementType( factory );
 		Iterator itr = getElementsIterator( value );
 		while ( itr.hasNext() ) {

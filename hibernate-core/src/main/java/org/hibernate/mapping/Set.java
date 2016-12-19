@@ -42,18 +42,15 @@ public class Set extends Collection {
 
 	public CollectionType getDefaultCollectionType() {
 		if ( isSorted() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
+			return getMetadata().getTypeConfiguration()
 					.sortedSet( getRole(), getReferencedPropertyName(), getComparator() );
 		}
 		else if ( hasOrder() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
+			return getMetadata().getTypeConfiguration()
 					.orderedSet( getRole(), getReferencedPropertyName() );
 		}
 		else {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
+			return getMetadata().getTypeConfiguration()
 					.set( getRole(), getReferencedPropertyName() );
 		}
 	}

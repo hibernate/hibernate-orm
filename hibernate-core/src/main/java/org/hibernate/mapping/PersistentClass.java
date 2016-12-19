@@ -56,7 +56,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private boolean lazy;
 	private ArrayList properties = new ArrayList();
 	private ArrayList declaredProperties = new ArrayList();
-	private final ArrayList<Subclass> subclasses = new ArrayList<Subclass>();
+	private final ArrayList<Subclass> subclasses = new ArrayList<>();
 	private final ArrayList subclassProperties = new ArrayList();
 	private final ArrayList subclassTables = new ArrayList();
 	private boolean dynamicInsert;
@@ -64,7 +64,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private int batchSize = -1;
 	private boolean selectBeforeUpdate;
 	private java.util.Map metaAttributes;
-	private ArrayList<Join> joins = new ArrayList<Join>();
+	private ArrayList<Join> joins = new ArrayList<>();
 	private final ArrayList subclassJoins = new ArrayList();
 	private final java.util.List filters = new ArrayList();
 	protected final java.util.Set synchronizedTables = new HashSet();
@@ -123,7 +123,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 		try {
 			if ( mappedClass == null ) {
-				mappedClass = metadataBuildingContext.getClassLoaderAccess().classForName( className );
+				mappedClass = metadataBuildingContext.getBootstrapContext().getClassLoaderAccess().classForName( className );
 			}
 			return mappedClass;
 		}
@@ -138,7 +138,8 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 		try {
 			if ( proxyInterface == null ) {
-				proxyInterface = metadataBuildingContext.getClassLoaderAccess().classForName( proxyInterfaceName );
+				proxyInterface = metadataBuildingContext.getBootstrapContext().getClassLoaderAccess().classForName(
+						proxyInterfaceName );
 			}
 			return proxyInterface;
 		}

@@ -20,8 +20,7 @@ public class Bag extends Collection {
 	}
 
 	public CollectionType getDefaultCollectionType() {
-		return getMetadata().getTypeResolver()
-				.getTypeFactory()
+		return getMetadata().getTypeConfiguration()
 				.bag( getRole(), getReferencedPropertyName() );
 	}
 

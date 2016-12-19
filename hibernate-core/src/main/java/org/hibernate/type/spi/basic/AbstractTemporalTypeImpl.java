@@ -13,6 +13,7 @@ import javax.persistence.AttributeConverter;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.TemporalType;
@@ -161,5 +162,10 @@ public abstract class AbstractTemporalTypeImpl<T> extends AbstractBasicTypeImpl<
 	public Serializable disassemble(T value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 		return getMutabilityPlan().disassemble( value );
+	}
+
+	@Override
+	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
+		return getJavaTypeDescriptor().extractLoggableRepresentation( (T) value );
 	}
 }

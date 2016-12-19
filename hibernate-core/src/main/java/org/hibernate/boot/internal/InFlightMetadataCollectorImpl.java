@@ -2267,7 +2267,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 					namedEntityGraphMap,
 					sqlFunctionMap,
 					getDatabase(),
-					auditMetadataBuilder
+					auditMetadataBuilder,
+					bootstrapContext
 			);
 		}
 		finally {

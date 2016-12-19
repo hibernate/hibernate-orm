@@ -51,7 +51,7 @@ public class OneToOne extends ToOne {
 	
 	public Type getType() throws MappingException {
 		if ( getColumnIterator().hasNext() ) {
-			return getMetadata().getTypeResolver().getTypeFactory().specialOneToOne(
+			return getMetadata().getTypeConfiguration().specialOneToOne(
 					getReferencedEntityName(), 
 					foreignKeyType,
 					referenceToPrimaryKey, 
@@ -63,7 +63,7 @@ public class OneToOne extends ToOne {
 			);
 		}
 		else {
-			return getMetadata().getTypeResolver().getTypeFactory().oneToOne(
+			return getMetadata().getTypeConfiguration().oneToOne(
 					getReferencedEntityName(), 
 					foreignKeyType,
 					referenceToPrimaryKey, 

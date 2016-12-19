@@ -16,12 +16,13 @@ import org.hibernate.collection.internal.PersistentMap;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.spi.TypeConfiguration;
 
 
 public class MapType extends CollectionType {
 
-	public MapType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
-		super( typeScope, role, propertyRef );
+	public MapType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
+		super( typeConfiguration, role, propertyRef );
 	}
 
 	@Override

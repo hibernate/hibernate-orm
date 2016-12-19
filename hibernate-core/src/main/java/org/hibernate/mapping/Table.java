@@ -52,11 +52,11 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	private Map columns = new LinkedHashMap();
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
-	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<ForeignKeyKey, ForeignKey>();
-	private Map<String, Index> indexes = new LinkedHashMap<String, Index>();
-	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
+	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>();
+	private Map<String, Index> indexes = new LinkedHashMap<>();
+	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
 	private int uniqueInteger;
-	private List<String> checkConstraints = new ArrayList<String>();
+	private List<String> checkConstraints = new ArrayList<>();
 	private String rowId;
 	private String subselect;
 	private boolean isAbstract;
@@ -886,7 +886,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 
 	public void addInitCommand(InitCommand command) {
 		if ( initCommands == null ) {
-			initCommands = new ArrayList<InitCommand>();
+			initCommands = new ArrayList<>();
 		}
 		initCommands.add( command );
 	}

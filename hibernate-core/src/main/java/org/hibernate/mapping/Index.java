@@ -28,8 +28,8 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class Index implements RelationalModel, Exportable, Serializable {
 	private Table table;
-	private java.util.List<Column> columns = new ArrayList<Column>();
-	private java.util.Map<Column, String> columnOrderMap = new HashMap<Column, String>(  );
+	private java.util.List<Column> columns = new ArrayList<>();
+	private java.util.Map<Column, String> columnOrderMap = new HashMap<>();
 	private Identifier name;
 
 	public String sqlCreateString(Dialect dialect, Mapping mapping, String defaultCatalog, String defaultSchema)

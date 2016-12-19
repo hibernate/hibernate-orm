@@ -41,7 +41,7 @@ public class OneToMany implements Value {
 	}
 
 	private EntityType getEntityType() {
-		return metadata.getTypeConfiguration()getTypeResolver().getTypeFactory().manyToOne(
+		return metadata.getTypeConfiguration().manyToOne(
 				getReferencedEntityName(),
 				true,
 				null,

@@ -8,7 +8,7 @@ package org.hibernate.persister.entity.spi;
 
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
-import org.hibernate.sqm.domain.Type;
+import org.hibernate.sqm.domain.DomainReference;
 
 /**
  * @author Steve Ebersole
@@ -28,7 +28,7 @@ public class EntityIdentifierCompositeNonAggregated implements EntityIdentifier 
 	}
 
 	@Override
-	public Type getIdType() {
+	public DomainReference getIdType() {
 		return embeddablePersister;
 	}
 

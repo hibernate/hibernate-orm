@@ -15,7 +15,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.SqmDomainMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.internal.ImprovedCollectionPersisterImpl;
 import org.hibernate.persister.collection.spi.ImprovedCollectionPersister;
 import org.hibernate.persister.entity.internal.ImprovedEntityPersisterImpl;
 import org.hibernate.persister.entity.spi.EntityPersister;
@@ -25,6 +24,7 @@ import org.hibernate.sqm.domain.DomainReference;
 import org.hibernate.sqm.domain.EntityReference;
 import org.hibernate.sqm.domain.NoSuchAttributeException;
 import org.hibernate.sqm.query.expression.BinaryArithmeticSqmExpression;
+import org.hibernate.type.spi.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.basic.BasicTypeParameters;
@@ -78,9 +78,6 @@ public class DomainMetamodelImpl implements SqmDomainMetamodelImplementor {
 
 	private Map<CollectionPersister, ImprovedCollectionPersister> collectionPersisterMap = new HashMap<>();
 
-	public void registerCollectionPersister(ImprovedCollectionPersisterImpl persister) {
-		collectionPersisterMap.put( persister.getPersister(), persister );
-	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public SessionFactoryImplementor getSessionFactory() {

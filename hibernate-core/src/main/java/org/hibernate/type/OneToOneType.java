@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.spi.ColumnMapping;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A one-to-one association to an entity
@@ -30,25 +31,8 @@ public class OneToOneType extends AbstractEntityType {
 	private final String propertyName;
 	private final String entityName;
 
-	/**
-	 * @deprecated Use {@link #OneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String)}
-	 *  instead.
-	 */
-	@Deprecated
 	public OneToOneType(
-			TypeFactory.TypeScope scope,
-			String referencedEntityName,
-			ForeignKeyDirection foreignKeyType,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			String entityName,
-			String propertyName) {
-		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
-	}
-
-	public OneToOneType(
-			TypeFactory.TypeScope scope,
+			TypeConfiguration typeConfiguration,
 			String referencedEntityName,
 			ForeignKeyDirection foreignKeyType,
 			boolean referenceToPrimaryKey,
@@ -57,7 +41,7 @@ public class OneToOneType extends AbstractEntityType {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
-		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
+		super( typeConfiguration, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
 		this.foreignKeyType = foreignKeyType;
 		this.propertyName = propertyName;
 		this.entityName = entityName;

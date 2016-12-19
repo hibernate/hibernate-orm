@@ -16,14 +16,14 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.StringType;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.TypeFactory;
+import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.descriptor.sql.IntegerTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
 import org.hibernate.usertype.CompositeUserType;
 
 public class MultiplicityType implements CompositeUserType {
@@ -32,21 +32,12 @@ public class MultiplicityType implements CompositeUserType {
 			"count", "glarch"
 	};
 	private static final int[] SQL_TYPES = new int[] {
-			IntegerType.INSTANCE.getSqlTypeDescriptor().getSqlType(),
-			StringType.INSTANCE.getSqlTypeDescriptor().getSqlType()
+			IntegerTypeDescriptor.INSTANCE.getSqlType(),
+			VarcharTypeDescriptor.INSTANCE.getSqlType()
 	};
 	private static final Type[] TYPES = new Type[] {
 			IntegerType.INSTANCE,
-			new ManyToOneType(
-					new TypeFactory.TypeScope() {
-						@Override
-						public SessionFactoryImplementor resolveFactory() {
-							// todo : can we tie this into org.hibernate.type.TypeFactory.TypeScopeImpl() somehow?
-							throw new HibernateException( "Cannot access SessionFactory from here" );
-						}
-					},
-					Glarch.class.getName()
-			)
+			new ManyToOneType( new TypeConfiguration(), Glarch.class.getName() )
 	};
 
 	public String[] getPropertyNames() {

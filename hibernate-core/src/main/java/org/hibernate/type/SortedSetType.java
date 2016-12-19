@@ -14,12 +14,13 @@ import org.hibernate.collection.internal.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.spi.TypeConfiguration;
 
 public class SortedSetType extends SetType {
 	private final Comparator comparator;
 
-	public SortedSetType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Comparator comparator) {
-		super( typeScope, role, propertyRef );
+	public SortedSetType(TypeConfiguration typeConfiguration, String role, String propertyRef, Comparator comparator) {
+		super( typeConfiguration, role, propertyRef );
 		this.comparator = comparator;
 	}
 

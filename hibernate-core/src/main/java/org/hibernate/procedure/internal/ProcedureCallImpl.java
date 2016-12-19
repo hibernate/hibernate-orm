@@ -744,6 +744,9 @@ public class ProcedureCallImpl<R>
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<R> getResultList() {
+		if ( getMaxResults() == 0 ) {
+			return Collections.EMPTY_LIST;
+		}
 		try {
 			final Output rtn = outputs().getCurrent();
 			if ( ! ResultSetOutput.class.isInstance( rtn ) ) {

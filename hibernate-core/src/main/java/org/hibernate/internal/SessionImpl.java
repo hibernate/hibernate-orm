@@ -1846,6 +1846,9 @@ public final class SessionImpl
 	public List list(Criteria criteria) throws HibernateException {
 		// TODO: Is this guaranteed to always be CriteriaImpl?
 		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
+		if ( criteriaImpl.getMaxResults() != null && criteriaImpl.getMaxResults() == 0 ) {
+			return Collections.EMPTY_LIST;
+		}
 
 		final NaturalIdLoadAccess naturalIdLoadAccess = this.tryNaturalIdLoadAccess( criteriaImpl );
 		if ( naturalIdLoadAccess != null ) {

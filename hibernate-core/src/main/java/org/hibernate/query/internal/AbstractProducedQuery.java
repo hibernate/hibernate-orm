@@ -55,9 +55,11 @@ import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
+import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.TypedParameterValue;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
@@ -815,7 +817,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setMaxResults(int maxResult) {
-		if ( maxResult <= 0 ) {
+		if ( maxResult < 0 ) {
 			// treat zero and negatives specially as meaning no limit...
 			queryOptions.setMaxRows( null );
 		}
@@ -1344,6 +1346,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@SuppressWarnings("unchecked")
 	protected Iterator<R> doIterate() {
+		if (getMaxResults() == 0){
+			return EmptyIterator.INSTANCE;
+		}
 		return getProducer().iterate(
 				queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() ),
 				getQueryParameters()
@@ -1367,6 +1372,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
+		if (getMaxResults() == 0){
+			return EmptyScrollableResults.INSTANCE;
+		}
 		final String query = queryParameterBindings.expandListValuedParameters( getQueryString(), getProducer() );
 		QueryParameters queryParameters = getQueryParameters();
 		queryParameters.setScrollMode( scrollMode );
@@ -1376,6 +1384,10 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Stream<R> stream() {
+		if (getMaxResults() == 0){
+			final Spliterator<R> spliterator = Spliterators.emptySpliterator();
+			return StreamSupport.stream( spliterator, false );
+		}
 		final ScrollableResultsImplementor scrollableResults = scroll( ScrollMode.FORWARD_ONLY );
 		final ScrollableResultsIterator<R> iterator = new ScrollableResultsIterator<>( scrollableResults );
 		final Spliterator<R> spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
@@ -1417,6 +1429,9 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	@SuppressWarnings("unchecked")
 	protected List<R> doList() {
+		if ( getMaxResults() == 0 ) {
+			return Collections.EMPTY_LIST;
+		}
 		if ( lockOptions.getLockMode() != null && lockOptions.getLockMode() != LockMode.NONE ) {
 			if ( !getProducer().isTransactionInProgress() ) {
 				throw new TransactionRequiredException( "no transaction is in progress" );

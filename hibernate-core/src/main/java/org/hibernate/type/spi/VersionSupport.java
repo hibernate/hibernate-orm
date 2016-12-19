@@ -6,6 +6,8 @@
  */
 package org.hibernate.type.spi;
 
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -31,4 +33,17 @@ public interface VersionSupport<T> {
 	 * @return an instance of the type
 	 */
 	T next(T current, SharedSessionContractImplementor session);
+
+	/**
+	 * Generate a representation of the value for logging purposes.
+	 *
+	 * @param value The value to be logged
+	 * @param factory The session factory
+	 *
+	 * @return The loggable representation
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 */
+	String toLoggableString(Object value, SessionFactoryImplementor factory);
+
 }

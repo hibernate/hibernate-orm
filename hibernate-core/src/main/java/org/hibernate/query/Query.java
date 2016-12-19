@@ -6,9 +6,6 @@
  */
 package org.hibernate.query;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -16,7 +13,6 @@ import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Locale;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -398,24 +394,6 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	@Override
 	Query<R> setHint(String hintName, Object value);
-
-	@Override
-	<T> Query<R> setParameter(QueryParameter<T> parameter, T val);
-
-	@Override
-	<P> Query<R> setParameter(int position, P val, TemporalType temporalType);
-
-	@Override
-	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, Type type);
-
-	@Override
-	Query<R> setParameter(int position, Object val, Type type);
-
-	@Override
-	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
-
-	@Override
-	<P> Query<R> setParameter(String name, P val, TemporalType temporalType);
 
 	@Override
 	Query<R> setFlushMode(FlushModeType flushMode);

@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.FloatTypeDescriptor;
@@ -17,7 +16,7 @@ import org.hibernate.type.spi.descriptor.java.FloatTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class FloatType extends BasicTypeImpl<Float> implements JdbcLiteralFormatter<Float> {
+public class FloatType extends BasicTypeImpl<Float> {
 	public static final FloatType INSTANCE = new FloatType();
 
 	public static final Float ZERO = 0.0f;
@@ -32,11 +31,8 @@ public class FloatType extends BasicTypeImpl<Float> implements JdbcLiteralFormat
 
 	@Override
 	public JdbcLiteralFormatter<Float> getJdbcLiteralFormatter() {
-		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(Float value, Dialect dialect) {
-		return value.toString();
+		return org.hibernate.type.spi.descriptor.sql.FloatTypeDescriptor.INSTANCE.getJdbcLiteralFormatter(
+				FloatTypeDescriptor.INSTANCE
+		);
 	}
 }

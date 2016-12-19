@@ -12,7 +12,7 @@ import java.util.Stack;
 
 import org.hibernate.sql.sqm.ast.from.FromClause;
 import org.hibernate.sql.sqm.ast.from.TableGroup;
-import org.hibernate.sqm.parser.common.DomainReferenceBinding;
+import org.hibernate.sqm.query.expression.domain.DomainReferenceBinding;
 import org.hibernate.sqm.query.from.SqmFrom;
 
 import org.jboss.logging.Logger;

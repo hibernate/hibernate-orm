@@ -12,7 +12,7 @@ import org.hibernate.type.spi.Type;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractPluralAttributeIndex<O extends Type, S extends org.hibernate.sqm.domain.Type>
+public abstract class AbstractPluralAttributeIndex<O extends Type, S extends org.hibernate.sqm.domain.DomainReference>
 		implements PluralAttributeIndex<O,S> {
 
 	private final O ormType;

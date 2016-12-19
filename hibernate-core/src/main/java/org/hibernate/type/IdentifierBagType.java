@@ -14,11 +14,12 @@ import org.hibernate.collection.internal.PersistentIdentifierBag;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.spi.TypeConfiguration;
 
 public class IdentifierBagType extends CollectionType {
 
-	public IdentifierBagType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
-		super( typeScope, role, propertyRef );
+	public IdentifierBagType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
+		super( typeConfiguration, role, propertyRef );
 	}
 
 	@Override

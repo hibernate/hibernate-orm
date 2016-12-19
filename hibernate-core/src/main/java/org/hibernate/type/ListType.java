@@ -14,10 +14,11 @@ import org.hibernate.collection.internal.PersistentList;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.spi.TypeConfiguration;
 
 public class ListType extends CollectionType {
 
-	public ListType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
+	public ListType(TypeConfiguration typeScope, String role, String propertyRef) {
 		super( typeScope, role, propertyRef );
 	}
 

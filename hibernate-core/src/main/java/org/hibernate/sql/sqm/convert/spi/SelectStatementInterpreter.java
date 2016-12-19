@@ -44,7 +44,9 @@ import org.hibernate.sql.sqm.ast.from.EntityTableGroup;
 import org.hibernate.sql.sqm.ast.from.TableGroup;
 import org.hibernate.sql.sqm.ast.from.TableGroupJoin;
 import org.hibernate.sql.sqm.ast.from.TableSpace;
+import org.hibernate.sql.sqm.ast.predicate.GroupedPredicate;
 import org.hibernate.sql.sqm.ast.predicate.Junction;
+import org.hibernate.sql.sqm.ast.predicate.NegatedPredicate;
 import org.hibernate.sql.sqm.ast.predicate.Predicate;
 import org.hibernate.sql.sqm.ast.predicate.RelationalPredicate;
 import org.hibernate.sql.sqm.ast.select.SelectClause;
@@ -54,7 +56,6 @@ import org.hibernate.sql.sqm.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sqm.BaseSemanticQueryWalker;
 import org.hibernate.sqm.domain.DomainReference;
 import org.hibernate.sqm.domain.PluralAttributeReference;
-import org.hibernate.sqm.domain.SingularAttributeReference;
 import org.hibernate.sqm.domain.SingularAttributeReference.SingularAttributeClassification;
 import org.hibernate.sqm.parser.common.AttributeBinding;
 import org.hibernate.sqm.parser.common.EntityBinding;
@@ -111,13 +112,8 @@ import org.hibernate.sqm.query.predicate.NegatedSqmPredicate;
 import org.hibernate.sqm.query.predicate.NullnessSqmPredicate;
 import org.hibernate.sqm.query.predicate.OrSqmPredicate;
 import org.hibernate.sqm.query.predicate.RelationalSqmPredicate;
-import org.hibernate.sqm.query.predicate.WhereClause;
-import org.hibernate.sqm.query.select.DynamicInstantiation;
-import org.hibernate.sqm.query.select.DynamicInstantiationArgument;
-import org.hibernate.sqm.query.select.DynamicInstantiationTarget;
-import org.hibernate.sqm.query.select.SelectClause;
-import org.hibernate.sqm.query.select.Selection;
-import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.EntityType;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.sqm.query.predicate.SqmWhereClause;
 import org.hibernate.sqm.query.select.SqmDynamicInstantiation;
@@ -357,7 +353,7 @@ public class SelectStatementInterpreter extends BaseSemanticQueryWalker {
 				final ColumnBinding[] joinLhsColumns = lhsTableGroup.resolveBindings( singularAttribute );
 				final ColumnBinding[] joinRhsColumns;
 
-				final org.hibernate.type.EntityType ormType = (org.hibernate.type.EntityType) singularAttribute.getOrmType();
+				final EntityType ormType = (EntityType) singularAttribute.getOrmType();
 				if ( ormType.getRHSUniqueKeyPropertyName() == null ) {
 					joinRhsColumns = ( (EntityTableGroup) group ).resolveIdentifierColumnBindings();
 				}

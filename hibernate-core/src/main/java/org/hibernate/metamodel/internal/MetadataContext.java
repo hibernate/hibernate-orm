@@ -31,6 +31,7 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.type.spi.EntityType;
 
 /**
  * Defines a context for storing information during the building of the {@link MetamodelImpl}.
@@ -136,36 +137,36 @@ class MetadataContext {
 	}
 
 	/**
-	 * Given a Hibernate {@link PersistentClass}, locate the corresponding JPA {@link org.hibernate.type.EntityType}
+	 * Given a Hibernate {@link PersistentClass}, locate the corresponding JPA {@link EntityType}
 	 * implementation.  May retur null if the given {@link PersistentClass} has not yet been processed.
 	 *
 	 * @param persistentClass The Hibernate (config time) metamodel instance representing an entity.
 	 *
-	 * @return Tne corresponding JPA {@link org.hibernate.type.EntityType}, or null if not yet processed.
+	 * @return Tne corresponding JPA {@link EntityType}, or null if not yet processed.
 	 */
 	public EntityTypeImpl<?> locateEntityType(PersistentClass persistentClass) {
 		return entityTypesByPersistentClass.get( persistentClass );
 	}
 
 	/**
-	 * Given a Java {@link Class}, locate the corresponding JPA {@link org.hibernate.type.EntityType}.  May
+	 * Given a Java {@link Class}, locate the corresponding JPA {@link EntityType}.  May
 	 * return null which could means that no such mapping exists at least at this time.
 	 *
 	 * @param javaType The java class.
 	 *
-	 * @return The corresponding JPA {@link org.hibernate.type.EntityType}, or null.
+	 * @return The corresponding JPA {@link EntityType}, or null.
 	 */
 	public EntityTypeImpl<?> locateEntityType(Class<?> javaType) {
 		return entityTypes.get( javaType );
 	}
 
 	/**
-	 * Given an entity-name, locate the corresponding JPA {@link org.hibernate.type.EntityType}.  May
+	 * Given an entity-name, locate the corresponding JPA {@link EntityType}.  May
 	 * return null which could means that no such mapping exists at least at this time.
 	 *
 	 * @param entityName The entity-name.
 	 *
-	 * @return The corresponding JPA {@link org.hibernate.type.EntityType}, or null.
+	 * @return The corresponding JPA {@link EntityType}, or null.
 	 */
 	public EntityTypeImpl<?> locateEntityType(String entityName) {
 		return entityTypesByEntityName.get( entityName );

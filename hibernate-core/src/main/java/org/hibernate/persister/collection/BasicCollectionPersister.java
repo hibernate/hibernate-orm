@@ -37,7 +37,7 @@ import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.Update;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 
 /**
  * Collection persister for collections of values and many-to-many associations.

@@ -12,7 +12,7 @@ import org.hibernate.type.spi.Type;
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeIndex<O extends Type, S extends org.hibernate.sqm.domain.Type> {
+public interface PluralAttributeIndex<O extends Type, S extends org.hibernate.sqm.domain.DomainReference> {
 	O getOrmType();
 
 	S getSqmType();

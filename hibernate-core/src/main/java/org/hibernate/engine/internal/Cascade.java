@@ -25,10 +25,10 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.CompositeType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.spi.Type;
 

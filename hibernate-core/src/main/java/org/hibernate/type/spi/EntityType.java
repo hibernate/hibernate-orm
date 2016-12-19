@@ -6,10 +6,64 @@
  */
 package org.hibernate.type.spi;
 
+import org.hibernate.MappingException;
 import org.hibernate.sqm.domain.EntityReference;
 
 /**
  * @author Steve Ebersole
  */
-public interface EntityType extends Type, EntityReference {
+public interface EntityType extends AssociationType, EntityReference {
+
+	/**
+	 * Is the association modeled here defined as a 1-1 in the database (physical model)?
+	 *
+	 * @return True if a 1-1 in the database; false otherwise.
+	 */
+	boolean isOneToOne();
+
+	/**
+	 * Is the association modeled here a 1-1 according to the logical moidel?
+	 *
+	 * @return True if a 1-1 in the logical model; false otherwise.
+	 */
+	boolean isLogicalOneToOne();
+
+	/**
+	 * The name of the associated entity.
+	 *
+	 * @return The associated entity name.
+	 */
+	String getAssociatedEntityName();
+
+	/**
+	 * Determine the type of either (1) the identifier if we reference the
+	 * associated entity's PK or (2) the unique key to which we refer (i.e.
+	 * the property-ref).
+	 *
+	 * @return The appropriate type.
+	 *
+	 * @throws MappingException Generally, if unable to resolve the associated entity name
+	 * or unique key property name.
+	 */
+	Type getIdentifierOrUniqueKeyType() throws MappingException;
+
+	/**
+	 * Does this association foreign key reference the primary key of the other table?
+	 * Otherwise, it references a property-ref.
+	 *
+	 * @return True if this association reference the PK of the associated entity.
+	 */
+	boolean isReferenceToPrimaryKey();
+
+	/**
+	 * The name of the property on the associated entity to which our FK
+	 * refers
+	 *
+	 * @return The appropriate property name.
+	 *
+	 * @throws MappingException Generally, if unable to resolve the associated entity name
+	 */
+	String getIdentifierOrUniqueKeyPropertyName();
+
+	public String getPropertyName();
 }

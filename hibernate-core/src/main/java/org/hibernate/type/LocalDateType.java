@@ -10,19 +10,16 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.basic.BasicTypeImpl;
+import org.hibernate.type.spi.TemporalType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.java.LocalDateJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.DateTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class LocalDateType
-		extends BasicTypeImpl<LocalDate>
-		implements JdbcLiteralFormatter<LocalDate> {
+public class LocalDateType extends TemporalTypeImpl<LocalDate> {
 
 	/**
 	 * Singleton access
@@ -46,16 +43,25 @@ public class LocalDateType
 
 	@Override
 	public JdbcLiteralFormatter<LocalDate> getJdbcLiteralFormatter() {
-		return this;
+		return DateTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( LocalDateJavaDescriptor.INSTANCE );
 	}
 
 	@Override
-	public String toJdbcLiteral(LocalDate value, Dialect dialect) {
-		return toJdbcLiteral( value );
+	@SuppressWarnings("unchecked")
+	public <X> TemporalType<X> resolveTypeForPrecision(
+			javax.persistence.TemporalType precision,
+			TypeConfiguration typeConfiguration) {
+		switch ( precision ) {
+			case TIME: {
+				return (TemporalType<X>) LocalTimeType.INSTANCE;
+			}
+			case TIMESTAMP: {
+				return (TemporalType<X>) LocalDateTimeType.INSTANCE;
+			}
+			default: {
+				return (TemporalType<X>) this;
+			}
+		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	public String toJdbcLiteral(LocalDate value) {
-		return DateTimeUtils.formatAsJdbcLiteralDate( value );
-	}
 }

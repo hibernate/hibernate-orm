@@ -6,14 +6,14 @@
  */
 package org.hibernate.persister.collection.spi;
 
-import org.hibernate.sqm.domain.PluralAttribute.ElementClassification;
+import org.hibernate.sqm.domain.PluralAttributeElementReference;
 import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeElement<O extends Type, S extends org.hibernate.sqm.domain.Type> {
-	ElementClassification getElementClassification();
+public interface PluralAttributeElement<O extends Type, S extends org.hibernate.sqm.domain.DomainReference> {
+	PluralAttributeElementReference.ElementClassification getElementClassification();
 	O getOrmType();
 	S getSqmType();
 }

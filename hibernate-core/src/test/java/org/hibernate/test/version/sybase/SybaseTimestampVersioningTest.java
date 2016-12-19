@@ -226,7 +226,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-10413" )
 	public void testComparableTimestamps() {
 		final VersionType versionType =
-				sessionFactory().getEntityPersister( User.class.getName() ).getVersionType();
+				sessionFactory().getEntityPersister( User.class.getName() ).getVersionSupport();
 		assertSame( RowVersionType.INSTANCE, versionType );
 
 		Session s = openSession();

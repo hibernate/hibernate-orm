@@ -133,7 +133,6 @@ import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.TypeResolver;
 
 import org.jboss.logging.Logger;
 

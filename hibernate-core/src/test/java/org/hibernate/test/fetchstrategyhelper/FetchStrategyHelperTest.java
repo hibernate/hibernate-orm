@@ -24,7 +24,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 
 import static org.junit.Assert.assertSame;
 

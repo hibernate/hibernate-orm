@@ -8,18 +8,16 @@ package org.hibernate.persister.common.spi;
 
 import org.hibernate.persister.common.internal.DatabaseModel;
 import org.hibernate.persister.common.internal.DomainMetamodelImpl;
-import org.hibernate.sqm.domain.IdentifiableType;
 
 /**
  * @author Steve Ebersole
  */
-public interface IdentifiableTypeImplementor extends IdentifiableType {
+public interface IdentifiableTypeImplementor  {
 	void finishInitialization(
 			IdentifiableTypeImplementor superType,
 			Object typeSource,
 			DatabaseModel databaseModel,
 			DomainMetamodelImpl domainMetamodel);
 
-	@Override
 	IdentifiableTypeImplementor getSuperType();
 }

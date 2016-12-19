@@ -8,9 +8,9 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 
 /**

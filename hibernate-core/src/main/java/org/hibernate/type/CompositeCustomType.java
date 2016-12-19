@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.Map;
 
 import org.hibernate.EntityMode;
@@ -18,13 +19,17 @@ import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.ColumnMapping;
+import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.Type;
+import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.LoggableUserType;
 
@@ -39,6 +44,7 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 	private final String[] registrationKeys;
 	private final String name;
 	private final boolean customLogging;
+	private final ColumnMapping[] columnMappings;
 
 	public CompositeCustomType(CompositeUserType userType) {
 		this( userType, ArrayHelper.EMPTY_STRING_ARRAY );
@@ -49,11 +55,40 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		this.name = userType.getClass().getName();
 		this.customLogging = LoggableUserType.class.isInstance( userType );
 		this.registrationKeys = registrationKeys;
+		this.columnMappings = new ColumnMapping[0];
+		for ( Type propertyType : userType.getPropertyTypes() ) {
+			ArrayHelper.join( columnMappings, propertyType.getColumnMappings() );
+		}
+	}
+
+	@Override
+	public AttributeConverterDefinition getAttributeConverterDefinition() {
+		return null;
+	}
+
+	@Override
+	public VersionSupport getVersionSupport() {
+		return null;
+	}
+
+	@Override
+	public String getTypeName() {
+		return null;
 	}
 
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public ColumnMapping[] getColumnMappings() {
+		return columnMappings;
+	}
+
+	@Override
+	public Comparator getComparator() {
+		return null;
 	}
 
 	@Override
@@ -64,11 +99,6 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 	@Override
 	public boolean isMutable() {
 		return userType.isMutable();
-	}
-
-	@Override
-	public String[] getRegistrationKeys() {
-		return registrationKeys;
 	}
 
 	public CompositeUserType getUserType() {
@@ -190,11 +220,11 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 	}
 
 	@Override
-	public int getColumnSpan(Mapping mapping) throws MappingException {
+	public int getColumnSpan() throws MappingException {
 		Type[] types = userType.getPropertyTypes();
 		int n = 0;
 		for ( Type type : types ) {
-			n += type.getColumnSpan( mapping );
+			n += type.getColumnSpan();
 		}
 		return n;
 	}
@@ -237,41 +267,15 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 	}
 
 	@Override
-	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		int[] result = new int[getColumnSpan( mapping )];
+	public int[] sqlTypes() throws MappingException {
+		int[] result = new int[getColumnSpan()];
 		int n = 0;
 		for ( Type type : userType.getPropertyTypes() ) {
-			for ( int sqlType : type.sqlTypes( mapping ) ) {
+			for ( int sqlType : type.sqlTypes() ) {
 				result[n++] = sqlType;
 			}
 		}
 		return result;
-	}
-
-	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
-		final Size[] sizes = new Size[getColumnSpan( mapping )];
-		int soFar = 0;
-		for ( Type propertyType : userType.getPropertyTypes() ) {
-			final Size[] propertySizes = propertyType.dictatedSizes( mapping );
-			System.arraycopy( propertySizes, 0, sizes, soFar, propertySizes.length );
-			soFar += propertySizes.length;
-		}
-		return sizes;
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
-		final Size[] sizes = new Size[getColumnSpan( mapping )];
-		int soFar = 0;
-		for ( Type propertyType : userType.getPropertyTypes() ) {
-			final Size[] propertySizes = propertyType.defaultSizes( mapping );
-			System.arraycopy( propertySizes, 0, sizes, soFar, propertySizes.length );
-			soFar += propertySizes.length;
-		}
-		return sizes;
 	}
 
 	@Override
@@ -293,8 +297,8 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
-		boolean[] result = new boolean[getColumnSpan( mapping )];
+	public boolean[] toColumnNullness(Object value) {
+		boolean[] result = new boolean[getColumnSpan()];
 		if ( value == null ) {
 			return result;
 		}
@@ -302,7 +306,7 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		int loc = 0;
 		Type[] propertyTypes = getSubtypes();
 		for ( int i = 0; i < propertyTypes.length; i++ ) {
-			boolean[] propertyNullness = propertyTypes[i].toColumnNullness( values[i], mapping );
+			boolean[] propertyNullness = propertyTypes[i].toColumnNullness( values[i] );
 			System.arraycopy( propertyNullness, 0, result, loc, propertyNullness.length );
 			loc += propertyNullness.length;
 		}

@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.util.UUID;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.UUIDTypeDescriptor;
@@ -19,7 +18,7 @@ import org.hibernate.type.spi.descriptor.sql.BinaryTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class UUIDBinaryType extends BasicTypeImpl<UUID> implements JdbcLiteralFormatter<UUID> {
+public class UUIDBinaryType extends BasicTypeImpl<UUID> {
 	public static final UUIDBinaryType INSTANCE = new UUIDBinaryType();
 
 	public UUIDBinaryType() {
@@ -32,11 +31,6 @@ public class UUIDBinaryType extends BasicTypeImpl<UUID> implements JdbcLiteralFo
 
 	@Override
 	public JdbcLiteralFormatter<UUID> getJdbcLiteralFormatter() {
-		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(UUID value, Dialect dialect) {
 		// no literal support for binary data
 		return null;
 	}

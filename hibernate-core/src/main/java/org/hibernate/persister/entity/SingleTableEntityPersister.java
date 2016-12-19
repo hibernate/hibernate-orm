@@ -40,7 +40,7 @@ import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.spi.Type;
 

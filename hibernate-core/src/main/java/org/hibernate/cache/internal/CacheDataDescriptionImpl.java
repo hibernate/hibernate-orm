@@ -12,8 +12,7 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.VersionType;
-import org.hibernate.type.descriptor.java.IncomparableComparator;
+import org.hibernate.type.spi.descriptor.java.IncomparableComparator;
 
 /**
  * Standard CacheDataDescription implementation.
@@ -79,7 +78,7 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 				model.isMutable(),
 				model.isVersioned(),
 				model.isVersioned()
-						? ( (VersionType) model.getVersion().getType() ).getComparator()
+						? ( model.getVersion().getType() ).getComparator()
 						: null,
 				model.getIdentifier().getType()
 		);
@@ -97,7 +96,7 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 				model.isMutable(),
 				model.getOwner().isVersioned(),
 				model.getOwner().isVersioned()
-						? ( (VersionType) model.getOwner().getVersion().getType() ).getComparator()
+						? ( model.getOwner().getVersion().getType() ).getComparator()
 						: null,
 				model.getKey().getType()
 		);

@@ -17,9 +17,6 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
-import org.hibernate.annotations.Source;
-import org.hibernate.annotations.SourceType;
-import org.hibernate.annotations.Type;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -40,7 +37,7 @@ public class SybaseTimestampComparisonAnnotationsTest extends BaseCoreFunctional
 	@TestForIssue( jiraKey = "HHH-10413" )
 	public void testComparableTimestamps() {
 		final VersionType versionType =
-				sessionFactory().getEntityPersister( Thing.class.getName() ).getVersionType();
+				sessionFactory().getEntityPersister( Thing.class.getName() ).getVersionSupport();
 		assertSame( RowVersionType.INSTANCE, versionType );
 
 		Session s = openSession();

@@ -31,7 +31,7 @@ import org.hibernate.engine.spi.Mapping;
 public abstract class Constraint implements RelationalModel, Exportable, Serializable {
 
 	private String name;
-	private final ArrayList<Column> columns = new ArrayList<Column>();
+	private final ArrayList<Column> columns = new ArrayList<>();
 	private Table table;
 
 	public String getName() {

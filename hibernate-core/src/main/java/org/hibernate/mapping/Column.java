@@ -191,7 +191,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	public int getSqlTypeCode(Mapping mapping) throws MappingException {
 		Type type = getValue().getType();
 		try {
-			int sqlTypeCode = type.sqlTypes( mapping )[getTypeIndex()];
+			int sqlTypeCode = type.sqlTypes()[getTypeIndex()];
 			if ( getSqlTypeCode() != null && getSqlTypeCode() != sqlTypeCode ) {
 				throw new MappingException( "SQLType code's does not match. mapped as " + sqlTypeCode + " but is " + getSqlTypeCode() );
 			}

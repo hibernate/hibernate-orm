@@ -10,11 +10,13 @@ import java.sql.Types;
 import java.util.Locale;
 import javax.persistence.AttributeConverter;
 
+import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
-import org.hibernate.type.SingleColumnType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
@@ -72,7 +74,7 @@ public class LiteralNode extends AbstractSelectExpression implements HqlSqlToken
 			return text;
 		}
 
-		return ( (SingleColumnType) inherentType ).fromStringValue( text );
+		return inherentType.getJavaTypeDescriptor().fromString( text );
 	}
 
 	@Override
@@ -81,52 +83,25 @@ public class LiteralNode extends AbstractSelectExpression implements HqlSqlToken
 			return;
 		}
 
-		if ( AttributeConverterTypeAdapter.class.isInstance( expectedType ) ) {
-			final AttributeConverterTypeAdapter adapterType = (AttributeConverterTypeAdapter) expectedType;
-			setText( determineConvertedValue( adapterType, getLiteralValue() ) );
-			this.expectedType = expectedType;
-		}
+		this.expectedType = expectedType;
 	}
 
-	@SuppressWarnings("unchecked")
-	protected String determineConvertedValue(AttributeConverterTypeAdapter converterTypeAdapter, Object literalValue) {
-		if ( getDataType().getJavaTypeDescriptor().getJavaType().equals( converterTypeAdapter.getModelType() ) ) {
-			// apply the converter
-			final AttributeConverter converter = converterTypeAdapter.getAttributeConverter();
-			final Object converted = converter.convertToDatabaseColumn( getLiteralValue() );
-			if ( isCharacterData( converterTypeAdapter.sqlType() ) ) {
-				return "'" + converted.toString() + "'";
-			}
-			else {
-				return converted.toString();
-			}
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public String getRenderText(SessionFactoryImplementor sessionFactory) {
+		final JdbcLiteralFormatter jdbcLiteralFormatter = getExpectedType().getJdbcLiteralFormatter();
+		if ( jdbcLiteralFormatter == null ) {
+			// There was no literal formatter associated with the
+			// todo : develop a "base" JdbcLiteralFormatter for standard basic types?
+			//		- Also would be nice to somehow consider the SqlTypeDescriptor in this
+			//			rendering process.  That's a better indicator of whether enclosing in
+			//			quotes is needed.
+			//
+			// for now, it is simply illegal to not have one...
+			throw new HibernateException( "LiteralNode, but Type has no JdbcLiteralFormatter associated with it: " + expectedType );
 		}
-		else if ( getDataType().getJavaTypeDescriptor().getJavaType().equals( converterTypeAdapter.getJdbcType() ) ) {
-			if ( isCharacterData( converterTypeAdapter.sqlType() ) ) {
-				return "'" + literalValue.toString() + "'";
-			}
-			else {
-				return literalValue.toString();
-			}
-		}
-		else {
-			throw new QueryException(
-					String.format(
-							Locale.ROOT,
-							"AttributeConverter domain-model attribute type [%s] and JDBC type [%s] did not match query literal type [%s]",
-							converterTypeAdapter.getModelType().getName(),
-							converterTypeAdapter.getJdbcType().getName(),
-							getDataType().getJavaTypeDescriptor().getJavaType().getName()
-					)
-			);
-		}
-	}
 
-	private boolean isCharacterData(int typeCode) {
-		return Types.VARCHAR == typeCode
-				|| Types.CHAR == typeCode
-				|| Types.NVARCHAR == typeCode
-				|| Types.NCHAR == typeCode;
+		return jdbcLiteralFormatter.toJdbcLiteral( getLiteralValue(), sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect() );
 	}
 
 	@Override

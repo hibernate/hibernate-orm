@@ -12,18 +12,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.persister.common.internal.SingularAttributeBasic;
-import org.hibernate.persister.common.internal.SingularAttributeEmbedded;
-import org.hibernate.persister.common.internal.SingularAttributeEntity;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.SingularAttributeImplementor;
 import org.hibernate.persister.common.spi.Table;
-import org.hibernate.persister.entity.spi.EntityIdentifierSimple;
 import org.hibernate.persister.entity.spi.ImprovedEntityPersister;
-import org.hibernate.sql.sqm.ast.expression.AttributeReference;
 import org.hibernate.sql.sqm.ast.expression.EntityReference;
-import org.hibernate.sql.sqm.convert.spi.NotYetImplementedException;
-import org.hibernate.sqm.domain.SingularAttribute;
 
 import org.jboss.logging.Logger;
 
@@ -77,38 +69,6 @@ public abstract class AbstractTableGroup implements TableGroup {
 		}
 	}
 
-	@Override
-	public ColumnBinding[] resolveBindings(SingularAttribute attribute) {
-		final Column[] columns;
-		if ( attribute instanceof SingularAttributeBasic ) {
-			columns = ( (SingularAttributeBasic) attribute ).getColumns();
-		}
-		else if ( attribute instanceof SingularAttributeEntity ) {
-			columns = ( (SingularAttributeEntity) attribute ).getColumns();
-		}
-		else if ( attribute instanceof SingularAttributeEmbedded ) {
-			columns = ( (SingularAttributeEmbedded) attribute ).asManagedType().collectColumns();
-		}
-		else if ( attribute instanceof EntityIdentifierSimple ) {
-			columns = ( (EntityIdentifierSimple) attribute ).getColumns();
-		}
-		else {
-			throw new NotYetImplementedException( "resolveBindings() : " + attribute );
-		}
-
-		final ColumnBinding[] bindings = new ColumnBinding[columns.length];
-		for ( int i = 0; i < columns.length; i++ ) {
-			final TableBinding tableBinding = locateTableBinding( columns[i].getSourceTable() );
-			bindings[i] = new ColumnBinding( columns[i], tableBinding );
-		}
-
-		return bindings;
-	}
-
-	@Override
-	public AttributeReference resolve(SingularAttribute attribute) {
-		return new AttributeReference( (SingularAttributeImplementor) attribute, resolveBindings( attribute ) );
-	}
 
 	@Override
 	public EntityReference resolveEntityReference() {

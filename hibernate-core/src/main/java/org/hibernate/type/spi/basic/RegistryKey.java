@@ -36,7 +36,7 @@ public class RegistryKey {
 	public static RegistryKey from(BasicType type) {
 		return from(
 				type.getJavaTypeDescriptor(),
-				type.getColumnMapping().getSqlTypeDescriptor(),
+				type.getColumnMappings()[0].getSqlTypeDescriptor(),
 				type.getMutabilityPlan(),
 				type.getComparator(),
 				type.getJdbcLiteralFormatter(),

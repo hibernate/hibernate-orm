@@ -15,63 +15,50 @@ import java.util.Arrays;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+import org.hibernate.type.spi.ColumnMapping;
+import org.hibernate.type.spi.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A many-to-one association to an entity.
  *
  * @author Gavin King
  */
-public class ManyToOneType extends EntityType {
+public class ManyToOneType extends AbstractEntityType {
 	private final boolean ignoreNotFound;
 	private boolean isLogicalOneToOne;
 
 	/**
 	 * Creates a many-to-one association type with the given referenced entity.
 	 *
-	 * @param scope The scope for this instance.
+	 * @param typeConfiguration The TypeConfiguration for this instance.
 	 * @param referencedEntityName The name iof the referenced entity
 	 */
-	public ManyToOneType(TypeFactory.TypeScope scope, String referencedEntityName) {
-		this( scope, referencedEntityName, false );
+	public ManyToOneType(TypeConfiguration typeConfiguration, String referencedEntityName) {
+		this( typeConfiguration, referencedEntityName, false );
 	}
 
 	/**
 	 * Creates a many-to-one association type with the given referenced entity and the
 	 * given laziness characteristic
 	 *
-	 * @param scope The scope for this instance.
+	 * @param typeConfiguration The TypeConfiguration for this instance.
 	 * @param referencedEntityName The name iof the referenced entity
 	 * @param lazy Should the association be handled lazily
 	 */
-	public ManyToOneType(TypeFactory.TypeScope scope, String referencedEntityName, boolean lazy) {
-		this( scope, referencedEntityName, true, null, lazy, true, false, false );
+	public ManyToOneType(TypeConfiguration typeConfiguration, String referencedEntityName, boolean lazy) {
+		this( typeConfiguration, referencedEntityName, true, null, lazy, true, false, false );
 	}
 
 
-	/**
-	 * @deprecated Use {@link #ManyToOneType(TypeFactory.TypeScope, String, boolean, String, boolean, boolean, boolean, boolean ) } instead.
-	 */
-	@Deprecated
 	public ManyToOneType(
-			TypeFactory.TypeScope scope,
-			String referencedEntityName,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			boolean isEmbeddedInXML,
-			boolean ignoreNotFound,
-			boolean isLogicalOneToOne) {
-		this( scope, referencedEntityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, isLogicalOneToOne );
-	}
-
-	public ManyToOneType(
-			TypeFactory.TypeScope scope,
+			TypeConfiguration typeConfiguration,
 			String referencedEntityName,
 			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
@@ -79,7 +66,7 @@ public class ManyToOneType extends EntityType {
 			boolean unwrapProxy,
 			boolean ignoreNotFound,
 			boolean isLogicalOneToOne) {
-		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
+		super( typeConfiguration, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
 		this.ignoreNotFound = ignoreNotFound;
 		this.isLogicalOneToOne = isLogicalOneToOne;
 	}
@@ -109,12 +96,12 @@ public class ManyToOneType extends EntityType {
 	}
 
 	@Override
-	public int getColumnSpan(Mapping mapping) throws MappingException {
-		return requireIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
+	public int getColumnSpan() throws MappingException {
+		return requireIdentifierOrUniqueKeyType().getColumnSpan();
 	}
 
-	private Type requireIdentifierOrUniqueKeyType(Mapping mapping) {
-		final Type fkTargetType = getIdentifierOrUniqueKeyType( mapping );
+	private Type requireIdentifierOrUniqueKeyType() {
+		final Type fkTargetType = getIdentifierOrUniqueKeyType();
 		if ( fkTargetType == null ) {
 			throw new MappingException(
 					"Unable to determine FK target Type for many-to-one mapping: " +
@@ -126,18 +113,18 @@ public class ManyToOneType extends EntityType {
 	}
 
 	@Override
-	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		return requireIdentifierOrUniqueKeyType( mapping ).sqlTypes( mapping );
+	public int[] sqlTypes() throws MappingException {
+		return requireIdentifierOrUniqueKeyType().sqlTypes();
 	}
 
 	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return requireIdentifierOrUniqueKeyType( mapping ).dictatedSizes( mapping );
+	public Classification getClassification() {
+		return Classification.ENTITY;
 	}
 
 	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return requireIdentifierOrUniqueKeyType( mapping ).defaultSizes( mapping );
+	public ColumnMapping[] getColumnMappings() {
+		return requireIdentifierOrUniqueKeyType( ).getColumnMappings();
 	}
 
 	@Override
@@ -147,7 +134,7 @@ public class ManyToOneType extends EntityType {
 			int index,
 			boolean[] settable,
 			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		requireIdentifierOrUniqueKeyType( session.getFactory() )
+		requireIdentifierOrUniqueKeyType()
 				.nullSafeSet( st, getIdentifier( value, session ), index, settable, session );
 	}
 
@@ -157,7 +144,7 @@ public class ManyToOneType extends EntityType {
 			Object value,
 			int index,
 			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		requireIdentifierOrUniqueKeyType( session.getFactory() )
+		requireIdentifierOrUniqueKeyType()
 				.nullSafeSet( st, getIdentifier( value, session ), index, session );
 	}
 
@@ -175,7 +162,7 @@ public class ManyToOneType extends EntityType {
 		// return the (fully resolved) identifier value, but do not resolve
 		// to the actual referenced entity instance
 		// NOTE: the owner of the association is not really the owner of the id!
-		final Serializable id = (Serializable) getIdentifierOrUniqueKeyType( session.getFactory() )
+		final Serializable id = (Serializable) getIdentifierOrUniqueKeyType()
 				.nullSafeGet( rs, names, session, null );
 		scheduleBatchLoadIfNeeded( id, session );
 		return id;
@@ -217,7 +204,7 @@ public class ManyToOneType extends EntityType {
 			return true;
 		}
 		// the ids are fully resolved, so compare them with isDirty(), not isModified()
-		return getIdentifierOrUniqueKeyType( session.getFactory() )
+		return getIdentifierOrUniqueKeyType()
 				.isDirty( old, getIdentifier( current, session ), session );
 	}
 
@@ -253,7 +240,11 @@ public class ManyToOneType extends EntityType {
 			Serializable oid,
 			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException {
-		
+		if ( oid != LazyPropertyInitializer.UNFETCHED_PROPERTY
+				&& oid != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+			scheduleBatchLoadIfNeeded( assembleId( oid, session ), session );
+		}
+
 		//TODO: currently broken for unique-key references (does not detect
 		//      change to unique key property of the associated object)
 		
@@ -273,13 +264,8 @@ public class ManyToOneType extends EntityType {
 	}
 
 	@Override
-	public void beforeAssemble(Serializable oid, SharedSessionContractImplementor session) {
-		scheduleBatchLoadIfNeeded( assembleId( oid, session ), session );
-	}
-
-	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
-		boolean[] result = new boolean[ getColumnSpan( mapping ) ];
+	public boolean[] toColumnNullness(Object value) {
+		boolean[] result = new boolean[getColumnSpan()];
 		if ( value != null ) {
 			Arrays.fill( result, true );
 		}

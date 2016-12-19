@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.StringTypeDescriptor;
@@ -18,8 +17,7 @@ import org.hibernate.type.spi.descriptor.sql.NVarcharTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class StringNVarcharType
-		extends BasicTypeImpl<String> implements JdbcLiteralFormatter<String> {
+public class StringNVarcharType extends BasicTypeImpl<String> {
 
 	public static final StringNVarcharType INSTANCE = new StringNVarcharType();
 
@@ -33,13 +31,7 @@ public class StringNVarcharType
 
 	@Override
 	public JdbcLiteralFormatter<String> getJdbcLiteralFormatter() {
-		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(String value, Dialect dialect) {
-		// some DBs support prefixing the literal with "n".  is that a standard?
-		return StringType.INSTANCE.toJdbcLiteral( value, dialect );
+		return NVarcharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( StringTypeDescriptor.INSTANCE );
 	}
 
 	public String toString(String value) {

@@ -8,6 +8,8 @@ package org.hibernate.type.converter.spi;
 
 import javax.persistence.AttributeConverter;
 
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+
 /**
  * Internal descriptor for an AttributeConverter implementation, with the intent of being
  * incorporated into a {@link org.hibernate.type.spi.BasicType}
@@ -28,7 +30,7 @@ public interface AttributeConverterDefinition<O,R> {
 	 *
 	 * @return The application domain model's attribute Java Type
 	 */
-	Class<?> getDomainType();
+	JavaTypeDescriptor<O> getDomainType();
 
 	/**
 	 * The "intermediate" Java type of the JDBC/SQL datatype (as we'd read through ResultSet, e.g.), as
@@ -36,5 +38,5 @@ public interface AttributeConverterDefinition<O,R> {
 	 *
 	 * @return The "intermediate" JDBC/SQL Java type.
 	 */
-	Class<?> getJdbcType();
+	JavaTypeDescriptor<R> getJdbcType();
 }

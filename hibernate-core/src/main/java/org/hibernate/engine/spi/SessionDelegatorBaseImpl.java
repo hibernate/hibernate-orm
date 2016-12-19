@@ -144,23 +144,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.isTransactionInProgress();
 	}
 
-	@Override
-	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
-		return delegate.getLockRequest( lockModeType, properties );
-	}
-
-	@Override
 	public LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {
 		return delegate.buildLockOptions( lockModeType, properties );
-	}
-
-	@Override
-	public <T> QueryImplementor<T> createQuery(
-			String jpaqlString,
-			Class<T> resultClass,
-			Selection selection,
-			QueryOptions queryOptions) {
-		return delegate.createQuery( jpaqlString,resultClass, selection, queryOptions );
 	}
 
 	@Override
@@ -316,6 +301,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void checkOpen(boolean markForRollbackIfClosed) {
 		delegate.checkOpen( markForRollbackIfClosed );
+	}
+
+	@Override
+	public void prepareForQueryExecution(boolean requiresTxn) {
+		delegate.prepareForQueryExecution( requiresTxn );
 	}
 
 	@Override
@@ -509,11 +499,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public NativeQueryImplementor getNamedSQLQuery(String name) {
-		return delegate.getNamedSQLQuery( name );
-	}
-
-	@Override
 	public NativeQueryImplementor getNamedNativeQuery(String name) {
 		return delegate.getNamedNativeQuery( name );
 	}
@@ -606,11 +591,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Object getDelegate() {
 		return delegate;
-	}
-
-	@Override
-	public NativeQueryImplementor createSQLQuery(String queryString) {
-		return delegate.createSQLQuery( queryString );
 	}
 
 	@Override
@@ -1086,11 +1066,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void addEventListeners(SessionEventListener... listeners) {
 		delegate.addEventListeners( listeners );
-	}
-
-	@Override
-	public boolean isFlushBeforeCompletionEnabled() {
-		return delegate.isFlushBeforeCompletionEnabled();
 	}
 
 	@Override

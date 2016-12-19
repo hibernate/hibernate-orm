@@ -7,7 +7,7 @@
 package org.hibernate.sql.sqm.ast.predicate;
 
 import org.hibernate.sql.sqm.ast.expression.Expression;
-import org.hibernate.sql.sqm.spi.SqlTreeWalker;
+import org.hibernate.sql.sqm.convert.spi.SqlTreeWalker;
 
 /**
  * @author Steve Ebersole

@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.spi.descriptor.java.BooleanTypeDescriptor;
@@ -18,7 +17,7 @@ import org.hibernate.type.spi.descriptor.sql.CharTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class YesNoType extends BasicTypeImpl<Boolean> implements JdbcLiteralFormatter<Boolean> {
+public class YesNoType extends BasicTypeImpl<Boolean> {
 
 	public static final YesNoType INSTANCE = new YesNoType();
 
@@ -33,11 +32,6 @@ public class YesNoType extends BasicTypeImpl<Boolean> implements JdbcLiteralForm
 
 	@Override
 	public JdbcLiteralFormatter<Boolean> getJdbcLiteralFormatter() {
-		return this;
-	}
-
-	@Override
-	public String toJdbcLiteral(Boolean value, Dialect dialect) {
-		return StringType.INSTANCE.toJdbcLiteral( value ? "Y" : "N", dialect );
+		return CharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( getJavaTypeDescriptor() );
 	}
 }

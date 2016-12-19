@@ -6,9 +6,14 @@
  */
 package org.hibernate.type.spi.basic;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
+import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
@@ -22,7 +27,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
-	private final ColumnMapping columnMapping;
+	private final ColumnMapping[] columnMappings;
 
 	private final JavaTypeDescriptor<T> domainJavaType;
 
@@ -32,6 +37,8 @@ public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 	private final AttributeConverterDefinition<T,?> attributeConverterDefinition;
 
 	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
+
+	private final int[] sqlTypes;
 
 	/**
 	 * Constructor form for building a basic type without an AttributeConverter
@@ -125,7 +132,7 @@ public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 			JdbcLiteralFormatter<T> jdbcLiteralFormatter) {
 		this.domainJavaType = domainJavaType;
 
-		this.columnMapping = new ColumnMapping( sqlType );
+		this.columnMappings = new ColumnMapping[] {new ColumnMapping( sqlType )};
 
 		this.mutabilityPlan = mutabilityPlan == null ? domainJavaType.getMutabilityPlan() : mutabilityPlan;
 		this.comparator = comparator == null ? domainJavaType.getComparator() : comparator;
@@ -138,6 +145,8 @@ public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 				domainJavaType,
 				sqlType
 		);
+
+		this.sqlTypes = new int[] { sqlType.getSqlType() };
 	}
 
 	@SuppressWarnings("unchecked")
@@ -164,8 +173,8 @@ public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 	}
 
 	@Override
-	public ColumnMapping getColumnMapping() {
-		return columnMapping;
+	public ColumnMapping[] getColumnMappings() {
+		return columnMappings;
 	}
 
 	public AttributeConverterDefinition<T,?> getAttributeConverterDefinition() {
@@ -175,6 +184,47 @@ public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 	@Override
 	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;
+	}
+
+	@Override
+	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
+		return getJavaTypeDescriptor().extractLoggableRepresentation( (T) value );
+	}
+
+	@Override
+	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session)
+			throws HibernateException {
+		return isDirty( old, current );
+	}
+
+	@Override
+	public boolean isDirty(
+			Object oldState, Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
+			throws HibernateException {
+		return checkable[0] && isDirty( oldState, currentState );
+	}
+
+	protected final boolean isDirty(Object old, Object current) {
+		return !getJavaTypeDescriptor().areEqual( (T) old, (T) current );
+	}
+
+	@Override
+	public boolean isModified(
+			Object dbState, Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
+			throws HibernateException {
+		return false;
+	}
+
+	@Override
+	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner)
+			throws HibernateException {
+		return getMutabilityPlan().assemble( cached );
+	}
+
+	@Override
+	public Serializable disassemble(T value, SharedSessionContractImplementor session, Object owner)
+			throws HibernateException {
+		return getMutabilityPlan().disassemble( value );
 	}
 
 	@Override
@@ -190,5 +240,10 @@ public class BasicTypeImpl<T> extends AbstractBasicTypeImpl<T> {
 	@Override
 	public String asLoggableText() {
 		return "BasicType(" + getJavaType() + ")";
+	}
+
+	@Override
+	public int[] sqlTypes() throws MappingException {
+		return sqlTypes;
 	}
 }

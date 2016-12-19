@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -26,11 +27,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -45,6 +44,10 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.type.spi.AssociationType;
+import org.hibernate.type.spi.ColumnMapping;
+import org.hibernate.type.spi.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -60,14 +63,23 @@ public abstract class CollectionType extends AbstractType implements Association
 	private static final Object NOT_NULL_COLLECTION = new MarkerObject( "NOT NULL COLLECTION" );
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
 
-	private final TypeFactory.TypeScope typeScope;
+	private final TypeConfiguration typeConfiguration;
 	private final String role;
 	private final String foreignKeyPropertyName;
+	private final Comparator comparator;
+	private final ColumnMapping[] columnMappings;
 
-	public CollectionType(TypeFactory.TypeScope typeScope, String role, String foreignKeyPropertyName) {
-		this.typeScope = typeScope;
+	public CollectionType(TypeConfiguration typeConfiguration, String role, String foreignKeyPropertyName) {
+		this.typeConfiguration = typeConfiguration;
 		this.role = role;
 		this.foreignKeyPropertyName = foreignKeyPropertyName;
+		this.comparator = new CollectionComparator();
+		this.columnMappings = new ColumnMapping[] {new ColumnMapping( null, LEGACY_DICTATED_SIZE, LEGACY_DEFAULT_SIZE )};
+	}
+
+	@Override
+	public Classification getClassification() {
+		return Classification.COLLECTION;
 	}
 
 	public String getRole() {
@@ -111,14 +123,14 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	@Override
-	public int compare(Object x, Object y) {
-		return 0; // collections cannot be compared
+	public Comparator getComparator() {
+		return comparator;
 	}
 
-	@Override
-	public int getHashCode(Object x) {
-		throw new UnsupportedOperationException( "cannot doAfterTransactionCompletion lookups on collections" );
-	}
+//	@Override
+//	public int getHashCode(Object x) {
+//		throw new UnsupportedOperationException( "cannot doAfterTransactionCompletion lookups on collections" );
+//	}
 
 	/**
 	 * Instantiate an uninitialized collection wrapper or holder. Callers MUST add the holder to the
@@ -154,22 +166,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	@Override
-	public int[] sqlTypes(Mapping session) throws MappingException {
-		return ArrayHelper.EMPTY_INT_ARRAY;
-	}
-
-	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return new Size[] { LEGACY_DICTATED_SIZE };
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return new Size[] { LEGACY_DEFAULT_SIZE };
-	}
-
-	@Override
-	public int getColumnSpan(Mapping session) throws MappingException {
+	public int getColumnSpan() throws MappingException {
 		return 0;
 	}
 
@@ -204,7 +201,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	protected String renderLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
-		final List<String> list = new ArrayList<String>();
+		final List<String> list = new ArrayList<>();
 		Type elemType = getElementType( factory );
 		Iterator itr = getElementsIterator( value );
 		while ( itr.hasNext() ) {
@@ -222,6 +219,11 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public String getName() {
 		return getReturnedClass().getName() + '(' + getRole() + ')';
+	}
+
+	@Override
+	public ColumnMapping[] getColumnMappings() {
+		return columnMappings;
 	}
 
 	/**
@@ -250,15 +252,16 @@ public abstract class CollectionType extends AbstractType implements Association
 		return false;
 	}
 
+
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 		//remember the uk value
-		
+
 		//This solution would allow us to eliminate the owner arg to disassemble(), but
 		//what if the collection was null, and then later had elements added? seems unsafe
 		//session.getPersistenceContext().getCollectionEntry( (PersistentCollection) value ).getKey();
-		
+
 		final Serializable key = getKeyOfOwner(owner, session);
 		if (key==null) {
 			return null;
@@ -273,7 +276,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
-		//we must use the "remembered" uk value, since it is 
+		//we must use the "remembered" uk value, since it is
 		//not available from the EntityEntry during assembly
 		if (cached==null) {
 			return null;
@@ -396,7 +399,7 @@ public abstract class CollectionType extends AbstractType implements Association
 				id = keyType.semiResolve(
 						entityEntry.getLoadedValue( foreignKeyPropertyName ),
 						session,
-						owner 
+						owner
 				);
 			}
 
@@ -448,7 +451,7 @@ public abstract class CollectionType extends AbstractType implements Association
 		
 		return resolveKey( getKeyOfOwner( owner, session ), session, owner );
 	}
-	
+
 	private Object resolveKey(Serializable key, SharedSessionContractImplementor session, Object owner) {
 		// if (key==null) throw new AssertionFailure("owner identifier unknown when re-assembling
 		// collection reference");
@@ -486,6 +489,16 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public boolean isModified(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) throws HibernateException {
 		return false;
+	}
+
+	@Override
+	public int getHashCode(Object value) throws HibernateException {
+		throw new UnsupportedOperationException( "cannot doAfterTransactionCompletion lookups on collections" );
+	}
+
+	@Override
+	public int[] sqlTypes() throws MappingException {
+		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
 
 	@Override
@@ -744,12 +757,12 @@ public abstract class CollectionType extends AbstractType implements Association
 
 		// check if collection is currently being loaded
 		PersistentCollection collection = persistenceContext.getLoadContexts().locateLoadingCollection( persister, key );
-		
+
 		if ( collection == null ) {
-			
+
 			// check if it is already completely loaded, but unowned
 			collection = persistenceContext.useUnownedCollection( new CollectionKey(persister, key, entityMode) );
-			
+
 			if ( collection == null ) {
 
 				collection = persistenceContext.getCollection( new CollectionKey(persister, key, entityMode) );
@@ -776,15 +789,15 @@ public abstract class CollectionType extends AbstractType implements Association
 				}
 
 			}
-			
+
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracef( "Created collection wrapper: %s",
 						MessageHelper.collectionInfoString( persister, collection,
 								key, session ) );
 			}
-			
+
 		}
-		
+
 		collection.setOwner(owner);
 
 		return collection.getValue();
@@ -814,7 +827,15 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value) {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
+
+	public static class CollectionComparator implements Comparator<Object> {
+		@Override
+		public int compare(Object x, Object y) {
+			return 0; // collections cannot be compared
+		}
+	}
+
 }

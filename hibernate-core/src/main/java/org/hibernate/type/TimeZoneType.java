@@ -20,8 +20,7 @@ import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class TimeZoneType
-		extends BasicTypeImpl<TimeZone> implements JdbcLiteralFormatter<TimeZone> {
+public class TimeZoneType extends BasicTypeImpl<TimeZone> implements JdbcLiteralFormatter<TimeZone> {
 
 	public static final TimeZoneType INSTANCE = new TimeZoneType();
 

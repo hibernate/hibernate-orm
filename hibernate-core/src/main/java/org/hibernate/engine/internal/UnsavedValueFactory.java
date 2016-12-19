@@ -14,10 +14,9 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.property.access.spi.Getter;
-import org.hibernate.type.IdentifierType;
 import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.spi.VersionSupport;
 
 /**
  * Helper for dealing with unsaved value handling
@@ -90,7 +89,8 @@ public class UnsavedValueFactory {
 		}
 		else {
 			try {
-				return new IdentifierValue( (Serializable) ( (IdentifierType) identifierType ).stringToObject( unsavedValue ) );
+				return new IdentifierValue( (Serializable) identifierType.getJavaTypeDescriptor()
+						.fromString( unsavedValue ) );
 			}
 			catch ( ClassCastException cce ) {
 				throw new MappingException( "Bad identifier type: " + identifierType.getName() );
@@ -117,7 +117,7 @@ public class UnsavedValueFactory {
 	public static VersionValue getUnsavedVersionValue(
 			String versionUnsavedValue, 
 			Getter versionGetter,
-			VersionType versionType,
+			Type versionType,
 			Constructor constructor) {
 		
 		if ( versionUnsavedValue == null ) {
@@ -125,7 +125,7 @@ public class UnsavedValueFactory {
 				final Object defaultValue = versionGetter.get( instantiate( constructor ) );
 				// if the version of a newly instantiated object is not the same
 				// as the version seed value, use that as the unsaved-value
-				return versionType.isEqual( versionType.seed( null ), defaultValue )
+				return versionType.isEqual( ( (VersionSupport) versionType ).seed( null ), defaultValue )
 						? VersionValue.UNDEFINED
 						: new VersionValue( defaultValue );
 			}

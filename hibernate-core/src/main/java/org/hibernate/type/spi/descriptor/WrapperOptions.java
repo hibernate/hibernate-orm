@@ -43,6 +43,8 @@ public interface WrapperOptions {
 	 * @return The remapped descriptor.  May be the same as the known descriptor indicating no remapping.
 	 */
 
+	SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor);
+
 	/**
 	 * The JDBC {@link TimeZone} used when persisting Timestamp and DateTime properties into the database.
 	 * This setting is used when storing timestamps using the {@link java.sql.PreparedStatement#setTimestamp(int, Timestamp, Calendar)} method.
@@ -51,7 +53,5 @@ public interface WrapperOptions {
 	 *
 	 * @return JDBC {@link TimeZone}
 	 */
-	TimeZone getJdbcTimeZone();
-
-	SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor);
+	public TimeZone getJdbcTimeZone();
 }

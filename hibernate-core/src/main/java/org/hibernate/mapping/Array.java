@@ -48,8 +48,7 @@ public class Array extends List {
 
 	@Override
 	public CollectionType getDefaultCollectionType() throws MappingException {
-		return getMetadata().getTypeResolver()
-				.getTypeFactory()
+		return getMetadata().getTypeConfiguration()
 				.array( getRole(), getReferencedPropertyName(), getElementClass() );
 	}
 

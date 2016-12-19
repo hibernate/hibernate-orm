@@ -6,6 +6,7 @@
  */
 package org.hibernate.type;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.spi.Type;
 
 /**
  * Additional contract for a {@link Type} that may appear as an SQL literal

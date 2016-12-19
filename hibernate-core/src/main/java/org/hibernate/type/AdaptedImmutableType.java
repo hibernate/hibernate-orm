@@ -26,7 +26,7 @@ public class AdaptedImmutableType<T> extends BasicTypeImpl<T> {
 	public AdaptedImmutableType(BasicType<T> baseMutableType) {
 		super(
 				baseMutableType.getJavaTypeDescriptor(),
-				baseMutableType.getColumnMapping().getSqlTypeDescriptor(),
+				baseMutableType.getColumnMappings()[0].getSqlTypeDescriptor(),
 				ImmutableMutabilityPlan.INSTANCE,
 				baseMutableType.getComparator()
 		);

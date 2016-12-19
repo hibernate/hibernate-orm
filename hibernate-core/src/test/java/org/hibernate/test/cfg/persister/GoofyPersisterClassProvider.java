@@ -53,7 +53,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.spi.VersionSupport;
 
 /**
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
@@ -87,11 +87,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		@Override
 		public EntityTuplizer getEntityTuplizer() {
 			return null;
-		}
-
-		@Override
-		public BytecodeEnhancementMetadata getInstrumentationMetadata() {
-			return new BytecodeEnhancementMetadataNonPojoImpl( null );
 		}
 
 		@Override
@@ -219,7 +214,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public VersionType getVersionType() {
+		public Type getVersionType() {
 			return null;
 		}
 

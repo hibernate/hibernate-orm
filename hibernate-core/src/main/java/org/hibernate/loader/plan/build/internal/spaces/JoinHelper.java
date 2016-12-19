@@ -14,7 +14,7 @@ import org.hibernate.loader.plan.spi.JoinDefinedByMetadata;
 import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.type.spi.CollectionType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.spi.EntityType;
 

@@ -15,12 +15,13 @@ import org.hibernate.collection.internal.PersistentBag;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.spi.TypeConfiguration;
 
 public class BagType extends CollectionType {
 
 	@SuppressWarnings("WeakerAccess")
-	public BagType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
-		super( typeScope, role, propertyRef );
+	public BagType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
+		super( typeConfiguration, role, propertyRef );
 	}
 
 	@Override

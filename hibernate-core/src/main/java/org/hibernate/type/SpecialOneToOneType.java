@@ -15,8 +15,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.spi.ColumnMapping;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A one-to-one association that maps to specific formula(s)
@@ -26,24 +27,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public class SpecialOneToOneType extends OneToOneType {
 	
-	/**
-	 * @deprecated Use {@link #SpecialOneToOneType(org.hibernate.type.TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String)} instead.
-	 */
-	@Deprecated
 	public SpecialOneToOneType(
-			TypeFactory.TypeScope scope,
-			String referencedEntityName,
-			ForeignKeyDirection foreignKeyType, 
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			String entityName,
-			String propertyName) {
-		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
-	}
-	
-	public SpecialOneToOneType(
-			TypeFactory.TypeScope scope,
+			TypeConfiguration typeConfiguration,
 			String referencedEntityName,
 			ForeignKeyDirection foreignKeyType,
 			boolean referenceToPrimaryKey, 
@@ -53,7 +38,7 @@ public class SpecialOneToOneType extends OneToOneType {
 			String entityName,
 			String propertyName) {
 		super(
-				scope,
+				typeConfiguration,
 				referencedEntityName, 
 				foreignKeyType,
 				referenceToPrimaryKey, 
@@ -66,21 +51,17 @@ public class SpecialOneToOneType extends OneToOneType {
 	}
 	
 	public int getColumnSpan(Mapping mapping) throws MappingException {
-		return super.getIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
-	}
-	
-	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		return super.getIdentifierOrUniqueKeyType( mapping ).sqlTypes( mapping );
+		return super.getIdentifierOrUniqueKeyType().getColumnSpan();
 	}
 
 	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return super.getIdentifierOrUniqueKeyType( mapping ).dictatedSizes( mapping );
+	public int[] sqlTypes() throws MappingException {
+		return super.getIdentifierOrUniqueKeyType().sqlTypes();
 	}
 
 	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return super.getIdentifierOrUniqueKeyType( mapping ).defaultSizes( mapping );
+	public ColumnMapping[] getColumnMappings() {
+		return getIdentifierOrUniqueKeyType().getColumnMappings();
 	}
 
 	public boolean useLHSPrimaryKey() {
@@ -90,7 +71,7 @@ public class SpecialOneToOneType extends OneToOneType {
 	@Override
 	public Object hydrate(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException, SQLException {
-		return super.getIdentifierOrUniqueKeyType( session.getFactory() )
+		return super.getIdentifierOrUniqueKeyType()
 			.nullSafeGet(rs, names, session, owner);
 	}
 	
@@ -130,7 +111,4 @@ public class SpecialOneToOneType extends OneToOneType {
 			return resolveIdentifier(id, session);
 		}
 	}
-	
-
-
 }

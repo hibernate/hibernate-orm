@@ -44,7 +44,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.BagType;
 import org.hibernate.type.spi.Type;
 

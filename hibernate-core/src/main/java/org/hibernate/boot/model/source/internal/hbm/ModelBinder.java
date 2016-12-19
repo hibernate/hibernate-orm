@@ -455,7 +455,7 @@ public class ModelBinder {
 		if ( StringHelper.isNotEmpty( entitySource.getCustomPersisterClassName() ) ) {
 			try {
 				entityDescriptor.setEntityPersisterClass(
-						sourceDocument.getClassLoaderAccess().classForName( entitySource.getCustomPersisterClassName() )
+						sourceDocument.getBootstrapContext().getClassLoaderAccess().classForName( entitySource.getCustomPersisterClassName() )
 				);
 			}
 			catch (ClassLoadingException e) {
@@ -1071,7 +1071,7 @@ public class ModelBinder {
 				rootEntityDescriptor.getTable()
 		);
 
-		versionValue.makeVersion();
+		rootEntityDescriptor.setIdentifier( versionValue );
 
 		bindSimpleValueType(
 				sourceDocument,
@@ -1656,7 +1656,7 @@ public class ModelBinder {
 
 		if ( source.getCustomPersisterClassName() != null ) {
 			binding.setCollectionPersisterClass(
-					mappingDocument.getClassLoaderAccess().classForName(
+					mappingDocument.getBootstrapContext().getClassLoaderAccess().classForName(
 							mappingDocument.qualifyClassName( source.getCustomPersisterClassName() )
 					)
 			);
@@ -3004,7 +3004,7 @@ public class ModelBinder {
 		final String typeName = typeSource.getName();
 
 		if ( StringHelper.isNotEmpty( typeName ) ) {
-			final BasicTypeProducer registered = mappingDocument.getMetadataCollector()
+			final BasicTypeProducer registered = mappingDocument.getMetadataCollector().getBootstrapContext()
 					.getBasicTypeProducerRegistry()
 					.resolve( typeSource.getName() );
 			if ( registered != null ) {

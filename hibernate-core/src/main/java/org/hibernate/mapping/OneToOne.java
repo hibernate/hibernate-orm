@@ -11,7 +11,7 @@ import java.util.Iterator;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.spi.Type;
 
@@ -51,7 +51,7 @@ public class OneToOne extends ToOne {
 	
 	public Type getType() throws MappingException {
 		if ( getColumnIterator().hasNext() ) {
-			return getMetadata().getTypeResolver().getTypeFactory().specialOneToOne(
+			return getMetadata().getTypeConfiguration().specialOneToOne(
 					getReferencedEntityName(), 
 					foreignKeyType,
 					referenceToPrimaryKey, 
@@ -63,7 +63,7 @@ public class OneToOne extends ToOne {
 			);
 		}
 		else {
-			return getMetadata().getTypeResolver().getTypeFactory().oneToOne(
+			return getMetadata().getTypeConfiguration().oneToOne(
 					getReferencedEntityName(), 
 					foreignKeyType,
 					referenceToPrimaryKey, 

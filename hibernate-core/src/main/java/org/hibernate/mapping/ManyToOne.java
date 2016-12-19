@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -28,7 +28,7 @@ public class ManyToOne extends ToOne {
 	}
 
 	public Type getType() throws MappingException {
-		return getMetadata().getTypeResolver().getTypeFactory().manyToOne(
+		return getMetadata().getTypeConfiguration().manyToOne(
 				getReferencedEntityName(),
 				referenceToPrimaryKey, 
 				getReferencedPropertyName(),
@@ -73,7 +73,7 @@ public class ManyToOne extends ToOne {
 					ForeignKey fk = getTable().createForeignKey( 
 							getForeignKeyName(), 
 							getConstraintColumns(), 
-							( (EntityType) getType() ).getAssociatedEntityName(), 
+							( (EntityType) getType() ).getAssociatedEntityName(),
 							getForeignKeyDefinition(), 
 							refColumns
 					);

@@ -28,10 +28,10 @@ import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityBasedBasicAttribute;
 import org.hibernate.tuple.entity.EntityBasedCompositionAttribute;
 import org.hibernate.tuple.entity.VersionProperty;
-import org.hibernate.type.AssociationType;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.AssociationType;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.VersionType;
 
 /**
  * Responsible for generation of runtime metamodel {@link Property} representations.
@@ -106,7 +106,7 @@ public final class PropertyFactory {
 		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
 				mappedUnsavedValue,
 				getGetter( property ),
-				(VersionType) property.getType(),
+				( (BasicType) property.getType() ).getVersionSupport(),
 				getConstructor( property.getPersistentClass() )
 		);
 

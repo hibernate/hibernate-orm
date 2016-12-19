@@ -6,7 +6,8 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import org.hibernate.type.spi.CollectionType;
+
+import org.hibernate.type.CollectionType;
 
 /**
  * Models the requested fetching of a persistent collection attribute.

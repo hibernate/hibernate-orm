@@ -24,7 +24,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InFragment;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.spi.Type;
 
@@ -182,7 +182,7 @@ public class WhereParser implements Parser {
 		else {
 			Type type = element.elementType;
 			if ( type.getClassification().equals( Type.Classification.ENTITY ) ) { //ie. a many-to-many
-				String entityName = ( ( EntityType ) type ).getAssociatedEntityName();
+				String entityName = ( (EntityType) type ).getAssociatedEntityName();
 				name = pathExpressionParser.continueFromManyToMany( entityName, element.elementColumns, q );
 			}
 			else {

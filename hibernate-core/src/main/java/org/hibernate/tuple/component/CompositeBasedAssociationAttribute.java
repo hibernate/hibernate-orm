@@ -30,7 +30,7 @@ import org.hibernate.tuple.AbstractNonIdentifierAttribute;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 
 /**
  * @author Steve Ebersole

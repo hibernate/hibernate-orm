@@ -52,7 +52,6 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sqm.ConsumerContext;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.TypeResolver;
 
 /**
  * Defines the internal contract between the <tt>SessionFactory</tt> and other parts of

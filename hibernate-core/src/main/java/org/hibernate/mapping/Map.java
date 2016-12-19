@@ -26,18 +26,15 @@ public class Map extends IndexedCollection {
 
 	public CollectionType getDefaultCollectionType() {
 		if ( isSorted() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
+			return getMetadata().getTypeConfiguration()
 					.sortedMap( getRole(), getReferencedPropertyName(), getComparator() );
 		}
 		else if ( hasOrder() ) {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
+			return getMetadata().getTypeConfiguration()
 					.orderedMap( getRole(), getReferencedPropertyName() );
 		}
 		else {
-			return getMetadata().getTypeResolver()
-					.getTypeFactory()
+			return getMetadata().getTypeConfiguration()
 					.map( getRole(), getReferencedPropertyName() );
 		}
 	}

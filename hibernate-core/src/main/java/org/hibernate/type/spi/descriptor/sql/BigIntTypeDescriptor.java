@@ -12,11 +12,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.internal.JdbcLiteralFormatterNumericData;
 
 /**
  * Descriptor for {@link Types#BIGINT BIGINT} handling.
@@ -32,6 +34,12 @@ public class BigIntTypeDescriptor implements SqlTypeDescriptor {
 	@Override
 	public int getSqlType() {
 		return Types.BIGINT;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, Long.class );
 	}
 
 	@Override

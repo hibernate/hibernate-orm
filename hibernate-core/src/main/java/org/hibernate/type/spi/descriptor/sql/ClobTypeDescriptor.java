@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.engine.jdbc.CharacterStream;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
@@ -35,6 +36,12 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 	@Override
 	public boolean canBeRemapped() {
 		return true;
+	}
+
+	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+		// literal values for (N)CLOB data is not supported.
+		return null;
 	}
 
 	@Override

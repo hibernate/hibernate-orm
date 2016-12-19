@@ -40,9 +40,9 @@ import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.CompositeType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;

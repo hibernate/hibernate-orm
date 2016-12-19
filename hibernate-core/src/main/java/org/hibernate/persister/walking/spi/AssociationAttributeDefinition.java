@@ -11,7 +11,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.spi.HydratedCompoundValueHandler;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 
 /**
  * @author Steve Ebersole

@@ -13,8 +13,8 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.TinyIntTypeDescriptor;
 
 /**
  * An SQL dialect targeting Sybase Adaptive Server Enterprise (ASE) 15 and higher.

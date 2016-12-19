@@ -7,7 +7,7 @@
 package org.hibernate.persister.entity;
 import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 /**

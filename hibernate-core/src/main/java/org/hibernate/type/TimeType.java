@@ -9,11 +9,11 @@ package org.hibernate.type;
 import java.sql.Time;
 import java.util.Date;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.basic.BasicTypeImpl;
+import org.hibernate.type.spi.TemporalType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.java.JdbcTimeTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TIME TIME} and {@link Time}
@@ -21,12 +21,12 @@ import org.hibernate.type.spi.descriptor.java.JdbcTimeTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class TimeType extends BasicTypeImpl<Date> implements JdbcLiteralFormatter<Date> {
+public class TimeType extends TemporalTypeImpl<Date> {
 
 	public static final TimeType INSTANCE = new TimeType();
 
 	public TimeType() {
-		super( JdbcTimeTypeDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor.INSTANCE );
+		super( JdbcTimeTypeDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -35,11 +35,24 @@ public class TimeType extends BasicTypeImpl<Date> implements JdbcLiteralFormatte
 
 	@Override
 	public JdbcLiteralFormatter<Date> getJdbcLiteralFormatter() {
-		return this;
+		return TimeTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( JdbcTimeTypeDescriptor.INSTANCE );
 	}
 
 	@Override
-	public String toJdbcLiteral(Date value, Dialect dialect) {
-		return DateTimeUtils.formatAsJdbcLiteralTime( value );
+	@SuppressWarnings("unchecked")
+	public <X> TemporalType<X> resolveTypeForPrecision(
+			javax.persistence.TemporalType precision, TypeConfiguration typeConfiguration) {
+		switch ( precision ) {
+			case DATE: {
+				return (TemporalType<X>) DateType.INSTANCE;
+			}
+			case TIMESTAMP: {
+				return (TemporalType<X>) TimestampType.INSTANCE;
+			}
+			default: {
+				return (TemporalType<X>) this;
+			}
+		}
 	}
+
 }

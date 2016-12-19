@@ -9,7 +9,7 @@ package org.hibernate.engine.internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.spi.VersionSupport;
 
 import org.jboss.logging.Logger;
 
@@ -31,21 +31,21 @@ public final class Versioning {
 	}
 
 	/**
-	 * Create an initial optimistic locking value according the {@link VersionType}
+	 * Create an initial optimistic locking value according the {@link org.hibernate.type.spi.VersionSupport}
 	 * contract for the version property.
 	 *
 	 * @param versionType The version type.
 	 * @param session The originating session
 	 * @return The initial optimistic locking value
 	 */
-	private static Object seed(VersionType versionType, SharedSessionContractImplementor session) {
+	private static Object seed(VersionSupport versionType, SharedSessionContractImplementor session) {
 		final Object seed = versionType.seed( session );
 		LOG.tracef( "Seeding: %s", seed );
 		return seed;
 	}
 
 	/**
-	 * Create an initial optimistic locking value according the {@link VersionType}
+	 * Create an initial optimistic locking value according the {@link VersionSupport}
 	 * contract for the version property <b>if required</b> and inject it into
 	 * the snapshot state.
 	 *
@@ -59,7 +59,7 @@ public final class Versioning {
 	public static boolean seedVersion(
 			Object[] fields,
 			int versionProperty,
-			VersionType versionType,
+			VersionSupport versionType,
 			SharedSessionContractImplementor session) {
 		final Object initialVersion = fields[versionProperty];
 		if (
@@ -80,7 +80,7 @@ public final class Versioning {
 
 	/**
 	 * Generate the next increment in the optimistic locking value according
-	 * the {@link VersionType} contract for the version property.
+	 * the {@link VersionSupport} contract for the version property.
 	 *
 	 * @param version The current version
 	 * @param versionType The version type
@@ -88,7 +88,7 @@ public final class Versioning {
 	 * @return The incremented optimistic locking value.
 	 */
 	@SuppressWarnings("unchecked")
-	public static Object increment(Object version, VersionType versionType, SharedSessionContractImplementor session) {
+	public static Object increment(Object version, VersionSupport versionType, SharedSessionContractImplementor session) {
 		final Object next = versionType.next( version, session );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(

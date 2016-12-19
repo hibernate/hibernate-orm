@@ -11,7 +11,7 @@ import java.io.Reader;
 import java.io.StringReader;
 
 import org.hibernate.engine.jdbc.CharacterStream;
-import org.hibernate.type.descriptor.java.DataHelper;
+import org.hibernate.type.spi.descriptor.java.DataHelper;
 
 /**
  * Implementation of {@link CharacterStream}

@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -66,7 +66,7 @@ public class OldNaturalIdCacheKey implements Serializable {
 			final Type type = propertyTypes[naturalIdPropertyIndex];
 			final Object value = naturalIdValues[i];
 
-			result = prime * result + (value != null ? type.getHashCode( value, factory ) : 0);
+			result = prime * result + (value != null ? type.getHashCode( value ) : 0);
 
 			// The natural id may not be fully resolved in some situations.  See HHH-7513 for one of them
 			// (re-attaching a mutable natural id uses a database snapshot and hydration does not resolve associations).

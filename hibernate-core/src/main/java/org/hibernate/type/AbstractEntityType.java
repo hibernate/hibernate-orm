@@ -9,7 +9,9 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.hibernate.AssertionFailure;
@@ -26,21 +28,25 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.sqm.domain.EntityReference;
+import org.hibernate.type.spi.EntityType;
+import org.hibernate.type.spi.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Base for types which map associations to persistent entities.
  *
  * @author Gavin King
  */
-public abstract class EntityType extends AbstractType implements AssociationType {
+public abstract class AbstractEntityType extends AbstractType implements EntityType {
 
-	private final TypeFactory.TypeScope scope;
+	private final TypeConfiguration typeConfiguration;
 	private final String associatedEntityName;
 	protected final String uniqueKeyPropertyName;
 	private final boolean eager;
 	private final boolean unwrapProxy;
 	private final boolean referenceToPrimaryKey;
-
+	private final Comparator comparator;
 	/**
 	 * Cached because of performance
 	 *
@@ -61,31 +67,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * Constructs the requested entity type mapping.
 	 *
-	 * @param scope The type scope
-	 * @param entityName The name of the associated entity.
-	 * @param uniqueKeyPropertyName The property-ref name, or null if we
-	 * reference the PK of the associated entity.
-	 * @param eager Is eager fetching enabled.
-	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
-	 * says to return the "implementation target" of lazy prooxies; typically only possible
-	 * with lazy="no-proxy".
-	 *
-	 * @deprecated Use {@link #EntityType(org.hibernate.type.TypeFactory.TypeScope, String, boolean, String, boolean, boolean)} instead.
-	 */
-	@Deprecated
-	protected EntityType(
-			TypeFactory.TypeScope scope,
-			String entityName,
-			String uniqueKeyPropertyName,
-			boolean eager,
-			boolean unwrapProxy) {
-		this( scope, entityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, eager, unwrapProxy );
-	}
-
-	/**
-	 * Constructs the requested entity type mapping.
-	 *
-	 * @param scope The type scope
+	 * @param typeConfiguration The type typeConfiguration
 	 * @param entityName The name of the associated entity.
 	 * @param referenceToPrimaryKey True if association references a primary key.
 	 * @param uniqueKeyPropertyName The property-ref name, or null if we
@@ -95,23 +77,24 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * says to return the "implementation target" of lazy prooxies; typically only possible
 	 * with lazy="no-proxy".
 	 */
-	protected EntityType(
-			TypeFactory.TypeScope scope,
+	protected AbstractEntityType(
+			TypeConfiguration typeConfiguration,
 			String entityName,
 			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
 			boolean eager,
 			boolean unwrapProxy) {
-		this.scope = scope;
+		this.typeConfiguration = typeConfiguration;
 		this.associatedEntityName = entityName;
 		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
 		this.eager = eager;
 		this.unwrapProxy = unwrapProxy;
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
+		this.comparator = new EntityComparator();
 	}
 
-	protected TypeFactory.TypeScope scope() {
-		return scope;
+	protected TypeConfiguration typeConfiguration() {
+		return typeConfiguration;
 	}
 
 	/**
@@ -157,12 +140,12 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return associatedEntityName;
 	}
 
-	/**
-	 * Does this association foreign key reference the primary key of the other table?
-	 * Otherwise, it references a property-ref.
-	 *
-	 * @return True if this association reference the PK of the associated entity.
-	 */
+	@Override
+	public Comparator getComparator() {
+		return comparator;
+	}
+
+	@Override
 	public boolean isReferenceToPrimaryKey() {
 		return referenceToPrimaryKey;
 	}
@@ -179,15 +162,12 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return null;
 	}
 
+	@Override
 	public String getPropertyName() {
 		return null;
 	}
 
-	/**
-	 * The name of the associated entity.
-	 *
-	 * @return The associated entity name.
-	 */
+	@Override
 	public final String getAssociatedEntityName() {
 		return associatedEntityName;
 	}
@@ -242,7 +222,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return ReflectHelper.classForName( entityName );
 		}
 		catch (ClassNotFoundException cnfe) {
-			return this.scope.resolveFactory().getMetamodel().entityPersister( entityName ).
+			return typeConfiguration.getSessionFactory().getMetamodel().entityPersister( entityName ).
 					getEntityTuplizer().getMappedClass();
 		}
 	}
@@ -273,11 +253,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	@Override
 	public final boolean isSame(Object x, Object y) {
 		return x == y;
-	}
-
-	@Override
-	public int compare(Object x, Object y) {
-		return 0; //TODO: entities CAN be compared, by PK, fix this! -> only if/when we can extract the id values....
 	}
 
 	@Override
@@ -325,7 +300,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 									.getName()
 					);
 				}
-				id = getIdentifierOrUniqueKeyType( session.getFactory() )
+				id = getIdentifierOrUniqueKeyType()
 						.replace( id, null, session, owner, copyCache );
 				return resolve( id, session, owner );
 			}
@@ -333,26 +308,26 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	@Override
-	public int getHashCode(Object x, SessionFactoryImplementor factory) {
-		EntityPersister persister = getAssociatedEntityPersister( factory );
+	public int getHashCode(Object value) {
+		EntityPersister persister = getAssociatedEntityPersister( typeConfiguration.getSessionFactory() );
 		if ( !persister.canExtractIdOutOfEntity() ) {
-			return super.getHashCode( x );
+			return super.getHashCode( value );
 		}
 
 		final Serializable id;
-		if ( x instanceof HibernateProxy ) {
-			id = ( (HibernateProxy) x ).getHibernateLazyInitializer().getIdentifier();
+		if ( value instanceof HibernateProxy ) {
+			id = ( (HibernateProxy) value ).getHibernateLazyInitializer().getIdentifier();
 		}
 		else {
 			final Class mappedClass = persister.getMappedClass();
-			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
-				id = persister.getIdentifier( x );
+			if ( mappedClass.isAssignableFrom( value.getClass() ) ) {
+				id = persister.getIdentifier( value );
 			}
 			else {
-				id = (Serializable) x;
+				id = (Serializable) value;
 			}
 		}
-		return persister.getIdentifierType().getHashCode( id, factory );
+		return persister.getIdentifierType().getHashCode( id );
 	}
 
 	@Override
@@ -476,7 +451,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			// an entity type, in which case we need to resolve its identitifier
 			Type type = entityPersister.getPropertyType( uniqueKeyPropertyName );
 			if ( type.isEntityType() ) {
-				propertyValue = ( (EntityType) type ).getIdentifier( propertyValue, session );
+				propertyValue = ( (AbstractEntityType) type ).getIdentifier( propertyValue, session );
 			}
 
 			return propertyValue;
@@ -526,18 +501,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return result.toString();
 	}
 
-	/**
-	 * Is the association modeled here defined as a 1-1 in the database (physical model)?
-	 *
-	 * @return True if a 1-1 in the database; false otherwise.
-	 */
-	public abstract boolean isOneToOne();
-
-	/**
-	 * Is the association modeled here a 1-1 according to the logical moidel?
-	 *
-	 * @return True if a 1-1 in the logical model; false otherwise.
-	 */
+	@Override
 	public boolean isLogicalOneToOne() {
 		return isOneToOne();
 	}
@@ -581,43 +545,26 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 	}
 
-	/**
-	 * Determine the type of either (1) the identifier if we reference the
-	 * associated entity's PK or (2) the unique key to which we refer (i.e.
-	 * the property-ref).
-	 *
-	 * @param factory The mappings...
-	 *
-	 * @return The appropriate type.
-	 *
-	 * @throws MappingException Generally, if unable to resolve the associated entity name
-	 * or unique key property name.
-	 */
-	public final Type getIdentifierOrUniqueKeyType(Mapping factory) throws MappingException {
+	@Override
+	public final Type getIdentifierOrUniqueKeyType() throws MappingException {
+		final SessionFactoryImplementor factory = typeConfiguration.getSessionFactory();
 		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return getIdentifierType( factory );
 		}
 		else {
 			Type type = factory.getReferencedPropertyType( getAssociatedEntityName(), uniqueKeyPropertyName );
 			if ( type.isEntityType() ) {
-				type = ( (EntityType) type ).getIdentifierOrUniqueKeyType( factory );
+				type = ( (AbstractEntityType) type ).getIdentifierOrUniqueKeyType();
 			}
 			return type;
 		}
 	}
 
-	/**
-	 * The name of the property on the associated entity to which our FK
-	 * refers
-	 *
-	 * @param factory The mappings...
-	 *
-	 * @return The appropriate property name.
-	 *
-	 * @throws MappingException Generally, if unable to resolve the associated entity name
-	 */
-	public final String getIdentifierOrUniqueKeyPropertyName(Mapping factory)
+	@Override
+	public final String getIdentifierOrUniqueKeyPropertyName()
 			throws MappingException {
+		final SessionFactoryImplementor factory = typeConfiguration.getSessionFactory();
+
 		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return factory.getIdentifierPropertyName( getAssociatedEntityName() );
 		}
@@ -688,7 +635,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				entityName,
 				uniqueKeyPropertyName,
 				key,
-				getIdentifierOrUniqueKeyType( factory ),
+				getIdentifierOrUniqueKeyType(),
 				persister.getEntityMode(),
 				session.getFactory()
 		);
@@ -699,6 +646,28 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			result = persister.loadByUniqueKey( uniqueKeyPropertyName, key, session );
 		}
 		return result == null ? null : persistenceContext.proxyFor( result );
+	}
+
+	@Override
+	public String getEntityName() {
+		return associatedEntityName;
+	}
+
+	@Override
+	public Optional<EntityReference> toEntityReference() {
+		return Optional.of( this );
+	}
+
+	@Override
+	public String asLoggableText() {
+		return "Entity(" + getEntityName() + ")";
+	}
+
+	public static class EntityComparator implements Comparator<Object> {
+		@Override
+		public int compare(Object x, Object y) {
+			return 0; //TODO: entities CAN be compared, by PK, fix this! -> only if/when we can extract the id values....
+		}
 	}
 
 }

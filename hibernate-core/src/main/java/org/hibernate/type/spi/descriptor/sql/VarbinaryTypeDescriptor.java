@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.ValueExtractor;
@@ -41,6 +42,12 @@ public class VarbinaryTypeDescriptor implements SqlTypeDescriptor {
 	@Override
 	public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
 		return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( byte[].class );
+	}
+
+	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+		// literal values for binary data of any kind is not supported.
+		return null;
 	}
 
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {

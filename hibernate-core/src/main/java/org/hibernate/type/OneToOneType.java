@@ -13,42 +13,26 @@ import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.type.spi.ColumnMapping;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A one-to-one association to an entity
  * @author Gavin King
  */
-public class OneToOneType extends EntityType {
+public class OneToOneType extends AbstractEntityType {
+	private static final ColumnMapping[] COLUMN_MAPPINGS = new ColumnMapping[0];
 
 	private final ForeignKeyDirection foreignKeyType;
 	private final String propertyName;
 	private final String entityName;
 
-	/**
-	 * @deprecated Use {@link #OneToOneType(TypeFactory.TypeScope, String, ForeignKeyDirection, boolean, String, boolean, boolean, String, String)}
-	 *  instead.
-	 */
-	@Deprecated
 	public OneToOneType(
-			TypeFactory.TypeScope scope,
-			String referencedEntityName,
-			ForeignKeyDirection foreignKeyType,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			String entityName,
-			String propertyName) {
-		this( scope, referencedEntityName, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
-	}
-
-	public OneToOneType(
-			TypeFactory.TypeScope scope,
+			TypeConfiguration typeConfiguration,
 			String referencedEntityName,
 			ForeignKeyDirection foreignKeyType,
 			boolean referenceToPrimaryKey,
@@ -57,7 +41,7 @@ public class OneToOneType extends EntityType {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
-		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
+		super( typeConfiguration, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
 		this.foreignKeyType = foreignKeyType;
 		this.propertyName = propertyName;
 		this.entityName = entityName;
@@ -82,30 +66,28 @@ public class OneToOneType extends EntityType {
 	}
 
 	@Override
-	public int getColumnSpan(Mapping session) throws MappingException {
+	public int getColumnSpan() throws MappingException {
 		return 0;
 	}
 
 	@Override
-	public int[] sqlTypes(Mapping session) throws MappingException {
+	public int[] sqlTypes() throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
 
-	private static final Size[] SIZES = new Size[0];
-
 	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return SIZES;
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return SIZES;
-	}
-
-	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value) {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
+	}
+
+	@Override
+	public Classification getClassification() {
+		return Classification.ENTITY;
+	}
+
+	@Override
+	public ColumnMapping[] getColumnMappings() {
+		return COLUMN_MAPPINGS;
 	}
 
 	@Override

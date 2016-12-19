@@ -48,7 +48,7 @@ import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.SQLLoadable;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -493,7 +493,7 @@ public class SQLQueryReturnProcessor {
 //			collectionOwnerAliases.add( ownerAlias );
 		}
 		else if ( returnType.isEntityType() ) {
-			EntityType eType = ( EntityType ) returnType;
+			EntityType eType = (EntityType) returnType;
 			String returnEntityName = eType.getAssociatedEntityName();
 			SQLLoadable persister = getSQLLoadable( returnEntityName );
 			addPersister( alias, fetchReturn.getPropertyResultsMap(), persister );

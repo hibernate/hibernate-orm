@@ -6,7 +6,8 @@
  */
 package org.hibernate;
 
-import org.hibernate.type.VersionType;
+
+import org.hibernate.type.spi.Type;
 
 /**
  * Represents a replication strategy.
@@ -20,7 +21,7 @@ public enum ReplicationMode {
 	 */
 	EXCEPTION {
 		@Override
-		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionType versionType) {
+		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, Type type) {
 			throw new AssertionFailure( "should not be called" );
 		}
 	},
@@ -29,7 +30,7 @@ public enum ReplicationMode {
 	 */
 	IGNORE {
 		@Override
-		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionType versionType) {
+		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, Type type) {
 			return false;
 		}
 	},
@@ -38,7 +39,7 @@ public enum ReplicationMode {
 	 */
 	OVERWRITE {
 		@Override
-		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionType versionType) {
+		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, Type type) {
 			return true;
 		}
 	},
@@ -48,9 +49,9 @@ public enum ReplicationMode {
 	LATEST_VERSION {
 		@Override
 		@SuppressWarnings("unchecked")
-		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionType versionType) {
+		public boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, Type type) {
 			// always overwrite non-versioned data (because we don't know which is newer)
-			return versionType == null || versionType.getComparator().compare( currentVersion, newVersion ) <= 0;
+			return type == null || type.getComparator().compare( currentVersion, newVersion ) <= 0;
 		}
 	};
 
@@ -60,10 +61,10 @@ public enum ReplicationMode {
 	 * @param entity The entity being replicated
 	 * @param currentVersion The version currently on the target database table.
 	 * @param newVersion The replicating version
-	 * @param versionType The version type
+	 * @param type The type
 	 *
 	 * @return {@code true} indicates the data should be overwritten; {@code false} indicates it should not.
 	 */
-	public abstract boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, VersionType versionType);
+	public abstract boolean shouldOverwriteCurrentVersion(Object entity, Object currentVersion, Object newVersion, Type type);
 
 }

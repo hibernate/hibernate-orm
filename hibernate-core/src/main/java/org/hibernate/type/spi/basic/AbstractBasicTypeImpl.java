@@ -41,14 +41,14 @@ public abstract class AbstractBasicTypeImpl<T> implements BasicType<T> {
 		final AttributeConverterDefinition converterDefinition = getAttributeConverterDefinition();
 
 		if ( converterDefinition == null ) {
-			return getColumnMapping().getSqlTypeDescriptor().getExtractor( getJavaTypeDescriptor() ).extract(
+			return getColumnMappings()[0].getSqlTypeDescriptor().getExtractor( getJavaTypeDescriptor() ).extract(
 					rs,
 					names[0],
 					session
 			);
 		}
 		else {
-			final Object databaseValue = getColumnMapping().getSqlTypeDescriptor().getExtractor( converterDefinition.getJdbcType() ).extract(
+			final Object databaseValue = getColumnMappings()[0].getSqlTypeDescriptor().getExtractor( converterDefinition.getJdbcType() ).extract(
 					rs,
 					names[0],
 					session
@@ -61,5 +61,10 @@ public abstract class AbstractBasicTypeImpl<T> implements BasicType<T> {
 	@Override
 	public int getColumnSpan() {
 		return 1;
+	}
+
+	@Override
+	public int getHashCode(T value) throws HibernateException {
+		return getJavaTypeDescriptor().extractHashCode( value );
 	}
 }

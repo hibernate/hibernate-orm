@@ -70,7 +70,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
@@ -124,14 +123,14 @@ import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.spi.CompositeType;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.TypeHelper;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.spi.VersionSupport;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -1653,7 +1652,7 @@ public abstract class AbstractEntityPersister
 			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
 		}
 
-		Object nextVersion = getVersionType().next( currentVersion, session );
+		Object nextVersion = ((VersionSupport)getVersionType()).next( currentVersion, session );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace(
 					"Forcing version increment [" + MessageHelper.infoString( this, id, getFactory() ) + "; "
@@ -2438,7 +2437,7 @@ public abstract class AbstractEntityPersister
 					// excluded from optimistic locking by optimistic-lock="false"
 					String[] propertyColumnNames = getPropertyColumnNames( i );
 					String[] propertyColumnWriters = getPropertyColumnWriters( i );
-					boolean[] propertyNullness = types[i].toColumnNullness( oldFields[i], getFactory() );
+					boolean[] propertyNullness = types[i].toColumnNullness( oldFields[i] );
 					for ( int k = 0; k < propertyNullness.length; k++ ) {
 						if ( propertyNullness[k] ) {
 							update.addWhereColumn( propertyColumnNames[k], "=" + propertyColumnWriters[k] );
@@ -2860,7 +2859,7 @@ public abstract class AbstractEntityPersister
 				.getIdentitySelectString(
 						getTableName( 0 ),
 						getKeyColumns( 0 )[0],
-						getIdentifierType().sqlTypes( getFactory() )[0]
+						getIdentifierType().sqlTypes()[0]
 				);
 	}
 
@@ -3116,7 +3115,7 @@ public abstract class AbstractEntityPersister
 								isPropertyOfTable( i, j ) &&
 								versionability[i]; //TODO: is this really necessary????
 						if ( include ) {
-							boolean[] settable = types[i].toColumnNullness( oldFields[i], getFactory() );
+							boolean[] settable = types[i].toColumnNullness( oldFields[i] );
 							types[i].nullSafeSet(
 									update,
 									oldFields[i],
@@ -3249,7 +3248,7 @@ public abstract class AbstractEntityPersister
 						if ( isPropertyOfTable( i, j ) && versionability[i] ) {
 							// this property belongs to the table and it is not specifically
 							// excluded from optimistic locking by optimistic-lock="false"
-							boolean[] settable = types[i].toColumnNullness( loadedState[i], getFactory() );
+							boolean[] settable = types[i].toColumnNullness( loadedState[i] );
 							types[i].nullSafeSet( delete, loadedState[i], index, settable, session );
 							index += ArrayHelper.countTrue( settable );
 						}
@@ -3522,7 +3521,7 @@ public abstract class AbstractEntityPersister
 					// this property belongs to the table and it is not specifically
 					// excluded from optimistic locking by optimistic-lock="false"
 					String[] propertyColumnNames = getPropertyColumnNames( i );
-					boolean[] propertyNullness = types[i].toColumnNullness( loadedState[i], getFactory() );
+					boolean[] propertyNullness = types[i].toColumnNullness( loadedState[i] );
 					for ( int k = 0; k < propertyNullness.length; k++ ) {
 						if ( propertyNullness[k] ) {
 							delete.addWhereFragment( propertyColumnNames[k] + " = ?" );
@@ -4281,11 +4280,8 @@ public abstract class AbstractEntityPersister
 		return !entityMetamodel.getIdentifierProperty().isVirtual();
 	}
 
-	public VersionType getVersionType() {
-		return (VersionType) locateVersionType();
-	}
-
-	private Type locateVersionType() {
+	@Override
+	public Type getVersionType() {
 		return entityMetamodel.getVersionProperty() == null ?
 				null :
 				entityMetamodel.getVersionProperty().getType();
@@ -5175,11 +5171,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public EntityTuplizer getEntityTuplizer() {
 		return entityTuplizer;
-	}
-
-	@Override
-	public BytecodeEnhancementMetadata getInstrumentationMetadata() {
-		return entityMetamodel.getBytecodeEnhancementMetadata();
 	}
 
 	@Override

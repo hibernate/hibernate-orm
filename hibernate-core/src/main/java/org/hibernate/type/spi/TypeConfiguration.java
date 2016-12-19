@@ -6,8 +6,12 @@
  */
 package org.hibernate.type.spi;
 
+import java.util.Comparator;
+import java.util.Properties;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
@@ -18,10 +22,33 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.tuple.component.ComponentMetamodel;
+import org.hibernate.type.ArrayType;
+import org.hibernate.type.BagType;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.CustomCollectionType;
+import org.hibernate.type.CustomType;
+import org.hibernate.type.EmbeddedComponentType;
+import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.IdentifierBagType;
+import org.hibernate.type.ListType;
+import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.MapType;
+import org.hibernate.type.OneToOneType;
+import org.hibernate.type.OrderedMapType;
+import org.hibernate.type.OrderedSetType;
+import org.hibernate.type.SetType;
+import org.hibernate.type.SortedMapType;
+import org.hibernate.type.SortedSetType;
+import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.spi.basic.BasicTypeRegistry;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptorRegistry;
+import org.hibernate.usertype.ParameterizedType;
+import org.hibernate.usertype.UserType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -126,27 +153,168 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 		throw new NotYetImplementedException(  );
 	}
 
-	public Type manyToOne(Class clazz) {
+	public EntityType manyToOne(Class clazz) {
 		assert clazz != null;
 		return manyToOne( clazz.getName() );
 	}
 
-	public Type manyToOne(String entityName) {
+	public EntityType manyToOne(String entityName) {
 		throw new NotYetImplementedException(  );
 	}
 
-	public Type manyToOne(Class clazz, boolean lazy) {
+	public EntityType manyToOne(Class clazz, boolean lazy) {
 		assert clazz != null;
 		return manyToOne( clazz.getName(), lazy );
 	}
 
-	public Type manyToOne(String entityName, boolean lazy) {
-		throw new NotYetImplementedException(  );
+	public EntityType manyToOne(String entityName, boolean lazy) {
+		return manyToOne( entityName, true, null, lazy, true, false, false );
+	}
+
+	public EntityType manyToOne(
+			String persistentClass,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			boolean isLogicalOneToOne) {
+		return new ManyToOneType(
+				this,
+				persistentClass,
+				referenceToPrimaryKey,
+				uniqueKeyPropertyName,
+				lazy,
+				unwrapProxy,
+				ignoreNotFound,
+				isLogicalOneToOne
+		);
+	}
+
+	// one-to-one type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	public EntityType oneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName) {
+		return new OneToOneType(
+				this, persistentClass, foreignKeyType, referenceToPrimaryKey,
+				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName
+		);
+	}
+
+	public EntityType specialOneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName) {
+		return new SpecialOneToOneType(
+				this, persistentClass, foreignKeyType, referenceToPrimaryKey,
+				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName
+		);
 	}
 
 	public Type heuristicType(String typename) {
 		throw new NotYetImplementedException(  );
 	}
+
+	// collection type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	public CollectionType array(String role, String propertyRef, Class elementClass) {
+		return new ArrayType( this, role, propertyRef, elementClass );
+	}
+
+	public CollectionType list(String role, String propertyRef) {
+		return new ListType( this, role, propertyRef );
+	}
+
+	public CollectionType bag(String role, String propertyRef) {
+		return new BagType( this, role, propertyRef );
+	}
+
+	public CollectionType idbag(String role, String propertyRef) {
+		return new IdentifierBagType( this, role, propertyRef );
+	}
+
+	public CollectionType map(String role, String propertyRef) {
+		return new MapType( this, role, propertyRef );
+	}
+
+	public CollectionType orderedMap(String role, String propertyRef) {
+		return new OrderedMapType( this, role, propertyRef );
+	}
+
+	public CollectionType sortedMap(String role, String propertyRef, Comparator comparator) {
+		return new SortedMapType( this, role, propertyRef, comparator );
+	}
+
+	public CollectionType set(String role, String propertyRef) {
+		return new SetType( this, role, propertyRef );
+	}
+
+	public CollectionType orderedSet(String role, String propertyRef) {
+		return new OrderedSetType( this, role, propertyRef );
+	}
+
+	public CollectionType sortedSet(String role, String propertyRef, Comparator comparator) {
+		return new SortedSetType( this, role, propertyRef, comparator );
+	}
+
+	// component type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	public EmbeddedComponentType embeddedComponent(ComponentMetamodel metamodel) {
+		return new EmbeddedComponentType( this, metamodel );
+	}
+
+	public ComponentType component(ComponentMetamodel metamodel) {
+		return new ComponentType( this, metamodel );
+	}
+
+
+	public CollectionType customCollection(
+			String typeName,
+			Properties typeParameters,
+			String role,
+			String propertyRef) {
+		Class typeClass;
+		try {
+			typeClass = ReflectHelper.classForName( typeName );
+		}
+		catch (ClassNotFoundException cnfe) {
+			throw new MappingException( "user collection type class not found: " + typeName, cnfe );
+		}
+		CustomCollectionType result = new CustomCollectionType( this, typeClass, role, propertyRef );
+		if ( typeParameters != null ) {
+			injectParameters( result.getUserType(), typeParameters );
+		}
+		return result;
+	}
+
+	private final static Properties EMPTY_PROPERTIES = new Properties();
+
+	public static void injectParameters(Object type, Properties parameters) {
+		if ( ParameterizedType.class.isInstance( type ) ) {
+			if ( parameters == null ) {
+				( (ParameterizedType) type ).setParameterValues( EMPTY_PROPERTIES );
+			}
+			else {
+				( (ParameterizedType) type ).setParameterValues( parameters );
+			}
+		}
+		else if ( parameters != null && !parameters.isEmpty() ) {
+			throw new MappingException( "type is not parameterized: " + type.getClass().getName() );
+		}
+	}
+
 
 
 	/**
@@ -305,4 +473,5 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 		}
 		return sqlTypeDescriptorRegistry;
 	}
+
 }

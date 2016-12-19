@@ -28,8 +28,7 @@ public class List extends IndexedCollection {
 	}
 
 	public CollectionType getDefaultCollectionType() throws MappingException {
-		return getMetadata().getTypeResolver()
-				.getTypeFactory()
+		return getMetadata().getTypeConfiguration()
 				.list( getRole(), getReferencedPropertyName() );
 	}
 	

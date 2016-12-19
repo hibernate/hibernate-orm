@@ -18,6 +18,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -28,7 +29,7 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.TypeFactory;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * The mapping for a component, composite element,
@@ -38,7 +39,7 @@ import org.hibernate.type.TypeFactory;
  * @author Steve Ebersole
  */
 public class Component extends SimpleValue implements MetaAttributable {
-	private ArrayList<Property> properties = new ArrayList<Property>();
+	private ArrayList<Property> properties = new ArrayList<>();
 	private String componentClassName;
 	private boolean embedded;
 	private String parentProperty;
@@ -50,23 +51,23 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	private java.util.Map<EntityMode,String> tuplizerImpls;
 
-	public Component(MetadataImplementor metadata, PersistentClass owner) throws MappingException {
+	public Component(InFlightMetadataCollector metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
 	}
 
-	public Component(MetadataImplementor metadata, Component component) throws MappingException {
+	public Component(InFlightMetadataCollector metadata, Component component) throws MappingException {
 		this( metadata, component.getTable(), component.getOwner() );
 	}
 
-	public Component(MetadataImplementor metadata, Join join) throws MappingException {
+	public Component(InFlightMetadataCollector metadata, Join join) throws MappingException {
 		this( metadata, join.getTable(), join.getPersistentClass() );
 	}
 
-	public Component(MetadataImplementor metadata, Collection collection) throws MappingException {
+	public Component(InFlightMetadataCollector metadata, Collection collection) throws MappingException {
 		this( metadata, collection.getCollectionTable(), collection.getOwner() );
 	}
 
-	public Component(MetadataImplementor metadata, Table table, PersistentClass owner) throws MappingException {
+	public Component(InFlightMetadataCollector metadata, Table table, PersistentClass owner) throws MappingException {
 		super( metadata, table );
 		this.owner = owner;
 	}
@@ -167,8 +168,8 @@ public class Component extends SimpleValue implements MetaAttributable {
 	public Type getType() throws MappingException {
 		// TODO : temporary initial step towards HHH-1907
 		final ComponentMetamodel metamodel = new ComponentMetamodel( this, getMetadata().getMetadataBuildingOptions() );
-		final TypeFactory factory = getMetadata().getTypeResolver().getTypeFactory();
-		return isEmbedded() ? factory.embeddedComponent( metamodel ) : factory.component( metamodel );
+		final TypeConfiguration typeConfiguration = getMetadata().getTypeConfiguration();
+		return isEmbedded() ? typeConfiguration.embeddedComponent( metamodel ) : typeConfiguration.component( metamodel );
 	}
 
 	@Override

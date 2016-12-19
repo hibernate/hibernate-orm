@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.spi;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,9 +16,12 @@ import java.util.Map;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
@@ -135,6 +139,13 @@ public interface Type<T> extends org.hibernate.sqm.domain.DomainReference {
 	}
 
 	/**
+	 * Describes the columns mapping for this Type.
+	 *
+	 * @return The column mapping for this Type
+	 */
+	ColumnMapping[] getColumnMappings();
+
+	/**
 	 * Obtain a descriptor for the Java side of a value mapping.
 	 *
 	 * @return The Java type descriptor.
@@ -215,7 +226,7 @@ public interface Type<T> extends org.hibernate.sqm.domain.DomainReference {
 	 * @throws HibernateException An error from Hibernate
 	 * @throws SQLException An error from the JDBC driver
 	 *
-	 * @see org.hibernate.type.Type#hydrate(ResultSet, String[], SharedSessionContractImplementor, Object) alternative, 2-phase property initialization
+	 * @see org.hibernate.type.spi.Type#hydrate(ResultSet, String[], SharedSessionContractImplementor, Object) alternative, 2-phase property initialization
 	 */
 	Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException;
@@ -392,6 +403,22 @@ public interface Type<T> extends org.hibernate.sqm.domain.DomainReference {
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
+	 * state) taking a shortcut for entity references.
+	 * <p/>
+	 * For most types this should equate to an {@link Object#equals} check on the values.  For associations
+	 * the implication is a bit different.  For most types it is conceivable to simply delegate to {@link #isEqual}
+	 *
+	 * @param x The first value
+	 * @param y The second value
+	 *
+	 * @return True if they are considered the same (see discussion above).
+	 *
+	 * @throws HibernateException A problem occurred performing the comparison
+	 */
+	boolean isSame(T x, T y) throws HibernateException;
+
+	/**
+	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
 	 * state).
 	 * <p/>
 	 * This should always equate to some form of comparison of the value's internal state.  As an example, for
@@ -496,4 +523,103 @@ public interface Type<T> extends org.hibernate.sqm.domain.DomainReference {
 			Map copyCache,
 			ForeignKeyDirection foreignKeyDirection) throws HibernateException;
 
+	/**
+	 * Reconstruct the object from its disassembled state.  This method is the reciprocal of {@link #disassemble}
+	 *
+	 * @param cached the disassembled state from the cache
+	 * @param session the originating session
+	 * @param owner the parent entity object
+	 *
+	 * @return the (re)assembled object
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 */
+	Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;
+
+	/**
+	 * Return a disassembled representation of the object.  This is the value Hibernate will use in second level
+	 * caching, so care should be taken to break values down to their simplest forms; for entities especially, this
+	 * means breaking them down into their constituent parts.
+	 *
+	 * @param value the value to cache
+	 * @param session the originating session
+	 * @param owner optional parent entity object (needed for collections)
+	 *
+	 * @return the disassembled, deep cloned state
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 */
+	Serializable disassemble(T value, SharedSessionContractImplementor session, Object owner) throws HibernateException;
+
+	/**
+	 * Should the parent be considered dirty, given both the old and current value?
+	 *
+	 * @param old the old value
+	 * @param current the current value
+	 * @param session The session from which the request originated.
+	 *
+	 * @return true if the field is dirty
+	 *
+	 * @throws HibernateException A problem occurred performing the checking
+	 */
+	boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) throws HibernateException;
+
+	/**
+	 * Should the parent be considered dirty, given both the old and current value?
+	 *
+	 * @param oldState the old value
+	 * @param currentState the current value
+	 * @param checkable An array of booleans indicating which columns making up the value are actually checkable
+	 * @param session The session from which the request originated.
+	 *
+	 * @return true if the field is dirty
+	 *
+	 * @throws HibernateException A problem occurred performing the checking
+	 */
+	boolean isDirty(Object oldState, Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
+			throws HibernateException;
+
+	/**
+	 * Has the value been modified compared to the current database state?  The difference between this
+	 * and the {@link #isDirty} methods is that here we need to account for "partially" built values.  This is really
+	 * only an issue with association types.  For most type implementations it is enough to simply delegate to
+	 * {@link #isDirty} here/
+	 *
+	 * @param dbState the database state, in a "hydrated" form, with identifiers unresolved
+	 * @param currentState the current state of the object
+	 * @param checkable which columns are actually updatable
+	 * @param session The session from which the request originated.
+	 *
+	 * @return true if the field has been modified
+	 *
+	 * @throws HibernateException A problem occurred performing the checking
+	 */
+	boolean isModified(
+			Object dbState,
+			Object currentState,
+			boolean[] checkable,
+			SharedSessionContractImplementor session)
+			throws HibernateException;
+
+	/**
+	 * Get a hash code, consistent with persistence "equality".  Again for most types the normal usage is to
+	 * delegate to the value's {@link Object#hashCode hashCode}.
+	 *
+	 * @param value The value for which to retrieve a hash code
+	 * @return The hash code
+	 *
+	 * @throws HibernateException A problem occurred calculating the hash code
+	 */
+	int getHashCode(T value) throws HibernateException;
+
+	/**
+	 * Return the JDBC types codes (per {@link java.sql.Types}) for the columns mapped by this type.
+	 * <p/>
+	 * NOTE: The number of elements in this array matches the return from {@link #getColumnSpan}.
+	 *
+	 * @return The JDBC type codes.
+	 *
+	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
+	 */
+	int[] sqlTypes() throws MappingException;
 }

@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.AbstractEntityJoinWalker;
 import org.hibernate.persister.entity.OuterJoinLoadable;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 
 public class CascadeEntityJoinWalker extends AbstractEntityJoinWalker {
 

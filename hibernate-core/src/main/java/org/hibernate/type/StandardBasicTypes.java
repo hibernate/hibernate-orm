@@ -42,9 +42,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * Type mappings can be adjusted per {@link org.hibernate.SessionFactory}.  These adjusted mappings can be accessed
  * from the {@link org.hibernate.TypeHelper} instance obtained via {@link org.hibernate.SessionFactory#getTypeHelper()}
  *
- * @see BasicTypeRegistry
  * @see org.hibernate.TypeHelper
- * @see org.hibernate.SessionFactory#getTypeHelper()
  *
  * @author Gavin King
  * @author Steve Ebersole

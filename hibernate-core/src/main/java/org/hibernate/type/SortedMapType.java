@@ -14,14 +14,15 @@ import org.hibernate.collection.internal.PersistentSortedMap;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.spi.TypeConfiguration;
 
 
 public class SortedMapType extends MapType {
 
 	private final Comparator comparator;
 
-	public SortedMapType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Comparator comparator) {
-		super( typeScope, role, propertyRef );
+	public SortedMapType(TypeConfiguration typeConfiguration, String role, String propertyRef, Comparator comparator) {
+		super( typeConfiguration, role, propertyRef );
 		this.comparator = comparator;
 	}
 

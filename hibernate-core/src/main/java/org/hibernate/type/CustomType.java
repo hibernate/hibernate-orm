@@ -17,12 +17,15 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.ColumnMapping;
+import org.hibernate.type.spi.Type;
+import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.Sized;
@@ -38,7 +41,8 @@ import org.hibernate.usertype.UserVersionType;
  */
 public class CustomType
 		extends AbstractType
-		implements IdentifierType, DiscriminatorType, VersionType, BasicType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
+		implements VersionSupport,
+		BasicType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
 
 	private final UserType userType;
 	private final String name;
@@ -46,24 +50,26 @@ public class CustomType
 	private final Size[] dictatedSizes;
 	private final Size[] defaultSizes;
 	private final boolean customLogging;
-	private final String[] registrationKeys;
+	private final ColumnMapping[] columnMappings;
 
 	public CustomType(UserType userType) throws MappingException {
-		this( userType, ArrayHelper.EMPTY_STRING_ARRAY );
-	}
-
-	public CustomType(UserType userType, String[] registrationKeys) throws MappingException {
 		this.userType = userType;
 		this.name = userType.getClass().getName();
 		this.types = userType.sqlTypes();
+
 		this.dictatedSizes = Sized.class.isInstance( userType )
 				? ( (Sized) userType ).dictatedSizes()
-				: new Size[ types.length ];
+				: new Size[types.length];
 		this.defaultSizes = Sized.class.isInstance( userType )
 				? ( (Sized) userType ).defaultSizes()
-				: new Size[ types.length ];
+				: new Size[types.length];
+
+		this.columnMappings = new ColumnMapping[this.dictatedSizes.length];
+		for ( int i = 0; i < this.dictatedSizes.length; i++ ) {
+			this.columnMappings[i] = new ColumnMapping( null, dictatedSizes[i], defaultSizes[i] );
+		}
+
 		this.customLogging = LoggableUserType.class.isInstance( userType );
-		this.registrationKeys = registrationKeys;
 	}
 
 	public UserType getUserType() {
@@ -71,27 +77,12 @@ public class CustomType
 	}
 
 	@Override
-	public String[] getRegistrationKeys() {
-		return registrationKeys;
-	}
-
-	@Override
-	public int[] sqlTypes(Mapping pi) {
+	public int[] sqlTypes() {
 		return types;
 	}
 
 	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return dictatedSizes;
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return defaultSizes;
-	}
-
-	@Override
-	public int getColumnSpan(Mapping session) {
+	public int getColumnSpan() {
 		return types.length;
 	}
 
@@ -107,7 +98,7 @@ public class CustomType
 
 	@Override
 	public int getHashCode(Object x) {
-		return userType.hashCode(x);
+		return userType.hashCode( x );
 	}
 
 	@Override
@@ -116,7 +107,7 @@ public class CustomType
 			String[] names,
 			SharedSessionContractImplementor session,
 			Object owner) throws SQLException {
-		return userType.nullSafeGet(rs, names, session, owner);
+		return userType.nullSafeGet( rs, names, session, owner );
 	}
 
 	@Override
@@ -125,18 +116,18 @@ public class CustomType
 			String columnName,
 			SharedSessionContractImplementor session,
 			Object owner) throws SQLException {
-		return nullSafeGet(rs, new String[] { columnName }, session, owner);
+		return nullSafeGet( rs, new String[] {columnName}, session, owner );
 	}
 
 
 	@Override
 	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) {
-		return userType.assemble(cached, owner);
+		return userType.assemble( cached, owner );
 	}
 
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
-		return userType.disassemble(value);
+		return userType.disassemble( value );
 	}
 
 	@Override
@@ -170,12 +161,12 @@ public class CustomType
 		userType.nullSafeSet( st, value, index, session );
 	}
 
-	@SuppressWarnings({ "UnusedDeclaration" })
+	@SuppressWarnings({"UnusedDeclaration"})
 	public String toXMLString(Object value, SessionFactoryImplementor factory) {
 		return toString( value );
 	}
 
-	@SuppressWarnings({ "UnusedDeclaration" })
+	@SuppressWarnings({"UnusedDeclaration"})
 	public Object fromXMLString(String xml, Mapping factory) {
 		return fromStringValue( xml );
 	}
@@ -186,8 +177,13 @@ public class CustomType
 	}
 
 	@Override
+	public ColumnMapping[] getColumnMappings() {
+		return columnMappings;
+	}
+
+	@Override
 	public Object deepCopy(Object value, SessionFactoryImplementor factory) throws HibernateException {
-		return userType.deepCopy(value);
+		return userType.deepCopy( value );
 	}
 
 	@Override
@@ -196,18 +192,23 @@ public class CustomType
 	}
 
 	@Override
-	public Object stringToObject(String xml) {
-		return fromStringValue( xml );
-	}
-
-	@Override
-	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return ( (EnhancedUserType) userType ).objectToSQLString(value);
-	}
-
-	@Override
 	public Comparator getComparator() {
 		return (Comparator) userType;
+	}
+
+	@Override
+	public AttributeConverterDefinition getAttributeConverterDefinition() {
+		return null;
+	}
+
+	@Override
+	public VersionSupport getVersionSupport() {
+		return this;
+	}
+
+	@Override
+	public String getTypeName() {
+		return name;
 	}
 
 	@Override
@@ -227,7 +228,7 @@ public class CustomType
 			return "null";
 		}
 		else if ( customLogging ) {
-			return ( ( LoggableUserType ) userType ).toLoggableString( value, factory );
+			return ( (LoggableUserType) userType ).toLoggableString( value, factory );
 		}
 		else {
 			return toXMLString( value, factory );
@@ -235,10 +236,10 @@ public class CustomType
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
-		boolean[] result = new boolean[ getColumnSpan(mapping) ];
+	public boolean[] toColumnNullness(Object value) {
+		boolean[] result = new boolean[getColumnSpan()];
 		if ( value != null ) {
-			Arrays.fill(result, true);
+			Arrays.fill( result, true );
 		}
 		return result;
 	}
@@ -246,7 +247,7 @@ public class CustomType
 	@Override
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
-		return checkable[0] && isDirty(old, current, session);
+		return checkable[0] && isDirty( old, current, session );
 	}
 
 	@Override
@@ -287,16 +288,17 @@ public class CustomType
 	@Override
 	public boolean canDoSetting() {
 		if ( ProcedureParameterNamedBinder.class.isInstance( userType ) ) {
-			return ((ProcedureParameterNamedBinder) userType).canDoSetting();
+			return ( (ProcedureParameterNamedBinder) userType ).canDoSetting();
 		}
 		return false;
 	}
 
 	@Override
 	public void nullSafeSet(
-			CallableStatement statement, Object value, String name, SharedSessionContractImplementor session) throws SQLException {
+			CallableStatement statement, Object value, String name, SharedSessionContractImplementor session)
+			throws SQLException {
 		if ( canDoSetting() ) {
-			((ProcedureParameterNamedBinder) userType).nullSafeSet( statement, value, name, session );
+			( (ProcedureParameterNamedBinder) userType ).nullSafeSet( statement, value, name, session );
 		}
 		else {
 			throw new UnsupportedOperationException(
@@ -308,15 +310,16 @@ public class CustomType
 	@Override
 	public boolean canDoExtraction() {
 		if ( ProcedureParameterExtractionAware.class.isInstance( userType ) ) {
-			return ((ProcedureParameterExtractionAware) userType).canDoExtraction();
+			return ( (ProcedureParameterExtractionAware) userType ).canDoExtraction();
 		}
 		return false;
 	}
 
 	@Override
-	public Object extract(CallableStatement statement, int startIndex, SharedSessionContractImplementor session) throws SQLException {
+	public Object extract(CallableStatement statement, int startIndex, SharedSessionContractImplementor session)
+			throws SQLException {
 		if ( canDoExtraction() ) {
-			return ((ProcedureParameterExtractionAware) userType).extract( statement, startIndex, session );
+			return ( (ProcedureParameterExtractionAware) userType ).extract( statement, startIndex, session );
 		}
 		else {
 			throw new UnsupportedOperationException(
@@ -329,7 +332,7 @@ public class CustomType
 	public Object extract(CallableStatement statement, String[] paramNames, SharedSessionContractImplementor session)
 			throws SQLException {
 		if ( canDoExtraction() ) {
-			return ((ProcedureParameterExtractionAware) userType).extract( statement, paramNames, session );
+			return ( (ProcedureParameterExtractionAware) userType ).extract( statement, paramNames, session );
 		}
 		else {
 			throw new UnsupportedOperationException(

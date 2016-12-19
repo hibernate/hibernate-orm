@@ -7,6 +7,7 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.LockModeType;
@@ -19,6 +20,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -165,4 +167,41 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 */
 	@Deprecated
 	void removeOrphanBeforeUpdates(String entityName, Object child);
+
+	SessionImplementor getSession();
+
+	/**
+	 * Given a JPA {@link javax.persistence.LockModeType} and properties, build a Hibernate
+	 * {@link org.hibernate.LockOptions}
+	 *
+	 * @param lockModeType the requested LockModeType
+	 * @param properties the lock properties
+	 *
+	 * @return the LockOptions
+	 */
+	LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties);
+
+	interface QueryOptions {
+		interface ResultMetadataValidator {
+			void validate(Type[] returnTypes);
+		}
+
+		ResultMetadataValidator getResultMetadataValidator();
+
+		/**
+		 * Get the conversions for the individual tuples in the query results.
+		 *
+		 * @return Value conversions to be applied to the JPA QL results
+		 */
+		List<ValueHandlerFactory.ValueHandler> getValueHandlers();
+
+		/**
+		 * Get the explicit parameter types.  Generally speaking these would apply to implicit named
+		 * parameters.
+		 *
+		 * @return The
+		 */
+		Map<String, Class> getNamedParameterExplicitTypes();
+	}
+
 }

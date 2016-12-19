@@ -13,11 +13,12 @@ import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.spi.TypeConfiguration;
 
 public class SetType extends CollectionType {
 
-	public SetType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
-		super( typeScope, role, propertyRef );
+	public SetType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
+		super( typeConfiguration, role, propertyRef );
 	}
 
 	@Override

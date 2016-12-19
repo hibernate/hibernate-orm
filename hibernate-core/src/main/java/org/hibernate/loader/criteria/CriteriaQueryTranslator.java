@@ -40,7 +40,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.StringRepresentableType;
 import org.hibernate.type.spi.Type;

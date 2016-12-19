@@ -7,7 +7,6 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Map;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
@@ -15,6 +14,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.tuple.NonIdentifierAttribute;
+import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.Type;
 
 /**
  * Collection of convenience methods relating to operations across arrays of types...
@@ -53,25 +54,6 @@ public class TypeHelper {
 					target[i] = types[i].deepCopy( values[i], session
 						.getFactory() );
 				}
-			}
-		}
-	}
-
-	/**
-	 * Apply the {@link Type#beforeAssemble} operation across a series of values.
-	 *
-	 * @param row The values
-	 * @param types The value types
-	 * @param session The originating session
-	 */
-	public static void beforeAssemble(
-			final Serializable[] row,
-			final Type[] types,
-			final SharedSessionContractImplementor session) {
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( row[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-				&& row[i] != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				types[i].beforeAssemble( row[i], session );
 			}
 		}
 	}

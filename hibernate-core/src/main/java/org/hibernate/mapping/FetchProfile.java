@@ -20,7 +20,7 @@ import java.util.LinkedHashSet;
 public class FetchProfile {
 	private final String name;
 	private final MetadataSource source;
-	private LinkedHashSet<Fetch> fetches = new LinkedHashSet<Fetch>();
+	private LinkedHashSet<Fetch> fetches = new LinkedHashSet<>();
 
 	/**
 	 * Create a fetch profile representation.

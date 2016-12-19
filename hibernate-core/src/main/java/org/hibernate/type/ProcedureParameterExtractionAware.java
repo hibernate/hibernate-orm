@@ -10,6 +10,7 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.spi.Type;
 
 /**
  * Optional {@link Type} contract for implementations that are aware of how to extract values from

@@ -24,21 +24,21 @@ import org.hibernate.type.spi.Type;
  * @author Gavin King
  */
 public interface Value extends Serializable {
-	public int getColumnSpan();
-	public Iterator<Selectable> getColumnIterator();
-	public Type getType() throws MappingException;
-	public FetchMode getFetchMode();
-	public Table getTable();
-	public boolean hasFormula();
-	public boolean isAlternateUniqueKey();
-	public boolean isNullable();
-	public boolean[] getColumnUpdateability();
-	public boolean[] getColumnInsertability();
-	public void createForeignKey() throws MappingException;
-	public boolean isSimpleValue();
-	public boolean isValid(Mapping mapping) throws MappingException;
-	public void setTypeUsingReflection(String className, String propertyName) throws MappingException;
-	public Object accept(ValueVisitor visitor);
+	int getColumnSpan();
+	Iterator<Selectable> getColumnIterator();
+	Type getType() throws MappingException;
+	FetchMode getFetchMode();
+	Table getTable();
+	boolean hasFormula();
+	boolean isAlternateUniqueKey();
+	boolean isNullable();
+	boolean[] getColumnUpdateability();
+	boolean[] getColumnInsertability();
+	void createForeignKey() throws MappingException;
+	boolean isSimpleValue();
+	boolean isValid(Mapping mapping) throws MappingException;
+	void setTypeUsingReflection(String className, String propertyName) throws MappingException;
+	Object accept(ValueVisitor visitor);
 
 	ServiceRegistry getServiceRegistry();
 }

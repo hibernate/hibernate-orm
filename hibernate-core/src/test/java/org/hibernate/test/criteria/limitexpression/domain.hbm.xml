@@ -3,7 +3,9 @@
 
 <hibernate-mapping package="org.hibernate.test.criteria.limitexpression">
     <class name="Person" table="person">
-        <id column="id" type="long"/>
+        <id name="id" column="id" type="long">
+            <generator class="increment"/>
+        </id>
         
         <set name="states" table="person_states" inverse="false" lazy="false" fetch="join">
             <key column="id_person" not-null="true"/>

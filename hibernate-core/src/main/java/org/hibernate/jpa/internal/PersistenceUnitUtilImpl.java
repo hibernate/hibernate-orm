@@ -11,9 +11,11 @@ import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.spi.LoadState;
 
 import org.hibernate.Hibernate;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
 
 import org.jboss.logging.Logger;
 
@@ -59,12 +61,31 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 
 	@Override
 	public Object getIdentifier(Object entity) {
-		final Class entityClass = Hibernate.getClass( entity );
-		final EntityPersister persister = sessionFactory.getMetamodel().entityPersister( entityClass );
-		if ( persister == null ) {
-			throw new IllegalArgumentException( entityClass + " is not an entity" );
+		if ( entity == null ) {
+			throw new IllegalArgumentException( "Passed entity cannot be null" );
 		}
-		//TODO does that work for @IdClass?
-		return persister.getIdentifier( entity );
+
+		if ( entity instanceof HibernateProxy ) {
+			final HibernateProxy proxy = (HibernateProxy) entity;
+			return proxy.getHibernateLazyInitializer().getIdentifier();
+		}
+		else if ( entity instanceof ManagedEntity ) {
+			final ManagedEntity enhancedEntity = (ManagedEntity) entity;
+			return enhancedEntity.$$_hibernate_getEntityEntry().getId();
+		}
+		else {
+			log.debugf(
+					"javax.persistence.PersistenceUnitUtil.getIdentifier is only intended to work with enhanced entities " +
+							"(although Hibernate also adapts this support to its proxies); " +
+							"however the passed entity was not enhanced (nor a proxy).. may not be able to read identifier"
+			);
+			final Class entityClass = Hibernate.getClass( entity );
+			final EntityPersister persister = sessionFactory.getMetamodel().entityPersister( entityClass );
+			if ( persister == null ) {
+				throw new IllegalArgumentException( entityClass + " is not an entity" );
+			}
+			//TODO does that work for @IdClass?
+			return persister.getIdentifier( entity );
+		}
 	}
 }

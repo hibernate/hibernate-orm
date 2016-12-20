@@ -129,6 +129,16 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-11352")
+	public void testPagingWithColumnNameStartingWithFrom() {
+		final String sql = "select column1 c1, from_column c2 from table1";
+		assertEquals( "WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " +
+				"select column1 c1, from_column c2 from table1 ) inner_query ) " +
+				"SELECT c1, c2 FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql(sql, toRowSelection(3, 5)));
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-7019")
 	public void testGetLimitStringWithSubselect() {
 		final String subselectInSelectClauseSQL = "select persistent0_.id as col_0_0_, " +

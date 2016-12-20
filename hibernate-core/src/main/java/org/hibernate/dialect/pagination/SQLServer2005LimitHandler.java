@@ -361,14 +361,15 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * based on the search pattern that is not enclosed in parenthesis.
 	 *
 	 * @param pattern String search pattern.
-	 * @param wordBoundardy whether to apply a word boundary restriction.
+	 * @param wordBoundary whether to apply a word boundary restriction.
 	 * @return Compiled {@link Pattern}.
 	 */
-	private static Pattern buildShallowIndexPattern(String pattern, boolean wordBoundardy) {
+	private static Pattern buildShallowIndexPattern(String pattern, boolean wordBoundary) {
 		return Pattern.compile(
 				"(" +
-				( wordBoundardy ? "\\b" : "" ) +
+				( wordBoundary ? "\\b" : "" ) +
 				pattern +
+				( wordBoundary ? "\\b" : "" ) +
 				")(?![^\\(|\\[]*(\\)|\\]))",
 				Pattern.CASE_INSENSITIVE
 		);

@@ -1822,6 +1822,7 @@ public abstract class AbstractEntityPersister
 	 * {@literal this} is the concrete EntityPersister (since the
 	 * concrete EntityPersister cannot have duplicated property names).
 	 */
+	@Override
 	public String[] toColumns(String alias, String propertyName) throws QueryException {
 		return propertyMapping.toColumns( alias, propertyName );
 	}
@@ -1836,6 +1837,7 @@ public abstract class AbstractEntityPersister
 	 * {@literal this} is the concrete EntityPersister (since the
 	 * concrete EntityPersister cannot have duplicated property names).
 	 */
+	@Override
 	public String[] toColumns(String propertyName) throws QueryException {
 		return propertyMapping.getColumnNames( propertyName );
 	}
@@ -1850,6 +1852,7 @@ public abstract class AbstractEntityPersister
 	 * {@literal this} is the concrete EntityPersister (since the
 	 * concrete EntityPersister cannot have duplicated property names).
 	 */
+	@Override
 	public Type toType(String propertyName) throws QueryException {
 		return propertyMapping.toType( propertyName );
 	}
@@ -1864,6 +1867,7 @@ public abstract class AbstractEntityPersister
 	 * {@literal this} is the concrete EntityPersister (since the
 	 * concrete EntityPersister cannot have duplicated property names).
 	 */
+	@Override
 	public String[] getPropertyColumnNames(String propertyName) {
 		return propertyMapping.getColumnNames( propertyName );
 	}
@@ -4560,6 +4564,7 @@ public abstract class AbstractEntityPersister
 	 * {@literal this} is the concrete EntityPersister (since the
 	 * concrete EntityPersister cannot have duplicated property names).
 	 */
+	@Override
 	public Type getPropertyType(String propertyName) throws MappingException {
 		return propertyMapping.toType( propertyName );
 	}

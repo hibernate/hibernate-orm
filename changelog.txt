@@ -3,6 +3,59 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+
+Changes in 5.2.6.Final (December 20, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/26100
+
+** Bug
+    * [HHH-4313] - ConcurrentModificationException when collection of embeddable contains a collection
+    * [HHH-7940] - NullPointerException with indexed Collections
+    * [HHH-7949] - Mapping of modified flags for bidirectional association causes lazy loading of collections
+    * [HHH-10465] - Loss of precision in temporal JavaTypeDescriptor implementations
+    * [HHH-10623] - Persist of detached entity in derived ID
+    * [HHH-11183] - Mixed line endings in schema creation script
+    * [HHH-11241] - Missing column when executing HQL and criteria query with secondary table
+    * [HHH-11257] - Connection leak when SQLGrammarException is thrown
+    * [HHH-11274] - EntityManagerFactoryImpl.getIdentifier uses deprecated version of getIdentifier
+    * [HHH-11277] - SQLServerDialect does not adhere to supportsVariableLimit setting
+    * [HHH-11278] - setMaxResult(0) should return an empty List
+    * [HHH-11287] - requiresDependencyResolution must bet set in plugin.xml to include maven dependencies in enhancement classpath
+    * [HHH-11288] - Execution project artifacts are always empty, so dependencies are never included
+    * [HHH-11289] - Lazy-initializing a static Method and making accessible not thread-safe
+    * [HHH-11293] - Use of enhancer dirty tracking causes collections in entities to not be persisted
+    * [HHH-11294] - NPE in org.hibernate.jpa.internal.util.PersistenceUtilHelper.isInitialized(PersistentAttributeInterceptable)
+    * [HHH-11296] - Incorrect handling of NCLOB streaming
+    * [HHH-11304] - Invalidations are not cleared when transaction rolls back
+    * [HHH-11305] - @OneToOne association, Nullable check does is not skipped for @NotFound(action = NotFoundAction.IGNORE)
+    * [HHH-11314] - BasicHibernateAnnotationsTest.testInheritFiltersFromMappedSuperclass fails on MS SQL Server
+    * [HHH-11315] - EnhancerTest fails on Oracle databases
+    * [HHH-11316] - EnhancerTest fails on Oracle databases
+    * [HHH-11324] - SQLServer2005LimitHandler uncapable of handle subquery in column list
+    * [HHH-11328] - Persist of transient entity in derived ID that is already in merge process throws javax.persistence.EntityExistsException
+    * [HHH-11329] - Too long identifiers in tests in org.hibernate.test.inheritancediscriminator.embeddable package
+    * [HHH-11330] - Skip IdentifierGeneratorWithNaturalIdCacheTest on dialects that do not support identity columns
+    * [HHH-11331] - SQLLoaderTest fails on DB2
+    * [HHH-11332] - QueryAndSQLTest and QueryTest failing on Sybase because null == null
+    * [HHH-11335] - ByteArrayIdTest and PrimitiveByteArrayIdTest failing on Oracle DBs
+    * [HHH-11337] - Incorrect SQL generated when use both left join with unrelated entity and implicit join to another entity in select-clause
+    * [HHH-11340] - Joins on Entity Joins are not rendered into SQL
+
+** Improvement
+    * [HHH-4959] - Concurrent HQL parsing blocks on ReflectHelper.classForName()
+    * [HHH-11265] - JCacheRegionFactory should allow for subclasses to specify CacheManager
+    * [HHH-11295] - Some improvements to EntityJoinTest
+    * [HHH-11307] - When .class cannot be loaded, throw a sensible exception instead of NPE
+    * [HHH-11308] - Bump c3p0 version up to support JDBC 4.2
+    * [HHH-11317] - Several typos and style fixes in documentation
+    * [HHH-11318] - Fix Infinispan Javadoc documentation typos
+    * [HHH-11319] - The dirtyPropertyNames content is NOT logged properly
+    * [HHH-11320] - Disable EntityRegionAccessStrategyTest#testContestedPutFromLoad because of short timeout
+    * [HHH-11321] - ByteBuddy Enhancer throws java.lang.IllegalStateException: Cannot resolve type description for certain classes
+    * [HHH-11338] - Apply HHH-11194 fix to Dialect subclasses
+    * [HHH-11346] - Upgrade gradle to 3.2.1 + Upgrade build scan plugin to 1.3
+
+
 Changes in 5.2.5.Final (November 24, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/25600

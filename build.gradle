@@ -111,7 +111,7 @@ subprojects { subProject ->
     defaultTasks 'build'
 
     group = 'com.seeburger.fork'
-    version = '4.0.1.SEE2'
+    version = '4.0.1.SEE3'
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"

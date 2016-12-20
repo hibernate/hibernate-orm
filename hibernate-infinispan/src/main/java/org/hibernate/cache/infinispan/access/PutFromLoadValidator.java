@@ -269,6 +269,41 @@ public class PutFromLoadValidator {
       }
    }
 
+
+   /**
+    * Release an object from pendingPut object immediately
+    * called from TransactionalAccessDelegate.evict(Object key) to avoid
+    * OutOfMemoryError under high load
+    *
+    * @param key the key
+    */
+   public void releasePendingPut(Object key)
+   {
+      PendingPutMap pending = pendingPuts.get(key);
+      if (pending != null)
+      {
+          try
+          {
+              if (pending.acquireLock(60, TimeUnit.SECONDS))
+              {
+                 try
+                 {
+                     if (pending.size() == 0)
+                     {
+                         pendingPuts.remove(key, pending);
+                     }
+                  }
+                  finally
+                  {
+                     pending.releaseLock();
+                  }
+              }
+          }
+          catch (Exception e){}//ignored
+      }
+   }
+
+
    /**
     * Invalidates any {@link #registerPendingPut(Object) previously registered pending puts} ensuring a subsequent call to
     * {@link #acquirePutFromLoadLock(Object)} will return <code>false</code>. <p> This method will block until any

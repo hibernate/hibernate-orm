@@ -154,6 +154,18 @@ public class TransactionalAccessDelegate {
          throw new CacheException("Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName());
       }      
       cacheAdapter.remove(key);
+
+      // added to remove the object from the pendingPuts map immediatedly.
+      // Existing mechanism is obviously not good enough to clear this queue under heavy load.
+      // Could lead to OutOfMemoryError
+      try
+      {
+          putValidator.releasePendingPut(key);
+      }
+      catch (Exception e)
+      {
+          // ignored
+      }
    }
 
    public void evictAll() throws CacheException {

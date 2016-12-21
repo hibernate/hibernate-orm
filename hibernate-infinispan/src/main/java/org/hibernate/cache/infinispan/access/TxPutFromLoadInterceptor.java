@@ -6,6 +6,10 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
 import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
 import org.hibernate.cache.infinispan.util.EndInvalidationCommand;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
@@ -30,9 +34,6 @@ import org.infinispan.remoting.rpc.RpcOptions;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.statetransfer.StateTransferManager;
 import org.infinispan.transaction.xa.GlobalTransaction;
-
-import java.util.Set;
-import java.util.List;
 
 /**
  * Intercepts transactions in Infinispan, calling {@link PutFromLoadValidator#beginInvalidatingKey(Object, Object)}
@@ -145,26 +146,29 @@ class TxPutFromLoadInterceptor extends BaseRpcInterceptor {
 		return endInvalidationAndInvokeNextInterceptor(ctx, command);
 	}
 
-	protected Object endInvalidationAndInvokeNextInterceptor(TxInvocationContext ctx, VisitableCommand command) throws Throwable {
+	protected Object endInvalidationAndInvokeNextInterceptor(TxInvocationContext<?> ctx, VisitableCommand command) throws Throwable {
 		try {
 			if (ctx.isOriginLocal()) {
-				// send async Commit
-				Set<Object> affectedKeys = ctx.getAffectedKeys();
+				// We cannot use directly ctx.getAffectedKeys() and that includes keys from local-only operations.
+				// During evictAll inside transaction this would cause unnecessary invalidate command
+				if (!ctx.getModifications().isEmpty()) {
+					Object[] keys = ctx.getModifications().stream()
+						.flatMap(mod -> mod.getAffectedKeys().stream()).distinct().toArray();
 
-				if (log.isTraceEnabled()) {
-					log.tracef( "Sending end invalidation for keys %s asynchronously, modifications are %s", affectedKeys, ctx.getCacheTransaction().getModifications());
-				}
+					if (log.isTraceEnabled()) {
+						log.tracef( "Sending end invalidation for keys %s asynchronously, modifications are %s",
+							Arrays.toString(keys), ctx.getCacheTransaction().getModifications());
+					}
 
-				if (!affectedKeys.isEmpty()) {
 					GlobalTransaction globalTransaction = ctx.getGlobalTransaction();
 					EndInvalidationCommand commitCommand = cacheCommandInitializer.buildEndInvalidationCommand(
-							cacheName, affectedKeys.toArray(), globalTransaction);
+							cacheName, keys, globalTransaction);
 					List<Address> members = stateTransferManager.getCacheTopology().getMembers();
 					rpcManager.invokeRemotely(members, commitCommand, asyncUnordered);
 
 					// If the transaction is not successful, *RegionAccessStrategy would not be called, therefore
 					// we have to end invalidation from here manually (in successful case as well)
-					for (Object key : affectedKeys) {
+					for (Object key : keys) {
 						putFromLoadValidator.endInvalidatingKey(globalTransaction, key);
 					}
 				}

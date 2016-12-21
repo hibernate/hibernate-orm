@@ -14,6 +14,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -22,7 +23,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
@@ -45,9 +45,11 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
         deleteTestData();
     }
 
-    @Test()
+    @Test
+    @SuppressWarnings( "unchecked" )
     public void testInnerEntityJoins() {
-        doInHibernate( this::sessionFactory, session -> {
+        Session session = openSession();
+        session.getTransaction().begin();
 
             // this should get financial records which have a lastUpdateBy user set
             List<Object[]> result = session.createQuery(
@@ -71,12 +73,16 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
 //			).list();
 //			assertThat( result.size(), is( 1 ) );
 
-        } );
+        session.getTransaction().commit();
+        session.close();
     }
 
     @Test
+    @SuppressWarnings( "unchecked" )
     public void testLeftOuterEntityJoins() {
-        doInHibernate( this::sessionFactory, session -> {
+        Session session = openSession();
+        session.getTransaction().begin();
+
             // this should get all financial records even if their lastUpdateBy user is null
             List<Object[]> result = session.createQuery(
                     "select r.id, u.id, u.username " +
@@ -93,13 +99,18 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
             Object[] noOnesRecord = result.get( 1 );
             assertThat( noOnesRecord[0], is( 2 ) );
             assertNull( noOnesRecord[2] );
-        } );
+
+        session.getTransaction().commit();
+        session.close();
     }
 
     @Test
     @TestForIssue(jiraKey = "HHH-11337")
+    @SuppressWarnings( "unchecked" )
     public void testLeftOuterEntityJoinsWithImplicitInnerJoinInSelectClause() {
-        doInHibernate( this::sessionFactory, session -> {
+        Session session = openSession();
+        session.getTransaction().begin();
+
             // this should get all financial records even if their lastUpdateBy user is null
             List<Object[]> result = session.createQuery(
                     "select r.id, u.id, u.username, r.customer.name " +
@@ -116,13 +127,18 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
             Object[] noOnesRecord = result.get( 1 );
             assertThat( noOnesRecord[0], is( 2 ) );
             assertNull( noOnesRecord[2] );
-        } );
+
+        session.getTransaction().commit();
+        session.close();
     }
 
     @Test
     @TestForIssue(jiraKey = "HHH-11340")
+    @SuppressWarnings( "unchecked" )
     public void testJoinOnEntityJoinNode() {
-        doInHibernate( this::sessionFactory, session -> {
+        Session session = openSession();
+        session.getTransaction().begin();
+
             // this should get all financial records even if their lastUpdateBy user is null
             List<Object[]> result = session.createQuery(
                     "select u.username, c.name " +
@@ -140,12 +156,17 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
             Object[] noOnesRecord = result.get( 1 );
             assertNull( noOnesRecord[0] );
             assertNull( noOnesRecord[1] );
-        } );
+
+        session.getTransaction().commit();
+        session.close();
     }
 
     @Test
+    @SuppressWarnings( "unchecked" )
     public void testRightOuterEntityJoins() {
-        doInHibernate( this::sessionFactory, session -> {
+        Session session = openSession();
+        session.getTransaction().begin();
+
             // this should get all users even if they have no financial records
             List<Object[]> result = session.createQuery(
                     "select r.id, u.id, u.username " +
@@ -163,11 +184,14 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
             Object[] janeAndNull = result.get( 1 );
             assertNull( janeAndNull[0] );
             assertThat( janeAndNull[2], is( "jane" ) );
-        } );
+
+        session.getTransaction().commit();
+        session.close();
     }
 
     private void createTestData() {
-        doInHibernate( this::sessionFactory, session -> {
+        Session session = openSession();
+        session.getTransaction().begin();
 
             final Customer customer = new Customer( 1, "Acme" );
             session.save( customer );
@@ -176,16 +200,20 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
             session.save( new FinancialRecord( 1, customer, "steve" ) );
             session.save( new FinancialRecord( 2, customer, null ) );
 
-        } );
+        session.getTransaction().commit();
+        session.close();
     }
 
     private void deleteTestData() {
-        doInHibernate( this::sessionFactory, session -> {
+        Session session = openSession();
+        session.getTransaction().begin();
+
             session.createQuery( "delete FinancialRecord" ).executeUpdate();
             session.createQuery( "delete User" ).executeUpdate();
             session.createQuery( "delete Customer" ).executeUpdate();
 
-        } );
+        session.getTransaction().commit();
+        session.close();
     }
 
     @Entity(name = "Customer")

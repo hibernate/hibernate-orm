@@ -45,7 +45,13 @@ import org.hibernate.test.cache.infinispan.util.BatchModeTransactionCoordinator;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.test.cache.infinispan.util.ExpectingInterceptor;
 import org.hibernate.test.cache.infinispan.util.JdbcResourceTransactionMock;
+import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 import org.hibernate.test.cache.infinispan.util.TestSynchronization;
+import org.hibernate.test.cache.infinispan.util.TestTimeService;
+import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.BeforeClassOnce;
+import org.infinispan.commands.write.InvalidateCommand;
+import org.infinispan.test.fwk.TestResourceTracker;
 import org.infinispan.AdvancedCache;
 import org.infinispan.commands.write.InvalidateCommand;
 import org.infinispan.commands.write.PutKeyValueCommand;
@@ -85,6 +91,8 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 	public static final String VALUE2 = "VALUE2";
 	public static final CacheDataDescription CACHE_DATA_DESCRIPTION
 			= new CacheDataDescriptionImpl(true, true, ComparableComparator.INSTANCE, null);
+
+	protected static final TestTimeService TIME_SERVICE = new TestTimeService();
 
 	protected NodeEnvironment localEnvironment;
 	protected R localRegion;
@@ -133,6 +141,13 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 		remoteAccessStrategy = getAccessStrategy(remoteRegion);
 
 		waitForClusterToForm(localRegion.getCache(), remoteRegion.getCache());
+	}
+
+	@Override
+	protected StandardServiceRegistryBuilder createStandardServiceRegistryBuilder() {
+		StandardServiceRegistryBuilder ssrb = super.createStandardServiceRegistryBuilder();
+		ssrb.applySetting(TestInfinispanRegionFactory.TIME_SERVICE, TIME_SERVICE);
+		return ssrb;
 	}
 
 	/**
@@ -272,7 +287,7 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 	protected SharedSessionContractImplementor mockedSession() {
 		SessionMock session = mock(SessionMock.class);
 		when(session.isClosed()).thenReturn(false);
-		when(session.getTimestamp()).thenReturn(System.currentTimeMillis());
+		when(session.getTimestamp()).thenReturn(TIME_SERVICE.wallClockTime());
 		if (jtaPlatform == BatchModeJtaPlatform.class) {
 			BatchModeTransactionCoordinator txCoord = new BatchModeTransactionCoordinator();
 			when(session.getTransactionCoordinator()).thenReturn(txCoord);
@@ -493,8 +508,11 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 				assertEquals(PutFromLoadValidator.class, originalValidator.getClass());
 				PutFromLoadValidator mockValidator = spy(originalValidator);
 				doAnswer(invocation -> {
-					endInvalidationLatch.countDown();
-					return invocation.callRealMethod();
+					try {
+						return invocation.callRealMethod();
+					} finally {
+						endInvalidationLatch.countDown();
+					}
 				}).when(mockValidator).endInvalidatingKey(any(), any());
 				PutFromLoadValidator.addToCache(remoteRegion.getCache(), mockValidator);
 				cleanup.add(() -> {
@@ -521,19 +539,17 @@ public abstract class AbstractRegionAccessStrategyTest<R extends BaseRegion, S e
 			}
 			return null;
 		});
-		// This should re-establish the region root node in the optimistic case
 		SharedSessionContractImplementor s7 = mockedSession();
 		assertNull(localAccessStrategy.get(s7, KEY, s7.getTimestamp()));
 		assertEquals(0, localRegion.getCache().size());
 
-		// Re-establishing the region root on the local node doesn't
-		// propagate it to other nodes. Do a get on the remote node to re-establish
 		SharedSessionContractImplementor s8 = mockedSession();
 		assertNull(remoteAccessStrategy.get(s8, KEY, s8.getTimestamp()));
 		assertEquals(0, remoteRegion.getCache().size());
 
 		// Wait for async propagation of EndInvalidationCommand before executing naked put
 		assertTrue(endInvalidationLatch.await(1, TimeUnit.SECONDS));
+		TIME_SERVICE.advance(1);
 
 		CountDownLatch lastPutFromLoadLatch = expectRemotePutFromLoad(remoteRegion.getCache(), localRegion.getCache());
 

@@ -338,14 +338,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 			throw new IllegalStateException( "No table alias for node " + this );
 		}
 
-		final String propertyName;
-		if ( getEntityPersister() != null && getEntityPersister().getEntityMetamodel() != null
-				&& getEntityPersister().getEntityMetamodel().hasNonIdentifierPropertyNamedId() ) {
-			propertyName = getEntityPersister().getIdentifierPropertyName();
-		}
-		else {
-			propertyName = EntityPersister.ENTITY_ID;
-		}
+		final String propertyName = getIdentifierPropertyName();
 
 		if ( getWalker().getStatementType() == HqlSqlTokenTypes.SELECT ) {
 			return getPropertyMapping( propertyName ).toColumns( table, propertyName );
@@ -518,6 +511,10 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 
 	public CollectionPropertyReference getCollectionPropertyReference(String propertyName) {
 		return elementType.getCollectionPropertyReference( propertyName );
+	}
+
+	public String getIdentifierPropertyName() {
+		return elementType.getIdentifierPropertyName();
 	}
 
 	public void setFetch(boolean fetch) {

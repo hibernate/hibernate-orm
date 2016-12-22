@@ -47,6 +47,7 @@ import org.hibernate.envers.internal.entities.mapper.relation.SortedSetCollectio
 import org.hibernate.envers.internal.entities.mapper.relation.ToOneIdMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleDummyComponentMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleEmbeddableComponentMapper;
+import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleMapElementNotKeyComponentMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleMapKeyIdComponentMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleMapKeyPropertyComponentMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleRelatedComponentMapper;
@@ -78,6 +79,8 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.MapType;
+import org.hibernate.type.MaterializedClobType;
+import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SortedMapType;
 import org.hibernate.type.SortedSetType;
@@ -467,7 +470,8 @@ public final class CollectionMetadataGenerator {
 				middleEntityXml,
 				queryGeneratorBuilder,
 				referencedPrefix,
-				propertyAuditingData.getJoinTable().inverseJoinColumns()
+				propertyAuditingData.getJoinTable().inverseJoinColumns(),
+				isCollectionElementKeyProperty()
 		);
 
 		// ******
@@ -510,7 +514,8 @@ public final class CollectionMetadataGenerator {
 						middleEntityXml,
 						queryGeneratorBuilder,
 						"mapkey",
-						null
+						null,
+						true
 				);
 			}
 			else {
@@ -562,7 +567,8 @@ public final class CollectionMetadataGenerator {
 			Element xmlMapping,
 			QueryGeneratorBuilder queryGeneratorBuilder,
 			String prefix,
-			JoinColumn[] joinColumns) {
+			JoinColumn[] joinColumns,
+			boolean key) {
 		final Type type = value.getType();
 		if ( type instanceof ManyToOneType ) {
 			final String prefixRelated = prefix + "_";
@@ -673,7 +679,7 @@ public final class CollectionMetadataGenerator {
 		else {
 			// Last but one parameter: collection components are always insertable
 			final boolean mapped = mainGenerator.getBasicMetadataGenerator().addBasic(
-					xmlMapping,
+					key ? xmlMapping : xmlMapping.getParent(),
 					new PropertyAuditingData(
 							prefix,
 							"field",
@@ -686,13 +692,20 @@ public final class CollectionMetadataGenerator {
 					value,
 					null,
 					true,
-					true
+					key
 			);
 
-			if ( mapped ) {
+			if ( mapped && key ) {
 				// Simple values are always stored in the first item of the array returned by the query generator.
 				return new MiddleComponentData(
 						new MiddleSimpleComponentMapper( mainGenerator.getVerEntCfg(), prefix ),
+						0
+				);
+			}
+			else if ( mapped && !key ) {
+				// when mapped but not part of the key, its stored as a dummy mapper??
+				return new MiddleComponentData(
+						new MiddleMapElementNotKeyComponentMapper( mainGenerator.getVerEntCfg(), prefix ),
 						0
 				);
 			}
@@ -1007,5 +1020,23 @@ public final class CollectionMetadataGenerator {
 		public Table getTable() {
 			return table;
 		}
+	}
+
+	/**
+	 * Checks whether the collection element should participate in the primary key association.  This
+	 * is only applicable for non-component, non-associative collection element types.
+	 *
+	 * @return {@code true} if should be part of the primary key, {@code false} if not.
+	 */
+	private boolean isCollectionElementKeyProperty() {
+		// When List or Set are used, the element will always be part of the primary key.
+		// When using a Map, the element isn't required as the Map Key will suffice.
+		if ( propertyValue instanceof org.hibernate.mapping.Map ) {
+			final Type type = propertyValue.getElement().getType();
+			if ( !type.isComponentType() && !type.isAssociationType() ) {
+				return !( type instanceof MaterializedClobType || type instanceof MaterializedNClobType );
+			}
+		}
+		return true;
 	}
 }

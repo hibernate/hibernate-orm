@@ -14,11 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
 import javax.persistence.Version;
 
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -35,6 +38,7 @@ import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
+import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
@@ -42,6 +46,7 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+import org.jboss.logging.Logger;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 import static org.hibernate.envers.internal.tools.Tools.newHashSet;
@@ -58,6 +63,11 @@ import static org.hibernate.envers.internal.tools.Tools.newHashSet;
  * @author Lukasz Zuchowski (author at zuchos dot com)
  */
 public class AuditedPropertiesReader {
+	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			EnversMessageLogger.class,
+			AuditedPropertiesReader.class.getName()
+	);
+
 	protected final ModificationStore defaultStore;
 	private final PersistentPropertiesSource persistentPropertiesSource;
 	private final AuditedPropertiesHolder auditedPropertiesHolder;
@@ -502,6 +512,8 @@ public class AuditedPropertiesReader {
 			}
 		}
 
+		validateLobMappingSupport( property );
+
 		final String propertyName = propertyNamePrefix + property.getName();
 		if ( !this.checkAudited( property, propertyData,propertyName, allClassAudited, globalCfg.getModifiedFlagSuffix() ) ) {
 			return false;
@@ -524,6 +536,30 @@ public class AuditedPropertiesReader {
 		return true;
 	}
 
+	private void validateLobMappingSupport(XProperty property) {
+		// HHH-9834 - Sanity check
+		try {
+			if ( property.isAnnotationPresent( ElementCollection.class ) ) {
+				if ( property.isAnnotationPresent( Lob.class ) ) {
+					if ( !property.getCollectionClass().isAssignableFrom( Map.class ) ) {
+						throw new MappingException(
+								"@ElementCollection combined with @Lob is only supported for Map collection types."
+						);
+					}
+				}
+			}
+		}
+		catch ( MappingException e ) {
+			throw new HibernateException(
+					String.format(
+							"Invalid mapping in [%s] for property [%s]",
+							property.getDeclaringClass().getName(),
+							property.getName()
+					),
+					e
+			);
+		}
+	}
 
 	protected boolean checkAudited(
 			XProperty property,

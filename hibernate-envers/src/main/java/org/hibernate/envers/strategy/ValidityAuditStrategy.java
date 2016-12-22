@@ -36,6 +36,9 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.sql.Update;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.MapType;
+import org.hibernate.type.MaterializedClobType;
+import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
@@ -260,25 +263,8 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			}
 		}
 
-		final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) session ).getFactory();
-		final Type propertyType = sessionFactory.getMetamodel().entityPersister( entityName ).getPropertyType( propertyName );
-		if ( propertyType.isCollectionType() ) {
-			CollectionType collectionPropertyType = (CollectionType) propertyType;
-			// Handling collection of components.
-			if ( collectionPropertyType.getElementType( sessionFactory ) instanceof ComponentType ) {
-				// Adding restrictions to compare data outside of primary key.
-				// todo: is it necessary that non-primary key attributes be compared?
-				for ( Map.Entry<String, Object> dataEntry : persistentCollectionChangeData.getData().entrySet() ) {
-					if ( !originalIdPropName.equals( dataEntry.getKey() ) ) {
-						if ( dataEntry.getValue() != null ) {
-							qb.getRootParameters().addWhereWithParam( dataEntry.getKey(), true, "=", dataEntry.getValue() );
-						}
-						else {
-							qb.getRootParameters().addNullRestriction( dataEntry.getKey(), true );
-						}
-					}
-				}
-			}
+		if ( isNonIdentifierWhereConditionsRequired( entityName, propertyName, (SessionImplementor) session ) ) {
+			addNonIdentifierWhereConditions( qb, persistentCollectionChangeData.getData(), originalIdPropName );
 		}
 
 		addEndRevisionNullRestriction( auditEntitiesConfiguration, qb.getRootParameters() );
@@ -297,6 +283,37 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		// Save the audit data
 		session.save( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, persistentCollectionChangeData.getData() );
+	}
+
+	private boolean isNonIdentifierWhereConditionsRequired(String entityName, String propertyName, SessionImplementor session) {
+		final Type propertyType = session.getSessionFactory().getMetamodel().entityPersister( entityName ).getPropertyType( propertyName );
+		if ( propertyType.isCollectionType() ) {
+			final CollectionType collectionType = (CollectionType) propertyType;
+			final Type collectionElementType = collectionType.getElementType( session.getSessionFactory() );
+			if ( collectionElementType instanceof ComponentType ) {
+				// required for Embeddables
+				return true;
+			}
+			else if ( collectionElementType instanceof MaterializedClobType || collectionElementType instanceof MaterializedNClobType ) {
+				// for Map<> using @Lob annotations
+				return collectionType instanceof MapType;
+			}
+		}
+		return false;
+	}
+
+	private void addNonIdentifierWhereConditions(QueryBuilder qb, Map<String, Object> data, String originalIdPropertyName) {
+		final Parameters parameters = qb.getRootParameters();
+		for ( Map.Entry<String, Object> entry : data.entrySet() ) {
+			if ( !originalIdPropertyName.equals( entry.getKey() ) ) {
+				if ( entry.getValue() != null ) {
+					parameters.addWhereWithParam( entry.getKey(), true, "=", entry.getValue() );
+				}
+				else {
+					parameters.addNullRestriction( entry.getKey(), true );
+				}
+			}
+		}
 	}
 
 	private void addEndRevisionNullRestriction(AuditEntitiesConfiguration auditEntitiesConfiguration, Parameters rootParameters) {

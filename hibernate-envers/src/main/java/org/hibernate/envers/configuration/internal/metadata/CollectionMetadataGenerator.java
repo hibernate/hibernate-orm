@@ -449,7 +449,7 @@ public final class CollectionMetadataGenerator {
 				mainGenerator.getAuditStrategy(),
 				referencingIdData,
 				auditMiddleEntityName,
-				isEmbeddableElementType()
+				isRevisionTypeInId()
 		);
 
 		// Adding the XML mapping for the referencing entity, if the relation isn't inverse.
@@ -471,7 +471,7 @@ public final class CollectionMetadataGenerator {
 				queryGeneratorBuilder,
 				referencedPrefix,
 				propertyAuditingData.getJoinTable().inverseJoinColumns(),
-				isCollectionElementKeyProperty()
+				!isLobMapElementType()
 		);
 
 		// ******
@@ -723,6 +723,7 @@ public final class CollectionMetadataGenerator {
 			MiddleComponentData indexComponentData) {
 		final Type type = propertyValue.getType();
 		final boolean embeddableElementType = isEmbeddableElementType();
+		final boolean lobMapElementType = isLobMapElementType();
 		if ( type instanceof SortedSetType ) {
 			currentMapper.addComposite(
 					propertyAuditingData.getPropertyData(),
@@ -761,7 +762,7 @@ public final class CollectionMetadataGenerator {
 							elementComponentData,
 							indexComponentData,
 							propertyValue.getComparator(),
-							embeddableElementType
+							embeddableElementType || lobMapElementType
 					)
 			);
 		}
@@ -775,7 +776,7 @@ public final class CollectionMetadataGenerator {
 							MapProxy.class,
 							elementComponentData,
 							indexComponentData,
-							embeddableElementType
+							embeddableElementType || lobMapElementType
 					)
 			);
 		}
@@ -854,9 +855,9 @@ public final class CollectionMetadataGenerator {
 
 		// Adding the revision type property to the entity xml.
 		mainGenerator.addRevisionType(
-				isEmbeddableElementType() ? middleEntityXmlId : middleEntityXml,
+				isRevisionTypeInId() ? middleEntityXmlId : middleEntityXml,
 				middleEntityXml,
-				isEmbeddableElementType()
+				isRevisionTypeInId()
 		);
 
 		// All other properties should also be part of the primary key of the middle entity.
@@ -1023,20 +1024,27 @@ public final class CollectionMetadataGenerator {
 	}
 
 	/**
-	 * Checks whether the collection element should participate in the primary key association.  This
-	 * is only applicable for non-component, non-associative collection element types.
+	 * Returns whether the revision type column part of the collection table's primary key.
 	 *
-	 * @return {@code true} if should be part of the primary key, {@code false} if not.
+	 * @return {@code true} if the revision type should be part of the primary key, otherwise {@code false}.
 	 */
-	private boolean isCollectionElementKeyProperty() {
-		// When List or Set are used, the element will always be part of the primary key.
-		// When using a Map, the element isn't required as the Map Key will suffice.
+	private boolean isRevisionTypeInId() {
+		return isEmbeddableElementType() || isLobMapElementType();
+	}
+
+	/**
+	 * Returns whether the collection is a map-type and that the map element is defined as a Clob/NClob type.
+	 *
+	 * @return {@code true} if the element is a Clob/NClob type, otherwise {@code false}.
+	 */
+	private boolean isLobMapElementType() {
 		if ( propertyValue instanceof org.hibernate.mapping.Map ) {
 			final Type type = propertyValue.getElement().getType();
+			// we're only interested in basic types
 			if ( !type.isComponentType() && !type.isAssociationType() ) {
-				return !( type instanceof MaterializedClobType || type instanceof MaterializedNClobType );
+				return ( type instanceof MaterializedClobType ) || ( type instanceof MaterializedNClobType );
 			}
 		}
-		return true;
+		return false;
 	}
 }

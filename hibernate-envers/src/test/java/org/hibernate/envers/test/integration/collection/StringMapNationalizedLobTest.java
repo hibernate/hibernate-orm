@@ -20,6 +20,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
@@ -28,6 +29,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Chris Cranford
  */
+@TestForIssue(jiraKey = "HHH-9834")
 public class StringMapNationalizedLobTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -43,37 +45,81 @@ public class StringMapNationalizedLobTest extends BaseEnversJPAFunctionalTestCas
 			simple.getEmbeddedMap().put( "2", "Two" );
 			entityManager.persist( simple );
 		} );
+
 		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
 			final Simple simple = entityManager.find( Simple.class, 1 );
 			simple.getEmbeddedMap().put( "3", "Three" );
 			entityManager.merge( simple );
 		} );
+
 		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
 			final Simple simple = entityManager.find( Simple.class, 1 );
 			simple.getEmbeddedMap().remove( "1" );
 			simple.getEmbeddedMap().remove( "2" );
 			entityManager.merge( simple );
 		} );
+
+		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+			final Simple simple = entityManager.find( Simple.class, 1 );
+			simple.getEmbeddedMap().remove( "3" );
+			simple.getEmbeddedMap().put( "3", "Three-New" );
+			entityManager.merge( simple );
+		} );
+
+		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+			final Simple simple = entityManager.find( Simple.class, 1 );
+			simple.getEmbeddedMap().clear();
+			entityManager.merge( simple );
+		} );
 	}
 
 	@Test
 	public void testRevisionCounts() {
-		assertEquals( Arrays.asList( 1, 2, 3 ), getAuditReader().getRevisions( Simple.class, 1 ) );
+		assertEquals( Arrays.asList( 1, 2, 3, 4, 5 ), getAuditReader().getRevisions( Simple.class, 1 ) );
 	}
 
 	@Test
 	public void testRevisionHistory() {
 		final Simple rev1 = getAuditReader().find( Simple.class, 1, 1 );
 		assertEquals( 2, rev1.getEmbeddedMap().entrySet().size() );
-		assertEquals( TestTools.makeSet( "1", "2" ), rev1.getEmbeddedMap().keySet() );
+		TestTools.assertCollectionsEqual(
+				TestTools.<String, String>mapBuilder()
+						.add( "1", "One" )
+						.add( "2", "Two" )
+						.entries(),
+				rev1.getEmbeddedMap().entrySet()
+		);
 
 		final Simple rev2 = getAuditReader().find( Simple.class, 1, 2 );
 		assertEquals( 3, rev2.getEmbeddedMap().entrySet().size() );
-		assertEquals( TestTools.makeSet( "1", "2", "3" ), rev2.getEmbeddedMap().keySet() );
+		TestTools.assertCollectionsEqual(
+				TestTools.<String,String>mapBuilder()
+						.add( "1", "One" )
+						.add( "2", "Two" )
+						.add( "3", "Three" )
+						.entries(),
+				rev2.getEmbeddedMap().entrySet()
+		);
 
 		final Simple rev3 = getAuditReader().find( Simple.class, 1, 3 );
 		assertEquals( 1, rev3.getEmbeddedMap().entrySet().size() );
-		assertEquals( TestTools.makeSet( "3" ), rev3.getEmbeddedMap().keySet() );
+		TestTools.assertCollectionsEqual(
+				TestTools.<String,String>mapBuilder()
+						.add( "3", "Three" )
+						.entries(),
+				rev3.getEmbeddedMap().entrySet()
+		);
+
+		final Simple rev4 = getAuditReader().find( Simple.class, 1, 4 );
+		TestTools.assertCollectionsEqual(
+				TestTools.<String,String>mapBuilder()
+						.add( "3", "Three-New" )
+						.entries(),
+				rev4.getEmbeddedMap().entrySet()
+		);
+
+		final Simple rev5 = getAuditReader().find( Simple.class, 1, 5 );
+		assertEquals( 0, rev5.getEmbeddedMap().size() );
 	}
 
 	@Entity(name = "Simple")

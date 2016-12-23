@@ -162,12 +162,20 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 	 */
 	private RelationDescription searchForRelationDescription(String entityName, String referencingPropertyName) {
 		final EntityConfiguration configuration = getEnversService().getEntitiesConfigurations().get( entityName );
-		final RelationDescription rd = configuration.getRelationDescription( referencingPropertyName );
+		final String propertyName = sanitizeReferencingPropertyName( referencingPropertyName );
+		final RelationDescription rd = configuration.getRelationDescription( propertyName );
 		if ( rd == null && configuration.getParentEntityName() != null ) {
-			return searchForRelationDescription( configuration.getParentEntityName(), referencingPropertyName );
+			return searchForRelationDescription( configuration.getParentEntityName(), propertyName );
 		}
 
 		return rd;
+	}
+
+	private String sanitizeReferencingPropertyName(String propertyName) {
+		if ( propertyName != null && propertyName.indexOf( '.' ) != -1 ) {
+			return propertyName.replaceAll( "\\.", "\\_" );
+		}
+		return propertyName;
 	}
 
 	private void generateFakeBidirecationalRelationWorkUnits(

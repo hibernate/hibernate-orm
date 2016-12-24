@@ -14,6 +14,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -26,15 +27,14 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.hibernate.Session;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -43,8 +43,7 @@ import static org.junit.Assert.assertEquals;
 @TestForIssue(jiraKey = "HHH-9864")
 public class InsertOrderingWithJoinedTableMultiLevelInheritance
 		extends BaseNonConfigCoreFunctionalTestCase {
-
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private InsertOrderingStatementInspector statementInspector = new InsertOrderingStatementInspector();
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -62,21 +61,18 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance
 	protected void addSettings(Map settings) {
 		settings.put( Environment.ORDER_INSERTS, "true" );
 		settings.put( Environment.STATEMENT_BATCH_SIZE, "10" );
-		settings.put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider
-		);
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
+		settings.put( Environment.GENERATE_STATISTICS, "true" );
+		settings.put( Environment.STATEMENT_INSPECTOR, statementInspector );
 	}
 
 	@Test
 	public void testBatchingAmongstSubClasses() {
-		doInHibernate( this::sessionFactory, session -> {
+		sessionFactory().getStatistics().clear();
+		statementInspector.clear();
+
+		Session session = openSession();
+		session.getTransaction().begin();
+
 			int iterations = 2;
 			for ( int i = 0; i < iterations; i++ ) {
 				final President president = new President();
@@ -96,10 +92,33 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance
 				specialPerson.addAddress( new Address() );
 				session.persist( specialPerson );
 			}
-			connectionProvider.clear();
-		} );
 
-		assertEquals( 17, connectionProvider.getPreparedStatements().size() );
+		session.getTransaction().commit();
+		session.close();
+
+		assertEquals( 1, statementInspector.getCount( "insert into ADDRESS (PERSONID, ID) values (?, ?)" ) );
+		assertEquals(
+				4,
+				sessionFactory().getStatistics().getEntityStatistics( Address.class.getName() ).getInsertCount()
+		);
+
+		assertEquals( 1, statementInspector.getCount( "insert into Office (ID) values (?)" ) );
+		assertEquals( 2, sessionFactory().getStatistics().getEntityStatistics( Office.class.getName() ).getInsertCount() );
+
+		assertEquals( 1, statementInspector.getCount( "insert into PERSON (CLASSINDICATOR, ID) values (1, ?)" ) );
+		assertEquals( 2, sessionFactory().getStatistics().getEntityStatistics( Person.class.getName() ).getInsertCount() );
+
+		assertEquals( 2, statementInspector.getCount( "insert into PERSON (CLASSINDICATOR, ID) values (2, ?)" ) );
+		assertEquals( 4, statementInspector.getCount( "insert into SpecialPerson (special, ID) values (?, ?)" ) );
+		assertEquals( 2, sessionFactory().getStatistics().getEntityStatistics( SpecialPerson.class.getName() ).getInsertCount() );
+
+		assertEquals( 2, statementInspector.getCount( "insert into PERSON (CLASSINDICATOR, ID) values (3, ?)" ) );
+		assertEquals( 2, statementInspector.getCount( "insert into AnotherPerson (office_ID, working, ID) values (?, ?, ?)" ) );
+		assertEquals( 2, sessionFactory().getStatistics().getEntityStatistics( AnotherPerson.class.getName() ).getInsertCount() );
+
+		assertEquals( 2, statementInspector.getCount( "insert into PERSON (CLASSINDICATOR, ID) values (4, ?)" ) );
+		assertEquals( 2, statementInspector.getCount( "insert into President (salary, ID) values (?, ?)" ) );
+		assertEquals( 2, sessionFactory().getStatistics().getEntityStatistics( President.class.getName() ).getInsertCount() );
 	}
 
 	@Override
@@ -109,14 +128,18 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance
 
 	@Override
 	protected void cleanupTestData() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+
 			session.createQuery( "delete Address" ).executeUpdate();
 			session.createQuery( "delete Person" ).executeUpdate();
 			session.createQuery( "delete SpecialPerson" ).executeUpdate();
 			session.createQuery( "delete AnotherPerson" ).executeUpdate();
 			session.createQuery( "delete Office" ).executeUpdate();
 			session.createQuery( "delete President" ).executeUpdate();
-		} );
+
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity(name = "Address")
@@ -142,6 +165,7 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance
 	@Table(name = "PERSON")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	@DiscriminatorColumn(name = "CLASSINDICATOR", discriminatorType = DiscriminatorType.INTEGER)
+	@DiscriminatorValue("1")
 	public static class Person {
 		@Id
 		@Column(name = "ID", nullable = false)
@@ -152,6 +176,7 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance
 	}
 
 	@Entity(name = "SpecialPerson")
+	@DiscriminatorValue("2")
 	public static class SpecialPerson extends Person {
 		@Column(name = "special")
 		private String special;
@@ -170,6 +195,7 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance
 	}
 
 	@Entity(name = "AnotherPerson")
+	@DiscriminatorValue("3")
 	public static class AnotherPerson extends Person {
 		private boolean working;
 
@@ -178,6 +204,7 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance
 	}
 
 	@Entity(name = "President")
+	@DiscriminatorValue("4")
 	public static class President extends SpecialPerson {
 
 		@Column(name = "salary")

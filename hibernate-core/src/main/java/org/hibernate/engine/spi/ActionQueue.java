@@ -1016,9 +1016,9 @@ public class ActionQueue {
 
 			private final String entityName;
 
-			private Set<String> parentEntityNames = new HashSet<>( );
+			private Set<String> parentEntityNames = new HashSet<String>( );
 
-			private Set<String> childEntityNames = new HashSet<>( );
+			private Set<String> childEntityNames = new HashSet<String>( );
 
 			public BatchIdentifier(
 					String entityName) {
@@ -1034,12 +1034,12 @@ public class ActionQueue {
 					return false;
 				}
 				BatchIdentifier that = (BatchIdentifier) o;
-				return Objects.equals( entityName, that.entityName );
+				return entityName.equals( that.entityName );
 			}
 
 			@Override
 			public int hashCode() {
-				return Objects.hash( entityName );
+				return entityName.hashCode();
 			}
 
 			public String getEntityName() {
@@ -1071,9 +1071,9 @@ public class ActionQueue {
 		 */
 		public void sort(List<AbstractEntityInsertAction> insertions) {
 			// optimize the hash size to eliminate a rehash.
-			this.latestBatches = new ArrayList<>( );
-			this.entityBatchIdentifier = new HashMap<>( insertions.size() + 1, 1.0f );
-			this.actionBatches = new HashMap<>();
+			this.latestBatches = new ArrayList<BatchIdentifier>( );
+			this.entityBatchIdentifier = new HashMap<Object, BatchIdentifier>( insertions.size() + 1, 1.0f );
+			this.actionBatches = new HashMap<BatchIdentifier, List<AbstractEntityInsertAction>>();
 
 			for ( AbstractEntityInsertAction action : insertions ) {
 				BatchIdentifier batchIdentifier = new BatchIdentifier( action.getEntityName() );
@@ -1156,7 +1156,7 @@ public class ActionQueue {
 			List<AbstractEntityInsertAction> actions = actionBatches.get( batchIdentifier );
 
 			if ( actions == null ) {
-				actions = new LinkedList<>();
+				actions = new LinkedList<AbstractEntityInsertAction>();
 				actionBatches.put( batchIdentifier, actions );
 			}
 			actions.add( action );

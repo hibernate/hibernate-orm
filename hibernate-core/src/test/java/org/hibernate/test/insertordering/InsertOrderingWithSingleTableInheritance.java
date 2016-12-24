@@ -27,15 +27,14 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.hibernate.Session;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -44,8 +43,7 @@ import static org.junit.Assert.assertEquals;
 @TestForIssue(jiraKey = "HHH-9864")
 public class InsertOrderingWithSingleTableInheritance
 		extends BaseNonConfigCoreFunctionalTestCase {
-
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private InsertOrderingStatementInspector statementInspector = new InsertOrderingStatementInspector();
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -56,21 +54,15 @@ public class InsertOrderingWithSingleTableInheritance
 	protected void addSettings(Map settings) {
 		settings.put( Environment.ORDER_INSERTS, "true" );
 		settings.put( Environment.STATEMENT_BATCH_SIZE, "10" );
-		settings.put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider
-		);
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
+		settings.put( Environment.GENERATE_STATISTICS, "true" );
+		settings.put( Environment.STATEMENT_INSPECTOR, statementInspector );
 	}
 
 	@Test
 	public void testBatchOrdering() {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+
 			// First object with dependent object (address)
 			final Person person = new Person();
 			person.addAddress( new Address() );
@@ -80,12 +72,19 @@ public class InsertOrderingWithSingleTableInheritance
 			final SpecialPerson specialPerson = new SpecialPerson();
 			specialPerson.addAddress( new Address() );
 			session.persist( specialPerson );
-		} );
+
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	public void testBatchingAmongstSubClasses() {
-		doInHibernate( this::sessionFactory, session -> {
+		sessionFactory().getStatistics().clear();
+		statementInspector.clear();
+
+		Session session = openSession();
+		session.getTransaction().begin();
+
 			int iterations = 12;
 			for ( int i = 0; i < iterations; i++ ) {
 				final Person person = new Person();
@@ -96,10 +95,18 @@ public class InsertOrderingWithSingleTableInheritance
 				specialPerson.addAddress( new Address() );
 				session.persist( specialPerson );
 			}
-			connectionProvider.clear();
-		} );
 
-		assertEquals( 3, connectionProvider.getPreparedStatements().size() );
+		session.getTransaction().commit();
+		session.close();
+
+		assertEquals( 1, statementInspector.getCount( "insert into ADDRESS (PERSONID, ID) values (?, ?)" ) );
+		assertEquals( 24, sessionFactory().getStatistics().getEntityStatistics( Address.class.getName() ).getInsertCount() );
+
+		assertEquals( 1, statementInspector.getCount( "insert into PERSON (CLASSINDICATOR, ID) values (1, ?)" ) );
+		assertEquals( 12, sessionFactory().getStatistics().getEntityStatistics( Person.class.getName() ).getInsertCount() );
+
+		assertEquals( 1, statementInspector.getCount( "insert into PERSON (special, CLASSINDICATOR, ID) values (?, 2, ?)" ) );
+		assertEquals( 12, sessionFactory().getStatistics().getEntityStatistics( SpecialPerson.class.getName() ).getInsertCount() );
 	}
 
 	@Override

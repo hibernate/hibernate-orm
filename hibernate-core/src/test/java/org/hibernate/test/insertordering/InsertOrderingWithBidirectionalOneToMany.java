@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.insertordering;
 
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,16 +20,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 
+import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
@@ -38,8 +35,7 @@ import static org.mockito.Mockito.verify;
 @TestForIssue(jiraKey = "HHH-9864")
 public class InsertOrderingWithBidirectionalOneToMany
 		extends BaseNonConfigCoreFunctionalTestCase {
-
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	private InsertOrderingStatementInspector statementInspector = new InsertOrderingStatementInspector();
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -50,21 +46,18 @@ public class InsertOrderingWithBidirectionalOneToMany
 	protected void addSettings(Map settings) {
 		settings.put( Environment.ORDER_INSERTS, "true" );
 		settings.put( Environment.STATEMENT_BATCH_SIZE, "10" );
-		settings.put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider
-		);
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
+		settings.put( Environment.GENERATE_STATISTICS, "true" );
+		settings.put( Environment.STATEMENT_INSPECTOR, statementInspector );
 	}
 
 	@Test
 	public void testBatching() throws SQLException {
-		doInHibernate( this::sessionFactory, session -> {
+		sessionFactory().getStatistics().clear();
+		statementInspector.clear();
+
+		Session session = openSession();
+		session.getTransaction().begin();
+
 			Person father = new Person();
 			Person mother = new Person();
 			Person son = new Person();
@@ -84,15 +77,14 @@ public class InsertOrderingWithBidirectionalOneToMany
 			session.persist( home );
 			session.persist( office );
 
-			connectionProvider.clear();
-		} );
+		session.getTransaction().commit();
+		session.close();
 
-		PreparedStatement addressPreparedStatement = connectionProvider.getPreparedStatement(
-				"insert into Address (ID) values (?)" );
-		verify( addressPreparedStatement, times( 2 ) ).addBatch();
-		PreparedStatement personPreparedStatement = connectionProvider.getPreparedStatement(
-				"insert into Person (address_ID, ID) values (?, ?)" );
-		verify( personPreparedStatement, times( 4 ) ).addBatch();
+		assertEquals( 1, statementInspector.getCount( "insert into Address (ID) values (?)" ) );
+		assertEquals( 2, sessionFactory().getStatistics().getEntityStatistics( Address.class.getName() ).getInsertCount() );
+
+		assertEquals( 1, statementInspector.getCount( "insert into Person (address_ID, ID) values (?, ?)" ) );
+		assertEquals( 4, sessionFactory().getStatistics().getEntityStatistics( Person.class.getName() ).getInsertCount() );
 	}
 
 	@Entity(name = "Address")
@@ -104,7 +96,7 @@ public class InsertOrderingWithBidirectionalOneToMany
 		private Long id;
 
 		@OneToMany(mappedBy = "address", cascade = CascadeType.PERSIST)
-		private List<Person> persons = new ArrayList<>();
+		private List<Person> persons = new ArrayList<Person>();
 
 		public void addPerson(Person person) {
 			persons.add( person );

@@ -7,7 +7,10 @@
 package org.hibernate.persister.entity.spi;
 
 import org.hibernate.EntityMode;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.persister.common.spi.Caching;
 
 /**
  * Models information used across the entire entity inheritance hierarchy.
@@ -38,19 +41,21 @@ public interface EntityHierarchy {
 	 */
 	EntityMode getEntityMode();
 
-	EntityIdentifier getEntityIdentifier();
+	IdentifierDescriptor getIdentifierDescriptor();
 
-	EntityDiscriminator getEntityDiscriminator();
+	RowIdDescriptor getRowIdDescriptor();
 
-	EntityVersion getEntityVersion();
+	DiscriminatorDescriptor getDiscriminatorDescriptor();
+
+	VersionDescriptor getVersionDescriptor();
 
 	OptimisticLockStyle getOptimisticLockStyle();
 
 	TenantDiscrimination getTenantDiscrimination();
 
-	Caching getCaching();
+	EntityRegionAccessStrategy getEntityRegionAccessStrategy();
 
-	Caching getNaturalIdCaching();
+	NaturalIdRegionAccessStrategy getNaturalIdRegionAccessStrategy();
 
 	/**
 	 * Are entities in this hierarchy mutable?

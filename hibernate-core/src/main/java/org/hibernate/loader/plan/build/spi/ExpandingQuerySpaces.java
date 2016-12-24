@@ -9,7 +9,7 @@ package org.hibernate.loader.plan.build.spi;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.build.internal.spaces.CompositePropertyMapping;
 import org.hibernate.loader.plan.spi.QuerySpaces;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**

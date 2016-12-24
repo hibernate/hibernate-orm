@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 
 /**
  * Cacheable representation of persistent collections

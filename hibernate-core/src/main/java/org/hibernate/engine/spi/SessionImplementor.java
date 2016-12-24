@@ -18,7 +18,7 @@ import javax.persistence.criteria.CriteriaUpdate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.jpa.internal.util.LockModeTypeHelper;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 import org.hibernate.query.spi.NativeQueryImplementor;
@@ -31,7 +31,7 @@ import org.hibernate.type.spi.descriptor.WrapperOptions;
 /**
  * Defines the "internal contract" for {@link Session} and other parts of Hibernate such as
  * {@link Type}, {@link EntityPersister}
- * and {@link org.hibernate.persister.collection.CollectionPersister} implementations.
+ * and {@link CollectionPersister} implementations.
  *
  * A Session, through this interface and SharedSessionContractImplementor, implements:<ul>
  *     <li>

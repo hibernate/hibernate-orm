@@ -1,9 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
+
 package org.hibernate.persister.common.spi;
 
 import java.util.Collection;
@@ -11,14 +12,12 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.hibernate.MappingException;
-import org.hibernate.persister.common.internal.DerivedColumn;
-import org.hibernate.persister.common.internal.PhysicalColumn;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractTable implements Table {
-	private final Map<String,Column> valueMap = new TreeMap<String, Column>( String.CASE_INSENSITIVE_ORDER );
+	private final Map<String,Column> valueMap = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 
 	public PhysicalColumn makeColumn(String name, int jdbcType) {
 		if ( valueMap.containsKey( name ) ) {
@@ -50,11 +49,16 @@ public abstract class AbstractTable implements Table {
 
 	@Override
 	public Column getColumn(String name) {
-		final Column match = valueMap.get( name );
+		final Column match = locateColumn( name );
 		if ( match == null ) {
 			throw new MappingException( "Could not locate value : " + name );
 		}
 		return match;
+	}
+
+	@Override
+	public Column locateColumn(String name) {
+		return valueMap.get( name );
 	}
 
 	@Override

@@ -30,6 +30,9 @@ import org.hibernate.persister.entity.spi.EntityPersister;
  */
 public interface EntityRegionAccessStrategy extends RegionAccessStrategy {
 
+	// todo : rename this to EntityRegionAccess.  imo the "Startegy" part adds no value
+	//		^^ but only if we otherwise decide to follow through the cache SPI changes - HHH-11356
+
 	/**
 	 * To create instances of keys for this region, Hibernate will invoke this method
 	 * exclusively so that generated implementations can generate optimised keys.

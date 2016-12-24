@@ -12,7 +12,7 @@ import java.util.HashSet;
 import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
 public class SetType extends CollectionType {

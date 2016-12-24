@@ -42,6 +42,7 @@ import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NativeQueryImplementor;
@@ -50,10 +51,9 @@ import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.type.spi.Type;
-import org.hibernate.sql.spi.ParameterBinder;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.sql.sqm.exec.internal.QueryOptionsImpl;
+import org.hibernate.sql.spi.ParameterBinder;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 
@@ -107,7 +107,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 			boolean callable,
 			List<String> querySpaces,
 			List<NativeSQLQueryReturn> queryReturns) {
-		super( session );
+		super( session, session );
 
 		this.sqlString = queryString;
 		this.callable = callable;
@@ -175,10 +175,6 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 	@Override
 	public ParameterMetadata getParameterMetadata() {
 		return parameterMetadata;
-	}
-
-	public void setZeroBasedParametersIndex(boolean zeroBasedParametersIndex) {
-		getParameterMetadata().setOrdinalParametersZeroBased( zeroBasedParametersIndex );
 	}
 
 	@Override
@@ -290,7 +286,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 		//
 		// NOTE : this was added for JPA initially.  Perhaps we want to only do this from JPA usage?
 		if ( shouldFlush() ) {
-			getProducer().flush();
+			getExecutionContext().flush();
 		}
 	}
 
@@ -312,10 +308,10 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 	}
 
 	private boolean shouldFlush() {
-		if ( getProducer().isTransactionInProgress() ) {
+		if ( getExecutionContext().isTransactionInProgress() ) {
 			FlushMode effectiveFlushMode = getHibernateFlushMode();
 			if ( effectiveFlushMode == null ) {
-				effectiveFlushMode = getProducer().getHibernateFlushMode();
+				effectiveFlushMode = getExecutionContext().getHibernateFlushMode();
 			}
 
 			if ( effectiveFlushMode == FlushMode.ALWAYS ) {
@@ -335,10 +331,11 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 	@Override
 	@SuppressWarnings("unchecked")
 	protected List<R> doList() {
-		getProducer().prepareForQueryExecution( false );
+		getExecutionContext().prepareForQueryExecution( false );
 
 		return resolveSelectQueryPlan().performList(
-				getProducer(),
+				(SharedSessionContractImplementor) getProducer(),
+				getExecutionContext(),
 				getQueryOptions(),
 				parameterBindings
 		);
@@ -366,10 +363,11 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 
 	@Override
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
-		getProducer().prepareForQueryExecution( false );
+		getExecutionContext().prepareForQueryExecution( false );
 
 		return resolveSelectQueryPlan().performScroll(
-				getProducer(),
+				(SharedSessionContractImplementor) getProducer(),
+				getExecutionContext(),
 				getQueryOptions(),
 				parameterBindings,
 				scrollMode
@@ -384,10 +382,11 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 
 	protected int doExecuteUpdate() {
 		// trigger the transaction-in-progress checks...
-		getProducer().prepareForQueryExecution( true );
+		getExecutionContext().prepareForQueryExecution( true );
 
 		return resolveNonSelectQueryPlan().executeUpdate(
-				getProducer(),
+				(SharedSessionContractImplementor) getProducer(),
+				getExecutionContext(),
 				getQueryOptions(),
 				parameterBindings
 		);

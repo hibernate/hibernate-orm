@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 
 /**
  * CollectionAliases which handles the logic of selecting user provided aliases (via return-property),

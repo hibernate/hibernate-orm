@@ -7,7 +7,7 @@
 package org.hibernate.loader.plan.build.spi;
 
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
 

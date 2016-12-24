@@ -9,7 +9,7 @@ package org.hibernate.hql.internal.classic;
 import java.util.Map;
 
 import org.hibernate.QueryException;
-import org.hibernate.engine.query.spi.EntityGraphQueryHint;
+import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.spi.FilterTranslator;
 import org.hibernate.hql.spi.QueryTranslator;

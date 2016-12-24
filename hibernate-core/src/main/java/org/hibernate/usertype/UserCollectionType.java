@@ -12,7 +12,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 
 /**
  * A custom type for mapping user-written classes that implement <tt>PersistentCollection</tt>

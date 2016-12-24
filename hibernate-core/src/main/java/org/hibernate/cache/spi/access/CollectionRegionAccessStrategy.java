@@ -8,7 +8,7 @@ package org.hibernate.cache.spi.access;
 
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 
 /**
  * Contract for managing transactional and concurrent access to cached collection

@@ -16,7 +16,7 @@ import org.hibernate.loader.plan.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan.spi.CollectionReference;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.spi.EntityPersister;

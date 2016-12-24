@@ -1,14 +1,16 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
+
 package org.hibernate.query.internal;
 
+import org.hibernate.persister.common.spi.OrmTypeExporter;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.sqm.domain.Type;
 import org.hibernate.sqm.query.Parameter;
+import org.hibernate.type.spi.Type;
 
 /**
  * QueryParameter impl for positional-parameters in HQL, JPQL or Criteria queries.
@@ -30,7 +32,10 @@ public class QueryParameterPositionalImpl<T> extends AbstractQueryParameter<T> {
 		return new QueryParameterPositionalImpl<>(
 				parameter.getPosition(),
 				parameter.allowMultiValuedBinding(),
-				parameter.getAnticipatedType()
+				true,
+				parameter.getAnticipatedType() == null
+						? null
+						: ( (OrmTypeExporter) parameter.getAnticipatedType() ).getOrmType()
 		);
 	}
 
@@ -38,14 +43,19 @@ public class QueryParameterPositionalImpl<T> extends AbstractQueryParameter<T> {
 		return new QueryParameterPositionalImpl<>(
 				position,
 				false,
+				true,
 				null
 		);
 	}
 
 	private final int position;
 
-	private QueryParameterPositionalImpl(Integer position, boolean allowMultiValuedBinding, Type anticipatedType) {
-		super( allowMultiValuedBinding, anticipatedType );
+	private QueryParameterPositionalImpl(
+			Integer position,
+			boolean allowMultiValuedBinding,
+			boolean isPassNullsEnabled,
+			Type anticipatedType) {
+		super( allowMultiValuedBinding, isPassNullsEnabled, anticipatedType );
 		this.position = position;
 	}
 

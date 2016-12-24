@@ -1,0 +1,2 @@
+* Migrate LoadPlan to SQM/SQL AST
+* Investigate managing AttributeConverter at the Attribute-level, as opposed to at the BasicType level.  See `org.hibernate.persister.common.spi.ConvertibleDomainReference`

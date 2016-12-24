@@ -7,7 +7,10 @@
 package org.hibernate.metamodel.internal;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -29,13 +32,16 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.UnknownEntityTypeException;
+import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
@@ -48,20 +54,39 @@ import org.hibernate.jpa.graph.internal.AttributeNodeImpl;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.jpa.graph.internal.SubgraphImpl;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.SqmDomainMetamodelImplementor;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.common.internal.DomainMetamodelImpl;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.persister.common.internal.DatabaseModelImpl;
+import org.hibernate.persister.common.internal.PolymorphicEntityReferenceImpl;
+import org.hibernate.persister.common.internal.SingularAttributeEmbedded;
+import org.hibernate.persister.common.spi.AttributeContainer;
+import org.hibernate.persister.common.spi.DatabaseModel;
+import org.hibernate.persister.common.spi.DerivedTable;
+import org.hibernate.persister.common.spi.OrmTypeExporter;
+import org.hibernate.persister.common.spi.PhysicalTable;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
+import org.hibernate.sqm.domain.AttributeReference;
+import org.hibernate.sqm.domain.BasicType;
+import org.hibernate.sqm.domain.DomainReference;
+import org.hibernate.sqm.domain.EntityReference;
+import org.hibernate.sqm.domain.NoSuchAttributeException;
+import org.hibernate.sqm.query.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.type.spi.AssociationType;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.basic.RegistryKey;
+import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Hibernate implementation of the JPA {@link javax.persistence.metamodel.Metamodel} contract.
@@ -76,7 +101,8 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final TypeConfiguration typeConfiguration;
-	private final DomainMetamodelImpl sqmDomainMetamodel;
+
+	private final DatabaseModelImpl databaseModel  = new DatabaseModelImpl();
 
 	private final Map<String,String> imports = new ConcurrentHashMap<>();
 	private final Map<String,EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
@@ -92,6 +118,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	private final Map<String, EntityTypeImpl<?>> jpaEntityTypesByEntityName = new ConcurrentHashMap<>();
 
 	private final Map<String,EntityGraph> entityGraphMap = new ConcurrentHashMap<>();
+	private Map<String,PolymorphicEntityReferenceImpl> polymorphicEntityTypeDescriptorMap;
 
 	/**
 	 * Instantiate the MetamodelImpl.
@@ -104,7 +131,6 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	public MetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
 		this.typeConfiguration = typeConfiguration;
-		this.sqmDomainMetamodel = new DomainMetamodelImpl( sessionFactory );
 	}
 
 	/**
@@ -117,6 +143,8 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			MetadataImplementor mappingMetadata,
 			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
 
+		populateDatabaseModel( mappingMetadata );
+
 		this.imports.putAll( mappingMetadata.getImports() );
 
 		final PersisterCreationContext persisterCreationContext = new PersisterCreationContext() {
@@ -128,6 +156,23 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			@Override
 			public MetadataImplementor getMetadata() {
 				return mappingMetadata;
+			}
+
+			@Override
+			public DatabaseModel getDatabaseModel() {
+				return databaseModel;
+			}
+
+			@Override
+			public void registerCollectionPersister(CollectionPersister collectionPersister) {
+				if ( collectionPersisterMap.put( collectionPersister.getRole(), collectionPersister ) != null ) {
+					throw new HibernateException( "CollectionPersister was already registered under that role : " + collectionPersister.getRole() );
+				}
+			}
+
+			@Override
+			public void registerEntityNameResolvers(EntityPersister entityPersister) {
+				MetamodelImpl.registerEntityNameResolvers( entityPersister, entityNameResolvers );
 			}
 		};
 
@@ -180,50 +225,16 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			}
 		}
 
+		persisterFactory.finishUp( persisterCreationContext );
+
+		// make sure we got a CollectionPersister for every mapping collection binding
 		for ( final Collection model : mappingMetadata.getCollectionBindings() ) {
-			final CollectionRegionAccessStrategy accessStrategy = getSessionFactory().getCache().determineCollectionRegionAccessStrategy(
-					model
-			);
-
-			final CollectionPersister persister = persisterFactory.createCollectionPersister(
-					model,
-					accessStrategy,
-					persisterCreationContext
-			);
-			collectionPersisterMap.put( model.getRole(), persister );
-
-			// todo : this should use whatever org.hibernate.persister.collection.spi.ImprovedCollectionPersister.getIndexDescriptor() eventually becomes
-			Type indexType = persister.getIndexType();
-			if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {
-				String entityName = ( (AssociationType) indexType ).getAssociatedEntityName( getSessionFactory() );
-				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
-				if ( roles == null ) {
-					roles = new HashSet<>();
-					collectionRolesByEntityParticipant.put( entityName, roles );
-				}
-				roles.add( persister.getRole() );
-			}
-			Type elementType = persister.getElementType();
-			if ( elementType.isAssociationType() && !elementType.isAnyType() ) {
-				String entityName = ( ( AssociationType ) elementType ).getAssociatedEntityName( getSessionFactory() );
-				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
-				if ( roles == null ) {
-					roles = new HashSet<>();
-					collectionRolesByEntityParticipant.put( entityName, roles );
-				}
-				roles.add( persister.getRole() );
+			if ( collectionPersister( model.getRole() ) == null ) {
+				throw new HibernateException( "Collection role not properly materialized to CollectionPersister : " + model.getRole() );
 			}
 		}
 
-		// after *all* persisters and named queries are registered
-		entityPersisterMap.values().forEach( EntityPersister::generateEntityDefinition );
-
-		for ( EntityPersister persister : entityPersisterMap.values() ) {
-			persister.postInstantiate();
-			registerEntityNameResolvers( persister, entityNameResolvers );
-		}
-		collectionPersisterMap.values().forEach( CollectionPersister::postInstantiate );
-
+		// todo : deal with this somewhere
 		if ( jpaMetaModelPopulationSetting != JpaMetaModelPopulationSetting.DISABLED ) {
 			MetadataContext context = new MetadataContext(
 					getSessionFactory(),
@@ -242,13 +253,44 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			this.jpaEmbeddableTypeMap.putAll( context.getEmbeddableTypeMap() );
 			this.jpaMappedSuperclassTypeMap.putAll( context.getMappedSuperclassTypeMap() );
 			this.jpaEntityTypesByEntityName.putAll( context.getEntityTypesByEntityName() );
-
-			applyNamedEntityGraphs( mappingMetadata.getNamedEntityGraphs().values() );
 		}
 
 		applyNamedEntityGraphs( mappingMetadata.getNamedEntityGraphs().values() );
 
 		typeConfiguration.scope( sessionFactory );
+	}
+
+	private void populateDatabaseModel(MetadataImplementor mappingMetadata) {
+		// todo : apply PhysicalNamingStrategy here, rather than as we create the "mapping model"?
+
+		// todo : we need DatabaseModel to incorporate catalogs/schemas in some fashion
+		//		either like org.hibernate.boot.model.relational.Database does
+		//		or via catalogs/schemas-specific names
+		for ( Namespace namespace : mappingMetadata.getDatabase().getNamespaces() ) {
+			for ( Table mappingTable : namespace.getTables() ) {
+				// todo : incorporate mapping Table's isAbstract indicator
+				final org.hibernate.persister.common.spi.Table table;
+				if ( mappingTable instanceof DenormalizedTable ) {
+					// this is akin to a UnionSubclassTable
+					throw new NotYetImplementedException( "DenormalizedTable support not yet implemented" );
+				}
+				else if ( mappingTable.getSubselect() != null ) {
+					table = new DerivedTable( mappingTable.getSubselect() );
+				}
+				else {
+					final JdbcEnvironment jdbcEnvironment = sessionFactory.getJdbcServices().getJdbcEnvironment();
+					final String qualifiedTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+							mappingTable.getQualifiedTableName(),
+							jdbcEnvironment.getDialect()
+					);
+					table = new PhysicalTable( qualifiedTableName );
+				}
+
+				databaseModel.registerTable( table );
+			}
+
+		}
+
 	}
 
 	@SuppressWarnings("unchecked")
@@ -469,10 +511,6 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
-	}
-
-	public SessionFactoryImplementor getSessionFactory() {
-		return getTypeConfiguration().getSessionFactory();
 	}
 
 	@Override
@@ -734,11 +772,262 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public SqmDomainMetamodelImplementor getSqmDomainMetamodel() {
-		return sqmDomainMetamodel;
+		return this;
 	}
 
 	@Override
 	public void close() {
 		// anything to do ?
+	}
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// DomainMetamodel impl
+
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
+	}
+
+	@Override
+	public EntityReference resolveEntityReference(String entityName) {
+		final String importedName = sessionFactory.getMetamodel().getImportedClassName( entityName );
+		if ( importedName != null ) {
+			entityName = importedName;
+		}
+
+		// look at existing non-polymorphic descriptors
+		final EntityPersister persister = sessionFactory.getMetamodel().entityPersister( entityName );
+		if ( persister != null ) {
+			return persister;
+		}
+
+		// look at existing polymorphic descriptors
+		if ( polymorphicEntityTypeDescriptorMap != null ) {
+			PolymorphicEntityReferenceImpl existingEntry = polymorphicEntityTypeDescriptorMap.get( entityName );
+			if ( existingEntry != null ) {
+				return existingEntry;
+			}
+		}
+
+
+		final String[] implementors = sessionFactory.getMetamodel().getImplementors( entityName );
+		if ( implementors != null ) {
+			if ( implementors.length == 1 ) {
+				return entityPersister( implementors[0] );
+			}
+			else if ( implementors.length > 1 ) {
+				final List<EntityPersister> implementDescriptors = new ArrayList<>();
+				for ( String implementor : implementors ) {
+					implementDescriptors.add( entityPersister( implementor ) );
+				}
+				if ( polymorphicEntityTypeDescriptorMap == null ) {
+					polymorphicEntityTypeDescriptorMap = new HashMap<>();
+				}
+				PolymorphicEntityReferenceImpl descriptor = new PolymorphicEntityReferenceImpl(
+						this,
+						entityName,
+						implementDescriptors
+				);
+				polymorphicEntityTypeDescriptorMap.put( entityName, descriptor );
+				return descriptor;
+			}
+		}
+
+		throw new HibernateException( "Could not resolve entity reference [" + entityName + "] from query" );
+	}
+
+	@Override
+	public EntityReference resolveEntityReference(Class javaType) {
+		return resolveEntityReference( javaType.getName() );
+	}
+
+	@Override
+	public AttributeReference resolveAttributeReference(DomainReference source, String attributeName) {
+		final AttributeReference attrRef = locateAttributeReference( source, attributeName );
+		if ( attrRef == null ) {
+			throw new NoSuchAttributeException( "Could not locate attribute named [" + attributeName + "] relative to [" + source.asLoggableText() + "]" );
+		}
+		return attrRef;
+	}
+
+	@Override
+	public AttributeReference locateAttributeReference(DomainReference sourceBinding, String attributeName) {
+		if ( sourceBinding instanceof AttributeContainer ) {
+			return ( (AttributeContainer) sourceBinding ).findAttribute( attributeName );
+		}
+
+		if ( sourceBinding instanceof SingularAttributeEmbedded ) {
+			return ( (SingularAttributeEmbedded) sourceBinding ).getEmbeddablePersister().findAttribute( attributeName );
+		}
+
+		if ( sourceBinding instanceof OrmTypeExporter ) {
+			return resolveAttributeReferenceSource( ( (OrmTypeExporter) sourceBinding ) ).findAttribute( attributeName );
+		}
+
+		throw new IllegalArgumentException( "Unexpected type [" + sourceBinding + "] passed as 'attribute source'" );
+	}
+
+	private AttributeContainer resolveAttributeReferenceSource(OrmTypeExporter typeAccess) {
+		// todo
+		final Type type = typeAccess.getOrmType();
+		if ( type instanceof org.hibernate.type.spi.EntityType ) {
+			return entityPersister( ( (org.hibernate.type.spi.EntityType) type ).getAssociatedEntityName() );
+		}
+		else if ( type instanceof CollectionType ) {
+			return resolveAttributeReferenceSource(
+					collectionPersister( ( (CollectionType) type ).getRole() ).getElementReference()
+			);
+		}
+		else if ( type instanceof CompositeType ) {
+			throw new org.hibernate.cfg.NotYetImplementedException( "Resolving CompositeType attribute references is not yet implemented; requires Type system changes" );
+		}
+
+		throw new IllegalArgumentException( "Unexpected type [" + typeAccess + "] passed" );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public BasicType resolveBasicType(Class javaType) {
+		final JavaTypeDescriptor jdt = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( javaType );
+		final SqlTypeDescriptor sdt = jdt.getJdbcRecommendedSqlType(
+				typeConfiguration.getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext()
+		);
+
+		return typeConfiguration.getBasicTypeRegistry().getRegisteredBasicType(
+				RegistryKey.from( jdt, sdt, null )
+		);
+	}
+
+	@Override
+	public BasicType resolveArithmeticType(
+			DomainReference firstType,
+			DomainReference secondType,
+			BinaryArithmeticSqmExpression.Operation operation) {
+		return resolveArithmeticType( toBasicType( firstType ), toBasicType( secondType ), operation );
+	}
+
+	private BasicType toBasicType(DomainReference domainReference) {
+		if ( domainReference == null ) {
+			return null;
+		}
+
+		if ( domainReference instanceof BasicType ) {
+			return (BasicType) domainReference;
+		}
+
+		if ( domainReference instanceof OrmTypeExporter ) {
+			return resolveBasicType( ( (OrmTypeExporter) domainReference ).getOrmType().getReturnedClass() );
+		}
+
+		throw new IllegalArgumentException( "Unexpected type [" + domainReference + "]" );
+	}
+
+	private BasicType resolveArithmeticType(
+			BasicType firstType,
+			BasicType secondType,
+			BinaryArithmeticSqmExpression.Operation operation) {
+		if ( operation == BinaryArithmeticSqmExpression.Operation.DIVIDE ) {
+			// covered under the note in 6.5.7.1 discussing the unportable
+			// "semantics of the SQL division operation"..
+			return resolveBasicType( Number.class );
+		}
+		else if ( firstType != null && Double.class.isAssignableFrom( firstType.getJavaType() ) ) {
+			return firstType;
+		}
+		else if ( secondType != null && Double.class.isAssignableFrom( secondType.getJavaType() ) ) {
+			return secondType;
+		}
+		else if ( firstType != null && Float.class.isAssignableFrom( firstType.getJavaType() ) ) {
+			return firstType;
+		}
+		else if ( secondType != null && Float.class.isAssignableFrom( secondType.getJavaType() ) ) {
+			return secondType;
+		}
+		else if ( firstType != null && BigDecimal.class.isAssignableFrom( firstType.getJavaType() ) ) {
+			return firstType;
+		}
+		else if ( secondType != null && BigDecimal.class.isAssignableFrom( secondType.getJavaType() ) ) {
+			return secondType;
+		}
+		else if ( firstType != null && BigInteger.class.isAssignableFrom( firstType.getJavaType() ) ) {
+			return firstType;
+		}
+		else if ( secondType != null && BigInteger.class.isAssignableFrom( secondType.getJavaType() ) ) {
+			return secondType;
+		}
+		else if ( firstType != null && Long.class.isAssignableFrom( firstType.getJavaType() ) ) {
+			return firstType;
+		}
+		else if ( secondType != null && Long.class.isAssignableFrom( secondType.getJavaType() ) ) {
+			return secondType;
+		}
+		else if ( firstType != null && Integer.class.isAssignableFrom( firstType.getJavaType() ) ) {
+			return firstType;
+		}
+		else if ( secondType != null && Integer.class.isAssignableFrom( secondType.getJavaType() ) ) {
+			return secondType;
+		}
+		else if ( firstType != null && Short.class.isAssignableFrom( firstType.getJavaType() ) ) {
+			return resolveBasicType( Integer.class );
+		}
+		else if ( secondType != null && Short.class.isAssignableFrom( secondType.getJavaType() ) ) {
+			return resolveBasicType( Integer.class );
+		}
+		else {
+			return resolveBasicType( Number.class );
+		}
+	}
+
+	@Override
+	public BasicType resolveSumFunctionType(DomainReference argumentType) {
+		return resolveSumFunctionType( toBasicType( argumentType ) );
+	}
+
+	public BasicType resolveSumFunctionType(BasicType argumentType) {
+		if ( argumentType == null ) {
+			return resolveBasicType( Number.class );
+		}
+
+		if ( Double.class.isAssignableFrom( argumentType.getJavaType() ) ) {
+			return argumentType;
+		}
+		else if ( Float.class.isAssignableFrom( argumentType.getJavaType() ) ) {
+			return argumentType;
+		}
+		else if ( BigDecimal.class.isAssignableFrom( argumentType.getJavaType() ) ) {
+			return argumentType;
+		}
+		else if ( BigInteger.class.isAssignableFrom( argumentType.getJavaType() ) ) {
+			return argumentType;
+		}
+		else if ( Long.class.isAssignableFrom( argumentType.getJavaType() ) ) {
+			return argumentType;
+		}
+		else if ( Integer.class.isAssignableFrom( argumentType.getJavaType() ) ) {
+			return argumentType;
+		}
+		else if ( Short.class.isAssignableFrom( argumentType.getJavaType() ) ) {
+			return resolveBasicType( Integer.class );
+		}
+		else {
+			return resolveBasicType( Number.class );
+		}
+	}
+
+	@Override
+	public BasicType resolveCastTargetType(String name) {
+		// todo : how broad to we want to allow HQL casts to be?  What types?  Just basic types?
+		//		for now assume just basic types
+		BasicType ormBasicType = null;
+//		BasicType ormBasicType = (BasicType) sessionFactory.getMetamodel().getTypeConfiguration()
+//				.getBasicTypeRegistry()
+//				.getRegisteredBasicType( Re )
+//		..getTypeHelper().heuristicType( name );
+		if ( ormBasicType == null ) {
+			return null;
+		}
+
+		return resolveBasicType( ormBasicType.getJavaType() );
 	}
 }

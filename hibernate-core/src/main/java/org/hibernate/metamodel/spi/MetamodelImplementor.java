@@ -15,14 +15,13 @@ import javax.persistence.EntityGraph;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
 import org.hibernate.Metamodel;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.sqm.domain.DomainMetamodel;
 
 /**
  * @author Steve Ebersole
  */
-public interface MetamodelImplementor extends Metamodel {
+public interface MetamodelImplementor extends Metamodel, SqmDomainMetamodelImplementor {
 	/**
 	 * Retrieve all EntityNameResolver instances registered with this Metamodel
 	 *

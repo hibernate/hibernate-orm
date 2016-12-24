@@ -19,7 +19,7 @@ import org.hibernate.loader.plan.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan.build.spi.ExpandingQuerySpaces;
 import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.loader.plan.spi.QuerySpaceUidNotRegisteredException;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 
 import org.jboss.logging.Logger;

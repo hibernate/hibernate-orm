@@ -582,7 +582,7 @@
                         <para>
                             Contract for determining the appropriate
                             <interfacename>org.hibernate.persister.entity.spi.EntityPersister</interfacename>
-                            or <interfacename>org.hibernate.persister.collection.CollectionPersister</interfacename>
+                            or <interfacename>org.hibernate.persister.collection.spi.CollectionPersister</interfacename>
                             implementation class to use given an entity or collection mapping.
                         </para>
                     </listitem>
@@ -615,7 +615,7 @@
                         <para>
                             Factory for creating
                             <interfacename>org.hibernate.persister.entity.spi.EntityPersister</interfacename>
-                            and <interfacename>org.hibernate.persister.collection.CollectionPersister</interfacename>
+                            and <interfacename>org.hibernate.persister.collection.spi.CollectionPersister</interfacename>
                             instances.
                         </para>
                     </listitem>

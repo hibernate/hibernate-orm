@@ -94,6 +94,10 @@ public class SimpleValue implements KeyValue {
 		return metadata;
 	}
 
+	public AttributeConverterDescriptor getAttributeConverterDescriptor() {
+		return attributeConverterDescriptor;
+	}
+
 	@Override
 	public ServiceRegistry getServiceRegistry() {
 		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();

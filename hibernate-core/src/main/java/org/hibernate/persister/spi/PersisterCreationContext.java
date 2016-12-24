@@ -8,6 +8,10 @@ package org.hibernate.persister.spi;
 
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.persister.common.spi.DatabaseModel;
+import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.internal.PersisterFactoryImpl;
 
 /**
  * "Parameter object" providing access to additional information that may be needed
@@ -18,4 +22,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 public interface PersisterCreationContext {
 	SessionFactoryImplementor getSessionFactory();
 	MetadataImplementor getMetadata();
+	DatabaseModel getDatabaseModel();
+
+	void registerCollectionPersister(CollectionPersister collectionPersister);
+
+	void registerEntityNameResolvers(EntityPersister entityPersister);
 }

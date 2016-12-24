@@ -12,12 +12,13 @@ import java.util.List;
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.spi.ExecutionContext;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.sql.exec.spi.RowTransformer;
 import org.hibernate.sql.spi.ParameterBinder;
-import org.hibernate.query.QueryOptions;
-import org.hibernate.sql.sqm.exec.spi.RowTransformer;
 
 /**
  * @author Steve Ebersole
@@ -51,6 +52,7 @@ public class SelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 	@Override
 	public List<R> performList(
 			SharedSessionContractImplementor persistenceContext,
+			ExecutionContext executionContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings) {
 		throw new NotYetImplementedException( "Not yet implemented" );
@@ -59,6 +61,7 @@ public class SelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 	@Override
 	public Iterator<R> performIterate(
 			SharedSessionContractImplementor persistenceContext,
+			ExecutionContext executionContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings) {
 		throw new NotYetImplementedException( "Not yet implemented" );
@@ -67,6 +70,7 @@ public class SelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 	@Override
 	public ScrollableResultsImplementor performScroll(
 			SharedSessionContractImplementor persistenceContext,
+			ExecutionContext executionContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings,
 			ScrollMode scrollMode) {

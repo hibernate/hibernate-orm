@@ -1,9 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
+
 package org.hibernate.query.spi;
 
 import java.io.Serializable;
@@ -66,7 +67,10 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> addJoin(String tableAlias, String path);
 
 	@Override
-	NativeQueryImplementor<R> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
+	NativeQueryImplementor<R> addJoin(
+			String tableAlias,
+			String ownerTableAlias,
+			String joinPropertyName);
 
 	@Override
 	NativeQueryImplementor<R> addJoin(String tableAlias, String path, LockMode lockMode);
@@ -142,7 +146,10 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setParameter(int position, Object val, Type type);
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
+	<P> NativeQueryImplementor<R> setParameter(
+			QueryParameter<P> parameter,
+			P val,
+			TemporalType temporalType);
 
 	@Override
 	NativeQueryImplementor<R> setParameter(String name, Object val, TemporalType temporalType);
@@ -151,7 +158,9 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setParameter(int position, Object val, TemporalType temporalType);
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<P> values);
+	<P> NativeQueryImplementor<R> setParameterList(
+			QueryParameter<P> parameter,
+			Collection<P> values);
 
 	@Override
 	NativeQueryImplementor<R> setParameterList(String name, Collection values);
@@ -172,19 +181,31 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setProperties(Map bean);
 
 	@Override
-	NativeQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	NativeQueryImplementor<R> setParameter(
+			Parameter<Date> param,
+			Date value,
+			TemporalType temporalType);
 
 	@Override
-	NativeQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	NativeQueryImplementor<R> setParameter(
+			Parameter<Calendar> param,
+			Calendar value,
+			TemporalType temporalType);
 
 	@Override
 	NativeQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
-	NativeQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType);
+	NativeQueryImplementor<R> setParameter(
+			String name,
+			Calendar value,
+			TemporalType temporalType);
 
 	@Override
-	NativeQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType);
+	NativeQueryImplementor<R> setParameter(
+			int position,
+			Calendar value,
+			TemporalType temporalType);
 
 	@Override
 	NativeQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType);

@@ -91,14 +91,19 @@ import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.EntityLoader;
 import org.hibernate.loader.entity.UniqueEntityLoader;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.persister.common.internal.PersisterHelper;
+import org.hibernate.persister.entity.internal.EntityHierarchyImpl;
+import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper;
@@ -123,13 +128,13 @@ import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.TypeHelper;
+import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.TypeHelper;
 import org.hibernate.type.spi.VersionSupport;
 
 /**
@@ -146,16 +151,30 @@ public abstract class AbstractEntityPersister
 
 	public static final String ENTITY_CLASS = "class";
 
-	// moved up from AbstractEntityPersister ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private final SessionFactoryImplementor factory;
+
+	// needed temporarily between construction of the persister and its afterInitialization call
 	private final EntityRegionAccessStrategy cacheAccessStrategy;
 	private final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy;
+
+
+	private EntityHierarchyImpl entityHierarchy;
+	private EntityPersister superTypeEntityPersister;
+	private List<EntityPersister> subclassEntityPersisters;
+
+
+
+
+	// moved up from AbstractEntityPersister ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private final boolean isLazyPropertiesCacheable;
 	private final CacheEntryHelper cacheEntryHelper;
 	private final EntityMetamodel entityMetamodel;
 	private final EntityTuplizer entityTuplizer;
 	private final EntityEntryFactory entityEntryFactory;
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+	// todo : most of the rest of this (and the API/SPI methods exposing them) can go away, especially the SQL-related ones...
 
 	private final String[] rootTableKeyColumnNames;
 	private final String[] rootTableKeyColumnReaders;
@@ -497,10 +516,10 @@ public abstract class AbstractEntityPersister
 
 	@SuppressWarnings("UnnecessaryBoxing")
 	public AbstractEntityPersister(
-			final PersistentClass persistentClass,
-			final EntityRegionAccessStrategy cacheAccessStrategy,
-			final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-			final PersisterCreationContext creationContext) throws HibernateException {
+			PersistentClass persistentClass,
+			EntityRegionAccessStrategy cacheAccessStrategy,
+			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+			PersisterCreationContext creationContext) throws HibernateException {
 
 		// moved up from AbstractEntityPersister ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		this.factory = creationContext.getSessionFactory();
@@ -3913,6 +3932,50 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected void doPostInstantiate() {
+	}
+
+
+	@Override
+	public void finishInitialization(EntityPersister superTypeEntityPersister, PersistentClass entityBinding, PersisterCreationContext creationContext) {
+		this.superTypeEntityPersister = superTypeEntityPersister;
+
+		if ( superTypeEntityPersister == null ) {
+			this.entityHierarchy = new EntityHierarchyImpl(
+					creationContext,
+					this,
+					( RootClass) entityBinding,
+					cacheAccessStrategy,
+					naturalIdRegionAccessStrategy
+			);
+		}
+		else {
+			// todo : need to implement this, but would rather not expose on EntityPersister interface
+			superTypeEntityPersister.registerSubclassEntityPersister( this );
+		}
+
+
+		final Iterator itr = entityBinding.getDeclaredPropertyIterator();
+		while ( itr.hasNext() ) {
+			final Property mappingProperty = (Property) itr.next();
+			LOG.tracef( "Starting building of Entity attribute : %s#%s", entityBinding.getEntityName(), mappingProperty.getName() );
+
+			if ( mappingProperty.getValue() instanceof Collection ) {
+				final Collection collectionBinding = (Collection) mappingProperty.getValue();
+
+				PersisterHelper.INSTANCE.buildPluralAttribute(
+						creationContext,
+						collectionBinding,
+						this,
+						mappingProperty.getName(),
+						collectionBinding.getCollectionType()
+				);
+			}
+		}
+	}
+
+	@Override
+	public EntityHierarchy getHierarchy() {
+		return null;
 	}
 
 	//needed by subclasses to override the createLoader strategy

@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.AttributeConverter;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -29,6 +30,7 @@ import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StructuredCollectionCacheEntry;
 import org.hibernate.cache.spi.entry.StructuredMapCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -43,6 +45,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
@@ -53,17 +56,38 @@ import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.collection.internal.PluralAttributeElementAny;
+import org.hibernate.persister.collection.internal.PluralAttributeElementBasic;
+import org.hibernate.persister.collection.internal.PluralAttributeElementEmbeddable;
+import org.hibernate.persister.collection.internal.PluralAttributeElementEntity;
+import org.hibernate.persister.collection.internal.PluralAttributeIndexBasic;
+import org.hibernate.persister.collection.internal.PluralAttributeIndexEmbeddable;
+import org.hibernate.persister.collection.internal.PluralAttributeIndexEntity;
+import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.persister.collection.spi.PluralAttributeElement;
+import org.hibernate.persister.collection.spi.PluralAttributeId;
+import org.hibernate.persister.collection.spi.PluralAttributeIndex;
+import org.hibernate.persister.collection.spi.PluralAttributeKey;
+import org.hibernate.persister.common.internal.PersisterHelper;
+import org.hibernate.persister.common.spi.AttributeContainer;
+import org.hibernate.persister.common.spi.DatabaseModel;
+import org.hibernate.persister.common.spi.JoinColumnMapping;
+import org.hibernate.persister.common.spi.JoinableAttributeContainer;
+import org.hibernate.persister.common.spi.SingularAttribute;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.internal.CompositionSingularSubAttributesHelper;
 import org.hibernate.persister.walking.internal.StandardAnyTypeDefinition;
@@ -81,20 +105,28 @@ import org.hibernate.sql.Alias;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
+import org.hibernate.sql.ast.from.CollectionTableGroup;
+import org.hibernate.sql.ast.from.TableBinding;
+import org.hibernate.sql.ast.from.TableSpace;
+import org.hibernate.sql.convert.internal.FromClauseIndex;
+import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sql.ordering.antlr.ColumnMapper;
 import org.hibernate.sql.ordering.antlr.ColumnReference;
 import org.hibernate.sql.ordering.antlr.FormulaReference;
 import org.hibernate.sql.ordering.antlr.OrderByAliasResolver;
 import org.hibernate.sql.ordering.antlr.OrderByTranslation;
 import org.hibernate.sql.ordering.antlr.SqlValueReference;
+import org.hibernate.sqm.domain.PluralAttributeElementReference;
+import org.hibernate.sqm.query.JoinType;
+import org.hibernate.sqm.query.from.SqmAttributeJoin;
+import org.hibernate.sqm.query.from.SqmFrom;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.spi.AssociationType;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
-
-import org.jboss.logging.Logger;
 
 /**
  * Base implementation of the <tt>QueryableCollection</tt> interface.
@@ -106,8 +138,23 @@ import org.jboss.logging.Logger;
 public abstract class AbstractCollectionPersister
 		implements CollectionMetadata, SQLLoadableCollection {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class,
-			AbstractCollectionPersister.class.getName() );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractCollectionPersister.class.getName() );
+
+	private final SessionFactoryImplementor sessionFactory;
+
+	private final CollectionClassification collectionClassification;
+	private final AttributeContainer source;
+	private final String propertyName;
+
+	private final PluralAttributeKey foreignKeyDescriptor;
+	private PluralAttributeId idDescriptor;
+	private PluralAttributeElement elementDescriptor;
+	private PluralAttributeIndex indexDescriptor;
+
+	private org.hibernate.persister.common.spi.Table separateCollectionTable;
+
+	private AttributeConverter indexAttributeConverter;
+	private AttributeConverter elementAttributeConverter;
 
 	// TODO: encapsulate the protected instance variables!
 
@@ -230,8 +277,29 @@ public abstract class AbstractCollectionPersister
 
 	public AbstractCollectionPersister(
 			Collection collectionBinding,
+			AttributeContainer source,
+			String propertyName,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			PersisterCreationContext creationContext) throws MappingException, CacheException {
+		this.source = source;
+		this.propertyName = propertyName;
+		this.sessionFactory = creationContext.getSessionFactory();
+		this.collectionClassification = PersisterHelper.interpretCollectionClassification( (CollectionType) collectionBinding.getType() );
+		this.foreignKeyDescriptor = new PluralAttributeKey( this );
+
+		if ( collectionBinding instanceof IndexedCollection ) {
+			final Value indexValueMapping = ( (IndexedCollection) collectionBinding ).getIndex();
+			if ( indexValueMapping instanceof SimpleValue ) {
+				final SimpleValue simpleIndexValueMapping = (SimpleValue) indexValueMapping;
+				indexAttributeConverter = simpleIndexValueMapping.getAttributeConverterDescriptor().getAttributeConverter();
+			}
+		}
+
+		final Value elementValueMapping = collectionBinding.getElement();
+		if ( elementValueMapping instanceof SimpleValue ) {
+			final SimpleValue simpleElementValueMapping = (SimpleValue) elementValueMapping;
+			elementAttributeConverter = simpleElementValueMapping.getAttributeConverterDescriptor().getAttributeConverter();
+		}
 
 		final Database database = creationContext.getMetadata().getDatabase();
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
@@ -592,6 +660,281 @@ public abstract class AbstractCollectionPersister
 		initCollectionPropertyMap();
 	}
 
+
+	@Override
+	public void finishInitialization(Collection collectionBinding, PersisterCreationContext creationContext) {
+		final org.hibernate.persister.common.spi.Table collectionTable = resolveCollectionTable( collectionBinding, creationContext );
+
+		if ( getIdentifierType() == null ) {
+			this.idDescriptor = null;
+		}
+		else {
+			this.idDescriptor = new PluralAttributeId(
+					(BasicType) getIdentifierType(),
+					getIdentifierGenerator()
+			);
+		}
+
+		if ( !hasIndex() ) {
+			this.indexDescriptor = null;
+		}
+		else {
+			final java.util.List<org.hibernate.persister.common.spi.Column> columns = PersisterHelper.makeValues(
+					sessionFactory,
+					getIndexType(),
+					getIndexColumnNames(),
+					getIndexFormulas(),
+					collectionTable
+			);
+			if ( getIndexType().isComponentType() ) {
+				this.indexDescriptor = new PluralAttributeIndexEmbeddable(
+						this,
+						PersisterHelper.INSTANCE.buildEmbeddablePersister(
+								creationContext,
+								this,
+								getRole() + ".key",
+								(CompositeType) getIndexType(),
+								columns
+						)
+				);
+			}
+			else if ( getIndexType().isEntityType() ) {
+				final EntityType indexTypeEntity = (EntityType) getIndexType();
+				this.indexDescriptor = new PluralAttributeIndexEntity(
+						this,
+						creationContext.getSessionFactory().getMetamodel().entityPersister(
+								indexTypeEntity.getAssociatedEntityName( creationContext.getSessionFactory() )
+						),
+						indexTypeEntity,
+						columns
+				);
+			}
+			else {
+				this.indexDescriptor = new PluralAttributeIndexBasic(
+						this,
+						(BasicType) getIndexType(),
+						indexAttributeConverter,
+						columns
+				);
+			}
+		}
+
+		this.elementDescriptor = buildElementDescriptor( creationContext );
+	}
+
+	protected org.hibernate.persister.common.spi.Table resolveCollectionTable(
+			Collection collectionBinding,
+			PersisterCreationContext creationContext) {
+		// todo : split this out as abstract with different impls on the specific CollectionPersister subclasses
+		this.separateCollectionTable = null;
+		if ( collectionBinding.isOneToMany() ) {
+			return this.elementPersister.getRootTable();
+		}
+		else {
+			return makeCollectionTable( creationContext.getDatabaseModel(), collectionBinding.getTable() );
+
+		}
+	}
+
+
+	private PluralAttributeElement buildElementDescriptor(PersisterCreationContext creationContext) {
+		final Type elementType = getElementType();
+
+		if ( elementType.isAnyType() ) {
+			assert separateCollectionTable != null;
+
+			final java.util.List<org.hibernate.persister.common.spi.Column> columns = PersisterHelper.makeValues(
+					sessionFactory,
+					elementType,
+					getElementColumnNames(),
+					null,
+					separateCollectionTable
+			);
+
+			return new PluralAttributeElementAny(
+					this,
+					(AnyType) elementType,
+					columns
+			);
+		}
+		else if ( elementType.isComponentType() ) {
+			assert separateCollectionTable != null;
+
+			final java.util.List<org.hibernate.persister.common.spi.Column> columns = PersisterHelper.makeValues(
+					sessionFactory,
+					elementType,
+					elementColumnNames,
+					elementFormulas,
+					separateCollectionTable
+			);
+
+			return new PluralAttributeElementEmbeddable(
+					this,
+					PersisterHelper.INSTANCE.buildEmbeddablePersister(
+							creationContext,
+							this,
+							getRole() + ".value",
+							(CompositeType) elementType,
+							columns
+					)
+			);
+		}
+		else if ( elementType.isEntityType() ) {
+			final EntityPersister elementPersister = getElementPersister();
+
+			final org.hibernate.persister.common.spi.Table table;
+			if ( separateCollectionTable != null ) {
+				table = separateCollectionTable;
+			}
+			else {
+				table = elementPersister.getRootTable();
+			}
+
+			final java.util.List<org.hibernate.persister.common.spi.Column> columns = PersisterHelper.makeValues(
+					creationContext.getSessionFactory(),
+					elementType,
+					elementColumnNames,
+					elementFormulas,
+					table
+			);
+
+			return new PluralAttributeElementEntity(
+					this,
+					elementPersister,
+					isManyToMany()
+							? PluralAttributeElementReference.ElementClassification.MANY_TO_MANY
+							: PluralAttributeElementReference.ElementClassification.ONE_TO_MANY,
+					(EntityType) elementType,
+					columns
+			);
+		}
+		else {
+			assert separateCollectionTable != null;
+
+			final java.util.List<org.hibernate.persister.common.spi.Column> columns = PersisterHelper.makeValues(
+					creationContext.getSessionFactory(),
+					elementType,
+					elementColumnNames,
+					elementFormulas,
+					separateCollectionTable
+			);
+
+			return new PluralAttributeElementBasic(
+					this,
+					(BasicType) elementType,
+					elementAttributeConverter,
+					columns
+			);
+		}
+	}
+
+	@Override
+	public CollectionTableGroup buildTableGroup(
+			SqmFrom sqmFrom,
+			TableSpace tableSpace,
+			SqlAliasBaseManager sqlAliasBaseManager,
+			FromClauseIndex fromClauseIndex) {
+		final JoinType joinType;
+		if ( SqmAttributeJoin.class.isInstance( sqmFrom ) ) {
+			joinType = ( (SqmAttributeJoin) sqmFrom ).getJoinType();
+		}
+		else {
+			joinType = JoinType.INNER;
+		}
+
+		final CollectionTableGroup group = new CollectionTableGroup(
+				tableSpace,
+				sqmFrom.getUniqueIdentifier(),
+				sqlAliasBaseManager.getSqlAliasBase( sqmFrom ),
+				this,
+				PersisterHelper.convert( sqmFrom.getPropertyPath() )
+		);
+
+		fromClauseIndex.crossReference( sqmFrom, group );
+
+		if ( separateCollectionTable != null ) {
+			group.setRootTableBinding( new TableBinding( separateCollectionTable, group.getAliasBase() ) );
+		}
+
+		if ( getElementReference() instanceof PluralAttributeElementEntity ) {
+			java.util.List<org.hibernate.persister.common.spi.Column> fkColumns = null;
+			java.util.List<org.hibernate.persister.common.spi.Column> fkTargetColumns = null;
+
+			final PluralAttributeElementEntity elementEntity = (PluralAttributeElementEntity) getElementReference();
+			final EntityPersister elementPersister = elementEntity.getElementPersister();
+
+			if ( separateCollectionTable != null ) {
+				fkColumns = elementEntity.getColumns();
+				if ( elementEntity.getOrmType().isReferenceToPrimaryKey() ) {
+					fkTargetColumns = elementPersister.getHierarchy().getIdentifierDescriptor().getColumns();
+				}
+				else {
+					SingularAttribute referencedAttribute = (SingularAttribute) elementPersister.findAttribute( elementEntity.getOrmType().getRHSUniqueKeyPropertyName() );
+					fkTargetColumns = referencedAttribute.getColumns();
+				}
+			}
+
+			elementPersister.addTableJoins(
+					group,
+					joinType,
+					fkColumns,
+					fkTargetColumns
+			);
+		}
+
+		return group;
+	}
+
+	private org.hibernate.persister.common.spi.Table makeCollectionTable(DatabaseModel databaseModel, Table mappingTable) {
+		final org.hibernate.persister.common.spi.Table table;
+
+		if ( mappingTable instanceof DenormalizedTable ) {
+			// todo : implement - convert to a UnionSubclassTable
+			throw new NotYetImplementedException(  );
+		}
+		else if ( StringHelper.isEmpty( mappingTable.getSubselect() ) ) {
+			table = databaseModel.findDerivedTable( mappingTable.getSubselect() );
+		}
+		else {
+			table = databaseModel.findPhysicalTable( mappingTable.getName() );
+		}
+
+		if ( table == null ) {
+			throw new HibernateException( "Could not locate collection table : " + mappingTable.getName() );
+		}
+
+		return table;
+	}
+
+	@Override
+	public CollectionClassification getCollectionClassification() {
+		return collectionClassification;
+	}
+
+	@Override
+	public PluralAttributeKey getForeignKeyDescriptor() {
+		return foreignKeyDescriptor;
+	}
+
+	@Override
+	public PluralAttributeId getIdDescriptor() {
+		return idDescriptor;
+	}
+
+	@Override
+	public PluralAttributeElement getElementReference() {
+		return elementDescriptor;
+	}
+
+	@Override
+	public PluralAttributeIndex getIndexReference() {
+		return indexDescriptor;
+	}
+
+	public org.hibernate.persister.common.spi.Table getSeparateCollectionTable() {
+		return separateCollectionTable;
+	}
+
 	protected String determineTableName(Table table, JdbcEnvironment jdbcEnvironment) {
 		if ( table.getSubselect() != null ) {
 			return "( " + table.getSubselect() + " )";
@@ -601,6 +944,36 @@ public abstract class AbstractCollectionPersister
 				table.getQualifiedTableName(),
 				jdbcEnvironment.getDialect()
 		);
+	}
+
+	@Override
+	public java.util.List<JoinColumnMapping> getJoinColumnMappings() {
+		return foreignKeyDescriptor.getJoinColumnMappings();
+	}
+
+	@Override
+	public CollectionType getOrmType() {
+		return getCollectionType();
+	}
+
+	@Override
+	public boolean canCompositeContainCollections() {
+		return false;
+	}
+
+	@Override
+	public JoinableAttributeContainer getAttributeContainer() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public String getAttributeName() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public String asLoggableText() {
+		return null;
 	}
 
 	private class ColumnMapperImpl implements ColumnMapper {

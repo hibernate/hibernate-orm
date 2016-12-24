@@ -27,7 +27,9 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.loader.custom.CustomQuery;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.query.spi.ExecutionContext;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -40,7 +42,7 @@ import org.hibernate.type.spi.descriptor.WrapperOptions;
  * Defines the internal contract shared between {@link org.hibernate.Session} and
  * {@link org.hibernate.StatelessSession} as used by other parts of Hibernate (such as
  * {@link Type}, {@link EntityPersister} and
- * {@link org.hibernate.persister.collection.CollectionPersister} implementors
+ * {@link CollectionPersister} implementors
  *
  * A Session, through this interface and SharedSessionContractImplementor, implements:<ul>
  *     <li>
@@ -66,7 +68,7 @@ import org.hibernate.type.spi.descriptor.WrapperOptions;
  * @author Steve Ebersole
  */
 public interface SharedSessionContractImplementor
-		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions, QueryProducerImplementor {
+		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions, QueryProducerImplementor, ExecutionContext {
 
 	// todo : this is the shared contract between Session and StatelessSession, but it defines methods that StatelessSession does not implement
 	//	(it just throws UnsupportedOperationException).  To me it seems like it is better to properly isolate those methods

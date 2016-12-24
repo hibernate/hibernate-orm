@@ -1,9 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
+
 package org.hibernate.query;
 
 import java.time.Instant;
@@ -32,6 +33,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.spi.Type;
 
@@ -136,11 +139,6 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * <p/>
 	 * In the initial implementation (5.2) this returns a simple sequential Stream.  The plan
 	 * is to return a a smarter stream in 6.0 leveraging the SQM model.
-	 *
-	 * <p>
-	 *
-	 * You should call {@link java.util.stream.Stream#close()} after processing the stream
-	 * so that the underlying resources are deallocated right away.
 	 *
 	 * @return The results Stream
 	 *
@@ -335,11 +333,20 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	Query<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType);
 
-	Query<R> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType);
+	Query<R> setParameter(
+			Parameter<LocalDateTime> param,
+			LocalDateTime value,
+			TemporalType temporalType);
 
-	Query<R> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType);
+	Query<R> setParameter(
+			Parameter<ZonedDateTime> param,
+			ZonedDateTime value,
+			TemporalType temporalType);
 
-	Query<R> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType);
+	Query<R> setParameter(
+			Parameter<OffsetDateTime> param,
+			OffsetDateTime value,
+			TemporalType temporalType);
 
 	Query<R> setParameter(String name, Instant value, TemporalType temporalType);
 
@@ -556,8 +563,9 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	@Deprecated
 	@SuppressWarnings("unchecked")
 	default Query<R> setResultTransformer(ResultTransformer transformer) {
-		setTupleTransformer( transformer );
-		setResultListTransformer( transformer );
-		return this;
+		throw new NotYetImplementedException( "On 6.0 branch ResultTransformer extends the 2 new contracts" );
+//		setTupleTransformer( transformer );
+//		setResultListTransformer( transformer );
+//		return this;
 	}
 }

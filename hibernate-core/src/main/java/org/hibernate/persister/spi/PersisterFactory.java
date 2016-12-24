@@ -12,7 +12,8 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.persister.common.spi.AttributeContainer;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.service.Service;
 
@@ -34,7 +35,7 @@ public interface PersisterFactory extends Service {
 	 *
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
-	public EntityPersister createEntityPersister(
+	EntityPersister createEntityPersister(
 			PersistentClass entityBinding,
 			EntityRegionAccessStrategy entityCacheAccessStrategy,
 			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
@@ -51,9 +52,12 @@ public interface PersisterFactory extends Service {
 	 *
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
-	public CollectionPersister createCollectionPersister(
+	CollectionPersister createCollectionPersister(
 			Collection collectionBinding,
+			AttributeContainer source,
+			String propertyName,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			PersisterCreationContext creationContext) throws HibernateException;
 
+	void finishUp(PersisterCreationContext creationContext);
 }

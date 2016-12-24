@@ -22,7 +22,7 @@ import org.hibernate.query.criteria.internal.MapJoinImplementor;
 import org.hibernate.query.criteria.internal.PathImplementor;
 import org.hibernate.query.criteria.internal.PathSource;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 
 /**
  * {@link javax.persistence.criteria.MapJoin#key} poses a number of implementation difficulties in terms of the

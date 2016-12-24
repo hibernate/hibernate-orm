@@ -46,6 +46,19 @@ public class RegistryKey {
 
 	public static RegistryKey from(
 			JavaTypeDescriptor javaTypeDescriptor,
+			SqlTypeDescriptor sqlTypeDescriptor) {
+		return from(
+				javaTypeDescriptor,
+				sqlTypeDescriptor,
+				javaTypeDescriptor.getMutabilityPlan(),
+				javaTypeDescriptor.getComparator(),
+				null,
+				null
+		);
+	}
+
+	public static RegistryKey from(
+			JavaTypeDescriptor javaTypeDescriptor,
 			SqlTypeDescriptor sqlTypeDescriptor,
 			Object converterReference) {
 		return from(

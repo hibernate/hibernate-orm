@@ -7,7 +7,7 @@
 package org.hibernate.hql.spi;
 import java.util.Map;
 
-import org.hibernate.engine.query.spi.EntityGraphQueryHint;
+import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
 

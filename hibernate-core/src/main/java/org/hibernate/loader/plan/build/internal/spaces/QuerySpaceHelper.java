@@ -14,7 +14,7 @@ import org.hibernate.loader.plan.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan.build.spi.ExpandingQuerySpace;
 import org.hibernate.loader.plan.spi.JoinDefinedByMetadata;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;

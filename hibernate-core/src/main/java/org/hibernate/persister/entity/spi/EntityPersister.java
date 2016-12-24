@@ -28,22 +28,27 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.common.internal.CompositeContainer;
+import org.hibernate.persister.common.spi.AttributeContainer;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.entity.MultiLoadOptions;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.EntityDefinition;
-import org.hibernate.sql.sqm.ast.from.EntityTableGroup;
-import org.hibernate.sql.sqm.ast.from.TableGroup;
-import org.hibernate.sql.sqm.ast.from.TableSpace;
-import org.hibernate.sql.sqm.convert.internal.FromClauseIndex;
-import org.hibernate.sql.sqm.convert.internal.SqlAliasBaseManager;
+import org.hibernate.sql.ast.from.EntityTableGroup;
+import org.hibernate.sql.ast.from.TableGroup;
+import org.hibernate.sql.ast.from.TableSpace;
+import org.hibernate.sql.convert.internal.FromClauseIndex;
+import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
+import org.hibernate.sql.convert.spi.TableGroupProducer;
+import org.hibernate.sqm.domain.EntityReference;
 import org.hibernate.sqm.query.JoinType;
 import org.hibernate.sqm.query.from.SqmFrom;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.spi.VersionSupport;
 
 /**
  * Contract describing mapping information and persistence logic for a particular strategy of entity mapping.  A given
@@ -76,21 +81,41 @@ import org.hibernate.type.spi.VersionSupport;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister extends OptimisticCacheSource, EntityDefinition {
+public interface EntityPersister
+		extends OptimisticCacheSource, EntityReference, AttributeContainer, CompositeContainer, TableGroupProducer, EntityDefinition {
+	/**
+	 * The required signature for all EntityPersister implementations
+	 */
+	Class[] CONSTRUCTOR_SIGNATURE = new Class[] {
+			PersistentClass.class,
+			EntityRegionAccessStrategy.class,
+			NaturalIdRegionAccessStrategy.class,
+			PersisterCreationContext.class
+	};
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Redesigned contract
 
+	 // todo : ultimately this needs to allow for MappedSuperclass supers
+
+	/**
+	 * Called after all EntityPersister instance have been created and (initially) initialized.
+	 *
+	 * @param superType The entity's super's EntityPersister
+	 * @param entityBinding Should be  the same PersistentClass instance originally passed to the
+	 * 		ctor, but we want to not have to stoire that around as EntityPersister instance state -
+	 * 		so we pass it in again
+	 * @param creationContext Access to the database model
+	 */
+	void finishInitialization(EntityPersister superType, PersistentClass entityBinding, PersisterCreationContext creationContext);
+
 	/**
 	 * Return the SessionFactory to which this persister "belongs".
-	 *
-	 * @return The owning SessionFactory.
 	 */
 	SessionFactoryImplementor getFactory();
 
 	/**
 	 * Access to information about the entity's inheritance hierarchy.
-	 *
-	 * @return The hierarchy information
 	 *
 	 * @since 6.0
 	 */
@@ -98,29 +123,23 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 
 	/**
 	 * The entity name which this persister maps.
-	 *
-	 * @return The name of the entity which this persister maps.
 	 */
 	String getEntityName();
 
 	/**
 	 * Get the EntityEntryFactory indicated for the entity mapped by this persister.
-	 *
-	 * @return The proper EntityEntryFactory.
 	 */
 	EntityEntryFactory getEntityEntryFactory();
 
 	/**
 	 * Access to information about bytecode enhancement for this entity.
-	 *
-	 * @return The bytecode enhancement information
 	 */
 	BytecodeEnhancementMetadata getBytecodeEnhancementMetadata();
 
 	/**
 	 * Access to the root table for this entity.
 	 *
-	 * @return The root table for this entity
+	 * todo : why is this needed?
 	 */
 	Table getRootTable();
 
@@ -151,7 +170,10 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	 * @param fkColumns The left-hand side join columns
 	 * @param fkTargetColumns The right-hand side join columns
 	 */
-	void addTableJoins(TableGroup group, JoinType joinType, Column[] fkColumns, Column[] fkTargetColumns);
+	void addTableJoins(TableGroup group, JoinType joinType, List<Column> fkColumns, List<Column> fkTargetColumns);
+
+
+
 
 
 

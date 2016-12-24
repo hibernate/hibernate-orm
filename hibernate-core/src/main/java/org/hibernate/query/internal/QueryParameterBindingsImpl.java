@@ -1,20 +1,21 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
+
 package org.hibernate.query.internal;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindings;
 
 import org.jboss.logging.Logger;
@@ -30,18 +31,18 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	 */
 	public static QueryParameterBindingsImpl from(
 			ParameterMetadata parameterMetadata,
-			SessionFactoryImplementor sessionFactory) {
-		return new QueryParameterBindingsImpl( sessionFactory, parameterMetadata );
+			QueryParameterBindingTypeResolver resolver) {
+		return new QueryParameterBindingsImpl( resolver, parameterMetadata );
 	}
 
 
-	private final SessionFactoryImplementor sessionFactory;
+	private final QueryParameterBindingTypeResolver resolver;
 	private final ParameterMetadata parameterMetadata;
 
 	private final Map<QueryParameter, QueryParameterBinding> bindingMap = new HashMap<>();
 
-	private QueryParameterBindingsImpl(SessionFactoryImplementor sessionFactory, ParameterMetadata parameterMetadata) {
-		this.sessionFactory = sessionFactory;
+	private QueryParameterBindingsImpl(QueryParameterBindingTypeResolver resolver, ParameterMetadata parameterMetadata) {
+		this.resolver = resolver;
 		this.parameterMetadata = parameterMetadata;
 
 		for ( QueryParameter queryParameter : parameterMetadata.collectAllParameters() ) {
@@ -53,7 +54,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	private QueryParameterBinding makeBinding(QueryParameter queryParameter) {
 		assert queryParameter != null;
 
-		return new QueryParameterBindingImpl( queryParameter, sessionFactory );
+		return new QueryParameterBindingImpl( queryParameter, resolver );
 	}
 
 	@Override

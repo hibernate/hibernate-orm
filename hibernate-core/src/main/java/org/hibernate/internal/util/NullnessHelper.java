@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal.util;
 
+import java.util.function.Supplier;
+
 /**
  * @author Steve Ebersole
  */
@@ -15,5 +17,9 @@ public class NullnessHelper {
 
 	public static <T> T nullif(T test, T fallback) {
 		return test == null ? fallback : test;
+	}
+
+	public static <T> T nullif(T test, Supplier<T> fallbackSupplier) {
+		return test != null ? test : fallbackSupplier.get();
 	}
 }

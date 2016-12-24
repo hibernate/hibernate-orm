@@ -13,7 +13,7 @@ import javax.persistence.Tuple;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.query.spi.EntityGraphQueryHint;
+import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.streams.StingArrayCollector;
 import org.hibernate.persister.common.spi.SqmTypeImplementor;
@@ -37,7 +37,7 @@ import org.hibernate.sql.sqm.exec.internal.RowTransformerTupleImpl;
 import org.hibernate.sql.sqm.exec.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.sqm.exec.internal.SqlTreeExecutorImpl;
 import org.hibernate.sql.sqm.exec.spi.PreparedStatementCreator;
-import org.hibernate.query.QueryOptions;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.sqm.exec.spi.RowTransformer;
 import org.hibernate.sqm.query.SqmSelectStatement;
 import org.hibernate.sqm.query.select.SqmSelection;

@@ -11,14 +11,23 @@ package org.hibernate.persister.entity.spi;
  */
 public enum InheritanceStrategy {
 	/**
-	 * No inheritance.  Similar to {@link #DISCRIMINATOR} (single table) but with
-	 * no discriminator column/formula.
+	 * No inheritance.  Similar to {@link #DISCRIMINATOR} in that there is just a
+	 * single table, but with no discriminator column/formula.
 	 */
 	NONE,
 	/**
-	 * An inher
+	 * Uses a dedicated column to store a value indicating the row's concrete type.
+	 * Inherently a single-table strategy.
 	 */
 	DISCRIMINATOR,
+	/**
+	 * Strategy using a complete table per each concrete subclass - the superclass columns
+	 * are defined on each subclass table.  Querying is done via a SQL UNION over all the
+	 * hierarchy tables.
+	 */
 	UNION,
+	/**
+	 * Strategy using a table per class, joined together.  Highly normalized.
+	 */
 	JOINED
 }

@@ -1,54 +1,64 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
+
 package org.hibernate.persister.common.internal;
 
+import java.util.List;
+import java.util.Optional;
+
+import javax.persistence.AttributeConverter;
+
 import org.hibernate.persister.common.spi.AbstractSingularAttribute;
+import org.hibernate.persister.common.spi.AttributeContainer;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.ConvertibleDomainReference;
+import org.hibernate.sqm.domain.EntityReference;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.sqm.domain.ManagedType;
-import org.hibernate.sqm.domain.SingularAttribute;
 
 /**
  * @author Steve Ebersole
  */
-public class SingularAttributeBasic
-		extends AbstractSingularAttribute<BasicType> {
-	private final Column[] columns;
+public class SingularAttributeBasic extends AbstractSingularAttribute<BasicType> implements ConvertibleDomainReference {
+	private final List<Column> columns;
+	private final AttributeConverter attributeConverter;
 
 	public SingularAttributeBasic(
-			ManagedType declaringType,
+			AttributeContainer declaringType,
 			String name,
-			BasicType type,
-			Column[] columns) {
-		super( declaringType, name, type );
+			BasicType ormType,
+			AttributeConverter attributeConverter,
+			List<Column> columns) {
+		super( declaringType, name, ormType, true );
+		this.attributeConverter = attributeConverter;
 		this.columns = columns;
 	}
 
 	@Override
-	public SingularAttribute.Classification getAttributeTypeClassification() {
-		return SingularAttribute.Classification.BASIC;
+	public SingularAttributeClassification getAttributeTypeClassification() {
+		return SingularAttributeClassification.BASIC;
 	}
 
-	public Column[] getColumns() {
+	@Override
+	public List<Column> getColumns() {
 		return columns;
 	}
 
 	@Override
-	public boolean isId() {
-		return false;
+	public String asLoggableText() {
+		return "SingularAttributeBasic(" + getLeftHandSide().asLoggableText() + '.' + getAttributeName() + ')';
 	}
 
 	@Override
-	public boolean isVersion() {
-		return false;
+	public Optional<EntityReference> toEntityReference() {
+		return Optional.empty();
 	}
 
 	@Override
-	public ManagedType asManagedType() {
-		return null;
+	public Optional<AttributeConverter> getAttributeConverter() {
+		return Optional.of( attributeConverter );
 	}
 }

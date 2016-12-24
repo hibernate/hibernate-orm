@@ -10,7 +10,7 @@ import org.hibernate.loader.plan.build.spi.ExpandingCollectionQuerySpace;
 import org.hibernate.loader.plan.build.spi.ExpandingQuerySpaces;
 import org.hibernate.loader.plan.spi.Join;
 import org.hibernate.loader.plan.spi.JoinDefinedByMetadata;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.PropertyMapping;

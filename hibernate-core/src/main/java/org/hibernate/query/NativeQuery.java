@@ -1,9 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
+
 package org.hibernate.query;
 
 import java.util.Calendar;
@@ -20,8 +21,8 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.type.spi.Type;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+import org.hibernate.type.spi.Type;
 
 /**
  * Represents a native (SQL) query.
@@ -65,7 +66,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return this, for method chaining
 	 */
-	NativeQuery<T> setResultSetMapping(String name);
+	org.hibernate.query.NativeQuery<T> setResultSetMapping(String name);
 
 	/**
 	 * Is this native-SQL query known to be callable?
@@ -90,7 +91,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addScalar(String columnAlias);
+	org.hibernate.query.NativeQuery<T> addScalar(String columnAlias);
 
 	/**
 	 * Declare a scalar query result.
@@ -102,10 +103,10 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addScalar(String columnAlias, Type type);
+	org.hibernate.query.NativeQuery<T> addScalar(String columnAlias, Type type);
 
 	/**
-	 * Add a new root return mapping, returning a {@link NativeQuery.RootReturn} to allow further definition.
+	 * Add a new root return mapping, returning a {@link org.hibernate.query.NativeQuery.RootReturn} to allow further definition.
 	 *
 	 * @param tableAlias The SQL table alias to map to this entity
 	 * @param entityName The name of the entity.
@@ -117,7 +118,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	RootReturn addRoot(String tableAlias, String entityName);
 
 	/**
-	 * Add a new root return mapping, returning a {@link NativeQuery.RootReturn} to allow further definition.
+	 * Add a new root return mapping, returning a {@link org.hibernate.query.NativeQuery.RootReturn} to allow further definition.
 	 *
 	 * @param tableAlias The SQL table alias to map to this entity
 	 * @param entityType The java type of the entity.
@@ -138,7 +139,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String entityName);
+	org.hibernate.query.NativeQuery<T> addEntity(String entityName);
 
 	/**
 	 * Declare a "root" entity.
@@ -148,7 +149,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String tableAlias, String entityName);
+	org.hibernate.query.NativeQuery<T> addEntity(String tableAlias, String entityName);
 
 	/**
 	 * Declare a "root" entity, specifying a lock mode.
@@ -159,7 +160,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String tableAlias, String entityName, LockMode lockMode);
+	org.hibernate.query.NativeQuery<T> addEntity(String tableAlias, String entityName, LockMode lockMode);
 
 	/**
 	 * Declare a "root" entity, without specifying an alias.  The expectation here is that the table alias is the
@@ -169,7 +170,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(Class entityType);
+	org.hibernate.query.NativeQuery<T> addEntity(Class entityType);
 
 	/**
 	 * Declare a "root" entity.
@@ -179,7 +180,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String tableAlias, Class entityType);
+	org.hibernate.query.NativeQuery<T> addEntity(String tableAlias, Class entityType);
 
 	/**
 	 * Declare a "root" entity, specifying a lock mode.
@@ -190,7 +191,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String tableAlias, Class entityClass, LockMode lockMode);
+	org.hibernate.query.NativeQuery<T> addEntity(String tableAlias, Class entityClass, LockMode lockMode);
 
 	/**
 	 * Declare a join fetch result.
@@ -214,7 +215,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addJoin(String tableAlias, String path);
+	org.hibernate.query.NativeQuery<T> addJoin(String tableAlias, String path);
 
 	/**
 	 * Declare a join fetch result.
@@ -228,7 +229,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @since 3.6
 	 */
-	NativeQuery<T> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
+	org.hibernate.query.NativeQuery<T> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
 
 	/**
 	 * Declare a join fetch result, specifying a lock mode.
@@ -239,7 +240,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addJoin(String tableAlias, String path, LockMode lockMode);
+	org.hibernate.query.NativeQuery<T> addJoin(String tableAlias, String path, LockMode lockMode);
 
 	/**
 	 * Allows access to further control how properties within a root or join fetch are mapped back from the result set.
@@ -349,112 +350,115 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	// covariant overrides - Query
 
 	@Override
-	NativeQuery<T> setHibernateFlushMode(FlushMode flushMode);
+	org.hibernate.query.NativeQuery<T> setHibernateFlushMode(FlushMode flushMode);
 
 	@Override
-	NativeQuery<T> setFlushMode(FlushModeType flushMode);
+	org.hibernate.query.NativeQuery<T> setFlushMode(FlushModeType flushMode);
 
 	@Override
-	NativeQuery<T> setCacheMode(CacheMode cacheMode);
+	org.hibernate.query.NativeQuery<T> setCacheMode(CacheMode cacheMode);
 
 	@Override
-	NativeQuery<T> setCacheable(boolean cacheable);
+	org.hibernate.query.NativeQuery<T> setCacheable(boolean cacheable);
 
 	@Override
-	NativeQuery<T> setCacheRegion(String cacheRegion);
+	org.hibernate.query.NativeQuery<T> setCacheRegion(String cacheRegion);
 
 	@Override
-	NativeQuery<T> setTimeout(int timeout);
+	org.hibernate.query.NativeQuery<T> setTimeout(int timeout);
 
 	@Override
-	NativeQuery<T> setFetchSize(int fetchSize);
+	org.hibernate.query.NativeQuery<T> setFetchSize(int fetchSize);
 
 	@Override
-	NativeQuery<T> setReadOnly(boolean readOnly);
+	org.hibernate.query.NativeQuery<T> setReadOnly(boolean readOnly);
 
 	@Override
-	NativeQuery<T> setLockOptions(LockOptions lockOptions);
+	org.hibernate.query.NativeQuery<T> setLockOptions(LockOptions lockOptions);
 
 	@Override
-	NativeQuery<T> setLockMode(String alias, LockMode lockMode);
+	org.hibernate.query.NativeQuery<T> setLockMode(String alias, LockMode lockMode);
 
 	@Override
-	NativeQuery<T> setComment(String comment);
+	org.hibernate.query.NativeQuery<T> setComment(String comment);
 
 	@Override
-	NativeQuery<T> addQueryHint(String hint);
+	org.hibernate.query.NativeQuery<T> addQueryHint(String hint);
 
 
-
-
-	@Override
-	NativeQuery<T> setParameter(String name, Object value);
-
-	@Override
-	NativeQuery<T> setParameter(int position, Object value);
-
-	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val);
-
-	@Override
-	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
 
 
 	@Override
-	NativeQuery<T> setParameter(String name, Object val, Type type);
+	org.hibernate.query.NativeQuery<T> setParameter(String name, Object value);
 
 	@Override
-	NativeQuery<T> setParameter(int position, Object val, Type type);
+	org.hibernate.query.NativeQuery<T> setParameter(int position, Object value);
 
 	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Type type);
+	<P> org.hibernate.query.NativeQuery<T> setParameter(QueryParameter<P> parameter, P val);
+
+	@Override
+	<P> org.hibernate.query.NativeQuery<T> setParameter(Parameter<P> param, P value);
 
 
 	@Override
-	NativeQuery<T> setParameter(String name, Object val, TemporalType temporalType);
+	org.hibernate.query.NativeQuery<T> setParameter(String name, Object val, Type type);
 
 	@Override
-	NativeQuery<T> setParameter(int position, Object val, TemporalType temporalType);
+	org.hibernate.query.NativeQuery<T> setParameter(int position, Object val, Type type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
+	<P> org.hibernate.query.NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Type type);
+
 
 	@Override
-	NativeQuery<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	org.hibernate.query.NativeQuery<T> setParameter(String name, Object val, TemporalType temporalType);
 
 	@Override
-	NativeQuery<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	org.hibernate.query.NativeQuery<T> setParameter(int position, Object val, TemporalType temporalType);
 
 	@Override
-	NativeQuery<T> setParameter(String name, Calendar value, TemporalType temporalType);
+	<P> org.hibernate.query.NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
 
 	@Override
-	NativeQuery<T> setParameter(int position, Calendar value, TemporalType temporalType);
+	org.hibernate.query.NativeQuery<T> setParameter(
+			Parameter<Calendar> param,
+			Calendar value,
+			TemporalType temporalType);
 
 	@Override
-	NativeQuery<T> setParameter(String name, Date value, TemporalType temporalType);
+	org.hibernate.query.NativeQuery<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
+	org.hibernate.query.NativeQuery<T> setParameter(String name, Calendar value, TemporalType temporalType);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<P> values);
+	org.hibernate.query.NativeQuery<T> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
-	NativeQuery<T> setParameterList(String name, Collection values);
+	org.hibernate.query.NativeQuery<T> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
-	NativeQuery<T> setParameterList(String name, Collection values, Type type);
+	org.hibernate.query.NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
 
 	@Override
-	NativeQuery<T> setParameterList(String name, Object[] values, Type type);
+	<P> org.hibernate.query.NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<P> values);
 
 	@Override
-	NativeQuery<T> setParameterList(String name, Object[] values);
+	org.hibernate.query.NativeQuery<T> setParameterList(String name, Collection values);
 
 	@Override
-	NativeQuery<T> setProperties(Object bean);
+	org.hibernate.query.NativeQuery<T> setParameterList(String name, Collection values, Type type);
 
 	@Override
-	NativeQuery<T> setProperties(Map bean);
+	org.hibernate.query.NativeQuery<T> setParameterList(String name, Object[] values, Type type);
+
+	@Override
+	org.hibernate.query.NativeQuery<T> setParameterList(String name, Object[] values);
+
+	@Override
+	org.hibernate.query.NativeQuery<T> setProperties(Object bean);
+
+	@Override
+	org.hibernate.query.NativeQuery<T> setProperties(Map bean);
 }

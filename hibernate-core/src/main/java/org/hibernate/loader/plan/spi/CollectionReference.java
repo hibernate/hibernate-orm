@@ -7,7 +7,7 @@
 package org.hibernate.loader.plan.spi;
 
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 
 /**
  * Represents a reference to a persistent collection either as a Return or as a {@link CollectionAttributeFetch}.

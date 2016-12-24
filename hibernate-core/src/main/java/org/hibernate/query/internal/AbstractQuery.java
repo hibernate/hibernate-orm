@@ -1,9 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
+
 package org.hibernate.query.internal;
 
 import java.io.Serializable;
@@ -43,7 +44,6 @@ import org.hibernate.NonUniqueResultException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
@@ -60,11 +60,12 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.TypedParameterValue;
-import org.hibernate.query.internal.old.AbstractProducedQuery;
+import org.hibernate.query.spi.ExecutionContext;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.type.spi.Type;
 
@@ -94,15 +95,21 @@ import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
 public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
 
-	private final SharedSessionContractImplementor producer;
+	private final QueryProducerImplementor producer;
+	private final ExecutionContext executionContext;
 
-	public AbstractQuery(SharedSessionContractImplementor producer) {
+	public AbstractQuery(QueryProducerImplementor producer, ExecutionContext executionContext) {
 		this.producer = producer;
+		this.executionContext = executionContext;
 	}
 
 	@Override
-	public SharedSessionContractImplementor getProducer() {
+	public QueryProducerImplementor getProducer() {
 		return producer;
+	}
+
+	public ExecutionContext getExecutionContext() {
+		return executionContext;
 	}
 
 	protected abstract boolean canApplyAliasSpecificLockModes();
@@ -175,7 +182,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	@Override
 	public FlushModeType getFlushMode() {
 		final FlushMode flushMode = getQueryOptions().getFlushMode() == null
-				? getProducer().getHibernateFlushMode()
+				? executionContext.getHibernateFlushMode()
 				: getQueryOptions().getFlushMode();
 		return FlushModeTypeHelper.getFlushModeType( flushMode );
 	}
@@ -247,9 +254,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public boolean isReadOnly() {
-		return getQueryOptions().isReadOnly() == null
-				? getProducer().isDefaultReadOnly()
-				: getQueryOptions().isReadOnly();
+//		return getQueryOptions().isReadOnly() == null
+//				? getProducer().isDefaultReadOnly()
+//				: getQueryOptions().isReadOnly();
+		return getQueryOptions().isReadOnly() == null ? false : getQueryOptions().isReadOnly();
 	}
 
 	@Override
@@ -329,7 +337,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	public Map<String, Object> getHints() {
 		// Technically this should rollback, but that's insane :)
 		// If the TCK ever adds a check for this, we may need to change this behavior
-		getProducer().checkOpen( false );
+		executionContext.checkOpen( false );
 
 		final Map<String,Object> hints = new HashMap<>();
 		collectBaselineHints( hints );
@@ -401,7 +409,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public QueryImplementor<R> setHint(String hintName, Object value) {
-		getProducer().checkOpen( true );
+		executionContext.checkOpen( true );
 		boolean applied = false;
 		try {
 			if ( HINT_TIMEOUT.equals( hintName ) ) {
@@ -493,7 +501,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	protected boolean applyJpaCacheRetrieveMode(CacheRetrieveMode retrieveMode) {
-		final CacheMode currentCacheMode = nullif( getCacheMode(), getProducer().getCacheMode() );
+		final CacheMode currentCacheMode = nullif( getCacheMode(), executionContext.getCacheMode() );
 		setCacheMode(
 				CacheModeHelper.interpretCacheMode(
 						CacheModeHelper.interpretCacheStoreMode( currentCacheMode ),
@@ -504,7 +512,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	protected boolean applyJpaCacheStoreMode(CacheStoreMode storeMode) {
-		final CacheMode currentCacheMode = nullif( getCacheMode(), getProducer().getCacheMode() );
+		final CacheMode currentCacheMode = nullif( getCacheMode(), executionContext.getCacheMode() );
 		setCacheMode(
 				CacheModeHelper.interpretCacheMode(
 						storeMode,
@@ -672,7 +680,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			return getParameterMetadata().getQueryParameter( name );
 		}
 		catch ( HibernateException e ) {
-			throw getProducer().getExceptionConverter().convert( e );
+			throw executionContext.getExceptionConverter().convert( e );
 		}
 	}
 
@@ -691,7 +699,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			return parameter;
 		}
 		catch ( HibernateException e ) {
-			throw getProducer().getExceptionConverter().convert( e );
+			throw executionContext.getExceptionConverter().convert( e );
 		}
 	}
 
@@ -701,7 +709,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			return getParameterMetadata().getQueryParameter( position );
 		}
 		catch ( HibernateException e ) {
-			throw getProducer().getExceptionConverter().convert( e );
+			throw executionContext.getExceptionConverter().convert( e );
 		}
 	}
 
@@ -720,7 +728,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			return parameter;
 		}
 		catch ( HibernateException e ) {
-			throw getProducer().getExceptionConverter().convert( e );
+			throw executionContext.getExceptionConverter().convert( e );
 		}
 	}
 
@@ -744,7 +752,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			return locateBinding( parameter.getPosition() );
 		}
 
-		throw getProducer().getExceptionConverter().convert(
+		throw executionContext.getExceptionConverter().convert(
 				new IllegalArgumentException( "Could not resolve binding for given parameter reference [" + parameter + "]" )
 		);
 	}
@@ -1100,14 +1108,14 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 		final FlushMode effectiveFlushMode = getHibernateFlushMode();
 		if ( effectiveFlushMode != null ) {
-			sessionFlushMode = getProducer().getHibernateFlushMode();
-			getProducer().setHibernateFlushMode( effectiveFlushMode );
+			sessionFlushMode = executionContext.getHibernateFlushMode();
+			executionContext.setHibernateFlushMode( effectiveFlushMode );
 		}
 
 		final CacheMode effectiveCacheMode = getCacheMode();
 		if ( effectiveCacheMode != null ) {
-			sessionCacheMode = getProducer().getCacheMode();
-			getProducer().setCacheMode( effectiveCacheMode );
+			sessionCacheMode = executionContext.getCacheMode();
+			executionContext.setCacheMode( effectiveCacheMode );
 		}
 	}
 
@@ -1184,11 +1192,11 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	protected void afterQuery() {
 		if ( sessionFlushMode != null ) {
-			getProducer().setHibernateFlushMode( sessionFlushMode );
+			executionContext.setHibernateFlushMode( sessionFlushMode );
 			sessionFlushMode = null;
 		}
 		if ( sessionCacheMode != null ) {
-			getProducer().setCacheMode( sessionCacheMode );
+			executionContext.setCacheMode( sessionCacheMode );
 			sessionCacheMode = null;
 		}
 	}
@@ -1206,7 +1214,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException he) {
-			throw getProducer().getExceptionConverter().convert( he );
+			throw executionContext.getExceptionConverter().convert( he );
 		}
 		finally {
 			afterQuery();
@@ -1231,7 +1239,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 		catch ( HibernateException e ) {
 			if ( getProducer().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				throw getProducer().getExceptionConverter().convert( e );
+				throw executionContext.getExceptionConverter().convert( e );
 			}
 			else {
 				throw e;
@@ -1304,8 +1312,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public int executeUpdate() throws HibernateException {
-		if ( ! getProducer().isTransactionInProgress() ) {
-			throw getProducer().getExceptionConverter().convert(
+		if ( !executionContext.isTransactionInProgress() ) {
+			throw executionContext.getExceptionConverter().convert(
 					new TransactionRequiredException(
 							"Executing an update/delete query"
 					)
@@ -1323,7 +1331,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 		catch ( HibernateException e) {
 			if ( getProducer().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				throw getProducer().getExceptionConverter().convert( e );
+				throw executionContext.getExceptionConverter().convert( e );
 			}
 			else {
 				throw e;

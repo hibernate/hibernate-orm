@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.walking.spi;
 
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.type.CollectionType;
 
 /**

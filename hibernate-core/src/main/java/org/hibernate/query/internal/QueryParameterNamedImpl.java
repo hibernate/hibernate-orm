@@ -1,13 +1,15 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
+
 package org.hibernate.query.internal;
 
-import org.hibernate.type.spi.Type;
+import org.hibernate.persister.common.spi.OrmTypeExporter;
 import org.hibernate.sqm.query.Parameter;
+import org.hibernate.type.spi.Type;
 
 /**
  * QueryParameter impl for named-parameters in HQL, JPQL or Criteria queries.
@@ -26,10 +28,11 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 		assert parameter.getName() != null;
 		assert parameter.getPosition() == null;
 
-		return new QueryParameterNamedImpl<>(
+		return new QueryParameterNamedImpl<T>(
 				parameter.getName(),
 				parameter.allowMultiValuedBinding(),
-				parameter.getAnticipatedType()
+				true,
+				( (OrmTypeExporter) parameter.getAnticipatedType() ).getOrmType()
 		);
 	}
 
@@ -37,37 +40,24 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 		return new QueryParameterNamedImpl<>(
 				name,
 				false,
+				true,
 				null
 		);
 	}
 
 	private final String name;
 
-	private QueryParameterNamedImpl(String name, boolean allowMultiValuedBinding, Type anticipatedType) {
-		super( allowMultiValuedBinding, anticipatedType );
+	private QueryParameterNamedImpl(
+			String name,
+			boolean allowMultiValuedBinding,
+			boolean isPassNullsEnabled,
+			Type anticipatedType) {
+		super( allowMultiValuedBinding, isPassNullsEnabled, anticipatedType );
 		this.name = name;
 	}
 
 	@Override
 	public String getName() {
 		return name;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-
-		QueryParameterNamedImpl<?> that = (QueryParameterNamedImpl<?>) o;
-		return getName().equals( that.getName() );
-	}
-
-	@Override
-	public int hashCode() {
-		return getName().hashCode();
 	}
 }

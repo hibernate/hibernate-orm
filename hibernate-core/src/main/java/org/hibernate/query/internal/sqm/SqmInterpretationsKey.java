@@ -14,7 +14,7 @@ import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.Limit;
-import org.hibernate.query.QueryOptions;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sqm.query.SqmStatement;
 
 /**

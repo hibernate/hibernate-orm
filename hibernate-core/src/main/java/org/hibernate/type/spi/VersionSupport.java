@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface VersionSupport<T> {
+public interface VersionSupport<T> extends Type {
 	/**
 	 * Generate an initial version.
 	 *

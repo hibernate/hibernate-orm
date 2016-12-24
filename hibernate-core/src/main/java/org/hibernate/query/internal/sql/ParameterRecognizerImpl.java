@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.*;
 import org.hibernate.query.spi.ParameterRecognizer;
-import org.hibernate.sql.spi.ParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
  * @author Steve Ebersole
@@ -45,7 +45,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 	private PositionalParameterStyle positionalParameterStyle;
 	private int ordinalParameterImplicitPosition;
 
-	private List<ParameterBinder> parameterBinders;
+	private List<JdbcParameterBinder> parameterBinders;
 
 	public ParameterRecognizerImpl(SessionFactoryImplementor factory) {
 		if ( factory.getSessionFactoryOptions().isJpaBootstrap() ) {
@@ -101,7 +101,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		return positionalQueryParameters;
 	}
 
-	List<ParameterBinder> getParameterBinders() {
+	List<JdbcParameterBinder> getParameterBinders() {
 		return parameterBinders;
 	}
 

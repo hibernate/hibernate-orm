@@ -12,6 +12,7 @@ import java.util.Map;
 import javax.persistence.EnumType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.type.TemporalTypeImpl;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.BasicType;
@@ -85,6 +86,7 @@ import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
  * @author Steve Ebersole
  * @author Chris Cranford
  */
+@Incubating
 public class BasicTypeRegistry {
 	private final Map<RegistryKey,BasicType> registrations = new HashMap<>();
 
@@ -114,7 +116,7 @@ public class BasicTypeRegistry {
 				return typeConfiguration;
 			}
 		};
-//		registerBasicTypes();
+		registerBasicTypes();
 	}
 
 	public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
@@ -125,6 +127,7 @@ public class BasicTypeRegistry {
 		return baseJdbcRecommendedSqlTypeMappingContext;
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> BasicType<T> getRegisteredBasicType(RegistryKey registryKey) {
 		return registrations.get( registryKey );
 	}

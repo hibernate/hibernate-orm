@@ -9,6 +9,7 @@ package org.hibernate.type.spi.basic;
 import java.util.Comparator;
 import javax.persistence.AttributeConverter;
 
+import org.hibernate.Incubating;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
@@ -24,6 +25,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @since 6.0
  */
+@Incubating
 public class RegistryKey {
 	private final Class javaTypeClass;
 	private final int jdbcCode;

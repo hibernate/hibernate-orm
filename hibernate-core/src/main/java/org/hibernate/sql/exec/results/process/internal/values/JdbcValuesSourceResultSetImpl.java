@@ -30,8 +30,8 @@ import org.hibernate.sql.exec.results.process.internal.caching.QueryCachePutMana
 import org.hibernate.sql.exec.results.process.spi.RowProcessingState;
 import org.hibernate.sql.exec.spi.PreparedStatementCreator;
 import org.hibernate.sql.exec.spi.PreparedStatementExecutor;
-import org.hibernate.sql.exec.spi.SqlSelectInterpretation;
-import org.hibernate.sql.spi.ParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
  * JdbcValuesSource implementation for a JDBC ResultSet as the source
@@ -43,7 +43,7 @@ public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
 	//		^^ that is the job of org.hibernate.sql.exec.spi.SqlTreeExecutor
 
 	private final SharedSessionContractImplementor persistenceContext;
-	private final SqlSelectInterpretation sqlSelectInterpretation;
+	private final JdbcSelect jdbcSelect;
 	private final QueryOptions queryOptions;
 	private final PreparedStatementCreator statementCreator;
 	private final PreparedStatementExecutor preparedStatementExecutor;
@@ -59,7 +59,7 @@ public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
 
 	public JdbcValuesSourceResultSetImpl(
 			SharedSessionContractImplementor persistenceContext,
-			SqlSelectInterpretation sqlSelectInterpretation,
+			JdbcSelect jdbcSelect,
 			QueryOptions queryOptions,
 			PreparedStatementCreator statementCreator,
 			PreparedStatementExecutor preparedStatementExecutor,
@@ -67,7 +67,7 @@ public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
 			List<SqlSelection> sqlSelections) {
 		super( resolveQueryCachePutManager( persistenceContext, queryOptions ) );
 		this.persistenceContext = persistenceContext;
-		this.sqlSelectInterpretation = sqlSelectInterpretation;
+		this.jdbcSelect = jdbcSelect;
 		this.queryOptions = queryOptions;
 		this.statementCreator = statementCreator;
 		this.preparedStatementExecutor = preparedStatementExecutor;
@@ -179,7 +179,7 @@ public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
 
 		final JdbcServices jdbcServices = persistenceContext.getFactory().getServiceRegistry().getService( JdbcServices.class );
 
-		final String sql = sqlSelectInterpretation.getSql();
+		final String sql = jdbcSelect.getSql();
 		try {
 			jdbcServices.getSqlStatementLogger().logStatement( sql );
 
@@ -201,7 +201,7 @@ public class JdbcValuesSourceResultSetImpl extends AbstractJdbcValuesSource {
 			// bind parameters
 			// 		todo : validate that all query parameters were bound?
 			int paramBindingPosition = 1;
-			for ( ParameterBinder parameterBinder : sqlSelectInterpretation.getParameterBinders() ) {
+			for ( JdbcParameterBinder parameterBinder : jdbcSelect.getParameterBinders() ) {
 				paramBindingPosition += parameterBinder.bindParameterValue(
 						preparedStatement,
 						paramBindingPosition,

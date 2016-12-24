@@ -51,8 +51,17 @@ public interface ProcedureCall extends CommonQueryContract, SynchronizeableQuery
 	/**
 	 * A hint key for use with JPA's {@link StoredProcedureQuery#setHint(String, Object)}
 	 * hinting system.  {@code true} indicates
+	 *
+	 * @deprecated Use {@link #FUNCTION_RETURN_TYPE_HINT} instead to indicate the return parameter's JDBC type code
 	 */
+	@Deprecated
 	String IS_FUNCTION_HINT = "hibernate.is_function_call";
+
+	/**
+	 * The hint key (for use with JPA's "hint system") indicating the function's return JDBC type code
+	 * (aka, {@link java.sql.Types} code)
+	 */
+	String FUNCTION_RETURN_TYPE_HINT = "hibernate.procedure.function_return_jdbc_type_code";
 
 	@Override
 	ProcedureCall addSynchronizedQuerySpace(String querySpace);
@@ -74,6 +83,10 @@ public interface ProcedureCall extends CommonQueryContract, SynchronizeableQuery
 	 * Does this ProcedureCall represent a call to a database FUNCTION (as opposed
 	 * to a PROCEDURE call)?
 	 *
+	 * NOTE : this will only report whether this ProcedureCall was marked
+	 * as a function via call to {@link #markAsFunctionCall}.  Specifically
+	 * will not return {@code true} when using JPA query hint.
+	 *
 	 * @return {@code true} indicates that this ProcedureCall represents a
 	 * function call; {@code false} indicates a procedure call.
 	 */
@@ -83,9 +96,11 @@ public interface ProcedureCall extends CommonQueryContract, SynchronizeableQuery
 	 * Mark this ProcedureCall as representing a call to a database function,
 	 * rather than a database procedure.
 	 *
+	 * @param sqlType The {@link java.sql.Types} code for the function return
+	 *
 	 * @return {@code this}, for method chaining
 	 */
-	ProcedureCall markAsFunctionCall();
+	ProcedureCall markAsFunctionCall(int sqlType);
 
 	/**
 	 * Basic form for registering a positional parameter.

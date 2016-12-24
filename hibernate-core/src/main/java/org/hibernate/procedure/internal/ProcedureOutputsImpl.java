@@ -22,6 +22,8 @@ import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.result.Output;
 import org.hibernate.result.internal.OutputsImpl;
+import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
+import org.hibernate.sql.exec.internal.JdbcRefCursorExtractor;
 
 /**
  * Implementation of ProcedureResult.  Defines centralized access to all of the results of a procedure call.
@@ -33,7 +35,7 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 	private final CallableStatement callableStatement;
 
 	private final boolean shouldUseJdbcNamedParameters;
-	private final Map<ParameterRegistration, JdbcParameterExtractor> jdbcParameterExtractorMap;
+	private final Map<ParameterRegistration, JdbcCallParameterExtractorImpl> jdbcParameterExtractorMap;
 	private final Iterator<JdbcRefCursorExtractor> jdbcRefCursorExtractorIterator;
 
 	private int refCursorParamIndex;
@@ -42,7 +44,7 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 			ProcedureCallImpl procedureCall,
 			CallableStatement callableStatement,
 			boolean shouldUseJdbcNamedParameters,
-			Map<ParameterRegistration, JdbcParameterExtractor> jdbcParameterExtractorMap,
+			Map<ParameterRegistration, JdbcCallParameterExtractorImpl> jdbcParameterExtractorMap,
 			List<JdbcRefCursorExtractor> jdbcRefCursorExtractors) {
 		super( procedureCall, callableStatement );
 		this.procedureCall = procedureCall;
@@ -55,13 +57,13 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 
 	@Override
 	public <T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration) {
-		final JdbcParameterExtractor<T> extractor = resolveJdbcParameterExtractor( parameterRegistration );
+		final JdbcCallParameterExtractorImpl<T> extractor = resolveJdbcParameterExtractor( parameterRegistration );
 		return extractor.extractValue( callableStatement, shouldUseJdbcNamedParameters, procedureCall.getSession() );
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> JdbcParameterExtractor<T> resolveJdbcParameterExtractor(ParameterRegistration<T> parameterRegistration) {
-		final JdbcParameterExtractor<T> extractor = jdbcParameterExtractorMap.get( parameterRegistration );
+	private <T> JdbcCallParameterExtractorImpl<T> resolveJdbcParameterExtractor(ParameterRegistration<T> parameterRegistration) {
+		final JdbcCallParameterExtractorImpl<T> extractor = jdbcParameterExtractorMap.get( parameterRegistration );
 		if ( extractor == null ) {
 			if ( parameterRegistration.getMode() == ParameterMode.IN ) {
 				throw new ParameterMisuseException( "Cannot extract value from parameter registered as IN parameter" );

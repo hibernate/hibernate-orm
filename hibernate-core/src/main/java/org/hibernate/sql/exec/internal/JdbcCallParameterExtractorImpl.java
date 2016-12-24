@@ -1,54 +1,54 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.procedure.internal;
+package org.hibernate.sql.exec.internal;
 
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
+import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.spi.Type;
 
 /**
- * Controls extracting values from OUT/INOUT parameters.
- * <p/>
- * For extracting REF_CURSOR results, see {@link JdbcRefCursorExtractor} instead.
+ * Standard implementation of JdbcCallParameterExtractor
  *
  * @author Steve Ebersole
  */
-class JdbcParameterExtractor<T> {
-	private final ParameterRegistrationImplementor<T> registration;
-	private final Type hibernateType;
+public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtractor {
+	private final String jdbcParameterName;
 	private final int startingJdbcParameterPosition;
+	private final Type ormType;
 
-	public JdbcParameterExtractor(
-			ParameterRegistrationImplementor<T> registration,
-			Type hibernateType,
-			int startingJdbcParameterPosition) {
-		this.registration = registration;
-		this.hibernateType = hibernateType;
+	public JdbcCallParameterExtractorImpl(
+			String jdbcParameterName,
+			int startingJdbcParameterPosition,
+			Type ormType) {
+		this.jdbcParameterName = jdbcParameterName;
 		this.startingJdbcParameterPosition = startingJdbcParameterPosition;
+		this.ormType = ormType;
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public T extractValue(
 			CallableStatement callableStatement,
 			boolean shouldUseJdbcNamedParameters,
 			SharedSessionContractImplementor session) {
 		final boolean useNamed = shouldUseJdbcNamedParameters
-				&& ProcedureParameterExtractionAware.class.isInstance( hibernateType )
-				&& registration.getName() != null;
+				&& ProcedureParameterExtractionAware.class.isInstance( ormType )
+				&& jdbcParameterName != null;
 
 		try {
 			if ( useNamed ) {
-				return (T) ( (ProcedureParameterExtractionAware) hibernateType ).extract(
+				return (T) ( (ProcedureParameterExtractionAware) ormType ).extract(
 						callableStatement,
-						new String[] {registration.getName()},
+						new String[] { jdbcParameterName },
 						session
 				);
 			}

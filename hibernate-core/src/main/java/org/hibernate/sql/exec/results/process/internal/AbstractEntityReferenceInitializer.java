@@ -43,7 +43,7 @@ public abstract class AbstractEntityReferenceInitializer
 	private final Map<Attribute, SqlSelectionGroup> sqlSelectionGroupMap;
 	private final boolean isShallow;
 
-	// in-flight processing state
+	// in-flight processing state.  reset after each row
 	private Object identifierHydratedState;
 	private EntityPersister concretePersister;
 	private EntityKey entityKey;
@@ -292,6 +292,12 @@ public abstract class AbstractEntityReferenceInitializer
 
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
+		// reset row state
+		identifierHydratedState = null;
+		concretePersister = null;
+		entityKey = null;
+		entityInstance = null;
+
 	}
 
 	private boolean isReadOnly(

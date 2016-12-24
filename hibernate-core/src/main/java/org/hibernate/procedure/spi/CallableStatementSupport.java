@@ -10,6 +10,8 @@ import java.sql.CallableStatement;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
+import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 
 /**
  * @author Steve Ebersole
@@ -18,15 +20,17 @@ public interface CallableStatementSupport {
 	boolean shouldUseFunctionSyntax(ParameterRegistry parameterRegistry);
 
 	String renderCallableStatement(
-			String name,
+			String callableName,
 			ParameterStrategy parameterStrategy,
-			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
+			JdbcCallFunctionReturn functionReturn,
+			List<JdbcCallParameterRegistration> parameterRegistrations,
 			SharedSessionContractImplementor session);
 
 	void registerParameters(
 			String procedureName,
 			CallableStatement statement,
 			ParameterStrategy parameterStrategy,
-			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
+			JdbcCallFunctionReturn functionReturn,
+			List<JdbcCallParameterRegistration > parameterRegistrations,
 			SharedSessionContractImplementor session);
 }

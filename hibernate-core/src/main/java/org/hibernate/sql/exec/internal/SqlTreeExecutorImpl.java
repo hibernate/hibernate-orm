@@ -40,7 +40,7 @@ import org.hibernate.sql.exec.spi.PreparedStatementCreator;
 import org.hibernate.sql.exec.spi.PreparedStatementExecutor;
 import org.hibernate.sql.exec.spi.RowTransformer;
 import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
-import org.hibernate.sql.exec.spi.SqlSelectInterpretation;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.SqlTreeExecutor;
 
 import org.jboss.logging.Logger;
@@ -88,7 +88,7 @@ public class SqlTreeExecutorImpl implements SqlTreeExecutor {
 //			return Collections.<R>emptyList();
 //		}
 
-		final SqlSelectInterpretation sqlSelectInterpretation = SqlAstSelectInterpreter.interpret(
+		final JdbcSelect jdbcSelect = SqlAstSelectInterpreter.interpret(
 				sqmSelectInterpretation,
 				false,
 				persistenceContext.getFactory(),
@@ -98,7 +98,7 @@ public class SqlTreeExecutorImpl implements SqlTreeExecutor {
 
 		final List<ReturnAssembler> returnAssemblers = new ArrayList<>();
 		final List<Initializer> initializers = new ArrayList<>();
-		for ( Return queryReturn : sqlSelectInterpretation.getReturns() ) {
+		for ( Return queryReturn : jdbcSelect.getReturns() ) {
 			returnAssemblers.add( queryReturn.getReturnAssembler() );
 
 			if ( queryReturn instanceof InitializerSource ) {
@@ -110,7 +110,7 @@ public class SqlTreeExecutorImpl implements SqlTreeExecutor {
 		final JdbcValuesSource jdbcValuesSource = resolveJdbcValuesSource(
 				queryOptions,
 				persistenceContext,
-				sqlSelectInterpretation,
+				jdbcSelect,
 				statementCreator,
 				preparedStatementExecutor,
 				queryParameterBindings,
@@ -189,7 +189,7 @@ public class SqlTreeExecutorImpl implements SqlTreeExecutor {
 	private JdbcValuesSource resolveJdbcValuesSource(
 			QueryOptions queryOptions,
 			SharedSessionContractImplementor persistenceContext,
-			SqlSelectInterpretation sqlSelectInterpretation,
+			JdbcSelect jdbcSelect,
 			PreparedStatementCreator statementCreator,
 			PreparedStatementExecutor statementExecutor,
 			QueryParameterBindings queryParameterBindings,
@@ -232,7 +232,7 @@ public class SqlTreeExecutorImpl implements SqlTreeExecutor {
 		if ( cachedResults == null || cachedResults.isEmpty() ) {
 			return new JdbcValuesSourceResultSetImpl(
 					persistenceContext,
-					sqlSelectInterpretation,
+					jdbcSelect,
 					queryOptions,
 					statementCreator,
 					statementExecutor,

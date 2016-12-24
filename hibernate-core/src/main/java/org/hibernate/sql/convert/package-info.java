@@ -8,7 +8,7 @@
 /**
  * Represents the Hibernate ORM functionality for interpreting a semantic query tree (SQM).  The
  * interpretation is performed by {@link org.hibernate.sql.exec.spi.SqlAstSelectInterpreter}
- * and represented by {@link org.hibernate.sql.exec.spi.SqlSelectInterpretation}.
+ * and represented by {@link org.hibernate.sql.exec.spi.JdbcSelect}.
  * <p/>
  * For execution of these interpretations see {@link org.hibernate.sql.exec}.
  */

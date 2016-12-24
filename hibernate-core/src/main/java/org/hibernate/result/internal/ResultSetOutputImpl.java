@@ -15,7 +15,7 @@ import org.hibernate.result.ResultSetOutput;
  *
  * @author Steve Ebersole
  */
-class ResultSetOutputImpl implements ResultSetOutput {
+public class ResultSetOutputImpl implements ResultSetOutput {
 	private final List results;
 
 	public ResultSetOutputImpl(List results) {

@@ -163,6 +163,7 @@ import org.hibernate.sqm.query.select.SqmSelectClause;
 import org.hibernate.sqm.query.select.SqmSelection;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
+import org.hibernate.type.spi.basic.BasicTypeHelper;
 
 import org.jboss.logging.Logger;
 
@@ -694,11 +695,12 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	protected Type extractOrmType(DomainReference expressionType, Class javaType) {
-		Type type = extractOrmType( expressionType );
-		if ( type == null ) {
-			type = factory.getTypeHelper().basic( javaType );
+		final Type type = extractOrmType( expressionType );
+		if ( type != null ) {
+			return type;
 		}
-		return type;
+
+		return BasicTypeHelper.getRegisteredBasicType( javaType, factory.getMetamodel().getTypeConfiguration() );
 	}
 
 	@Override

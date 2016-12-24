@@ -65,8 +65,7 @@ import org.hibernate.sql.ast.select.SelectClause;
 import org.hibernate.sql.ast.select.SqlSelection;
 import org.hibernate.sql.convert.spi.ConversionHelper;
 import org.hibernate.sql.convert.spi.SqmSelectInterpretation;
-import org.hibernate.sql.exec.internal.SqlSelectInterpretationImpl;
-import org.hibernate.sql.spi.ParameterBinder;
+import org.hibernate.sql.exec.internal.JdbcSelectImpl;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.spi.Type;
 
@@ -75,7 +74,7 @@ import org.jboss.logging.Logger;
 /**
  * The final phase of query translation.  Here we take the SQL-AST an
  * "interpretation".  For a select query, that means an instance of
- * {@link SqlSelectInterpretation}.
+ * {@link JdbcSelect}.
  *
  * @author Steve Ebersole
  */
@@ -93,7 +92,7 @@ public class SqlAstSelectInterpreter {
 	 * @param executionContext
 	 * @return The interpretation result
 	 */
-	public static SqlSelectInterpretation interpret(
+	public static JdbcSelect interpret(
 			SqmSelectInterpretation sqmSelectInterpretation,
 			boolean shallow,
 			SessionFactoryImplementor sessionFactory,
@@ -101,7 +100,7 @@ public class SqlAstSelectInterpreter {
 			ExecutionContext executionContext) {
 		final SqlAstSelectInterpreter walker = new SqlAstSelectInterpreter( sessionFactory, parameterBindings, executionContext, shallow );
 		walker.visitSelectQuery( sqmSelectInterpretation.getSqlSelectAst() );
-		return new SqlSelectInterpretationImpl(
+		return new JdbcSelectImpl(
 				walker.sqlBuffer.toString(),
 				walker.parameterBinders,
 				sqmSelectInterpretation.getQueryReturns()
@@ -116,7 +115,7 @@ public class SqlAstSelectInterpreter {
 
 	// In-flight state
 	private final StringBuilder sqlBuffer = new StringBuilder();
-	private final List<ParameterBinder> parameterBinders = new ArrayList<>();
+	private final List<JdbcParameterBinder> parameterBinders = new ArrayList<>();
 
 	// rendering expressions often has to be done differently if it occurs in certain contexts
 	private boolean currentlyInPredicate;
@@ -138,7 +137,7 @@ public class SqlAstSelectInterpreter {
 	public String getSql() {
 		return sqlBuffer.toString();
 	}
-	public List<ParameterBinder> getParameterBinders() {
+	public List<JdbcParameterBinder> getParameterBinders() {
 		return parameterBinders;
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

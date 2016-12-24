@@ -18,7 +18,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.sql.exec.spi.RowTransformer;
-import org.hibernate.sql.spi.ParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
  * @author Steve Ebersole
@@ -28,7 +28,7 @@ public class SelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 	private final boolean callable;
 	private final boolean autoDiscoverTypes;
 
-	private final List<ParameterBinder> parameterBinders;
+	private final List<JdbcParameterBinder> parameterBinders;
 
 	private final RowTransformer<R> rowTransformer;
 

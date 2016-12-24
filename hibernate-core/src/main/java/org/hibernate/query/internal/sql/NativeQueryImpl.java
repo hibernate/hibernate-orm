@@ -52,7 +52,7 @@ import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.sql.spi.ParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -73,7 +73,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 	private final ParameterMetadataImpl parameterMetadata;
 	private final QueryParameterBindings parameterBindings;
 
-	private final List<ParameterBinder> parameterBinders;
+	private final List<JdbcParameterBinder> parameterBinders;
 
 	private Collection<String> querySpaces;
 
@@ -197,7 +197,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 		return parameterBindings;
 	}
 
-	public List<ParameterBinder> getParameterBinders() {
+	public List<JdbcParameterBinder> getParameterBinders() {
 		return parameterBinders;
 	}
 

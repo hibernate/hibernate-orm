@@ -84,6 +84,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.CompositeType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.basic.BasicTypeHelper;
 import org.hibernate.type.spi.basic.RegistryKey;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -889,14 +890,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	@SuppressWarnings("unchecked")
 	public BasicType resolveBasicType(Class javaType) {
-		final JavaTypeDescriptor jdt = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( javaType );
-		final SqlTypeDescriptor sdt = jdt.getJdbcRecommendedSqlType(
-				typeConfiguration.getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext()
-		);
-
-		return typeConfiguration.getBasicTypeRegistry().getRegisteredBasicType(
-				RegistryKey.from( jdt, sdt, null )
-		);
+		return BasicTypeHelper.getRegisteredBasicType( javaType, typeConfiguration );
 	}
 
 	@Override

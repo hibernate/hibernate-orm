@@ -21,6 +21,9 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.MutableQueryOptions;
 
 /**
+ * @todo split there into org.hibernate.query.QueryOptions and org.hibernate.sql.exec.spi.JdbcOperationOptions
+ * 		^^ package boundaries
+ *
  * @author Steve Ebersole
  */
 public class QueryOptionsImpl implements MutableQueryOptions {

@@ -19,7 +19,7 @@ import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sql.exec.results.process.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
-import org.hibernate.sql.spi.ParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 
@@ -32,7 +32,7 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  */
 public abstract class AbstractLiteral
-		implements ParameterBinder, Expression, SqlSelectable, Selectable {
+		implements JdbcParameterBinder, Expression, SqlSelectable, Selectable {
 	private final Object value;
 	private final Type ormType;
 	private final boolean inSelect;

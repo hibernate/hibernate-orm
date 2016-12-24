@@ -1,2 +1,21 @@
 * Migrate LoadPlan to SQM/SQL AST
-* Investigate managing AttributeConverter at the Attribute-level, as opposed to at the BasicType level.  See `org.hibernate.persister.common.spi.ConvertibleDomainReference`
+* Investigate managing AttributeConverter at the Attribute-level, as opposed to at the BasicType level.
+	See `org.hibernate.persister.common.spi.ConvertibleDomainReference`
+* Move `org.hibernate.secure` to `org.hibernate.resource.jacc`?
+* Move `org.hibernate.jmx` to `org.hibernate.resource.jmx`?
+* Remove (or just deprecate for now?) org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport.  IIRC we decided to
+	baseline ORM 6.0 on Java 8 so no need for the reflection anymore
+* Integrate org.hibernate.procedure.ProcedureCall processing into the new SQL execution (org.hibernate.sql.exec).
+		// todo : a lot of this should be delegated to something like SqlTreeExecutor
+		// 		^^ and there should be a generalized contracts pulled out of SqlTreeExecutor concept
+		// 		for individually:
+		//			1) Preparing the PreparedStatement for execution (PreparedStatementPreparer) - including:
+		//				* getting the PreparedStatement/CallableStatement from the Connection
+		//				* registering CallableStatement parameters (JdbcCallParameterRegistrations)
+		//				* binding any IN/INOUT parameter values into the PreparedStatement
+		//			2) Executing the PreparedStatement and giving access to the outputs - PreparedStatementExecutor
+		//				- ? PreparedStatementResult as an abstraction at the Jdbc level?
+		//			3) For ResultSet outputs, extracting the "jdbc values" - for integration into
+		// 				the org.hibernate.sql.exec.results.process stuff.  This allows, for example, easily
+		// 				applying query result caching over a ProcedureCall for its ResultSet outputs (if we
+		//				decide that is a worthwhile feature.

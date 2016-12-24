@@ -7,11 +7,11 @@
 
 package org.hibernate.sql.convert.spi;
 
-import org.hibernate.sql.spi.ParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
  * @author Steve Ebersole
  */
 public interface ParameterSpec {
-	ParameterBinder getParameterBinder();
+	JdbcParameterBinder getParameterBinder();
 }

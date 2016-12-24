@@ -10,18 +10,18 @@ package org.hibernate.sql.exec.internal;
 import java.util.List;
 
 import org.hibernate.sql.convert.results.spi.Return;
-import org.hibernate.sql.exec.spi.SqlSelectInterpretation;
-import org.hibernate.sql.spi.ParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
  * @author Steve Ebersole
  */
-public class SqlSelectInterpretationImpl implements SqlSelectInterpretation {
+public class JdbcSelectImpl implements JdbcSelect {
 	private final String sql;
-	private final List<ParameterBinder> parameterBinders;
+	private final List<JdbcParameterBinder> parameterBinders;
 	private final List<Return> returns;
 
-	public SqlSelectInterpretationImpl(String sql, List<ParameterBinder> parameterBinders, List<Return> returns) {
+	public JdbcSelectImpl(String sql, List<JdbcParameterBinder> parameterBinders, List<Return> returns) {
 		this.sql = sql;
 		this.parameterBinders = parameterBinders;
 		this.returns = returns;
@@ -33,7 +33,7 @@ public class SqlSelectInterpretationImpl implements SqlSelectInterpretation {
 	}
 
 	@Override
-	public List<ParameterBinder> getParameterBinders() {
+	public List<JdbcParameterBinder> getParameterBinders() {
 		return parameterBinders;
 	}
 

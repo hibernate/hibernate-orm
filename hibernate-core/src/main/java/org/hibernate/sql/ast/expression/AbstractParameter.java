@@ -20,7 +20,7 @@ import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sql.convert.spi.ParameterSpec;
 import org.hibernate.sql.exec.results.process.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
-import org.hibernate.sql.spi.ParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 
@@ -30,7 +30,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public abstract class AbstractParameter
-		implements ParameterSpec, ParameterBinder, Expression, SqlSelectable, Selectable {
+		implements ParameterSpec, JdbcParameterBinder, Expression, SqlSelectable, Selectable {
 	private static final Logger log = Logger.getLogger( AbstractParameter.class );
 
 	private final Type inferredType;
@@ -69,7 +69,7 @@ public abstract class AbstractParameter
 	}
 
 	@Override
-	public ParameterBinder getParameterBinder() {
+	public JdbcParameterBinder getParameterBinder() {
 		return this;
 	}
 

@@ -238,4 +238,11 @@ public interface DeprecationLogger extends BasicLogger {
 					"or [hibernate.connection.release_mode]; use [hibernate.connection.handling_mode] instead"
 	)
 	void logUseOfDeprecatedConnectionHandlingSettings();
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000024,
+			value = "Encountered use of deprecated Query hint (JPA query hint system) [%s] use [%s] instead"
+	)
+	void logDeprecatedQueryHint(String deprecatedHint, String replacementHint);
 }

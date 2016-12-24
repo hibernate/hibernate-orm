@@ -8,15 +8,17 @@ package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.List;
 import javax.persistence.ParameterMode;
 
-import org.hibernate.QueryException;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
+import org.hibernate.procedure.spi.ParameterRegistry;
 import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
+import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 
 /**
  * Standard implementation of CallableStatementSupport
@@ -41,40 +43,55 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 	}
 
 	@Override
+	public boolean shouldUseFunctionSyntax(ParameterRegistry parameterRegistry) {
+		return false;
+	}
+
+	@Override
 	public String renderCallableStatement(
-			String procedureName,
+			String callableName,
 			ParameterStrategy parameterStrategy,
-			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
+			JdbcCallFunctionReturn functionReturn,
+			List<JdbcCallParameterRegistration> parameterRegistrations,
 			SharedSessionContractImplementor session) {
-		final StringBuilder buffer = new StringBuilder().append( "{call " )
-				.append( procedureName )
-				.append( "(" );
+		final boolean renderAsFunctionCall = functionReturn != null;
+
+		if ( renderAsFunctionCall ) {
+			// validate that the parameter strategy is positional (cannot mix, and REF_CURSOR is inherently positional)
+			if ( parameterStrategy == ParameterStrategy.NAMED ) {
+				throw new HibernateException( "Cannot mix named parameters and REF_CURSOR parameter" );
+			}
+		}
+
+		final StringBuilder buffer;
+		if ( renderAsFunctionCall ) {
+			buffer = new StringBuilder().append( "{? = call " );
+		}
+		else {
+			buffer = new StringBuilder().append( "{call " );
+		}
+
+		buffer.append( callableName ).append( "(" );
+
 		String sep = "";
-		for ( ParameterRegistrationImplementor parameter : parameterRegistrations ) {
-			if ( parameter == null ) {
-				throw new QueryException( "Parameter registrations had gaps" );
+
+		final int startIndex = renderAsFunctionCall ? 1 : 0;
+		for ( int i = startIndex; i < parameterRegistrations.size(); i++ ) {
+			final JdbcCallParameterRegistration registration = parameterRegistrations.get( i );
+
+			if ( registration.getParameterMode() == ParameterMode.REF_CURSOR ) {
+				if ( !supportsRefCursors ) {
+					throw new HibernateException( "Found REF_CURSOR parameter registration, but database does not support REF_CURSOR parameters" );
+				}
 			}
 
-			if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-				verifyRefCursorSupport( session.getJdbcServices().getJdbcEnvironment().getDialect() );
+			for ( int j = 0; j < registration.getJdbcParameterCount(); j++ ) {
 				buffer.append( sep ).append( "?" );
 				sep = ",";
-			}
-			else {
-				for ( int i = 0; i < parameter.getSqlTypes().length; i++ ) {
-					buffer.append( sep ).append( "?" );
-					sep = ",";
-				}
 			}
 		}
 
 		return buffer.append( ")}" ).toString();
-	}
-
-	private void verifyRefCursorSupport(Dialect dialect) {
-		if ( ! supportsRefCursors ) {
-			throw new QueryException( "Dialect [" + dialect.getClass().getName() + "] not known to support REF_CURSOR parameters" );
-		}
 	}
 
 	@Override
@@ -82,19 +99,27 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 			String procedureName,
 			CallableStatement statement,
 			ParameterStrategy parameterStrategy,
-			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
+			JdbcCallFunctionReturn functionReturn,
+			List<JdbcCallParameterRegistration> parameterRegistrations,
 			SharedSessionContractImplementor session) {
 		// prepare parameters
 		int i = 1;
 
 		try {
-			for ( ParameterRegistrationImplementor parameter : parameterRegistrations ) {
-				parameter.prepare( statement, i );
-				if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
+			if ( functionReturn != null ) {
+				functionReturn.prepare( statement, session );
+				i++;
+			}
+
+			for ( JdbcCallParameterRegistration registration : parameterRegistrations ) {
+				if ( registration.getParameterMode() == ParameterMode.REF_CURSOR ) {
+					statement.registerOutParameter( i, Types.OTHER );
 					i++;
+
 				}
 				else {
-					i += parameter.getSqlTypes().length;
+					registration.registerParameter( statement, session );
+					i += registration.getJdbcParameterCount();
 				}
 			}
 		}

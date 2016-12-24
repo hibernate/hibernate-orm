@@ -158,7 +158,7 @@ public abstract class AbstractEntityPersister
 	private final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy;
 
 
-	private EntityHierarchyImpl entityHierarchy;
+	private EntityHierarchy entityHierarchy;
 	private EntityPersister superTypeEntityPersister;
 	private List<EntityPersister> subclassEntityPersisters;
 
@@ -3949,8 +3949,13 @@ public abstract class AbstractEntityPersister
 			);
 		}
 		else {
-			// todo : need to implement this, but would rather not expose on EntityPersister interface
-			superTypeEntityPersister.registerSubclassEntityPersister( this );
+			this.entityHierarchy = superTypeEntityPersister.getHierarchy();
+
+			// todo : would be better to expose this on an interface, but EntityPersister is not a good place
+			//		for now just rely on it being a AbstractEntityPersister
+			if ( superTypeEntityPersister instanceof AbstractEntityPersister ) {
+				( (AbstractEntityPersister) superTypeEntityPersister ).registerSubclassEntityPersister( this );
+			}
 		}
 
 
@@ -3973,9 +3978,16 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	private void registerSubclassEntityPersister(AbstractEntityPersister subclassEntityPersister) {
+		if ( subclassEntityPersisters == null ) {
+			subclassEntityPersisters = new ArrayList<>();
+		}
+		subclassEntityPersisters.add( subclassEntityPersister );
+	}
+
 	@Override
 	public EntityHierarchy getHierarchy() {
-		return null;
+		return entityHierarchy;
 	}
 
 	//needed by subclasses to override the createLoader strategy

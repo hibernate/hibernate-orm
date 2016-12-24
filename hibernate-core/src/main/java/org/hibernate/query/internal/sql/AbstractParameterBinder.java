@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.spi.ParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -20,7 +20,7 @@ import org.hibernate.type.spi.Type;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractParameterBinder implements ParameterBinder {
+public abstract class AbstractParameterBinder implements JdbcParameterBinder {
 	@Override
 	public int bindParameterValue(
 			PreparedStatement statement,

@@ -7,7 +7,7 @@
 
 /**
  * Represents the Hibernate ORM functionality for execution of
- * {@link org.hibernate.sql.exec.spi.SqlSelectInterpretation} references which
+ * {@link org.hibernate.sql.exec.spi.JdbcSelect} references which
  * generally means execution of one or more SQL statements via JDBC as well as other
  * supporting tasks.
  */

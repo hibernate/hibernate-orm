@@ -64,7 +64,7 @@ public class ValueTypeInstantiatorTest {
 	}
 
 	private void givenProperties(Property... properties) {
-		given( component.getPropertyIterator() ).willReturn( Arrays.asList( properties ).iterator() );
+		given( component.getPropertyStream() ).willReturn( Arrays.stream( properties ) );
 	}
 
 	private Property givenProperty(String name, Class type) {

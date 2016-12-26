@@ -6,10 +6,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Property;
 
 public class ValueTypeInstantiator {
 
@@ -21,6 +23,11 @@ public class ValueTypeInstantiator {
 			Class mappedClass,
 			Constructor constructor,
 			Map<String, Integer> constructorParameterNameToIndex) {
+
+		if ( !constructor.isAccessible() ) {
+			constructor.setAccessible( true );
+		}
+
 		this.mappedClass = mappedClass;
 		this.constructor = constructor;
 		this.constructorParameterNameToIndex = constructorParameterNameToIndex;
@@ -28,36 +35,14 @@ public class ValueTypeInstantiator {
 
 	public static Optional<ValueTypeInstantiator> of(Component component) {
 
-		Class componentClass = component.getComponentClass();
-		Map<String, Class> propertyNameToType = new HashMap<>();
-		component.getPropertyIterator()
-				.forEachRemaining( property -> propertyNameToType.put(
-						property.getName(),
-						property.getType().getReturnedClass()
-				) );
+		Map<String, Class> propertyNameToType = component.getPropertyStream()
+				.collect( Collectors.toMap( Property::getName, p -> p.getType().getReturnedClass() ) );
 
-		Constructor constructor = Stream.of( componentClass.getDeclaredConstructors() )
+		Class componentClass = component.getComponentClass();
+		return Stream.of( componentClass.getDeclaredConstructors() )
 				.filter( c -> parametersMatchProperties( c.getParameters(), propertyNameToType ) )
 				.findFirst()
-				.orElse( null );
-
-		if ( constructor == null ) {
-			return Optional.empty();
-		}
-
-		Parameter[] parameters = constructor.getParameters();
-		Map<String, Integer> constructorParameterNameToIndex = new HashMap<>();
-
-		for ( int parameterIndex = 0; parameterIndex < parameters.length; parameterIndex++ ) {
-			Parameter parameter = parameters[parameterIndex];
-			constructorParameterNameToIndex.put( parameter.getName(), parameterIndex );
-		}
-
-		if ( !constructor.isAccessible() ) {
-			constructor.setAccessible( true );
-		}
-
-		return Optional.of( new ValueTypeInstantiator( componentClass, constructor, constructorParameterNameToIndex ) );
+				.map( c -> new ValueTypeInstantiator( componentClass, c, getParameterNameToIndex( c ) ) );
 	}
 
 	public Object instantiate(String[] propertyNames, Object[] values) {
@@ -93,5 +78,18 @@ public class ValueTypeInstantiator {
 		}
 
 		return true;
+	}
+
+	private static Map<String, Integer> getParameterNameToIndex(Constructor constructor) {
+
+		Parameter[] parameters = constructor.getParameters();
+		Map<String, Integer> constructorParameterNameToIndex = new HashMap<>();
+
+		for ( int parameterIndex = 0; parameterIndex < parameters.length; parameterIndex++ ) {
+			Parameter parameter = parameters[parameterIndex];
+			constructorParameterNameToIndex.put( parameter.getName(), parameterIndex );
+		}
+
+		return constructorParameterNameToIndex;
 	}
 }

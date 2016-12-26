@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
@@ -38,7 +39,7 @@ import org.hibernate.type.TypeFactory;
  * @author Steve Ebersole
  */
 public class Component extends SimpleValue implements MetaAttributable {
-	private ArrayList<Property> properties = new ArrayList<Property>();
+	private ArrayList<Property> properties = new ArrayList<>();
 	private String componentClassName;
 	private boolean embedded;
 	private String parentProperty;
@@ -77,6 +78,10 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	public Iterator<Property> getPropertyIterator() {
 		return properties.iterator();
+	}
+
+	public Stream<Property> getPropertyStream() {
+		return properties.stream();
 	}
 
 	public void addProperty(Property p) {
@@ -242,7 +247,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	public void addTuplizer(EntityMode entityMode, String implClassName) {
 		if ( tuplizerImpls == null ) {
-			tuplizerImpls = new HashMap<EntityMode,String>();
+			tuplizerImpls = new HashMap<>();
 		}
 		tuplizerImpls.put( entityMode, implClassName );
 	}

@@ -14,7 +14,11 @@ package org.hibernate.result;
  * Conceptually, Result presents those Returns as an iterator.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Used only in defining outputs for procedure calls, so use {@link org.hibernate.procedure.ProcedureOutputs}
+ * instead
  */
+@Deprecated
 public interface Outputs {
 	/**
 	 * Retrieve the current Output object.

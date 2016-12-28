@@ -20,7 +20,7 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 public class ScrollableResultsIterator<T> implements CloseableIterator {
 	private final ScrollableResultsImplementor scrollableResults;
 
-	ScrollableResultsIterator(ScrollableResultsImplementor scrollableResults) {
+	public ScrollableResultsIterator(ScrollableResultsImplementor scrollableResults) {
 		this.scrollableResults = scrollableResults;
 	}
 

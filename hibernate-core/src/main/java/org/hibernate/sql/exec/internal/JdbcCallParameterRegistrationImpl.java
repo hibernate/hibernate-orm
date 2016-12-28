@@ -14,7 +14,9 @@ import javax.persistence.ParameterMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.spi.Type;
 
@@ -25,34 +27,44 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 	private final String name;
 	private final int jdbcParameterPositionStart;
 	private final ParameterMode parameterMode;
+	private final int jdbcTypeCode;
 	private final Type ormType;
+	private final JdbcParameterBinder parameterBinder;
+	private final JdbcCallParameterExtractorImpl parameterExtractor;
+	private final JdbcCallRefCursorExtractorImpl refCursorExtractor;
 
 	public JdbcCallParameterRegistrationImpl(
 			String name,
 			int jdbcParameterPositionStart,
 			ParameterMode parameterMode,
-			Type ormType) {
+			int jdbcTypeCode,
+			Type ormType,
+			JdbcParameterBinder parameterBinder,
+			JdbcCallParameterExtractorImpl parameterExtractor,
+			JdbcCallRefCursorExtractorImpl refCursorExtractor) {
 		this.name = name;
 		this.jdbcParameterPositionStart = jdbcParameterPositionStart;
 		this.parameterMode = parameterMode;
+		this.jdbcTypeCode = jdbcTypeCode;
 		this.ormType = ormType;
+		this.parameterBinder = parameterBinder;
+		this.parameterExtractor = parameterExtractor;
+		this.refCursorExtractor = refCursorExtractor;
 	}
 
 	@Override
-	public int getJdbcParameterCount() {
-		switch ( parameterMode ) {
-			case IN:
-			case INOUT:
-			case OUT: {
-				return ormType.getColumnSpan();
-			}
-			case REF_CURSOR: {
-				return 1;
-			}
-			default: {
-				throw new HibernateException( "Invalid ParameterMode : " + parameterMode );
-			}
-		}
+	public JdbcParameterBinder getParameterBinder() {
+		return parameterBinder;
+	}
+
+	@Override
+	public JdbcCallParameterExtractor getParameterExtractor() {
+		return parameterExtractor;
+	}
+
+	@Override
+	public JdbcCallRefCursorExtractorImpl getRefCursorExtractor() {
+		return refCursorExtractor;
 	}
 
 	@Override

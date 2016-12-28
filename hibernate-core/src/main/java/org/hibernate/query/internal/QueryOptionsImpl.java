@@ -23,6 +23,10 @@ import org.hibernate.query.spi.MutableQueryOptions;
 /**
  * @todo split there into org.hibernate.query.QueryOptions and org.hibernate.sql.exec.spi.JdbcOperationOptions
  * 		^^ package boundaries
+ * 		^^ really comes down to how we want to view JdbcOperation "execution".  E.g. for a SELECT does that
+ * 			return the ResultSet or the List<T> ?  If the former, then the split maybe makes sense; if the
+ * 			latter then then split probably does not make sense.
+ *
  *
  * @author Steve Ebersole
  */

@@ -41,6 +41,17 @@ import org.hibernate.type.TypeHelper;
 public class StandardQueryCache implements QueryCache {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StandardQueryCache.class );
 
+	// todo : split QueryResultsRegion and UpdateTimestampsCache used here - drop QueryCache contract
+	//		the "invalidation" handling is better moved to a dedicated contract, something like:
+
+	interface QueryCacheDataValidator {
+		boolean areCachedResultsValid(
+				UpdateTimestampsCache timestampsCache,
+				Set<Serializable> spaces,
+				Long timestamp,
+				SharedSessionContractImplementor session);
+	}
+
 	private static final boolean DEBUGGING = LOG.isDebugEnabled();
 	private static final boolean TRACING = LOG.isTraceEnabled();
 

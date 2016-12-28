@@ -16,11 +16,6 @@ import org.hibernate.sql.exec.results.process.spi.RowProcessingState;
  * @author Steve Ebersole
  */
 public abstract class AbstractJdbcValuesSource implements JdbcValuesSource {
-	// todo : add PreparedStatement execution here for use in subclasses
-
-	// todo : perhaps it is better to pass this in to org.hibernate.sql.exec.spi.PreparedStatementExecutor
-	// 		^^ to better handle ScrollableResults, Stream and List results
-
 	private final QueryCachePutManager queryCachePutManager;
 
 	public AbstractJdbcValuesSource(QueryCachePutManager queryCachePutManager) {

@@ -81,6 +81,8 @@ import org.jboss.logging.Logger;
 public class SqlAstSelectInterpreter {
 	private static final Logger log = Logger.getLogger( SqlAstSelectInterpreter.class );
 
+	// todo : rename SqlSelectAstToJdbcSelectConverter
+
 	/**
 	 * Perform interpretation of a select query, returning the SqlSelectInterpretation
 	 *
@@ -103,6 +105,7 @@ public class SqlAstSelectInterpreter {
 		return new JdbcSelectImpl(
 				walker.sqlBuffer.toString(),
 				walker.parameterBinders,
+				sqmSelectInterpretation.getSqlSelectAst().getQuerySpec().getSelectClause().getSqlSelections(),
 				sqmSelectInterpretation.getQueryReturns()
 		);
 	}

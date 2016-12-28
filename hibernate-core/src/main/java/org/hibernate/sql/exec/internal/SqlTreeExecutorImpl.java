@@ -65,14 +65,6 @@ public class SqlTreeExecutorImpl implements SqlTreeExecutor {
 			Callback callback,
 			SharedSessionContractImplementor persistenceContext,
 			ExecutionContext executionContext) {
-		// Walk the SQL AST.  This produces:
-		//		* SQL string
-		//		* ParameterBinders
-		//		* Returns
-
-		// todo : should also pass in QueryOptions
-		// 		as the rendered SQL would depend on first/max results, comment, db-hints, lock-options, entity-graph
-
 		// todo : also need to account for multi-valued param bindings in terms of the generated SQL...
 
 		// todo : actually, why not just pass in the SqlSelectInterpretation rather than SelectQuery (SQL AST)

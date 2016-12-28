@@ -20,7 +20,6 @@ import org.hibernate.query.QueryProducer;
 public interface QueryProducerImplementor extends QueryProducer {
 	SessionFactoryImplementor getFactory();
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides
 

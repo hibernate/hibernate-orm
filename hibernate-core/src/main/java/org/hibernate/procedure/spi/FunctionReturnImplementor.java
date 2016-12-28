@@ -5,18 +5,12 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
-package org.hibernate.query.spi;
+package org.hibernate.procedure.spi;
 
-import org.hibernate.Incubating;
-import org.hibernate.ScrollableResults;
+import org.hibernate.procedure.FunctionReturn;
 
 /**
  * @author Steve Ebersole
- *
- * @since 5.2
  */
-@Incubating
-public interface ScrollableResultsImplementor<R> extends ScrollableResults<R> {
-	boolean isClosed();
-	int getNumberOfTypes();
+public interface FunctionReturnImplementor extends FunctionReturn, ParameterRegistrationImplementor {
 }

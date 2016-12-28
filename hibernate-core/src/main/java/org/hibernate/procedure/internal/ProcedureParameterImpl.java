@@ -9,8 +9,8 @@ package org.hibernate.procedure.internal;
 import javax.persistence.ParameterMode;
 
 import org.hibernate.query.internal.AbstractQueryParameter;
-import org.hibernate.query.procedure.ProcedureParameter;
-import org.hibernate.type.Type;
+import org.hibernate.procedure.ProcedureParameter;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
@@ -20,27 +20,34 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 	private final Integer position;
 
 	private final ParameterMode mode;
-	private boolean passNulls;
 
 	private final Class<T> javaType;
 
 
 	public ProcedureParameterImpl(String name, ParameterMode mode, Class<T> javaType, Type hibernateType, boolean passNulls) {
-		super( false, null );
+		super( false, passNulls, hibernateType );
 		this.name = name;
 		this.position = null;
 		this.mode = mode;
-		this.passNulls = passNulls;
 		this.javaType = javaType;
 	}
 
 	public ProcedureParameterImpl(Integer position, ParameterMode mode, Class<T> javaType, Type hibernateType, boolean passNulls) {
-		super( false, null );
+		super( false, passNulls, hibernateType );
 		this.name = null;
 		this.position = position;
 		this.mode = mode;
-		this.passNulls = passNulls;
 		this.javaType = javaType;
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public Integer getPosition() {
+		return position;
 	}
 
 	@Override
@@ -49,17 +56,8 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 	}
 
 	@Override
-	public boolean isPassNullsEnabled() {
-		return passNulls;
-	}
-
-	@Override
-	public void enablePassingNulls(boolean enabled) {
-		this.passNulls = enabled;
-	}
-
-	@Override
 	public Class<T> getParameterType() {
 		return javaType;
 	}
+
 }

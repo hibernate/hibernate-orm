@@ -12,8 +12,8 @@ import java.util.Map;
 
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -30,24 +30,24 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	 * Generates the QueryParameterBindingsImpl instance
 	 */
 	public static QueryParameterBindingsImpl from(
-			ParameterMetadata parameterMetadata,
+			ParameterMetadataImplementor parameterMetadata,
 			QueryParameterBindingTypeResolver resolver) {
 		return new QueryParameterBindingsImpl( resolver, parameterMetadata );
 	}
 
 
 	private final QueryParameterBindingTypeResolver resolver;
-	private final ParameterMetadata parameterMetadata;
+	private final ParameterMetadataImplementor parameterMetadata;
 
 	private final Map<QueryParameter, QueryParameterBinding> bindingMap = new HashMap<>();
 
-	private QueryParameterBindingsImpl(QueryParameterBindingTypeResolver resolver, ParameterMetadata parameterMetadata) {
+	private QueryParameterBindingsImpl(QueryParameterBindingTypeResolver resolver, ParameterMetadataImplementor parameterMetadata) {
 		this.resolver = resolver;
 		this.parameterMetadata = parameterMetadata;
 
-		for ( QueryParameter queryParameter : parameterMetadata.collectAllParameters() ) {
-			registerBinding( queryParameter, makeBinding( queryParameter ) );
-		}
+		parameterMetadata.collectAllParameters(
+				queryParameter -> registerBinding( queryParameter, makeBinding( queryParameter ) )
+		);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -59,19 +59,21 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public void validate() {
-		for ( QueryParameter<?> queryParameter : parameterMetadata.collectAllParameters() ) {
-			if ( !isBound( queryParameter ) ) {
-				if ( queryParameter.getName() != null ) {
-					throw new QueryException( "Named parameter [" + queryParameter.getName() + "] not set" );
+		parameterMetadata.collectAllParameters(
+				queryParameter -> {
+					if ( !isBound( queryParameter ) ) {
+						if ( queryParameter.getName() != null ) {
+							throw new QueryException( "Named parameter [" + queryParameter.getName() + "] not set" );
+						}
+						else if ( queryParameter.getPosition() != null ) {
+							throw new QueryException( "Positional parameter [" + queryParameter.getPosition() + "] not set" );
+						}
+						else {
+							throw new QueryException( "Parameter [" + queryParameter + "] not set" );
+						}
+					}
 				}
-				else if ( queryParameter.getPosition() != null ) {
-					throw new QueryException( "Positional parameter [" + queryParameter.getPosition() + "] not set" );
-				}
-				else {
-					throw new QueryException( "Parameter [" + queryParameter + "] not set" );
-				}
-			}
-		}
+		);
 	}
 
 	@Override

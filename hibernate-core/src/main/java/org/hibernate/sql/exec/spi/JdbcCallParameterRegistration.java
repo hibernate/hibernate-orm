@@ -12,6 +12,7 @@ import java.sql.CallableStatement;
 import javax.persistence.ParameterMode;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 
 /**
  * @author Steve Ebersole
@@ -19,9 +20,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public interface JdbcCallParameterRegistration {
 	ParameterMode getParameterMode();
 
-	int getJdbcParameterCount();
-
 	void registerParameter(
 			CallableStatement callableStatement,
 			SharedSessionContractImplementor session);
+
+	JdbcParameterBinder getParameterBinder();
+
+	JdbcCallParameterExtractor getParameterExtractor();
+
+	JdbcCallRefCursorExtractorImpl getRefCursorExtractor();
 }

@@ -9,15 +9,13 @@ package org.hibernate.sql.exec.spi;
 
 import java.util.List;
 
+import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.convert.results.spi.Return;
+
 /**
  * @author Steve Ebersole
  */
 public interface JdbcCall extends JdbcOperation {
-	/**
-	 * If this JdbcCall represents a function call then here we will return
-	 * a representation of the function's return.  If not a function call,
-	 * returns {@code null}
-	 */
 	JdbcCallFunctionReturn getFunctionReturn();
 
 	/**
@@ -29,4 +27,8 @@ public interface JdbcCall extends JdbcOperation {
 	List<JdbcCallParameterExtractor> getParameterExtractors();
 
 	List<JdbcCallRefCursorExtractor> getCallRefCursorExtractors();
+
+	List<SqlSelection> getSqlSelections();
+
+	List<Return> getReturns();
 }

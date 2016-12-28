@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.result;
+package org.hibernate.procedure;
 
 import java.util.List;
 
@@ -12,17 +12,14 @@ import java.util.List;
  * Models a return that is a result set.
  *
  * @author Steve Ebersole
- *
- * @deprecated Use {@link org.hibernate.procedure.ResultSetOutput} instead
  */
-@Deprecated
-public interface ResultSetOutput extends Output {
+public interface ResultSetOutput extends Output, org.hibernate.result.ResultSetOutput {
 	/**
 	 * Consume the underlying {@link java.sql.ResultSet} and return the resulting List.
 	 *
 	 * @return The consumed ResultSet values.
 	 */
-	public List getResultList();
+	List getResultList();
 
 	/**
 	 * Consume the underlying {@link java.sql.ResultSet} with the expectation that there is just a single level of
@@ -30,5 +27,5 @@ public interface ResultSetOutput extends Output {
 	 *
 	 * @return The single result.
 	 */
-	public Object getSingleResult();
+	Object getSingleResult();
 }

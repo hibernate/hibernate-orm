@@ -10,7 +10,10 @@ package org.hibernate.result;
  * Models a return that is an update count (count of rows affected)
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link org.hibernate.procedure.UpdateCountOutput} instead
  */
+@Deprecated
 public interface UpdateCountOutput extends Output {
 	/**
 	 * Retrieve the associated update count

@@ -7,11 +7,15 @@
 package org.hibernate.procedure;
 
 /**
- * Describes the function return for ProcedureCalls that represent calls to
- * a function ({@code "{? = call ...} syntax) rather that a proc ({@code {call ...} syntax)
+ * Models a return that is an update count (count of rows affected)
  *
  * @author Steve Ebersole
  */
-public interface FunctionReturn<T> extends ParameterRegistration<T> {
-	int getJdbcTypeCode();
+public interface UpdateCountOutput extends Output, org.hibernate.result.UpdateCountOutput {
+	/**
+	 * Retrieve the associated update count
+	 *
+	 * @return The update count
+	 */
+	int getUpdateCount();
 }

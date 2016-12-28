@@ -56,10 +56,6 @@ public interface ParameterMetadata {
 	 */
 	Set<String> getNamedParameterNames();
 
-	Set<QueryParameter<?>> collectAllParameters();
-
-	Set<Parameter<?>> collectAllParametersJpa();
-
 	<T> QueryParameter<T> getQueryParameter(String name);
 
 	<T> QueryParameter<T> getQueryParameter(int position);

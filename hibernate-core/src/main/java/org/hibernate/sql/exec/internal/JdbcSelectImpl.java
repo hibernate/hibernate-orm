@@ -9,6 +9,7 @@ package org.hibernate.sql.exec.internal;
 
 import java.util.List;
 
+import org.hibernate.sql.ast.select.SqlSelection;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
@@ -19,11 +20,17 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 public class JdbcSelectImpl implements JdbcSelect {
 	private final String sql;
 	private final List<JdbcParameterBinder> parameterBinders;
+	private final List<SqlSelection> sqlSelections;
 	private final List<Return> returns;
 
-	public JdbcSelectImpl(String sql, List<JdbcParameterBinder> parameterBinders, List<Return> returns) {
+	public JdbcSelectImpl(
+			String sql,
+			List<JdbcParameterBinder> parameterBinders,
+			List<SqlSelection> sqlSelections,
+			List<Return> returns) {
 		this.sql = sql;
 		this.parameterBinders = parameterBinders;
+		this.sqlSelections = sqlSelections;
 		this.returns = returns;
 	}
 
@@ -35,6 +42,11 @@ public class JdbcSelectImpl implements JdbcSelect {
 	@Override
 	public List<JdbcParameterBinder> getParameterBinders() {
 		return parameterBinders;
+	}
+
+	@Override
+	public List<SqlSelection> getSqlSelections() {
+		return sqlSelections;
 	}
 
 	@Override

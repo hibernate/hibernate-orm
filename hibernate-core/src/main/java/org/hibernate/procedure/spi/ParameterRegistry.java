@@ -8,13 +8,13 @@ package org.hibernate.procedure.spi;
 
 import java.util.List;
 
-import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 
 /**
  * @author Steve Ebersole
  */
-public interface ParameterRegistry extends ParameterMetadata, QueryParameterBindings {
+public interface ParameterRegistry extends ParameterMetadataImplementor, QueryParameterBindings {
 	ProcedureCallImplementor getProcedureCall();
 
 	ParameterStrategy getParameterStrategy();

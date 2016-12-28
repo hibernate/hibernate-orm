@@ -7,17 +7,19 @@
 
 package org.hibernate.sql.exec.spi;
 
-import java.util.List;
-
 import org.hibernate.sql.ast.select.SqlSelection;
 import org.hibernate.sql.convert.results.spi.Return;
 
 /**
- * Represents the {@link SqlAstSelectInterpreter}'s interpretation of a select query
- *
  * @author Steve Ebersole
  */
-public interface JdbcSelect extends JdbcOperation {
-	List<SqlSelection> getSqlSelections();
-	List<Return> getReturns();
+public interface InFlightJdbcCall extends JdbcCall {
+
+	void setFunctionReturn(JdbcCallFunctionReturn functionReturn);
+
+	void addParameterRegistration(JdbcCallParameterRegistration registration);
+
+	void addSqlSelection(SqlSelection sqlSelection);
+
+	void addQueryReturn(Return queryReturn);
 }

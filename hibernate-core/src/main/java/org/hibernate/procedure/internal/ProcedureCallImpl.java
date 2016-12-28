@@ -6,8 +6,6 @@
  */
 package org.hibernate.procedure.internal;
 
-import java.sql.CallableStatement;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,12 +13,12 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
@@ -32,53 +30,40 @@ import javax.persistence.TransactionRequiredException;
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
-import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.procedure.NoMoreReturnsException;
 import org.hibernate.procedure.NoSuchParameterException;
+import org.hibernate.procedure.Output;
 import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.ProcedureOutputs;
+import org.hibernate.procedure.ResultSetOutput;
+import org.hibernate.procedure.UpdateCountOutput;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.procedure.spi.ParameterBindImplementor;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.AbstractQuery;
+import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.result.NoMoreReturnsException;
-import org.hibernate.result.Output;
-import org.hibernate.result.Outputs;
-import org.hibernate.result.ResultSetOutput;
-import org.hibernate.result.UpdateCountOutput;
-import org.hibernate.result.spi.ResultContext;
-import org.hibernate.sql.exec.internal.JdbcCallFunctionReturnImpl;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
+import org.hibernate.sql.exec.internal.JdbcCallParameterBinderImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterRegistrationImpl;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterBinderProcCallImpl;
-import org.hibernate.sql.exec.internal.JdbcRefCursorExtractor;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.ProcedureParameterExtractionAware;
-import org.hibernate.type.ProcedureParameterNamedBinder;
-
-import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of {@link org.hibernate.procedure.ProcedureCall}
@@ -87,14 +72,7 @@ import org.jboss.logging.Logger;
  */
 public class ProcedureCallImpl<R>
 		extends AbstractQuery<R>
-		implements ProcedureCallImplementor<R>, ResultContext {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			ProcedureCallImpl.class.getName()
-	);
-
-	private static final NativeSQLQueryReturn[] NO_RETURNS = new NativeSQLQueryReturn[0];
-
+		implements ProcedureCallImplementor<R> {
 	private final String procedureName;
 
 	private FunctionReturnImpl functionReturn;
@@ -103,7 +81,6 @@ public class ProcedureCallImpl<R>
 	private Set<String> synchronizedQuerySpaces;
 
 	private ProcedureOutputsImpl outputs;
-	private final NativeSQLQueryReturn[] queryReturns;
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
@@ -119,8 +96,6 @@ public class ProcedureCallImpl<R>
 		this.procedureName = procedureName;
 
 		this.parameterManager = new ParameterManager( this );
-
-		this.queryReturns = NO_RETURNS;
 	}
 
 	/**
@@ -159,8 +134,9 @@ public class ProcedureCallImpl<R>
 				resultClasses
 		);
 
-		this.queryReturns = collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] );
 		this.synchronizedQuerySpaces = collectedQuerySpaces;
+
+		// todo : use resultClasses to build RowReader, Initializers, etc
 	}
 
 	/**
@@ -209,8 +185,9 @@ public class ProcedureCallImpl<R>
 				resultSetMappings
 		);
 
-		this.queryReturns = collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] );
 		this.synchronizedQuerySpaces = collectedQuerySpaces;
+
+		// todo : use resultSetMappings to build RowReader, Initializers, etc
 	}
 
 	/**
@@ -227,7 +204,6 @@ public class ProcedureCallImpl<R>
 		this.parameterManager = new ParameterManager( this );
 		parameterManager.registerParameters( memento );
 
-		this.queryReturns = memento.getQueryReturns();
 		this.synchronizedQuerySpaces = Util.copy( memento.getSynchronizedQuerySpaces() );
 
 		for ( Map.Entry<String, Object> entry : memento.getHintsMap().entrySet() ) {
@@ -241,7 +217,6 @@ public class ProcedureCallImpl<R>
 		return (SharedSessionContractImplementor) super.getProducer();
 	}
 
-	@Override
 	public SharedSessionContractImplementor getSession() {
 		return getProducer();
 	}
@@ -273,18 +248,8 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCall markAsFunctionCall(int sqlType) {
-		functionReturn = new FunctionReturnImpl( sqlType );
+		functionReturn = new FunctionReturnImpl( this, sqlType );
 		return this;
-	}
-
-	@Override
-	public String getSql() {
-		return getProcedureName();
-	}
-
-	@Override
-	public NativeSQLQueryReturn[] getQueryReturns() {
-		return queryReturns;
 	}
 
 	@Override
@@ -381,189 +346,122 @@ public class ProcedureCallImpl<R>
 
 		final JdbcCallImpl jdbcCall = new JdbcCallImpl( getProcedureName(), parameterManager.getParameterStrategy() );
 
-		if ( functionReturn != null ) {
+		// positional parameters are 0-based..
+		//		JDBC positions (1-based) come into play later, although we could calculate them here as well
+		int parameterPosition = 0;
+
+		final FunctionReturnImpl functionReturnToUse;
+		if ( this.functionReturn != null ) {
 			// user explicitly defined the function return via native API - good for them :)
-			jdbcCall.setFunctionReturn( functionReturn.toJdbcFunctionReturn() );
+			functionReturnToUse = this.functionReturn;
 		}
 		else {
 			final boolean useFunctionCallSyntax = isFunctionCall()
 					|| callableStatementSupport.shouldUseFunctionSyntax( parameterManager );
 
 			if ( useFunctionCallSyntax ) {
-				jdbcCall.setFunctionReturn(
-						// todo : how to determine the JDBC type code here?
-						new JdbcCallFunctionReturnImpl( Types.VARCHAR )
-				);
+				// todo : how to determine the JDBC type code here?
+				functionReturnToUse = new FunctionReturnImpl( this, Types.VARCHAR );
+				parameterPosition++;
+			}
+			else {
+				functionReturnToUse = null;
 			}
 		}
 
-		// determine whether to use named or positional JDBC parameter access;
-		// this is just the initial determination - as we visit each
-		// parameter registration we will adjust this if needed.
-		//
-		// acts as an "opt out" toggle.  Meaning we assume true and apply
-		// a series of checks that can only set this to false.
-		boolean shouldUseJdbcNamedParameters = canUseJdbcNamedParameters();
+		if ( functionReturnToUse != null ) {
+			jdbcCall.addParameterRegistration( functionReturnToUse.toJdbcCallParameterRegistration( getSession() ) );
 
-		final List<JdbcParameterPreparer> jdbcParameterPreparers = new ArrayList<>();
-		final List<JdbcParameterBinder> jdbcParameterBinders = new ArrayList<>();
-
-		final Map<ParameterRegistration,JdbcCallParameterExtractorImpl> jdbcParameterExtractorMap = new HashMap<>();
-		final List<JdbcRefCursorExtractor> jdbcRefCursorExtractors = new ArrayList<>();
-
-		// JDBC positional parameters are 0-based..
-		int jdbcParameterPosition = 0;
+			// function returns use a parameter
+			parameterPosition++;
+		}
 
 		for ( ParameterRegistrationImplementor registration : parameterManager.getParameterRegistrations() ) {
-			final Type ormType = determineTypeToUse( registration );
+			final JdbcCallParameterRegistrationImpl jdbcRegistration;
 
-			if ( ormType == null ) {
-				throw new ParameterMisuseException( "Could not determine Hibernate Type for parameter : " + registration );
+			if ( registration.getMode() == ParameterMode.REF_CURSOR ) {
+				jdbcRegistration = new JdbcCallParameterRegistrationImpl(
+						registration.getName(),
+						parameterPosition,
+						ParameterMode.REF_CURSOR,
+						Types.REF_CURSOR,
+						null,
+						null,
+						null,
+						new JdbcCallRefCursorExtractorImpl( registration.getName(), parameterPosition )
+				);
 			}
+			else {
+				final Type ormType = determineTypeToUse( registration );
+				if ( ormType == null ) {
+					throw new ParameterMisuseException( "Could not determine Hibernate Type for parameter : " + registration );
+				}
 
-			jdbcCall.addParameterRegistration(
-					new JdbcCallParameterRegistrationImpl(
+				JdbcParameterBinder parameterBinder = null;
+				JdbcCallParameterExtractorImpl parameterExtractor = null;
+
+				if ( registration.getMode() == ParameterMode.IN || registration.getMode() == ParameterMode.INOUT ) {
+					parameterBinder = new JdbcCallParameterBinderImpl(
+							procedureName,
 							registration.getName(),
-							jdbcParameterPosition,
-							registration.getMode(),
+							registration.getPosition(),
 							ormType
-					)
-			);
+					);
+				}
+				if ( registration.getMode() == ParameterMode.OUT || registration.getMode() == ParameterMode.INOUT ) {
+					parameterExtractor = new JdbcCallParameterExtractorImpl(
+							procedureName,
+							registration.getName(),
+							registration.getPosition(),
+							ormType
+					);
+				}
 
-			if ( isInputParameter( registration ) ) {
-				jdbcCall.addParameterBinder(
-						new JdbcParameterBinderProcCallImpl(
-								registration.getName(),
-								registration.getPosition(),
-								ormType,
-								registration.isPassNullsEnabled()
-						)
+				jdbcRegistration = new JdbcCallParameterRegistrationImpl(
+						registration.getName(),
+						parameterPosition,
+						ParameterMode.REF_CURSOR,
+						Types.REF_CURSOR,
+						ormType,
+						parameterBinder,
+						parameterExtractor,
+						null
 				);
 			}
 
-			if ( isOutputParameter( registration ) ) {
-				jdbcCall.addParameterExtractor(
-						new JdbcCallParameterExtractorImpl(
-								registration.getName(),
-								jdbcParameterPosition,
-								ormType
-						)
-				);
-			}
+			jdbcCall.addParameterRegistration( jdbcRegistration );
 
-			if ( isRefCursorParameter( registration ) ) {
-				jdbcCall.addRefCursorExtractor(
-						new JdbcCallRefCursorExtractorImpl()
-				);
-			}
-
-			jdbcParameterPosition += ormType.getColumnSpan();
+			parameterPosition++;
 		}
 
-		// todo : from here down ought to be moved into a JdbcOperationExecutor (e.g. SqlSelectTreeExecutor) with JdbcCall as the JdbcOperation
-		//		JdbcCallExecutor would return the OutputsImpl
-
-		final String jdbcCallString = jdbcCall.toCallString( session() );
-
-		try {
-			LOG.debugf( "Preparing procedure/function call : %s", jdbcCallString );
-			final CallableStatement callableStatement = (CallableStatement) getSession()
-					.getJdbcCoordinator()
-					.getStatementPreparer()
-					.prepareStatement( jdbcCallString, true );
-
-			for ( JdbcParameterPreparer jdbcParameterPreparer : jdbcParameterPreparers ) {
-				jdbcParameterPreparer.prepare( callableStatement, shouldUseJdbcNamedParameters, getProducer() );
-			}
-
-			for ( JdbcParameterBinder jdbcParameterBinder : jdbcParameterBinders ) {
-				jdbcParameterBinder.bindInputValue( callableStatement, shouldUseJdbcNamedParameters, getProducer() );
-			}
-
-			return new ProcedureOutputsImpl( this, callableStatement, shouldUseJdbcNamedParameters, jdbcParameterExtractorMap, jdbcRefCursorExtractors );
-		}
-		catch (SQLException e) {
-			throw getSession().getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					"Error preparing CallableStatement",
-					getProcedureName()
-			);
-		}
+		return new ProcedureOutputsImpl(
+				this,
+				jdbcCall,
+				resolveParameterStrategy( parameterManager.getParameterStrategy() ),
+				queryOptions,
+				parameterManager,
+				// can we apply a RowTransformer to ProcedureCalls?
+				null,
+				getSession()
+		);
 	}
 
-	private boolean isInputParameter(ParameterRegistrationImplementor registration) {
-		return registration.getMode() == ParameterMode.IN || registration.getMode() == ParameterMode.INOUT;
-	}
-
-	private boolean isOutputParameter(ParameterRegistrationImplementor registration) {
-		return registration.getMode() == ParameterMode.OUT || registration.getMode() == ParameterMode.INOUT;
-	}
-
-	private boolean isRefCursorParameter(ParameterRegistrationImplementor registration) {
-		return registration.getMode() == ParameterMode.REF_CURSOR;
-	}
-
-	@SuppressWarnings("RedundantIfStatement")
-	private boolean canUseJdbcNamedParameters() {
-		if ( parameterManager.getParameterStrategy() != ParameterStrategy.NAMED ) {
-			return false;
+	private ParameterStrategy resolveParameterStrategy(ParameterStrategy parameterStrategy) {
+		if ( parameterStrategy == ParameterStrategy.UNKNOWN ) {
+			return ParameterStrategy.POSITIONAL;
 		}
 
-		if ( !session().getFactory().getSessionFactoryOptions().isUseOfJdbcNamedParametersEnabled() ) {
-			return false;
-		}
-
-		final ExtractedDatabaseMetaData databaseMetaData = session().getJdbcCoordinator()
-				.getJdbcSessionOwner()
-				.getJdbcSessionContext()
-				.getServiceRegistry().getService( JdbcEnvironment.class )
-				.getExtractedDatabaseMetaData();
-		if ( !databaseMetaData.supportsNamedParameters() ) {
-			return false;
-		}
-
-		return true;
-	}
-
-	private boolean shouldUseJdbcNamedParameters() {
-		// atm we execute this for each registration.
-		// todo : this should really get passed into each registration - like when obtaining the Binder/Extractor
-
-		if ( parameterManager.getParameterStrategy() != ParameterStrategy.NAMED ) {
-			return false;
-		}
-
-		if ( !session().getFactory().getSessionFactoryOptions().isUseOfJdbcNamedParametersEnabled() ) {
-			return false;
-		}
-
-		final ExtractedDatabaseMetaData databaseMetaData = session().getJdbcCoordinator()
-				.getJdbcSessionOwner()
-				.getJdbcSessionContext()
-				.getServiceRegistry().getService( JdbcEnvironment.class )
-				.getExtractedDatabaseMetaData();
-		if ( !databaseMetaData.supportsNamedParameters() ) {
-			return false;
-		}
-
-		// todo : I think this could be kept track of as we register the parameters...
-		for ( ParameterRegistrationImplementor parameterRegistration : parameterManager.collectParameterRegistrationImplementors() ) {
-			final Type typeToUse = determineTypeToUse( parameterRegistration );
-			if ( typeToUse == null ) {
-				return false;
-			}
-
-			if ( typeToUse.getColumnSpan() > 1 ) {
-				return false;
-			}
-
-			if ( !ProcedureParameterNamedBinder.class.isInstance( typeToUse )
-					|| !( (ProcedureParameterNamedBinder) typeToUse ).canDoSetting() ) {
-				return false;
+		if ( parameterStrategy == ParameterStrategy.NAMED ) {
+			final boolean supportsNamedParameters = getSession().getJdbcServices()
+					.getJdbcEnvironment()
+					.getExtractedDatabaseMetaData()
+					.supportsNamedParameters();
+			if ( !supportsNamedParameters ) {
+				return ParameterStrategy.POSITIONAL;
 			}
 		}
 
-		return true;
+		return parameterStrategy;
 	}
 
 	private Type determineTypeToUse(ParameterRegistrationImplementor parameterRegistration) {
@@ -579,15 +477,6 @@ public class ProcedureCallImpl<R>
 
 		return null;
 	}
-
-	private ProcedureCallImpl procedureCall() {
-		return parameterManager.getProcedureCall();
-	}
-
-	private SharedSessionContractImplementor session() {
-		return procedureCall().getSession();
-	}
-
 
 	@Override
 	public String getQueryString() {
@@ -641,24 +530,9 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public QueryParameters getQueryParameters() {
-		// todo : remove this
-		//		- kept here for now as reminder to make sure I integrate auto-discover and callable
-
-		// todo : another option for auto-discover, with the current-jdbc-values array row representation we could just return the "raw" values
-
-		final QueryParameters qp = super.getQueryParameters();
-		// both of these are for documentation purposes, they are actually handled directly...
-		qp.setAutoDiscoverScalarTypes( true );
-		qp.setCallable( true );
-		return qp;
-	}
-
-	@Override
 	public ProcedureCallMemento extractMemento(Map<String, Object> hints) {
 		return new ProcedureCallMementoImpl(
 				procedureName,
-				Util.copy( queryReturns ),
 				parameterManager.getParameterStrategy(),
 				parameterManager.toParameterMementos(),
 				Util.copy( synchronizedQuerySpaces ),
@@ -670,7 +544,6 @@ public class ProcedureCallImpl<R>
 	public ProcedureCallMemento extractMemento() {
 		return new ProcedureCallMementoImpl(
 				procedureName,
-				Util.copy( queryReturns ),
 				parameterManager.getParameterStrategy(),
 				parameterManager.toParameterMementos(),
 				Util.copy( synchronizedQuerySpaces ),
@@ -873,15 +746,11 @@ public class ProcedureCallImpl<R>
 			return (T) queryOptions;
 		}
 
-		if ( cls.isInstance( queryReturns ) ) {
-			return (T) queryReturns;
-		}
-
 		if ( cls.isInstance( getProducer() ) ) {
 			return (T) getProducer();
 		}
 
-		if ( Outputs.class.isAssignableFrom( cls ) ) {
+		if ( ProcedureOutputs.class.isAssignableFrom( cls ) ) {
 			return (T) getOutputs();
 		}
 
@@ -889,6 +758,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public ProcedureCallImplementor<R> setHint(String hintName, Object value) {
 		if ( FUNCTION_RETURN_TYPE_HINT.equals( hintName ) ) {
 			markAsFunctionCall( ConfigurationHelper.getInteger( value ) );
@@ -896,6 +766,7 @@ public class ProcedureCallImpl<R>
 		else if ( IS_FUNCTION_HINT.equals( hintName ) ) {
 			DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedQueryHint( IS_FUNCTION_HINT, FUNCTION_RETURN_TYPE_HINT );
 			// make a guess as to the type - for now VARCHAR
+			// todo : how best to determine JDBC Types code?
 			markAsFunctionCall( Types.VARCHAR );
 		}
 
@@ -1073,171 +944,10 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public Set<Parameter<?>> getParameters() {
-		return parameterManager.collectAllParametersJpa();
+		if ( !parameterManager.hasAnyParameterRegistrations() ) {
+			return Collections.emptySet();
+		}
+
+		return parameterManager.collectParameterRegistrations().stream().collect( Collectors.toSet() );
 	}
-
-	private static class JdbcParameterPreparer {
-		private final ParameterRegistrationImplementor registration;
-		private final Type hibernateType;
-		private final int startingJdbcParameterPosition;
-
-		public JdbcParameterPreparer(
-				ParameterRegistrationImplementor registration,
-				Type hibernateType,
-				int startingJdbcParameterPosition) {
-			this.registration = registration;
-			this.hibernateType = hibernateType;
-			this.startingJdbcParameterPosition = startingJdbcParameterPosition;
-		}
-
-		public void prepare(
-				CallableStatement callableStatement,
-				boolean shouldUseJdbcNamedParameters,
-				SharedSessionContractImplementor session) throws SQLException {
-			switch ( registration.getMode() ) {
-				case REF_CURSOR: {
-					registerRefCursorParameter( callableStatement, shouldUseJdbcNamedParameters, session );
-					break;
-				}
-				case IN: {
-					// nothing to prepare
-					break;
-				}
-				default: {
-					// OUT and INOUT
-					registerOutputParameter( callableStatement, shouldUseJdbcNamedParameters, session );
-					break;
-				}
-			}
-		}
-
-		private void registerRefCursorParameter(
-				CallableStatement callableStatement,
-				boolean shouldUseJdbcNamedParameters,
-				SharedSessionContractImplementor session) {
-			if ( shouldUseJdbcNamedParameters && registration.getName() != null ) {
-				session.getFactory().getServiceRegistry()
-						.getService( RefCursorSupport.class )
-						.registerRefCursorParameter( callableStatement, registration.getName() );
-			}
-			else {
-				session.getFactory().getServiceRegistry()
-						.getService( RefCursorSupport.class )
-						.registerRefCursorParameter( callableStatement, startingJdbcParameterPosition );
-			}
-
-		}
-
-		private void registerOutputParameter(
-				CallableStatement callableStatement,
-				boolean shouldUseJdbcNamedParameters,
-				SharedSessionContractImplementor session) throws SQLException {
-			if ( hibernateType.getColumnSpan() > 1 ) {
-				assert !shouldUseJdbcNamedParameters;
-
-				// there is more than one column involved; see if the Hibernate Type can handle
-				// multi-param extraction...
-				final boolean canHandleMultiParamExtraction = ProcedureParameterExtractionAware.class.isInstance( hibernateType )
-						&& ( (ProcedureParameterExtractionAware) hibernateType ).canDoExtraction();
-				if ( ! canHandleMultiParamExtraction ) {
-					// it cannot...
-					throw new UnsupportedOperationException(
-							"Type [" + hibernateType + "] does support multi-parameter value extraction"
-					);
-				}
-
-				// todo : this needs CompositeType etal to be finished
-
-				for ( int i = 0; i < hibernateType.getColumnSpan(); i++ ) {
-					callableStatement.registerOutParameter( startingJdbcParameterPosition + i, hibernateType.sqlTypes()[i] );
-				}
-			}
-			else {
-				// again, needs Type to get finished (access to JDBC type code
-				if ( shouldUseJdbcNamedParameters && registration.getName() != null ) {
-					callableStatement.registerOutParameter( registration.getName(), hibernateType.sqlTypes()[0] );
-				}
-				else {
-					callableStatement.registerOutParameter( startingJdbcParameterPosition, hibernateType.sqlTypes()[0] );
-				}
-			}
-		}
-	}
-
-	private static boolean isNamed(ParameterRegistrationImplementor registration) {
-		return registration.getName() != null;
-	}
-
-	private static class JdbcParameterBinder {
-		private final ParameterRegistrationImplementor registration;
-		private final Type hibernateType;
-		private final int startingJdbcParameterPosition;
-
-		public JdbcParameterBinder(
-				ParameterRegistrationImplementor registration,
-				Type hibernateType,
-				int startingJdbcParameterPosition) {
-			this.registration = registration;
-			this.hibernateType = hibernateType;
-			this.startingJdbcParameterPosition = startingJdbcParameterPosition;
-		}
-
-		public void bindInputValue(
-				CallableStatement callableStatement,
-				boolean shouldUseJdbcNamedParameters,
-				SharedSessionContractImplementor session) throws SQLException {
-			final ParameterBindImplementor binding = registration.getBind();
-
-			if ( binding == null || binding.getValue() == null ) {
-				// the user did not bind a value to the parameter being processed, or they bound null.
-				// This is the condition defined by `passNulls` and that value controls what happens
-				// here.  If `passNulls` is {@code true} we will bind the NULL value into the statement;
-				// if `passNulls` is {@code false} we will not.
-				//
-				// Unfortunately there is not a way to reliably know through JDBC metadata whether a procedure
-				// parameter defines a default value.  Deferring to that information would be the best option
-				if ( registration.isPassNullsEnabled() ) {
-					LOG.debugf(
-							"Stored procedure [%s] IN/INOUT parameter [%s] not bound and `passNulls` was set to true; binding NULL",
-							registration.getProcedureCall().getProcedureName(),
-							this
-					);
-
-					if ( shouldUseJdbcNamedParameters && registration.getName() != null ) {
-						( (ProcedureParameterNamedBinder) hibernateType ).nullSafeSet(
-								callableStatement,
-								null,
-								registration.getName(),
-								session
-						);
-					}
-					else {
-						hibernateType.nullSafeSet( callableStatement, null, startingJdbcParameterPosition, session );
-					}
-				}
-				else {
-					LOG.debugf(
-							"Stored procedure [%s] IN/INOUT parameter [%s] not bound and `passNulls` was set to false; assuming procedure defines default value",
-							registration.getProcedureCall().getProcedureName(),
-							this
-					);
-				}
-			}
-			else {
-				if ( shouldUseJdbcNamedParameters && registration.getName() != null ) {
-					( (ProcedureParameterNamedBinder) hibernateType ).nullSafeSet(
-							callableStatement,
-							binding.getValue(),
-							registration.getName(),
-							session
-					);
-				}
-				else {
-					hibernateType.nullSafeSet( callableStatement, binding.getValue(),
-											   startingJdbcParameterPosition, session );
-				}
-			}
-		}
-	}
-
 }

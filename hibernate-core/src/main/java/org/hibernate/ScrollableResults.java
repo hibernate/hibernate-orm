@@ -31,7 +31,7 @@ import org.hibernate.query.Query;
  *
  * @author Gavin King
  */
-public interface ScrollableResults extends AutoCloseable {
+public interface ScrollableResults<R> extends AutoCloseable {
 
 	/**
 	 * Release resources immediately.

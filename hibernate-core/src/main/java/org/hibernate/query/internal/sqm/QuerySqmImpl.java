@@ -7,6 +7,7 @@
 package org.hibernate.query.internal.sqm;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,6 @@ import javax.persistence.PersistenceException;
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.query.ParameterMetadata;
@@ -25,17 +25,18 @@ import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
+import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryInterpretations;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.sql.sqm.exec.internal.QueryOptionsImpl;
-import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sqm.QuerySplitter;
 import org.hibernate.sqm.query.SqmSelectStatement;
 import org.hibernate.sqm.query.SqmStatement;
@@ -63,7 +64,7 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 			SqmStatement sqmStatement,
 			Class resultType,
 			SharedSessionContractImplementor producer) {
-		super( producer );
+		super( producer, producer );
 
 		if ( resultType != null ) {
 			if ( sqmStatement instanceof SqmStatementNonSelect ) {
@@ -145,7 +146,9 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 	@Override
 	public Set<Parameter<?>> getParameters() {
-		return parameterMetadata.collectAllParametersJpa();
+		Set<Parameter<?>> parameters = new HashSet<>();
+		parameterMetadata.collectAllParameters( parameters::add );
+		return parameters;
 	}
 
 	@Override
@@ -225,10 +228,11 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	protected List<R> doList() {
-		getProducer().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
+		getExecutionContext().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
 		return resolveSelectQueryPlan().performList(
-				getProducer(),
+				(SharedSessionContractImplementor) getProducer(),
+				getExecutionContext(),
 				getQueryOptions(),
 				getQueryParameterBindings()
 		);
@@ -301,7 +305,8 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 			Class<R> resultType,
 			EntityGraphQueryHint entityGraphHint,
 			QueryOptions queryOptions) {
-		return new ConcreteSqmSelectQueryPlan<>(
+		// todo : need to have SQM translation use TypeConfiguration instead of just "DomainMetamodel"
+		return new ConcreteSqmSelectQueryPlan(
 				concreteSqmStatement,
 				entityGraphHint,
 				resultType,
@@ -312,10 +317,11 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	protected Iterator<R> doIterate() {
-		getProducer().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
+		getExecutionContext().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
 		return resolveSelectQueryPlan().performIterate(
-				getProducer(),
+				(SharedSessionContractImplementor) getProducer(),
+				getExecutionContext(),
 				getQueryOptions(),
 				getQueryParameterBindings()
 		);
@@ -323,10 +329,11 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 	@Override
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
-		getProducer().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
+		getExecutionContext().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
 		return resolveSelectQueryPlan().performScroll(
-				getProducer(),
+				(SharedSessionContractImplementor) getProducer(),
+				getExecutionContext(),
 				getQueryOptions(),
 				getQueryParameterBindings(),
 				scrollMode
@@ -335,10 +342,11 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 	@Override
 	protected int doExecuteUpdate() {
-		getProducer().prepareForQueryExecution( true );
+		getExecutionContext().prepareForQueryExecution( true );
 
 		return resolveNonSelectQueryPlan().executeUpdate(
-				getProducer(),
+				(SharedSessionContractImplementor) getProducer(),
+				getExecutionContext(),
 				getQueryOptions(),
 				getQueryParameterBindings()
 		);

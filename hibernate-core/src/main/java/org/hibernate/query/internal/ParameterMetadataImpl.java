@@ -8,19 +8,18 @@
 package org.hibernate.query.internal;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.Parameter;
 
 import org.hibernate.QueryParameterException;
-import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.spi.ParameterMetadataImplementor;
 
 /**
  * @author Steve Ebersole
  */
-public class ParameterMetadataImpl implements ParameterMetadata {
+public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	private final Map<String,QueryParameter> namedQueryParameters;
 	private final Map<Integer,QueryParameter> positionalQueryParameters;
 
@@ -60,34 +59,8 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Set<QueryParameter<?>> collectAllParameters() {
-		if ( !hasNamedParameters() && !hasPositionalParameters() ) {
-			return Collections.emptySet();
-		}
-
-		final HashSet allParameters = new HashSet();
-		allParameters.addAll( namedQueryParameters.values() );
-		allParameters.addAll( positionalQueryParameters.values() );
-		return allParameters;
-	}
-
-	@Override
 	public Set<String> getNamedParameterNames() {
 		return  namedQueryParameters.keySet();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Set<Parameter<?>> collectAllParametersJpa() {
-		if ( !hasNamedParameters() && !hasPositionalParameters() ) {
-			return Collections.emptySet();
-		}
-
-		final HashSet allParameters = new HashSet();
-		allParameters.addAll( namedQueryParameters.values() );
-		allParameters.addAll( positionalQueryParameters.values() );
-		return allParameters;
 	}
 
 	@Override
@@ -131,5 +104,20 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 		}
 
 		throw new IllegalArgumentException( "Could not resolve javax.persistence.Parameter to org.hibernate.query.QueryParameter" );
+	}
+
+	@Override
+	public void collectAllParameters(ParameterCollector collector) {
+		if ( !hasNamedParameters() && !hasPositionalParameters() ) {
+			return;
+		}
+
+		for ( QueryParameter queryParameter : namedQueryParameters.values() ) {
+			collector.collect( queryParameter );
+		}
+
+		for ( QueryParameter queryParameter : positionalQueryParameters.values() ) {
+			collector.collect( queryParameter );
+		}
 	}
 }

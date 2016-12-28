@@ -1,44 +1,44 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.query.internal.sqm;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.persistence.Tuple;
+import javax.persistence.TupleElement;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.streams.StingArrayCollector;
-import org.hibernate.persister.common.spi.SqmTypeImplementor;
+import org.hibernate.loader.spi.AfterLoadAction;
+import org.hibernate.persister.common.spi.OrmTypeExporter;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.TupleBuilder;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.sql.sqm.ast.SelectQuery;
-import org.hibernate.sql.sqm.convert.spi.Callback;
-import org.hibernate.sql.sqm.convert.spi.SelectStatementInterpreter;
-import org.hibernate.sql.sqm.exec.internal.PreparedStatementCreatorScrollableForwardOnlyImpl;
-import org.hibernate.sql.sqm.exec.internal.PreparedStatementCreatorScrollableInsensitiveImpl;
-import org.hibernate.sql.sqm.exec.internal.PreparedStatementCreatorScrollableSensitiveImpl;
-import org.hibernate.sql.sqm.exec.internal.PreparedStatementCreatorStandardImpl;
-import org.hibernate.sql.sqm.exec.internal.PreparedStatementExecutorNormalImpl;
-import org.hibernate.sql.sqm.exec.internal.PreparedStatementExecutorScrollableImpl;
-import org.hibernate.sql.sqm.exec.internal.RowTransformerPassThruImpl;
-import org.hibernate.sql.sqm.exec.internal.RowTransformerSingularReturnImpl;
-import org.hibernate.sql.sqm.exec.internal.RowTransformerTupleImpl;
-import org.hibernate.sql.sqm.exec.internal.RowTransformerTupleTransformerAdapter;
-import org.hibernate.sql.sqm.exec.internal.SqlTreeExecutorImpl;
-import org.hibernate.sql.sqm.exec.spi.PreparedStatementCreator;
+import org.hibernate.query.JpaTupleBuilder;
+import org.hibernate.query.spi.EntityGraphQueryHint;
+import org.hibernate.query.spi.ExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.sqm.exec.spi.RowTransformer;
+import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.sql.convert.spi.Callback;
+import org.hibernate.sql.convert.spi.SqmSelectInterpretation;
+import org.hibernate.sql.convert.spi.SqmSelectToSqlAstConverter;
+import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
+import org.hibernate.sql.exec.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.exec.internal.RowTransformerSingularReturnImpl;
+import org.hibernate.sql.exec.internal.RowTransformerTupleImpl;
+import org.hibernate.sql.exec.internal.RowTransformerTupleTransformerAdapter;
+import org.hibernate.sql.exec.internal.TupleElementImpl;
+import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.exec.spi.RowTransformer;
+import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sqm.domain.DomainMetamodel;
 import org.hibernate.sqm.query.SqmSelectStatement;
 import org.hibernate.sqm.query.select.SqmSelection;
 
@@ -47,15 +47,18 @@ import org.hibernate.sqm.query.select.SqmSelection;
  */
 public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement sqm;
+	private final DomainMetamodel domainMetamodel;
 	private final EntityGraphQueryHint entityGraphHint;
 	private final RowTransformer<R> rowTransformer;
 
 	public ConcreteSqmSelectQueryPlan(
 			SqmSelectStatement sqm,
+			DomainMetamodel domainMetamodel,
 			EntityGraphQueryHint entityGraphHint,
 			Class<R> resultType,
 			QueryOptions queryOptions) {
 		this.sqm = sqm;
+		this.domainMetamodel = domainMetamodel;
 		this.entityGraphHint = entityGraphHint;
 
 		this.rowTransformer = determineRowTransformer( sqm, resultType, queryOptions );
@@ -71,7 +74,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
 			}
 			else {
-				return (RowTransformer<R>) RowTransformerPassThruImpl.INSTANCE;
+				return RowTransformerPassThruImpl.instance();
 			}
 		}
 
@@ -80,25 +83,35 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		if ( Tuple.class.isAssignableFrom( resultType ) ) {
 			// resultType is Tuple..
 			if ( queryOptions.getTupleTransformer() == null ) {
-				return (RowTransformer<R>) new RowTransformerTupleImpl(
-						sqm.getQuerySpec().getSelectClause().getSelections()
-								.stream()
-								.map( selection -> new RowTransformerTupleImpl.HqlTupleElementImpl(
-										( (SqmTypeImplementor) selection.getExpression().getExpressionType() ).getOrmType().getReturnedClass(),
-										selection.getAlias()
-								) )
-								.collect( Collectors.toList() )
-				);
+				final List<TupleElement<?>> tupleElementList = new ArrayList<>();
+				for ( SqmSelection selection : sqm.getQuerySpec().getSelectClause().getSelections() ) {
+					tupleElementList.add(
+							new TupleElementImpl(
+									( (OrmTypeExporter) selection.getExpression().getExpressionType() ).getOrmType().getReturnedClass(),
+									selection.getAlias()
+							)
+					);
+				}
+				return (RowTransformer<R>) new RowTransformerTupleImpl( tupleElementList );
+//				return (RowTransformer<R>) new RowTransformerTupleImpl(
+//						sqm.getQuerySpec().getSelectClause().getSelections()
+//								.stream()
+//								.map( selection -> (TupleElement<?>) new TupleElementImpl(
+//										( (SqmTypeImplementor) selection.getExpression().getExpressionType() ).getOrmType().getReturnedClass(),
+//										selection.getAlias()
+//								) )
+//								.collect( Collectors.toList() )
+//				);
 			}
 
-			// there can be a TupleTransformer IF it is a TupleBuilder,
+			// there can be a TupleTransformer IF it is a JpaTupleBuilder,
 			// otherwise this is considered an error
-			if ( queryOptions.getTupleTransformer() instanceof TupleBuilder ) {
+			if ( queryOptions.getTupleTransformer() instanceof JpaTupleBuilder ) {
 				return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
 			}
 
 			throw new IllegalArgumentException(
-					"Illegal combination of Tuple resultType and (non-TupleBuilder) TupleTransformer : " +
+					"Illegal combination of Tuple resultType and (non-JpaTupleBuilder) TupleTransformer : " +
 							queryOptions.getTupleTransformer()
 			);
 		}
@@ -115,7 +128,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			throw new IllegalQueryOperationException( "Query defined multiple selections, return cannot be typed (other that Object[] or Tuple)" );
 		}
 		else {
-			return (RowTransformer<R>) RowTransformerSingularReturnImpl.INSTANCE;
+			return RowTransformerSingularReturnImpl.instance();
 		}
 	}
 
@@ -136,23 +149,46 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	@SuppressWarnings("unchecked")
 	public List<R> performList(
 			SharedSessionContractImplementor persistenceContext,
+			ExecutionContext executionContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings) {
 		verifyQueryIsSelect();
 
-		final Callback callback = new Callback() {};
+		boolean shallow = false;
+
+		final Callback callback = new Callback() {
+			@Override
+			public void registerAfterLoadAction(AfterLoadAction afterLoadAction) {
+				// do nothing here
+			}
+		};
 
 		// todo : SelectStatementInterpreter needs to account for the EntityGraph hint
-		final SelectQuery sqlTree = SelectStatementInterpreter.interpret( sqm, queryOptions, callback );
-		return (List<R>) new SqlTreeExecutorImpl().executeSelect(
-				sqlTree,
-				PreparedStatementCreatorStandardImpl.INSTANCE,
-				PreparedStatementExecutorNormalImpl.INSTANCE,
+		final SqmSelectInterpretation interpretation = SqmSelectToSqlAstConverter.interpret(
+				sqm,
+				persistenceContext.getFactory(),
+				domainMetamodel,
+				queryOptions,
+				shallow,
+				callback
+		);
+
+		final JdbcSelect jdbcSelect = SqlAstSelectInterpreter.interpret(
+				interpretation,
+				shallow,
+				persistenceContext.getFactory(),
+				inputParameterBindings,
+				executionContext
+		);
+
+		return new JdbcSelectExecutorStandardImpl().list(
+				jdbcSelect,
 				queryOptions,
 				inputParameterBindings,
 				rowTransformer,
 				callback,
-				persistenceContext
+				persistenceContext,
+				executionContext
 		);
 	}
 
@@ -167,6 +203,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	@Override
 	public Iterator<R> performIterate(
 			SharedSessionContractImplementor persistenceContext,
+			ExecutionContext executionContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings) {
 		verifyQueryIsSelect();
@@ -179,36 +216,48 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	@SuppressWarnings("unchecked")
 	public ScrollableResultsImplementor performScroll(
 			SharedSessionContractImplementor persistenceContext,
+			ExecutionContext executionContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings,
 			ScrollMode scrollMode) {
 		verifyQueryIsSelect();
 
-		final Callback callback = new Callback() {};
+		boolean shallow = false;
+
+		final Callback callback = new Callback() {
+			@Override
+			public void registerAfterLoadAction(AfterLoadAction afterLoadAction) {
+				// do nothing here
+			}
+		};
 
 		// todo : SelectStatementInterpreter needs to account for the EntityGraph hint
-		final SelectQuery sqlTree = SelectStatementInterpreter.interpret( sqm, queryOptions, callback );
+		final SqmSelectInterpretation interpretation = SqmSelectToSqlAstConverter.interpret(
+				sqm,
+				persistenceContext.getFactory(),
+				domainMetamodel,
+				queryOptions,
+				shallow,
+				callback
+		);
 
-		final PreparedStatementCreator creator;
-		if ( scrollMode == ScrollMode.FORWARD_ONLY ) {
-			creator = PreparedStatementCreatorScrollableForwardOnlyImpl.INSTANCE;
-		}
-		else if ( scrollMode == ScrollMode.SCROLL_SENSITIVE ) {
-			creator = PreparedStatementCreatorScrollableSensitiveImpl.INSTANCE;
-		}
-		else {
-			creator = PreparedStatementCreatorScrollableInsensitiveImpl.INSTANCE;
-		}
+		final JdbcSelect jdbcSelect = SqlAstSelectInterpreter.interpret(
+				interpretation,
+				shallow,
+				persistenceContext.getFactory(),
+				inputParameterBindings,
+				executionContext
+		);
 
-		return (ScrollableResultsImplementor) new SqlTreeExecutorImpl().executeSelect(
-				sqlTree,
-				creator,
-				PreparedStatementExecutorScrollableImpl.INSTANCE,
+		return new JdbcSelectExecutorStandardImpl().scroll(
+				jdbcSelect,
+				scrollMode,
 				queryOptions,
 				inputParameterBindings,
 				rowTransformer,
 				callback,
-				persistenceContext
+				persistenceContext,
+				executionContext
 		);
 	}
 }

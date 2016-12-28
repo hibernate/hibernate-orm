@@ -7,12 +7,14 @@
 
 package org.hibernate.sql.exec.spi;
 
+import java.sql.PreparedStatement;
+
 /**
- * For cases when JdbcCall represents a call to a database function (with a return).
- * <p>
- * This models the return.
+ * Defines a contract for preparing a PreparedStatement for execution.  Generally
+ * this gives a chance to apply options to the PreparedStatement after creation.
  *
  * @author Steve Ebersole
  */
-public interface JdbcCallFunctionReturn extends JdbcCallParameterRegistration {
+public interface PreparedStatementPreparer {
+	void prepare(PreparedStatement preparedStatement);
 }

@@ -47,9 +47,13 @@ public abstract class AbstractQueryParameter<T> implements QueryParameterImpleme
 		return isPassNullsEnabled;
 	}
 
+	public void enablePassingNulls(boolean enabled) {
+		this.isPassNullsEnabled = enabled;
+	}
+
 	@Override
 	public Type getHibernateType() {
-		return null;
+		return anticipatedType;
 	}
 
 	@Override

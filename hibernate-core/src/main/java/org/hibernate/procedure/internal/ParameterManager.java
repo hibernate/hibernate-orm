@@ -218,24 +218,17 @@ public class ParameterManager implements ParameterRegistry {
 	@Override
 	public Set<String> getNamedParameterNames() {
 		return hasNamedParameters()
-				? collectAllParametersJpa().stream().map( Parameter::getName ).collect( Collectors.toSet() )
+				? parameterRegistrations.stream().map( ParameterRegistrationImplementor::getName ).collect( Collectors.toSet() )
 				: Collections.emptySet();
 	}
 
 	@Override
-	public Set<QueryParameter<?>> collectAllParameters() {
-		if ( parameterRegistrations.size() == 0 ) {
-			return Collections.emptySet();
+	public void collectAllParameters(ParameterCollector collector) {
+		if ( parameterRegistrations == null || parameterRegistrations.isEmpty() ) {
+			return;
 		}
-		return parameterRegistrations.stream().collect( Collectors.toSet() );
-	}
 
-	@Override
-	public Set<Parameter<?>> collectAllParametersJpa() {
-		if ( parameterRegistrations.size() == 0 ) {
-			return Collections.emptySet();
-		}
-		return parameterRegistrations.stream().collect( Collectors.toSet() );
+		parameterRegistrations.forEach( collector::collect );
 	}
 
 	@Override

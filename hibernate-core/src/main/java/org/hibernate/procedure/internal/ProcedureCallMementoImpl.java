@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.ParameterMode;
 
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
@@ -26,7 +25,6 @@ import org.hibernate.type.spi.Type;
  */
 public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 	private final String procedureName;
-	private final NativeSQLQueryReturn[] queryReturns;
 
 	private final ParameterStrategy parameterStrategy;
 	private final List<ParameterMemento> parameterDeclarations;
@@ -39,7 +37,6 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 	 * Constructs a ProcedureCallImpl
 	 *
 	 * @param procedureName The name of the procedure to be called
-	 * @param queryReturns The result mappings
 	 * @param parameterStrategy Are parameters named or positional?
 	 * @param parameterDeclarations The parameters registrations
 	 * @param synchronizedQuerySpaces Any query spaces to synchronize on execution
@@ -47,13 +44,11 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 	 */
 	public ProcedureCallMementoImpl(
 			String procedureName,
-			NativeSQLQueryReturn[] queryReturns,
 			ParameterStrategy parameterStrategy,
 			List<ParameterMemento> parameterDeclarations,
 			Set<String> synchronizedQuerySpaces,
 			Map<String, Object> hintsMap) {
 		this.procedureName = procedureName;
-		this.queryReturns = queryReturns;
 		this.parameterStrategy = parameterStrategy;
 		this.parameterDeclarations = parameterDeclarations;
 		this.synchronizedQuerySpaces = synchronizedQuerySpaces;
@@ -67,10 +62,6 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 
 	public String getProcedureName() {
 		return procedureName;
-	}
-
-	public NativeSQLQueryReturn[] getQueryReturns() {
-		return queryReturns;
 	}
 
 	public ParameterStrategy getParameterStrategy() {

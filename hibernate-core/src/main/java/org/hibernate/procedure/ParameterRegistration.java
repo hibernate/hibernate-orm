@@ -10,6 +10,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -23,6 +24,7 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  */
 public interface ParameterRegistration<T> extends QueryParameter<T> {
+
 	/**
 	 * Controls how unbound values for this IN/INOUT parameter registration will be handled prior to
 	 * execution.  There are 2 possible options to handle it:<ul>

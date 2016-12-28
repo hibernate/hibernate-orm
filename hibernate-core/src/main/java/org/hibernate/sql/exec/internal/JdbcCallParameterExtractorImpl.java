@@ -10,7 +10,6 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.spi.Type;
@@ -21,17 +20,30 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  */
 public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtractor {
-	private final String jdbcParameterName;
-	private final int startingJdbcParameterPosition;
+	private final String callableName;
+	private final String parameterName;
+	private final int parameterPosition;
 	private final Type ormType;
 
 	public JdbcCallParameterExtractorImpl(
-			String jdbcParameterName,
-			int startingJdbcParameterPosition,
+			String callableName,
+			String parameterName,
+			int parameterPosition,
 			Type ormType) {
-		this.jdbcParameterName = jdbcParameterName;
-		this.startingJdbcParameterPosition = startingJdbcParameterPosition;
+		this.callableName = callableName;
+		this.parameterName = parameterName;
+		this.parameterPosition = parameterPosition;
 		this.ormType = ormType;
+	}
+
+	@Override
+	public String getParameterName() {
+		return parameterName;
+	}
+
+	@Override
+	public int getParameterPosition() {
+		return parameterPosition;
 	}
 
 	@Override
@@ -42,18 +54,18 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 			SharedSessionContractImplementor session) {
 		final boolean useNamed = shouldUseJdbcNamedParameters
 				&& ProcedureParameterExtractionAware.class.isInstance( ormType )
-				&& jdbcParameterName != null;
+				&& parameterName != null;
 
 		try {
 			if ( useNamed ) {
 				return (T) ( (ProcedureParameterExtractionAware) ormType ).extract(
 						callableStatement,
-						new String[] { jdbcParameterName },
+						new String[] {parameterName},
 						session
 				);
 			}
 			else {
-				return (T) callableStatement.getObject( startingJdbcParameterPosition );
+				return (T) callableStatement.getObject( parameterPosition );
 			}
 		}
 		catch (SQLException e) {

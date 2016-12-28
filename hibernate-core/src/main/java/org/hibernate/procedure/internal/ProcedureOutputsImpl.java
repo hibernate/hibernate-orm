@@ -8,69 +8,217 @@ package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.ParameterMode;
-
 import org.hibernate.AssertionFailure;
-import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
-import org.hibernate.procedure.ParameterMisuseException;
+import org.hibernate.JDBCException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.procedure.NoMoreReturnsException;
+import org.hibernate.procedure.Output;
 import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ProcedureOutputs;
-import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
-import org.hibernate.result.Output;
-import org.hibernate.result.internal.OutputsImpl;
-import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
-import org.hibernate.sql.exec.internal.JdbcRefCursorExtractor;
+import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.exec.spi.JdbcCall;
+import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
+import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
+import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.RowTransformer;
+
+import org.jboss.logging.Logger;
 
 /**
  * Implementation of ProcedureResult.  Defines centralized access to all of the results of a procedure call.
  *
  * @author Steve Ebersole
  */
-public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutputs {
+public class ProcedureOutputsImpl implements ProcedureOutputs {
+	private static final Logger log = Logger.getLogger( ProcedureOutputsImpl.class );
+
+	private final ParameterStrategy parameterStrategy;
+	private final SharedSessionContractImplementor persistenceContext;
 	private final ProcedureCallImpl procedureCall;
+	private final JdbcCall jdbcCall;
+
+	private final String callableName;
+	private final String callString;
 	private final CallableStatement callableStatement;
 
-	private final boolean shouldUseJdbcNamedParameters;
-	private final Map<ParameterRegistration, JdbcCallParameterExtractorImpl> jdbcParameterExtractorMap;
-	private final Iterator<JdbcRefCursorExtractor> jdbcRefCursorExtractorIterator;
+	private CurrentOutputState currentOutputState;
 
-	private int refCursorParamIndex;
+	private Map<String, JdbcCallParameterExtractor> parameterExtractorMap;
+	private Iterator<JdbcCallRefCursorExtractor> refCursorExtractorIterator;
 
 	ProcedureOutputsImpl(
 			ProcedureCallImpl procedureCall,
-			CallableStatement callableStatement,
-			boolean shouldUseJdbcNamedParameters,
-			Map<ParameterRegistration, JdbcCallParameterExtractorImpl> jdbcParameterExtractorMap,
-			List<JdbcRefCursorExtractor> jdbcRefCursorExtractors) {
-		super( procedureCall, callableStatement );
+			JdbcCall jdbcCall,
+			ParameterStrategy parameterStrategy,
+			QueryOptions queryOptions,
+			QueryParameterBindings bindings,
+			RowTransformer rowTransformer,
+			SharedSessionContractImplementor persistenceContext) {
+		this.parameterStrategy = parameterStrategy;
+		this.persistenceContext = persistenceContext;
 		this.procedureCall = procedureCall;
-		this.callableStatement = callableStatement;
-		this.shouldUseJdbcNamedParameters = shouldUseJdbcNamedParameters;
+		this.jdbcCall = jdbcCall;
 
-		this.jdbcParameterExtractorMap = jdbcParameterExtractorMap;
-		this.jdbcRefCursorExtractorIterator = jdbcRefCursorExtractors.iterator();
+		// JdbcCall.getSql is the callable name
+		this.callableName = jdbcCall.getSql();
+		this.callString = buildCallableString();
+		this.callableStatement = prepareCallableStatement( queryOptions, bindings );
+
+		try {
+			final boolean isResultSet = callableStatement.execute();
+			currentOutputState = buildCurrentReturnState( isResultSet );
+		}
+		catch (SQLException e) {
+			throw convert( e, "Error calling CallableStatement.getMoreResults" );
+		}
+	}
+
+	private String buildCallableString() {
+		final CallableStatementSupport callableStatementSupport = persistenceContext.getJdbcServices()
+				.getJdbcEnvironment()
+				.getDialect().getCallableStatementSupport();
+
+		return callableStatementSupport.renderCallableStatement(
+				callableName,
+				parameterStrategy,
+				jdbcCall.getFunctionReturn(),
+				jdbcCall.getParameterRegistrations(),
+				persistenceContext
+		);
+	}
+
+	private CallableStatement prepareCallableStatement(QueryOptions queryOptions, QueryParameterBindings bindings) {
+		try {
+			log.debugf( "Preparing procedure/function call (%s) : %s", jdbcCall.getSql(), callString );
+			final CallableStatement callableStatement = (CallableStatement) persistenceContext.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( callString, true );
+
+			List<JdbcCallRefCursorExtractor> refCursorExtractors = null;
+
+			if ( jdbcCall.getFunctionReturn() != null ) {
+				jdbcCall.getFunctionReturn().registerParameter( callableStatement, persistenceContext );
+
+				final JdbcCallParameterExtractor parameterExtractor = jdbcCall.getFunctionReturn().getParameterExtractor();
+				final JdbcCallRefCursorExtractor refCursorExtractor = jdbcCall.getFunctionReturn().getRefCursorExtractor();
+
+				if ( parameterExtractor != null ) {
+					assert refCursorExtractor == null;
+					final String key = parameterExtractor.getParameterName() == null
+							? Integer.toString( parameterExtractor.getParameterPosition() )
+							: parameterExtractor.getParameterName();
+					parameterExtractorMap = new HashMap<>();
+					parameterExtractorMap.put( key, parameterExtractor );
+				}
+				else if ( refCursorExtractor != null ) {
+					refCursorExtractors = new ArrayList<>();
+					refCursorExtractors.add( refCursorExtractor );
+				}
+			}
+
+			for ( JdbcCallParameterRegistration registration : jdbcCall.getParameterRegistrations() ) {
+				int jdbcPosition = 1;
+				registration.registerParameter( callableStatement, persistenceContext );
+
+				// todo : ok to bind right away?  Or do we need to wait until after all parameters are registered?
+				final JdbcParameterBinder binder = registration.getParameterBinder();
+				if ( binder != null ) {
+					binder.bindParameterValue( callableStatement, jdbcPosition, bindings, persistenceContext );
+				}
+
+				final JdbcCallParameterExtractor parameterExtractor = registration.getParameterExtractor();
+				final JdbcCallRefCursorExtractor refCursorExtractor = registration.getRefCursorExtractor();
+
+				if ( parameterExtractor != null ) {
+					assert refCursorExtractor == null;
+
+					if ( parameterExtractorMap == null ) {
+						parameterExtractorMap = new HashMap<>();
+					}
+					final String key = parameterExtractor.getParameterName() == null
+							? Integer.toString( parameterExtractor.getParameterPosition() )
+							: parameterExtractor.getParameterName();
+					parameterExtractorMap.put( key, parameterExtractor );
+				}
+				else {
+					if ( refCursorExtractors == null ) {
+						refCursorExtractors = new ArrayList<>();
+					}
+					refCursorExtractors.add( refCursorExtractor );
+				}
+			}
+
+			if ( refCursorExtractors == null ) {
+				refCursorExtractorIterator = Collections.emptyIterator();
+			}
+			else {
+				refCursorExtractorIterator = refCursorExtractors.iterator();
+			}
+
+			return callableStatement;
+		}
+		catch (SQLException e) {
+			throw persistenceContext.getJdbcServices().getSqlExceptionHelper().convert(
+					e,
+					"Error preparing CallableStatement [" + jdbcCall.getSql() + "]",
+					callString
+			);
+		}
+	}
+
+	private CurrentOutputState buildCurrentReturnState(boolean isResultSet) {
+		int updateCount = -1;
+		if ( ! isResultSet ) {
+			try {
+				updateCount = callableStatement.getUpdateCount();
+			}
+			catch (SQLException e) {
+				throw convert( e, "Error calling CallableStatement.getUpdateCount" );
+			}
+		}
+
+		return buildCurrentReturnState( isResultSet, updateCount );
+	}
+
+	private CurrentOutputState buildCurrentReturnState(boolean isResultSet, int updateCount) {
+		return new CurrentOutputState( isResultSet, updateCount );
+	}
+
+	private JDBCException convert(SQLException e, String message) {
+		return persistenceContext.getJdbcServices().getSqlExceptionHelper().convert(
+				e,
+				message,
+				callString
+		);
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration) {
-		final JdbcCallParameterExtractorImpl<T> extractor = resolveJdbcParameterExtractor( parameterRegistration );
-		return extractor.extractValue( callableStatement, shouldUseJdbcNamedParameters, procedureCall.getSession() );
+		final JdbcCallParameterExtractor extractor = resolveJdbcParameterExtractor( parameterRegistration );
+		return (T) extractor.extractValue( callableStatement, parameterStrategy == ParameterStrategy.NAMED, procedureCall.getSession() );
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> JdbcCallParameterExtractorImpl<T> resolveJdbcParameterExtractor(ParameterRegistration<T> parameterRegistration) {
-		final JdbcCallParameterExtractorImpl<T> extractor = jdbcParameterExtractorMap.get( parameterRegistration );
+	private <T> JdbcCallParameterExtractor resolveJdbcParameterExtractor(ParameterRegistration<T> parameterRegistration) {
+		final String key = parameterRegistration.getName() != null
+				? parameterRegistration.getName()
+				: Integer.toString( parameterRegistration.getPosition() );
+		final JdbcCallParameterExtractor<T> extractor = parameterExtractorMap.get( key );
 		if ( extractor == null ) {
-			if ( parameterRegistration.getMode() == ParameterMode.IN ) {
-				throw new ParameterMisuseException( "Cannot extract value from parameter registered as IN parameter" );
-			}
-			if ( parameterRegistration.getMode() == ParameterMode.REF_CURSOR ) {
-				throw new ParameterMisuseException( "Cannot extract value from parameter registered as REF_CURSOR parameter" );
-			}
 			throw new AssertionFailure( "Could not locate JdbcParameterExtractor for given ParameterRegistration :  " + parameterRegistration );
 		}
 		return extractor;
@@ -87,56 +235,107 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 	}
 
 	@Override
-	protected CurrentReturnState buildCurrentReturnState(boolean isResultSet, int updateCount) {
-		return new ProcedureCurrentReturnState( isResultSet, updateCount, refCursorParamIndex );
+	public Output getCurrent() {
+		if ( currentOutputState == null ) {
+			return null;
+		}
+		return currentOutputState.buildOutput();
 	}
 
-	protected class ProcedureCurrentReturnState extends CurrentReturnState {
-		private final int refCursorParamIndex;
-
-		private ProcedureCurrentReturnState(boolean isResultSet, int updateCount, int refCursorParamIndex) {
-			super( isResultSet, updateCount );
-			this.refCursorParamIndex = refCursorParamIndex;
+	@Override
+	public boolean goToNext() {
+		if ( currentOutputState == null ) {
+			return false;
 		}
 
-		@Override
+		if ( currentOutputState.indicatesMoreOutputs() ) {
+			// prepare the next return state
+			try {
+				final boolean isResultSet = callableStatement.getMoreResults();
+				currentOutputState = buildCurrentReturnState( isResultSet );
+			}
+			catch (SQLException e) {
+				throw convert( e, "Error calling CallableStatement.getMoreResults" );
+			}
+		}
+
+		// and return
+		return currentOutputState != null && currentOutputState.indicatesMoreOutputs();
+	}
+
+	@Override
+	public void release() {
+		try {
+			callableStatement.close();
+		}
+		catch (SQLException e) {
+			log.debug( "Unable to close PreparedStatement", e );
+		}
+	}
+
+	private List extractCurrentResults() {
+		final JdbcCallRefCursorExtractor refCursorExtractor = refCursorExtractorIterator.next();
+
+		return extractResults(
+				refCursorExtractor.extractResultSet( callableStatement, persistenceContext )
+		);
+	}
+
+	protected List extractResults(ResultSet resultSet) {
+		// todo : need to hook this in with RowReader, Initializers, etc
+		throw new NotYetImplementedException( );
+	}
+
+	protected class CurrentOutputState {
+		private final boolean isResultSet;
+		private final int updateCount;
+
+		private CurrentOutputState(boolean isResultSet, int updateCount) {
+			this.isResultSet = isResultSet;
+			this.updateCount = updateCount;
+		}
+
+		public boolean isResultSet() {
+			return isResultSet;
+		}
+
+		public int getUpdateCount() {
+			return updateCount;
+		}
+
 		public boolean indicatesMoreOutputs() {
-			return super.indicatesMoreOutputs() || jdbcRefCursorExtractorIterator.hasNext();
+			return isResultSet() || getUpdateCount() >= 0 || refCursorExtractorIterator.hasNext();
 		}
 
-		@Override
-		protected boolean hasExtendedReturns() {
-			return jdbcRefCursorExtractorIterator.hasNext();
-		}
-
-		@Override
-		protected Output buildExtendedReturn() {
-			if ( !jdbcRefCursorExtractorIterator.hasNext() ) {
+		protected Output buildOutput() {
+			if ( !indicatesMoreOutputs() ) {
 				throw new IllegalStateException( "No more REF_CURSOR results to process" );
 			}
 
-			final JdbcRefCursorExtractor next = jdbcRefCursorExtractorIterator.next();
-			return buildResultSetOutput(
-					next.extractResults(
-							callableStatement,
-							procedureCall.getSession(),
-							getLoader()
-					)
-			);
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
+						"Building Return [isResultSet=%s, updateCount=%s]",
+						isResultSet(),
+						getUpdateCount()
+				);
+			}
 
-			final ParameterRegistrationImplementor refCursorParam = ProcedureOutputsImpl.this.refCursorParameters[refCursorParamIndex];
-			ResultSet resultSet;
-			if ( refCursorParam.getName() != null ) {
-				resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
-						.getService( RefCursorSupport.class )
-						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getName() );
+			if ( isResultSet() ) {
+				return buildResultSetOutput( extractCurrentResults() );
 			}
-			else {
-				resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
-						.getService( RefCursorSupport.class )
-						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getPosition() );
+			else if ( getUpdateCount() >= 0 ) {
+				return buildUpdateCountOutput( updateCount );
 			}
-			return buildResultSetOutput( extractResults( resultSet ) );
+
+			throw new NoMoreReturnsException();
+		}
+
+		private Output buildResultSetOutput(List list) {
+			return new ResultSetOutputImpl( list );
+		}
+
+		private Output buildUpdateCountOutput(int updateCount) {
+			return new UpdateCountOutputImpl( updateCount );
 		}
 	}
 

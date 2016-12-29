@@ -38,7 +38,7 @@ public class LocalTimeJavaDescriptor extends AbstractTypeDescriptorBasicImpl<Loc
 
 	@SuppressWarnings("unchecked")
 	public LocalTimeJavaDescriptor() {
-		super( LocalTime.class, org.hibernate.type.descriptor.java.ImmutableMutabilityPlan.INSTANCE );
+		super( LocalTime.class, ImmutableMutabilityPlan.INSTANCE );
 	}
 
 	@Override

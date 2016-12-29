@@ -19,7 +19,6 @@ import java.util.GregorianCalendar;
 
 import javax.persistence.TemporalType;
 
-import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.WrapperOptions;

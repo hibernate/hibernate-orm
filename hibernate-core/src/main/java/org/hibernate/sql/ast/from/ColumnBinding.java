@@ -14,7 +14,7 @@ import org.hibernate.sql.ast.select.SqlSelectable;
 import org.hibernate.sql.exec.results.process.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
 import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
-import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * Represents a binding of a column (derived or physical) into a SQL statement

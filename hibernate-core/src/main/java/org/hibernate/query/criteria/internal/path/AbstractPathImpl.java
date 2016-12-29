@@ -21,7 +21,6 @@ import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.PathImplementor;
 import org.hibernate.query.criteria.internal.PathSource;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
 import org.hibernate.query.criteria.internal.expression.PathTypeExpression;
 
@@ -224,32 +223,5 @@ public abstract class AbstractPathImpl<X>
 	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// none to register
-	}
-
-	@Override
-	public void prepareAlias(RenderingContext renderingContext) {
-		// Make sure we delegate up to our source (eventually up to the path root) to
-		// prepare the path properly.
-		PathSource<?> source = getPathSource();
-		if ( source != null ) {
-			source.prepareAlias( renderingContext );
-		}
-	}
-
-	@Override
-	public String render(RenderingContext renderingContext) {
-		PathSource<?> source = getPathSource();
-		if ( source != null ) {
-			source.prepareAlias( renderingContext );
-			return source.getPathIdentifier() + "." + getAttribute().getName();
-		}
-		else {
-			return getAttribute().getName();
-		}
-	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

@@ -20,8 +20,8 @@ import org.hibernate.sqm.query.SqmStatement;
 /**
  * @author Steve Ebersole
  */
-class SqmInterpretationsKey implements QueryInterpretations.Key {
-	static SqmInterpretationsKey generateFrom(QuerySqmImpl query) {
+public class SqmInterpretationsKey implements QueryInterpretations.Key {
+	public static SqmInterpretationsKey generateFrom(QuerySqmImpl query) {
 		if ( !isCacheable( query ) ) {
 			return null;
 		}

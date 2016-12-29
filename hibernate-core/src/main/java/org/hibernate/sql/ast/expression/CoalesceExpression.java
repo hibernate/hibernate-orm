@@ -18,7 +18,7 @@ import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sql.exec.results.process.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
 import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
-import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole

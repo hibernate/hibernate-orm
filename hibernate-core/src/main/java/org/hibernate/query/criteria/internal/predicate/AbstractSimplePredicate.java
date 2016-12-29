@@ -12,7 +12,6 @@ import java.util.List;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * TODO : javadoc
@@ -42,15 +41,4 @@ public abstract class AbstractSimplePredicate
 	public final List<Expression<Boolean>> getExpressions() {
 		return NO_EXPRESSIONS;
 	}
-
-	@Override
-	public String render(RenderingContext renderingContext) {
-		return render( isNegated(), renderingContext );
-	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
-
 }

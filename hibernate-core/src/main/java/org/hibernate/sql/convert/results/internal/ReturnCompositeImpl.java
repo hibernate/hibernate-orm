@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.select.SqlSelection;
 import org.hibernate.sql.convert.results.spi.ReturnComposite;
 import org.hibernate.sql.exec.results.process.internal.ReturnAssemblerComposite;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 
 /**
  * @author Steve Ebersole

@@ -17,8 +17,8 @@ import org.hibernate.sqm.domain.AttributeReference;
 import org.hibernate.sqm.domain.DomainReference;
 import org.hibernate.sqm.domain.EntityReference;
 import org.hibernate.sqm.query.from.SqmFrom;
-import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.EntityType;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole

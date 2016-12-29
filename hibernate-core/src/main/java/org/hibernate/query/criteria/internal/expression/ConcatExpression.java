@@ -11,8 +11,6 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * A string concatenation.
@@ -61,15 +59,5 @@ public class ConcatExpression extends ExpressionImpl<String> implements Serializ
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getString1(), registry );
 		Helper.possibleParameter( getString2(), registry );
-	}
-
-	public String render(RenderingContext renderingContext) {
-		return  '(' + ((Renderable) getString1() ).render( renderingContext )
-				+ " || "
-				+ ( (Renderable) getString2() ).render( renderingContext ) + ')' ;
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

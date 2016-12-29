@@ -15,10 +15,8 @@ import javax.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
 import org.hibernate.query.criteria.internal.TupleElementImplementor;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * The Hibernate implementation of the JPA {@link CompoundSelection}
@@ -28,7 +26,7 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
  */
 public class CompoundSelectionImpl<X>
 		extends SelectionImpl<X>
-		implements CompoundSelection<X>, Renderable, Serializable {
+		implements CompoundSelection<X>, Serializable {
 	private final boolean isConstructor;
 	private List<Selection<?>> selectionItems;
 
@@ -57,7 +55,7 @@ public class CompoundSelectionImpl<X>
 			return null;
 		}
 		boolean foundHandlers = false;
-		ArrayList<ValueHandlerFactory.ValueHandler> valueHandlers = new ArrayList<ValueHandlerFactory.ValueHandler>();
+		ArrayList<ValueHandlerFactory.ValueHandler> valueHandlers = new ArrayList<>();
 		for ( Selection selection : getCompoundSelectionItems() ) {
 			ValueHandlerFactory.ValueHandler valueHandler = ( (TupleElementImplementor) selection ).getValueHandler();
 			valueHandlers.add( valueHandler );
@@ -70,26 +68,5 @@ public class CompoundSelectionImpl<X>
 		for ( Selection selectionItem : getCompoundSelectionItems() ) {
 			Helper.possibleParameter(selectionItem, registry);
 		}
-	}
-
-	public String render(RenderingContext renderingContext) {
-		StringBuilder buff = new StringBuilder();
-		if ( isConstructor ) {
-			buff.append( "new " ).append( getJavaType().getName() ).append( '(' );
-		}
-		String sep = "";
-		for ( Selection selection : selectionItems ) {
-			buff.append( sep )
-					.append( ( (Renderable) selection ).renderProjection( renderingContext ) );
-			sep = ", ";
-		}
-		if ( isConstructor ) {
-			buff.append( ')' );
-		}
-		return buff.toString();
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

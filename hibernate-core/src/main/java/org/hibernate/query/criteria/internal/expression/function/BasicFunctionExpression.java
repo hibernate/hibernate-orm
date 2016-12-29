@@ -10,7 +10,6 @@ import java.io.Serializable;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
 
 /**
@@ -46,13 +45,5 @@ public class BasicFunctionExpression<X>
 
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do here...
-	}
-
-	public String render(RenderingContext renderingContext) {
-		return getFunctionName() + "()";
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

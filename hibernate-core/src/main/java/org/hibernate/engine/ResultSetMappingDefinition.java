@@ -65,17 +65,10 @@ public class ResultSetMappingDefinition implements Serializable {
 
 		for ( NativeSQLQueryReturn rtn : queryReturns ) {
 			rtn.traceLog(
-					new NativeSQLQueryReturn.TraceLogger() {
-						@Override
-						public void writeLine(String traceLine) {
-							buffer.append( "        " ).append( traceLine ).append( "\n" );
-						}
-					}
+					traceLine -> buffer.append( "        " ).append( traceLine ).append( "\n" )
 			);
 		}
 
-		buffer.append( "    ]\n" ).append( "]" );
-
-		return buffer.toString();
+		return buffer.append( "    ]\n" ).append( "]" ).toString();
 	}
 }

@@ -138,7 +138,7 @@ public class StandardQueryCache implements QueryCache {
 		final boolean isSingleResult = returnTypes.length == 1;
 		for ( Object aResult : result ) {
 			final Serializable cacheItem = isSingleResult
-					? returnTypes[0].disassemble( aResult )
+					? returnTypes[0].disassemble( aResult, session, null )
 					: TypeHelper.disassemble( (Object[]) aResult, returnTypes, null, session, null );
 			cacheable.add( cacheItem );
 			if ( TRACING ) {

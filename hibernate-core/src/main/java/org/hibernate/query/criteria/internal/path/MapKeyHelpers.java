@@ -17,12 +17,10 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.MapJoinImplementor;
 import org.hibernate.query.criteria.internal.PathImplementor;
-import org.hibernate.query.criteria.internal.PathSource;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
-import org.hibernate.persister.collection.spi.CollectionPersister;
 
 /**
  * {@link javax.persistence.criteria.MapJoin#key} poses a number of implementation difficulties in terms of the
@@ -96,20 +94,6 @@ public class MapKeyHelpers {
 			// todo : if key is an entity, this is probably not enough
 			return (MapKeyPath<T>) this;
 		}
-
-		@Override
-		public String render(RenderingContext renderingContext) {
-			PathSource<?> source = getPathSource();
-			String name;
-			if ( source != null ) {
-				source.prepareAlias( renderingContext );
-				name = source.getPathIdentifier();
-			}
-			else {
-				name = getAttribute().getName();
-			}
-			return "key(" + name + ")";
-		}
 	}
 
 	/**
@@ -170,12 +154,6 @@ public class MapKeyHelpers {
 		public String getPathIdentifier() {
 			return mapJoin.getPathIdentifier();
 		}
-
-		@Override
-		public void prepareAlias(RenderingContext renderingContext) {
-			mapJoin.prepareAlias( renderingContext );
-		}
-
 	}
 
 	/**
@@ -203,8 +181,8 @@ public class MapKeyHelpers {
 					: BindableType.SINGULAR_ATTRIBUTE;
 
 			String guessedRoleName = determineRole( attribute );
-			SessionFactoryImplementor sfi = criteriaBuilder.getEntityManagerFactory().getSessionFactory();
-			mapPersister = sfi.getCollectionPersister( guessedRoleName );
+			SessionFactoryImplementor sfi = criteriaBuilder.getEntityManagerFactory();
+			mapPersister = sfi.getMetamodel().collectionPersister( guessedRoleName );
 			if ( mapPersister == null ) {
 				throw new IllegalStateException( "Could not locate collection persister [" + guessedRoleName + "]" );
 			}

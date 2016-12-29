@@ -15,7 +15,7 @@ import org.hibernate.sql.exec.results.process.internal.CompositeReferenceInitial
 import org.hibernate.sql.exec.results.process.spi.CompositeReferenceInitializer;
 import org.hibernate.sql.exec.results.process.spi.Initializer;
 import org.hibernate.sql.exec.results.process.spi.InitializerCollector;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 
 /**
  * @author Steve Ebersole

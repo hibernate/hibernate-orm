@@ -10,7 +10,6 @@ import java.io.Serializable;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
 
 /**
@@ -43,14 +42,5 @@ public class CastFunction<T,Y>
 	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getCastSource(), registry );
-	}
-
-	@Override
-	public String render(RenderingContext renderingContext) {
-		return CAST_NAME + '(' +
-				castSource.render( renderingContext ) +
-				" as " +
-				renderingContext.getCastType( getJavaType() ) +
-				')';
 	}
 }

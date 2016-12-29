@@ -14,7 +14,6 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.path.SingularAttributePath;
 
 /**
@@ -108,30 +107,6 @@ public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 		super.validate();
 		if ( assignments.isEmpty() ) {
 			throw new IllegalStateException( "No assignments specified as part of UPDATE criteria" );
-		}
-	}
-
-	@Override
-	protected String renderQuery(RenderingContext renderingContext) {
-		final StringBuilder jpaql = new StringBuilder( "update " );
-		renderRoot( jpaql, renderingContext );
-		renderAssignments( jpaql, renderingContext );
-		renderRestrictions( jpaql, renderingContext );
-
-		return jpaql.toString();
-	}
-
-	private void renderAssignments(StringBuilder jpaql, RenderingContext renderingContext) {
-		jpaql.append( " set " );
-		boolean first = true;
-		for ( Assignment assignment : assignments ) {
-			if ( ! first ) {
-				jpaql.append( ", " );
-			}
-			jpaql.append( assignment.attributePath.render( renderingContext ) )
-					.append( " = " )
-					.append( assignment.value.render( renderingContext ) );
-			first = false;
 		}
 	}
 

@@ -11,7 +11,6 @@ import java.util.Collection;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.UnaryOperatorExpression;
 import org.hibernate.query.criteria.internal.path.PluralAttributePath;
 
@@ -41,11 +40,5 @@ public class IsEmptyPredicate<C extends Collection>
 	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do
-	}
-
-	@Override
-	public String render(boolean isNegated, RenderingContext renderingContext) {
-		final String operator = isNegated ? " is not empty" : " is empty";
-		return getOperand().render( renderingContext ) + operator;
 	}
 }

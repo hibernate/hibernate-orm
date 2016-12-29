@@ -11,8 +11,6 @@ import javax.persistence.criteria.Subquery;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Models an <tt>EXISTS(<subquery>)</tt> predicate
@@ -36,11 +34,5 @@ public class ExistsPredicate
 	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do here
-	}
-
-	@Override
-	public String render(boolean isNegated, RenderingContext renderingContext) {
-		return ( isNegated ? "not " : "" ) + "exists "
-				+ ( (Renderable) getSubquery() ).render( renderingContext );
 	}
 }

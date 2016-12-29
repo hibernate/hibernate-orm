@@ -11,8 +11,6 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Defines a {@link javax.persistence.criteria.Predicate} used to wrap an {@link Expression Expression&lt;Boolean&gt;}.
@@ -41,10 +39,5 @@ public class BooleanExpressionPredicate
 	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter(expression, registry);
-	}
-
-	@Override
-	public String render(boolean isNegated, RenderingContext renderingContext) {
-		return ( (Renderable) getExpression() ).render( renderingContext );
 	}
 }

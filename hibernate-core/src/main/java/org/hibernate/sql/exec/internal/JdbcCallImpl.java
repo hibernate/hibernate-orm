@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.sql.ast.select.SqlSelection;
 import org.hibernate.sql.convert.results.spi.Return;

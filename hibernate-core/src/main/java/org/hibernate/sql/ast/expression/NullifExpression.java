@@ -15,8 +15,8 @@ import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sql.exec.results.process.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
 import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
@@ -39,8 +39,8 @@ public class NullifExpression implements Expression, SqlSelectable, Selectable {
 	}
 
 	@Override
-	public Type getType() {
-		return first.getType();
+	public BasicType getType() {
+		return (BasicType) first.getType();
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public class NullifExpression implements Expression, SqlSelectable, Selectable {
 
 	@Override
 	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( (BasicType) getType() );
+		return new SqlSelectionReaderImpl( getType() );
 	}
 
 	@Override

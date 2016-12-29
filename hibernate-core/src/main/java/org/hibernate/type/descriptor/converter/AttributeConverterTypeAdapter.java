@@ -10,6 +10,7 @@ import javax.persistence.AttributeConverter;
 
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
+import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 import org.jboss.logging.Logger;
 

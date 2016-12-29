@@ -11,7 +11,7 @@ import org.hibernate.sql.ast.from.ColumnBinding;
 import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.convert.ConversionException;
 import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole

@@ -15,11 +15,8 @@ import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
-import org.hibernate.query.criteria.internal.FromImplementor;
 import org.hibernate.query.criteria.internal.JoinImplementor;
 import org.hibernate.query.criteria.internal.PathSource;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
-import org.hibernate.query.criteria.internal.predicate.AbstractPredicateImpl;
 
 /**
  * Convenience base class for various {@link javax.persistence.criteria.Join} implementations.
@@ -69,23 +66,6 @@ public abstract class AbstractJoinImpl<Z, X>
 	public From<?, Z> getParent() {
 		// this cast should be ok by virtue of our constructors...
 		return (From<?, Z>) getPathSource();
-	}
-
-	@Override
-	public String renderTableExpression(RenderingContext renderingContext) {
-		prepareAlias( renderingContext );
-		( (FromImplementor) getParent() ).prepareAlias( renderingContext );
-		StringBuilder tableExpression = new StringBuilder();
-		tableExpression.append( getParent().getAlias() )
-				.append( '.' )
-				.append( getAttribute().getName() )
-				.append( " as " )
-				.append( getAlias() );
-		if ( suppliedJoinCondition != null ) {
-			tableExpression.append( " with " )
-					.append( ( (AbstractPredicateImpl) suppliedJoinCondition ).render( renderingContext ) );
-		}
-		return tableExpression.toString();
 	}
 
 	@Override

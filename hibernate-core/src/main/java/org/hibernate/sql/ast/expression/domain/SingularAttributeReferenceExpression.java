@@ -22,9 +22,9 @@ import org.hibernate.sql.ast.select.SelectableBasicTypeImpl;
 import org.hibernate.sql.ast.select.SelectableEmbeddedTypeImpl;
 import org.hibernate.sql.ast.select.SelectableEntityTypeImpl;
 import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole

@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.from.ColumnBinding;
 import org.hibernate.sql.convert.results.internal.ReturnCompositeImpl;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.spi.CompositeType;
 
 /**
  * @author Steve Ebersole

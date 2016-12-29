@@ -9,14 +9,13 @@ package org.hibernate.sql.convert.expression.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.entity.spi.ImprovedEntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
 import org.hibernate.sql.ast.expression.domain.DomainReferenceExpression;
 import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
-import org.hibernate.sqm.domain.DomainMetamodel;
 import org.hibernate.sqm.query.expression.domain.PluralAttributeBinding;
 import org.hibernate.sqm.query.expression.domain.PluralAttributeElementBinding;
 import org.hibernate.sqm.query.expression.domain.SingularAttributeBinding;
@@ -30,7 +29,7 @@ public interface DomainReferenceExpressionBuilder {
 	DomainReferenceExpression buildEntityExpression(
 			BuildingContext buildingContext,
 			ColumnBindingSource columnBindingSource,
-			ImprovedEntityPersister improvedEntityPersister,
+			EntityPersister improvedEntityPersister,
 			PropertyPath propertyPath);
 
 	DomainReferenceExpression buildSingularAttributeExpression(
@@ -48,7 +47,6 @@ public interface DomainReferenceExpressionBuilder {
 
 	interface BuildingContext {
 		SessionFactoryImplementor getSessionFactory();
-		DomainMetamodel getSqmDomainMetamodel();
 		FromClauseIndex getFromClauseIndex();
 		ReturnResolutionContext getReturnResolutionContext();
 		DomainReferenceExpressionBuilder getCurrentDomainReferenceExpressionBuilder();

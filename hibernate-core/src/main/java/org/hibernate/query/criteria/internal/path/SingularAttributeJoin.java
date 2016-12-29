@@ -18,7 +18,6 @@ import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
 import org.hibernate.query.criteria.internal.FromImplementor;
 import org.hibernate.query.criteria.internal.PathSource;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Models a join based on a singular attribute
@@ -137,18 +136,6 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 		}
 
 		@Override
-		public void prepareAlias(RenderingContext renderingContext) {
-			if ( getAlias() == null ) {
-				if ( isCorrelated() ) {
-					setAlias( getCorrelationParent().getAlias() );
-				}
-				else {
-					setAlias( renderingContext.generateAlias() );
-				}
-			}
-		}
-
-		@Override
 		protected void setAlias(String alias) {
 			super.setAlias( alias );
 			original.setAlias( alias );
@@ -157,11 +144,6 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 		@Override
 		protected ManagedType<T> locateManagedType() {
 			return criteriaBuilder().getEntityManagerFactory().getMetamodel().managedType( treatAsType );
-		}
-
-		@Override
-		public String render(RenderingContext renderingContext) {
-			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
 		}
 	}
 }

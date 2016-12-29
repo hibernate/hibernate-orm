@@ -14,7 +14,6 @@ import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
 import org.hibernate.query.criteria.internal.FromImplementor;
 import org.hibernate.query.criteria.internal.PathSource;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Hibernate implementation of the JPA {@link Root} contract
@@ -70,25 +69,9 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 		return allowJoins ? super.illegalFetch() : new IllegalArgumentException( "UPDATE/DELETE criteria queries cannot define fetches" );
 	}
 
-	public String renderTableExpression(RenderingContext renderingContext) {
-		prepareAlias( renderingContext );
-		return getModel().getName() + " as " + getAlias();
-	}
-
 	@Override
 	public String getPathIdentifier() {
 		return getAlias();
-	}
-
-	@Override
-	public String render(RenderingContext renderingContext) {
-		prepareAlias( renderingContext );
-		return getAlias();
-	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 
 	@Override
@@ -112,19 +95,6 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 		@Override
 		public String getAlias() {
 			return original.getAlias();
-		}
-
-		@Override
-		public void prepareAlias(RenderingContext renderingContext) {
-			// NOTE : we call `original#prepareAlias` here and during render
-			//		since in some cases only one or the other will be called
-			original.prepareAlias( renderingContext );
-		}
-
-		@Override
-		public String render(RenderingContext renderingContext) {
-			original.prepareAlias( renderingContext );
-			return getTreatFragment();
 		}
 
 		protected String getTreatFragment() {

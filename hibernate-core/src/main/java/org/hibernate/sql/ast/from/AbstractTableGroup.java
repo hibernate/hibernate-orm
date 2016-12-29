@@ -18,7 +18,7 @@ import org.hibernate.persister.common.spi.UnionSubclassTable;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 

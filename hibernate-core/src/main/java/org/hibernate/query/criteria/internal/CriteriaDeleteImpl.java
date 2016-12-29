@@ -10,8 +10,6 @@ import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
-
 /**
  * Hibernate implementation of the JPA 2.1 {@link CriteriaDelete} contract.
  *
@@ -32,14 +30,5 @@ public class CriteriaDeleteImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 	public CriteriaDelete<T> where(Predicate... restrictions) {
 		setRestriction( restrictions );
 		return this;
-	}
-
-	@Override
-	protected String renderQuery(RenderingContext renderingContext) {
-		final StringBuilder jpaql = new StringBuilder( "delete " );
-		renderRoot( jpaql, renderingContext );
-		renderRestrictions( jpaql, renderingContext );
-
-		return jpaql.toString();
 	}
 }

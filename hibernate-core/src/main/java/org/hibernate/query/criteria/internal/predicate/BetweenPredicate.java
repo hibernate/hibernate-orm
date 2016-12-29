@@ -11,8 +11,6 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Models a <tt>BETWEEN</tt> {@link javax.persistence.criteria.Predicate}.
@@ -67,15 +65,5 @@ public class BetweenPredicate<Y>
 		Helper.possibleParameter( getExpression(), registry );
 		Helper.possibleParameter( getLowerBound(), registry );
 		Helper.possibleParameter( getUpperBound(), registry );
-	}
-
-	@Override
-	public String render(boolean isNegated, RenderingContext renderingContext) {
-		final String operator = isNegated ? " not between " : " between ";
-		return ( (Renderable) getExpression() ).render( renderingContext )
-				+ operator
-				+ ( (Renderable) getLowerBound() ).render( renderingContext )
-				+ " and "
-				+ ( (Renderable) getUpperBound() ).render( renderingContext );
 	}
 }

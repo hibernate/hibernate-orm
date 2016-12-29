@@ -15,8 +15,6 @@ import javax.persistence.criteria.Predicate;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * A compound {@link Predicate predicate} is a grouping of other {@link Predicate predicates} in order to convert
@@ -101,27 +99,8 @@ public class CompoundPredicate
 	}
 
 	@Override
-	public String render(RenderingContext renderingContext) {
-		return render( isNegated(), renderingContext );
-	}
-
-	@Override
 	public boolean isJunction() {
 		return true;
-	}
-
-	@Override
-	public String render(boolean isNegated, RenderingContext renderingContext) {
-		return render( this, renderingContext );
-	}
-
-	private String operatorTextWithSeparator() {
-		return operatorTextWithSeparator( this.getOperator() );
-	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 
 	/**
@@ -134,50 +113,9 @@ public class CompoundPredicate
 		return new NegatedPredicateWrapper( this );
 	}
 
-	private void toggleOperator() {
-		this.operator = reverseOperator( this.operator );
-	}
-
 	public static BooleanOperator reverseOperator(BooleanOperator operator) {
 		return operator == BooleanOperator.AND
 				? BooleanOperator.OR
 				: BooleanOperator.AND;
-	}
-
-	public static String render(PredicateImplementor predicate, RenderingContext renderingContext) {
-		if ( ! predicate.isJunction() ) {
-			throw new IllegalStateException( "CompoundPredicate.render should only be used to render junctions" );
-		}
-
-		// for junctions, the negation is already cooked into the expressions and operator; we just need to render
-		// them as is
-
-		if ( predicate.getExpressions().isEmpty() ) {
-			boolean implicitTrue = predicate.getOperator() == BooleanOperator.AND;
-			// AND is always true for empty; OR is always false
-			return implicitTrue ? "1=1" : "0=1";
-		}
-
-		// single valued junction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		if ( predicate.getExpressions().size() == 1 ) {
-			return ( (Renderable) predicate.getExpressions().get( 0 ) ).render( renderingContext );
-		}
-
-		final StringBuilder buffer = new StringBuilder();
-		String sep = "";
-		for ( Expression expression : predicate.getExpressions() ) {
-			buffer.append( sep )
-					.append( "( " )
-					.append( ( (Renderable) expression ).render( renderingContext ) )
-					.append( " )" );
-			sep = operatorTextWithSeparator( predicate.getOperator() );
-		}
-		return buffer.toString();
-	}
-
-	private static String operatorTextWithSeparator(BooleanOperator operator) {
-		return operator == BooleanOperator.AND
-				? " and "
-				: " or ";
 	}
 }

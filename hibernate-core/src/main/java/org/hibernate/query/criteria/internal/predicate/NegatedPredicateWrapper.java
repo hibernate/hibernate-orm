@@ -16,7 +16,6 @@ import javax.persistence.criteria.Predicate;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterContainer;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
 
 /**
@@ -86,25 +85,5 @@ public class NegatedPredicateWrapper extends ExpressionImpl<Boolean> implements 
 		if ( ParameterContainer.class.isInstance( predicate ) ) {
 			( (ParameterContainer) predicate ).registerParameters( registry );
 		}
-	}
-
-	@Override
-	public String render(boolean isNegated, RenderingContext renderingContext) {
-		if ( isJunction() ) {
-			return CompoundPredicate.render( this, renderingContext );
-		}
-		else {
-			return predicate.render( isNegated, renderingContext );
-		}
-	}
-
-	@Override
-	public String render(RenderingContext renderingContext) {
-		return render( isNegated(), renderingContext );
-	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

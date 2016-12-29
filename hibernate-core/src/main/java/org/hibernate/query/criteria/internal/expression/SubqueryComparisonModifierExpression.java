@@ -11,8 +11,6 @@ import javax.persistence.criteria.Subquery;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Represents a {@link Modifier#ALL}, {@link Modifier#ANY}, {@link Modifier#SOME} modifier appplied to a subquery as
@@ -65,13 +63,5 @@ public class SubqueryComparisonModifierExpression<Y>
 
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do (the subquery should be handled directly, and the modified itself is not parameterized)
-	}
-
-	public String render(RenderingContext renderingContext) {
-		return getModifier().rendered() + ( (Renderable) getSubquery() ).render( renderingContext );
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

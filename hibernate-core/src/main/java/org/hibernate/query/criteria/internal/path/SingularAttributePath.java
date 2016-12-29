@@ -16,7 +16,6 @@ import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.PathSource;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Models a path for a {@link SingularAttribute} generally obtained from a
@@ -101,16 +100,6 @@ public class SingularAttributePath<X> extends AbstractPathImpl<X> implements Ser
 		@Override
 		public String getAlias() {
 			return original.getAlias();
-		}
-
-		@Override
-		public void prepareAlias(RenderingContext renderingContext) {
-			// do nothing...
-		}
-
-		@Override
-		public String render(RenderingContext renderingContext) {
-			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
 		}
 	}
 }

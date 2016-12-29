@@ -30,7 +30,6 @@ import javax.persistence.TransactionRequiredException;
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -57,11 +56,18 @@ import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterBinderImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterRegistrationImpl;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
+import org.hibernate.sql.exec.results.process.internal.RowReaderNoResultsExpectedImpl;
+import org.hibernate.sql.exec.results.process.internal.RowReaderStandardImpl;
+import org.hibernate.sql.exec.results.process.spi.Initializer;
+import org.hibernate.sql.exec.results.process.spi.InitializerSource;
+import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
+import org.hibernate.sql.exec.results.process.spi.RowReader;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.spi.Type;
 
@@ -74,11 +80,12 @@ public class ProcedureCallImpl<R>
 		extends AbstractQuery<R>
 		implements ProcedureCallImplementor<R> {
 	private final String procedureName;
+	private final Set<String> synchronizedQuerySpaces;
+
+	private final RowReader<R> rowReader;
+	private final ParameterManager parameterManager;
 
 	private FunctionReturnImpl functionReturn;
-
-	private final ParameterManager parameterManager;
-	private Set<String> synchronizedQuerySpaces;
 
 	private ProcedureOutputsImpl outputs;
 
@@ -96,6 +103,9 @@ public class ProcedureCallImpl<R>
 		this.procedureName = procedureName;
 
 		this.parameterManager = new ParameterManager( this );
+
+		this.synchronizedQuerySpaces = Collections.emptySet();
+		this.rowReader = RowReaderNoResultsExpectedImpl.instance();
 	}
 
 	/**
@@ -111,8 +121,9 @@ public class ProcedureCallImpl<R>
 
 		this.parameterManager = new ParameterManager( this );
 
-		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<>();
-		final Set<String> collectedQuerySpaces = new HashSet<>();
+		final Set<String> querySpaces = new HashSet<>();
+		final List<ReturnAssembler> returnAssemblers = new ArrayList<>();
+		final List<Initializer> initializers = new ArrayList<>();
 
 		Util.resolveResultClasses(
 				new Util.ResultClassesResolutionContext() {
@@ -122,21 +133,30 @@ public class ProcedureCallImpl<R>
 					}
 
 					@Override
-					public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
-						Collections.addAll( collectedQueryReturns, queryReturns );
+					public void addQuerySpaces(String... spaces) {
+						Collections.addAll( querySpaces, spaces );
 					}
 
 					@Override
-					public void addQuerySpaces(String... spaces) {
-						Collections.addAll( collectedQuerySpaces, spaces );
+					public void addQueryReturns(Return... queryReturns) {
+						for ( Return queryReturn : queryReturns ) {
+							returnAssemblers.add( queryReturn.getReturnAssembler() );
+							if ( queryReturn instanceof InitializerSource ) {
+								( (InitializerSource) queryReturn ).registerInitializers( initializers::add );
+							}
+						}
 					}
 				},
 				resultClasses
 		);
 
-		this.synchronizedQuerySpaces = collectedQuerySpaces;
-
-		// todo : use resultClasses to build RowReader, Initializers, etc
+		this.synchronizedQuerySpaces = Collections.unmodifiableSet( querySpaces );
+		this.rowReader = new RowReaderStandardImpl<>(
+				returnAssemblers,
+				initializers,
+				null,
+				null
+		);
 	}
 
 	/**
@@ -152,8 +172,9 @@ public class ProcedureCallImpl<R>
 
 		this.parameterManager = new ParameterManager( this );
 
-		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<>();
-		final Set<String> collectedQuerySpaces = new HashSet<>();
+		final Set<String> querySpaces = new HashSet<>();
+		final List<ReturnAssembler> returnAssemblers = new ArrayList<>();
+		final List<Initializer> initializers = new ArrayList<>();
 
 		Util.resolveResultSetMappings(
 				new Util.ResultSetMappingResolutionContext() {
@@ -167,27 +188,34 @@ public class ProcedureCallImpl<R>
 						return session.getFactory().getNamedQueryRepository().getResultSetMappingDefinition( name );
 					}
 
-					// todo : integrate org.hibernate.sql.convert.results.spi.Return as the return objects here
+					@Override
+					public void addQuerySpaces(String... spaces) {
+						Collections.addAll( querySpaces, spaces );
+					}
 
 					@Override
-					public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
-						Collections.addAll( collectedQueryReturns, queryReturns );
+					public void addQueryReturns(Return... queryReturns) {
+						for ( Return queryReturn : queryReturns ) {
+							returnAssemblers.add( queryReturn.getReturnAssembler() );
+							if ( queryReturn instanceof InitializerSource ) {
+								( (InitializerSource) queryReturn ).registerInitializers( initializers::add );
+							}
+						}
 					}
 
 					// todo : add QuerySpaces to JdbcOperation
 					// todo : add JdbcOperation#shouldFlushAffectedQuerySpaces()
-
-					@Override
-					public void addQuerySpaces(String... spaces) {
-						Collections.addAll( collectedQuerySpaces, spaces );
-					}
 				},
 				resultSetMappings
 		);
 
-		this.synchronizedQuerySpaces = collectedQuerySpaces;
-
-		// todo : use resultSetMappings to build RowReader, Initializers, etc
+		this.synchronizedQuerySpaces = Collections.unmodifiableSet( querySpaces );
+		this.rowReader = new RowReaderStandardImpl<>(
+				returnAssemblers,
+				initializers,
+				null,
+				null
+		);
 	}
 
 	/**
@@ -202,9 +230,10 @@ public class ProcedureCallImpl<R>
 		this.procedureName = memento.getProcedureName();
 
 		this.parameterManager = new ParameterManager( this );
-		parameterManager.registerParameters( memento );
+		this.parameterManager.registerParameters( memento );
 
 		this.synchronizedQuerySpaces = Util.copy( memento.getSynchronizedQuerySpaces() );
+		this.rowReader = memento.getRowReader();
 
 		for ( Map.Entry<String, Object> entry : memento.getHintsMap().entrySet() ) {
 			setHint( entry.getKey(), entry.getValue() );
@@ -440,7 +469,7 @@ public class ProcedureCallImpl<R>
 				resolveParameterStrategy( parameterManager.getParameterStrategy() ),
 				queryOptions,
 				parameterManager,
-				// can we apply a RowTransformer to ProcedureCalls?
+				// todo : build RowTransformer based on ResultSet mapping
 				null,
 				getSession()
 		);
@@ -490,10 +519,7 @@ public class ProcedureCallImpl<R>
 	 * @return The spaces
 	 */
 	protected Set<String> synchronizedQuerySpaces() {
-		if ( synchronizedQuerySpaces == null ) {
-			synchronizedQuerySpaces = new HashSet<>();
-		}
-		return synchronizedQuerySpaces;
+		return synchronizedQuerySpaces == null ? Collections.emptySet() : synchronizedQuerySpaces;
 	}
 
 	@Override
@@ -535,6 +561,7 @@ public class ProcedureCallImpl<R>
 				procedureName,
 				parameterManager.getParameterStrategy(),
 				parameterManager.toParameterMementos(),
+				rowReader,
 				Util.copy( synchronizedQuerySpaces ),
 				Util.copy( hints )
 		);
@@ -546,6 +573,7 @@ public class ProcedureCallImpl<R>
 				procedureName,
 				parameterManager.getParameterStrategy(),
 				parameterManager.toParameterMementos(),
+				rowReader,
 				Util.copy( synchronizedQuerySpaces ),
 				Util.copy( getHints() )
 		);

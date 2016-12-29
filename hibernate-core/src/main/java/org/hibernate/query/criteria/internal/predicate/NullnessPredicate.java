@@ -11,8 +11,6 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.UnaryOperatorExpression;
 
 /**
@@ -50,14 +48,5 @@ public class NullnessPredicate
 	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getOperand(), registry );
-	}
-
-	@Override
-	public String render(boolean isNegated, RenderingContext renderingContext) {
-		return ( (Renderable) operand ).render( renderingContext ) + check( isNegated );
-	}
-
-	private String check(boolean negated) {
-		return negated ? " is not null" : " is null";
 	}
 }

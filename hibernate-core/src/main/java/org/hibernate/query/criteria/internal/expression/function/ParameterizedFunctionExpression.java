@@ -14,8 +14,6 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterContainer;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Support for functions with parameters.
@@ -90,30 +88,4 @@ public class ParameterizedFunctionExpression<X>
 			}
 		}
 	}
-
-	@Override
-	public String render(RenderingContext renderingContext) {
-		StringBuilder buffer = new StringBuilder();
-		if ( isStandardJpaFunction() ) {
-			buffer.append( getFunctionName() )
-					.append( "(" );
-		}
-		else {
-			buffer.append( "function('" )
-					.append( getFunctionName() )
-					.append( "', " );
-		}
-		renderArguments( buffer, renderingContext );
-		buffer.append( ')' );
-		return buffer.toString();
-	}
-
-	protected void renderArguments(StringBuilder buffer, RenderingContext renderingContext) {
-		String sep = "";
-		for ( Expression argument : argumentExpressions ) {
-			buffer.append( sep ).append( ( (Renderable) argument ).render( renderingContext ) );
-			sep = ", ";
-		}
-	}
-
 }

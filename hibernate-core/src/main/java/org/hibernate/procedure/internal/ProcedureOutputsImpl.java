@@ -6,6 +6,7 @@
  */
 package org.hibernate.procedure.internal;
 
+import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,13 +28,17 @@ import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.exec.results.process.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.exec.results.process.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.exec.results.process.internal.values.DirectResultSetAccess;
+import org.hibernate.sql.exec.results.process.internal.values.JdbcValuesSourceResultSetImpl;
+import org.hibernate.sql.exec.results.process.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.exec.results.process.spi.RowReader;
 import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.spi.RowTransformer;
 
 import org.jboss.logging.Logger;
 
@@ -46,6 +51,7 @@ public class ProcedureOutputsImpl implements ProcedureOutputs {
 	private static final Logger log = Logger.getLogger( ProcedureOutputsImpl.class );
 
 	private final ParameterStrategy parameterStrategy;
+	private final QueryOptions queryOptions;
 	private final SharedSessionContractImplementor persistenceContext;
 	private final ProcedureCallImpl procedureCall;
 	private final JdbcCall jdbcCall;
@@ -53,6 +59,8 @@ public class ProcedureOutputsImpl implements ProcedureOutputs {
 	private final String callableName;
 	private final String callString;
 	private final CallableStatement callableStatement;
+
+	private final RowReader rowReader;
 
 	private CurrentOutputState currentOutputState;
 
@@ -65,9 +73,10 @@ public class ProcedureOutputsImpl implements ProcedureOutputs {
 			ParameterStrategy parameterStrategy,
 			QueryOptions queryOptions,
 			QueryParameterBindings bindings,
-			RowTransformer rowTransformer,
+			RowReader rowReader,
 			SharedSessionContractImplementor persistenceContext) {
 		this.parameterStrategy = parameterStrategy;
+		this.queryOptions = queryOptions;
 		this.persistenceContext = persistenceContext;
 		this.procedureCall = procedureCall;
 		this.jdbcCall = jdbcCall;
@@ -76,6 +85,9 @@ public class ProcedureOutputsImpl implements ProcedureOutputs {
 		this.callableName = jdbcCall.getSql();
 		this.callString = buildCallableString();
 		this.callableStatement = prepareCallableStatement( queryOptions, bindings );
+
+		// todo : pass in RowReader based on ResultSet-mapping
+		this.rowReader = rowReader;
 
 		try {
 			final boolean isResultSet = callableStatement.execute();
@@ -128,6 +140,8 @@ public class ProcedureOutputsImpl implements ProcedureOutputs {
 					refCursorExtractors.add( refCursorExtractor );
 				}
 			}
+
+			// todo : bind query-options
 
 			for ( JdbcCallParameterRegistration registration : jdbcCall.getParameterRegistrations() ) {
 				int jdbcPosition = 1;
@@ -281,9 +295,74 @@ public class ProcedureOutputsImpl implements ProcedureOutputs {
 		);
 	}
 
+	@SuppressWarnings("unchecked")
 	protected List extractResults(ResultSet resultSet) {
-		// todo : need to hook this in with RowReader, Initializers, etc
-		throw new NotYetImplementedException( );
+		final DirectResultSetAccess resultSetAccess = new DirectResultSetAccess( persistenceContext, callableStatement, resultSet );
+		final JdbcValuesSourceResultSetImpl jdbcValuesSource = new JdbcValuesSourceResultSetImpl(
+				resultSetAccess,
+				queryOptions,
+				jdbcCall.getSqlSelections(),
+				persistenceContext
+		);
+
+
+		/*
+		 * Processing options effectively are only used for entity loading.  Here we don't need these values.
+		 */
+		final JdbcValuesSourceProcessingOptions processingOptions = new JdbcValuesSourceProcessingOptions() {
+			@Override
+			public Object getEffectiveOptionalObject() {
+				return null;
+			}
+
+			@Override
+			public String getEffectiveOptionalEntityName() {
+				return null;
+			}
+
+			@Override
+			public Serializable getEffectiveOptionalId() {
+				return null;
+			}
+
+			@Override
+			public boolean shouldReturnProxies() {
+				return true;
+			}
+		};
+
+		final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
+				jdbcValuesSource,
+				queryOptions,
+				processingOptions,
+				persistenceContext
+		);
+
+		final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
+				jdbcValuesSourceProcessingState,
+				queryOptions,
+				jdbcValuesSource
+		);
+
+		try {
+			final List results = new ArrayList<>();
+			while ( rowProcessingState.next() ) {
+				results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
+				rowProcessingState.finishRowProcessing();
+			}
+			return results;
+		}
+		catch (SQLException e) {
+			throw persistenceContext.getJdbcServices().getSqlExceptionHelper().convert(
+					e,
+					"Error processing return rows"
+			);
+		}
+		finally {
+			rowReader.finishUp( jdbcValuesSourceProcessingState );
+			jdbcValuesSourceProcessingState.finishUp();
+			jdbcValuesSource.finishUp();
+		}
 	}
 
 	protected class CurrentOutputState {

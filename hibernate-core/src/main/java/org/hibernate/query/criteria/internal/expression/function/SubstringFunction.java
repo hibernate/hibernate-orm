@@ -11,8 +11,6 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.LiteralExpression;
 
 /**
@@ -89,19 +87,5 @@ public class SubstringFunction
 		Helper.possibleParameter( getLength(), registry );
 		Helper.possibleParameter( getStart(), registry );
 		Helper.possibleParameter( getValue(), registry );
-	}
-
-	public String render(RenderingContext renderingContext) {
-		StringBuilder buffer = new StringBuilder();
-		buffer.append( "substring(" )
-				.append( ( (Renderable) getValue() ).render( renderingContext ) )
-				.append( ',' )
-				.append( ( (Renderable) getStart() ).render( renderingContext ) );
-		if ( getLength() != null ) {
-			buffer.append( ',' )
-					.append( ( (Renderable) getLength() ).render( renderingContext ) );
-		}
-		buffer.append( ')' );
-		return buffer.toString();
 	}
 }

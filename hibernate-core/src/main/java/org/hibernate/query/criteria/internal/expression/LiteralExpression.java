@@ -11,7 +11,6 @@ import java.io.Serializable;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Represents a literal expression.
@@ -42,30 +41,6 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	public String render(RenderingContext renderingContext) {
-		if ( ValueHandlerFactory.isNumeric( literal ) ) {
-			return ValueHandlerFactory.determineAppropriateHandler( (Class) literal.getClass() ).render( literal );
-		}
-
-		// else...
-		final String parameterName = renderingContext.registerLiteralParameterBinding( getLiteral(), getJavaType() );
-		return ':' + parameterName;
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	public String renderProjection(RenderingContext renderingContext) {
-		// some drivers/servers do not like parameters in the select clause
-		final ValueHandlerFactory.ValueHandler handler =
-				ValueHandlerFactory.determineAppropriateHandler( literal.getClass() );
-		if ( ValueHandlerFactory.isCharacter( literal ) ) {
-			return '\'' + handler.render( literal ) + '\'';
-		}
-		else {
-			return handler.render( literal );
-		}
 	}
 
 	@Override

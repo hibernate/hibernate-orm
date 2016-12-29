@@ -14,8 +14,6 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Models an ANSI SQL <tt>COALESCE</tt> expression.  <tt>COALESCE</tt> is a specialized <tt>CASE</tt> statement.
@@ -35,7 +33,7 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 			Class<T> javaType) {
 		super( criteriaBuilder, javaType );
 		this.javaType = javaType;
-		this.expressions = new ArrayList<Expression<? extends T>>();
+		this.expressions = new ArrayList<>();
 	}
 
 	@Override
@@ -64,20 +62,5 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 		for ( Expression expression : getExpressions() ) {
 			Helper.possibleParameter(expression, registry);
 		}
-	}
-
-	public String render(RenderingContext renderingContext) {
-		StringBuilder buffer = new StringBuilder( "coalesce(" );
-		String sep = "";
-		for ( Expression expression : getExpressions() ) {
-			buffer.append( sep )
-					.append( ( (Renderable) expression ).render( renderingContext ) );
-			sep = ", ";
-		}
-		return buffer.append( ")" ).toString();
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

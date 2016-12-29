@@ -11,8 +11,6 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Models an ANSI SQL <tt>NULLIF</tt> expression.  <tt>NULLIF</tt> is a specialized <tt>CASE</tt> statement.
@@ -58,17 +56,5 @@ public class NullifExpression<T> extends ExpressionImpl<T> implements Serializab
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getPrimaryExpression(), registry );
 		Helper.possibleParameter( getSecondaryExpression(), registry );
-	}
-
-	public String render(RenderingContext renderingContext) {
-		return "nullif("
-				+ ( (Renderable) getPrimaryExpression() ).render( renderingContext )
-				+ ','
-				+ ( (Renderable) getSecondaryExpression() ).render( renderingContext )
-				+ ")";
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

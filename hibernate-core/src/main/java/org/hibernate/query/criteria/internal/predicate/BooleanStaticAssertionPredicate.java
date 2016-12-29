@@ -10,7 +10,6 @@ import java.io.Serializable;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Predicate used to assert a static boolean condition.
@@ -37,14 +36,4 @@ public class BooleanStaticAssertionPredicate
 	public void registerParameters(ParameterRegistry registry) {
 		// nada
 	}
-
-	@Override
-	public String render(boolean isNegated, RenderingContext renderingContext) {
-		boolean isTrue = getAssertedValue();
-		if ( isNegated ) {
-			isTrue = !isTrue;
-		}
-		return isTrue ? "1=1" : "0=1";
-	}
-
 }

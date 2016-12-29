@@ -20,7 +20,6 @@ import org.hibernate.query.criteria.internal.FromImplementor;
 import org.hibernate.query.criteria.internal.ListJoinImplementor;
 import org.hibernate.query.criteria.internal.PathImplementor;
 import org.hibernate.query.criteria.internal.PathSource;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.ListIndexExpression;
 
 /**
@@ -110,26 +109,9 @@ public class ListAttributeJoin<O,E>
 		}
 
 		@Override
-		public void prepareAlias(RenderingContext renderingContext) {
-			if ( getAlias() == null ) {
-				if ( isCorrelated() ) {
-					setAlias( getCorrelationParent().getAlias() );
-				}
-				else {
-					setAlias( renderingContext.generateAlias() );
-				}
-			}
-		}
-
-		@Override
 		protected void setAlias(String alias) {
 			super.setAlias( alias );
 			original.setAlias( alias );
-		}
-
-		@Override
-		public String render(RenderingContext renderingContext) {
-			return "treat(" + original.render( renderingContext ) + " as " + treatAsType.getName() + ")";
 		}
 
 		@Override

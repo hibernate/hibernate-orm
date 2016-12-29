@@ -10,8 +10,6 @@ import java.io.Serializable;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
-import org.hibernate.query.criteria.internal.expression.function.CastFunction;
 
 /**
  * Represents a <tt>NULL</tt>literal expression.
@@ -25,13 +23,5 @@ public class NullLiteralExpression<T> extends ExpressionImpl<T> implements Seria
 
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do
-	}
-
-	public String render(RenderingContext renderingContext) {
-		return "null";
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return CastFunction.CAST_NAME + "( 	null  as " + renderingContext.getCastType( getJavaType() ) + ')';
 	}
 }

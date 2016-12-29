@@ -9,9 +9,7 @@ package org.hibernate.query.criteria.internal;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaQuery;
@@ -24,17 +22,6 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
-import org.hibernate.query.criteria.internal.compile.CompilableCriteria;
-import org.hibernate.query.criteria.internal.compile.CriteriaInterpretation;
-import org.hibernate.query.criteria.internal.compile.CriteriaQueryTypeQueryAdapter;
-import org.hibernate.query.criteria.internal.compile.ImplicitParameterBinding;
-import org.hibernate.query.criteria.internal.compile.InterpretedParameterMetadata;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
-import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.type.spi.Type;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -43,14 +30,13 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<T>, CompilableCriteria, Serializable {
+public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<T>, Serializable {
 	private static final Logger log = Logger.getLogger( CriteriaQueryImpl.class );
 
 	private final Class<T> returnType;
 
 	private final QueryStructure<T> queryStructure;
 	private List<Order> orderSpecs = Collections.emptyList();
-
 
 	public CriteriaQueryImpl(
 			CriteriaBuilderImpl criteriaBuilder,
@@ -246,7 +232,6 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		return queryStructure.subquery( subqueryType );
 	}
 
-	@Override
 	public void validate() {
 		// getRoots() is explicitly supposed to return empty if none defined, no need to check for null
 		if ( getRoots().isEmpty() ) {
@@ -283,106 +268,5 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		//
 		// todo : should we put an implicit marker in the selection to this fact to make later processing easier?
 		return true;
-	}
-
-	@Override
-	public CriteriaInterpretation interpret(RenderingContext renderingContext) {
-		final StringBuilder jpaqlBuffer = new StringBuilder();
-
-		queryStructure.render( jpaqlBuffer, renderingContext );
-
-		if ( ! getOrderList().isEmpty() ) {
-			jpaqlBuffer.append( " order by " );
-			String sep = "";
-			for ( Order orderSpec : getOrderList() ) {
-				jpaqlBuffer.append( sep )
-						.append( ( ( Renderable ) orderSpec.getExpression() ).render( renderingContext ) )
-						.append( orderSpec.isAscending() ? " asc" : " desc" );
-				sep = ", ";
-			}
-		}
-
-		final String jpaqlString = jpaqlBuffer.toString();
-
-		log.debugf( "Rendered criteria query -> %s", jpaqlString );
-
-		return new CriteriaInterpretation() {
-			@Override
-			@SuppressWarnings("unchecked")
-			public QueryImplementor buildCompiledQuery(
-					SessionImplementor entityManager,
-					final InterpretedParameterMetadata parameterMetadata) {
-
-				final Map<String,Class> implicitParameterTypes = extractTypeMap( parameterMetadata.implicitParameterBindings() );
-
-				QueryImplementor<T> jpaqlQuery = entityManager.createQuery(
-						jpaqlString,
-						getResultType(),
-						getSelection(),
-						new HibernateEntityManagerImplementor.QueryOptions() {
-							@Override
-							public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
-								SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
-								return selection == null
-										? null
-										: selection.getValueHandlers();
-							}
-
-							@Override
-							public Map<String, Class> getNamedParameterExplicitTypes() {
-								return implicitParameterTypes;
-							}
-
-							@Override
-							public ResultMetadataValidator getResultMetadataValidator() {
-								return new HibernateEntityManagerImplementor.QueryOptions.ResultMetadataValidator() {
-									@Override
-									public void validate(Type[] returnTypes) {
-										SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
-										if ( selection != null ) {
-											if ( selection.isCompoundSelection() ) {
-												if ( returnTypes.length != selection.getCompoundSelectionItems().size() ) {
-													throw new IllegalStateException(
-															"Number of return values [" + returnTypes.length +
-																	"] did not match expected [" +
-																	selection.getCompoundSelectionItems().size() + "]"
-													);
-												}
-											}
-											else {
-												if ( returnTypes.length > 1 ) {
-													throw new IllegalStateException(
-															"Number of return values [" + returnTypes.length +
-																	"] did not match expected [1]"
-													);
-												}
-											}
-										}
-									}
-								};
-							}
-						}
-				);
-
-				for ( ImplicitParameterBinding implicitParameterBinding : parameterMetadata.implicitParameterBindings() ) {
-					implicitParameterBinding.bind( jpaqlQuery );
-				}
-
-				return new CriteriaQueryTypeQueryAdapter(
-						entityManager,
-						jpaqlQuery,
-						parameterMetadata.explicitParameterInfoMap()
-				);
-
-			}
-
-			private Map<String, Class> extractTypeMap(List<ImplicitParameterBinding> implicitParameterBindings) {
-				final HashMap<String,Class> map = new HashMap<String, Class>();
-				for ( ImplicitParameterBinding implicitParameter : implicitParameterBindings ) {
-					map.put( implicitParameter.getParameterName(), implicitParameter.getJavaType() );
-				}
-				return map;
-			}
-		};
 	}
 }

@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.collection.spi.ImprovedCollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.collection.spi.PluralAttributeIndex;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.DomainReferenceImplementor;
@@ -23,15 +23,15 @@ import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.ast.select.SelectableBasicTypeImpl;
 import org.hibernate.sql.ast.select.SelectableEmbeddedTypeImpl;
 import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
 public class PluralAttributeIndexReferenceExpression implements DomainReferenceExpression {
-	private final ImprovedCollectionPersister collectionPersister;
+	private final CollectionPersister collectionPersister;
 	private final ColumnBindingSource columnBindingSource;
 	private final PropertyPath propertyPath;
 
@@ -39,7 +39,7 @@ public class PluralAttributeIndexReferenceExpression implements DomainReferenceE
 	private final Selectable selectable;
 
 	public PluralAttributeIndexReferenceExpression(
-			ImprovedCollectionPersister collectionPersister,
+			CollectionPersister collectionPersister,
 			TableGroup columnBindingSource,
 			PropertyPath propertyPath) {
 		this.collectionPersister = collectionPersister;

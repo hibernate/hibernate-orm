@@ -11,8 +11,6 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.predicate.ImplicitNumericExpressionTypeDeterminer;
 
 /**
@@ -206,16 +204,4 @@ public class BinaryArithmeticOperation<N extends Number>
 		Helper.possibleParameter( getLeftHandOperand(), registry );
 	}
 
-	@Override
-	public String render(RenderingContext renderingContext) {
-		return getOperator().apply(
-				( (Renderable) getLeftHandOperand() ).render( renderingContext ),
-				( (Renderable) getRightHandOperand() ).render( renderingContext )
-		);
-	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
 }

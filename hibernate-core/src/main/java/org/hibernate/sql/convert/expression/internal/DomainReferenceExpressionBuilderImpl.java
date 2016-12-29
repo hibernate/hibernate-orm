@@ -8,11 +8,11 @@
 package org.hibernate.sql.convert.expression.internal;
 
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.collection.spi.ImprovedCollectionPersister;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.internal.SingularAttributeEntity;
 import org.hibernate.persister.common.spi.SingularAttribute;
-import org.hibernate.persister.entity.spi.ImprovedEntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
 import org.hibernate.sql.ast.expression.domain.CompositeColumnBindingSource;
@@ -46,11 +46,11 @@ public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpr
 	public DomainReferenceExpression buildEntityExpression(
 			BuildingContext buildingContext,
 			ColumnBindingSource columnBindingSource,
-			ImprovedEntityPersister improvedEntityPersister,
+			EntityPersister entityPersister,
 			PropertyPath propertyPath) {
 		return new EntityReferenceExpression(
 				columnBindingSource,
-				improvedEntityPersister,
+				entityPersister,
 				propertyPath,
 				shallow
 		);
@@ -121,7 +121,7 @@ public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpr
 			PluralAttributeElementBinding binding,
 			TableGroup resolvedTableGroup,
 			PropertyPath propertyPath) {
-		final ImprovedCollectionPersister collectionPersister = (ImprovedCollectionPersister) binding.getPluralAttributeReference();
+		final CollectionPersister collectionPersister = (CollectionPersister) binding.getPluralAttributeReference();
 		return new PluralAttributeElementReferenceExpression(
 				collectionPersister,
 				resolvedTableGroup,

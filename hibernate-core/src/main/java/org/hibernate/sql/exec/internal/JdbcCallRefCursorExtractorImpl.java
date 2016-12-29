@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.procedure.internal.ProcedureOutputsImpl;
 import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
 
 /**

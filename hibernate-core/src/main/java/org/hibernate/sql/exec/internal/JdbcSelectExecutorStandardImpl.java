@@ -102,8 +102,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 						ResultSet.CONCUR_READ_ONLY,
 						ResultSet.CLOSE_CURSORS_AT_COMMIT
 				),
-
-				null
+				ScrollableResultsConsumer.instance()
 		);
 	}
 

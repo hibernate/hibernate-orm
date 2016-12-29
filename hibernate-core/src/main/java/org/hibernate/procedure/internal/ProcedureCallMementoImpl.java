@@ -16,6 +16,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.sql.exec.results.process.spi.RowReader;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -29,6 +30,7 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 	private final ParameterStrategy parameterStrategy;
 	private final List<ParameterMemento> parameterDeclarations;
 
+	private final RowReader rowReader;
 	private final Set<String> synchronizedQuerySpaces;
 
 	private final Map<String, Object> hintsMap;
@@ -46,11 +48,13 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 			String procedureName,
 			ParameterStrategy parameterStrategy,
 			List<ParameterMemento> parameterDeclarations,
+			RowReader rowReader,
 			Set<String> synchronizedQuerySpaces,
 			Map<String, Object> hintsMap) {
 		this.procedureName = procedureName;
 		this.parameterStrategy = parameterStrategy;
 		this.parameterDeclarations = parameterDeclarations;
+		this.rowReader = rowReader;
 		this.synchronizedQuerySpaces = synchronizedQuerySpaces;
 		this.hintsMap = hintsMap;
 	}
@@ -79,6 +83,10 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 	@Override
 	public Map<String, Object> getHintsMap() {
 		return hintsMap;
+	}
+
+	public <R> RowReader<R> getRowReader() {
+		return rowReader;
 	}
 
 	/**

@@ -11,7 +11,6 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 import javax.persistence.ParameterMode;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;

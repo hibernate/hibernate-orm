@@ -11,8 +11,6 @@ import javax.persistence.criteria.ParameterExpression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.compile.ExplicitParameterInfo;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Defines a parameter specification, or the information about a parameter (where it occurs, what is
@@ -66,14 +64,5 @@ public class ParameterExpressionImpl<T>
 
 	public void registerParameters(ParameterRegistry registry) {
 		registry.registerParameter( this );
-	}
-
-	public String render(RenderingContext renderingContext) {
-		final ExplicitParameterInfo parameterInfo = renderingContext.registerExplicitParameter( this );
-		return parameterInfo.render();
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

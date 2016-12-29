@@ -6,9 +6,7 @@
  */
 package org.hibernate.query.criteria.internal;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import javax.persistence.criteria.CommonAbstractCriteria;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
@@ -16,15 +14,7 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
-import org.hibernate.query.criteria.internal.compile.CompilableCriteria;
-import org.hibernate.query.criteria.internal.compile.CriteriaInterpretation;
-import org.hibernate.query.criteria.internal.compile.ImplicitParameterBinding;
-import org.hibernate.query.criteria.internal.compile.InterpretedParameterMetadata;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.path.RootImpl;
-import org.hibernate.query.spi.QueryImplementor;
 
 /**
  * Base class for commonality between {@link javax.persistence.criteria.CriteriaUpdate} and
@@ -32,7 +22,7 @@ import org.hibernate.query.spi.QueryImplementor;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractManipulationCriteriaQuery<T> implements CompilableCriteria, CommonAbstractCriteria {
+public abstract class AbstractManipulationCriteriaQuery<T> implements CommonAbstractCriteria {
 	private final CriteriaBuilderImpl criteriaBuilder;
 
 	private RootImpl<T> root;
@@ -97,67 +87,4 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 		}
 	}
 
-	@Override
-	public CriteriaInterpretation interpret(RenderingContext renderingContext) {
-		final String jpaqlString = renderQuery( renderingContext );
-		return new CriteriaInterpretation() {
-			@Override
-			@SuppressWarnings("unchecked")
-			public QueryImplementor buildCompiledQuery(
-					SessionImplementor entityManager,
-					final InterpretedParameterMetadata interpretedParameterMetadata) {
-
-				final Map<String,Class> implicitParameterTypes = extractTypeMap( interpretedParameterMetadata.implicitParameterBindings() );
-
-				QueryImplementor query = entityManager.createQuery(
-						jpaqlString,
-						null,
-						null,
-						new HibernateEntityManagerImplementor.QueryOptions() {
-							@Override
-							public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
-								return null;
-							}
-
-							@Override
-							public Map<String, Class> getNamedParameterExplicitTypes() {
-								return implicitParameterTypes;
-							}
-
-							@Override
-							public ResultMetadataValidator getResultMetadataValidator() {
-								return null;
-							}
-						}
-				);
-
-				for ( ImplicitParameterBinding implicitParameterBinding : interpretedParameterMetadata.implicitParameterBindings() ) {
-					implicitParameterBinding.bind( query );
-				}
-
-				return query;
-			}
-
-			private Map<String, Class> extractTypeMap(List<ImplicitParameterBinding> implicitParameterBindings) {
-				final HashMap<String,Class> map = new HashMap<>();
-				for ( ImplicitParameterBinding implicitParameter : implicitParameterBindings ) {
-					map.put( implicitParameter.getParameterName(), implicitParameter.getJavaType() );
-				}
-				return map;
-			}
-		};
-	}
-
-	protected abstract String renderQuery(RenderingContext renderingContext);
-
-	protected void renderRoot(StringBuilder jpaql, RenderingContext renderingContext) {
-		jpaql.append( ( (FromImplementor) root ).renderTableExpression( renderingContext ) );
-	}
-
-	protected void renderRestrictions(StringBuilder jpaql, RenderingContext renderingContext) {
-		if ( getRestriction() != null) {
-			jpaql.append( " where " )
-					.append( ( (Renderable) getRestriction() ).render( renderingContext ) );
-		}
-	}
 }

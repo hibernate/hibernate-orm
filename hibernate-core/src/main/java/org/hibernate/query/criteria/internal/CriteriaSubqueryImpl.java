@@ -23,7 +23,6 @@ import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.DelegatedExpressionImpl;
 import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
 import org.hibernate.query.criteria.internal.path.RootImpl;
@@ -130,16 +129,6 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 		public SubquerySelection(ExpressionImpl<S> wrapped, CriteriaSubqueryImpl subQuery) {
 			super( wrapped );
 			this.subQuery = subQuery;
-		}
-
-		@Override
-		public String render(RenderingContext renderingContext) {
-			return subQuery.render( renderingContext );
-		}
-
-		@Override
-		public String renderProjection(RenderingContext renderingContext) {
-			return render( renderingContext );
 		}
 	}
 
@@ -257,19 +246,4 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 		return queryStructure.subquery( subqueryType );
 	}
 
-
-	// rendering ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public String render(RenderingContext renderingContext) {
-		StringBuilder subqueryBuffer = new StringBuilder( "(" );
-		queryStructure.render( subqueryBuffer, renderingContext );
-		subqueryBuffer.append( ')' );
-		return subqueryBuffer.toString();
-	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		throw new IllegalStateException( "Subquery cannot occur in select clause" );
-	}
 }

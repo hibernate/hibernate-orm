@@ -13,7 +13,6 @@ import java.util.Map;
 
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.AnyDiscriminatorMappingType;
 import org.hibernate.type.spi.Type;
 
 /**

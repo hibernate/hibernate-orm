@@ -6,18 +6,46 @@
  */
 package org.hibernate.procedure.internal;
 
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.LockMode;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryCollectionReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
+import org.hibernate.loader.PropertyPath;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
+import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.expression.instantiation.DynamicInstantiation;
+import org.hibernate.sql.ast.select.SqlSelectable;
+import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.convert.results.internal.ReturnDynamicInstantiationImpl;
+import org.hibernate.sql.convert.results.internal.ReturnEntityImpl;
+import org.hibernate.sql.convert.results.internal.ReturnScalarImpl;
+import org.hibernate.sql.convert.results.spi.FetchParent;
+import org.hibernate.sql.convert.results.spi.Return;
+import org.hibernate.sql.exec.results.internal.instantiation.ArgumentReader;
+import org.hibernate.sql.exec.results.internal.instantiation.ReturnAssemblerConstructorImpl;
+import org.hibernate.sql.exec.results.internal.instantiation.ReturnAssemblerListImpl;
+import org.hibernate.sql.exec.results.process.internal.SqlSelectionImpl;
+import org.hibernate.sql.exec.results.process.internal.SqlSelectionReaderImpl;
+import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
+import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
+import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sqm.query.expression.Compatibility;
+import org.hibernate.type.spi.BasicType;
 
 import org.jboss.logging.Logger;
 
@@ -80,7 +108,7 @@ public class Util {
 		 *
 		 * @return SessionFactory
 		 */
-		public SessionFactoryImplementor getSessionFactory();
+		SessionFactoryImplementor getSessionFactory();
 
 		/**
 		 * Locate a ResultSetMappingDefinition by name
@@ -89,21 +117,21 @@ public class Util {
 		 *
 		 * @return The ResultSetMappingDefinition
 		 */
-		public ResultSetMappingDefinition findResultSetMapping(String name);
+		ResultSetMappingDefinition findResultSetMapping(String name);
 
 		/**
 		 * Callback to add query returns indicated by the result set mapping(s)
 		 *
 		 * @param queryReturns The query returns
 		 */
-		public void addQueryReturns(NativeSQLQueryReturn... queryReturns);
+		void addQueryReturns(Return... queryReturns);
 
 		/**
 		 * Callback to add query spaces indicated by the result set mapping(s)
 		 *
 		 * @param querySpaces The query spaces
 		 */
-		public void addQuerySpaces(String... querySpaces);
+		void addQuerySpaces(String... querySpaces);
 	}
 
 	/**
@@ -112,48 +140,41 @@ public class Util {
 	 * @param context The context for the resolution.  See {@link ResultSetMappingResolutionContext}
 	 * @param resultSetMappingNames The names of the result-set-mappings to resolve
 	 */
-	public static void resolveResultSetMappings(ResultSetMappingResolutionContext context, String... resultSetMappingNames) {
+	public static void resolveResultSetMappings(
+			ResultSetMappingResolutionContext context,
+			String... resultSetMappingNames) {
+		final QueryReturnResolver resolver = new QueryReturnResolver( context );
+
 		for ( String resultSetMappingName : resultSetMappingNames ) {
-			log.tracef( "Starting attempt resolve named result-set-mapping : %s", resultSetMappingName );
-			final ResultSetMappingDefinition mapping = context.findResultSetMapping( resultSetMappingName );
-			if ( mapping == null ) {
-				throw new UnknownSqlResultSetMappingException( "Unknown SqlResultSetMapping [" + resultSetMappingName + "]" );
-			}
-
-			log.tracef( "Found result-set-mapping : %s", mapping.traceLoggableFormat() );
-
-			context.addQueryReturns( mapping.getQueryReturns() );
-
-			final SQLQueryReturnProcessor processor =
-					new SQLQueryReturnProcessor( mapping.getQueryReturns(), context.getSessionFactory() );
-			final SQLQueryReturnProcessor.ResultAliasContext processResult = processor.process();
-			context.addQuerySpaces( processResult.collectQuerySpaces() );
+			resolver.resolve( resultSetMappingName );
 		}
 	}
 
 	/**
 	 * Context for resolving result-class definitions
 	 */
-	public static interface ResultClassesResolutionContext {
+	public interface ResultClassesResolutionContext {
+
 		/**
 		 * Access to the SessionFactory
 		 *
 		 * @return SessionFactory
 		 */
-		public SessionFactoryImplementor getSessionFactory();
+		SessionFactoryImplementor getSessionFactory();
+
 		/**
 		 * Callback to add query returns indicated by the result set mapping(s)
 		 *
 		 * @param queryReturns The query returns
 		 */
-		public void addQueryReturns(NativeSQLQueryReturn... queryReturns);
+		void addQueryReturns(Return... queryReturns);
 
 		/**
 		 * Callback to add query spaces indicated by the result set mapping(s)
 		 *
 		 * @param querySpaces The query spaces
 		 */
-		public void addQuerySpaces(String... querySpaces);
+		void addQuerySpaces(String... querySpaces);
 	}
 
 	/**
@@ -162,17 +183,183 @@ public class Util {
 	 * @param context The context for the resolution.  See {@link ResultSetMappingResolutionContext}
 	 * @param resultClasses The Classes to which the results should be mapped
 	 */
-	public static void resolveResultClasses(ResultClassesResolutionContext context, Class... resultClasses) {
+	public static void resolveResultClasses(
+			ResultClassesResolutionContext context,
+			Class... resultClasses) {
 		int i = 0;
 		for ( Class resultClass : resultClasses ) {
+			final EntityPersister persister = context.getSessionFactory().getMetamodel().entityPersister( resultClass.getName() );
+			context.addQuerySpaces( (String[]) persister.getQuerySpaces() );
 			context.addQueryReturns(
-					new NativeSQLQueryRootReturn( "alias" + (++i), resultClass.getName(), LockMode.READ )
+					new ReturnEntityImpl(
+							null,
+							persister,
+							null,
+							false,
+							// todo : SqlSelection map
+							null,
+							new PropertyPath( resultClass.getName() ),
+							null
+
+					)
 			);
-			try {
-				final EntityPersister persister = context.getSessionFactory().getEntityPersister( resultClass.getName() );
-				context.addQuerySpaces( (String[]) persister.getQuerySpaces() );
+		}
+	}
+
+	private static class QueryReturnResolver {
+		private final ResultSetMappingResolutionContext context;
+		private int selectablesCount = 0;
+
+		Map<String,SqlSelection> sqlSelectionMap = new HashMap<>();
+		Map<String, FetchParent> fetchParentMap = null;
+
+		public QueryReturnResolver(ResultSetMappingResolutionContext context) {
+			this.context = context;
+		}
+
+		public void resolve(String resultSetMappingName) {
+			log.tracef( "Starting attempt to resolve named result-set-mapping : %s", resultSetMappingName );
+
+			final ResultSetMappingDefinition mapping = context.findResultSetMapping( resultSetMappingName );
+			if ( mapping == null ) {
+				throw new UnknownSqlResultSetMappingException( "Unknown SqlResultSetMapping [" + resultSetMappingName + "]" );
 			}
-			catch (Exception ignore) {
+
+			log.tracef( "Found result-set-mapping : %s", mapping.traceLoggableFormat() );
+
+
+			// even though we only read from JDBC via positions now, we can still leverage the specified
+			//		aliases here as a key to resolve SqlSelections
+			//	todo : implement ^^
+
+			for ( NativeSQLQueryReturn nativeQueryReturn : mapping.getQueryReturns() ) {
+				if ( nativeQueryReturn instanceof NativeSQLQueryScalarReturn ) {
+					final NativeSQLQueryScalarReturn rtn = (NativeSQLQueryScalarReturn) nativeQueryReturn;
+					final ReturnScalarImpl scalarReturn = new ReturnScalarImpl(
+							null,
+							resolveSqlSelection( (BasicType) rtn.getType(), rtn.getColumnAlias() ),
+							null,
+							rtn.getType()
+					);
+					context.addQueryReturns( scalarReturn );
+				}
+				else if ( nativeQueryReturn instanceof NativeSQLQueryConstructorReturn ) {
+					final NativeSQLQueryConstructorReturn rtn = (NativeSQLQueryConstructorReturn) nativeQueryReturn;
+					final ReturnDynamicInstantiationImpl dynamicInstantiationReturn = new ReturnDynamicInstantiationImpl(
+							new DynamicInstantiation( rtn.getTargetClass() ),
+							null,
+							buildDynamicInstantiationAssembler( rtn )
+					);
+					context.addQueryReturns( dynamicInstantiationReturn );
+				}
+				else if ( nativeQueryReturn instanceof NativeSQLQueryCollectionReturn ) {
+					final NativeSQLQueryCollectionReturn rtn = (NativeSQLQueryCollectionReturn) nativeQueryReturn;
+					final String role = rtn.getOwnerEntityName() + '.' + rtn.getOwnerProperty();
+					final CollectionPersister persister = context.getSessionFactory().getMetamodel().collectionPersister( role );
+					//context.addQueryReturns( ... );
+					throw new NotYetImplementedException( "Collection Returns not yet implemented" );
+				}
+				else if ( nativeQueryReturn instanceof NativeSQLQueryRootReturn ) {
+					final NativeSQLQueryRootReturn rtn = (NativeSQLQueryRootReturn) nativeQueryReturn;
+					final EntityPersister persister = context.getSessionFactory().getMetamodel().entityPersister( rtn.getReturnEntityName() );
+					final ReturnEntityImpl entityReturn = new ReturnEntityImpl(
+							null,
+							persister,
+							null,
+							false,
+							// todo : SqlSelections
+							null,
+							new PropertyPath( rtn.getReturnEntityName() ),
+							null
+					);
+					context.addQueryReturns( entityReturn );
+					if ( fetchParentMap == null ) {
+						fetchParentMap = new HashMap<>();
+					}
+					fetchParentMap.put( rtn.getAlias(), entityReturn );
+				}
+				else if ( nativeQueryReturn instanceof NativeSQLQueryJoinReturn ) {
+					final NativeSQLQueryJoinReturn rtn = (NativeSQLQueryJoinReturn) nativeQueryReturn;
+					// tod finish
+				}
+			}
+		}
+
+		private SqlSelection resolveSqlSelection(BasicType ormType, String alias) {
+			return sqlSelectionMap.computeIfAbsent(
+					alias,
+					s -> new SqlSelectionImpl(
+							new SqlSelectable() {
+								@Override
+								public SqlSelectionReader getSqlSelectionReader() {
+									return new SqlSelectionReaderImpl( ormType );
+								}
+
+								@Override
+								public void accept(SqlAstSelectInterpreter interpreter) {
+									throw new HibernateException( "Unexpected call to SqlSelectable#accept as part of procedure/native query Return" );
+								}
+							},
+							selectablesCount++
+					)
+			);
+		}
+
+		private ReturnAssembler buildDynamicInstantiationAssembler(NativeSQLQueryConstructorReturn nativeQueryReturn) {
+			final Class target = nativeQueryReturn.getTargetClass();
+			if ( Map.class.equals( target ) ) {
+				throw new HibernateException( "Map dynamic-instantiations not allowed for native/procedure queries" );
+			}
+
+			final List<ArgumentReader> argumentReaders = new ArrayList<>();
+
+			for ( NativeSQLQueryScalarReturn argument : nativeQueryReturn.getColumnReturns() ) {
+				final BasicType ormType = (BasicType) argument.getType();
+				final ReturnScalarImpl argumentReturn = new ReturnScalarImpl(
+						null,
+						resolveSqlSelection( ormType, argument.getColumnAlias() ),
+						null,
+						ormType
+				);
+				argumentReaders.add( new ArgumentReader( argumentReturn.getReturnAssembler(), null ) );
+			}
+
+			if ( List.class.equals( target ) ) {
+				return new ReturnAssemblerListImpl( argumentReaders );
+			}
+			else {
+				// find a constructor matching argument types
+				constructor_loop:
+				for ( Constructor constructor : target.getDeclaredConstructors() ) {
+					if ( constructor.getParameterTypes().length != argumentReaders.size() ) {
+						continue;
+					}
+
+					for ( int i = 0; i < argumentReaders.size(); i++ ) {
+						final ArgumentReader argumentReader = argumentReaders.get( i );
+						// todo : move Compatibility from SQM into ORM?  It is only used here
+						final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
+								constructor.getParameterTypes()[i],
+								argumentReader.getReturnedJavaType()
+						);
+						if ( !assignmentCompatible ) {
+							log.debugf(
+									"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
+									i,
+									constructor.getParameterTypes()[i],
+									argumentReader.getReturnedJavaType()
+							);
+							continue constructor_loop;
+						}
+					}
+
+					constructor.setAccessible( true );
+					return new ReturnAssemblerConstructorImpl( constructor, argumentReaders );
+				}
+
+				throw new HibernateException(
+						"Could not locate appropriate constructor for dynamic instantiation of [" + target.getName() + "]"
+				);
 			}
 		}
 	}

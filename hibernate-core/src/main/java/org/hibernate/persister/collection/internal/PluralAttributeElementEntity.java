@@ -14,7 +14,6 @@ import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.collection.spi.PluralAttributeElement;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.entity.spi.ImprovedEntityPersister;
 import org.hibernate.sqm.domain.DomainReference;
 import org.hibernate.sqm.domain.EntityReference;
 import org.hibernate.type.spi.EntityType;

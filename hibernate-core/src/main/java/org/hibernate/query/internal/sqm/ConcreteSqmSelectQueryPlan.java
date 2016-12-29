@@ -47,18 +47,15 @@ import org.hibernate.sqm.query.select.SqmSelection;
  */
 public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement sqm;
-	private final DomainMetamodel domainMetamodel;
 	private final EntityGraphQueryHint entityGraphHint;
 	private final RowTransformer<R> rowTransformer;
 
 	public ConcreteSqmSelectQueryPlan(
 			SqmSelectStatement sqm,
-			DomainMetamodel domainMetamodel,
 			EntityGraphQueryHint entityGraphHint,
 			Class<R> resultType,
 			QueryOptions queryOptions) {
 		this.sqm = sqm;
-		this.domainMetamodel = domainMetamodel;
 		this.entityGraphHint = entityGraphHint;
 
 		this.rowTransformer = determineRowTransformer( sqm, resultType, queryOptions );
@@ -167,7 +164,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		final SqmSelectInterpretation interpretation = SqmSelectToSqlAstConverter.interpret(
 				sqm,
 				persistenceContext.getFactory(),
-				domainMetamodel,
 				queryOptions,
 				shallow,
 				callback
@@ -235,7 +231,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		final SqmSelectInterpretation interpretation = SqmSelectToSqlAstConverter.interpret(
 				sqm,
 				persistenceContext.getFactory(),
-				domainMetamodel,
 				queryOptions,
 				shallow,
 				callback

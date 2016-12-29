@@ -12,8 +12,6 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.LiteralExpression;
 
 /**
@@ -98,30 +96,5 @@ public class TrimFunction
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getTrimCharacter(), registry );
 		Helper.possibleParameter( getTrimSource(), registry );
-	}
-
-	@Override
-	public String render(RenderingContext renderingContext) {
-		String renderedTrimChar;
-		if ( trimCharacter.getClass().isAssignableFrom( 
-				LiteralExpression.class ) ) {
-			// If the character is a literal, treat it as one.  A few dialects
-			// do not support parameters as trim() arguments.
-			renderedTrimChar = ( ( LiteralExpression<Character> ) 
-					trimCharacter ).getLiteral().toString();
-		}
-		else {
-			renderedTrimChar = ( (Renderable) trimCharacter ).render( 
-					renderingContext );
-		}
-		return new StringBuilder()
-				.append( "trim(" )
-				.append( trimspec.name() )
-				.append( ' ' )
-				.append( renderedTrimChar )
-				.append( " from " )
-				.append( ( (Renderable) trimSource ).render( renderingContext ) )
-				.append( ')' )
-				.toString();
 	}
 }

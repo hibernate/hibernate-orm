@@ -9,11 +9,9 @@ package org.hibernate.persister.collection.internal;
 
 import java.util.List;
 import java.util.Optional;
-
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.collection.spi.ImprovedCollectionPersister;
 import org.hibernate.persister.collection.spi.PluralAttributeElement;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.ConvertibleDomainReference;

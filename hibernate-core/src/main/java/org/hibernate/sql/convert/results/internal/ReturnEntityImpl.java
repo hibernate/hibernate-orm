@@ -31,7 +31,6 @@ public class ReturnEntityImpl extends AbstractFetchParent implements ReturnEntit
 	private final Expression expression;
 	private final EntityPersister entityPersister;
 	private final String resultVariable;
-	private final Map<Attribute, SqlSelectionGroup> sqlSelectionGroupMap;
 
 	private final ReturnAssemblerEntity assembler;
 	private final EntityReturnInitializerImpl initializer;
@@ -48,7 +47,6 @@ public class ReturnEntityImpl extends AbstractFetchParent implements ReturnEntit
 		this.expression = expression;
 		this.entityPersister = entityPersister;
 		this.resultVariable = resultVariable;
-		this.sqlSelectionGroupMap = sqlSelectionGroupMap;
 
 		this.initializer = new EntityReturnInitializerImpl(
 				this,
@@ -91,6 +89,7 @@ public class ReturnEntityImpl extends AbstractFetchParent implements ReturnEntit
 	@Override
 	public void registerInitializers(InitializerCollector collector) {
 		collector.addInitializer( initializer );
+		addFetchInitializers( collector );
 	}
 
 	@Override

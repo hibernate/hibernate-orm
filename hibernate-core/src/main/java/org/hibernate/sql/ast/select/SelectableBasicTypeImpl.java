@@ -11,7 +11,7 @@ import org.hibernate.sql.ast.expression.Expression;
 import org.hibernate.sql.convert.results.internal.ReturnScalarImpl;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
-import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole

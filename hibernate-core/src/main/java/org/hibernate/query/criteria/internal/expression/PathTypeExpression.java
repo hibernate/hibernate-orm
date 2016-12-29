@@ -10,7 +10,6 @@ import java.io.Serializable;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.path.AbstractPathImpl;
 
 /**
@@ -28,13 +27,5 @@ public class PathTypeExpression<T> extends ExpressionImpl<T> implements Serializ
 
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do
-	}
-
-	public String render(RenderingContext renderingContext) {
-		return "type(" + pathImpl.getPathIdentifier() + ")";
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

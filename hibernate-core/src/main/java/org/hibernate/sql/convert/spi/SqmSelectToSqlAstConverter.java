@@ -95,7 +95,6 @@ import org.hibernate.sql.convert.results.spi.ReturnDynamicInstantiation;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sql.exec.results.process.internal.SqlSelectionImpl;
 import org.hibernate.sqm.BaseSemanticQueryWalker;
-import org.hibernate.sqm.domain.DomainMetamodel;
 import org.hibernate.sqm.domain.DomainReference;
 import org.hibernate.sqm.query.SqmDeleteStatement;
 import org.hibernate.sqm.query.SqmInsertSelectStatement;
@@ -192,13 +191,11 @@ public class SqmSelectToSqlAstConverter
 	public static SqmSelectInterpretation interpret(
 			SqmSelectStatement statement,
 			SessionFactoryImplementor factory,
-			DomainMetamodel sqmDomainMetamodel,
 			QueryOptions queryOptions,
 			boolean isShallow,
 			Callback callback) {
 		final SqmSelectToSqlAstConverter walker = new SqmSelectToSqlAstConverter(
 				factory,
-				sqmDomainMetamodel,
 				queryOptions,
 				isShallow,
 				callback
@@ -207,7 +204,6 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	private final SessionFactoryImplementor factory;
-	private final DomainMetamodel sqmDomainMetamodel;
 	private final QueryOptions queryOptions;
 	private final boolean isShallow;
 	private final Callback callback;
@@ -223,12 +219,10 @@ public class SqmSelectToSqlAstConverter
 
 	private SqmSelectToSqlAstConverter(
 			SessionFactoryImplementor factory,
-			DomainMetamodel sqmDomainMetamodel,
 			QueryOptions queryOptions,
 			boolean isShallow,
 			Callback callback) {
 		this.factory = factory;
-		this.sqmDomainMetamodel = sqmDomainMetamodel;
 		this.queryOptions = queryOptions;
 		this.isShallow = isShallow;
 		this.callback = callback;
@@ -1191,11 +1185,6 @@ public class SqmSelectToSqlAstConverter
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
 		return factory;
-	}
-
-	@Override
-	public DomainMetamodel getSqmDomainMetamodel() {
-		return sqmDomainMetamodel;
 	}
 
 	@Override

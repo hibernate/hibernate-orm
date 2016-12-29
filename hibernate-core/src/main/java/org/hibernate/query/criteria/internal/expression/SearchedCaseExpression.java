@@ -9,14 +9,11 @@ package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
 import javax.persistence.criteria.CriteriaBuilder.Case;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Models what ANSI SQL terms a <tt>searched case expression</tt>.  This is a <tt>CASE</tt> expression
@@ -113,35 +110,4 @@ public class SearchedCaseExpression<R>
 			Helper.possibleParameter( whenClause.getResult(), registry );
 		}
 	}
-
-	public String render(RenderingContext renderingContext) {
-		return render(
-				renderingContext,
-				(Renderable expression, RenderingContext context) -> expression.render( context )
-		);
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render(
-				renderingContext,
-				(Renderable expression, RenderingContext context) -> expression.renderProjection( context )
-		);
-	}
-
-	private String render(
-			RenderingContext renderingContext,
-			BiFunction<Renderable, RenderingContext, String> formatter) {
-		StringBuilder caseStatement = new StringBuilder( "case" );
-		for ( WhenClause whenClause : getWhenClauses() ) {
-			caseStatement.append( " when " )
-					.append( formatter.apply( (Renderable) whenClause.getCondition(), renderingContext ) )
-					.append( " then " )
-					.append( formatter.apply( ((Renderable) whenClause.getResult()), renderingContext ) );
-		}
-		caseStatement.append( " else " )
-				.append( formatter.apply( (Renderable) getOtherwiseResult(), renderingContext ) )
-				.append( " end" );
-		return caseStatement.toString();
-	}
-
 }

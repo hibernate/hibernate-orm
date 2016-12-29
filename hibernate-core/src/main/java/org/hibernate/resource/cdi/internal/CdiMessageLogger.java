@@ -53,7 +53,7 @@ public interface CdiMessageLogger {
 	@LogMessage( level = INFO )
 	@Message(
 			id = 10005003,
-			value = "No explicit CDI BeanManager reference [%s] was passed to Hibernate, " +
+			value = "No explicit CDI BeanManager reference was passed to Hibernate, " +
 					"but CDI is available on the Hibernate ClassLoader."
 	)
 	void noBeanManagerButCdiAvailable();

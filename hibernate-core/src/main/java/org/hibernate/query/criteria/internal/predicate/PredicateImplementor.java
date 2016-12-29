@@ -9,13 +9,11 @@ package org.hibernate.query.criteria.internal.predicate;
 import javax.persistence.criteria.Predicate;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * @author Steve Ebersole
  */
-public interface PredicateImplementor extends Predicate, Renderable {
+public interface PredicateImplementor extends Predicate {
 	/**
 	 * Access to the CriteriaBuilder
 	 *
@@ -29,18 +27,4 @@ public interface PredicateImplementor extends Predicate, Renderable {
 	 * @return {@code true} if this predicate is a junction (AND/OR); {@code false} otherwise
 	 */
 	public boolean isJunction();
-
-	/**
-	 * Form of {@link Renderable#render} used when the predicate is wrapped in a negated wrapper.  Allows passing
-	 * down the negation flag.
-	 * <p/>
-	 * Note that this form is no-op in compound (junction) predicates.  The reason being that compound predicates
-	 * are more complex and the negation is applied during its creation.
-	 *
-	 * @param isNegated Should the predicate be negated.
-	 * @param renderingContext The context for rendering
-	 *
-	 * @return The rendered predicate fragment.
-	 */
-	public String render(boolean isNegated, RenderingContext renderingContext);
 }

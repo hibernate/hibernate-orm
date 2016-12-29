@@ -8,7 +8,6 @@ package org.hibernate.type.internal.descriptor.java;
 
 import java.util.Comparator;
 
-import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.java.AbstractTypeDescriptorBasicImpl;

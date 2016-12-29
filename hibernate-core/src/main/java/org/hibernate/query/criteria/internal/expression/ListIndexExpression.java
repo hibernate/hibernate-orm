@@ -12,8 +12,6 @@ import javax.persistence.metamodel.ListAttribute;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.PathImplementor;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
-
 
 /**
  * An expression for referring to the index of a list.
@@ -39,15 +37,5 @@ public class ListIndexExpression extends ExpressionImpl<Integer> implements Seri
 
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do
-	}
-
-	public String render(RenderingContext renderingContext) {
-		return "index("
-				+ origin.getPathIdentifier()
-				+ ")";
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

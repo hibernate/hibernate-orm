@@ -4,18 +4,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.ast.expression.domain;
 
 import java.util.List;
 
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.entity.spi.ImprovedEntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.ast.from.ColumnBinding;
 import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.ast.select.SelectableEntityTypeImpl;
 import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.Type;
 
 /**
  * @author Andrea Boriero
@@ -23,36 +22,36 @@ import org.hibernate.type.Type;
  */
 public class EntityReferenceExpression implements DomainReferenceExpression {
 	private final ColumnBindingSource columnBindingSource;
-	private final ImprovedEntityPersister improvedEntityPersister;
+	private final EntityPersister entityPersister;
 	private final PropertyPath propertyPath;
 
 	private final SelectableEntityTypeImpl selectable;
 
 	public EntityReferenceExpression(
 			ColumnBindingSource columnBindingSource,
-			ImprovedEntityPersister improvedEntityPersister,
+			EntityPersister entityPersister,
 			PropertyPath propertyPath,
 			boolean isShallow) {
 		this.columnBindingSource = columnBindingSource;
-		this.improvedEntityPersister = improvedEntityPersister;
+		this.entityPersister = entityPersister;
 		this.propertyPath = propertyPath;
 
 		this.selectable = new SelectableEntityTypeImpl(
 				this,
 				propertyPath,
 				columnBindingSource,
-				improvedEntityPersister,
+				entityPersister,
 				isShallow
 		);
 	}
 
-	public ImprovedEntityPersister getImprovedEntityPersister() {
-		return improvedEntityPersister;
+	public EntityPersister getEntityPersister() {
+		return entityPersister;
 	}
 
 	@Override
 	public Type getType() {
-		return improvedEntityPersister.getOrmType();
+		return null;
 	}
 
 	@Override
@@ -76,7 +75,7 @@ public class EntityReferenceExpression implements DomainReferenceExpression {
 	}
 
 	@Override
-	public ImprovedEntityPersister getDomainReference() {
-		return getImprovedEntityPersister();
+	public EntityPersister getDomainReference() {
+		return getEntityPersister();
 	}
 }

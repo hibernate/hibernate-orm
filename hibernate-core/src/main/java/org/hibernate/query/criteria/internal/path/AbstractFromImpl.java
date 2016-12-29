@@ -38,7 +38,6 @@ import org.hibernate.query.criteria.internal.ListJoinImplementor;
 import org.hibernate.query.criteria.internal.MapJoinImplementor;
 import org.hibernate.query.criteria.internal.PathSource;
 import org.hibernate.query.criteria.internal.SetJoinImplementor;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Convenience base class for various {@link javax.persistence.criteria.From} implementations.
@@ -76,29 +75,6 @@ public abstract class AbstractFromImpl<Z, X>
 	@Override
 	protected boolean canBeDereferenced() {
 		return true;
-	}
-
-	@Override
-	public void prepareAlias(RenderingContext renderingContext) {
-		if ( getAlias() == null ) {
-			if ( isCorrelated() ) {
-				setAlias( getCorrelationParent().getAlias() );
-			}
-			else {
-				setAlias( renderingContext.generateAlias() );
-			}
-		}
-	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		prepareAlias( renderingContext );
-		return getAlias();
-	}
-
-	@Override
-	public String render(RenderingContext renderingContext) {
-		return renderProjection( renderingContext );
 	}
 
 	@Override

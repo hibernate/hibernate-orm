@@ -15,7 +15,7 @@ import javax.persistence.criteria.Expression;
  *
  * @author Steve Ebersole
  */
-public interface ExpressionImplementor<T> extends SelectionImplementor<T>, Expression<T>, Renderable {
+public interface ExpressionImplementor<T> extends SelectionImplementor<T>, Expression<T> {
 	/**
 	 * See {@link javax.persistence.criteria.CriteriaBuilder#toLong}
 	 *

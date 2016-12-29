@@ -14,9 +14,6 @@ import javax.persistence.metamodel.MapAttribute;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.PathImplementor;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
-
 /**
  * TODO : javadoc
  *
@@ -45,20 +42,5 @@ public class MapEntryExpression<K,V>
 
 	public void registerParameters(ParameterRegistry registry) {
 		// none to register
-	}
-
-	public String render(RenderingContext renderingContext) {
-		// don't think this is valid outside of select clause...
-		throw new IllegalStateException( "illegal reference to map entry outside of select clause." );
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return "entry(" + path( renderingContext ) + ")";
-	}
-
-	private String path(RenderingContext renderingContext) {
-		return origin.getPathIdentifier()
-				+ '.'
-				+ ( (Renderable) getAttribute() ).renderProjection( renderingContext );
 	}
 }

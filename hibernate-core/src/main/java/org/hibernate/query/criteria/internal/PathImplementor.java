@@ -14,7 +14,7 @@ import javax.persistence.metamodel.Attribute;
  *
  * @author Steve Ebersole
  */
-public interface PathImplementor<X> extends ExpressionImplementor<X>, Path<X>, PathSource<X>, Renderable {
+public interface PathImplementor<X> extends ExpressionImplementor<X>, Path<X>, PathSource<X> {
 	/**
 	 * Retrieve reference to the attribute this path represents.
 	 *

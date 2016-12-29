@@ -12,8 +12,6 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.LiteralExpression;
 import org.hibernate.query.criteria.internal.path.PluralAttributePath;
 
@@ -61,12 +59,5 @@ public class MemberOfPredicate<E, C extends Collection<E>>
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getCollectionPath(), registry );
 		Helper.possibleParameter( getElementExpression(), registry );
-	}
-
-	@Override
-	public String render(boolean isNegated, RenderingContext renderingContext) {
-		return ( (Renderable) elementExpression ).render( renderingContext )
-				+ ( isNegated ? " not" : "" ) + " member of "
-				+ getCollectionPath().render( renderingContext );
 	}
 }

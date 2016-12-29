@@ -19,7 +19,7 @@ import org.hibernate.persister.common.internal.SingularAttributeEmbedded;
 import org.hibernate.persister.common.spi.Attribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.SingularAttribute;
-import org.hibernate.persister.entity.spi.ImprovedEntityPersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.ast.expression.Expression;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingGroup;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingGroupEmptyImpl;
@@ -40,7 +40,7 @@ public class SelectableEntityTypeImpl implements Selectable {
 	private final Expression expression;
 	private final PropertyPath propertyPath;
 	private final ColumnBindingSource columnBindingSource;
-	private final ImprovedEntityPersister entityPersister;
+	private final EntityPersister entityPersister;
 
 	private final LinkedHashMap<Attribute, ColumnBindingGroup> columnBindingGroupMap;
 	private final boolean isShallow;
@@ -49,7 +49,7 @@ public class SelectableEntityTypeImpl implements Selectable {
 			Expression expression,
 			PropertyPath propertyPath,
 			ColumnBindingSource columnBindingSource,
-			ImprovedEntityPersister entityPersister,
+			EntityPersister entityPersister,
 			boolean isShallow) {
 		this.expression = expression;
 		this.propertyPath = propertyPath;
@@ -64,14 +64,14 @@ public class SelectableEntityTypeImpl implements Selectable {
 
 		// no matter what, include:
 		//		1) identifier
-		addColumnBindingGroupEntry( entityPersister.getIdentifierDescriptor(), columnBindingGroupMap );
+		addColumnBindingGroupEntry( entityPersister.getHierarchy().getIdentifierDescriptor(), columnBindingGroupMap );
 		//		2) ROW_ID (if used)
-		if ( entityPersister.getRowIdDescriptor() != null ) {
-			addColumnBindingGroupEntry( entityPersister.getRowIdDescriptor(), columnBindingGroupMap );
+		if ( entityPersister.getHierarchy().getRowIdDescriptor() != null ) {
+			addColumnBindingGroupEntry( entityPersister.getHierarchy().getRowIdDescriptor(), columnBindingGroupMap );
 		}
 		//		3) discriminator (if used)
-		if ( entityPersister.getDiscriminatorDescriptor() != null ) {
-			addColumnBindingGroupEntry( entityPersister.getDiscriminatorDescriptor(), columnBindingGroupMap );
+		if ( entityPersister.getHierarchy().getDiscriminatorDescriptor() != null ) {
+			addColumnBindingGroupEntry( entityPersister.getHierarchy().getDiscriminatorDescriptor(), columnBindingGroupMap );
 		}
 
 		// Only render the rest of the attributes if !shallow

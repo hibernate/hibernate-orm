@@ -18,9 +18,9 @@ import javax.persistence.metamodel.Type;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.PathSource;
-import org.hibernate.persister.collection.spi.CollectionPersister;
 
 /**
  * Models a path for a {@link PluralAttribute} generally obtained from a
@@ -42,8 +42,8 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 	}
 
 	private CollectionPersister resolvePersister(CriteriaBuilderImpl criteriaBuilder, PluralAttribute attribute) {
-		SessionFactoryImplementor sfi = criteriaBuilder.getEntityManagerFactory().getSessionFactory();
-		return sfi.getCollectionPersister( resolveRole( attribute ) );
+		SessionFactoryImplementor sfi = criteriaBuilder.getEntityManagerFactory();
+		return sfi.getMetamodel().collectionPersister( resolveRole( attribute ) );
 	}
 
 	private String resolveRole(PluralAttribute attribute) {

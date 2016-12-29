@@ -11,8 +11,6 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.expression.LiteralExpression;
 
 /**
@@ -82,20 +80,5 @@ public class LocateFunction
 		Helper.possibleParameter( getPattern(), registry );
 		Helper.possibleParameter( getStart(), registry );
 		Helper.possibleParameter( getString(), registry );
-	}
-
-	@Override
-	public String render(RenderingContext renderingContext) {
-		StringBuilder buffer = new StringBuilder();
-		buffer.append( "locate(" )
-				.append( ( (Renderable) getPattern() ).render( renderingContext ) )
-				.append( ',' )
-				.append( ( (Renderable) getString() ).render( renderingContext ) );
-		if ( getStart() != null ) {
-			buffer.append( ',' )
-					.append( ( (Renderable) getStart() ).render( renderingContext ) );
-		}
-		buffer.append( ')' );
-		return buffer.toString();
 	}
 }

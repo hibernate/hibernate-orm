@@ -9,14 +9,11 @@ package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
 import javax.persistence.criteria.CriteriaBuilder.SimpleCase;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Models what ANSI SQL terms a simple case statement.  This is a <tt>CASE</tt> expression in the form<pre>
@@ -124,37 +121,4 @@ public class SimpleCaseExpression<C,R>
 		}
 		Helper.possibleParameter( getOtherwiseResult(), registry );
 	}
-
-	public String render(RenderingContext renderingContext) {
-		return render(
-				renderingContext,
-				(Renderable expression, RenderingContext context) -> expression.render( context )
-		);
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render(
-				renderingContext,
-				(Renderable expression, RenderingContext context) -> expression.renderProjection( context )
-		);
-	}
-
-	private String render(
-			RenderingContext renderingContext,
-			BiFunction<Renderable, RenderingContext, String> formatter) {
-		StringBuilder caseExpr = new StringBuilder();
-		caseExpr.append( "case " )
-				.append( formatter.apply( (Renderable) getExpression(), renderingContext ) );
-		for ( WhenClause whenClause : getWhenClauses() ) {
-			caseExpr.append( " when " )
-					.append( formatter.apply( whenClause.getCondition(), renderingContext ) )
-					.append( " then " )
-					.append( formatter.apply( (Renderable) whenClause.getResult(), renderingContext ) );
-		}
-		caseExpr.append( " else " )
-				.append( formatter.apply( (Renderable) getOtherwiseResult(), renderingContext ) )
-				.append( " end" );
-		return caseExpr.toString();
-	}
-
 }

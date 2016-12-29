@@ -45,7 +45,7 @@ public class StringTypeDescriptor extends AbstractTypeDescriptorBasicImpl<String
 			jdbcTypeCode = Types.VARCHAR;
 		}
 
-		return context.getTypeDescriptorRegistryAccess().getSqlTypeDescriptorRegistry().getDescriptor( jdbcTypeCode );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( jdbcTypeCode );
 	}
 
 	public String toString(String value) {

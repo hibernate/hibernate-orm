@@ -29,6 +29,7 @@ import org.hibernate.sql.exec.results.internal.instantiation.ReturnAssemblerMapI
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
 import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
 import org.hibernate.sqm.query.expression.Compatibility;
+import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 
@@ -97,7 +98,7 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 	}
 
 	@Override
-	public org.hibernate.type.Type getType() {
+	public Type getType() {
 		return null;
 	}
 

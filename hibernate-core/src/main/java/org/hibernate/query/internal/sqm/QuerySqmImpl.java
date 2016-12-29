@@ -305,8 +305,7 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 			Class<R> resultType,
 			EntityGraphQueryHint entityGraphHint,
 			QueryOptions queryOptions) {
-		// todo : need to have SQM translation use TypeConfiguration instead of just "DomainMetamodel"
-		return new ConcreteSqmSelectQueryPlan(
+		return new ConcreteSqmSelectQueryPlan<>(
 				concreteSqmStatement,
 				entityGraphHint,
 				resultType,

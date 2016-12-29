@@ -11,8 +11,6 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.Renderable;
-import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Models unary arithmetic operation (unary plus and unary minus).
@@ -52,16 +50,5 @@ public class UnaryArithmeticOperation<T>
 	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getOperand(), registry );
-	}
-
-	@Override
-	public String render(RenderingContext renderingContext) {
-		return ( getOperation() == Operation.UNARY_MINUS ? '-' : '+' )
-				+ ( (Renderable) getOperand() ).render( renderingContext );
-	}
-
-	@Override
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

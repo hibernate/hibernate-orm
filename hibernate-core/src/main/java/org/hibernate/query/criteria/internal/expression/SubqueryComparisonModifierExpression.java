@@ -19,7 +19,7 @@ import org.hibernate.query.criteria.internal.ParameterRegistry;
  * @author Steve Ebersole
  */
 public class SubqueryComparisonModifierExpression<Y>
-		extends ExpressionImpl<Y>
+		extends AbstractExpression<Y>
 		implements Serializable {
 	public static enum Modifier {
 		ALL {

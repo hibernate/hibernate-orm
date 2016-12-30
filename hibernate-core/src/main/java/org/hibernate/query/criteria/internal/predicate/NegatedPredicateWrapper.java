@@ -13,25 +13,27 @@ import java.util.List;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
+import org.hibernate.query.criteria.JpaCompoundPredicate;
+import org.hibernate.query.criteria.JpaPredicateImplementor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterContainer;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
+import org.hibernate.query.criteria.internal.expression.AbstractExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class NegatedPredicateWrapper extends ExpressionImpl<Boolean> implements PredicateImplementor, Serializable {
-	private final PredicateImplementor predicate;
+public class NegatedPredicateWrapper extends AbstractExpression<Boolean> implements JpaPredicateImplementor, Serializable {
+	private final JpaPredicateImplementor predicate;
 	private final BooleanOperator negatedOperator;
 	private final List<Expression<Boolean>> negatedExpressions;
 
 	@SuppressWarnings("unchecked")
-	public NegatedPredicateWrapper(PredicateImplementor predicate) {
+	public NegatedPredicateWrapper(JpaPredicateImplementor predicate) {
 		super( predicate.criteriaBuilder(), Boolean.class );
 		this.predicate = predicate;
 		this.negatedOperator = predicate.isJunction()
-				? CompoundPredicate.reverseOperator( predicate.getOperator() )
+				? JpaCompoundPredicate.reverseOperator( predicate.getOperator() )
 				: predicate.getOperator();
 		this.negatedExpressions = negateCompoundExpressions( predicate.getExpressions(), predicate.criteriaBuilder() );
 	}

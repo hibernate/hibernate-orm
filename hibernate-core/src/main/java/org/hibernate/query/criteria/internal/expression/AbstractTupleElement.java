@@ -1,17 +1,16 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
+import javax.persistence.TupleElement;
 
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.internal.AbstractNode;
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-import org.hibernate.query.criteria.internal.TupleElementImplementor;
-import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 
 /**
  * TODO : javadoc
@@ -20,13 +19,12 @@ import org.hibernate.query.criteria.internal.ValueHandlerFactory;
  */
 public abstract class AbstractTupleElement<X>
 		extends AbstractNode
-		implements TupleElementImplementor<X>, Serializable {
+		implements TupleElement<X>, Serializable {
 	private final Class originalJavaType;
 	private Class<X> javaType;
 	private String alias;
-	private ValueHandlerFactory.ValueHandler<X> valueHandler;
 
-	protected AbstractTupleElement(CriteriaBuilderImpl criteriaBuilder, Class<X> javaType) {
+	protected AbstractTupleElement(HibernateCriteriaBuilder criteriaBuilder, Class<X> javaType) {
 		super( criteriaBuilder );
 		this.originalJavaType = javaType;
 		this.javaType = javaType;
@@ -40,19 +38,6 @@ public abstract class AbstractTupleElement<X>
 	@SuppressWarnings({ "unchecked" })
 	protected void resetJavaType(Class targetType) {
 		this.javaType = targetType;
-//		this.valueHandler = javaType.equals( originalJavaType )
-//				? null
-//				: ValueHandlerFactory.determineAppropriateHandler( javaType );
-		this.valueHandler = ValueHandlerFactory.determineAppropriateHandler( javaType );
-	}
-
-	protected void forceConversion(ValueHandlerFactory.ValueHandler<X> valueHandler) {
-		this.valueHandler = valueHandler;
-	}
-
-	@Override
-	public ValueHandlerFactory.ValueHandler<X> getValueHandler() {
-		return valueHandler;
 	}
 
 	@Override

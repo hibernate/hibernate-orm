@@ -12,8 +12,13 @@ import java.util.List;
 import javax.persistence.criteria.CriteriaBuilder.SimpleCase;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.query.criteria.JpaExpressionImplementor;
+import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
+import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
+import org.hibernate.sqm.query.expression.CaseSimpleSqmExpression;
+import org.hibernate.sqm.query.expression.SqmExpression;
 
 /**
  * Models what ANSI SQL terms a simple case statement.  This is a <tt>CASE</tt> expression in the form<pre>
@@ -27,18 +32,18 @@ import org.hibernate.query.criteria.internal.ParameterRegistry;
  * @author Steve Ebersole
  */
 public class SimpleCaseExpression<C,R>
-		extends ExpressionImpl<R>
-		implements SimpleCase<C,R>, Serializable {
+		extends AbstractExpression<R>
+		implements JpaSimpleCase<C,R>, Serializable {
 	private Class<R> javaType;
-	private final Expression<? extends C> expression;
-	private List<WhenClause> whenClauses = new ArrayList<WhenClause>();
-	private Expression<? extends R> otherwiseResult;
+	private final JpaExpressionImplementor<? extends C> expression;
+	private List<WhenClause> whenClauses = new ArrayList<>();
+	private JpaExpressionImplementor<? extends R> otherwiseResult;
 
 	public class WhenClause {
 		private final LiteralExpression<C> condition;
-		private final Expression<? extends R> result;
+		private final JpaExpressionImplementor<? extends R> result;
 
-		public WhenClause(LiteralExpression<C> condition, Expression<? extends R> result) {
+		public WhenClause(LiteralExpression<C> condition, JpaExpressionImplementor<? extends R> result) {
 			this.condition = condition;
 			this.result = result;
 		}
@@ -47,7 +52,7 @@ public class SimpleCaseExpression<C,R>
 			return condition;
 		}
 
-		public Expression<? extends R> getResult() {
+		public JpaExpressionImplementor<? extends R> getResult() {
 			return result;
 		}
 
@@ -56,17 +61,19 @@ public class SimpleCaseExpression<C,R>
 	public SimpleCaseExpression(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<R> javaType,
-			Expression<? extends C> expression) {
+			JpaExpressionImplementor<? extends C> expression) {
 		super( criteriaBuilder, javaType);
 		this.javaType = javaType;
 		this.expression = expression;
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Expression<C> getExpression() {
 		return (Expression<C>) expression;
 	}
 
+	@Override
 	public SimpleCase<C, R> when(C condition, R result) {
 		return when( condition, buildLiteral(result) );
 	}
@@ -79,9 +86,16 @@ public class SimpleCaseExpression<C,R>
 		return new LiteralExpression<R>( criteriaBuilder(), type, result );
 	}
 
+	@Override
+	@SuppressWarnings({ "unchecked" })
 	public SimpleCase<C, R> when(C condition, Expression<? extends R> result) {
+		criteriaBuilder().checkIsJpaExpression( result );
+		return when( condition, (JpaExpressionImplementor<? extends R>) result );
+	}
+
+	public SimpleCase<C, R> when(C condition, JpaExpressionImplementor<? extends R> result) {
 		WhenClause whenClause = new WhenClause(
-				new LiteralExpression<C>( criteriaBuilder(), condition ),
+				new LiteralExpression<>( criteriaBuilder(), condition ),
 				result
 		);
 		whenClauses.add( whenClause );
@@ -96,17 +110,25 @@ public class SimpleCaseExpression<C,R>
 		}
 	}
 
-	public Expression<R> otherwise(R result) {
+	@Override
+	public JpaExpressionImplementor<R> otherwise(R result) {
 		return otherwise( buildLiteral(result) );
 	}
 
-	public Expression<R> otherwise(Expression<? extends R> result) {
+	@Override
+	@SuppressWarnings({ "unchecked" })
+	public JpaExpressionImplementor<R> otherwise(Expression<? extends R> result) {
+		criteriaBuilder().checkIsJpaExpression( result );
+		return otherwise( (JpaExpressionImplementor<? extends R>) result );
+	}
+
+	public JpaExpressionImplementor<R> otherwise(JpaExpressionImplementor<? extends R> result) {
 		this.otherwiseResult = result;
 		adjustJavaType( result );
 		return this;
 	}
 
-	public Expression<? extends R> getOtherwiseResult() {
+	public JpaExpressionImplementor<? extends R> getOtherwiseResult() {
 		return otherwiseResult;
 	}
 
@@ -120,5 +142,25 @@ public class SimpleCaseExpression<C,R>
 			Helper.possibleParameter( whenClause.getResult(), registry );
 		}
 		Helper.possibleParameter( getOtherwiseResult(), registry );
+	}
+
+	@Override
+	public SqmExpression visitExpression(CriteriaVisitor visitor) {
+		final CaseSimpleSqmExpression caseExpression = new CaseSimpleSqmExpression(
+				expression.visitExpression( visitor )
+		);
+
+		for ( WhenClause whenClause : whenClauses ) {
+			caseExpression.when(
+					whenClause.getCondition().visitExpression( visitor ),
+					whenClause.getResult().visitExpression( visitor )
+			);
+		}
+
+		if ( otherwiseResult != null ) {
+			caseExpression.otherwise( otherwiseResult.visitExpression( visitor ) );
+		}
+
+		return caseExpression;
 	}
 }

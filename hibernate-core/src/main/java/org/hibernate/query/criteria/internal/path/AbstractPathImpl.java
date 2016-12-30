@@ -17,11 +17,12 @@ import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.PathImplementor;
-import org.hibernate.query.criteria.internal.PathSource;
-import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
+import org.hibernate.query.criteria.JpaPathImplementor;
+import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.query.criteria.internal.expression.AbstractExpression;
 import org.hibernate.query.criteria.internal.expression.PathTypeExpression;
 
 /**
@@ -30,10 +31,10 @@ import org.hibernate.query.criteria.internal.expression.PathTypeExpression;
  * @author Steve Ebersole
  */
 public abstract class AbstractPathImpl<X>
-		extends ExpressionImpl<X>
-		implements Path<X>, PathImplementor<X>, Serializable {
+		extends AbstractExpression<X>
+		implements Path<X>, JpaPathImplementor<X>, Serializable {
 
-	private final PathSource pathSource;
+	private final JpaPathSourceImplementor pathSource;
 	private final Expression<Class<? extends X>> typeExpression;
 	private Map<String,Path> attributePathRegistry;
 
@@ -46,20 +47,20 @@ public abstract class AbstractPathImpl<X>
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public AbstractPathImpl(
-			CriteriaBuilderImpl criteriaBuilder,
+			HibernateCriteriaBuilder criteriaBuilder,
 			Class<X> javaType,
-			PathSource pathSource) {
+			JpaPathSourceImplementor pathSource) {
 		super( criteriaBuilder, javaType );
 		this.pathSource = pathSource;
 		this.typeExpression =  new PathTypeExpression( criteriaBuilder(), getJavaType(), this );
 	}
 
-	public PathSource getPathSource() {
+	public JpaPathSourceImplementor getPathSource() {
 		return pathSource;
 	}
 
 	@Override
-	public PathSource<?> getParentPath() {
+	public JpaPathSourceImplementor<?> getParentPath() {
 		return getPathSource();
 	}
 
@@ -92,7 +93,7 @@ public abstract class AbstractPathImpl<X>
 
 	protected final RuntimeException unknownAttribute(String attributeName) {
 		String message = "Unable to resolve attribute [" + attributeName + "] against path";
-		PathSource<?> source = getPathSource();
+		JpaPathSourceImplementor<?> source = getPathSource();
 		if ( source != null ) {
 			message += " [" + source.getPathIdentifier() + "]";
 		}
@@ -132,7 +133,7 @@ public abstract class AbstractPathImpl<X>
 		return path;
 	}
 
-	protected PathSource getPathSourceForSubPaths() {
+	protected JpaPathSourceImplementor getPathSourceForSubPaths() {
 		return this;
 	}
 

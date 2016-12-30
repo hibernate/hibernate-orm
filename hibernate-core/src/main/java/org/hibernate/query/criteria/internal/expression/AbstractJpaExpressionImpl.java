@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.query.criteria.internal.expression;
 
@@ -13,28 +13,50 @@ import java.util.Collection;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-import org.hibernate.query.criteria.internal.ExpressionImplementor;
-import org.hibernate.query.criteria.internal.expression.function.CastFunction;
+import org.hibernate.sqm.parser.criteria.tree.JpaExpression;
+
+import org.hibernate.test.sqm.domain.BasicType;
+import org.hibernate.test.sqm.domain.Type;
+import org.hibernate.test.sqm.parser.criteria.tree.CriteriaBuilderImpl;
+import org.hibernate.test.sqm.parser.criteria.tree.expression.function.CastFunction;
+import org.hibernate.test.sqm.parser.criteria.tree.select.AbstractSimpleSelection;
 
 /**
  * Models an expression in the criteria query language.
  *
  * @author Steve Ebersole
  */
-public abstract class ExpressionImpl<T>
-		extends SelectionImpl<T>
-		implements ExpressionImplementor<T>, Serializable {
-	public ExpressionImpl(CriteriaBuilderImpl criteriaBuilder, Class<T> javaType) {
+public abstract class AbstractJpaExpressionImpl<T>
+		extends AbstractSimpleSelection<T>
+		implements JpaExpression<T>, Serializable {
+	private Type sqmType;
+
+	public AbstractJpaExpressionImpl(
+			CriteriaBuilderImpl criteriaBuilder,
+			Type sqmType,
+			Class<T> javaType) {
 		super( criteriaBuilder, javaType );
+	}
+
+	@Override
+	public Type getExpressionSqmType() {
+		return sqmType;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X> Expression<X> as(Class<X> type) {
-		return type.equals( getJavaType() )
-				? (Expression<X>) this
-				: new CastFunction<X, T>( criteriaBuilder(), type, this );
+		if ( type.equals( getJavaType() ) ) {
+			return (Expression<X>) this;
+		}
+		else {
+			return new CastFunction<>(
+					this,
+					(BasicType<X>) criteriaBuilder().consumerContext().getDomainMetamodel().resolveBasicType( type ),
+					type,
+					criteriaBuilder()
+			);
+		}
 	}
 
 	@Override
@@ -69,50 +91,50 @@ public abstract class ExpressionImpl<T>
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public ExpressionImplementor<Long> asLong() {
+	public JpaExpression<Long> asLong() {
 		resetJavaType( Long.class );
-		return (ExpressionImplementor<Long>) this;
+		return (JpaExpression<Long>) this;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public ExpressionImplementor<Integer> asInteger() {
+	public JpaExpression<Integer> asInteger() {
 		resetJavaType( Integer.class );
-		return (ExpressionImplementor<Integer>) this;
+		return (JpaExpression<Integer>) this;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public ExpressionImplementor<Float> asFloat() {
+	public JpaExpression<Float> asFloat() {
 		resetJavaType( Float.class );
-		return (ExpressionImplementor<Float>) this;
+		return (JpaExpression<Float>) this;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public ExpressionImplementor<Double> asDouble() {
+	public JpaExpression<Double> asDouble() {
 		resetJavaType( Double.class );
-		return (ExpressionImplementor<Double>) this;
+		return (JpaExpression<Double>) this;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public ExpressionImplementor<BigDecimal> asBigDecimal() {
+	public JpaExpression<BigDecimal> asBigDecimal() {
 		resetJavaType( BigDecimal.class );
-		return (ExpressionImplementor<BigDecimal>) this;
+		return (JpaExpression<BigDecimal>) this;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public ExpressionImplementor<BigInteger> asBigInteger() {
+	public JpaExpression<BigInteger> asBigInteger() {
 		resetJavaType( BigInteger.class );
-		return (ExpressionImplementor<BigInteger>) this;
+		return (JpaExpression<BigInteger>) this;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public ExpressionImplementor<String> asString() {
+	public JpaExpression<String> asString() {
 		resetJavaType( String.class );
-		return (ExpressionImplementor<String>) this;
+		return (JpaExpression<String>) this;
 	}
 }

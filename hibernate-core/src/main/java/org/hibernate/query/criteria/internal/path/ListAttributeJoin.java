@@ -16,10 +16,10 @@ import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
-import org.hibernate.query.criteria.internal.FromImplementor;
-import org.hibernate.query.criteria.internal.ListJoinImplementor;
-import org.hibernate.query.criteria.internal.PathImplementor;
-import org.hibernate.query.criteria.internal.PathSource;
+import org.hibernate.query.criteria.JpaFromImplementor;
+import org.hibernate.query.criteria.JpaListJoinImplementor;
+import org.hibernate.query.criteria.JpaPathImplementor;
+import org.hibernate.query.criteria.JpaPathSourceImplementor;
 import org.hibernate.query.criteria.internal.expression.ListIndexExpression;
 
 /**
@@ -29,12 +29,12 @@ import org.hibernate.query.criteria.internal.expression.ListIndexExpression;
  */
 public class ListAttributeJoin<O,E>
 		extends PluralAttributeJoinSupport<O, List<E>,E>
-		implements ListJoinImplementor<O,E>, Serializable {
+		implements JpaListJoinImplementor<O,E>, Serializable {
 
 	public ListAttributeJoin(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<E> javaType,
-			PathSource<O> pathSource,
+			JpaPathSourceImplementor<O> pathSource,
 			ListAttribute<? super O, E> joinAttribute,
 			JoinType joinType) {
 		super( criteriaBuilder, javaType, pathSource, joinAttribute, joinType );
@@ -61,11 +61,11 @@ public class ListAttributeJoin<O,E>
 	}
 
 	@Override
-	protected FromImplementor<O, E> createCorrelationDelegate() {
+	protected JpaFromImplementor<O, E> createCorrelationDelegate() {
 		return new ListAttributeJoin<O,E>(
 				criteriaBuilder(),
 				getJavaType(),
-				(PathImplementor<O>) getParentPath(),
+				(JpaPathImplementor<O>) getParentPath(),
 				getAttribute(),
 				getJoinType()
 		);
@@ -125,7 +125,7 @@ public class ListAttributeJoin<O,E>
 		}
 
 		@Override
-		protected PathSource getPathSourceForSubPaths() {
+		protected JpaPathSourceImplementor getPathSourceForSubPaths() {
 			return this;
 		}
 	}

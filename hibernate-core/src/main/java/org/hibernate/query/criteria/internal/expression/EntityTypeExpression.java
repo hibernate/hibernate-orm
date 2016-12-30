@@ -16,7 +16,7 @@ import org.hibernate.query.criteria.internal.ParameterRegistry;
  *
  * @author Steve Ebersole
  */
-public class EntityTypeExpression<T> extends ExpressionImpl<T> implements Serializable {
+public class EntityTypeExpression<T> extends AbstractExpression<T> implements Serializable {
 	public EntityTypeExpression(CriteriaBuilderImpl criteriaBuilder, Class<T> javaType) {
 		super( criteriaBuilder, javaType );
 	}

@@ -9,19 +9,24 @@ package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaBuilder.Coalesce;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.query.criteria.JpaCoalesce;
+import org.hibernate.query.criteria.JpaExpressionImplementor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
+import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
+import org.hibernate.sqm.query.expression.SqmExpression;
 
 /**
  * Models an ANSI SQL <tt>COALESCE</tt> expression.  <tt>COALESCE</tt> is a specialized <tt>CASE</tt> statement.
  *
  * @author Steve Ebersole
  */
-public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce<T>, Serializable {
-	private final List<Expression<? extends T>> expressions;
+public class CoalesceExpression<T> extends AbstractExpression<T> implements JpaCoalesce<T>, Serializable {
+	private final List<JpaExpressionImplementor<? extends T>> expressions;
 	private Class<T> javaType;
 
 	public CoalesceExpression(CriteriaBuilderImpl criteriaBuilder) {
@@ -41,12 +46,20 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 		return javaType;
 	}
 
-	public Coalesce<T> value(T value) {
+	public JpaCoalesce<T> value(T value) {
 		return value( new LiteralExpression<T>( criteriaBuilder(), value ) );
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
+	public JpaCoalesce<T> value(Expression<? extends T> value) {
+		criteriaBuilder().checkIsJpaExpression( value );
+		value( (JpaExpressionImplementor<? extends T>) value );
+		return null;
+	}
+
 	@SuppressWarnings({ "unchecked" })
-	public Coalesce<T> value(Expression<? extends T> value) {
+	public JpaCoalesce<T> value(JpaExpressionImplementor<? extends T> value) {
 		expressions.add( value );
 		if ( javaType == null ) {
 			javaType = (Class<T>) value.getJavaType();
@@ -54,7 +67,7 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 		return this;
 	}
 
-	public List<Expression<? extends T>> getExpressions() {
+	public List<JpaExpressionImplementor<? extends T>> getExpressions() {
 		return expressions;
 	}
 
@@ -62,5 +75,10 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 		for ( Expression expression : getExpressions() ) {
 			Helper.possibleParameter(expression, registry);
 		}
+	}
+
+	@Override
+	public SqmExpression visitExpression(CriteriaVisitor visitor) {
+		return visitor.visitCoalesce( expressions );
 	}
 }

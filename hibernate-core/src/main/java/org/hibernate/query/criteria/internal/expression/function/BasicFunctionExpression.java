@@ -8,9 +8,10 @@ package org.hibernate.query.criteria.internal.expression.function;
 
 import java.io.Serializable;
 
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
+import org.hibernate.query.criteria.internal.expression.AbstractExpression;
 
 /**
  * Models the basic concept of a SQL function.
@@ -18,13 +19,13 @@ import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
  * @author Steve Ebersole
  */
 public class BasicFunctionExpression<X>
-		extends ExpressionImpl<X>
+		extends AbstractExpression<X>
 		implements FunctionExpression<X>, Serializable {
 
 	private final String functionName;
 
 	public BasicFunctionExpression(
-			CriteriaBuilderImpl criteriaBuilder,
+			HibernateCriteriaBuilder criteriaBuilder,
 			Class<X> javaType,
 			String functionName) {
 		super( criteriaBuilder, javaType );

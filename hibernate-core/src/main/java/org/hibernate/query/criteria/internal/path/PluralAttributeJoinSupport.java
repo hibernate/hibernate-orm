@@ -16,8 +16,8 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-import org.hibernate.query.criteria.internal.JoinImplementor;
-import org.hibernate.query.criteria.internal.PathSource;
+import org.hibernate.query.criteria.JpaAttributeJoinImplementor;
+import org.hibernate.query.criteria.JpaPathSourceImplementor;
 
 /**
  * Support for defining joins to plural attributes (JPA requires typing based on
@@ -33,7 +33,7 @@ public abstract class PluralAttributeJoinSupport<O,C,E>
 	public PluralAttributeJoinSupport(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<E> javaType,
-			PathSource<O> pathSource,
+			JpaPathSourceImplementor<O> pathSource,
 			Attribute<? super O,?> joinAttribute,
 			JoinType joinType) {
 		super( criteriaBuilder, javaType, pathSource, joinAttribute, joinType );
@@ -70,12 +70,12 @@ public abstract class PluralAttributeJoinSupport<O,C,E>
 	}
 
 	@Override
-	public JoinImplementor<O, E> on(Predicate... restrictions) {
+	public JpaAttributeJoinImplementor<O, E> on(Predicate... restrictions) {
 		return super.on( restrictions );
 	}
 
 	@Override
-	public JoinImplementor<O, E> on(Expression<Boolean> restriction) {
+	public JpaAttributeJoinImplementor<O, E> on(Expression<Boolean> restriction) {
 		return super.on( restriction );
 	}
 }

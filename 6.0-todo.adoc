@@ -5,7 +5,8 @@
 * Migrate LoadPlan to SQM/SQL AST
 * related (^^) - drop Loader?  Or retrofit it to leverage JdbcSelectExecutor.
 * Drop old QueryTranslator and both impls
-
+* Remove `org.hibernate.query.QueryParameter#isPassNullsEnabled` - this is now handled based on whether
+	bind was called or not.
 
 == Open questions
 
@@ -45,3 +46,4 @@
 --
 Would be more efficient to combine (a) and (b).  Both are controlled by the persister anyway
 --
+* Determine how to handle `org.hibernate.query.QueryParameter#allowsMultiValuedBinding` for criteria queries

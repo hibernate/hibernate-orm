@@ -15,8 +15,9 @@ import javax.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.TupleElementImplementor;
+import org.hibernate.query.criteria.JpaTupleElementImplementor;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
+import org.hibernate.query.criteria.internal.selection.AbstractSelection;
 
 /**
  * The Hibernate implementation of the JPA {@link CompoundSelection}
@@ -25,7 +26,7 @@ import org.hibernate.query.criteria.internal.ValueHandlerFactory;
  * @author Steve Ebersole
  */
 public class CompoundSelectionImpl<X>
-		extends SelectionImpl<X>
+		extends AbstractSelection<X>
 		implements CompoundSelection<X>, Serializable {
 	private final boolean isConstructor;
 	private List<Selection<?>> selectionItems;
@@ -57,7 +58,7 @@ public class CompoundSelectionImpl<X>
 		boolean foundHandlers = false;
 		ArrayList<ValueHandlerFactory.ValueHandler> valueHandlers = new ArrayList<>();
 		for ( Selection selection : getCompoundSelectionItems() ) {
-			ValueHandlerFactory.ValueHandler valueHandler = ( (TupleElementImplementor) selection ).getValueHandler();
+			ValueHandlerFactory.ValueHandler valueHandler = ( (JpaTupleElementImplementor) selection ).getValueHandler();
 			valueHandlers.add( valueHandler );
 			foundHandlers = foundHandlers || valueHandler != null;
 		}

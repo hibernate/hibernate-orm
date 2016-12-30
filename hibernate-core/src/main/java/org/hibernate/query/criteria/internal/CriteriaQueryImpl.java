@@ -22,6 +22,9 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.sqm.parser.criteria.tree.JpaCriteriaQuery;
+import org.hibernate.sqm.parser.criteria.tree.JpaQuerySpec;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -30,13 +33,12 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<T>, Serializable {
+public class CriteriaQueryImpl<T> extends AbstractNode implements JpaCriteriaQuery<T>, Serializable {
 	private static final Logger log = Logger.getLogger( CriteriaQueryImpl.class );
 
 	private final Class<T> returnType;
 
 	private final QueryStructure<T> queryStructure;
-	private List<Order> orderSpecs = Collections.emptyList();
 
 	public CriteriaQueryImpl(
 			CriteriaBuilderImpl criteriaBuilder,
@@ -268,5 +270,10 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		//
 		// todo : should we put an implicit marker in the selection to this fact to make later processing easier?
 		return true;
+	}
+
+	@Override
+	public JpaQuerySpec getQuerySpec() {
+		return queryStructure;
 	}
 }

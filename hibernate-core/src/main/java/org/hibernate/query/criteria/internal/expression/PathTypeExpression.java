@@ -8,7 +8,7 @@ package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
 
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.path.AbstractPathImpl;
 
@@ -17,10 +17,10 @@ import org.hibernate.query.criteria.internal.path.AbstractPathImpl;
  *
  * @author Steve Ebersole
  */
-public class PathTypeExpression<T> extends ExpressionImpl<T> implements Serializable {
+public class PathTypeExpression<T> extends AbstractExpression<T> implements Serializable {
 	private final AbstractPathImpl<T> pathImpl;
 
-	public PathTypeExpression(CriteriaBuilderImpl criteriaBuilder, Class<T> javaType, AbstractPathImpl<T> pathImpl) {
+	public PathTypeExpression(HibernateCriteriaBuilder criteriaBuilder, Class<T> javaType, AbstractPathImpl<T> pathImpl) {
 		super( criteriaBuilder, javaType );
 		this.pathImpl = pathImpl;
 	}

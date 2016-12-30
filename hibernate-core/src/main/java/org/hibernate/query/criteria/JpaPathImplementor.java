@@ -1,20 +1,22 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.criteria.internal;
+package org.hibernate.query.criteria;
 
 import javax.persistence.criteria.Path;
 import javax.persistence.metamodel.Attribute;
+
+import org.hibernate.sqm.parser.criteria.tree.path.JpaPath;
 
 /**
  * Implementation contract for the JPA {@link Path} interface.
  *
  * @author Steve Ebersole
  */
-public interface PathImplementor<X> extends ExpressionImplementor<X>, Path<X>, PathSource<X> {
+public interface JpaPathImplementor<X> extends JpaExpressionImplementor<X>, JpaPath<X>, JpaPathSourceImplementor<X> {
 	/**
 	 * Retrieve reference to the attribute this path represents.
 	 *
@@ -30,5 +32,5 @@ public interface PathImplementor<X> extends ExpressionImplementor<X>, Path<X>, P
 	 *
 	 * @return The properly typed view of this path.
 	 */
-	public <T extends X> PathImplementor<T> treatAs(Class<T> treatAsType);
+	public <T extends X> JpaPathImplementor<T> treatAs(Class<T> treatAsType);
 }

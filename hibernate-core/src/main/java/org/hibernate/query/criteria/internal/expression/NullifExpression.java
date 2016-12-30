@@ -17,7 +17,7 @@ import org.hibernate.query.criteria.internal.ParameterRegistry;
  *
  * @author Steve Ebersole
  */
-public class NullifExpression<T> extends ExpressionImpl<T> implements Serializable {
+public class NullifExpression<T> extends AbstractExpression<T> implements Serializable {
 	private final Expression<? extends T> primaryExpression;
 	private final Expression<?> secondaryExpression;
 

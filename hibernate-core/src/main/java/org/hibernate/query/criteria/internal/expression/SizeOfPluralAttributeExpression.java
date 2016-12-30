@@ -19,7 +19,7 @@ import org.hibernate.query.criteria.internal.path.PluralAttributePath;
  * @author Steve Ebersole
  */
 public class SizeOfPluralAttributeExpression
-		extends ExpressionImpl<Integer>
+		extends AbstractExpression<Integer>
 		implements Serializable {
 	private final PluralAttributePath path;
 

@@ -19,8 +19,8 @@ import javax.persistence.metamodel.Type;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-import org.hibernate.query.criteria.internal.MapJoinImplementor;
-import org.hibernate.query.criteria.internal.PathImplementor;
+import org.hibernate.query.criteria.JpaMapJoinImplementor;
+import org.hibernate.query.criteria.JpaPathImplementor;
 
 /**
  * {@link javax.persistence.criteria.MapJoin#key} poses a number of implementation difficulties in terms of the
@@ -43,7 +43,7 @@ public class MapKeyHelpers {
 	 */
 	public static class MapKeyPath<K>
 			extends AbstractPathImpl<K>
-			implements PathImplementor<K>, Serializable {
+			implements JpaPathImplementor<K>, Serializable {
 
 		private final MapKeyAttribute<K> mapKeyAttribute;
 
@@ -105,15 +105,15 @@ public class MapKeyHelpers {
 	 */
 	public static class MapKeySource<K,V>
 			extends AbstractPathImpl<Map<K, V>>
-			implements PathImplementor<Map<K, V>>, Serializable {
+			implements JpaPathImplementor<Map<K, V>>, Serializable {
 
 		private final MapAttribute<?,K,V> mapAttribute;
-		private final MapJoinImplementor<?,K,V> mapJoin;
+		private final JpaMapJoinImplementor<?,K,V> mapJoin;
 
 		public MapKeySource(
 				CriteriaBuilderImpl criteriaBuilder,
 				Class<Map<K, V>> javaType,
-				MapJoinImplementor<?,K,V> mapJoin,
+				JpaMapJoinImplementor<?,K,V> mapJoin,
 				MapAttribute<?,K,V> attribute) {
 			super( criteriaBuilder, javaType, null );
 			this.mapJoin = mapJoin;
@@ -131,8 +131,8 @@ public class MapKeyHelpers {
 		}
 
 		@Override
-		public PathImplementor<?> getParentPath() {
-			return (PathImplementor<?>) mapJoin.getParentPath();
+		public JpaPathImplementor<?> getParentPath() {
+			return (JpaPathImplementor<?>) mapJoin.getParentPath();
 		}
 
 		@Override
@@ -146,7 +146,7 @@ public class MapKeyHelpers {
 		}
 
 		@Override
-		public <T extends Map<K, V>> PathImplementor<T> treatAs(Class<T> treatAsType) {
+		public <T extends Map<K, V>> JpaPathImplementor<T> treatAs(Class<T> treatAsType) {
 			throw new UnsupportedOperationException();
 		}
 

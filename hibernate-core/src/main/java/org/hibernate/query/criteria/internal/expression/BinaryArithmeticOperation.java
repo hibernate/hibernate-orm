@@ -19,7 +19,7 @@ import org.hibernate.query.criteria.internal.predicate.ImplicitNumericExpression
  * @author Steve Ebersole
  */
 public class BinaryArithmeticOperation<N extends Number>
-		extends ExpressionImpl<N>
+		extends AbstractExpression<N>
 		implements BinaryOperatorExpression<N>, Serializable {
 
 	public static enum Operation {

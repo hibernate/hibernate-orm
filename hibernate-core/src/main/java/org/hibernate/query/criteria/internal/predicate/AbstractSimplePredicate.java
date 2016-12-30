@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.query.criteria.AbstractPredicateImpl;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 
 /**
@@ -19,7 +20,7 @@ import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
  * @author Steve Ebersole
  */
 public abstract class AbstractSimplePredicate
-		extends AbstractPredicateImpl 
+		extends AbstractPredicateImpl
 		implements Serializable {
 	private static final List<Expression<Boolean>> NO_EXPRESSIONS = Collections.emptyList();
 

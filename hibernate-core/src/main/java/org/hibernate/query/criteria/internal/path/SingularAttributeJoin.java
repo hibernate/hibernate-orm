@@ -16,8 +16,8 @@ import javax.persistence.metamodel.Type;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
-import org.hibernate.query.criteria.internal.FromImplementor;
-import org.hibernate.query.criteria.internal.PathSource;
+import org.hibernate.query.criteria.JpaFromImplementor;
+import org.hibernate.query.criteria.JpaPathSourceImplementor;
 
 /**
  * Models a join based on a singular attribute
@@ -34,7 +34,7 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 	public SingularAttributeJoin(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<X> javaType,
-			PathSource<O> pathSource,
+			JpaPathSourceImplementor<O> pathSource,
 			SingularAttribute<? super O, ?> joinAttribute,
 			JoinType joinType) {
 		super( criteriaBuilder, javaType, pathSource, joinAttribute, joinType );
@@ -62,7 +62,7 @@ public class SingularAttributeJoin<O,X> extends AbstractJoinImpl<O,X> {
 	}
 
 	@Override
-	protected FromImplementor<O, X> createCorrelationDelegate() {
+	protected JpaFromImplementor<O, X> createCorrelationDelegate() {
 		return new SingularAttributeJoin<O,X>(
 				criteriaBuilder(),
 				getJavaType(),

@@ -7,10 +7,12 @@
 package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
-import javax.persistence.criteria.ParameterExpression;
 
+import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
+import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
+import org.hibernate.sqm.query.expression.SqmExpression;
 
 /**
  * Defines a parameter specification, or the information about a parameter (where it occurs, what is
@@ -19,8 +21,8 @@ import org.hibernate.query.criteria.internal.ParameterRegistry;
  * @author Steve Ebersole
  */
 public class ParameterExpressionImpl<T>
-		extends ExpressionImpl<T>
-		implements ParameterExpression<T>, Serializable {
+		extends AbstractExpression<T>
+		implements JpaParameterExpression<T>, Serializable {
 	private final String name;
 	private final Integer position;
 
@@ -64,5 +66,22 @@ public class ParameterExpressionImpl<T>
 
 	public void registerParameters(ParameterRegistry registry) {
 		registry.registerParameter( this );
+	}
+
+	@Override
+	public boolean allowsMultiValuedBinding() {
+		// for now just return false.
+		// todo : figure out how to handle this in criteria
+		return false;
+	}
+
+	@Override
+	public boolean isPassNullsEnabled() {
+		return true;
+	}
+
+	@Override
+	public SqmExpression visitExpression(CriteriaVisitor visitor) {
+		return visitor.visitParameter( getName(), getPosition(), getJavaType() );
 	}
 }

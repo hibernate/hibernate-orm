@@ -20,7 +20,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-import org.hibernate.query.criteria.internal.PathSource;
+import org.hibernate.query.criteria.JpaPathSourceImplementor;
 
 /**
  * Models a path for a {@link PluralAttribute} generally obtained from a
@@ -34,7 +34,7 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 
 	public PluralAttributePath(
 			CriteriaBuilderImpl criteriaBuilder,
-			PathSource source,
+			JpaPathSourceImplementor source,
 			PluralAttribute<?,X,?> attribute) {
 		super( criteriaBuilder, attribute.getJavaType(), source );
 		this.attribute = attribute;
@@ -74,7 +74,7 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Seria
 			case EMBEDDABLE: {
 				// initialize role to '.' + <plural_attribute_name>
 				StringBuilder role = new StringBuilder().append( '.' ).append( attribute.getName() );
-				PathSource parentPath = getPathSource();
+				JpaPathSourceImplementor parentPath = getPathSource();
 				SingularAttribute singularAttribute;
 				do {
 					final SingularAttributePath singularAttributePath = (SingularAttributePath) parentPath;

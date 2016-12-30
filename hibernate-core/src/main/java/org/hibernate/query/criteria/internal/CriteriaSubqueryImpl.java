@@ -23,8 +23,13 @@ import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.query.criteria.JpaCollectionJoinImplementor;
+import org.hibernate.query.criteria.JpaAttributeJoinImplementor;
+import org.hibernate.query.criteria.JpaListJoinImplementor;
+import org.hibernate.query.criteria.JpaMapJoinImplementor;
+import org.hibernate.query.criteria.JpaSetJoinImplementor;
 import org.hibernate.query.criteria.internal.expression.DelegatedExpressionImpl;
-import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
+import org.hibernate.query.criteria.internal.expression.AbstractExpression;
 import org.hibernate.query.criteria.internal.path.RootImpl;
 
 /**
@@ -33,7 +38,7 @@ import org.hibernate.query.criteria.internal.path.RootImpl;
  *
  * @author Steve Ebersole
  */
-public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subquery<T>, Serializable {
+public class CriteriaSubqueryImpl<T> extends AbstractExpression<T> implements Subquery<T>, Serializable {
 	private final CommonAbstractCriteria parent;
 	private final QueryStructure<T> queryStructure;
 
@@ -111,7 +116,7 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 			if ( queryStructure.getSelection() == null ) {
 				return null;
 			}
-			wrappedSelection = new SubquerySelection<T>( (ExpressionImpl<T>) queryStructure.getSelection(), this );
+			wrappedSelection = new SubquerySelection<T>( (AbstractExpression<T>) queryStructure.getSelection(), this );
 		}
 		return wrappedSelection;
 	}
@@ -126,7 +131,7 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 	public static class SubquerySelection<S> extends DelegatedExpressionImpl<S> {
 		private final CriteriaSubqueryImpl subQuery;
 
-		public SubquerySelection(ExpressionImpl<S> wrapped, CriteriaSubqueryImpl subQuery) {
+		public SubquerySelection(AbstractExpression<S> wrapped, CriteriaSubqueryImpl subQuery) {
 			super( wrapped );
 			this.subQuery = subQuery;
 		}
@@ -208,35 +213,35 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 
 	@Override
 	public <X, Y> Join<X, Y> correlate(Join<X, Y> source) {
-		final JoinImplementor<X,Y> correlation = ( (JoinImplementor<X,Y>) source ).correlateTo( this );
+		final JpaAttributeJoinImplementor<X,Y> correlation = ( (JpaAttributeJoinImplementor<X,Y>) source ).correlateTo( this );
 		queryStructure.addCorrelationRoot( correlation );
 		return correlation;
 	}
 
 	@Override
 	public <X, Y> CollectionJoin<X, Y> correlate(CollectionJoin<X, Y> source) {
-		final CollectionJoinImplementor<X,Y> correlation = ( (CollectionJoinImplementor<X,Y>) source ).correlateTo( this );
+		final JpaCollectionJoinImplementor<X,Y> correlation = ( (JpaCollectionJoinImplementor<X,Y>) source ).correlateTo( this );
 		queryStructure.addCorrelationRoot( correlation );
 		return correlation;
 	}
 
 	@Override
 	public <X, Y> SetJoin<X, Y> correlate(SetJoin<X, Y> source) {
-		final SetJoinImplementor<X,Y> correlation = ( (SetJoinImplementor<X,Y>) source ).correlateTo( this );
+		final JpaSetJoinImplementor<X,Y> correlation = ( (JpaSetJoinImplementor<X,Y>) source ).correlateTo( this );
 		queryStructure.addCorrelationRoot( correlation );
 		return correlation;
 	}
 
 	@Override
 	public <X, Y> ListJoin<X, Y> correlate(ListJoin<X, Y> source) {
-		final ListJoinImplementor<X,Y> correlation = ( (ListJoinImplementor<X,Y>) source ).correlateTo( this );
+		final JpaListJoinImplementor<X,Y> correlation = ( (JpaListJoinImplementor<X,Y>) source ).correlateTo( this );
 		queryStructure.addCorrelationRoot( correlation );
 		return correlation;
 	}
 
 	@Override
 	public <X, K, V> MapJoin<X, K, V> correlate(MapJoin<X, K, V> source) {
-		final MapJoinImplementor<X, K, V> correlation = ( (MapJoinImplementor<X, K, V>) source ).correlateTo( this );
+		final JpaMapJoinImplementor<X, K, V> correlation = ( (JpaMapJoinImplementor<X, K, V>) source ).correlateTo( this );
 		queryStructure.addCorrelationRoot( correlation );
 		return correlation;
 	}

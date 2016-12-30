@@ -11,12 +11,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.query.criteria.CriteriaBuilderException;
+import org.hibernate.query.criteria.JpaExpressionImplementor;
+import org.hibernate.query.criteria.JpaInImplementor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 import org.hibernate.query.criteria.internal.expression.LiteralExpression;
+import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
+import org.hibernate.sqm.query.expression.SqmExpression;
+import org.hibernate.sqm.query.predicate.SqmPredicate;
 
 /**
  * Models an <tt>[NOT] IN</tt> restriction
@@ -25,9 +33,9 @@ import org.hibernate.query.criteria.internal.expression.LiteralExpression;
  */
 public class InPredicate<T>
 		extends AbstractSimplePredicate
-		implements CriteriaBuilderImpl.In<T>, Serializable {
-	private final Expression<? extends T> expression;
-	private final List<Expression<? extends T>> values;
+		implements JpaInImplementor<T>, Serializable {
+	private final JpaExpressionImplementor<? extends T> expression;
+	private List<JpaExpressionImplementor<? extends T>> values;
 
 	/**
 	 * Constructs an <tt>IN</tt> predicate against a given expression with an empty list of values.
@@ -62,13 +70,22 @@ public class InPredicate<T>
 	 * @param expression The expression.
 	 * @param values The value list.
 	 */
+	@SuppressWarnings("unchecked")
 	public InPredicate(
 			CriteriaBuilderImpl criteriaBuilder,
 			Expression<? extends T> expression,
 			List<Expression<? extends T>> values) {
 		super( criteriaBuilder );
-		this.expression = expression;
-		this.values = values;
+		criteriaBuilder.checkIsJpaExpression( expression );
+		this.expression = (JpaExpressionImplementor<? extends T>) expression;
+
+		if ( values == null || values.isEmpty() ) {
+			this.values = null;
+		}
+		else {
+			this.values = CollectionHelper.arrayList( values.size() );
+			values.forEach( this::value );
+		}
 	}
 
 	/**
@@ -97,8 +114,12 @@ public class InPredicate<T>
 			Expression<? extends T> expression,
 			Collection<T> values) {
 		super( criteriaBuilder );
-		this.expression = expression;
-		this.values = new ArrayList<Expression<? extends T>>( values.size() );
+
+		criteriaBuilder.checkIsJpaExpression( expression );
+		this.expression = (JpaExpressionImplementor<? extends T>) expression;
+
+		if ( values == null || values.isEmpty() )
+		this.values = CollectionHelper.arrayList( values.size() );
 		final Class<? extends T> javaType = expression.getJavaType();
 		ValueHandlerFactory.ValueHandler<? extends T> valueHandler = javaType != null && ValueHandlerFactory.isNumeric(javaType)
 				? ValueHandlerFactory.determineAppropriateHandler((Class<? extends T>) javaType)
@@ -112,8 +133,8 @@ public class InPredicate<T>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Expression<T> getExpression() {
-		return ( Expression<T> ) expression;
+	public JpaExpressionImplementor<T> getExpression() {
+		return (JpaExpressionImplementor<T>) expression;
 	}
 
 	public Expression<? extends T> getExpressionInternal() {
@@ -121,18 +142,27 @@ public class InPredicate<T>
 	}
 
 	public List<Expression<? extends T>> getValues() {
-		return values;
+		return values.stream().collect( Collectors.toList() );
 	}
 
 	@Override
 	public InPredicate<T> value(T value) {
-		return value( new LiteralExpression<T>( criteriaBuilder(), value ) );
+		return addValue( new LiteralExpression<T>( criteriaBuilder(), value ) );
+	}
+
+	private InPredicate<T> addValue(JpaExpressionImplementor<? extends T> value) {
+		if ( values == null ) {
+			values = new ArrayList<>();
+		}
+		values.add( value );
+		return this;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public InPredicate<T> value(Expression<? extends T> value) {
-		values.add( value );
-		return this;
+		criteriaBuilder().checkIsJpaExpression( value );
+		return addValue( (JpaExpressionImplementor<? extends T>) value );
 	}
 
 	@Override
@@ -141,5 +171,19 @@ public class InPredicate<T>
 		for ( Expression value : getValues() ) {
 			Helper.possibleParameter(value, registry);
 		}
+	}
+
+	@Override
+	public SqmPredicate visitPredicate(CriteriaVisitor visitor) {
+		return visitor.visitInTupleListPredicate(
+				expression,
+				values.stream().collect( Collectors.toList() ),
+				isNegated()
+		);
+	}
+
+	@Override
+	public SqmExpression visitExpression(CriteriaVisitor visitor) {
+		throw new CriteriaBuilderException( "Unexpected call to #visitExpression on InPredicate" );
 	}
 }

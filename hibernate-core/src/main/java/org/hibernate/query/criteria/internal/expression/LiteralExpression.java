@@ -6,22 +6,23 @@
  */
 package org.hibernate.query.criteria.internal.expression;
 
-import java.io.Serializable;
-
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaExpressionImplementor;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
+import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
+import org.hibernate.sqm.query.expression.SqmExpression;
 
 /**
  * Represents a literal expression.
  *
  * @author Steve Ebersole
  */
-public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializable {
+public class LiteralExpression<T> extends AbstractExpression<T> implements JpaExpressionImplementor<T> Serializable {
 	private Object literal;
 
 	@SuppressWarnings({ "unchecked" })
-	public LiteralExpression(CriteriaBuilderImpl criteriaBuilder, T literal) {
+	public LiteralExpression(HibernateCriteriaBuilder criteriaBuilder, T literal) {
 		this( criteriaBuilder, (Class<T>) determineClass( literal ), literal );
 	}
 
@@ -29,7 +30,7 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 		return literal == null ? null : literal.getClass();
 	}
 
-	public LiteralExpression(CriteriaBuilderImpl criteriaBuilder, Class<T> type, T literal) {
+	public LiteralExpression(HibernateCriteriaBuilder criteriaBuilder, Class<T> type, T literal) {
 		super( criteriaBuilder, type );
 		this.literal = literal;
 	}
@@ -56,5 +57,11 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 		if ( valueHandler != null ) {
 			literal = valueHandler.convert( literal );
 		}
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public SqmExpression visitExpression(CriteriaVisitor visitor) {
+		return visitor.visitConstant( (T) literal, getJavaType() );
 	}
 }

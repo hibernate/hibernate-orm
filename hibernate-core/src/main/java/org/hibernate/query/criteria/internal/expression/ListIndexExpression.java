@@ -11,20 +11,20 @@ import javax.persistence.metamodel.ListAttribute;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.PathImplementor;
+import org.hibernate.query.criteria.JpaPathImplementor;
 
 /**
  * An expression for referring to the index of a list.
  *
  * @author Steve Ebersole
  */
-public class ListIndexExpression extends ExpressionImpl<Integer> implements Serializable {
-	private final PathImplementor origin;
+public class ListIndexExpression extends AbstractExpression<Integer> implements Serializable {
+	private final JpaPathImplementor origin;
 	private final ListAttribute listAttribute;
 
 	public ListIndexExpression(
 			CriteriaBuilderImpl criteriaBuilder,
-			PathImplementor origin,
+			JpaPathImplementor origin,
 			ListAttribute listAttribute) {
 		super( criteriaBuilder, Integer.class );
 		this.origin = origin;

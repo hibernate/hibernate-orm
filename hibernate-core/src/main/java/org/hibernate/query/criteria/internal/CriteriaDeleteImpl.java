@@ -10,6 +10,8 @@ import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
+import org.hibernate.query.criteria.AbstractManipulationCriteriaQuery;
+
 /**
  * Hibernate implementation of the JPA 2.1 {@link CriteriaDelete} contract.
  *

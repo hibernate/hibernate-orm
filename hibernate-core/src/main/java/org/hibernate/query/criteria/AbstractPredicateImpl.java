@@ -1,18 +1,20 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.criteria.internal.predicate;
+package org.hibernate.query.criteria;
 
 import java.io.Serializable;
 import java.util.List;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
+import org.hibernate.query.criteria.internal.expression.AbstractExpression;
+import org.hibernate.query.criteria.internal.predicate.NegatedPredicateWrapper;
+import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
+import org.hibernate.sqm.query.expression.SqmExpression;
 
 /**
  * Basic template support for {@link Predicate} implementors providing
@@ -21,18 +23,25 @@ import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
  * @author Steve Ebersole
  */
 public abstract class AbstractPredicateImpl
-		extends ExpressionImpl<Boolean>
-		implements PredicateImplementor, Serializable {
+		extends AbstractExpression<Boolean>
+		implements JpaPredicateImplementor, Serializable {
 
-	protected AbstractPredicateImpl(CriteriaBuilderImpl criteriaBuilder) {
+	protected AbstractPredicateImpl(HibernateCriteriaBuilder criteriaBuilder) {
 		super( criteriaBuilder, Boolean.class );
 	}
 
+	@Override
+	public SqmExpression visitExpression(CriteriaVisitor visitor) {
+		return null;
+	}
+
+	@Override
 	public boolean isNegated() {
 		return false;
 	}
 
-	public Predicate not() {
+	@Override
+	public JpaPredicateImplementor not() {
 		return new NegatedPredicateWrapper( this );
 	}
 

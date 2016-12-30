@@ -14,12 +14,12 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.ManagedType;
 
-import org.hibernate.query.criteria.internal.CollectionJoinImplementor;
+import org.hibernate.query.criteria.JpaCollectionJoinImplementor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
-import org.hibernate.query.criteria.internal.FromImplementor;
-import org.hibernate.query.criteria.internal.PathImplementor;
-import org.hibernate.query.criteria.internal.PathSource;
+import org.hibernate.query.criteria.JpaFromImplementor;
+import org.hibernate.query.criteria.JpaPathImplementor;
+import org.hibernate.query.criteria.JpaPathSourceImplementor;
 
 /**
  * Models a join based on a plural association attribute.
@@ -28,11 +28,11 @@ import org.hibernate.query.criteria.internal.PathSource;
  */
 public class CollectionAttributeJoin<O,E>
 		extends PluralAttributeJoinSupport<O,Collection<E>,E>
-		implements CollectionJoinImplementor<O,E>, Serializable {
+		implements JpaCollectionJoinImplementor<O,E>, Serializable {
 	public CollectionAttributeJoin(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<E> javaType,
-			PathSource<O> pathSource,
+			JpaPathSourceImplementor<O> pathSource,
 			CollectionAttribute<? super O, E> joinAttribute,
 			JoinType joinType) {
 		super( criteriaBuilder, javaType, pathSource, joinAttribute, joinType );
@@ -53,11 +53,11 @@ public class CollectionAttributeJoin<O,E>
 	}
 
 	@Override
-	protected FromImplementor<O, E> createCorrelationDelegate() {
+	protected JpaFromImplementor<O, E> createCorrelationDelegate() {
 		return new CollectionAttributeJoin<O,E>(
 				criteriaBuilder(),
 				getJavaType(),
-				(PathImplementor<O>) getParentPath(),
+				(JpaPathImplementor<O>) getParentPath(),
 				getAttribute(),
 				getJoinType()
 		);
@@ -117,7 +117,7 @@ public class CollectionAttributeJoin<O,E>
 		}
 
 		@Override
-		protected PathSource getPathSourceForSubPaths() {
+		protected JpaPathSourceImplementor getPathSourceForSubPaths() {
 			return this;
 		}
 	}

@@ -13,23 +13,23 @@ import javax.persistence.metamodel.MapAttribute;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.PathImplementor;
+import org.hibernate.query.criteria.JpaPathImplementor;
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
 public class MapEntryExpression<K,V>
-		extends ExpressionImpl<Map.Entry<K,V>>
+		extends AbstractExpression<Map.Entry<K,V>>
 		implements Expression<Map.Entry<K,V>>, Serializable {
 
-	private final PathImplementor origin;
+	private final JpaPathImplementor origin;
 	private final MapAttribute<?, K, V> attribute;
 
 	public MapEntryExpression(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<Map.Entry<K, V>> javaType,
-			PathImplementor origin,
+			JpaPathImplementor origin,
 			MapAttribute<?, K, V> attribute) {
 		super( criteriaBuilder, javaType);
 		this.origin = origin;

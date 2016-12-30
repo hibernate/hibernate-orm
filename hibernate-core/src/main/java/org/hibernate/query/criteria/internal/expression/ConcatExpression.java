@@ -17,7 +17,7 @@ import org.hibernate.query.criteria.internal.ParameterRegistry;
  *
  * @author Steve Ebersole
  */
-public class ConcatExpression extends ExpressionImpl<String> implements Serializable {
+public class ConcatExpression extends AbstractExpression<String> implements Serializable {
 	private Expression<String> string1;
 	private Expression<String> string2;
 

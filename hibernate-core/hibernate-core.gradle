@@ -21,7 +21,7 @@ configurations {
 }
 
 dependencies {
-    compile 'org.hibernate:hibernate-sqm:1.0.0-SNAPSHOT'
+    compile 'org.hibernate.sqm:hibernate-sqm:1.0.0-SNAPSHOT'
     compile( libraries.jpa )
     compile( libraries.javassist )
     // provided until 6.0 when we make it the default and drop Javassist support

@@ -18,7 +18,7 @@ import org.hibernate.query.criteria.internal.ParameterRegistry;
  * @author Steve Ebersole
  */
 public class UnaryArithmeticOperation<T> 
-		extends ExpressionImpl<T>
+		extends AbstractExpression<T>
 		implements UnaryOperatorExpression<T>, Serializable {
 
 	public static enum Operation {

@@ -28,16 +28,16 @@ import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.query.criteria.internal.BasicPathUsageException;
-import org.hibernate.query.criteria.internal.CollectionJoinImplementor;
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.BasicPathUsageException;
+import org.hibernate.query.criteria.JpaCollectionJoinImplementor;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
-import org.hibernate.query.criteria.internal.FromImplementor;
-import org.hibernate.query.criteria.internal.JoinImplementor;
-import org.hibernate.query.criteria.internal.ListJoinImplementor;
-import org.hibernate.query.criteria.internal.MapJoinImplementor;
-import org.hibernate.query.criteria.internal.PathSource;
-import org.hibernate.query.criteria.internal.SetJoinImplementor;
+import org.hibernate.query.criteria.JpaFromImplementor;
+import org.hibernate.query.criteria.JpaAttributeJoinImplementor;
+import org.hibernate.query.criteria.JpaListJoinImplementor;
+import org.hibernate.query.criteria.JpaMapJoinImplementor;
+import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.query.criteria.JpaSetJoinImplementor;
 
 /**
  * Convenience base class for various {@link javax.persistence.criteria.From} implementations.
@@ -46,24 +46,24 @@ import org.hibernate.query.criteria.internal.SetJoinImplementor;
  */
 public abstract class AbstractFromImpl<Z, X>
 		extends AbstractPathImpl<X>
-		implements From<Z, X>, FromImplementor<Z, X>, Serializable {
+		implements From<Z, X>, JpaFromImplementor<Z, X>, Serializable {
 
 	public static final JoinType DEFAULT_JOIN_TYPE = JoinType.INNER;
 
 	private Set<Join<X, ?>> joins;
 	private Set<Fetch<X, ?>> fetches;
 
-	public AbstractFromImpl(CriteriaBuilderImpl criteriaBuilder, Class<X> javaType) {
+	public AbstractFromImpl(HibernateCriteriaBuilder criteriaBuilder, Class<X> javaType) {
 		this( criteriaBuilder, javaType, null );
 	}
 
-	public AbstractFromImpl(CriteriaBuilderImpl criteriaBuilder, Class<X> javaType, PathSource pathSource) {
+	public AbstractFromImpl(HibernateCriteriaBuilder criteriaBuilder, Class<X> javaType, JpaPathSourceImplementor pathSource) {
 		super( criteriaBuilder, javaType, pathSource );
 	}
 
 	@Override
 	@SuppressWarnings({"unchecked"})
-	public PathSource<Z> getPathSource() {
+	public JpaPathSourceImplementor<Z> getPathSource() {
 		return super.getPathSource();
 	}
 
@@ -106,7 +106,7 @@ public abstract class AbstractFromImpl<Z, X>
 	//		that may be cleaner code-wise, it is certainly means creating a lot of "extra"
 	//		classes since we'd need one for each Subquery#correlate method
 
-	private FromImplementor<Z, X> correlationParent;
+	private JpaFromImplementor<Z, X> correlationParent;
 
 	private JoinScope<X> joinScope = new BasicJoinScope();
 
@@ -158,7 +158,7 @@ public abstract class AbstractFromImpl<Z, X>
 	}
 
 	@Override
-	public FromImplementor<Z, X> getCorrelationParent() {
+	public JpaFromImplementor<Z, X> getCorrelationParent() {
 		if ( correlationParent == null ) {
 			throw new IllegalStateException(
 					String.format(
@@ -172,16 +172,16 @@ public abstract class AbstractFromImpl<Z, X>
 
 	@Override
 	@SuppressWarnings({"unchecked"})
-	public FromImplementor<Z, X> correlateTo(CriteriaSubqueryImpl subquery) {
-		final FromImplementor<Z, X> correlationDelegate = createCorrelationDelegate();
+	public JpaFromImplementor<Z, X> correlateTo(CriteriaSubqueryImpl subquery) {
+		final JpaFromImplementor<Z, X> correlationDelegate = createCorrelationDelegate();
 		correlationDelegate.prepareCorrelationDelegate( this );
 		return correlationDelegate;
 	}
 
-	protected abstract FromImplementor<Z, X> createCorrelationDelegate();
+	protected abstract JpaFromImplementor<Z, X> createCorrelationDelegate();
 
 	@Override
-	public void prepareCorrelationDelegate(FromImplementor<Z, X> parent) {
+	public void prepareCorrelationDelegate(JpaFromImplementor<Z, X> parent) {
 		this.joinScope = new CorrelationJoinScope();
 		this.correlationParent = parent;
 	}
@@ -225,7 +225,7 @@ public abstract class AbstractFromImpl<Z, X>
 		return join;
 	}
 
-	private <Y> JoinImplementor<X, Y> constructJoin(SingularAttribute<? super X, Y> attribute, JoinType jt) {
+	private <Y> JpaAttributeJoinImplementor<X, Y> constructJoin(SingularAttribute<? super X, Y> attribute, JoinType jt) {
 		if ( Type.PersistenceType.BASIC.equals( attribute.getType().getPersistenceType() ) ) {
 			throw new BasicPathUsageException( "Cannot join to attribute of basic type", attribute );
 		}
@@ -262,7 +262,7 @@ public abstract class AbstractFromImpl<Z, X>
 		return join;
 	}
 
-	private <Y> CollectionJoinImplementor<X, Y> constructJoin(
+	private <Y> JpaCollectionJoinImplementor<X, Y> constructJoin(
 			CollectionAttribute<? super X, Y> collection,
 			JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
@@ -297,7 +297,7 @@ public abstract class AbstractFromImpl<Z, X>
 		return join;
 	}
 
-	private <Y> SetJoinImplementor<X, Y> constructJoin(SetAttribute<? super X, Y> set, JoinType jt) {
+	private <Y> JpaSetJoinImplementor<X, Y> constructJoin(SetAttribute<? super X, Y> set, JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
 		}
@@ -324,7 +324,7 @@ public abstract class AbstractFromImpl<Z, X>
 		return join;
 	}
 
-	private <Y> ListJoinImplementor<X, Y> constructJoin(ListAttribute<? super X, Y> list, JoinType jt) {
+	private <Y> JpaListJoinImplementor<X, Y> constructJoin(ListAttribute<? super X, Y> list, JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
 		}
@@ -351,7 +351,7 @@ public abstract class AbstractFromImpl<Z, X>
 		return join;
 	}
 
-	private <K, V> MapJoinImplementor<X, K, V> constructJoin(MapAttribute<? super X, K, V> map, JoinType jt) {
+	private <K, V> JpaMapJoinImplementor<X, K, V> constructJoin(MapAttribute<? super X, K, V> map, JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
 		}

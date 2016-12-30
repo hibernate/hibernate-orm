@@ -1,12 +1,14 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.query.criteria.internal;
 
 import java.io.Serializable;
+
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 /**
  * All nodes in a criteria query tree will generally need access to the {@link CriteriaBuilderImpl} from which they
@@ -15,9 +17,9 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public abstract class AbstractNode implements Serializable {
-	private final CriteriaBuilderImpl criteriaBuilder;
+	private final HibernateCriteriaBuilder criteriaBuilder;
 
-	public AbstractNode(CriteriaBuilderImpl criteriaBuilder) {
+	public AbstractNode(HibernateCriteriaBuilder criteriaBuilder) {
 		this.criteriaBuilder = criteriaBuilder;
 	}
 
@@ -26,7 +28,7 @@ public abstract class AbstractNode implements Serializable {
 	 *
 	 * @return The underlying {@link CriteriaBuilderImpl} instance.
 	 */
-	public CriteriaBuilderImpl criteriaBuilder() {
+	public HibernateCriteriaBuilder criteriaBuilder() {
 		return criteriaBuilder;
 	}
 }

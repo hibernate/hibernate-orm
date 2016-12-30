@@ -14,6 +14,9 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.SingularAttribute;
 
+import org.hibernate.query.criteria.AbstractManipulationCriteriaQuery;
+import org.hibernate.query.criteria.JpaExpressionImplementor;
+import org.hibernate.query.criteria.JpaPathImplementor;
 import org.hibernate.query.criteria.internal.path.SingularAttributePath;
 
 /**
@@ -75,13 +78,13 @@ public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 	}
 
 	protected <Y> void addAssignment(Path<Y> attributePath, Expression<? extends Y> value) {
-		if ( ! PathImplementor.class.isInstance( attributePath ) ) {
+		if ( ! JpaPathImplementor.class.isInstance( attributePath ) ) {
 			throw new IllegalArgumentException( "Unexpected path implementation type : " + attributePath.getClass().getName() );
 		}
 		if ( ! SingularAttributePath.class.isInstance( attributePath ) ) {
 			throw new IllegalArgumentException(
 					"Attribute path for assignment must represent a singular attribute ["
-							+ ( (PathImplementor) attributePath ).getPathIdentifier() + "]"
+							+ ( (JpaPathImplementor) attributePath ).getPathIdentifier() + "]"
 			);
 		}
 		if ( value == null ) {
@@ -112,11 +115,11 @@ public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 
 	private static class Assignment<A> {
 		private final SingularAttributePath<A> attributePath;
-		private final ExpressionImplementor<? extends A> value;
+		private final JpaExpressionImplementor<? extends A> value;
 
 		private Assignment(SingularAttributePath<A> attributePath, Expression<? extends A> value) {
 			this.attributePath = attributePath;
-			this.value = (ExpressionImplementor) value;
+			this.value = (JpaExpressionImplementor) value;
 		}
 	}
 }

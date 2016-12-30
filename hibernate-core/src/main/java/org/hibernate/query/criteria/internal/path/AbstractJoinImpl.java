@@ -15,8 +15,8 @@ import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
-import org.hibernate.query.criteria.internal.JoinImplementor;
-import org.hibernate.query.criteria.internal.PathSource;
+import org.hibernate.query.criteria.JpaAttributeJoinImplementor;
+import org.hibernate.query.criteria.JpaPathSourceImplementor;
 
 /**
  * Convenience base class for various {@link javax.persistence.criteria.Join} implementations.
@@ -25,7 +25,7 @@ import org.hibernate.query.criteria.internal.PathSource;
  */
 public abstract class AbstractJoinImpl<Z, X>
 		extends AbstractFromImpl<Z, X>
-		implements JoinImplementor<Z,X>, Serializable {
+		implements JpaAttributeJoinImplementor<Z,X>, Serializable {
 
 	private final Attribute<? super Z, ?> joinAttribute;
 	private final JoinType joinType;
@@ -34,7 +34,7 @@ public abstract class AbstractJoinImpl<Z, X>
 
 	public AbstractJoinImpl(
 			CriteriaBuilderImpl criteriaBuilder,
-			PathSource<Z> pathSource,
+			JpaPathSourceImplementor<Z> pathSource,
 			Attribute<? super Z, X> joinAttribute,
 			JoinType joinType) {
 		this( criteriaBuilder, joinAttribute.getJavaType(), pathSource, joinAttribute, joinType );
@@ -43,7 +43,7 @@ public abstract class AbstractJoinImpl<Z, X>
 	public AbstractJoinImpl(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<X> javaType,
-			PathSource<Z> pathSource,
+			JpaPathSourceImplementor<Z> pathSource,
 			Attribute<? super Z, ?> joinAttribute,
 			JoinType joinType) {
 		super( criteriaBuilder, javaType, pathSource );
@@ -69,12 +69,12 @@ public abstract class AbstractJoinImpl<Z, X>
 	}
 
 	@Override
-	public JoinImplementor<Z, X> correlateTo(CriteriaSubqueryImpl subquery) {
-		return (JoinImplementor<Z, X>) super.correlateTo( subquery );
+	public JpaAttributeJoinImplementor<Z, X> correlateTo(CriteriaSubqueryImpl subquery) {
+		return (JpaAttributeJoinImplementor<Z, X>) super.correlateTo( subquery );
 	}
 
 	@Override
-	public JoinImplementor<Z, X> on(Predicate... restrictions) {
+	public JpaAttributeJoinImplementor<Z, X> on(Predicate... restrictions) {
 		// no matter what, a call to this method replaces any previously set values...
 		this.suppliedJoinCondition = null;
 
@@ -86,7 +86,7 @@ public abstract class AbstractJoinImpl<Z, X>
 	}
 
 	@Override
-	public JoinImplementor<Z, X> on(Expression<Boolean> restriction) {
+	public JpaAttributeJoinImplementor<Z, X> on(Expression<Boolean> restriction) {
 		this.suppliedJoinCondition = criteriaBuilder().wrap( restriction );
 		return this;
 	}

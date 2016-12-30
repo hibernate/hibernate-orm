@@ -9,6 +9,7 @@ package org.hibernate.query.criteria.internal.predicate;
 import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.query.criteria.TruthValue;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 

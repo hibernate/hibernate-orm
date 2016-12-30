@@ -8,9 +8,10 @@ package org.hibernate.query.criteria.internal.expression.function;
 
 import java.io.Serializable;
 
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.expression.ExpressionImpl;
+import org.hibernate.query.criteria.internal.expression.AbstractExpression;
 
 /**
  * Models a <tt>CAST</tt> function.
@@ -25,17 +26,17 @@ public class CastFunction<T,Y>
 		implements FunctionExpression<T>, Serializable {
 	public static final String CAST_NAME = "cast";
 
-	private final ExpressionImpl<Y> castSource;
+	private final AbstractExpression<Y> castSource;
 
 	public CastFunction(
-			CriteriaBuilderImpl criteriaBuilder,
+			HibernateCriteriaBuilder criteriaBuilder,
 			Class<T> javaType,
-			ExpressionImpl<Y> castSource) {
+			AbstractExpression<Y> castSource) {
 		super( criteriaBuilder, javaType, CAST_NAME );
 		this.castSource = castSource;
 	}
 
-	public ExpressionImpl<Y> getCastSource() {
+	public AbstractExpression<Y> getCastSource() {
 		return castSource;
 	}
 

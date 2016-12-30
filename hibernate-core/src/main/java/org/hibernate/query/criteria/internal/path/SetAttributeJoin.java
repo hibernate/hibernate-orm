@@ -16,10 +16,10 @@ import javax.persistence.metamodel.SetAttribute;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
-import org.hibernate.query.criteria.internal.FromImplementor;
-import org.hibernate.query.criteria.internal.PathImplementor;
-import org.hibernate.query.criteria.internal.PathSource;
-import org.hibernate.query.criteria.internal.SetJoinImplementor;
+import org.hibernate.query.criteria.JpaFromImplementor;
+import org.hibernate.query.criteria.JpaPathImplementor;
+import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.query.criteria.JpaSetJoinImplementor;
 
 /**
  * Models a join based on a set-style plural association attribute.
@@ -31,12 +31,12 @@ import org.hibernate.query.criteria.internal.SetJoinImplementor;
  */
 public class SetAttributeJoin<O,E>
 		extends PluralAttributeJoinSupport<O, Set<E>,E>
-		implements SetJoinImplementor<O,E>, Serializable {
+		implements JpaSetJoinImplementor<O,E>, Serializable {
 
 	public SetAttributeJoin(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<E> javaType,
-			PathSource<O> pathSource,
+			JpaPathSourceImplementor<O> pathSource,
 			SetAttribute<? super O, E> joinAttribute,
 			JoinType joinType) {
 		super( criteriaBuilder, javaType, pathSource, joinAttribute, joinType );
@@ -58,24 +58,24 @@ public class SetAttributeJoin<O,E>
 	}
 
 	@Override
-	protected FromImplementor<O, E> createCorrelationDelegate() {
+	protected JpaFromImplementor<O, E> createCorrelationDelegate() {
 		return new SetAttributeJoin<O,E>(
 				criteriaBuilder(),
 				getJavaType(),
-				(PathImplementor<O>) getParentPath(),
+				(JpaPathImplementor<O>) getParentPath(),
 				getAttribute(),
 				getJoinType()
 		);
 	}
 
 	@Override
-	public SetJoinImplementor<O, E> on(Predicate... restrictions) {
-		return (SetJoinImplementor<O, E>) super.on( restrictions );
+	public JpaSetJoinImplementor<O, E> on(Predicate... restrictions) {
+		return (JpaSetJoinImplementor<O, E>) super.on( restrictions );
 	}
 
 	@Override
-	public SetJoinImplementor<O, E> on(Expression<Boolean> restriction) {
-		return (SetJoinImplementor<O, E>) super.on( restriction );
+	public JpaSetJoinImplementor<O, E> on(Expression<Boolean> restriction) {
+		return (JpaSetJoinImplementor<O, E>) super.on( restriction );
 	}
 
 	@Override
@@ -122,7 +122,7 @@ public class SetAttributeJoin<O,E>
 		}
 
 		@Override
-		protected PathSource getPathSourceForSubPaths() {
+		protected JpaPathSourceImplementor getPathSourceForSubPaths() {
 			return this;
 		}
 	}

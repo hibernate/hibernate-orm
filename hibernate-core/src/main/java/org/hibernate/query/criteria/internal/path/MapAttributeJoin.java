@@ -17,10 +17,10 @@ import javax.persistence.metamodel.MapAttribute;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
-import org.hibernate.query.criteria.internal.FromImplementor;
-import org.hibernate.query.criteria.internal.MapJoinImplementor;
-import org.hibernate.query.criteria.internal.PathImplementor;
-import org.hibernate.query.criteria.internal.PathSource;
+import org.hibernate.query.criteria.JpaFromImplementor;
+import org.hibernate.query.criteria.JpaMapJoinImplementor;
+import org.hibernate.query.criteria.JpaPathImplementor;
+import org.hibernate.query.criteria.JpaPathSourceImplementor;
 import org.hibernate.query.criteria.internal.expression.MapEntryExpression;
 
 /**
@@ -30,12 +30,12 @@ import org.hibernate.query.criteria.internal.expression.MapEntryExpression;
  */
 public class MapAttributeJoin<O,K,V>
 		extends PluralAttributeJoinSupport<O, Map<K,V>, V>
-		implements MapJoinImplementor<O,K,V>, Serializable {
+		implements JpaMapJoinImplementor<O,K,V>, Serializable {
 
 	public MapAttributeJoin(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<V> javaType,
-			PathSource<O> pathSource,
+			JpaPathSourceImplementor<O> pathSource,
 			MapAttribute<? super O, K, V> joinAttribute,
 			JoinType joinType) {
 		super( criteriaBuilder, javaType, pathSource, joinAttribute, joinType );
@@ -57,11 +57,11 @@ public class MapAttributeJoin<O,K,V>
 	}
 
 	@Override
-	protected FromImplementor<O, V> createCorrelationDelegate() {
+	protected JpaFromImplementor<O, V> createCorrelationDelegate() {
 		return new MapAttributeJoin<O,K,V>(
 				criteriaBuilder(),
 				getJavaType(),
-				(PathImplementor<O>) getParentPath(),
+				(JpaPathImplementor<O>) getParentPath(),
 				getAttribute(),
 				getJoinType()
 		);
@@ -93,13 +93,13 @@ public class MapAttributeJoin<O,K,V>
 	}
 
 	@Override
-	public MapJoinImplementor<O, K, V> on(Predicate... restrictions) {
-		return (MapJoinImplementor<O, K, V>) super.on( restrictions );
+	public JpaMapJoinImplementor<O, K, V> on(Predicate... restrictions) {
+		return (JpaMapJoinImplementor<O, K, V>) super.on( restrictions );
 	}
 
 	@Override
-	public MapJoinImplementor<O, K, V> on(Expression<Boolean> restriction) {
-		return (MapJoinImplementor<O, K, V>) super.on( restriction );
+	public JpaMapJoinImplementor<O, K, V> on(Expression<Boolean> restriction) {
+		return (JpaMapJoinImplementor<O, K, V>) super.on( restriction );
 	}
 
 	@Override
@@ -146,7 +146,7 @@ public class MapAttributeJoin<O,K,V>
 		}
 
 		@Override
-		protected PathSource getPathSourceForSubPaths() {
+		protected JpaPathSourceImplementor getPathSourceForSubPaths() {
 			return this;
 		}
 	}

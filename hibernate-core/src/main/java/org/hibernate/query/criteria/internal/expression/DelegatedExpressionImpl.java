@@ -18,15 +18,15 @@ import org.hibernate.query.criteria.internal.ValueHandlerFactory;
  *
  * @author Steve Ebersole
  */
-public abstract class DelegatedExpressionImpl<T> extends ExpressionImpl<T> {
-	private final ExpressionImpl<T> wrapped;
+public abstract class DelegatedExpressionImpl<T> extends AbstractExpression<T> {
+	private final AbstractExpression<T> wrapped;
 
-	public DelegatedExpressionImpl(ExpressionImpl<T> wrapped) {
+	public DelegatedExpressionImpl(AbstractExpression<T> wrapped) {
 		super( wrapped.criteriaBuilder(), wrapped.getJavaType() );
 		this.wrapped = wrapped;
 	}
 
-	public ExpressionImpl<T> getWrapped() {
+	public AbstractExpression<T> getWrapped() {
 		return wrapped;
 	}
 

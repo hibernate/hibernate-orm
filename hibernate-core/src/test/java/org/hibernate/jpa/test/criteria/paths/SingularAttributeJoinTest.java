@@ -20,7 +20,7 @@ import javax.persistence.metamodel.Type;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-import org.hibernate.query.criteria.internal.PathSource;
+import org.hibernate.query.criteria.JpaPathSourceImplementor;
 import org.hibernate.query.criteria.internal.path.SingularAttributeJoin;
 
 import org.junit.Test;
@@ -49,7 +49,7 @@ public class SingularAttributeJoinTest extends BaseEntityManagerFunctionalTestCa
     @Test
     public void testEntityModeMapJoins() throws Exception {
         CriteriaBuilderImpl criteriaBuilder = mock( CriteriaBuilderImpl.class);
-        PathSource pathSource = mock( PathSource.class);
+        JpaPathSourceImplementor pathSource = mock( JpaPathSourceImplementor.class);
         SingularAttribute joinAttribute = mock( SingularAttribute.class);
         when(joinAttribute.getPersistentAttributeType()).thenReturn(Attribute.PersistentAttributeType.MANY_TO_ONE);
         Type joinType = mock( Type.class, withSettings().extraInterfaces( Bindable.class));

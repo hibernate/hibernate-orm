@@ -3,48 +3,45 @@
 == TODO items
 
 * Migrate LoadPlan to SQM/SQL AST
-* Investigate managing AttributeConverter at the Attribute-level, as opposed to at the BasicType level.
-	See `org.hibernate.persister.common.spi.ConvertibleDomainReference`
-* Move `org.hibernate.secure` to `org.hibernate.resource.jacc`?
-* Move `org.hibernate.jmx` to `org.hibernate.resource.jmx`?
-* Remove (or just deprecate for now?) org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport.  IIRC we decided to
-	baseline ORM 6.0 on Java 8 so no need for the reflection anymore
-* Integrate org.hibernate.procedure.ProcedureCall processing into the new SQL execution (org.hibernate.sql.exec).
-	This also serves as general design guidelines for processing JdbcOperations, which should generally follow
-	the pattern set forth in SqlTreeExecutor - specifically:
-		1. Preparing the PreparedStatement for execution (PreparedStatementPreparer) - including:
-			a. getting the PreparedStatement/CallableStatement from the Connection
-			b. registering CallableStatement parameters (JdbcCallParameterRegistrations)
-			c. binding any IN/INOUT parameter values into the PreparedStatement
-		2. Executing the PreparedStatement and giving access to the outputs - PreparedStatementExecutor.
-			? PreparedStatementResult as an abstraction at the Jdbc level?
-		3. For ResultSet outputs, extracting the "jdbc values" - for integration into the org.hibernate.sql.exec.results.process stuff.  This allows, for example, easily
-			applying query result caching over a ProcedureCall for its ResultSet outputs (if we decide that is a worthwhile feature).
-+
---
-	The current approach to this in the SQM stuff is that SqlTreeExecutor is passed delegates that handle the 3 phases
-	mentioned below (create statement, execute, extract results) - it acts as the "coordinator".  But another approach
-	would be to have different "SqlTreeExecutor" impls, i.e.. JdbcCallExecutor, JdbcSelectExecutor, etc which has a lot of benefits
---
-* Design the following JdbcOperations:
-	. JdbcOperation
-		.. JdbcSelect
-		.. JdbcCall
-		.. JdbcDml (are these subtypes vv needed?)
-			... JdbcUpdate
-			... JdbcDelete
-			... JdbcInsert
-* Design individual JdbcOperation-executors:
-	. JdbcSelectExecutor : list, scroll, stream (iterate?)
-	. JdbcCallExecutor : execute -> Outputs
-	. JdbcDmlExecutor : executeUpdate -> updateCount
-* Session#stream API - accepts entity to stream, operations on the stream get translated to SQL up until a forEach etc call
+* related (^^) - drop Loader?  Or retrofit it to leverage JdbcSelectExecutor.
+* Drop old QueryTranslator and both impls
 
 
 == Open questions
 
+* Consider managing AttributeConverter at the Attribute-level, as opposed to at the BasicType level.
+	See `org.hibernate.persister.common.spi.ConvertibleDomainReference`.
+* Move `org.hibernate.secure` to `org.hibernate.resource.jacc`?
+* Move `org.hibernate.jmx` to `org.hibernate.resource.jmx`?
+* Remove (or just deprecate for now?) org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport.  IIRC we decided to
+	baseline ORM 6.0 on Java 8 so no need for the reflection anymore
+* Session#stream API - accepts entity to stream, operations on the stream get translated to SQL up until a forEach etc call
 * Parameterized ScrollableResults signature - change signature of row access methods or add new row access methods?
 * Drop `Query#iterate` support (shallow queries)?
 * Drop support for loading an entity by passing the instance to populate ("optional entity instance" et al)?
 * Do we want to expose some form of Returns from Query objects as a sort of "result metadata"?  This would play
 	the same role that Query returning Type does now (but Type is too limiting hence its removal)
+* Consider dropping `org.hibernate.cache.spi.QueryCache` in favor of direct coordination between:
+** `org.hibernate.cache.spi.QueryResultsRegion`
+** `org.hibernate.cache.spi.UpdateTimestampsCache`
+** a new "results validation checker", something like:
++
+--
+	interface QueryCacheResultsValidator {
+		boolean areCachedResultsValid(
+				UpdateTimestampsCache timestampsCache,
+				Set<Serializable> spaces,
+				Long timestamp,
+				SharedSessionContractImplementor session);
+	}
+--
+* Redesign Cache SPI as per https://hibernate.atlassian.net/browse/HHH-10707?focusedCommentId=84079&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-84079
+	and https://gist.github.com/sebersole/2c9ad6b77ea3477ba508c21c6ab61b8d
+* Redesign `org.hibernate.cache.spi.entry.CacheEntryStructure` and friends (with better names) and make more efficient.  At the moment, to cache, we:
+.. Create a "cache entry" (object creation)
+.. "structure" the "cache entry" (object creation)
+.. add "structured data" to the cache.
++
+--
+Would be more efficient to combine (a) and (b).  Both are controlled by the persister anyway
+--

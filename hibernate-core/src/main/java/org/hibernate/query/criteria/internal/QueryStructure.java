@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.criteria.internal;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,7 +25,7 @@ import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.query.criteria.FromClauseImpl;
 import org.hibernate.query.criteria.JpaFromImplementor;
-import org.hibernate.query.criteria.JpaSelectClauseImpl;
+import org.hibernate.query.criteria.SelectClauseImpl;
 import org.hibernate.query.criteria.internal.path.RootImpl;
 import org.hibernate.sqm.parser.criteria.tree.JpaExpression;
 import org.hibernate.sqm.parser.criteria.tree.JpaOrder;
@@ -56,7 +55,7 @@ public class QueryStructure<T> implements JpaQuerySpec<T> {
 		this.isSubQuery = Subquery.class.isInstance( owner );
 	}
 
-	private JpaSelectClauseImpl<T> jpaSelectClause = new JpaSelectClauseImpl<>();
+	private SelectClauseImpl<T> jpaSelectClause = new SelectClauseImpl<>();
 	private FromClauseImpl fromClause = new FromClauseImpl();
 	private JpaPredicate restriction;
 	private List<JpaExpression<?>> groupings = Collections.emptyList();

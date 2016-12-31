@@ -7,17 +7,22 @@
 package org.hibernate.query.criteria;
 
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.MapJoin;
 import javax.persistence.criteria.Predicate;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
+import org.hibernate.sqm.parser.criteria.tree.from.JpaMapJoin;
 
 /**
- * Specialization of {@link JpaAttributeJoinImplementor} for {@link java.util.Map} typed attribute joins
+ * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.MapJoin}
+ * contract.
  *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
-public interface JpaMapJoinImplementor<Z,K,V> extends JpaAttributeJoinImplementor<Z,V>, MapJoin<Z,K,V> {
+@Incubating
+public interface JpaMapJoinImplementor<Z,K,V> extends JpaAttributeJoinImplementor<Z,V>, JpaMapJoin<Z,K,V> {
 	@Override
 	JpaMapJoinImplementor<Z,K,V> correlateTo(CriteriaSubqueryImpl subquery);
 

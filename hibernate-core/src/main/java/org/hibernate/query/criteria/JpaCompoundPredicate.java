@@ -13,17 +13,21 @@ import java.util.stream.Collectors;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
 import org.hibernate.sqm.query.predicate.SqmPredicate;
 
 /**
- * A compound {@link Predicate predicate} is a grouping of other {@link Predicate predicates} in order to convert
- * either a conjunction (logical AND) or a disjunction (logical OR).
+ * Represents a grouping of JPA {@link Predicate} nodes as either a
+ * conjunction (logical AND) or a disjunction (logical OR).
  *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
+@Incubating
 public class JpaCompoundPredicate
 		extends AbstractPredicateImpl
 		implements JpaPredicateImplementor {

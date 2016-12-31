@@ -11,13 +11,17 @@ import java.math.BigInteger;
 import java.util.Collection;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.Incubating;
 import org.hibernate.sqm.parser.criteria.tree.JpaExpression;
 
 /**
- * Internal contract for implementations of the JPA {@link Expression} contract.
+ * Hibernate ORM specialization of the JPA {@link Expression} contract.
  *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
+@Incubating
 public interface JpaExpressionImplementor<T> extends JpaSelectionImplementor<T>, JpaExpression<T> {
 
 	@Override

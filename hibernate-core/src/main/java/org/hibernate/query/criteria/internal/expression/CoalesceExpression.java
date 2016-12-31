@@ -9,8 +9,6 @@ package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaBuilder.Coalesce;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.JpaCoalesce;
@@ -58,6 +56,7 @@ public class CoalesceExpression<T> extends AbstractExpression<T> implements JpaC
 		return null;
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public JpaCoalesce<T> value(JpaExpressionImplementor<? extends T> value) {
 		expressions.add( value );

@@ -8,16 +8,21 @@ package org.hibernate.query.criteria;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.SetJoin;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
+import org.hibernate.sqm.parser.criteria.tree.from.JpaSetJoin;
 
 /**
- * Specialization of {@link JpaAttributeJoinImplementor} for {@link java.util.Set} typed attribute joins
+ * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.SetJoin}
+ * contract.
  *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
-public interface JpaSetJoinImplementor<Z,X> extends JpaAttributeJoinImplementor<Z,X>, SetJoin<Z,X> {
+@Incubating
+public interface JpaSetJoinImplementor<Z,X> extends JpaAttributeJoinImplementor<Z,X>, JpaSetJoin<Z,X> {
 	@Override
 	JpaSetJoinImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
 

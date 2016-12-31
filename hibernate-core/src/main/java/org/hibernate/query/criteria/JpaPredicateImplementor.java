@@ -9,6 +9,9 @@ package org.hibernate.query.criteria;
 import org.hibernate.sqm.parser.criteria.tree.JpaPredicate;
 
 /**
+ * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.Predicate}
+ * contract.
+ *
  * @author Steve Ebersole
  */
 public interface JpaPredicateImplementor extends JpaPredicate, JpaExpressionImplementor<Boolean> {

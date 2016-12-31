@@ -9,9 +9,7 @@ package org.hibernate.sql.exec.spi;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
-import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.ExecutionContext;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -66,7 +64,6 @@ import org.hibernate.sql.ast.select.SqlSelection;
 import org.hibernate.sql.convert.spi.ConversionHelper;
 import org.hibernate.sql.convert.spi.SqmSelectInterpretation;
 import org.hibernate.sql.exec.internal.JdbcSelectImpl;
-import org.hibernate.type.LiteralType;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -478,50 +475,77 @@ public class SqlAstSelectInterpreter {
 	}
 
 	public void visitQueryLiteral(QueryLiteral queryLiteral) {
-		if ( !queryLiteral.isInSelect() ) {
-			// handle literals via parameter binding if they occur outside the select
-			parameterBinders.add( queryLiteral );
-
-			final int columnCount = queryLiteral.getType().getColumnSpan();
-			final boolean needsParens = currentlyInPredicate && columnCount > 1;
-
-			if ( needsParens ) {
-				appendSql( "(" );
+		switch( sessionFactory.getSessionFactoryOptions().getQueryLiteralRendering() ) {
+			case AS_LITERAL: {
+				renderAsLiteral( queryLiteral );
+				break;
 			}
-
-			String separator = "";
-			for ( int i = 0; i < columnCount; i++ ) {
-				appendSql( separator );
-				appendSql( "?" );
-				separator = ", ";
+			case AS_PARAM: {
+				renderAsParameter( queryLiteral );
+				break;
 			}
-
-			if ( needsParens ) {
-				appendSql( ")" );
+			case AS_PARAM_OUTSIDE_SELECT: {
+				if ( queryLiteral.isInSelect() ) {
+					renderAsLiteral( queryLiteral );
+				}
+				else {
+					renderAsParameter( queryLiteral );
+				}
+				break;
+			}
+			default: {
+				throw new IllegalArgumentException(
+						"Unrecognized QueryLiteralRendering : " + sessionFactory.getSessionFactoryOptions().getQueryLiteralRendering()
+				);
 			}
 		}
+	}
+
+	private void renderAsLiteral(QueryLiteral queryLiteral) {
+		// todo : define approach to rendering these literals.
+		//		my preference is to define `BasicType#getJdbcLiteralRenderer` (as well as a
+		// 		`BasicType#getJdbcLiteralConsumer` and a `BasicType#getLiteralConsumer`
+		//
+		//
+		// todo : would also be interesting to investigate simply not rendering the literal when it is a selection
+		//		we could simply add the literal directly to the "currentJdbcValues" array
+
+		// for now, simply render its #toString
+
+		if ( queryLiteral.getValue() == null ) {
+			// todo : not sure we allow this "higher up"
+			appendSql( "NULL" );
+		}
 		else {
-			// otherwise, render them as literals
-			// todo : better scheme for rendering these as literals
-			try {
-				appendSql(
-						( (LiteralType) queryLiteral.getType() ).objectToSQLString(
-								queryLiteral.getValue(),
-								sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect()
-						)
-				);
-			}
-			catch (Exception e) {
-				throw new QueryException(
-						String.format(
-								Locale.ROOT,
-								"Could not render literal value [%s (%s)] into SQL",
-								queryLiteral.getValue(),
-								queryLiteral.getType().getName()
-						),
-						e
-				);
-			}
+			appendSql( queryLiteral.getValue().toString() );
+		}
+	}
+
+	private void renderAsParameter(QueryLiteral queryLiteral) {
+		parameterBinders.add( queryLiteral );
+
+		// NOTE : the needsParens bit is only needed if we allow composites.
+		//		currently QueryLiteral#getType is defined as BasicType
+		// todo : ?do we want to allow composites?
+
+		// todo : wrap in cast function call if the literal occurs in SELECT (?based on Dialect?)
+
+		final int columnCount = queryLiteral.getType().getColumnSpan();
+		final boolean needsParens = currentlyInPredicate && columnCount > 1;
+
+		if ( needsParens ) {
+			appendSql( "(" );
+		}
+
+		String separator = "";
+		for ( int i = 0; i < columnCount; i++ ) {
+			appendSql( separator );
+			appendSql( "?" );
+			separator = ", ";
+		}
+
+		if ( needsParens ) {
+			appendSql( ")" );
 		}
 	}
 

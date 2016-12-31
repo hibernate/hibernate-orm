@@ -6,23 +6,27 @@
  */
 package org.hibernate.query.criteria;
 
-import javax.persistence.criteria.Path;
 import javax.persistence.metamodel.Attribute;
 
+import org.hibernate.Incubating;
 import org.hibernate.sqm.parser.criteria.tree.path.JpaPath;
 
 /**
- * Implementation contract for the JPA {@link Path} interface.
+ * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.Path}
+ * contract.
  *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
+@Incubating
 public interface JpaPathImplementor<X> extends JpaExpressionImplementor<X>, JpaPath<X>, JpaPathSourceImplementor<X> {
 	/**
 	 * Retrieve reference to the attribute this path represents.
 	 *
 	 * @return The metamodel attribute.
 	 */
-	public Attribute<?, ?> getAttribute();
+	Attribute<?, ?> getAttribute();
 
 	/**
 	 * Defines handling for the JPA 2.1 TREAT down-casting feature.
@@ -32,5 +36,5 @@ public interface JpaPathImplementor<X> extends JpaExpressionImplementor<X>, JpaP
 	 *
 	 * @return The properly typed view of this path.
 	 */
-	public <T extends X> JpaPathImplementor<T> treatAs(Class<T> treatAsType);
+	<T extends X> JpaPathImplementor<T> treatAs(Class<T> treatAsType);
 }

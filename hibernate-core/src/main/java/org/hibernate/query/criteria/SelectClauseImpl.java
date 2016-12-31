@@ -6,13 +6,19 @@
  */
 package org.hibernate.query.criteria;
 
+import org.hibernate.Incubating;
 import org.hibernate.sqm.parser.criteria.tree.select.JpaSelectClause;
 import org.hibernate.sqm.parser.criteria.tree.select.JpaSelection;
 
 /**
+ * Models a grouping of selections in a JPA CriteriaQuery.
+ *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
-public class JpaSelectClauseImpl<T> implements JpaSelectClause<T> {
+@Incubating
+public class SelectClauseImpl<T> implements JpaSelectClause<T> {
 	private boolean distinct;
 	private JpaSelectionImplementor<? extends T> jpaSelection;
 

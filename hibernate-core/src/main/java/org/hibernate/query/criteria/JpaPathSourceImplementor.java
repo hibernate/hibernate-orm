@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.criteria;
 
+import org.hibernate.Incubating;
 import org.hibernate.sqm.parser.criteria.tree.path.JpaPath;
 import org.hibernate.sqm.parser.criteria.tree.path.JpaPathSource;
 
@@ -13,7 +14,10 @@ import org.hibernate.sqm.parser.criteria.tree.path.JpaPathSource;
  * Implementation contract for things which can be the source (parent, left-hand-side, etc) of a path
  *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
+@Incubating
 public interface JpaPathSourceImplementor<X> extends JpaPath<X>, JpaPathSource<X> {
 	// todo : PropertyPath, instead of #getPathIdentifier() ?
 

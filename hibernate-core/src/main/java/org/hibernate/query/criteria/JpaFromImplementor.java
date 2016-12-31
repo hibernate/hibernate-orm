@@ -6,16 +6,19 @@
  */
 package org.hibernate.query.criteria;
 
-import javax.persistence.criteria.From;
-
+import org.hibernate.Incubating;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
 import org.hibernate.sqm.parser.criteria.tree.from.JpaFrom;
 
 /**
- * Implementation contract for the JPA {@link From} interface.
+ * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.From}
+ * contract.
  *
  * @author Steve Ebersole
+ *
+ * @since 6.0
  */
+@Incubating
 public interface JpaFromImplementor<Z,X> extends JpaPathImplementor<X>, JpaFrom<Z,X> {
 	JpaFromImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
 	void prepareCorrelationDelegate(JpaFromImplementor<Z,X> parent);

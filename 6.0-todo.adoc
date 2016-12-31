@@ -1,15 +1,32 @@
-= Active question and todo list for 6.0
+= Active questions and todo list for 6.0
 
 == TODO items
 
 * Migrate LoadPlan to SQM/SQL AST
 * related (^^) - drop Loader?  Or retrofit it to leverage JdbcSelectExecutor.
 * Drop old QueryTranslator and both impls
+* Drop `org.hibernate.query.criteria.internal.ParameterContainer`.  This is already handled during
+	SQM -> SQL-AST conversion.  `org.hibernate.sql.exec.spi.SqlAstSelectInterpreter` already has
+	built-in capability to track parameters - see `SqlAstSelectInterpreter#parameterBinders`
 * Remove `org.hibernate.query.QueryParameter#isPassNullsEnabled` - this is now handled based on whether
 	bind was called or not.
+* Find deprecations and evaluate for removal
+* Find incubations and evaluate for promotion
+
 
 == Open questions
 
+* General "literal as JDBC parameter" feature based on SQM?  I currently have
+		added this via the `org.hibernate.query.QueryLiteralRendering` enum and
+		`SessionFactoryOptions.getQueryLiteralRendering`
+* When not rendering literals as parameters:
+	** if they occur in SELECT, wrap in cast function based on Java type (?Dialect-specific?)
+	** define a better scheme for rendering these as SQL literals.  This could possibly be something
+		like the legacy `org.hibernate.query.criteria.internal.ValueHandlerFactory`.  Another option
+		(my preference), considering literals must be basic types (?allow composites?) is to define a
+		`BasicType#getLiteralRenderer` (as well as an inverse `BasicType#getLiteralConsumer`).
+* Determine how to deal with `org.hibernate.sqm.parser.criteria.tree.JpaExpression#getExpressionSqmType`.
+	It is only used in "basic contexts" (function return types, arithmetic results, etc)
 * Consider managing AttributeConverter at the Attribute-level, as opposed to at the BasicType level.
 	See `org.hibernate.persister.common.spi.ConvertibleDomainReference`.
 * Move `org.hibernate.secure` to `org.hibernate.resource.jacc`?
@@ -23,9 +40,9 @@
 * Do we want to expose some form of Returns from Query objects as a sort of "result metadata"?  This would play
 	the same role that Query returning Type does now (but Type is too limiting hence its removal)
 * Consider dropping `org.hibernate.cache.spi.QueryCache` in favor of direct coordination between:
-** `org.hibernate.cache.spi.QueryResultsRegion`
-** `org.hibernate.cache.spi.UpdateTimestampsCache`
-** a new "results validation checker", something like:
+	** `org.hibernate.cache.spi.QueryResultsRegion`
+	** `org.hibernate.cache.spi.UpdateTimestampsCache`
+	** a new "results validation checker", something like:
 +
 --
 	interface QueryCacheResultsValidator {

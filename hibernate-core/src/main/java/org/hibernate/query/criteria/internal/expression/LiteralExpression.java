@@ -6,10 +6,13 @@
  */
 package org.hibernate.query.criteria.internal.expression;
 
+import java.io.Serializable;
+
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpressionImplementor;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.query.criteria.internal.ValueHandlerFactory;
+import org.hibernate.sqm.domain.DomainReference;
 import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
 import org.hibernate.sqm.query.expression.SqmExpression;
 
@@ -18,8 +21,9 @@ import org.hibernate.sqm.query.expression.SqmExpression;
  *
  * @author Steve Ebersole
  */
-public class LiteralExpression<T> extends AbstractExpression<T> implements JpaExpressionImplementor<T> Serializable {
+public class LiteralExpression<T> extends AbstractExpression<T> implements JpaExpressionImplementor<T>, Serializable {
 	private Object literal;
+	private boolean wasReset;
 
 	@SuppressWarnings({ "unchecked" })
 	public LiteralExpression(HibernateCriteriaBuilder criteriaBuilder, T literal) {
@@ -45,23 +49,32 @@ public class LiteralExpression<T> extends AbstractExpression<T> implements JpaEx
 	}
 
 	@Override
+	public DomainReference getExpressionSqmType() {
+		return null;
+	}
+
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	protected void resetJavaType(Class targetType) {
 		super.resetJavaType( targetType );
-		ValueHandlerFactory.ValueHandler valueHandler = getValueHandler();
-		if ( valueHandler == null ) {
-			valueHandler = ValueHandlerFactory.determineAppropriateHandler( targetType );
-			forceConversion( valueHandler );
-		}
-
-		if ( valueHandler != null ) {
-			literal = valueHandler.convert( literal );
-		}
+		wasReset = true;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmExpression visitExpression(CriteriaVisitor visitor) {
-		return visitor.visitConstant( (T) literal, getJavaType() );
+		final T value = wasReset
+				? (T) convert( literal, getJavaType() )
+				: (T) literal;
+		return visitor.visitConstant( value, getJavaType() );
+	}
+
+	@SuppressWarnings("unchecked")
+	private <X> Object convert(X literal, Class<T> javaType) {
+		// todo : convert the literal value based on the Java type.  This requires access to Session though
+		return ( (MetamodelImplementor) criteriaBuilder().getEntityManagerFactory().getMetamodel() ).getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( (Class<X>) literal.getClass() )
+				.unwrap( literal, javaType, null );
 	}
 }

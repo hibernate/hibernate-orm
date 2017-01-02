@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import net.bytebuddy.TypeCache;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
@@ -40,8 +41,8 @@ import net.bytebuddy.matcher.ElementMatchers;
 
 public class BytecodeProviderImpl implements BytecodeProvider {
 
-	private final ConcurrentMap<Class, Class> FAST_CLASSES = new ConcurrentHashMap<Class, Class>();
-	private final ConcurrentMap<Class, Class> BULK_ACCESSORS = new ConcurrentHashMap<Class, Class>();
+	private final TypeCache<String> FAST_CLASSES = new TypeCache.WithInlineExpunction<String>(TypeCache.Sort.SOFT);
+	private final TypeCache<String> BULK_ACCESSORS = new TypeCache.WithInlineExpunction<String>(TypeCache.Sort.SOFT);
 
 	@Override
 	public ProxyFactoryFactory getProxyFactoryFactory() {
@@ -59,48 +60,41 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		findAccessors( clazz, getterNames, setterNames, types, getters, setters );
 		final Constructor<?> constructor = findConstructor( clazz );
 
-		Class fastClass = FAST_CLASSES.get( clazz );
+		Class fastClass = FAST_CLASSES.findOrInsert( clazz.getClassLoader(), clazz.getName(), new Callable<Class<?>>() {
+			@Override
+			public Class<?> call() throws Exception {
+				return new ByteBuddy()
+						.with(TypeValidation.DISABLED)
+						.with(new NamingStrategy.SuffixingRandom("HibernateInstantiator"))
+						.subclass(ReflectionOptimizer.InstantiationOptimizer.class)
+						.method(ElementMatchers.named("newInstance"))
+						.intercept(MethodCall.construct(constructor))
+						.make()
+						.load(clazz.getClassLoader())
+						.getLoaded();
+			}
+		}, clazz);
 
-		if ( fastClass == null ) {
-			fastClass = new ByteBuddy()
-					.with( TypeValidation.DISABLED )
-					.with( new NamingStrategy.SuffixingRandom( "HibernateInstantiator" ) )
-					.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
-					.method( ElementMatchers.named( "newInstance" ) )
-					.intercept( MethodCall.construct( constructor ) )
-					.make()
-					.load( clazz.getClassLoader() )
-					.getLoaded();
-		}
+		fastClass = FAST_CLASSES.insert( clazz.getClassLoader(), clazz.getName(), fastClass );
 
-		Class previousFastClass = FAST_CLASSES.putIfAbsent( clazz, fastClass );
-		if ( previousFastClass != null ) {
-			fastClass = previousFastClass;
-		}
-
-		Class bulkAccessor = BULK_ACCESSORS.get( clazz );
-
-		if ( bulkAccessor == null ) {
-			bulkAccessor = new ByteBuddy()
-					.with( TypeValidation.DISABLED )
-					.with( new NamingStrategy.SuffixingRandom( "HibernateAccessOptimizer" ) )
-					.subclass( ReflectionOptimizer.AccessOptimizer.class )
-					.method( ElementMatchers.named( "getPropertyValues" ) )
-					.intercept( new Implementation.Simple( new GetPropertyValues( clazz, getters ) ) )
-					.method( ElementMatchers.named( "setPropertyValues" ) )
-					.intercept( new Implementation.Simple( new SetPropertyValues( clazz, setters ) ) )
-					.method( ElementMatchers.named( "getPropertyNames" ) )
-					.intercept( MethodCall.call( new CloningPropertyCall( getterNames ) ) )
-					.make()
-					.load( clazz.getClassLoader() )
-					.getLoaded();
-		}
-
-
-		Class previousBulkAccessor = BULK_ACCESSORS.putIfAbsent( clazz, fastClass );
-		if ( previousBulkAccessor != null ) {
-			bulkAccessor = previousBulkAccessor;
-		}
+		Class bulkAccessor = BULK_ACCESSORS.findOrInsert( clazz.getClassLoader(), clazz.getName(), new Callable<Class<?>>() {
+			@Override
+			public Class<?> call() throws Exception {
+				return new ByteBuddy()
+						.with(TypeValidation.DISABLED)
+						.with(new NamingStrategy.SuffixingRandom("HibernateAccessOptimizer"))
+						.subclass(ReflectionOptimizer.AccessOptimizer.class)
+						.method(ElementMatchers.named("getPropertyValues"))
+						.intercept(new Implementation.Simple(new GetPropertyValues(clazz, getters)))
+						.method(ElementMatchers.named("setPropertyValues"))
+						.intercept(new Implementation.Simple(new SetPropertyValues(clazz, setters)))
+						.method(ElementMatchers.named("getPropertyNames"))
+						.intercept(MethodCall.call(new CloningPropertyCall(getterNames)))
+						.make()
+						.load(clazz.getClassLoader())
+						.getLoaded();
+			}
+		}, clazz);
 
 		try {
 			return new ReflectionOptimizerImpl(

@@ -8,12 +8,12 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import javax.persistence.Id;
 
+import net.bytebuddy.description.method.MethodList;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
-import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
@@ -47,7 +47,7 @@ class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.Method
 	@Override
 	public MethodVisitor wrap(
 			TypeDescription instrumentedType,
-			MethodDescription.InDefinedShape instrumentedMethod,
+			MethodDescription instrumentedMethod,
 			MethodVisitor methodVisitor,
 			Implementation.Context implementationContext,
 			TypePool typePool,

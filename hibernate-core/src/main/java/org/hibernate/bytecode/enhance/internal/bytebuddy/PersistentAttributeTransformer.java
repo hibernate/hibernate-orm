@@ -13,6 +13,8 @@ import java.util.Collections;
 import java.util.List;
 import javax.persistence.Embedded;
 
+import net.bytebuddy.description.field.FieldList;
+import net.bytebuddy.description.method.MethodList;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.internal.CoreLogging;
@@ -116,7 +118,7 @@ class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMet
 	@Override
 	public MethodVisitor wrap(
 			TypeDescription instrumentedType,
-			MethodDescription.InDefinedShape instrumentedMethod,
+			MethodDescription instrumentedMethod,
 			MethodVisitor methodVisitor,
 			Implementation.Context implementationContext,
 			TypePool typePool,

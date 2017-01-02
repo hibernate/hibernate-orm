@@ -13,9 +13,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import net.bytebuddy.TypeCache;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -44,7 +46,8 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyProxyFactory.class );
 
-	private static final ConcurrentMap<Set<Class>, Class> CACHE = new ConcurrentHashMap<Set<Class>, Class>();
+	private static final TypeCache<TypeCache.SimpleKey> CACHE =
+			new TypeCache.WithInlineExpunction<TypeCache.SimpleKey>(TypeCache.Sort.SOFT);
 
 	private Class persistentClass;
 	private String entityName;
@@ -86,38 +89,32 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 	public static Class buildProxy(
 			final Class persistentClass,
 			final Class[] interfaces) {
-		Set<Class> key = new HashSet<Class>();
+		Set<Class<?>> key = new HashSet<Class<?>>();
 		if ( interfaces.length == 1 ) {
 			key.add( persistentClass );
 		}
-		key.addAll( Arrays.asList( interfaces ) );
+		key.addAll( Arrays.<Class<?>>asList( interfaces ) );
 
-		Class<?> proxy = CACHE.get( key );
-		if ( proxy != null ) {
-			return proxy;
-		}
-
-		proxy = new ByteBuddy()
-				.with( TypeValidation.DISABLED )
-				.with( new NamingStrategy.SuffixingRandom( "HibernateProxy" ) )
-				.subclass( interfaces.length == 1 ? persistentClass : Object.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
-				.implement( (Type[]) interfaces )
-				.method( ElementMatchers.isVirtual().and( ElementMatchers.not( ElementMatchers.isFinalizer() ) ) )
-				.intercept( MethodDelegation.to( ProxyConfiguration.InterceptorDispatcher.class ) )
-				.method( ElementMatchers.nameStartsWith( "$$_hibernate_" ).and( ElementMatchers.isVirtual() ) )
-				.intercept( SuperMethodCall.INSTANCE )
-				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
-				.implement( ProxyConfiguration.class )
-				.intercept( FieldAccessor.ofField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME ).withAssigner( Assigner.DEFAULT, Assigner.Typing.DYNAMIC ) )
-				.make()
-				.load( persistentClass.getClassLoader() )
-				.getLoaded();
-
-		Class previousProxy = CACHE.putIfAbsent( key, proxy );
-		if ( previousProxy != null ) {
-			proxy = previousProxy;
-		}
-		return proxy;
+		return CACHE.findOrInsert(persistentClass.getClassLoader(), new TypeCache.SimpleKey(key), new Callable<Class<?>>() {
+			@Override
+			public Class<?> call() throws Exception {
+				return new ByteBuddy()
+						.with(TypeValidation.DISABLED)
+						.with(new NamingStrategy.SuffixingRandom("HibernateProxy"))
+						.subclass(interfaces.length == 1 ? persistentClass : Object.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING)
+						.implement((Type[]) interfaces)
+						.method(ElementMatchers.isVirtual().and(ElementMatchers.not(ElementMatchers.isFinalizer())))
+						.intercept(MethodDelegation.to(ProxyConfiguration.InterceptorDispatcher.class))
+						.method(ElementMatchers.nameStartsWith("$$_hibernate_").and(ElementMatchers.isVirtual()))
+						.intercept(SuperMethodCall.INSTANCE)
+						.defineField(ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE)
+						.implement(ProxyConfiguration.class)
+						.intercept(FieldAccessor.ofField(ProxyConfiguration.INTERCEPTOR_FIELD_NAME).withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC))
+						.make()
+						.load(persistentClass.getClassLoader())
+						.getLoaded();
+			}
+		}, persistentClass);
 	}
 
 	@Override

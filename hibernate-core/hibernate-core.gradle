@@ -143,11 +143,12 @@ jar {
             'javax.naming.event;resolution:=optional',
             'javax.naming.spi;resolution:=optional',
             'org.apache.tools.ant;resolution:=optional',
-			'org.apache.tools.ant.taskdefs;resolution:=optional',
-			'org.apache.tools.ant.types;resolution:=optional',
+            'org.apache.tools.ant.taskdefs;resolution:=optional',
+            'org.apache.tools.ant.types;resolution:=optional',
             '!javax.enterprise*',
             'javax.enterprise.context.spi;resolution:=optional',
-            'javax.enterprise.inject.spi;resolution:=optional'
+            'javax.enterprise.inject.spi;resolution:=optional',
+            'net.bytebuddy.*;resolution:=optional'
 
 //        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
 //        // uses ClassLoaderServiceImpl.

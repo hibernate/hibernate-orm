@@ -21,41 +21,36 @@ import javax.persistence.JoinColumn;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11216")
 public class ElementCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
+	private InsertOrderingStatementInspector statementInspector = new InsertOrderingStatementInspector();
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {Task.class};
 	}
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
-
 	@Override
 	protected void addSettings(Map settings) {
 		settings.put( Environment.ORDER_INSERTS, "true" );
 		settings.put( Environment.STATEMENT_BATCH_SIZE, "10" );
-		settings.put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider
-		);
 	}
 
 	@Test
 	public void testBatchOrdering() {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+
 			Task task = new Task();
 			task.addCategory(Category.A);
 			session.persist( task );
@@ -63,13 +58,9 @@ public class ElementCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 			Task task1 = new Task();
 			task1.addCategory(Category.A);
 			session.persist( task1 );
-		} );
-	}
 
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity

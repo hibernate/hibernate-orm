@@ -619,22 +619,39 @@ public class AttributeFactory {
 			this.persistentAttributeType = persistentAttributeType;
 
 			final Class declaredType;
-
-			if ( member == null ) {
-				// assume we have a MAP entity-mode "class"
-				declaredType = propertyMapping.getType().getReturnedClass();
-			}
-			else if ( Field.class.isInstance( member ) ) {
-				declaredType = ( (Field) member ).getType();
-			}
-			else if ( Method.class.isInstance( member ) ) {
-				declaredType = ( (Method) member ).getReturnType();
-			}
-			else if ( MapMember.class.isInstance( member ) ) {
+			if ( MapMember.class.isInstance( member ) ) {
 				declaredType = ( (MapMember) member ).getType();
 			}
 			else {
-				throw new IllegalArgumentException( "Cannot determine java-type from given member [" + member + "]" );
+				final java.lang.reflect.Type genericType;
+				if ( Field.class.isInstance( member ) ) {
+					genericType = ( (Field) member ).getGenericType();
+				}
+				else if ( Method.class.isInstance( member ) ) {
+					genericType = ( (Method) member ).getGenericReturnType();
+				}
+				else {
+					throw new IllegalArgumentException( "Cannot determine java-type from given member [" + member + "]" );
+				}
+
+				if ( Class.class.isInstance( genericType ) ) {
+					declaredType = (Class) genericType;
+				}
+				else if ( ParameterizedType.class.isInstance( genericType ) ) {
+					final java.lang.reflect.Type rawType = ( (ParameterizedType) genericType ).getRawType();
+
+					if ( Class.class.isInstance( rawType ) ) {
+						declaredType = (Class) rawType;
+					}
+					else {
+						// Use the underlying resolved type
+						declaredType = propertyMapping.getType().getReturnedClass();
+					}
+				}
+				else {
+					// assume we have a MAP entity-mode "class"
+					declaredType = propertyMapping.getType().getReturnedClass();
+				}
 			}
 			this.javaType = accountForPrimitiveTypes( declaredType );
 		}

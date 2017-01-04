@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
 import javax.persistence.criteria.AbstractQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Fetch;
@@ -29,6 +30,7 @@ import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.path.RootImpl;
+import org.hibernate.query.criteria.internal.path.RootImpl.TreatedRoot;
 
 /**
  * Models basic query structure.  Used as a delegate in implementing both
@@ -299,6 +301,12 @@ public class QueryStructure<T> implements Serializable {
 
 		for ( Root root : getRoots() ) {
 			renderJoins( jpaqlQuery, renderingContext, root.getJoins() );
+			if (root instanceof RootImpl) {
+				Set<TreatedRoot> treats = ((RootImpl)root).getTreats();
+				for ( TreatedRoot treat : treats ) {
+					renderJoins( jpaqlQuery, renderingContext, treat.getJoins() );
+				}
+			}
 			renderFetches( jpaqlQuery, renderingContext, root.getFetches() );
 		}
 

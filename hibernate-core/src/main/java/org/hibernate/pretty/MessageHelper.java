@@ -262,7 +262,7 @@ public final class MessageHelper {
 				ownerKey = collectionKey;
 			}
 			else {
-            Object collectionOwner = collection == null ? null : collection.getOwner();
+				Object collectionOwner = collection == null ? null : collection.getOwner();
 				EntityEntry entry = collectionOwner == null ? null : session.getPersistenceContext().getEntry(collectionOwner);
 				ownerKey = entry == null ? null : entry.getId();
 			}

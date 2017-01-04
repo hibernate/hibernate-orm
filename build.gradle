@@ -364,8 +364,9 @@ subprojects { subProject ->
 	checkstyleMain.source = 'src/main/java'
 	
 	// define a second checkstyle task for checking non-fatal violations
-	task nonFatalCheckstyle(type:Checkstyle, dependsOn: checkstyle) {
-		source subProject.sourceSets.main
+	task nonFatalCheckstyle(type:Checkstyle) {
+		source = subProject.sourceSets.main.java
+		classpath = subProject.configurations.checkstyle
 		showViolations = false
 		configFile = rootProject.file( 'shared/config/checkstyle/checkstyle-non-fatal.xml' )
 	}

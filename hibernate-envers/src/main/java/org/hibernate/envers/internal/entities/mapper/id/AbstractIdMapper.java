@@ -66,7 +66,7 @@ public abstract class AbstractIdMapper implements IdMapper {
 			final QueryParameterData paramData1 = paramDataIter1.next();
 			final QueryParameterData paramData2 = paramDataIter2.next();
 
-			parametersToUse.addWhere(
+			parametersToUse.addWhereOrNullRestriction(
 					paramData1.getProperty( prefix1 ),
 					false,
 					"=",

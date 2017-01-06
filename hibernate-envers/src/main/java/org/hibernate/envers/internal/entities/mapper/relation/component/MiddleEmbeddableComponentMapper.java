@@ -105,7 +105,12 @@ public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, C
 				);
 			}
 			else {
-				parameters.addWhereOrNullRestriction(prefix1 + '.' + propertyName, false, "=", prefix2 + '.' + propertyName, false);
+				parameters.addWhereOrNullRestriction(
+						prefix1 + '.' + propertyName,
+						false,
+						"=",
+						prefix2 + '.' + propertyName, false
+				);
 			}
 		}
 	}

@@ -286,6 +286,25 @@ public class Parameters {
 		expressions.add( expression.toString() );
 	}
 
+	/**
+	 * Add where clause with a null restriction: (left = right or (left is null and right is null))
+	 * @param left Left property name.
+	 * @param addAliasLeft Whether to add the alias to the left property.
+	 * @param op The operator.
+	 * @param right Right property name.
+	 * @param addAliasRight Whether to add the alias to the right property.
+     */
+	public void addWhereOrNullRestriction(String left, boolean addAliasLeft, String op, String right, boolean addAliasRight) {
+		// apply the normal addWhere predicate
+		final Parameters sub1 = addSubParameters( "or" );
+		sub1.addWhere( left, addAliasLeft, op, right, addAliasRight );
+
+		// apply the is null predicate for both join properties
+		final Parameters sub2 = sub1.addSubParameters( "and" );
+		sub2.addNullRestriction( left, false );
+		sub2.addNullRestriction( right, false );
+	}
+
 	private void append(StringBuilder sb, String toAppend, MutableBoolean isFirst) {
 		if ( !isFirst.isSet() ) {
 			sb.append( " " ).append( connective ).append( " " );

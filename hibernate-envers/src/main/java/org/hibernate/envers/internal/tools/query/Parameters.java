@@ -288,6 +288,7 @@ public class Parameters {
 
 	/**
 	 * Add where clause with a null restriction: (left = right or (left is null and right is null))
+	 *
 	 * @param left Left property name.
 	 * @param addAliasLeft Whether to add the alias to the left property.
 	 * @param op The operator.

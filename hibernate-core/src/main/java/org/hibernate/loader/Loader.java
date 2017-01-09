@@ -1775,7 +1775,8 @@ public abstract class Loader {
 		final int firstRow = dialect.convertToFirstRowValue( getFirstRow( selection ) );
 		final int lastRow = selection.getMaxRows().intValue();
 		if ( dialect.useMaxForLimit() ) {
-			return lastRow + firstRow;
+			int maxRow = lastRow + firstRow;
+			return maxRow < 0 ? Integer.MAX_VALUE : maxRow;
 		}
 		else {
 			return lastRow;

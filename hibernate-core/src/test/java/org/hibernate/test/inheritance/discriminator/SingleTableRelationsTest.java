@@ -37,9 +37,7 @@ public class SingleTableRelationsTest extends BaseCoreFunctionalTestCase {
 		return new Class<?>[] { PostTable.class, Category.class, Post.class };
 	}
 
-	@Test
-	@TestForIssue(jiraKey = "HHH-11375")
-	public void doIt() {
+	private void createTestData() {
 		doInHibernate( this::sessionFactory, session -> {
 			Category category7;
 			session.persist( new Category( 1 ) );
@@ -51,9 +49,28 @@ public class SingleTableRelationsTest extends BaseCoreFunctionalTestCase {
 			session.persist( category7 = new Category( 7 ) );
 			session.persist( new Post( 8, category7 ) );
 		} );
+	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-11375")
+	public void testLazyInitialization() {
+		createTestData();
 		doInHibernate( this::sessionFactory, session -> {
 			Category category7 = session.find( Category.class, 7 );
+			// Must be empty because although Post and Category share the same column for their category relations,
+			// the children must be based on entities that are of type Category
+			Assert.assertTrue( category7.children.isEmpty() );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11375")
+	public void testJoinFetch() {
+		createTestData();
+		doInHibernate( this::sessionFactory, session -> {
+			Category category7 = session.createQuery( "SELECT c FROM " + Category.class.getName() + " c LEFT JOIN FETCH c.children WHERE c.id = :id", Category.class )
+					.setParameter( "id", 7 )
+					.getSingleResult();
 			// Must be empty because although Post and Category share the same column for their category relations,
 			// the children must be based on entities that are of type Category
 			Assert.assertTrue( category7.children.isEmpty() );

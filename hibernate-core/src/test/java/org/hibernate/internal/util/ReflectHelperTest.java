@@ -11,6 +11,7 @@ import javax.persistence.FetchType;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.hib3rnat3.C0nst4nts३;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.junit.Before;
@@ -122,5 +123,15 @@ public class ReflectHelperTest {
 		Object value = ReflectHelper.getConstantValue( "org.hibernate.internal.util.ReflectHelperTest$Status.ON", sessionFactoryImplementorMock);
 		assertEquals( Status.ON, value );
 		verify(classLoaderServiceMock, times(1)).classForName( eq("org.hibernate.internal.util.ReflectHelperTest$Status") );
+	}
+
+	@Test
+	public void test_getConstantValue_constant_digits() {
+
+		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
+		when( classLoaderServiceMock.classForName( "org.hibernate.internal.util.hib3rnat3.C0nst4nts३" ) ).thenReturn( (Class) C0nst4nts३.class );
+		Object value = ReflectHelper.getConstantValue( "org.hibernate.internal.util.hib3rnat3.C0nst4nts३.ABC_DEF", sessionFactoryImplementorMock);
+		assertEquals( C0nst4nts३.ABC_DEF, value );
+		verify(classLoaderServiceMock, times(1)).classForName( eq("org.hibernate.internal.util.hib3rnat3.C0nst4nts३") );
 	}
 }

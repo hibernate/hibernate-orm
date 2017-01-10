@@ -80,7 +80,7 @@ public class EnversIntegrator implements Integrator {
 		final EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		listenerRegistry.addDuplicationStrategy( EnversListenerDuplicationStrategy.INSTANCE );
 
-		if ( enversService.getEntitiesConfigurations().hasAuditedEntities() ) {
+		if ( enversService.getEntitiesConfigurations() != null && enversService.getEntitiesConfigurations().hasAuditedEntities()) {
 			listenerRegistry.appendListeners(
 					EventType.POST_DELETE,
 					new EnversPostDeleteEventListenerImpl( enversService )

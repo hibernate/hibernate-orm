@@ -152,6 +152,11 @@ public final class StandardBasicTypes {
 	public static final StringType STRING = StringType.INSTANCE;
 
 	/**
+	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#NVARCHAR NVARCHAR}
+	 */
+	public static final StringNVarcharType NSTRING = StringNVarcharType.INSTANCE;
+
+	/**
 	 * The standard Hibernate type for mapping {@link java.net.URL} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 *
 	 * @see UrlType

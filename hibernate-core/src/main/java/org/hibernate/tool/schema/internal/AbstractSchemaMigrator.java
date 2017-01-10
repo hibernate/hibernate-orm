@@ -20,6 +20,7 @@ import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -164,7 +165,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				applySqlStrings(
-						true,
+						isHaltOnError(options),
 						dialect.getAuxiliaryDatabaseObjectExporter()
 								.getSqlDropStrings( auxiliaryDatabaseObject, metadata ),
 						formatter,
@@ -178,7 +179,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				applySqlStrings(
-						true,
+						isHaltOnError(options),
 						auxiliaryDatabaseObject.sqlCreateStrings( dialect ),
 						formatter,
 						options,
@@ -220,7 +221,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					final SequenceInformation sequenceInformation = existingDatabase.getSequenceInformation( sequence.getName() );
 					if ( sequenceInformation == null ) {
 						applySqlStrings(
-								false,
+								isHaltOnError(options),
 								dialect.getSequenceExporter().getSqlCreateStrings(
 										sequence,
 										metadata
@@ -253,7 +254,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect )) {
 				applySqlStrings(
-						true,
+						isHaltOnError(options),
 						auxiliaryDatabaseObject.sqlCreateStrings( dialect ),
 						formatter,
 						options,
@@ -271,7 +272,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			ExecutionOptions options,
 			GenerationTarget... targets) {
 		applySqlStrings(
-				false,
+				isHaltOnError(options),
 				dialect.getTableExporter().getSqlCreateStrings( table, metadata ),
 				formatter,
 				options,
@@ -325,7 +326,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				}
 				if ( existingIndex == null ) {
 					applySqlStrings(
-							false,
+							isHaltOnError(options),
 							exporter.getSqlCreateStrings( index, metadata ),
 							formatter,
 							options,
@@ -368,7 +369,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				if ( indexInfo == null ) {
 					if ( uniqueConstraintStrategy == UniqueConstraintSchemaUpdateStrategy.DROP_RECREATE_QUIETLY ) {
 						applySqlStrings(
-								true,
+								isHaltOnError(options),
 								exporter.getSqlDropStrings( uniqueKey, metadata ),
 								formatter,
 								options,
@@ -377,7 +378,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					}
 
 					applySqlStrings(
-							true,
+							isHaltOnError(options),
 							exporter.getSqlCreateStrings( uniqueKey, metadata ),
 							formatter,
 							options,
@@ -427,7 +428,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 						// in old SchemaUpdate code, this was the trigger to "create"
 						applySqlStrings(
-								false,
+								isHaltOnError(options),
 								exporter.getSqlCreateStrings( foreignKey, metadata ),
 								formatter,
 								options,
@@ -488,7 +489,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName )
 						&& !existingDatabase.catalogExists( catalogLogicalName ) ) {
 					applySqlStrings(
-							false,
+							isHaltOnError(options),
 							dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) ),
 							formatter,
 							options,
@@ -502,7 +503,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					&& namespace.getPhysicalName().getSchema() != null
 					&& !existingDatabase.schemaExists( namespace.getName() ) ) {
 				applySqlStrings(
-						false,
+						isHaltOnError(options),
 						dialect.getCreateSchemaCommand( namespace.getPhysicalName().getSchema().render( dialect ) ),
 						formatter,
 						options,
@@ -555,5 +556,10 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	private String getDefaultSchemaName(Database database, Dialect dialect) {
 		final Identifier identifier = database.getDefaultNamespace().getPhysicalName().getSchema();
 		return identifier == null ? null : identifier.render( dialect );
+	}
+
+	private boolean isHaltOnError(ExecutionOptions options) {
+		Object haltOnError = options.getConfigurationValues().get( AvailableSettings.HBM2DDL_HALT_ON_ERROR );
+		return !( Boolean.TRUE.equals( haltOnError ) || Boolean.TRUE.toString().equals( haltOnError ) );
 	}
 }

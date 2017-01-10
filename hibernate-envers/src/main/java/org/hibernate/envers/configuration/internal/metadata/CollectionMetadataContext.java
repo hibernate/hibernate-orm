@@ -6,13 +6,13 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import org.hibernate.envers.configuration.internal.metadata.EntityMappingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
+import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.type.BagType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.MapType;
@@ -74,4 +74,10 @@ public interface CollectionMetadataContext {
 					|| isOwningManyToOneWithBidrectionalJoinTable() ) );
 	}
 
+	default boolean isOneToManySingleTableSubclass() {
+		if ( getCollection().getElement() instanceof OneToMany ) {
+			return ( (OneToMany) getCollection().getElement() ).getAssociatedClass() instanceof SingleTableSubclass;
+		}
+		return false;
+	}
 }

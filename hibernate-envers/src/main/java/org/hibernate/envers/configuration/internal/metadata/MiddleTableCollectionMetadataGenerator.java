@@ -208,7 +208,13 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 		);
 
 		final RootPersistentEntity entity = new RootPersistentEntity( auditTableData, null );
-		entity.setWhereClause( context.getCollection().getWhere() );
+
+		// When collection element uses a single table discriminator pattern; if any type of WHERE
+		// conditions are present in the ORM mapping; they should be ignored by Envers; however,
+		// otherwise all other use cases should be applied.
+		if ( !context.isOneToManySingleTableSubclass() ) {
+			entity.setWhereClause( context.getCollection().getWhere() );
+		}
 
 		CompositeIdentifier id = new CompositeIdentifier( getMetadataBuildingContext() );
 		entity.setIdentifier( id );

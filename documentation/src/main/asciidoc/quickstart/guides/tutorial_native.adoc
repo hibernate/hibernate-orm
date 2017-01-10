@@ -119,7 +119,7 @@ In the absence of a `column` attribute, Hibernate uses the property name as the 
 This is appropriate for `title`, but since `date` is a reserved keyword in most databases, you need to specify a
 non-reserved word for the column name.
 
-The `title mapping also lacks a type attribute.  The types declared and used in the mapping files are neither Java data
+The `title` mapping also lacks a type attribute.  The types declared and used in the mapping files are neither Java data
 types nor SQL database types.  Instead, they are *Hibernate mapping types*, which are converters which translate between
 Java and SQL data types.  Hibernate attempts to determine the correct conversion and mapping type autonomously if the
 type attribute is not specified in the mapping, by using Java reflection to determine the Java type of the declared

@@ -15,6 +15,8 @@ import javax.persistence.Id;
 import javax.persistence.PersistenceException;
 import javax.persistence.Table;
 
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.exception.ConstraintViolationException;
 
 import org.hibernate.testing.TestForIssue;
@@ -34,6 +36,10 @@ public class UniqueConstraintThrowsConstraintViolationExceptionTest extends Base
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Customer.class };
+	}
+
+	protected void configure(Configuration configuration) {
+		configuration.setProperty( Environment.HBM2DDL_AUTO, "update" );
 	}
 
 	@Test
@@ -57,6 +63,11 @@ public class UniqueConstraintThrowsConstraintViolationExceptionTest extends Base
 					e.getCause().getClass()
 			);
 		}
+	}
+
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
 	}
 
 	@Entity

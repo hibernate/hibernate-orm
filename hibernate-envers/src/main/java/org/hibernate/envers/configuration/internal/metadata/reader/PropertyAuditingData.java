@@ -41,6 +41,8 @@ public class PropertyAuditingData {
 	// Synthetic properties are ones which are not part of the actual java model.
 	// They're properties used for bookkeeping by Hibernate
 	private boolean syntheic;
+	private String where;
+	private String whereJoinTable;
 
 	public PropertyAuditingData() {
 	}
@@ -245,5 +247,21 @@ public class PropertyAuditingData {
 
 	public Value getValue() {
 		return value;
+	}
+
+	public String getWhere() {
+		return where;
+	}
+
+	public void setWhere(String where) {
+		this.where = where;
+	}
+
+	public String getWhereJoinTable() {
+		return whereJoinTable;
+	}
+
+	public void setWhereJoinTable(String whereJoinTable) {
+		this.whereJoinTable = whereJoinTable;
 	}
 }

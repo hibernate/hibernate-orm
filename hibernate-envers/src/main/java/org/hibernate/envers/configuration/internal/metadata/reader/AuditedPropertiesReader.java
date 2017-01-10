@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.ElementCollection;
-import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
@@ -23,6 +22,8 @@ import javax.persistence.Version;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.Where;
+import org.hibernate.annotations.WhereJoinTable;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -530,6 +531,7 @@ public class AuditedPropertiesReader {
 			return false;
 		}
 		addPropertyMapKey( property, propertyData );
+		addPropertyWhereClauses( property, propertyData );
 		setPropertyAuditMappedBy( property, propertyData );
 		setPropertyRelationMappedBy( property, propertyData );
 
@@ -635,12 +637,24 @@ public class AuditedPropertiesReader {
 
 	private void addPropertyJoinTables(XProperty property, PropertyAuditingData propertyData) {
 		// first set the join table based on the AuditJoinTable annotation
-		final AuditJoinTable joinTable = property.getAnnotation( AuditJoinTable.class );
-		if ( joinTable != null ) {
-			propertyData.setJoinTable( joinTable );
-		}
-		else {
-			propertyData.setJoinTable( DEFAULT_AUDIT_JOIN_TABLE );
+		propertyData.setJoinTable( property.getAnnotation( AuditJoinTable.class ) );
+	}
+
+	private void addPropertyWhereClauses(XProperty property, PropertyAuditingData propertyData) {
+		if ( property.isCollection() ) {
+			// HHH-9432
+			final Where whereClause = property.getAnnotation( Where.class );
+			if ( whereClause != null && !StringTools.isEmpty( whereClause.clause() ) ) {
+				propertyData.setWhere( whereClause.clause() );
+			}
+
+			// HHH-4633
+			// Retrofitted this here to avoid ambiguity on the Property whether the clause came
+			// from a @WhereJoinTable annotation or a @Where annotation, since their use varies
+			final WhereJoinTable whereJoinTable = property.getAnnotation( WhereJoinTable.class );
+			if ( whereJoinTable != null && !StringTools.isEmpty( whereJoinTable.clause() ) ) {
+				propertyData.setWhereJoinTable( whereJoinTable.clause() );
+			}
 		}
 	}
 
@@ -716,33 +730,6 @@ public class AuditedPropertiesReader {
 		@Override
 		public String modifiedColumnName() {
 			return "";
-		}
-
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return this.getClass();
-		}
-	};
-
-	private static final AuditJoinTable DEFAULT_AUDIT_JOIN_TABLE = new AuditJoinTable() {
-		@Override
-		public String name() {
-			return "";
-		}
-
-		@Override
-		public String schema() {
-			return "";
-		}
-
-		@Override
-		public String catalog() {
-			return "";
-		}
-
-		@Override
-		public JoinColumn[] inverseJoinColumns() {
-			return new JoinColumn[0];
 		}
 
 		@Override

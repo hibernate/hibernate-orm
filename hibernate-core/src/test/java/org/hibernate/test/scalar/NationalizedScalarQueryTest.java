@@ -15,7 +15,6 @@ import javax.persistence.Table;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.SQLServer2008Dialect;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -37,7 +36,6 @@ public class NationalizedScalarQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-10183")
 	public void testScalarResult() {
 
 		User user1 = new User( 1, "Chris" );

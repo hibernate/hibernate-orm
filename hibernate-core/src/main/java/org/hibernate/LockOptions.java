@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -113,7 +114,7 @@ public class LockOptions implements Serializable {
 	 */
 	public LockOptions setAliasSpecificLockMode(String alias, LockMode lockMode) {
 		if ( aliasSpecificLockModes == null ) {
-			aliasSpecificLockModes = new HashMap<String,LockMode>();
+			aliasSpecificLockModes = new LinkedHashMap<>();
 		}
 		aliasSpecificLockModes.put( alias, lockMode );
 		return this;

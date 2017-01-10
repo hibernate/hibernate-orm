@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<hibernate-mapping 
+ xmlns="http://www.hibernate.org/xsd/hibernate-mapping"                
+ xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping hibernate-mapping-4.0.xsd"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" package="org.hibernate.test.setup">
+	<class name="Car" table="Car">
+		<cache usage="nonstrict-read-write" region="org.hibernate.test.setup.Car"/>
+		<id name="id" column="id" type="java.lang.Long">
+			<generator class="native">
+				<param name="sequence">cat_id_sequence</param>
+			</generator>
+		</id>
+		<property name="quantity" type="java.lang.Long">
+			<column name="quantity" />
+		</property>
+	</class>
+</hibernate-mapping>

@@ -35,7 +35,7 @@ is required to locate all JPA configuration files by classpath lookup of the `ME
 ====
 
 `persistence.xml` files should provide a unique name for each "persistence unit".  Applications use this name to
-reference the configuration when obtaining an `javax.persistence.EntityManagerFactory reference.
+reference the configuration when obtaining an `javax.persistence.EntityManagerFactory` reference.
 
 The settings defined in the `<properties/>` element are discussed in <<hibernate-gsg-tutorial-basic-config>>.
 Here the `javax.persistence`-prefixed varieties are used when possible.  Notice that the remaining

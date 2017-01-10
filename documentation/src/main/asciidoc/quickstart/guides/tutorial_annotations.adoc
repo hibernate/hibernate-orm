@@ -79,7 +79,7 @@ public Date getDate() {
 ----
 ====
 
-As in <<hibernate-gsg-tutorial-basic-mapping, the `date` property needs special handling to account for its special
+As in <<hibernate-gsg-tutorial-basic-mapping>>, the `date` property needs special handling to account for its special
 naming and its SQL type.
 
 Attributes of an entity are considered persistent by default when mapping with annotations, which is why we don't see

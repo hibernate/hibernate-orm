@@ -350,6 +350,8 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 
 		qualifiedTableName = determineGeneratorTableName( params, jdbcEnvironment );
+		renderedTableName = qualifiedTableName.render();
+
 		segmentColumnName = determineSegmentColumnName( params, jdbcEnvironment );
 		valueColumnName = determineValueColumnName( params, jdbcEnvironment );
 
@@ -370,6 +372,9 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 				incrementSize,
 				ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 )
 		);
+		selectQuery = buildSelectQuery( jdbcEnvironment.getDialect() );
+		updateQuery = buildUpdateQuery();
+		insertQuery = buildInsertQuery();
 	}
 
 	/**

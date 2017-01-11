@@ -42,9 +42,10 @@ import static org.junit.Assert.assertThat;
 @RunWith(Parameterized.class)
 public class ColumnNamesTest {
 	@Parameterized.Parameters
-	public static Collection<String> parameters() {
+	public static Collection<String[]> parameters() {
 		return Arrays.asList(
-				new String[] {JdbcMetadaAccessStrategy.GROUPED.toString(), JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()}
+				new String[] { JdbcMetadaAccessStrategy.GROUPED.toString() },
+				new String[] { JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()}
 		);
 	}
 

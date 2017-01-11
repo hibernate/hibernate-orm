@@ -197,8 +197,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				tryToCreateCatalogs = true;
 			}
 		}
-		final Map<Namespace, NameSpaceTablesInformation> tablesInformation = new HashMap<>();
-		Set<Identifier> exportedCatalogs = new HashSet<>();
+		final Map<Namespace, NameSpaceTablesInformation> tablesInformation = new HashMap<Namespace, NameSpaceTablesInformation>();
+		Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
 		for ( Namespace namespace : database.getNamespaces() ) {
 			final NameSpaceTablesInformation nameSpaceTablesInformation = performTablesMigration(
 					metadata,

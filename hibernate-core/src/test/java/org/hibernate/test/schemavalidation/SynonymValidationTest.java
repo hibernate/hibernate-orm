@@ -18,6 +18,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Oracle9iDialect;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 
@@ -51,7 +52,7 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 			s.getTransaction().commit();
 		}
 		catch (Exception e) {
-			if ( s.getTransaction().isActive() ) {
+			if ( s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
 				s.getTransaction().rollback();
 			}
 		}
@@ -69,7 +70,7 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 			s.getTransaction().commit();
 		}
 		catch (Exception e) {
-			if ( s.getTransaction().isActive() ) {
+			if ( s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
 				s.getTransaction().rollback();
 			}
 		}

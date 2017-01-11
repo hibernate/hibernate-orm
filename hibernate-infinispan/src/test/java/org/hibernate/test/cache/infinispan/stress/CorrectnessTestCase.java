@@ -272,9 +272,7 @@ public abstract class CorrectnessTestCase {
       return new Class[] {Family.class, Person.class, Address.class};
    }
 
-   private static Metadata buildMetadata(StandardServiceRegistry registry) {
-      final String cacheStrategy = "transactional";
-
+   private Metadata buildMetadata(StandardServiceRegistry registry) {
       MetadataSources metadataSources = new MetadataSources( registry );
       for ( Class entityClass : getAnnotatedClasses() ) {
          metadataSources.addAnnotatedClass( entityClass );
@@ -284,12 +282,15 @@ public abstract class CorrectnessTestCase {
 
       for ( PersistentClass entityBinding : metadata.getEntityBindings() ) {
          if (!entityBinding.isInherited()) {
-            ( (RootClass) entityBinding ).setCacheConcurrencyStrategy( cacheStrategy);
+            ( (RootClass) entityBinding ).setCacheConcurrencyStrategy( accessType.getExternalName() );
          }
       }
 
+      // Collections don't have integrated version, these piggyback on parent's owner version (for DB).
+      // However, this version number isn't extractable and is not passed to cache methods.
+      AccessType collectionAccessType = accessType == AccessType.NONSTRICT_READ_WRITE ? AccessType.READ_WRITE : accessType;
       for ( Collection collectionBinding : metadata.getCollectionBindings() ) {
-         collectionBinding.setCacheConcurrencyStrategy( cacheStrategy );
+         collectionBinding.setCacheConcurrencyStrategy( collectionAccessType.getExternalName() );
       }
 
       return metadata;
@@ -409,7 +410,7 @@ public abstract class CorrectnessTestCase {
             }));
          }
       }
-      Exception failure = exceptions.poll(EXECUTION_TIME, TimeUnit.SECONDS);
+      Exception failure = exceptions.poll(EXECUTION_TIME, TimeUnit.MILLISECONDS);
       if (failure != null) exceptions.addFirst(failure);
       running = false;
       exec.shutdown();

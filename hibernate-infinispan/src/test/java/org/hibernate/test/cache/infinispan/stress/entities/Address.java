@@ -11,6 +11,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Version;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -28,6 +30,7 @@ public final class Address {
    private String zipCode;
    @OneToMany
    private Set<Person> inhabitants;
+   @Version
    private int version;
 
    public Address(int streetNumber, String streetName, String cityName, String countryName) {

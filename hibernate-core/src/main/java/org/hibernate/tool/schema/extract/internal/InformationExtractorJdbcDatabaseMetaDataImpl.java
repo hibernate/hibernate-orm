@@ -687,7 +687,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	@Override
 	public Iterable<IndexInformation> getIndexes(TableInformation tableInformation) {
-		final Map<Identifier, IndexInformationImpl.Builder> builders = new HashMap<>();
+		final Map<Identifier, IndexInformationImpl.Builder> builders = new HashMap<Identifier, IndexInformationImpl.Builder>();
 		final QualifiedTableName tableName = tableInformation.getName();
 		final Identifier catalog = tableName.getCatalogName();
 		final Identifier schema = tableName.getSchemaName();
@@ -766,7 +766,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	@Override
 	public Iterable<ForeignKeyInformation> getForeignKeys(TableInformation tableInformation) {
-		final Map<Identifier, ForeignKeyBuilder> fkBuilders = new HashMap<>();
+		final Map<Identifier, ForeignKeyBuilder> fkBuilders = new HashMap<Identifier, ForeignKeyBuilder>();
 		final QualifiedTableName tableName = tableInformation.getName();
 		final Identifier catalog = tableName.getCatalogName();
 		final Identifier schema = tableName.getSchemaName();

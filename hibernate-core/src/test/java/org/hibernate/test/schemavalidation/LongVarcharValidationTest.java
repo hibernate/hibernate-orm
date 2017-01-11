@@ -46,9 +46,10 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class LongVarcharValidationTest implements ExecutionOptions {
 	@Parameterized.Parameters
-	public static Collection<String> parameters() {
+	public static Collection<String[]> parameters() {
 		return Arrays.asList(
-				new String[] {JdbcMetadaAccessStrategy.GROUPED.toString(), JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()}
+				new String[] { JdbcMetadaAccessStrategy.GROUPED.toString() },
+				new String[] { JdbcMetadaAccessStrategy.INDIVIDUALLY.toString() }
 		);
 	}
 

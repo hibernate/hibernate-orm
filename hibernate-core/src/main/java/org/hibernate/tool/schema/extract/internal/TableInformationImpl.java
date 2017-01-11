@@ -37,7 +37,7 @@ public class TableInformationImpl implements TableInformation {
 	private PrimaryKeyInformation primaryKey;
 	private Map<Identifier, ForeignKeyInformation> foreignKeys;
 	private Map<Identifier, IndexInformation> indexes;
-	private Map<Identifier, ColumnInformation> columns = new HashMap<>(  );
+	private Map<Identifier, ColumnInformation> columns = new HashMap<Identifier, ColumnInformation>(  );
 
 	private boolean wasPrimaryKeyLoaded = false; // to avoid multiple db reads since primary key can be null.
 
@@ -93,7 +93,7 @@ public class TableInformationImpl implements TableInformation {
 
 	protected Map<Identifier, ForeignKeyInformation> foreignKeys() {
 		if ( foreignKeys == null ) {
-			final Map<Identifier, ForeignKeyInformation> fkMap = new HashMap<>();
+			final Map<Identifier, ForeignKeyInformation> fkMap = new HashMap<Identifier, ForeignKeyInformation>();
 			final Iterable<ForeignKeyInformation> fks = extractor.getForeignKeys( this );
 			for ( ForeignKeyInformation fk : fks ) {
 				fkMap.put( fk.getForeignKeyIdentifier(), fk );
@@ -118,7 +118,7 @@ public class TableInformationImpl implements TableInformation {
 
 	protected Map<Identifier, IndexInformation> indexes() {
 		if ( indexes == null ) {
-			final Map<Identifier, IndexInformation> indexMap = new HashMap<>();
+			final Map<Identifier, IndexInformation> indexMap = new HashMap<Identifier, IndexInformation>();
 			final Iterable<IndexInformation> indexes = extractor.getIndexes( this );
 			for ( IndexInformation index : indexes ) {
 				indexMap.put( index.getIndexIdentifier(), index );

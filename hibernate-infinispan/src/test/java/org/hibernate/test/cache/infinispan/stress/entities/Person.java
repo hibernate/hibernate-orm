@@ -11,6 +11,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Version;
+
 import java.util.Date;
 
 @Entity
@@ -26,6 +28,7 @@ public class Person {
    @ManyToOne
    private Address address;
    private boolean checked;
+   @Version
    private int version;
 
    public Person(String firstName, Family family) {

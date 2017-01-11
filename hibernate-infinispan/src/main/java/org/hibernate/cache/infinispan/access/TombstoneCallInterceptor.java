@@ -23,6 +23,7 @@ import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
+import org.infinispan.filter.NullValueConverter;
 import org.infinispan.interceptors.CallInterceptor;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.Metadata;
@@ -190,14 +191,16 @@ public class TombstoneCallInterceptor extends CallInterceptor {
 	public Object visitSizeCommand(InvocationContext ctx, SizeCommand command) throws Throwable {
 		Set<Flag> flags = command.getFlags();
 		int size = 0;
-		Map<Object, CacheEntry> contextEntries = ctx.getLookedUpEntries();
-		AdvancedCache decoratedCache = cache.getAdvancedCache().withFlags(flags != null ? flags.toArray(new Flag[flags.size()]) : null);
+		AdvancedCache decoratedCache = cache.getAdvancedCache();
+		if (flags != null) {
+			decoratedCache = decoratedCache.withFlags(flags.toArray(new Flag[flags.size()]));
+		}
 		// In non-transactional caches we don't care about context
 		CloseableIterable<CacheEntry<Object, Object>> iterable = decoratedCache
-				.filterEntries(Tombstone.EXCLUDE_TOMBSTONES);
+				.filterEntries(Tombstone.EXCLUDE_TOMBSTONES).converter(NullValueConverter.getInstance());
 		try {
 			for (CacheEntry<Object, Object> entry : iterable) {
-				if (entry.getValue() != null && size++ == Integer.MAX_VALUE) {
+				if (size++ == Integer.MAX_VALUE) {
 					return Integer.MAX_VALUE;
 				}
 			}

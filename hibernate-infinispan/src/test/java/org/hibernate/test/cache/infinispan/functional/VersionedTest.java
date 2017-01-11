@@ -220,11 +220,7 @@ public class VersionedTest extends AbstractNonInvalidationTest {
    public void testEvictUpdateExpiration() throws Exception {
       // since the timestamp for update is based on session open/tx begin time, we have to do this sequentially
       sessionFactory().getCache().evictEntity(Item.class, itemId);
-
-      Map contents = Caches.entrySet(entityCache).toMap();
-      assertEquals(1, contents.size());
-      assertEquals(VersionedEntry.class, contents.get(itemId).getClass());
-
+      assertSingleEmpty();
       TIME_SERVICE.advance(1);
 
       withTxSession(s -> {
@@ -235,6 +231,22 @@ public class VersionedTest extends AbstractNonInvalidationTest {
 
       assertSingleCacheEntry();
       TIME_SERVICE.advance(timeout + 1);
+      assertSingleCacheEntry();
+   }
+
+   @Test
+   public void testEvictAndPutFromLoad() throws Exception {
+      sessionFactory().getCache().evictEntity(Item.class, itemId);
+      assertSingleEmpty();
+      TIME_SERVICE.advance(1);
+
+      withTxSession(s -> {
+         Item item = s.load(Item.class, itemId);
+         assertEquals("Original item", item.getDescription());
+      });
+
+      assertSingleCacheEntry();
+      TIME_SERVICE.advance(TIMEOUT + 1);
       assertSingleCacheEntry();
    }
 

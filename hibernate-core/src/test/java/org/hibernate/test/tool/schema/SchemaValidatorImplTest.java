@@ -24,16 +24,15 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
-import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.SchemaValidatorImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
-import org.hibernate.tool.schema.internal.exec.JdbcConnectionContextNonSharedImpl;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
@@ -157,10 +156,9 @@ public class SchemaValidatorImplTest extends BaseUnitTestCase {
 		connectionProvider.configure( properties() );
 
 		final GenerationTargetToDatabase schemaGenerator =  new GenerationTargetToDatabase(
-				new JdbcConnectionContextNonSharedImpl(
-						new JdbcConnectionAccessImpl( connectionProvider ),
-						new SqlStatementLogger( false, true ),
-						true
+				new DdlTransactionIsolatorTestingImpl(
+						serviceRegistry,
+						new JdbcConnectionAccessImpl( connectionProvider )
 				)
 		);
 
@@ -211,10 +209,9 @@ public class SchemaValidatorImplTest extends BaseUnitTestCase {
 		connectionProvider.configure( properties() );
 
 		final GenerationTargetToDatabase schemaGenerator =  new GenerationTargetToDatabase(
-				new JdbcConnectionContextNonSharedImpl(
-						new JdbcConnectionAccessImpl( connectionProvider ),
-						new SqlStatementLogger( false, true ),
-						true
+				new DdlTransactionIsolatorTestingImpl(
+						serviceRegistry,
+						new JdbcConnectionAccessImpl( connectionProvider )
 				)
 		);
 

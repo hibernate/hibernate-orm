@@ -1,4 +1,4 @@
-[[entity]]
+﻿[[entity]]
 === Entity types
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/locking
 :extrasdir: extras
@@ -228,7 +228,7 @@ include::{extrasdir}/entity/listing7.java[]
 ====
 
 The issue here is a conflict between the use of generated identifier, the contract of `Set` and the equals/hashCode implementations.
-`Set` says that the equals/hashCode value for an object should not change while the object is part of the Set.
+`Set` says that the equals/hashCode value for an object should not change while the object is part of the `Set`.
 But that is exactly what happened here because the equals/hasCode are based on the (generated) id, which was not set until the `session.getTransaction().commit()` call.
 
 Note that this is just a concern when using generated identifiers.
@@ -325,7 +325,7 @@ There are 4 available OptimisticLockTypes:
 `ALL`::
 	performs optimistic locking based on _all_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements
 `DIRTY`::
-	performs optimistic locking based on _dirty_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements.
+	performs optimistic locking based on _dirty_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements
 
 [[entity-pojo-optlock-versionless-all]]
 ====== Versionless optimistic locking using `OptimisticLockType.ALL`

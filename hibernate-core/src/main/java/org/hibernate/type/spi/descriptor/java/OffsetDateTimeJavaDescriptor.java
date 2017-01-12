@@ -18,6 +18,9 @@ import java.util.GregorianCalendar;
 import javax.persistence.TemporalType;
 
 import org.hibernate.type.OffsetDateTimeType;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.TemporalTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
@@ -30,7 +33,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptorBasicImpl<OffsetDateTime> implements TemporalTypeDescriptor<OffsetDateTime> {
+public class OffsetDateTimeJavaDescriptor extends AbstractBasicTypeDescriptor<OffsetDateTime> implements TemporalTypeDescriptor<OffsetDateTime> {
 	private static final Logger log = Logger.getLogger( OffsetDateTimeJavaDescriptor.class );
 
 	/**

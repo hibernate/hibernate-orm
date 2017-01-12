@@ -8,7 +8,7 @@ package org.hibernate.type.converter.spi;
 
 import javax.persistence.AttributeConverter;
 
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Internal descriptor for an AttributeConverter implementation, with the intent of being

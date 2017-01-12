@@ -7,7 +7,7 @@
 package org.hibernate.type.spi;
 
 
-import org.hibernate.type.spi.descriptor.java.TemporalTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.TemporalTypeDescriptor;
 
 /**
  * Further classification of a BasicType that models a temporal (date, time, instant, etc) value type.

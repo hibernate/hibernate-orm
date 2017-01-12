@@ -16,6 +16,9 @@ import java.util.GregorianCalendar;
 import javax.persistence.TemporalType;
 
 import org.hibernate.type.ZonedDateTimeType;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.TemporalTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
@@ -26,7 +29,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class ZonedDateTimeJavaDescriptor extends AbstractTypeDescriptorBasicImpl<ZonedDateTime> implements TemporalTypeDescriptor<ZonedDateTime> {
+public class ZonedDateTimeJavaDescriptor extends AbstractBasicTypeDescriptor<ZonedDateTime> implements TemporalTypeDescriptor<ZonedDateTime> {
 	/**
 	 * Singleton access
 	 */

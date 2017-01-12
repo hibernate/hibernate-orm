@@ -10,8 +10,8 @@ import java.util.Comparator;
 
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
-import org.hibernate.type.spi.descriptor.java.AbstractTypeDescriptorBasicImpl;
-import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**
@@ -20,7 +20,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class JavaTypeDescriptorBasicAdaptorImpl<T> extends AbstractTypeDescriptorBasicImpl<T> {
+public class JavaTypeDescriptorBasicAdaptorImpl<T> extends AbstractBasicTypeDescriptor<T> {
 	public JavaTypeDescriptorBasicAdaptorImpl(Class<T> type) {
 		super( type );
 	}

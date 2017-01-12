@@ -22,6 +22,9 @@ import java.util.GregorianCalendar;
 import javax.persistence.TemporalType;
 
 import org.hibernate.type.OffsetTimeType;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.TemporalTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
@@ -32,7 +35,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class OffsetTimeJavaDescriptor extends AbstractTypeDescriptorBasicImpl<OffsetTime> implements TemporalTypeDescriptor<OffsetTime> {
+public class OffsetTimeJavaDescriptor extends AbstractBasicTypeDescriptor<OffsetTime> implements TemporalTypeDescriptor<OffsetTime> {
 	/**
 	 * Singleton access
 	 */

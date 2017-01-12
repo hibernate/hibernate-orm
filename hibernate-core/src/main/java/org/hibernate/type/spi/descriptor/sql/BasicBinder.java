@@ -14,7 +14,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.type.internal.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.spi.descriptor.ValueBinder;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 

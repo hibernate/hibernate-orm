@@ -7,6 +7,7 @@
 package org.hibernate.type.spi.descriptor.java;
 import java.sql.Types;
 
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -17,7 +18,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class ByteTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Byte> {
+public class ByteTypeDescriptor extends AbstractBasicTypeDescriptor<Byte> {
 	public static final ByteTypeDescriptor INSTANCE = new ByteTypeDescriptor();
 
 	public ByteTypeDescriptor() {

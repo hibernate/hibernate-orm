@@ -9,7 +9,7 @@ package org.hibernate.type.spi.descriptor.sql;
 import java.sql.Types;
 
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Descriptor for {@link Types#FLOAT FLOAT} handling.

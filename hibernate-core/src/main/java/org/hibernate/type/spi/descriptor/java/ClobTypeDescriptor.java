@@ -19,6 +19,9 @@ import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.engine.jdbc.ClobProxy;
 import org.hibernate.engine.jdbc.WrappedClob;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.IncomparableComparator;
+import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -31,7 +34,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class ClobTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Clob> {
+public class ClobTypeDescriptor extends AbstractBasicTypeDescriptor<Clob> {
 	public static final ClobTypeDescriptor INSTANCE = new ClobTypeDescriptor();
 
 	public static class ClobMutabilityPlan implements MutabilityPlan<Clob> {

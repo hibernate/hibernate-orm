@@ -10,6 +10,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.hibernate.HibernateException;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -19,7 +20,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class UrlTypeDescriptor extends AbstractTypeDescriptorBasicImpl<URL> {
+public class UrlTypeDescriptor extends AbstractBasicTypeDescriptor<URL> {
 	public static final UrlTypeDescriptor INSTANCE = new UrlTypeDescriptor();
 
 	public UrlTypeDescriptor() {

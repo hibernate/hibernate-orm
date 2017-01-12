@@ -12,6 +12,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import org.hibernate.internal.util.BytesHelper;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -21,7 +22,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class UUIDTypeDescriptor extends AbstractTypeDescriptorBasicImpl<UUID> {
+public class UUIDTypeDescriptor extends AbstractBasicTypeDescriptor<UUID> {
 	public static final UUIDTypeDescriptor INSTANCE = new UUIDTypeDescriptor();
 
 	public static class UUIDComparator implements Comparator<UUID> {

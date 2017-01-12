@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
 
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -19,7 +20,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class BigDecimalTypeDescriptor extends AbstractTypeDescriptorBasicImpl<BigDecimal> {
+public class BigDecimalTypeDescriptor extends AbstractBasicTypeDescriptor<BigDecimal> {
 	public static final BigDecimalTypeDescriptor INSTANCE = new BigDecimalTypeDescriptor();
 
 	public BigDecimalTypeDescriptor() {

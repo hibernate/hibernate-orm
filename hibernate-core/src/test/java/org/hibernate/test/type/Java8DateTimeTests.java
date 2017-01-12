@@ -25,7 +25,7 @@ import org.hibernate.Session;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.SerializableType;
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -82,7 +82,7 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 					String.format(
 							"%s (%s) -> %s",
 							propertyBinding.getName(),
-							javaTypeDescriptor.getJavaTypeClass().getSimpleName(),
+							javaTypeDescriptor.getJavaType().getSimpleName(),
 							javaTypeDescriptor.toString( propertyBinding.getGetter( TheEntity.class ).get( theEntity ) )
 					)
 			);

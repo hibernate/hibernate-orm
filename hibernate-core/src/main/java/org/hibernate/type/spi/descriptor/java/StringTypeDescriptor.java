@@ -13,6 +13,7 @@ import java.sql.Types;
 
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -22,7 +23,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class StringTypeDescriptor extends AbstractTypeDescriptorBasicImpl<String> {
+public class StringTypeDescriptor extends AbstractBasicTypeDescriptor<String> {
 	public static final StringTypeDescriptor INSTANCE = new StringTypeDescriptor();
 
 	public StringTypeDescriptor() {

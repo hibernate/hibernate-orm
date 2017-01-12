@@ -8,6 +8,7 @@ package org.hibernate.type.spi.descriptor.java;
 
 import java.sql.Types;
 
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -20,7 +21,7 @@ import static java.lang.Boolean.TRUE;
  *
  * @author Steve Ebersole
  */
-public class BooleanTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Boolean> {
+public class BooleanTypeDescriptor extends AbstractBasicTypeDescriptor<Boolean> {
 	public static final BooleanTypeDescriptor INSTANCE = new BooleanTypeDescriptor();
 
 	private final char characterValueTrue;

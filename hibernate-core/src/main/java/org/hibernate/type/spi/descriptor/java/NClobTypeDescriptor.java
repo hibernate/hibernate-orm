@@ -20,6 +20,9 @@ import org.hibernate.engine.jdbc.NClobImplementer;
 import org.hibernate.engine.jdbc.NClobProxy;
 import org.hibernate.engine.jdbc.WrappedClob;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.IncomparableComparator;
+import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -32,7 +35,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class NClobTypeDescriptor extends AbstractTypeDescriptorBasicImpl<NClob> {
+public class NClobTypeDescriptor extends AbstractBasicTypeDescriptor<NClob> {
 	public static final NClobTypeDescriptor INSTANCE = new NClobTypeDescriptor();
 
 	public static class NClobMutabilityPlan implements MutabilityPlan<NClob> {

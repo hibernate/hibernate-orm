@@ -19,8 +19,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 /**
  * Special-use AttributeConverterDescriptor implementation for cases where the converter will never

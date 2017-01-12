@@ -22,6 +22,9 @@ import java.util.GregorianCalendar;
 import javax.persistence.TemporalType;
 
 import org.hibernate.type.LocalTimeType;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.TemporalTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
@@ -30,7 +33,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 /**
  * @author Chris Cranford
  */
-public class LocalTimeJavaDescriptor extends AbstractTypeDescriptorBasicImpl<LocalTime> implements TemporalTypeDescriptor<LocalTime> {
+public class LocalTimeJavaDescriptor extends AbstractBasicTypeDescriptor<LocalTime> implements TemporalTypeDescriptor<LocalTime> {
 	/**
 	 * Singleton access
 	 */

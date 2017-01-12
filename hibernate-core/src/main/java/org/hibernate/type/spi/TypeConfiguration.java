@@ -29,7 +29,6 @@ import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CustomCollectionType;
-import org.hibernate.type.CustomType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.IdentifierBagType;
@@ -45,10 +44,9 @@ import org.hibernate.type.SortedSetType;
 import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.spi.basic.BasicTypeRegistry;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptorRegistry;
 import org.hibernate.usertype.ParameterizedType;
-import org.hibernate.usertype.UserType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 

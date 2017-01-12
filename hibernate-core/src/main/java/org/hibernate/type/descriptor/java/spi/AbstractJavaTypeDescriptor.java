@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type.spi.descriptor.java;
+package org.hibernate.type.descriptor.java.spi;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -18,7 +18,7 @@ import org.hibernate.internal.util.compare.EqualsHelper;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractTypeDescriptor<T> implements JavaTypeDescriptor<T>, Serializable {
+public abstract class AbstractJavaTypeDescriptor<T> implements JavaTypeDescriptor<T>, Serializable {
 	private final Class<T> type;
 	private final MutabilityPlan<T> mutabilityPlan;
 	private final Comparator<T> comparator;
@@ -28,10 +28,10 @@ public abstract class AbstractTypeDescriptor<T> implements JavaTypeDescriptor<T>
 	 *
 	 * @param type The Java type.
 	 *
-	 * @see #AbstractTypeDescriptor(Class, MutabilityPlan)
+	 * @see #AbstractJavaTypeDescriptor(Class, MutabilityPlan)
 	 */
 	@SuppressWarnings({ "unchecked" })
-	protected AbstractTypeDescriptor(Class<T> type) {
+	protected AbstractJavaTypeDescriptor(Class<T> type) {
 		this( type, (MutabilityPlan<T>) ImmutableMutabilityPlan.INSTANCE );
 	}
 
@@ -42,7 +42,7 @@ public abstract class AbstractTypeDescriptor<T> implements JavaTypeDescriptor<T>
 	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
 	 */
 	@SuppressWarnings({ "unchecked" })
-	protected AbstractTypeDescriptor(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
+	protected AbstractJavaTypeDescriptor(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
 		this(
 				type,
 				mutabilityPlan,
@@ -52,7 +52,7 @@ public abstract class AbstractTypeDescriptor<T> implements JavaTypeDescriptor<T>
 		);
 	}
 
-	public AbstractTypeDescriptor(Class<T> type, MutabilityPlan<T> mutabilityPlan, Comparator<T> comparator) {
+	public AbstractJavaTypeDescriptor(Class<T> type, MutabilityPlan<T> mutabilityPlan, Comparator<T> comparator) {
 		this.type = type;
 		this.mutabilityPlan = mutabilityPlan;
 		this.comparator = comparator;
@@ -64,7 +64,7 @@ public abstract class AbstractTypeDescriptor<T> implements JavaTypeDescriptor<T>
 	}
 
 	@Override
-	public Class<T> getJavaTypeClass() {
+	public Class<T> getJavaType() {
 		return type;
 	}
 

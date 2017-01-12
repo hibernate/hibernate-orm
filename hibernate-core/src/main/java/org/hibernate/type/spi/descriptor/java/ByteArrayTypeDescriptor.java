@@ -16,6 +16,8 @@ import java.util.Arrays;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.ArrayMutabilityPlan;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -25,7 +27,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class ByteArrayTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Byte[]> {
+public class ByteArrayTypeDescriptor extends AbstractBasicTypeDescriptor<Byte[]> {
 	public static final ByteArrayTypeDescriptor INSTANCE = new ByteArrayTypeDescriptor();
 
 	@SuppressWarnings({ "unchecked" })

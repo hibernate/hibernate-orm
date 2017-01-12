@@ -9,8 +9,8 @@ package org.hibernate.type.internal.descriptor.java;
 import java.util.Comparator;
 
 import org.hibernate.internal.util.compare.ComparableComparator;
-import org.hibernate.type.spi.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 
 /**
  * @author Steve Ebersole

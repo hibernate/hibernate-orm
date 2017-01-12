@@ -16,6 +16,9 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.compare.CalendarComparator;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.MutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.TemporalTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
@@ -26,7 +29,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class CalendarTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Calendar> implements TemporalTypeDescriptor<Calendar> {
+public class CalendarTypeDescriptor extends AbstractBasicTypeDescriptor<Calendar> implements TemporalTypeDescriptor<Calendar> {
 	public static final CalendarTypeDescriptor INSTANCE = new CalendarTypeDescriptor();
 
 	@Override

@@ -7,6 +7,7 @@
 package org.hibernate.type.spi.descriptor.java;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -16,7 +17,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class ClassTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Class> {
+public class ClassTypeDescriptor extends AbstractBasicTypeDescriptor<Class> {
 	public static final ClassTypeDescriptor INSTANCE = new ClassTypeDescriptor();
 
 	public ClassTypeDescriptor() {

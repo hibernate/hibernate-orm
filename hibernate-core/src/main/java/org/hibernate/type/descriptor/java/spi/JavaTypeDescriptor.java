@@ -4,56 +4,39 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type.spi.descriptor.java;
+package org.hibernate.type.descriptor.java.spi;
 
 import java.io.Serializable;
 import java.util.Comparator;
 
-import javax.persistence.metamodel.Type;
-
+import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 
 /**
  * Descriptor for the Java side of a value mapping.
  *
  * @author Steve Ebersole
  */
-public interface JavaTypeDescriptor<T> extends Type<T>, Serializable {
+public interface JavaTypeDescriptor<T> extends Serializable {
 	/**
-	 * Retrieve the Java type handled here.
+	 * The Java type (Class) represented by this descriptor.
 	 * <p/>
 	 * May be {@code null} in the case of dynamic models ({@link org.hibernate.EntityMode#MAP} e.g.).
-	 *
-	 * @return The Java type, or {@code null}
 	 */
-	Class<T> getJavaTypeClass();
-
-	/**
-	 * Note that implementations may return {@code null} in the case of dynamic models
-	 * ({@link org.hibernate.EntityMode#MAP} e.g.).
-	 *
-	 * {@inheritDoc}
-	 */
-	@Override
-	default Class<T> getJavaType() {
-		return getJavaTypeClass();
-	}
+	Class<T> getJavaType();
 
 	/**
 	 * Get the type name.  This is useful for dynamic models which either will not have
-	 * a Java type ({@link #getJavaTypeClass()} returns null) or {@link #getJavaTypeClass()}
+	 * a Java type ({@link #getJavaType()} returns null) or {@link #getJavaType()}
 	 * returns a non-indicative value ({@code java.util.Map.class} for a composite value in
 	 * {@link org.hibernate.EntityMode#MAP} EntityMode, e.g.).
 	 * <p/>
-	 * For typed models, this generally returns {@link #getJavaTypeClass()}.{@linkplain Class#getName() getName}
+	 * For typed models, this generally returns {@link #getJavaType()}.{@linkplain Class#getName() getName}
 	 *
 	 * @return The Java type name.
 	 */
-	default String getTypeName() {
-		return getJavaTypeClass().getName();
-	}
+	String getTypeName();
 
 	/**
 	 * Obtain the "recommended" SQL type descriptor for this Java type.  The recommended

@@ -8,7 +8,7 @@ package org.hibernate.type.descriptor.converter;
 
 import javax.persistence.AttributeConverter;
 
-import org.hibernate.type.spi.descriptor.java.MutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.MutableMutabilityPlan;
 
 /**
  * For now we need to treat attributes to which a converter has been applied as mutable.

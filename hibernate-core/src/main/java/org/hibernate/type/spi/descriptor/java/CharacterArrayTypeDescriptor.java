@@ -13,6 +13,8 @@ import java.util.Arrays;
 
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.ArrayMutabilityPlan;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -22,7 +24,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class CharacterArrayTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Character[]> {
+public class CharacterArrayTypeDescriptor extends AbstractBasicTypeDescriptor<Character[]> {
 	public static final CharacterArrayTypeDescriptor INSTANCE = new CharacterArrayTypeDescriptor();
 
 	@SuppressWarnings({ "unchecked" })

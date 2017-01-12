@@ -20,6 +20,7 @@ import org.hibernate.sql.exec.internal.JdbcCallFunctionReturnImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -62,7 +63,7 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 			final TypeConfiguration typeConfiguration = persistenceContext.getFactory().getMetamodel().getTypeConfiguration();
 			final SqlTypeDescriptor sqlTypeDescriptor = typeConfiguration.getSqlTypeDescriptorRegistry()
 					.getDescriptor( getJdbcTypeCode() );
-			final org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor javaTypeMapping = sqlTypeDescriptor
+			final JavaTypeDescriptor javaTypeMapping = sqlTypeDescriptor
 					.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
 			ormType = typeConfiguration.heuristicType( javaTypeMapping.getTypeName() );
 			parameterExtractor = new JdbcCallParameterExtractorImpl( procedureCall.getProcedureName(), null, 0, ormType );

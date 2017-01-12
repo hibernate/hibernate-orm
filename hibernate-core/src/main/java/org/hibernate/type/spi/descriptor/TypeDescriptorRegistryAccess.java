@@ -7,7 +7,7 @@
 package org.hibernate.type.spi.descriptor;
 
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptorRegistry;
 
 /**

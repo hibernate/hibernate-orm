@@ -7,7 +7,7 @@
 package org.hibernate.type.spi.descriptor.sql.internal;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;

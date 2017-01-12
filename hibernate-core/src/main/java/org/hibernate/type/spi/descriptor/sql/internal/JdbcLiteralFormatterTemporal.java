@@ -10,7 +10,7 @@ import java.time.temporal.TemporalAccessor;
 import javax.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.spi.descriptor.java.TemporalTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.TemporalTypeDescriptor;
 import org.hibernate.type.internal.descriptor.DateTimeUtils;
 
 /**

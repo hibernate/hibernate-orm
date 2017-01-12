@@ -18,6 +18,9 @@ import java.util.GregorianCalendar;
 import javax.persistence.TemporalType;
 
 import org.hibernate.type.LocalDateTimeType;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.TemporalTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
@@ -30,7 +33,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class LocalDateTimeJavaDescriptor extends AbstractTypeDescriptorBasicImpl<LocalDateTime> implements TemporalTypeDescriptor<LocalDateTime > {
+public class LocalDateTimeJavaDescriptor extends AbstractBasicTypeDescriptor<LocalDateTime> implements TemporalTypeDescriptor<LocalDateTime > {
 	private static final Logger log = Logger.getLogger( LocalDateTimeJavaDescriptor.class );
 
 	/**

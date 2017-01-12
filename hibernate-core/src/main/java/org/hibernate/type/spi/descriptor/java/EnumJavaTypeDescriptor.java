@@ -9,6 +9,8 @@ package org.hibernate.type.spi.descriptor.java;
 import java.sql.Types;
 import javax.persistence.EnumType;
 
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -18,7 +20,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescriptorBasicImpl<T> {
+public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractBasicTypeDescriptor<T> {
 	@SuppressWarnings("unchecked")
 	protected EnumJavaTypeDescriptor(Class<T> type) {
 		super( type, ImmutableMutabilityPlan.INSTANCE );

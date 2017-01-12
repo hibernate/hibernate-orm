@@ -20,6 +20,9 @@ import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.engine.jdbc.WrappedBlob;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.IncomparableComparator;
+import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -33,7 +36,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
-public class BlobTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Blob> {
+public class BlobTypeDescriptor extends AbstractBasicTypeDescriptor<Blob> {
 	public static final BlobTypeDescriptor INSTANCE = new BlobTypeDescriptor();
 
 	public static class BlobMutabilityPlan implements MutabilityPlan<Blob> {

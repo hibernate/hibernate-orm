@@ -8,6 +8,7 @@ package org.hibernate.type.spi.descriptor.java;
 
 import java.sql.Types;
 
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -17,7 +18,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class ShortTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Short> {
+public class ShortTypeDescriptor extends AbstractBasicTypeDescriptor<Short> {
 	public static final ShortTypeDescriptor INSTANCE = new ShortTypeDescriptor();
 
 	public ShortTypeDescriptor() {

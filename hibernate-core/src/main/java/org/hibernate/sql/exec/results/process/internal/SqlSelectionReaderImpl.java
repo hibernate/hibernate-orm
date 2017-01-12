@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.select.SqlSelection;
 import org.hibernate.sql.exec.results.process.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
 
 /**

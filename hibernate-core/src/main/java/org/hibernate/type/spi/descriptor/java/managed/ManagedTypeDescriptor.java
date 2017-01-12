@@ -25,7 +25,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
-import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 import org.hibernate.type.spi.descriptor.java.managed.attribute.AttributeBuilderPluralStandardImpl;
 import org.hibernate.type.spi.descriptor.java.managed.attribute.AttributeBuilderSingularStandardImpl;
 

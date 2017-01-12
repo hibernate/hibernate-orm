@@ -9,6 +9,7 @@ package org.hibernate.type.spi.descriptor.java;
 import java.util.Comparator;
 import java.util.Locale;
 
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -18,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  * 
  * @author Steve Ebersole
  */
-public class LocaleTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Locale> {
+public class LocaleTypeDescriptor extends AbstractBasicTypeDescriptor<Locale> {
 	public static final LocaleTypeDescriptor INSTANCE = new LocaleTypeDescriptor();
 
 	public static class LocaleComparator implements Comparator<Locale> {

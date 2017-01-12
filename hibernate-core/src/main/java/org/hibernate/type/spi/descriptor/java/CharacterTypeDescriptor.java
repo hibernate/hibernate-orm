@@ -9,6 +9,7 @@ package org.hibernate.type.spi.descriptor.java;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -18,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class CharacterTypeDescriptor extends AbstractTypeDescriptorBasicImpl<Character> {
+public class CharacterTypeDescriptor extends AbstractBasicTypeDescriptor<Character> {
 	public static final CharacterTypeDescriptor INSTANCE = new CharacterTypeDescriptor();
 
 	public CharacterTypeDescriptor() {

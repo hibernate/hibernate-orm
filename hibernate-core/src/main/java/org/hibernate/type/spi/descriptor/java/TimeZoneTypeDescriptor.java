@@ -9,6 +9,7 @@ package org.hibernate.type.spi.descriptor.java;
 import java.util.Comparator;
 import java.util.TimeZone;
 
+import org.hibernate.type.descriptor.java.spi.AbstractBasicTypeDescriptor;
 import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.WrapperOptions;
 import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
@@ -18,7 +19,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class TimeZoneTypeDescriptor extends AbstractTypeDescriptorBasicImpl<TimeZone> {
+public class TimeZoneTypeDescriptor extends AbstractBasicTypeDescriptor<TimeZone> {
 	public static final TimeZoneTypeDescriptor INSTANCE = new TimeZoneTypeDescriptor();
 
 	public static class TimeZoneComparator implements Comparator<TimeZone> {

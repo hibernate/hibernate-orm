@@ -8,13 +8,14 @@ package org.hibernate.type.spi.descriptor;
 
 import javax.persistence.EnumType;
 
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * More-or-less a parameter-object intended for use in determining the SQL/JDBC type recommended
  * by the JDBC spec (explicitly or implicitly) for a given Java type.
  *
- * @see org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor#getJdbcRecommendedSqlType
+ * @see JavaTypeDescriptor#getJdbcRecommendedSqlType
  *
  * @author Steve Ebersole
  */

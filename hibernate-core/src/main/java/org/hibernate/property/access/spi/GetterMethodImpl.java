@@ -121,7 +121,9 @@ public class GetterMethodImpl implements Getter {
 		@SuppressWarnings("unchecked")
 		private Method resolveMethod() {
 			try {
-				return declaringClass.getDeclaredMethod( methodName );
+				final Method method = declaringClass.getDeclaredMethod( methodName );
+				method.setAccessible( true );
+				return method;
 			}
 			catch (NoSuchMethodException e) {
 				throw new PropertyAccessSerializationException(

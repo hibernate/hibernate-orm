@@ -88,7 +88,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 
 [NOTE]
 ====
-To use these hibernate-spatial types just must add the `hibernate-spatial` dependency to your classpath _and_ use a the `org.hibernate.spatial.SpatialDialect`.
+To use these hibernate-spatial types just must add the `hibernate-spatial` dependency to your classpath _and_ use a `org.hibernate.spatial.SpatialDialect` implementation.
 See <<spatial>> for more about spatial types.
 ====
 
@@ -98,7 +98,7 @@ That is the purpose of the "BasicTypeRegistry key(s)" column in the previous tab
 [[basic-annotation]]
 ==== The `@Basic` annotation
 
-Strictly speaking, a basic type is denoted with with the `javax.persistence.Basic` annotation.
+Strictly speaking, a basic type is denoted with the `javax.persistence.Basic` annotation.
 Generally speaking, the `@Basic` annotation can be ignored, as it is assumed by default.
 Both of the following examples are ultimately the same.
 
@@ -243,7 +243,7 @@ For example, you might want to persist properties of type `java.util.BigInteger`
 There are two approaches to developing a custom type:
 
 - implementing a `BasicType` and registering it
-- implement a `UserType` which doesn't require type registration
+- implementing a `UserType` which doesn't require type registration
 
 As a means of illustrating the different approaches, let's consider a use case where we need to support a `java.util.BitSet` mapping that's stored as a VARCHAR.
 
@@ -413,8 +413,8 @@ Hibernate supports the mapping of Java enums as basic value types in a number of
 
 The original JPA-compliant way to map enums was via the `@Enumerated` and `@MapKeyEnumerated` for map keys annotations which works on the principle that the enum values are stored according to one of 2 strategies indicated by `javax.persistence.EnumType`:
 
-`ORDINAL`:: - stored according to the enum value's ordinal position within the enum class, as indicated by java.lang.Enum#ordinal
-`STRING`:: - stored according to the enum value's name, as indicated by java.lang.Enum#name
+`ORDINAL`:: - stored according to the enum value's ordinal position within the enum class, as indicated by `java.lang.Enum#ordinal`
+`STRING`:: - stored according to the enum value's name, as indicated by `java.lang.Enum#name`
 
 Assuming the following enumeration:
 
@@ -457,7 +457,7 @@ include::{extrasdir}/basic/basic-enums-Enumerated-ordinal-persistence-example.sq
 ----
 ====
 
-In the STRING example, the `phone_type` column is defined as an (nullable) VARCHAR type and would hold:
+In the STRING example, the `phone_type` column is defined as a (nullable) VARCHAR type and would hold:
 
 `NULL`:: For null values
 `LAND_LINE`:: For the `LAND_LINE` enum
@@ -813,7 +813,7 @@ Hibernate also allows you to map UUID values, again in a number of ways.
 ====
 The default UUID mapping is as binary because it represents more efficient storage.
 However many applications prefer the readability of character storage.
-To switch the default mapping, simply call `MetadataBuilder.applyBasicType( UUIDCharType.INSTANCE, UUID.class.getName() )`
+To switch the default mapping, simply call `MetadataBuilder.applyBasicType( UUIDCharType.INSTANCE, UUID.class.getName() )`.
 ====
 
 ==== UUID as binary
@@ -831,7 +831,7 @@ Maps the UUID to a String using `java.util.UUID#toString` and `java.util.UUID#fr
 
 [IMPORTANT]
 ====
-When using one of the PostgreSQL Dialects, this becomes the default UUID mapping
+When using one of the PostgreSQL Dialects, this becomes the default UUID mapping.
 ====
 
 Maps the UUID using PostgreSQL's specific UUID data type.
@@ -1017,7 +1017,7 @@ https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTim
 ==== JPA 2.1 AttributeConverters
 
 Although Hibernate has long been offering <<basic-custom-type,custom types>>, as a JPA 2.1 provider,
-it also supports `AttributeConverter`s as well.
+it also supports `AttributeConverter` as well.
 
 With a custom `AttributeConverter`, the application developer can map a given JDBC type to an entity basic type.
 
@@ -1262,7 +1262,7 @@ include::{extrasdir}/basic/mapping-generated-Generated-update-example.sql[]
 ===== `@GeneratorType` annotation
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratorType.html[`@GeneratorType`] annotation is used so that
-you can provide a custom generator to ste the value of the currently annotated property.
+you can provide a custom generator to set the value of the currently annotated property.
 
 For this reason, the `@GeneratorType` annotation accepts a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] enum value
 and a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ValueGenerator.html[`ValueGenerator`] class type.
@@ -1466,7 +1466,7 @@ include::{extrasdir}/basic/mapping-column-read-and-write-composite-type-persiste
 ====
 
 [[mapping-column-formula]]
-==== @Formula
+==== `@Formula`
 
 Sometimes, you want the Database to do some computation for you rather than in the JVM, you might also create some kind of virtual column.
 You can use a SQL fragment (aka formula) instead of mapping a property into a column. This kind of property is read only (its value is calculated by your formula fragment)
@@ -1507,7 +1507,7 @@ The SQL fragment can be as complex as you want and even include subselects.
 ====
 
 [[mapping-column-where]]
-==== @Where
+==== `@Where`
 
 Sometimes, you want to filter out entities or collections using a custom SQL criteria.
 This can be achieved using the `@Where` annotation, which can be applied to entities and collections.
@@ -1570,7 +1570,7 @@ include::{extrasdir}/basic/mapping-where-collection-query-example.sql[]
 ====
 
 [[mapping-column-filter]]
-==== @Filter
+==== `@Filter`
 
 The `@Filter` annotation is another way to filter out entities or collections using a custom SQL criteria, for both entities and collections.
 Unlike the `@Where` annotation, `@Filter` allows you to parameterize the filter clause at runtime.
@@ -1652,7 +1652,7 @@ For this reason, the second-level collection cache is limited to storing whole c
 ====
 
 [[mapping-column-filter-join-table]]
-==== @FilterJoinTable
+==== `@FilterJoinTable`
 
 When using the `@Filter` annotation with collections, the filtering is done against the child entries (entities or embeddables).
 However, if you have a link table between the parent entity and the child table, then you need to use the `@FilterJoinTable` to filter child entries according to some column contained in the join table.
@@ -1702,7 +1702,7 @@ include::{extrasdir}/basic/mapping-filter-join-table-collection-query-example.sq
 ====
 
 [[mapping-column-any]]
-==== @Any mapping
+==== `@Any` mapping
 
 There is one more type of property mapping.
 The `@Any` mapping defines a polymorphic association to classes from multiple tables.

@@ -31,7 +31,9 @@ public abstract class AbstractFieldSerialForm implements Serializable {
 
 	protected Field resolveField() {
 		try {
-			return declaringClass.getDeclaredField( fieldName );
+			final Field field = declaringClass.getDeclaredField( fieldName );
+			field.setAccessible( true );
+			return field;
 		}
 		catch (NoSuchFieldException e) {
 			throw new PropertyAccessSerializationException(

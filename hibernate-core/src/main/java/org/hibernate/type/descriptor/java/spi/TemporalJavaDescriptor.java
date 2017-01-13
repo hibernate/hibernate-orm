@@ -11,7 +11,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public interface TemporalJavaDescriptor<T> extends JavaTypeDescriptor<T> {
+public interface TemporalJavaDescriptor<T> extends BasicJavaDescriptor<T> {
 	javax.persistence.TemporalType getPrecision();
 
 	<X> TemporalJavaDescriptor<X> resolveTypeForPrecision(

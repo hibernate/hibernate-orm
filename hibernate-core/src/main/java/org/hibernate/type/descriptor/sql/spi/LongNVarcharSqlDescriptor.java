@@ -4,23 +4,23 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type.spi.descriptor.sql;
+package org.hibernate.type.descriptor.sql.spi;
 
 import java.sql.Types;
 
 /**
- * Descriptor for {@link Types#LONGVARCHAR LONGVARCHAR} handling.
+ * Descriptor for {@link Types#LONGNVARCHAR LONGNVARCHAR} handling.
  *
  * @author Steve Ebersole
  */
-public class LongVarcharTypeDescriptor extends VarcharTypeDescriptor {
-	public static final LongVarcharTypeDescriptor INSTANCE = new LongVarcharTypeDescriptor();
+public class LongNVarcharSqlDescriptor extends NVarcharSqlDescriptor {
+	public static final LongNVarcharSqlDescriptor INSTANCE = new LongNVarcharSqlDescriptor();
 
-	public LongVarcharTypeDescriptor() {
+	public LongNVarcharSqlDescriptor() {
 	}
 
 	@Override
 	public int getSqlType() {
-		return Types.LONGVARCHAR;
+		return Types.LONGNVARCHAR;
 	}
 }

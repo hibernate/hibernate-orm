@@ -15,6 +15,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.type.TemporalTypeImpl;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
+import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BooleanSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.DoubleSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.FloatSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NClobSqlDescriptor;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -62,23 +69,23 @@ import org.hibernate.type.descriptor.java.internal.TimeZoneJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.UUIDJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.UrlJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.ZonedDateTimeJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.BigIntTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.BinaryTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.CharTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.DateTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.LongNVarcharTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.LongVarbinaryTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.LongVarcharTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.NCharTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.NVarcharTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.NumericTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.SmallIntTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BigIntSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BinarySqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.CharSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.DateSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.LongNVarcharSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.LongVarbinarySqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.LongVarcharSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NCharSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NVarcharSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NumericSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.TinyIntTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.VarbinaryTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TimeSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TimestampSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarbinarySqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 
 /**
  * Registry for BasicType instances for lookupsicType from JavaTypeDescriptor, SqlTypeDescriptor and AttributeConverter.
@@ -360,63 +367,63 @@ public class BasicTypeRegistry {
 
 	@SuppressWarnings("unchecked")
 	private void registerBasicTypes() {
-		registerBasicType( BooleanJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.BooleanTypeDescriptor.INSTANCE );
-		registerBasicType( IntegerJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.BooleanTypeDescriptor.INSTANCE );
-		registerBasicType( new BooleanJavaDescriptor( 'T', 'F' ), CharTypeDescriptor.INSTANCE );
-		registerBasicType( BooleanJavaDescriptor.INSTANCE, CharTypeDescriptor.INSTANCE );
+		registerBasicType( BooleanJavaDescriptor.INSTANCE, BooleanSqlDescriptor.INSTANCE );
+		registerBasicType( IntegerJavaDescriptor.INSTANCE, BooleanSqlDescriptor.INSTANCE );
+		registerBasicType( new BooleanJavaDescriptor( 'T', 'F' ), CharSqlDescriptor.INSTANCE );
+		registerBasicType( BooleanJavaDescriptor.INSTANCE, CharSqlDescriptor.INSTANCE );
 
-		registerBasicType( ByteJavaDescriptor.INSTANCE, TinyIntTypeDescriptor.INSTANCE );
-		registerBasicType( CharacterJavaDescriptor.INSTANCE, CharTypeDescriptor.INSTANCE );
-		registerBasicType( ShortJavaDescriptor.INSTANCE, SmallIntTypeDescriptor.INSTANCE );
-		registerBasicType( IntegerJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.IntegerTypeDescriptor.INSTANCE );
-		registerBasicType( LongJavaDescriptor.INSTANCE, BigIntTypeDescriptor.INSTANCE );
-		registerBasicType( FloatJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.FloatTypeDescriptor.INSTANCE );
-		registerBasicType( DoubleJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.DoubleTypeDescriptor.INSTANCE );
-		registerBasicType( BigDecimalJavaDescriptor.INSTANCE, NumericTypeDescriptor.INSTANCE );
-		registerBasicType( BigIntegerJavaDescriptor.INSTANCE, NumericTypeDescriptor.INSTANCE );
+		registerBasicType( ByteJavaDescriptor.INSTANCE, TinyIntSqlDescriptor.INSTANCE );
+		registerBasicType( CharacterJavaDescriptor.INSTANCE, CharSqlDescriptor.INSTANCE );
+		registerBasicType( ShortJavaDescriptor.INSTANCE, SmallIntSqlDescriptor.INSTANCE );
+		registerBasicType( IntegerJavaDescriptor.INSTANCE, IntegerSqlDescriptor.INSTANCE );
+		registerBasicType( LongJavaDescriptor.INSTANCE, BigIntSqlDescriptor.INSTANCE );
+		registerBasicType( FloatJavaDescriptor.INSTANCE, FloatSqlDescriptor.INSTANCE );
+		registerBasicType( DoubleJavaDescriptor.INSTANCE, DoubleSqlDescriptor.INSTANCE );
+		registerBasicType( BigDecimalJavaDescriptor.INSTANCE, NumericSqlDescriptor.INSTANCE );
+		registerBasicType( BigIntegerJavaDescriptor.INSTANCE, NumericSqlDescriptor.INSTANCE );
 
-		registerBasicType( StringJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
-		registerBasicType( StringJavaDescriptor.INSTANCE, NVarcharTypeDescriptor.INSTANCE );
-		registerBasicType( CharacterJavaDescriptor.INSTANCE, NCharTypeDescriptor.INSTANCE );
-		registerBasicType( UrlJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
+		registerBasicType( StringJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
+		registerBasicType( StringJavaDescriptor.INSTANCE, NVarcharSqlDescriptor.INSTANCE );
+		registerBasicType( CharacterJavaDescriptor.INSTANCE, NCharSqlDescriptor.INSTANCE );
+		registerBasicType( UrlJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
 
-		registerBasicType( DurationJavaDescriptor.INSTANCE, BigIntTypeDescriptor.INSTANCE );
+		registerBasicType( DurationJavaDescriptor.INSTANCE, BigIntSqlDescriptor.INSTANCE );
 
-		registerTemporalType( InstantJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
-		registerTemporalType( LocalDateTimeJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
-		registerTemporalType( LocalDateJavaDescriptor.INSTANCE, DateTypeDescriptor.INSTANCE );
-		registerTemporalType( LocalTimeJavaDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE );
-		registerTemporalType( OffsetDateTimeJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
-		registerTemporalType( OffsetTimeJavaDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE );
-		registerTemporalType( ZonedDateTimeJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
+		registerTemporalType( InstantJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
+		registerTemporalType( LocalDateTimeJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
+		registerTemporalType( LocalDateJavaDescriptor.INSTANCE, DateSqlDescriptor.INSTANCE );
+		registerTemporalType( LocalTimeJavaDescriptor.INSTANCE, TimeSqlDescriptor.INSTANCE );
+		registerTemporalType( OffsetDateTimeJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
+		registerTemporalType( OffsetTimeJavaDescriptor.INSTANCE, TimeSqlDescriptor.INSTANCE );
+		registerTemporalType( ZonedDateTimeJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
 
-		registerTemporalType( JdbcDateJavaDescriptor.INSTANCE, DateTypeDescriptor.INSTANCE );
-		registerTemporalType( JdbcTimeJavaDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE );
-		registerTemporalType( JdbcTimestampJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
-		registerTemporalType( CalendarTimeJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
-		registerTemporalType( CalendarDateJavaDescriptor.INSTANCE, DateTypeDescriptor.INSTANCE );
+		registerTemporalType( JdbcDateJavaDescriptor.INSTANCE, DateSqlDescriptor.INSTANCE );
+		registerTemporalType( JdbcTimeJavaDescriptor.INSTANCE, TimeSqlDescriptor.INSTANCE );
+		registerTemporalType( JdbcTimestampJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
+		registerTemporalType( CalendarTimeJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
+		registerTemporalType( CalendarDateJavaDescriptor.INSTANCE, DateSqlDescriptor.INSTANCE );
 
-		registerBasicType( LocaleJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
-		registerBasicType( CurrencyJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
-		registerBasicType( TimeZoneJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
-		registerBasicType( ClassJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
-		registerBasicType( UUIDJavaDescriptor.INSTANCE, BinaryTypeDescriptor.INSTANCE );
-		registerBasicType( UUIDJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
+		registerBasicType( LocaleJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
+		registerBasicType( CurrencyJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
+		registerBasicType( TimeZoneJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
+		registerBasicType( ClassJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
+		registerBasicType( UUIDJavaDescriptor.INSTANCE, BinarySqlDescriptor.INSTANCE );
+		registerBasicType( UUIDJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
 
-		registerBasicType( PrimitiveByteArrayJavaDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE );
-		registerBasicType( ByteArrayJavaDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE );
-		registerBasicType( PrimitiveByteArrayJavaDescriptor.INSTANCE, LongVarbinaryTypeDescriptor.INSTANCE );
-		registerBasicType( PrimitiveCharacterArrayJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
-		registerBasicType( CharacterArrayJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
-		registerBasicType( StringJavaDescriptor.INSTANCE, LongVarcharTypeDescriptor.INSTANCE );
-		registerBasicType( StringJavaDescriptor.INSTANCE, LongNVarcharTypeDescriptor.INSTANCE );
-		registerBasicType( BlobJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor.DEFAULT );
-		registerBasicType( PrimitiveByteArrayJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor.DEFAULT );
-		registerBasicType( ClobJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor.DEFAULT );
-		registerBasicType( NClobJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor.DEFAULT );
-		registerBasicType( StringJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor.DEFAULT );
-		registerBasicType( StringJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor.DEFAULT );
-		registerBasicType( SerializableJavaDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE );
+		registerBasicType( PrimitiveByteArrayJavaDescriptor.INSTANCE, VarbinarySqlDescriptor.INSTANCE );
+		registerBasicType( ByteArrayJavaDescriptor.INSTANCE, VarbinarySqlDescriptor.INSTANCE );
+		registerBasicType( PrimitiveByteArrayJavaDescriptor.INSTANCE, LongVarbinarySqlDescriptor.INSTANCE );
+		registerBasicType( PrimitiveCharacterArrayJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
+		registerBasicType( CharacterArrayJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
+		registerBasicType( StringJavaDescriptor.INSTANCE, LongVarcharSqlDescriptor.INSTANCE );
+		registerBasicType( StringJavaDescriptor.INSTANCE, LongNVarcharSqlDescriptor.INSTANCE );
+		registerBasicType( BlobJavaDescriptor.INSTANCE, BlobSqlDescriptor.DEFAULT );
+		registerBasicType( PrimitiveByteArrayJavaDescriptor.INSTANCE, BlobSqlDescriptor.DEFAULT );
+		registerBasicType( ClobJavaDescriptor.INSTANCE, ClobSqlDescriptor.DEFAULT );
+		registerBasicType( NClobJavaDescriptor.INSTANCE, NClobSqlDescriptor.DEFAULT );
+		registerBasicType( StringJavaDescriptor.INSTANCE, ClobSqlDescriptor.DEFAULT );
+		registerBasicType( StringJavaDescriptor.INSTANCE, NClobSqlDescriptor.DEFAULT );
+		registerBasicType( SerializableJavaDescriptor.INSTANCE, VarbinarySqlDescriptor.INSTANCE );
 
 		// todo : ObjectType
 		// composed of these two types.
@@ -425,13 +432,13 @@ public class BasicTypeRegistry {
 		// based on AnyType
 
 		// Immutable types
-		registerTemporalType( JdbcDateJavaDescriptor.INSTANCE, DateTypeDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
-		registerTemporalType( JdbcTimeJavaDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
-		registerTemporalType( JdbcTimestampJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
-		registerTemporalType( CalendarTimeJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
-		registerTemporalType( CalendarDateJavaDescriptor.INSTANCE, DateTypeDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
-		registerBasicType( PrimitiveByteArrayJavaDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
-		registerBasicType( SerializableJavaDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
+		registerTemporalType( JdbcDateJavaDescriptor.INSTANCE, DateSqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
+		registerTemporalType( JdbcTimeJavaDescriptor.INSTANCE, TimeSqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
+		registerTemporalType( JdbcTimestampJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
+		registerTemporalType( CalendarTimeJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
+		registerTemporalType( CalendarDateJavaDescriptor.INSTANCE, DateSqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
+		registerBasicType( PrimitiveByteArrayJavaDescriptor.INSTANCE, VarbinarySqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
+		registerBasicType( SerializableJavaDescriptor.INSTANCE, VarbinarySqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
 	}
 
 	private void registerBasicType(JavaTypeDescriptor javaTypeDescriptor, SqlTypeDescriptor sqlTypeDescriptor) {

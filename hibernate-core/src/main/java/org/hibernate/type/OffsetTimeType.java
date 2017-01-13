@@ -12,7 +12,7 @@ import java.util.Locale;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.java.internal.OffsetTimeJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TimeSqlDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -31,7 +31,7 @@ public class OffsetTimeType extends TemporalTypeImpl<OffsetTime> {
 	 */
 	@SuppressWarnings("WeakerAccess")
 	protected OffsetTimeType() {
-		super( OffsetTimeJavaDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE );
+		super( OffsetTimeJavaDescriptor.INSTANCE, TimeSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -41,7 +41,7 @@ public class OffsetTimeType extends TemporalTypeImpl<OffsetTime> {
 
 	@Override
 	public JdbcLiteralFormatter<OffsetTime> getJdbcLiteralFormatter() {
-		return TimeTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( OffsetTimeJavaDescriptor.INSTANCE );
+		return TimeSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( OffsetTimeJavaDescriptor.INSTANCE );
 	}
 
 }

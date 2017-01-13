@@ -41,8 +41,8 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -184,11 +184,11 @@ public class PostgreSQL81Dialect extends Dialect {
 				// with @Lob will attempt to use
 				// BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the
 				// dialect uses oid for Blobs, byte arrays cannot be used.
-				descriptor = BlobTypeDescriptor.BLOB_BINDING;
+				descriptor = BlobSqlDescriptor.BLOB_BINDING;
 				break;
 			}
 			case Types.CLOB: {
-				descriptor = ClobTypeDescriptor.CLOB_BINDING;
+				descriptor = ClobSqlDescriptor.CLOB_BINDING;
 				break;
 			}
 			default: {

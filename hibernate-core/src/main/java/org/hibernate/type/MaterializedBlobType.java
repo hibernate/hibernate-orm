@@ -9,7 +9,7 @@ package org.hibernate.type;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.PrimitiveByteArrayJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#BLOB BLOB} and {@code byte[]}
@@ -23,7 +23,7 @@ public class MaterializedBlobType extends BasicTypeImpl<byte[]> {
 	public static final MaterializedBlobType INSTANCE = new MaterializedBlobType();
 
 	public MaterializedBlobType() {
-		super( PrimitiveByteArrayJavaDescriptor.INSTANCE, BlobTypeDescriptor.DEFAULT );
+		super( PrimitiveByteArrayJavaDescriptor.INSTANCE, BlobSqlDescriptor.DEFAULT );
 	}
 
 	public String getName() {

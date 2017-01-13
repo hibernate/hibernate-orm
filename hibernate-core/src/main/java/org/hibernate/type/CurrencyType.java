@@ -11,7 +11,7 @@ import java.util.Currency;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.CurrencyJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link Currency}
@@ -24,7 +24,7 @@ public class CurrencyType extends BasicTypeImpl<Currency> {
 	public static final CurrencyType INSTANCE = new CurrencyType();
 
 	protected CurrencyType() {
-		super( CurrencyJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
+		super( CurrencyJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -34,6 +34,6 @@ public class CurrencyType extends BasicTypeImpl<Currency> {
 
 	@Override
 	public JdbcLiteralFormatter<Currency> getJdbcLiteralFormatter() {
-		return VarcharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( CurrencyJavaDescriptor.INSTANCE );
+		return VarcharSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( CurrencyJavaDescriptor.INSTANCE );
 	}
 }

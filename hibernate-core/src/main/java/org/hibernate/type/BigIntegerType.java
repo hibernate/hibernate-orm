@@ -11,7 +11,7 @@ import java.math.BigInteger;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.BigIntegerJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.NumericTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NumericSqlDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#NUMERIC NUMERIC} and {@link BigInteger}.
@@ -25,7 +25,7 @@ public class BigIntegerType
 	public static final BigIntegerType INSTANCE = new BigIntegerType();
 
 	public BigIntegerType() {
-		super( BigIntegerJavaDescriptor.INSTANCE, NumericTypeDescriptor.INSTANCE );
+		super( BigIntegerJavaDescriptor.INSTANCE, NumericSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -35,6 +35,6 @@ public class BigIntegerType
 
 	@Override
 	public JdbcLiteralFormatter<BigInteger> getJdbcLiteralFormatter() {
-		return NumericTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( BigIntegerJavaDescriptor.INSTANCE );
+		return NumericSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( BigIntegerJavaDescriptor.INSTANCE );
 	}
 }

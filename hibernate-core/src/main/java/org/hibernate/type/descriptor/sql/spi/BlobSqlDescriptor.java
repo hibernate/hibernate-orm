@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type.spi.descriptor.sql;
+package org.hibernate.type.descriptor.sql.spi;
 
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
@@ -28,9 +28,9 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Gail Badner
  * @author Brett Meyer
  */
-public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
+public abstract class BlobSqlDescriptor implements SqlTypeDescriptor {
 
-	private BlobTypeDescriptor() {
+	private BlobSqlDescriptor() {
 	}
 
 	@Override
@@ -77,10 +77,10 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 		return getBlobBinder( javaTypeDescriptor );
 	}
 
-	public static final BlobTypeDescriptor DEFAULT = new BlobTypeDescriptor() {
+	public static final BlobSqlDescriptor DEFAULT = new BlobSqlDescriptor() {
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Blob.class );
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Blob.class );
 		}
 
 		@Override
@@ -89,7 +89,7 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					BlobTypeDescriptor descriptor = BLOB_BINDING;
+					BlobSqlDescriptor descriptor = BLOB_BINDING;
 					if ( byte[].class.isInstance( value ) ) {
 						// performance shortcut for binding BLOB data in byte[] format
 						descriptor = PRIMITIVE_ARRAY_BINDING;
@@ -103,7 +103,7 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					BlobTypeDescriptor descriptor = BLOB_BINDING;
+					BlobSqlDescriptor descriptor = BLOB_BINDING;
 					if ( byte[].class.isInstance( value ) ) {
 						// performance shortcut for binding BLOB data in byte[] format
 						descriptor = PRIMITIVE_ARRAY_BINDING;
@@ -117,10 +117,10 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 		}
 	};
 
-	public static final BlobTypeDescriptor PRIMITIVE_ARRAY_BINDING = new BlobTypeDescriptor() {
+	public static final BlobSqlDescriptor PRIMITIVE_ARRAY_BINDING = new BlobSqlDescriptor() {
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( byte[].class );
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( byte[].class );
 		}
 
 		@Override
@@ -141,10 +141,10 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 		}
 	};
 
-	public static final BlobTypeDescriptor BLOB_BINDING = new BlobTypeDescriptor() {
+	public static final BlobSqlDescriptor BLOB_BINDING = new BlobSqlDescriptor() {
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Blob.class );
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Blob.class );
 		}
 
 		@Override
@@ -165,9 +165,9 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 		}
 	};
 
-	public static final BlobTypeDescriptor STREAM_BINDING = new BlobTypeDescriptor() {
+	public static final BlobSqlDescriptor STREAM_BINDING = new BlobSqlDescriptor() {
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
 			return null;
 		}
 

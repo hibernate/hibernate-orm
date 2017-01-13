@@ -8,7 +8,7 @@ package org.hibernate.type;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.PrimitiveCharacterArrayJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 
 /**
  * Map a char[] to a Clob
@@ -19,7 +19,7 @@ public class PrimitiveCharacterArrayClobType extends BasicTypeImpl<char[]> {
 	public static final CharacterArrayClobType INSTANCE = new CharacterArrayClobType();
 
 	public PrimitiveCharacterArrayClobType() {
-		super( PrimitiveCharacterArrayJavaDescriptor.INSTANCE, ClobTypeDescriptor.DEFAULT );
+		super( PrimitiveCharacterArrayJavaDescriptor.INSTANCE, ClobSqlDescriptor.DEFAULT );
 	}
 
 	public String getName() {

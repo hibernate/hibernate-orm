@@ -45,14 +45,15 @@ import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.BasicBinder;
-import org.hibernate.type.spi.descriptor.sql.BitTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.SmallIntTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BasicBinder;
+import org.hibernate.type.descriptor.sql.spi.BitSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NClobSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -103,13 +104,13 @@ public abstract class AbstractHANADialect extends Dialect {
 	// using non-contexual lob creation and HANA then closes our StringReader.
 	// see test case LobLocatorTest
 
-	private static final ClobTypeDescriptor HANA_CLOB_STREAM_BINDING = new ClobTypeDescriptor() {
+	private static final ClobSqlDescriptor HANA_CLOB_STREAM_BINDING = new ClobSqlDescriptor() {
 		/** serial version uid. */
 		private static final long serialVersionUID = -379042275442752102L;
 
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Clob.class );
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Clob.class );
 		}
 
 		@Override
@@ -155,10 +156,10 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 	};
 
-	private static final NClobTypeDescriptor HANA_NCLOB_STREAM_BINDING = new NClobTypeDescriptor() {
+	private static final NClobSqlDescriptor HANA_NCLOB_STREAM_BINDING = new NClobSqlDescriptor() {
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( NClob.class );
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( NClob.class );
 		}
 
 		/** serial version uid. */
@@ -559,14 +560,14 @@ public abstract class AbstractHANADialect extends Dialect {
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(final int sqlCode) {
 		switch ( sqlCode ) {
 		case Types.BOOLEAN:
-			return BitTypeDescriptor.INSTANCE;
+			return BitSqlDescriptor.INSTANCE;
 		case Types.CLOB:
 			return HANA_CLOB_STREAM_BINDING;
 		case Types.NCLOB:
 			return HANA_NCLOB_STREAM_BINDING;
 		case Types.TINYINT:
 			// tinyint is unsigned on HANA
-			return SmallIntTypeDescriptor.INSTANCE;
+			return SmallIntSqlDescriptor.INSTANCE;
 		default:
 			return super.getSqlTypeDescriptorOverride( sqlCode );
 		}

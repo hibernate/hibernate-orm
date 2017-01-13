@@ -14,7 +14,7 @@ import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.ShortJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.SmallIntTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#SMALLINT SMALLINT} and {@link Short}
@@ -29,7 +29,7 @@ public class ShortType extends BasicTypeImpl<Short> implements VersionSupport<Sh
 	private static final Short ZERO = (short) 0;
 
 	public ShortType() {
-		super( ShortJavaDescriptor.INSTANCE, SmallIntTypeDescriptor.INSTANCE );
+		super( ShortJavaDescriptor.INSTANCE, SmallIntSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -63,6 +63,6 @@ public class ShortType extends BasicTypeImpl<Short> implements VersionSupport<Sh
 
 	@Override
 	public JdbcLiteralFormatter<Short> getJdbcLiteralFormatter() {
-		return SmallIntTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( ShortJavaDescriptor.INSTANCE );
+		return SmallIntSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( ShortJavaDescriptor.INSTANCE );
 	}
 }

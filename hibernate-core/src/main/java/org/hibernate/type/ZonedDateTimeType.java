@@ -16,7 +16,7 @@ import org.hibernate.internal.util.ZonedDateTimeComparator;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.type.descriptor.java.internal.ZonedDateTimeJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TimestampSqlDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -37,7 +37,7 @@ public class ZonedDateTimeType
 	 */
 	@SuppressWarnings("WeakerAccess")
 	protected ZonedDateTimeType() {
-		super( ZonedDateTimeJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
+		super( ZonedDateTimeJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -68,6 +68,6 @@ public class ZonedDateTimeType
 
 	@Override
 	public JdbcLiteralFormatter<ZonedDateTime> getJdbcLiteralFormatter() {
-		return TimestampTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( ZonedDateTimeJavaDescriptor.INSTANCE );
+		return TimestampSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( ZonedDateTimeJavaDescriptor.INSTANCE );
 	}
 }

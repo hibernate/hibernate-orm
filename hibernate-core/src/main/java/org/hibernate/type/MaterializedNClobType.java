@@ -9,7 +9,7 @@ package org.hibernate.type;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.StringJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NClobSqlDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#NCLOB NCLOB} and {@link String}
@@ -22,7 +22,7 @@ public class MaterializedNClobType extends BasicTypeImpl<String> {
 	public static final MaterializedNClobType INSTANCE = new MaterializedNClobType();
 
 	public MaterializedNClobType() {
-		super( StringJavaDescriptor.INSTANCE, NClobTypeDescriptor.DEFAULT );
+		super( StringJavaDescriptor.INSTANCE, NClobSqlDescriptor.DEFAULT );
 	}
 
 	public String getName() {

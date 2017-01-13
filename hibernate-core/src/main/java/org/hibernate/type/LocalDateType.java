@@ -14,7 +14,7 @@ import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.java.internal.LocalDateJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.DateTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.DateSqlDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -33,7 +33,7 @@ public class LocalDateType extends TemporalTypeImpl<LocalDate> {
 	 */
 	@SuppressWarnings("WeakerAccess")
 	protected LocalDateType() {
-		super( LocalDateJavaDescriptor.INSTANCE, DateTypeDescriptor.INSTANCE );
+		super( LocalDateJavaDescriptor.INSTANCE, DateSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -43,7 +43,7 @@ public class LocalDateType extends TemporalTypeImpl<LocalDate> {
 
 	@Override
 	public JdbcLiteralFormatter<LocalDate> getJdbcLiteralFormatter() {
-		return DateTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( LocalDateJavaDescriptor.INSTANCE );
+		return DateSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( LocalDateJavaDescriptor.INSTANCE );
 	}
 
 	@Override

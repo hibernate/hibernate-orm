@@ -9,7 +9,7 @@ package org.hibernate.type;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.StringJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.NVarcharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NVarcharSqlDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link String}
@@ -22,7 +22,7 @@ public class StringNVarcharType extends BasicTypeImpl<String> {
 	public static final StringNVarcharType INSTANCE = new StringNVarcharType();
 
 	public StringNVarcharType() {
-		super( StringJavaDescriptor.INSTANCE, NVarcharTypeDescriptor.INSTANCE );
+		super( StringJavaDescriptor.INSTANCE, NVarcharSqlDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -31,7 +31,7 @@ public class StringNVarcharType extends BasicTypeImpl<String> {
 
 	@Override
 	public JdbcLiteralFormatter<String> getJdbcLiteralFormatter() {
-		return NVarcharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( StringJavaDescriptor.INSTANCE );
+		return NVarcharSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( StringJavaDescriptor.INSTANCE );
 	}
 
 	public String toString(String value) {

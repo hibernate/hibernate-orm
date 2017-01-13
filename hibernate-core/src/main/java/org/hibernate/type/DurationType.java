@@ -11,7 +11,7 @@ import java.time.Duration;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.DurationJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.BigIntTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BigIntSqlDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -25,7 +25,7 @@ public class DurationType
 	public static final DurationType INSTANCE = new DurationType();
 
 	protected DurationType() {
-		super( DurationJavaDescriptor.INSTANCE, BigIntTypeDescriptor.INSTANCE );
+		super( DurationJavaDescriptor.INSTANCE, BigIntSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -35,6 +35,6 @@ public class DurationType
 
 	@Override
 	public JdbcLiteralFormatter<Duration> getJdbcLiteralFormatter() {
-		return BigIntTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( DurationJavaDescriptor.INSTANCE );
+		return BigIntSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( DurationJavaDescriptor.INSTANCE );
 	}
 }

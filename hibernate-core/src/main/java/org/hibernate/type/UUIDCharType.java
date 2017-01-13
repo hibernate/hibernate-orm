@@ -11,7 +11,7 @@ import java.util.UUID;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.UUIDJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#CHAR} (or {@link java.sql.Types#VARCHAR}) and {@link java.util.UUID}
@@ -22,7 +22,7 @@ public class UUIDCharType extends BasicTypeImpl<UUID> {
 	public static final UUIDCharType INSTANCE = new UUIDCharType();
 
 	public UUIDCharType() {
-		super( UUIDJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
+		super( UUIDJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -31,6 +31,6 @@ public class UUIDCharType extends BasicTypeImpl<UUID> {
 
 	@Override
 	public JdbcLiteralFormatter<UUID> getJdbcLiteralFormatter() {
-		return VarcharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( UUIDJavaDescriptor.INSTANCE );
+		return VarcharSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( UUIDJavaDescriptor.INSTANCE );
 	}
 }

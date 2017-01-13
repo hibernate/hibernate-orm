@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type.spi.descriptor.sql;
+package org.hibernate.type.descriptor.sql.spi;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -12,29 +12,29 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.internal.JdbcLiteralFormatterNumericData;
+import org.hibernate.type.descriptor.sql.internal.JdbcLiteralFormatterCharacterData;
 
 /**
- * Descriptor for {@link Types#INTEGER INTEGER} handling.
+ * Descriptor for {@link Types#VARCHAR VARCHAR} handling.
  *
  * @author Steve Ebersole
  */
-public class IntegerTypeDescriptor implements SqlTypeDescriptor {
-	public static final IntegerTypeDescriptor INSTANCE = new IntegerTypeDescriptor();
+public class VarcharSqlDescriptor implements SqlTypeDescriptor {
+	public static final VarcharSqlDescriptor INSTANCE = new VarcharSqlDescriptor();
 
-	public IntegerTypeDescriptor() {
+	public VarcharSqlDescriptor() {
 	}
 
 	@Override
 	public int getSqlType() {
-		return Types.INTEGER;
+		return Types.VARCHAR;
 	}
 
 	@Override
@@ -43,14 +43,14 @@ public class IntegerTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
-	public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class );
+	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, Integer.class );
+		return new JdbcLiteralFormatterCharacterData( javaTypeDescriptor );
 	}
 
 	@Override
@@ -58,13 +58,13 @@ public class IntegerTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setInt( index, javaTypeDescriptor.unwrap( value, Integer.class, options ) );
+				st.setString( index, javaTypeDescriptor.unwrap( value, String.class, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setInt( name, javaTypeDescriptor.unwrap( value, Integer.class, options ) );
+				st.setString( name, javaTypeDescriptor.unwrap( value, String.class, options ) );
 			}
 		};
 	}
@@ -74,17 +74,17 @@ public class IntegerTypeDescriptor implements SqlTypeDescriptor {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getInt( name ), options );
+				return javaTypeDescriptor.wrap( rs.getString( name ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getInt( index ), options );
+				return javaTypeDescriptor.wrap( statement.getString( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getInt( name ), options );
+				return javaTypeDescriptor.wrap( statement.getString( name ), options );
 			}
 		};
 	}

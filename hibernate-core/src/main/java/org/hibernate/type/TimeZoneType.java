@@ -12,7 +12,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.TimeZoneJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#VARCHAR VARCHAR} and {@link TimeZone}
@@ -25,7 +25,7 @@ public class TimeZoneType extends BasicTypeImpl<TimeZone> implements JdbcLiteral
 	public static final TimeZoneType INSTANCE = new TimeZoneType();
 
 	public TimeZoneType() {
-		super( TimeZoneJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
+		super( TimeZoneJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
 	}
 
 	public String getName() {

@@ -12,7 +12,7 @@ import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.java.internal.CalendarTimeJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TimeSqlDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#TIME TIME} and {@link Calendar}.
@@ -26,7 +26,7 @@ public class CalendarTimeType extends TemporalTypeImpl<Calendar> {
 	public static final CalendarTimeType INSTANCE = new CalendarTimeType();
 
 	public CalendarTimeType() {
-		super( CalendarTimeJavaDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE );
+		super( CalendarTimeJavaDescriptor.INSTANCE, TimeSqlDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -35,7 +35,7 @@ public class CalendarTimeType extends TemporalTypeImpl<Calendar> {
 
 	@Override
 	public JdbcLiteralFormatter<Calendar> getJdbcLiteralFormatter() {
-		return TimeTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( CalendarTimeJavaDescriptor.INSTANCE );
+		return TimeSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( CalendarTimeJavaDescriptor.INSTANCE );
 	}
 
 	@Override

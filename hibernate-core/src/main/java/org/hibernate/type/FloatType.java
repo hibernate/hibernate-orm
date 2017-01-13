@@ -6,6 +6,7 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.type.descriptor.sql.spi.FloatSqlDescriptor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.FloatTypeDescriptor;
@@ -22,7 +23,7 @@ public class FloatType extends BasicTypeImpl<Float> {
 	public static final Float ZERO = 0.0f;
 
 	public FloatType() {
-		super( FloatTypeDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.FloatTypeDescriptor.INSTANCE );
+		super( FloatTypeDescriptor.INSTANCE, FloatSqlDescriptor.INSTANCE );
 	}
 	@Override
 	public String getName() {
@@ -31,7 +32,7 @@ public class FloatType extends BasicTypeImpl<Float> {
 
 	@Override
 	public JdbcLiteralFormatter<Float> getJdbcLiteralFormatter() {
-		return org.hibernate.type.spi.descriptor.sql.FloatTypeDescriptor.INSTANCE.getJdbcLiteralFormatter(
+		return FloatSqlDescriptor.INSTANCE.getJdbcLiteralFormatter(
 				FloatTypeDescriptor.INSTANCE
 		);
 	}

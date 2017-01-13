@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.PrimitiveByteArrayJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.VarbinaryTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarbinarySqlDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@code byte[]}
@@ -33,7 +33,7 @@ public class RowVersionType
 	}
 
 	public RowVersionType() {
-		super( PrimitiveByteArrayJavaDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE );
+		super( PrimitiveByteArrayJavaDescriptor.INSTANCE, VarbinarySqlDescriptor.INSTANCE );
 	}
 
 	@Override

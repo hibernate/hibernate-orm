@@ -11,7 +11,7 @@ import java.util.UUID;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.UUIDJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.BinaryTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BinarySqlDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#BINARY} and {@link UUID}
@@ -22,7 +22,7 @@ public class UUIDBinaryType extends BasicTypeImpl<UUID> {
 	public static final UUIDBinaryType INSTANCE = new UUIDBinaryType();
 
 	public UUIDBinaryType() {
-		super( UUIDJavaDescriptor.INSTANCE, BinaryTypeDescriptor.INSTANCE );
+		super( UUIDJavaDescriptor.INSTANCE, BinarySqlDescriptor.INSTANCE );
 	}
 
 	public String getName() {

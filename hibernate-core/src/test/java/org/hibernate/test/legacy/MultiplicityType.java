@@ -22,8 +22,8 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.descriptor.sql.IntegerTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 import org.hibernate.usertype.CompositeUserType;
 
 public class MultiplicityType implements CompositeUserType {
@@ -32,8 +32,8 @@ public class MultiplicityType implements CompositeUserType {
 			"count", "glarch"
 	};
 	private static final int[] SQL_TYPES = new int[] {
-			IntegerTypeDescriptor.INSTANCE.getSqlType(),
-			VarcharTypeDescriptor.INSTANCE.getSqlType()
+			IntegerSqlDescriptor.INSTANCE.getSqlType(),
+			VarcharSqlDescriptor.INSTANCE.getSqlType()
 	};
 	private static final Type[] TYPES = new Type[] {
 			IntegerType.INSTANCE,

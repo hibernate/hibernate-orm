@@ -13,7 +13,7 @@ import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.LongJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.BigIntTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BigIntSqlDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#BIGINT BIGINT} and {@link Long}
@@ -30,7 +30,7 @@ public class LongType
 	private static final Long ZERO = (long) 0;
 
 	public LongType() {
-		super( LongJavaDescriptor.INSTANCE, BigIntTypeDescriptor.INSTANCE );
+		super( LongJavaDescriptor.INSTANCE, BigIntSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -60,6 +60,6 @@ public class LongType
 
 	@Override
 	public JdbcLiteralFormatter<Long> getJdbcLiteralFormatter() {
-		return BigIntTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( LongJavaDescriptor.INSTANCE );
+		return BigIntSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( LongJavaDescriptor.INSTANCE );
 	}
 }

@@ -11,7 +11,7 @@ import java.net.URL;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.UrlJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link URL}
@@ -22,7 +22,7 @@ public class UrlType extends BasicTypeImpl<URL> {
 	public static final UrlType INSTANCE = new UrlType();
 
 	public UrlType() {
-		super( UrlJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
+		super( UrlJavaDescriptor.INSTANCE, VarcharSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -32,7 +32,7 @@ public class UrlType extends BasicTypeImpl<URL> {
 
 	@Override
 	public JdbcLiteralFormatter<URL> getJdbcLiteralFormatter() {
-		return VarcharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( UrlJavaDescriptor.INSTANCE );
+		return VarcharSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( UrlJavaDescriptor.INSTANCE );
 	}
 
 	@Override

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type.spi.descriptor.sql;
+package org.hibernate.type.descriptor.sql.spi;
 
 import java.io.Serializable;
 import java.sql.CallableStatement;
@@ -13,14 +13,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.internal.descriptor.JdbcTypeNameMapper;
-import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.internal.SqlTypeDescriptorBaseline;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -29,45 +29,21 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class SqlTypeDescriptorRegistry {
+public class SqlTypeDescriptorRegistry implements SqlTypeDescriptorBaseline.BaselineTarget {
 	private static final Logger log = Logger.getLogger( SqlTypeDescriptorRegistry.class );
 
+	private final TypeConfiguration typeConfiguration;
 	private ConcurrentHashMap<Integer, SqlTypeDescriptor> descriptorMap = new ConcurrentHashMap<>();
 
 	public SqlTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
-		addDescriptor( BooleanTypeDescriptor.INSTANCE );
-
-		addDescriptor( BitTypeDescriptor.INSTANCE );
-		addDescriptor( BigIntTypeDescriptor.INSTANCE );
-		addDescriptor( DecimalTypeDescriptor.INSTANCE );
-		addDescriptor( DoubleTypeDescriptor.INSTANCE );
-		addDescriptor( FloatTypeDescriptor.INSTANCE );
-		addDescriptor( IntegerTypeDescriptor.INSTANCE );
-		addDescriptor( NumericTypeDescriptor.INSTANCE );
-		addDescriptor( RealTypeDescriptor.INSTANCE );
-		addDescriptor( SmallIntTypeDescriptor.INSTANCE );
-		addDescriptor( TinyIntTypeDescriptor.INSTANCE );
-
-		addDescriptor( DateTypeDescriptor.INSTANCE );
-		addDescriptor( TimestampTypeDescriptor.INSTANCE );
-		addDescriptor( TimeTypeDescriptor.INSTANCE );
-
-		addDescriptor( BinaryTypeDescriptor.INSTANCE );
-		addDescriptor( VarbinaryTypeDescriptor.INSTANCE );
-		addDescriptor( LongVarbinaryTypeDescriptor.INSTANCE );
-		addDescriptor( BlobTypeDescriptor.DEFAULT );
-
-		addDescriptor( CharTypeDescriptor.INSTANCE );
-		addDescriptor( VarcharTypeDescriptor.INSTANCE );
-		addDescriptor( LongVarcharTypeDescriptor.INSTANCE );
-		addDescriptor( ClobTypeDescriptor.DEFAULT );
-
-		addDescriptor( NCharTypeDescriptor.INSTANCE );
-		addDescriptor( NVarcharTypeDescriptor.INSTANCE );
-		addDescriptor( LongNVarcharTypeDescriptor.INSTANCE );
-		addDescriptor( NClobTypeDescriptor.DEFAULT );
+		this.typeConfiguration = typeConfiguration;
+		SqlTypeDescriptorBaseline.prime( this );
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// baseline descriptors
+
+	@Override
 	public void addDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		descriptorMap.put( sqlTypeDescriptor.getSqlType(), sqlTypeDescriptor );
 	}
@@ -125,7 +101,7 @@ public class SqlTypeDescriptorRegistry {
 		}
 
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
 			throw new UnsupportedOperationException( "No recommended Java-type mapping known for JDBC type code [" + jdbcTypeCode + "]" );
 		}
 
@@ -142,8 +118,8 @@ public class SqlTypeDescriptorRegistry {
 
 		@Override
 		public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
-			if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
-				return VarbinaryTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
+			if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
+				return VarbinarySqlDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
 			}
 
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
@@ -164,8 +140,8 @@ public class SqlTypeDescriptorRegistry {
 		@Override
 		@SuppressWarnings("unchecked")
 		public ValueExtractor getExtractor(JavaTypeDescriptor javaTypeDescriptor) {
-			if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
-				return VarbinaryTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
+			if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
+				return VarbinarySqlDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
 			}
 
 			return new BasicExtractor( javaTypeDescriptor, this ) {

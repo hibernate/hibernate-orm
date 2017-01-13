@@ -14,7 +14,7 @@ import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.type.descriptor.java.internal.InstantJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TimestampSqlDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link java.time.LocalDateTime}.
@@ -30,7 +30,7 @@ public class InstantType
 	public static final InstantType INSTANCE = new InstantType();
 
 	protected InstantType() {
-		super( InstantJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
+		super( InstantJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -61,6 +61,6 @@ public class InstantType
 
 	@Override
 	public JdbcLiteralFormatter<Instant> getJdbcLiteralFormatter() {
-		return TimestampTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( InstantJavaDescriptor.INSTANCE );
+		return TimestampSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( InstantJavaDescriptor.INSTANCE );
 	}
 }

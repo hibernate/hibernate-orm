@@ -6,6 +6,7 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.type.descriptor.sql.spi.DoubleSqlDescriptor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.DoubleJavaDescriptor;
@@ -22,7 +23,7 @@ public class DoubleType extends BasicTypeImpl<Double> {
 	public static final Double ZERO = 0.0;
 
 	public DoubleType() {
-		super( DoubleJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.DoubleTypeDescriptor.INSTANCE );
+		super( DoubleJavaDescriptor.INSTANCE, DoubleSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -32,7 +33,7 @@ public class DoubleType extends BasicTypeImpl<Double> {
 
 	@Override
 	public JdbcLiteralFormatter<Double> getJdbcLiteralFormatter() {
-		return org.hibernate.type.spi.descriptor.sql.DoubleTypeDescriptor.INSTANCE.getJdbcLiteralFormatter(
+		return DoubleSqlDescriptor.INSTANCE.getJdbcLiteralFormatter(
 				DoubleJavaDescriptor.INSTANCE
 		);
 	}

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type.spi.descriptor.sql;
+package org.hibernate.type.descriptor.sql.spi;
 
 import java.sql.Types;
 
@@ -13,10 +13,10 @@ import java.sql.Types;
  *
  * @author Steve Ebersole
  */
-public class NCharTypeDescriptor extends NVarcharTypeDescriptor {
-	public static final NCharTypeDescriptor INSTANCE = new NCharTypeDescriptor();
+public class NCharSqlDescriptor extends NVarcharSqlDescriptor {
+	public static final NCharSqlDescriptor INSTANCE = new NCharSqlDescriptor();
 
-	public NCharTypeDescriptor() {
+	public NCharSqlDescriptor() {
 	}
 
 	@Override

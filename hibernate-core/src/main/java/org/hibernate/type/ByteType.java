@@ -13,7 +13,7 @@ import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.ByteJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.TinyIntTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TINYINT TINYINT} and {@link Byte}
@@ -30,7 +30,7 @@ public class ByteType
 	private static final Byte ZERO = (byte) 0;
 
 	protected ByteType() {
-		super( ByteJavaDescriptor.INSTANCE, TinyIntTypeDescriptor.INSTANCE );
+		super( ByteJavaDescriptor.INSTANCE, TinyIntSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -40,7 +40,7 @@ public class ByteType
 
 	@Override
 	public JdbcLiteralFormatter<Byte> getJdbcLiteralFormatter() {
-		return TinyIntTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( ByteJavaDescriptor.INSTANCE );
+		return TinyIntSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( ByteJavaDescriptor.INSTANCE );
 	}
 
 	@Override

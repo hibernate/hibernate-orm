@@ -51,7 +51,7 @@ import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.spi.basic.BasicTypeRegistry;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
-import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.usertype.ParameterizedType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;

@@ -9,7 +9,7 @@ package org.hibernate.type;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.StringJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.LongNVarcharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.LongNVarcharSqlDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#LONGNVARCHAR LONGNVARCHAR} and {@link String}
@@ -22,7 +22,7 @@ public class NTextType extends BasicTypeImpl<String> {
 	public static final NTextType INSTANCE = new NTextType();
 
 	public NTextType() {
-		super( StringJavaDescriptor.INSTANCE, LongNVarcharTypeDescriptor.INSTANCE );
+		super( StringJavaDescriptor.INSTANCE, LongNVarcharSqlDescriptor.INSTANCE );
 	}
 
 	public String getName() { 

@@ -25,7 +25,7 @@ import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.internal.descriptor.JdbcTypeNameMapper;
+import org.hibernate.type.descriptor.sql.spi.JdbcTypeNameMapper;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

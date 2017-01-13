@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.descriptor.sql.spi.BooleanSqlDescriptor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.BooleanJavaDescriptor;
@@ -23,7 +24,7 @@ public class BooleanType
 	public static final BooleanType INSTANCE = new BooleanType();
 
 	public BooleanType() {
-		this( org.hibernate.type.spi.descriptor.sql.BooleanTypeDescriptor.INSTANCE, BooleanJavaDescriptor.INSTANCE );
+		this( BooleanSqlDescriptor.INSTANCE, BooleanJavaDescriptor.INSTANCE );
 	}
 
 	protected BooleanType(SqlTypeDescriptor sqlTypeDescriptor, BooleanJavaDescriptor javaTypeDescriptor) {

@@ -15,7 +15,7 @@ import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.internal.SerializableJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
@@ -30,7 +30,7 @@ public class SerializableToBlobType<T extends Serializable> extends BasicTypeImp
 	private JavaTypeDescriptor javaTypeDescriptor;
 
 	public SerializableToBlobType() {
-		super( new SerializableJavaDescriptor( Serializable.class ), BlobTypeDescriptor.DEFAULT );
+		super( new SerializableJavaDescriptor( Serializable.class ), BlobSqlDescriptor.DEFAULT );
 	}
 
 	@Override

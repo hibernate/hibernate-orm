@@ -3,7 +3,7 @@ package org.hibernate.userguide.mapping.basic;
 import java.util.BitSet;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 
 /**
  * @author Vlad Mihalcea
@@ -15,7 +15,7 @@ public class BitSetType
     public static final BitSetType INSTANCE = new BitSetType();
 
     public BitSetType() {
-        super( VarcharTypeDescriptor.INSTANCE, BitSetTypeDescriptor.INSTANCE );
+        super( VarcharSqlDescriptor.INSTANCE, BitSetTypeDescriptor.INSTANCE );
     }
 
     @Override

@@ -18,7 +18,7 @@ import org.hibernate.type.spi.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.type.descriptor.java.internal.LocalDateTimeJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TimestampSqlDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link LocalDateTime}.
@@ -40,7 +40,7 @@ public class LocalDateTimeType
 	 */
 	@SuppressWarnings("WeakerAccess")
 	protected LocalDateTimeType() {
-		super( LocalDateTimeJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
+		super( LocalDateTimeJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -71,7 +71,7 @@ public class LocalDateTimeType
 
 	@Override
 	public JdbcLiteralFormatter<LocalDateTime> getJdbcLiteralFormatter() {
-		return TimestampTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( LocalDateTimeJavaDescriptor.INSTANCE );
+		return TimestampSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( LocalDateTimeJavaDescriptor.INSTANCE );
 	}
 
 	@Override

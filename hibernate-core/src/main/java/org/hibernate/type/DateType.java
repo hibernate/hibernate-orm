@@ -10,7 +10,7 @@ import java.util.Date;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.java.internal.JdbcDateJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.DateTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.DateSqlDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#DATE DATE} and {@link java.sql.Date}
@@ -23,7 +23,7 @@ public class DateType extends TemporalTypeImpl<Date> {
 	public static final DateType INSTANCE = new DateType();
 
 	protected DateType() {
-		super( JdbcDateJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.DateTypeDescriptor.INSTANCE );
+		super( JdbcDateJavaDescriptor.INSTANCE, DateSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -33,6 +33,6 @@ public class DateType extends TemporalTypeImpl<Date> {
 
 	@Override
 	public JdbcLiteralFormatter<Date> getJdbcLiteralFormatter() {
-		return DateTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( JdbcDateJavaDescriptor.INSTANCE );
+		return DateSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( JdbcDateJavaDescriptor.INSTANCE );
 	}
 }

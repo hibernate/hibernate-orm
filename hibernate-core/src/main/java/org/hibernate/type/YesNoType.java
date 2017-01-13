@@ -9,7 +9,7 @@ package org.hibernate.type;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.BooleanJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.CharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.CharSqlDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#CHAR CHAR(1)} and {@link Boolean} (using 'Y' and 'N')
@@ -22,7 +22,7 @@ public class YesNoType extends BasicTypeImpl<Boolean> {
 	public static final YesNoType INSTANCE = new YesNoType();
 
 	protected YesNoType() {
-		super( BooleanJavaDescriptor.INSTANCE, CharTypeDescriptor.INSTANCE );
+		super( BooleanJavaDescriptor.INSTANCE, CharSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -32,6 +32,6 @@ public class YesNoType extends BasicTypeImpl<Boolean> {
 
 	@Override
 	public JdbcLiteralFormatter<Boolean> getJdbcLiteralFormatter() {
-		return CharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( getJavaTypeDescriptor() );
+		return CharSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( getJavaTypeDescriptor() );
 	}
 }

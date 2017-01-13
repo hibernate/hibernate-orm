@@ -9,6 +9,7 @@ package org.hibernate.type;
 import java.sql.Blob;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.BlobJavaDescriptor;
@@ -23,7 +24,7 @@ public class BlobType extends BasicTypeImpl<Blob> {
 	public static final BlobType INSTANCE = new BlobType();
 
 	public BlobType() {
-		super( BlobJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor.DEFAULT );
+		super( BlobJavaDescriptor.INSTANCE, BlobSqlDescriptor.DEFAULT );
 	}
 
 	@Override

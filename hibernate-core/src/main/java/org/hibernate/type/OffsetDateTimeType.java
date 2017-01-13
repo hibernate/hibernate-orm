@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.type.descriptor.java.internal.OffsetDateTimeJavaDescriptor;
-import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.TimestampSqlDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -36,7 +36,7 @@ public class OffsetDateTimeType
 	 */
 	@SuppressWarnings("WeakerAccess")
 	protected OffsetDateTimeType() {
-		super( OffsetDateTimeJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
+		super( OffsetDateTimeJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -67,6 +67,6 @@ public class OffsetDateTimeType
 
 	@Override
 	public JdbcLiteralFormatter<OffsetDateTime> getJdbcLiteralFormatter() {
-		return TimestampTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( OffsetDateTimeJavaDescriptor.INSTANCE );
+		return TimestampSqlDescriptor.INSTANCE.getJdbcLiteralFormatter( OffsetDateTimeJavaDescriptor.INSTANCE );
 	}
 }

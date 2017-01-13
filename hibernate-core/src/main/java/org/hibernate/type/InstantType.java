@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
-import org.hibernate.type.spi.descriptor.java.InstantJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.InstantJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
 /**

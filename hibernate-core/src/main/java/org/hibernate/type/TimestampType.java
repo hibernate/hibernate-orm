@@ -14,7 +14,7 @@ import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.VersionSupport;
-import org.hibernate.type.spi.descriptor.java.JdbcTimestampTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.JdbcTimestampJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
 /**
@@ -28,7 +28,7 @@ public class TimestampType extends TemporalTypeImpl<Date> implements VersionSupp
 	public static final TimestampType INSTANCE = new TimestampType();
 
 	public TimestampType() {
-		super( JdbcTimestampTypeDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
+		super( JdbcTimestampJavaDescriptor.INSTANCE, TimestampTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class TimestampType extends TemporalTypeImpl<Date> implements VersionSupp
 
 	@Override
 	public JdbcLiteralFormatter<Date> getJdbcLiteralFormatter() {
-		return TimestampTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( JdbcTimestampTypeDescriptor.INSTANCE );
+		return TimestampTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( JdbcTimestampJavaDescriptor.INSTANCE );
 	}
 
 	@Override

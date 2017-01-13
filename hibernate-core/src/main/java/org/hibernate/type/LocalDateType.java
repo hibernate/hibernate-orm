@@ -13,7 +13,7 @@ import java.util.Locale;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.descriptor.java.LocalDateJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.LocalDateJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.DateTypeDescriptor;
 
 /**

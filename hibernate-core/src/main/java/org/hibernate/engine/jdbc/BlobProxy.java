@@ -15,7 +15,7 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
-import org.hibernate.type.spi.descriptor.java.DataHelper;
+import org.hibernate.type.descriptor.java.internal.DataHelper;
 
 /**
  * Manages aspects of proxying {@link Blob} references for non-contextual creation, including proxy creation and

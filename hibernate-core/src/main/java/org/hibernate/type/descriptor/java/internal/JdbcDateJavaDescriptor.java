@@ -1,24 +1,19 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type.descriptor.java.internal;
 
 import java.sql.Types;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import javax.persistence.TemporalType;
 
-import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
@@ -55,6 +50,7 @@ public class JdbcDateJavaDescriptor extends AbstractBasicJavaDescriptor<Date> im
 	public JdbcDateJavaDescriptor() {
 		super( Date.class, DateMutabilityPlan.INSTANCE );
 	}
+
 	@Override
 	public String toString(Date value) {
 		if ( value instanceof java.sql.Date ) {
@@ -63,6 +59,7 @@ public class JdbcDateJavaDescriptor extends AbstractBasicJavaDescriptor<Date> im
 
 		return FORMATTER.format( value.toInstant() );
 	}
+
 	@Override
 	public Date fromString(String string) {
 		return java.sql.Date.valueOf( LocalDate.parse( string, FORMATTER ) );
@@ -144,6 +141,7 @@ public class JdbcDateJavaDescriptor extends AbstractBasicJavaDescriptor<Date> im
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Date wrap(X value, WrapperOptions options) {
 		if ( value == null ) {

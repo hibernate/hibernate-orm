@@ -10,7 +10,7 @@ import java.util.Currency;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.CurrencyTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.CurrencyJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
 
 /**
@@ -24,7 +24,7 @@ public class CurrencyType extends BasicTypeImpl<Currency> {
 	public static final CurrencyType INSTANCE = new CurrencyType();
 
 	protected CurrencyType() {
-		super( CurrencyTypeDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
+		super( CurrencyJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -34,6 +34,6 @@ public class CurrencyType extends BasicTypeImpl<Currency> {
 
 	@Override
 	public JdbcLiteralFormatter<Currency> getJdbcLiteralFormatter() {
-		return VarcharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( CurrencyTypeDescriptor.INSTANCE );
+		return VarcharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( CurrencyJavaDescriptor.INSTANCE );
 	}
 }

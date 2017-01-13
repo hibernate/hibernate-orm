@@ -1,15 +1,13 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type.descriptor.java.internal;
 
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
@@ -17,7 +15,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import javax.persistence.TemporalType;
 
-import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
@@ -60,10 +57,12 @@ public class JdbcTimestampJavaDescriptor extends AbstractBasicJavaDescriptor<Dat
 	public JdbcTimestampJavaDescriptor() {
 		super( Date.class, TimestampMutabilityPlan.INSTANCE );
 	}
+
 	@Override
 	public String toString(Date value) {
 		return FORMATTER.format( value.toInstant() );
 	}
+
 	@Override
 	public Date fromString(String string) {
 		return Date.from( ZonedDateTime.parse( string, FORMATTER ).toInstant() );
@@ -150,6 +149,7 @@ public class JdbcTimestampJavaDescriptor extends AbstractBasicJavaDescriptor<Dat
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Date wrap(X value, WrapperOptions options) {
 		if ( value == null ) {

@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.PrimitiveByteArrayJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor;
 
 /**
@@ -23,7 +23,7 @@ public class MaterializedBlobType extends BasicTypeImpl<byte[]> {
 	public static final MaterializedBlobType INSTANCE = new MaterializedBlobType();
 
 	public MaterializedBlobType() {
-		super( PrimitiveByteArrayTypeDescriptor.INSTANCE, BlobTypeDescriptor.DEFAULT );
+		super( PrimitiveByteArrayJavaDescriptor.INSTANCE, BlobTypeDescriptor.DEFAULT );
 	}
 
 	public String getName() {

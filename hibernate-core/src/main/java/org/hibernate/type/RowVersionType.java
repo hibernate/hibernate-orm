@@ -11,7 +11,7 @@ import java.util.Comparator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.PrimitiveByteArrayJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.VarbinaryTypeDescriptor;
 
 /**
@@ -33,7 +33,7 @@ public class RowVersionType
 	}
 
 	public RowVersionType() {
-		super( PrimitiveByteArrayTypeDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE );
+		super( PrimitiveByteArrayJavaDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE );
 	}
 
 	@Override

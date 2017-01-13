@@ -7,9 +7,11 @@
 package org.hibernate.type;
 
 import java.time.OffsetTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.descriptor.java.OffsetTimeJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.OffsetTimeJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
 
 /**
@@ -21,6 +23,8 @@ public class OffsetTimeType extends TemporalTypeImpl<OffsetTime> {
 	 * Singleton access
 	 */
 	public static final OffsetTimeType INSTANCE = new OffsetTimeType();
+
+	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "HH:mm:ss.S xxxxx", Locale.ENGLISH );
 
 	/**
 	 * NOTE: protected access to allow for sub-classing

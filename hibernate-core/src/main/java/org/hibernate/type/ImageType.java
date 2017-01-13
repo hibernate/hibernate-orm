@@ -7,7 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.PrimitiveByteArrayJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.LongVarbinaryTypeDescriptor;
 
 /**
@@ -22,7 +22,7 @@ public class ImageType extends BasicTypeImpl<byte[]> {
 	public static final ImageType INSTANCE = new ImageType();
 
 	protected ImageType() {
-		super( PrimitiveByteArrayTypeDescriptor.INSTANCE, LongVarbinaryTypeDescriptor.INSTANCE );
+		super( PrimitiveByteArrayJavaDescriptor.INSTANCE, LongVarbinaryTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

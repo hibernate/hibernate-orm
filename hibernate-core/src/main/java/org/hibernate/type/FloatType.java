@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.FloatTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.FloatTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#FLOAT FLOAT} and {@link Float}

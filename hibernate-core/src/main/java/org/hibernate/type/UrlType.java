@@ -10,7 +10,7 @@ import java.net.URL;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.UrlTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.UrlJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
 
 /**
@@ -22,7 +22,7 @@ public class UrlType extends BasicTypeImpl<URL> {
 	public static final UrlType INSTANCE = new UrlType();
 
 	public UrlType() {
-		super( UrlTypeDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
+		super( UrlJavaDescriptor.INSTANCE, VarcharTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -32,11 +32,11 @@ public class UrlType extends BasicTypeImpl<URL> {
 
 	@Override
 	public JdbcLiteralFormatter<URL> getJdbcLiteralFormatter() {
-		return VarcharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( UrlTypeDescriptor.INSTANCE );
+		return VarcharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( UrlJavaDescriptor.INSTANCE );
 	}
 
 	@Override
 	public String toString(URL value) {
-		return UrlTypeDescriptor.INSTANCE.toString( value );
+		return UrlJavaDescriptor.INSTANCE.toString( value );
 	}
 }

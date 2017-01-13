@@ -11,7 +11,7 @@ import java.sql.Clob;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.ClobJavaDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link Clob}
@@ -23,7 +23,7 @@ public class ClobType extends BasicTypeImpl<Clob> {
 	public static final ClobType INSTANCE = new ClobType();
 
 	public ClobType() {
-		super( ClobTypeDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor.DEFAULT );
+		super( ClobJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor.DEFAULT );
 	}
 
 	@Override

@@ -12,7 +12,7 @@ import java.util.Date;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.descriptor.java.JdbcTimeTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.JdbcTimeJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
 
 /**
@@ -26,7 +26,7 @@ public class TimeType extends TemporalTypeImpl<Date> {
 	public static final TimeType INSTANCE = new TimeType();
 
 	public TimeType() {
-		super( JdbcTimeTypeDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE );
+		super( JdbcTimeJavaDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -35,7 +35,7 @@ public class TimeType extends TemporalTypeImpl<Date> {
 
 	@Override
 	public JdbcLiteralFormatter<Date> getJdbcLiteralFormatter() {
-		return TimeTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( JdbcTimeTypeDescriptor.INSTANCE );
+		return TimeTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( JdbcTimeJavaDescriptor.INSTANCE );
 	}
 
 	@Override

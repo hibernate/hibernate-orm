@@ -10,7 +10,7 @@ import java.time.Duration;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.DurationJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.DurationJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.BigIntTypeDescriptor;
 
 /**

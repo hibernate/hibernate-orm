@@ -11,7 +11,7 @@ import java.util.Calendar;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.descriptor.java.CalendarTimeTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.CalendarTimeJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
 
 /**
@@ -26,7 +26,7 @@ public class CalendarTimeType extends TemporalTypeImpl<Calendar> {
 	public static final CalendarTimeType INSTANCE = new CalendarTimeType();
 
 	public CalendarTimeType() {
-		super( CalendarTimeTypeDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE );
+		super( CalendarTimeJavaDescriptor.INSTANCE, TimeTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -35,7 +35,7 @@ public class CalendarTimeType extends TemporalTypeImpl<Calendar> {
 
 	@Override
 	public JdbcLiteralFormatter<Calendar> getJdbcLiteralFormatter() {
-		return TimeTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( CalendarTimeTypeDescriptor.INSTANCE );
+		return TimeTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( CalendarTimeJavaDescriptor.INSTANCE );
 	}
 
 	@Override

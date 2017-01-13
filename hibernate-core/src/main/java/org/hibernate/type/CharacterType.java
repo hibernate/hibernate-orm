@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.CharacterTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.CharacterJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.CharTypeDescriptor;
 
 /**
@@ -22,7 +22,7 @@ public class CharacterType extends BasicTypeImpl<Character> {
 	public static final CharacterType INSTANCE = new CharacterType();
 
 	protected CharacterType() {
-		super( CharacterTypeDescriptor.INSTANCE, CharTypeDescriptor.INSTANCE );
+		super( CharacterJavaDescriptor.INSTANCE, CharTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -31,6 +31,6 @@ public class CharacterType extends BasicTypeImpl<Character> {
 
 	@Override
 	public JdbcLiteralFormatter<Character> getJdbcLiteralFormatter() {
-		return CharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( CharacterTypeDescriptor.INSTANCE );
+		return CharTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( CharacterJavaDescriptor.INSTANCE );
 	}
 }

@@ -14,7 +14,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.descriptor.java.SerializableTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.SerializableJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.usertype.DynamicParameterizedType;
 
@@ -30,7 +30,7 @@ public class SerializableToBlobType<T extends Serializable> extends BasicTypeImp
 	private JavaTypeDescriptor javaTypeDescriptor;
 
 	public SerializableToBlobType() {
-		super( new SerializableTypeDescriptor( Serializable.class ), BlobTypeDescriptor.DEFAULT );
+		super( new SerializableJavaDescriptor( Serializable.class ), BlobTypeDescriptor.DEFAULT );
 	}
 
 	@Override
@@ -48,7 +48,7 @@ public class SerializableToBlobType<T extends Serializable> extends BasicTypeImp
 	public void setParameterValues(Properties parameters) {
 		ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
 		if ( reader != null ) {
-			javaTypeDescriptor = new SerializableTypeDescriptor<T>( reader.getReturnedClass() );
+			javaTypeDescriptor = new SerializableJavaDescriptor<T>( reader.getReturnedClass() );
 		}
 		else {
 			String className = parameters.getProperty( CLASS_NAME );
@@ -56,7 +56,7 @@ public class SerializableToBlobType<T extends Serializable> extends BasicTypeImp
 				throw new MappingException( "No class name defined for type: " + SerializableToBlobType.class.getName() );
 			}
 			try {
-				javaTypeDescriptor = new SerializableTypeDescriptor<T>( ReflectHelper.classForName( className ) );
+				javaTypeDescriptor = new SerializableJavaDescriptor<T>( ReflectHelper.classForName( className ) );
 			}
 			catch ( ClassNotFoundException e ) {
 				throw new MappingException( "Unable to load class from " + CLASS_NAME + " parameter", e );

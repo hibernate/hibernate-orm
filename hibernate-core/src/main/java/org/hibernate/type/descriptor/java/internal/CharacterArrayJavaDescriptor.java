@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type.descriptor.java.internal;
 
@@ -31,10 +31,12 @@ public class CharacterArrayJavaDescriptor extends AbstractBasicJavaDescriptor<Ch
 	public CharacterArrayJavaDescriptor() {
 		super( Character[].class, ArrayMutabilityPlan.INSTANCE );
 	}
+
 	@Override
 	public String toString(Character[] value) {
 		return new String( unwrapChars( value ) );
 	}
+
 	@Override
 	public Character[] fromString(String string) {
 		return wrapChars( string.toCharArray() );
@@ -83,6 +85,7 @@ public class CharacterArrayJavaDescriptor extends AbstractBasicJavaDescriptor<Ch
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Character[] wrap(X value, WrapperOptions options) {
 		if ( value == null ) {

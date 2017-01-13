@@ -17,7 +17,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
-import org.hibernate.type.spi.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.StringJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.VarcharTypeDescriptor;
@@ -31,7 +31,7 @@ import static org.junit.Assert.assertNull;
  * @author Steve Ebersole
  */
 public class StringValueMappingTest extends BaseUnitTestCase {
-	private final StringTypeDescriptor stringJavaDescriptor = new StringTypeDescriptor();
+	private final StringJavaDescriptor stringJavaDescriptor = new StringJavaDescriptor();
 
 	private final VarcharTypeDescriptor varcharSqlDescriptor = new VarcharTypeDescriptor();
 	private final ClobTypeDescriptor clobSqlDescriptor = ClobTypeDescriptor.DEFAULT;

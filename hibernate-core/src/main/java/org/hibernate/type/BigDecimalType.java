@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.BigDecimalTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.BigDecimalJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.NumericTypeDescriptor;
 
 /**
@@ -24,7 +24,7 @@ public class BigDecimalType
 	public static final BigDecimalType INSTANCE = new BigDecimalType();
 
 	public BigDecimalType() {
-		super( BigDecimalTypeDescriptor.INSTANCE, NumericTypeDescriptor.INSTANCE );
+		super( BigDecimalJavaDescriptor.INSTANCE, NumericTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -34,6 +34,6 @@ public class BigDecimalType
 
 	@Override
 	public JdbcLiteralFormatter<BigDecimal> getJdbcLiteralFormatter() {
-		return NumericTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( BigDecimalTypeDescriptor.INSTANCE );
+		return NumericTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( BigDecimalJavaDescriptor.INSTANCE );
 	}
 }

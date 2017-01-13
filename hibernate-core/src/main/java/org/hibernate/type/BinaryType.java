@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.PrimitiveByteArrayJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.VarbinaryTypeDescriptor;
 
 /**
@@ -33,7 +33,7 @@ public class BinaryType extends BasicTypeImpl<byte[]> implements VersionSupport<
 	}
 
 	public BinaryType() {
-		super( PrimitiveByteArrayTypeDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE );
+		super( PrimitiveByteArrayJavaDescriptor.INSTANCE, VarbinaryTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -73,7 +73,7 @@ public class BinaryType extends BasicTypeImpl<byte[]> implements VersionSupport<
 	@Override
 	@Deprecated
 	public Comparator<byte[]> getComparator() {
-		return PrimitiveByteArrayTypeDescriptor.INSTANCE.getComparator();
+		return PrimitiveByteArrayJavaDescriptor.INSTANCE.getComparator();
 	}
 
 	@Override

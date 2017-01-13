@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.BooleanJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.CharTypeDescriptor;
 
 /**
@@ -22,7 +22,7 @@ public class TrueFalseType extends BasicTypeImpl<Boolean> {
 	public static final TrueFalseType INSTANCE = new TrueFalseType();
 
 	public TrueFalseType() {
-		super( new BooleanTypeDescriptor( 'T', 'F' ), CharTypeDescriptor.INSTANCE );
+		super( new BooleanJavaDescriptor( 'T', 'F' ), CharTypeDescriptor.INSTANCE );
 	}
 
 	@Override

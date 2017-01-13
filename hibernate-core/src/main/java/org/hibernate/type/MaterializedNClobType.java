@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.StringJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor;
 
 /**
@@ -22,7 +22,7 @@ public class MaterializedNClobType extends BasicTypeImpl<String> {
 	public static final MaterializedNClobType INSTANCE = new MaterializedNClobType();
 
 	public MaterializedNClobType() {
-		super( StringTypeDescriptor.INSTANCE, NClobTypeDescriptor.DEFAULT );
+		super( StringJavaDescriptor.INSTANCE, NClobTypeDescriptor.DEFAULT );
 	}
 
 	public String getName() {

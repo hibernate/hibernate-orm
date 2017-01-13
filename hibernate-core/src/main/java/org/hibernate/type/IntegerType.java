@@ -10,7 +10,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.IntegerTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.IntegerJavaDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#INTEGER INTEGER} and @link Integer}
@@ -26,7 +26,7 @@ public class IntegerType extends BasicTypeImpl<Integer>
 	public static final Integer ZERO = 0;
 
 	public IntegerType() {
-		super( IntegerTypeDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.IntegerTypeDescriptor.INSTANCE );
+		super( IntegerJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.IntegerTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class IntegerType extends BasicTypeImpl<Integer>
 	@Override
 	public JdbcLiteralFormatter<Integer> getJdbcLiteralFormatter() {
 		return org.hibernate.type.spi.descriptor.sql.IntegerTypeDescriptor.INSTANCE.getJdbcLiteralFormatter(
-				IntegerTypeDescriptor.INSTANCE
+				IntegerJavaDescriptor.INSTANCE
 		);
 	}
 }

@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.ByteTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.ByteJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TinyIntTypeDescriptor;
 
 /**
@@ -30,7 +30,7 @@ public class ByteType
 	private static final Byte ZERO = (byte) 0;
 
 	protected ByteType() {
-		super( ByteTypeDescriptor.INSTANCE, TinyIntTypeDescriptor.INSTANCE );
+		super( ByteJavaDescriptor.INSTANCE, TinyIntTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -40,7 +40,7 @@ public class ByteType
 
 	@Override
 	public JdbcLiteralFormatter<Byte> getJdbcLiteralFormatter() {
-		return TinyIntTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( ByteTypeDescriptor.INSTANCE );
+		return TinyIntTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( ByteJavaDescriptor.INSTANCE );
 	}
 
 	@Override

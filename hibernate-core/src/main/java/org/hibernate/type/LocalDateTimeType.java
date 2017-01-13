@@ -17,7 +17,7 @@ import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.VersionSupport;
-import org.hibernate.type.spi.descriptor.java.LocalDateTimeJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.LocalDateTimeJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
 /**

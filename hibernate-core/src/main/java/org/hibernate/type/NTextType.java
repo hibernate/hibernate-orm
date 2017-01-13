@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.StringJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.LongNVarcharTypeDescriptor;
 
 /**
@@ -22,7 +22,7 @@ public class NTextType extends BasicTypeImpl<String> {
 	public static final NTextType INSTANCE = new NTextType();
 
 	public NTextType() {
-		super( StringTypeDescriptor.INSTANCE, LongNVarcharTypeDescriptor.INSTANCE );
+		super( StringJavaDescriptor.INSTANCE, LongNVarcharTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() { 

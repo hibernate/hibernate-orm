@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.descriptor.java.UUIDTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.UUIDJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.BasicBinder;
 import org.hibernate.type.spi.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -36,7 +36,7 @@ public class PostgresUUIDType extends BasicTypeImpl<UUID> {
 	public static final PostgresUUIDType INSTANCE = new PostgresUUIDType();
 
 	public PostgresUUIDType() {
-		super( UUIDTypeDescriptor.INSTANCE, PostgresUUIDSqlTypeDescriptor.INSTANCE );
+		super( UUIDJavaDescriptor.INSTANCE, PostgresUUIDSqlTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -58,7 +58,7 @@ public class PostgresUUIDType extends BasicTypeImpl<UUID> {
 
 		@Override
 		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return UUIDTypeDescriptor.INSTANCE;
+			return UUIDJavaDescriptor.INSTANCE;
 		}
 
 		@Override

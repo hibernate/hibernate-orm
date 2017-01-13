@@ -10,7 +10,7 @@ import java.math.BigInteger;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.BigIntegerTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.BigIntegerJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.NumericTypeDescriptor;
 
 /**
@@ -25,7 +25,7 @@ public class BigIntegerType
 	public static final BigIntegerType INSTANCE = new BigIntegerType();
 
 	public BigIntegerType() {
-		super( BigIntegerTypeDescriptor.INSTANCE, NumericTypeDescriptor.INSTANCE );
+		super( BigIntegerJavaDescriptor.INSTANCE, NumericTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -35,6 +35,6 @@ public class BigIntegerType
 
 	@Override
 	public JdbcLiteralFormatter<BigInteger> getJdbcLiteralFormatter() {
-		return NumericTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( BigIntegerTypeDescriptor.INSTANCE );
+		return NumericTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( BigIntegerJavaDescriptor.INSTANCE );
 	}
 }

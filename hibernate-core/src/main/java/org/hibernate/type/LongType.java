@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.LongTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.LongJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.BigIntTypeDescriptor;
 
 /**
@@ -30,7 +30,7 @@ public class LongType
 	private static final Long ZERO = (long) 0;
 
 	public LongType() {
-		super( LongTypeDescriptor.INSTANCE, BigIntTypeDescriptor.INSTANCE );
+		super( LongJavaDescriptor.INSTANCE, BigIntTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -60,6 +60,6 @@ public class LongType
 
 	@Override
 	public JdbcLiteralFormatter<Long> getJdbcLiteralFormatter() {
-		return BigIntTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( LongTypeDescriptor.INSTANCE );
+		return BigIntTypeDescriptor.INSTANCE.getJdbcLiteralFormatter( LongJavaDescriptor.INSTANCE );
 	}
 }

@@ -7,12 +7,14 @@
 package org.hibernate.type;
 
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
+import java.util.Locale;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.VersionSupport;
-import org.hibernate.type.spi.descriptor.java.OffsetDateTimeJavaDescriptor;
+import org.hibernate.type.descriptor.java.internal.OffsetDateTimeJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 
 /**
@@ -26,6 +28,8 @@ public class OffsetDateTimeType
 	 * Singleton access
 	 */
 	public static final OffsetDateTimeType INSTANCE = new OffsetDateTimeType();
+
+	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss.S xxxxx", Locale.ENGLISH );
 
 	/**
 	 * NOTE: protected access to allow for sub-classing

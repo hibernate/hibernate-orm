@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.SerializableTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.SerializableJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.VarbinaryTypeDescriptor;
 
 /**
@@ -33,7 +33,7 @@ public class SerializableType<T extends Serializable> extends BasicTypeImpl<T> {
 	private final Class<T> serializableClass;
 
 	public SerializableType(Class<T> serializableClass) {
-		super( new SerializableTypeDescriptor<T>( serializableClass ), VarbinaryTypeDescriptor.INSTANCE );
+		super( new SerializableJavaDescriptor<T>( serializableClass ), VarbinaryTypeDescriptor.INSTANCE );
 		this.serializableClass = serializableClass;
 	}
 

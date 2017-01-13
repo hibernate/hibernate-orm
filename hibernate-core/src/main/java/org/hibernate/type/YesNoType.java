@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.BooleanJavaDescriptor;
 import org.hibernate.type.spi.descriptor.sql.CharTypeDescriptor;
 
 /**
@@ -22,7 +22,7 @@ public class YesNoType extends BasicTypeImpl<Boolean> {
 	public static final YesNoType INSTANCE = new YesNoType();
 
 	protected YesNoType() {
-		super( BooleanTypeDescriptor.INSTANCE, CharTypeDescriptor.INSTANCE );
+		super( BooleanJavaDescriptor.INSTANCE, CharTypeDescriptor.INSTANCE );
 	}
 
 	@Override

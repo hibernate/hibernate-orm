@@ -11,7 +11,7 @@ import java.sql.NClob;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
-import org.hibernate.type.spi.descriptor.java.NClobTypeDescriptor;
+import org.hibernate.type.descriptor.java.internal.NClobJavaDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#NCLOB NCLOB} and {@link java.sql.NClob}
@@ -23,7 +23,7 @@ public class NClobType extends BasicTypeImpl<NClob> {
 	public static final NClobType INSTANCE = new NClobType();
 
 	protected NClobType() {
-		super( NClobTypeDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor.DEFAULT );
+		super( NClobJavaDescriptor.INSTANCE, org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor.DEFAULT );
 	}
 
 	@Override

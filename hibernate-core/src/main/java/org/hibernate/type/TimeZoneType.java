@@ -9,6 +9,7 @@ package org.hibernate.type;
 import java.util.TimeZone;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.internal.TimeZoneJavaDescriptor;
@@ -38,7 +39,7 @@ public class TimeZoneType extends BasicTypeImpl<TimeZone> implements JdbcLiteral
 	}
 
 	@Override
-	public String toJdbcLiteral(TimeZone value, Dialect dialect) {
-		return StringType.INSTANCE.toJdbcLiteral( value.getID(), dialect );
+	public String toJdbcLiteral(TimeZone value, Dialect dialect, SharedSessionContractImplementor session) {
+		return StringType.INSTANCE.getJdbcLiteralFormatter().toJdbcLiteral( value.getID(), dialect, session );
 	}
 }

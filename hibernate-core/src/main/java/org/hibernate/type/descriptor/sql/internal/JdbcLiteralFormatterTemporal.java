@@ -11,8 +11,8 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.internal.DateTimeUtils;
 import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
-import org.hibernate.type.spi.DateTimeUtils;
 
 /**
  * @author Steve Ebersole

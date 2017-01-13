@@ -7,7 +7,6 @@
 package org.hibernate.type.descriptor.java.internal;
 
 import java.sql.Types;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
@@ -24,7 +23,6 @@ import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.TemporalSqlDescriptor;
-import org.hibernate.type.spi.DateTimeUtils;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

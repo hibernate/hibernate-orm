@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.UUID;
 
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
@@ -57,8 +58,9 @@ public class PostgresUUIDType extends BasicTypeImpl<UUID> {
 		}
 
 		@Override
-		public JavaTypeDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return UUIDJavaDescriptor.INSTANCE;
+		@SuppressWarnings("unchecked")
+		public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<T>) UUIDJavaDescriptor.INSTANCE;
 		}
 
 		@Override

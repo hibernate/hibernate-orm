@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.sql.spi.BooleanSqlDescriptor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
@@ -42,7 +43,7 @@ public class BooleanType
 	}
 
 	@Override
-	public String toJdbcLiteral(Boolean value, Dialect dialect) {
+	public String toJdbcLiteral(Boolean value, Dialect dialect, SharedSessionContractImplementor session) {
 		// We could also defer to the Dialect here, as in:
 		//
 		// return dialect.toBooleanValueString( value == null || value );

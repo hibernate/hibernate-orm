@@ -28,7 +28,7 @@ public abstract class AbstractBasicTypeImpl<T> implements BasicType<T> {
 	@Override
 	public String getTypeName() {
 		// todo : improve this to account for converters, etc
-		return getJavaTypeDescriptor().getJavaTypeClass().getName();
+		return getJavaTypeDescriptor().getTypeName();
 	}
 
 	@Override

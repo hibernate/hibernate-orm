@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractBasicJavaDescriptor<T> {
-	public JavaTypeDescriptorBasicAdaptorImpl(Class<T> type) {
+	public JavaTypeDescriptorBasicAdaptor(Class<T> type) {
 		super( type );
 	}
 

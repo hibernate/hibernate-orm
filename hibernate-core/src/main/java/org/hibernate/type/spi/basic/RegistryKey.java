@@ -90,7 +90,7 @@ public class RegistryKey {
 			}
 		}
 		return new RegistryKey(
-				javaTypeDescriptor.getJavaTypeClass(),
+				javaTypeDescriptor.getJavaType(),
 				sqlTypeDescriptor.getSqlType(),
 				extraClassFromOptional( mutabilityPlan ),
 				extraClassFromOptional( comparator ),

@@ -144,7 +144,7 @@ include::{extrasdir}/id/IdClass1.java[]
 ----
 ====
 
-Non-aggregated composite identifiers can also contain ManyToOne attributes as we saw with aggregated ones (still non-portably)
+Non-aggregated composite identifiers can also contain ManyToOne attributes as we saw with aggregated ones (still non-portably).
 
 .IdClass with ManyToOne
 ====
@@ -201,7 +201,7 @@ include::{extrasdir}/id/CompositeIdAssociationsQuery.java[]
 
 [NOTE]
 ====
-For discussion of generated values for non-identifier attributes, see <<chapters/domain/basic_types.adoc#mapping-generated,Generated properties>>
+For discussion of generated values for non-identifier attributes, see <<chapters/domain/basic_types.adoc#mapping-generated,Generated properties>>.
 ====
 
 Hibernate supports identifier value generation across a number of different types.
@@ -249,10 +249,10 @@ The `IdGeneratorStrategyInterpreter` has two implementations:
 
 For implementing database sequence-based identifier value generation Hibernate makes use of its `org.hibernate.id.enhanced.SequenceStyleGenerator` id generator.
 It is important to note that SequenceStyleGenerator is capable of working against databases that do not support sequences by switching to a table as the underlying backing.
-This gives Hibernate a huge degree of portability across databases while still maintaining consistent id generation behavior (versus say choosing between sequence and IDENTITY).
+This gives Hibernate a huge degree of portability across databases while still maintaining consistent id generation behavior (versus say choosing between SEQUENCE and IDENTITY).
 This backing storage is completely transparent to the user.
 
-The preferred (and portable) way to configure this generator is using the JPA-defined javax.persistence.SequenceGenerator annotation.
+The preferred (and portable) way to configure this generator is using the JPA-defined `javax.persistence.SequenceGenerator` annotation.
 
 The simplest form is to simply request sequence generation; Hibernate will use a single, implicitly-named sequence (`hibernate_sequence`) for all such unnamed definitions.
 
@@ -264,7 +264,7 @@ include::{extrasdir}/id/UnnamedSequence.java[]
 ----
 ====
 
-Or a specifically named sequence can be requested
+Or a specifically named sequence can be requested.
 
 .Named sequence
 ====
@@ -274,7 +274,7 @@ include::{extrasdir}/id/NamedSequence.java[]
 ----
 ====
 
-Use javax.persistence.SequenceGenerator to specify additional
+Use `javax.persistence.SequenceGenerator` to specify additional
 configuration.
 
 .Configured sequence
@@ -294,7 +294,7 @@ IdentityGenerator understands 3 different ways that the INSERT-generated value m
 
 * If Hibernate believes the JDBC environment supports `java.sql.Statement#getGeneratedKeys`, then that approach will be used for extracting the IDENTITY generated keys.
 * Otherwise, if `Dialect#supportsInsertSelectIdentity` reports true, Hibernate will use the Dialect specific INSERT+SELECT statement syntax.
-* Otherwise, Hibernate will expect that the database supports some form of asking for the most recently inserted IDENTITY value via a separate SQL command as indicated by `Dialect#getIdentitySelectString`
+* Otherwise, Hibernate will expect that the database supports some form of asking for the most recently inserted IDENTITY value via a separate SQL command as indicated by `Dialect#getIdentitySelectString`.
 
 [IMPORTANT]
 ====
@@ -356,7 +356,7 @@ include::{extrasdir}/id/UUIDRandom.java[]
 ====
 
 To specify an alternative generation strategy, we'd have to define some configuration via `@GenericGenerator`.
-Here we choose the RFC 4122 version 1 compliant strategy named `org.hibernate.id.uuid.CustomVersionOneStrategy`
+Here we choose the RFC 4122 version 1 compliant strategy named `org.hibernate.id.uuid.CustomVersionOneStrategy`.
 
 .Implicitly using the random UUID strategy
 ====
@@ -402,9 +402,9 @@ Applications can also implement and use their own optimizer strategies, as defin
 ====
 
 [[identifiers-generators-GenericGenerator]]
-==== Using @GenericGenerator
+==== Using `@GenericGenerator`
 
-@GenericGenerator allows integration of any Hibernate `org.hibernate.id.IdentifierGenerator` implementation, including any of the specific ones discussed here and any custom ones.
+`@GenericGenerator` allows integration of any Hibernate `org.hibernate.id.IdentifierGenerator` implementation, including any of the specific ones discussed here and any custom ones.
 
 To make use of the pooled or pooled-lo optimizers,
 the entity mapping must use the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenericGenerator.html[`@GenericGenerator`] annotation:

@@ -79,7 +79,7 @@ dependencies {
     testCompile( 'joda-time:joda-time:2.3' )
 //    testCompile( "org.jboss.weld:weld-core:2.3.4.Final" )
 //    testCompile( "org.jboss.arquillian.container:arquillian-weld-ee-embedded-1.1:1.0.0.CR9" )
-    compile( "javax.enterprise:cdi-api:${cdiVersion}" ) {
+    testCompile( "javax.enterprise:cdi-api:${cdiVersion}" ) {
         // we need to force it to make sure we influence the one coming from arquillian
         force=true
     }

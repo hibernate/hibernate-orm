@@ -427,7 +427,7 @@ include::{sourcedir}/BidirectionalSetTest.java[tags=collections-bidirectional-se
 ==== Sorted sets
 
 For sorted sets, the entity mapping must use the `SortedSet` interface instead.
-According to the `SortedSet` contract, all elements must implement the comparable interface and therefore provide the sorting logic.
+According to the `SortedSet` contract, all elements must implement the `Comparable` interface and therefore provide the sorting logic.
 
 [[collections-unidirectional-sorted-set]]
 ===== Unidirectional sorted sets
@@ -544,7 +544,7 @@ include::{extrasdir}/collections-map-unidirectional-example.sql[]
 [[collections-map-bidirectional]]
 ===== Bidirectional maps
 
-Like most bidirectional associations, this relationship is owned by the child-side while the parent is the inverse side abd can propagate its own state transitions to the child entities.
+Like most bidirectional associations, this relationship is owned by the child-side while the parent is the inverse side and can propagate its own state transitions to the child entities.
 In the following example, you can see that `@MapKeyEnumerated` was used so that the `Phone` enumeration becomes the map key.
 
 [[collections-map-bidirectional-example]]
@@ -630,7 +630,7 @@ See the Hibernate Integrations Guide for more details on developing custom value
 [[collections-custom]]
 ==== Custom collection types
 
-If you wish to use other collection types than `List`, `Set` or ``Map`, like `Queue` for instance,
+If you wish to use other collection types than `List`, `Set` or `Map`, like `Queue` for instance,
 you have to use a custom collection type, as illustrated by the following example:
 
 [[collections-custom-collection-mapping-example]]

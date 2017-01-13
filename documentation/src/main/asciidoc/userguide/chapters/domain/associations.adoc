@@ -362,7 +362,7 @@ include::{extrasdir}/associations-many-to-many-bidirectional-with-link-entity-ex
 ----
 ====
 
-Both the `Person` and the `Address` have a` mappedBy` `@OneToMany` side, while the `PersonAddress` owns the `person` and the `address` `@ManyToOne` associations.
+Both the `Person` and the `Address` have a `mappedBy` `@OneToMany` side, while the `PersonAddress` owns the `person` and the `address` `@ManyToOne` associations.
 Because this mapping is formed out of two bidirectional associations, the helper methods are even more relevant.
 
 [NOTE]

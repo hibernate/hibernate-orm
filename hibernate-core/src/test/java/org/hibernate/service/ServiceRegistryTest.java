@@ -18,16 +18,19 @@ import org.hibernate.service.spi.Startable;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-@TestForIssue(jiraKey = "HHH-10427")
 public class ServiceRegistryTest {
 	private final ServiceRegistry registry = buildRegistry();
 	private final static int NUMBER_OF_THREADS = 100;
 	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-10427")
 	public void testOnlyOneInstanceOfTheServiceShouldBeCreated() throws InterruptedException, ExecutionException {
 
 		Future<SlowInitializationService>[] serviceIdentities = execute();
@@ -48,9 +51,41 @@ public class ServiceRegistryTest {
 
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-11395")
+	public void testGetService() {
+		assertThat(
+				registry.getService( SlowInitializationService.class ),
+				instanceOf( SlowInitializationService.class )
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11395")
+	public void testGetServiceReturnsNullWhenTheServiceInitiatorInitiateServiceReturnsNull() {
+		assertNull( registry.getService( FakeService.class ) );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11395")
+	public void testRequireService() {
+		assertThat(
+				registry.requireService( SlowInitializationService.class ),
+				instanceOf( SlowInitializationService.class )
+		);
+	}
+
+	@Test(expected = NullServiceException.class)
+	@TestForIssue(jiraKey = "HHH-11395")
+	public void testRequireServiceThrowsAnExceptionWhenTheServiceInitiatorInitiateServiceReturnsNull() {
+		assertNull( registry.requireService( FakeService.class ) );
+	}
+
 	private ServiceRegistry buildRegistry() {
 		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder();
-		return standardServiceRegistryBuilder.addInitiator( new SlowServiceInitiator() ).build();
+		return standardServiceRegistryBuilder.addInitiator( new SlowServiceInitiator() )
+				.addInitiator( new NullServiceInitiator() )
+				.build();
 	}
 
 	private FutureTask<SlowInitializationService>[] execute()
@@ -151,6 +186,37 @@ public class ServiceRegistryTest {
 		@Override
 		public SlowInitializationService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 			return new SlowInitializationService();
+		}
+	}
+
+	public class NullServiceInitiator implements StandardServiceInitiator<FakeService> {
+
+		@Override
+		public Class<FakeService> getServiceInitiated() {
+			return FakeService.class;
+		}
+
+		@Override
+		public FakeService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+			return null;
+		}
+	}
+
+	public class FakeService implements ServiceRegistryAwareService, Configurable, Startable, Service {
+
+		@Override
+		public void start() {
+
+		}
+
+		@Override
+		public void configure(Map configurationValues) {
+
+		}
+
+		@Override
+		public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+
 		}
 	}
 

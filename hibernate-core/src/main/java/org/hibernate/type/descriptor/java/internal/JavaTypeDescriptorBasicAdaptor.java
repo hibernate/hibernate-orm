@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type.internal.descriptor.java;
+package org.hibernate.type.descriptor.java.internal;
 
 import java.util.Comparator;
 
@@ -15,23 +15,23 @@ import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
- * AbstractTypeDescriptorBasicImpl adaptor for cases where we do not know a
- * proper JavaTypeDescriptor for a given Java type.
+ * AbstractBasicTypeDescriptor adapter for cases where we do not know a proper JavaTypeDescriptor
+ * for a given Java type.
  *
  * @author Steve Ebersole
  */
-public class JavaTypeDescriptorBasicAdaptorImpl<T> extends AbstractBasicJavaDescriptor<T> {
+public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractBasicJavaDescriptor<T> {
 	public JavaTypeDescriptorBasicAdaptorImpl(Class<T> type) {
 		super( type );
 	}
 
-	protected JavaTypeDescriptorBasicAdaptorImpl(
+	protected JavaTypeDescriptorBasicAdaptor(
 			Class<T> type,
 			MutabilityPlan<T> mutabilityPlan) {
 		super( type, mutabilityPlan );
 	}
 
-	public JavaTypeDescriptorBasicAdaptorImpl(
+	public JavaTypeDescriptorBasicAdaptor(
 			Class<T> type,
 			MutabilityPlan<T> mutabilityPlan,
 			Comparator comparator) {
@@ -41,7 +41,7 @@ public class JavaTypeDescriptorBasicAdaptorImpl<T> extends AbstractBasicJavaDesc
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
 		throw new UnsupportedOperationException(
-				"Recommended SqlTypeDescriptor not known for this Java type : " + getJavaTypeClass().getName()
+				"Recommended SqlTypeDescriptor not known for this Java type : " + getJavaType().getName()
 		);
 	}
 
@@ -53,21 +53,21 @@ public class JavaTypeDescriptorBasicAdaptorImpl<T> extends AbstractBasicJavaDesc
 	@Override
 	public T fromString(String string) {
 		throw new UnsupportedOperationException(
-				"Conversion from String strategy not known for this Java type : " + getJavaTypeClass().getName()
+				"Conversion from String strategy not known for this Java type : " + getJavaType().getName()
 		);
 	}
 
 	@Override
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		throw new UnsupportedOperationException(
-				"Unwrap strategy not known for this Java type : " + getJavaTypeClass().getName()
+				"Unwrap strategy not known for this Java type : " + getJavaType().getName()
 		);
 	}
 
 	@Override
 	public <X> T wrap(X value, WrapperOptions options) {
 		throw new UnsupportedOperationException(
-				"Wrap strategy not known for this Java type : " + getJavaTypeClass().getName()
+				"Wrap strategy not known for this Java type : " + getJavaType().getName()
 		);
 	}
 }

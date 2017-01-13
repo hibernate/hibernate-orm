@@ -209,8 +209,10 @@ public abstract class AbstractServiceRegistryImpl
 			if ( service == null ) {
 				service = initializeService( serviceBinding );
 			}
-			// add the service only after it is completely initialized
-			initializedServiceByRole.put( serviceRole, service );
+			if ( service != null ) {
+				// add the service only after it is completely initialized
+				initializedServiceByRole.put( serviceRole, service );
+			}
 			return service;
 		}
 	}
@@ -257,7 +259,9 @@ public abstract class AbstractServiceRegistryImpl
 			R service = serviceBinding.getLifecycleOwner().initiateService( serviceInitiator );
 			// IMPL NOTE : the register call here is important to avoid potential stack overflow issues
 			//		from recursive calls through #configureService
-			registerService( serviceBinding, service );
+			if ( service != null ) {
+				registerService( serviceBinding, service );
+			}
 			return service;
 		}
 		catch ( ServiceException e ) {

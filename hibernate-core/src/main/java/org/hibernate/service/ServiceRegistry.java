@@ -17,7 +17,7 @@ public interface ServiceRegistry {
 	 * 
 	 * @return The parent registry.  May be null.
 	 */
-	public ServiceRegistry getParentServiceRegistry();
+	ServiceRegistry getParentServiceRegistry();
 
 	/**
 	 * Retrieve a service by role.  If service is not found, but a {@link org.hibernate.service.spi.ServiceInitiator} is
@@ -28,9 +28,32 @@ public interface ServiceRegistry {
 	 * @param serviceRole The service role
 	 * @param <R> The service role type
 	 *
-	 * @return The requested service.
+	 * @return The requested service or null if the service was not found.
 	 *
 	 * @throws UnknownServiceException Indicates the service was not known.
 	 */
-	public <R extends Service> R getService(Class<R> serviceRole);
+	<R extends Service> R getService(Class<R> serviceRole);
+
+	/**
+	 * Retrieve a service by role.  If service is not found, but a {@link org.hibernate.service.spi.ServiceInitiator} is
+	 * registered for this service role, the service will be initialized and returned.
+	 * <p/>
+	 * NOTE: We cannot return {@code <R extends Service<T>>} here because the service might come from the parent...
+	 *
+	 * @param serviceRole The service role
+	 * @param <R> The service role type
+	 *
+	 * @return The requested service .
+	 *
+	 * @throws UnknownServiceException Indicates the service was not known.
+	 * @throws NullServiceException Indicates the service was null.
+	 */
+	default <R extends Service> R requireService(Class<R> serviceRole) {
+		final R service = getService( serviceRole );
+		if ( service == null ) {
+			throw new NullServiceException( serviceRole );
+		}
+		return service;
+	}
+
 }

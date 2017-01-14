@@ -7,6 +7,7 @@
 package org.hibernate.type.spi;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * A formatter object for creating JDBC literals of a given type.
@@ -20,5 +21,5 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public interface JdbcLiteralFormatter<T> {
-	String toJdbcLiteral(T value, Dialect dialect);
+	String toJdbcLiteral(T value, Dialect dialect, SharedSessionContractImplementor session);
 }

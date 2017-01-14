@@ -21,6 +21,10 @@ import java.util.stream.Collector;
  * @author Steve Ebersole
  */
 public class GenericArrayCollector<T> implements Collector<T, List<T>, T[]> {
+	public static <T> GenericArrayCollector<T> forType(Class<T> type) {
+		return new GenericArrayCollector<T>( type );
+	}
+
 	private final Class<T> collectedType;
 
 	public GenericArrayCollector(Class<T> collectedType) {

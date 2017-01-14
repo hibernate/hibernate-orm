@@ -14,7 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Gavin King
@@ -29,7 +29,7 @@ public class MapProxyFactory implements ProxyFactory {
 			final Set interfaces,
 			final Method getIdentifierMethod,
 			final Method setIdentifierMethod,
-			CompositeType componentIdType) throws HibernateException {
+			EmbeddedType componentIdType) throws HibernateException {
 		this.entityName = entityName;
 
 	}

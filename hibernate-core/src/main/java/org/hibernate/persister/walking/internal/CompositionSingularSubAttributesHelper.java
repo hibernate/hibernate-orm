@@ -33,7 +33,7 @@ import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.spi.AssociationType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -60,7 +60,7 @@ public final class CompositionSingularSubAttributesHelper {
 		return getSingularSubAttributes(
 				entityPersister,
 				entityPersister,
-				(CompositeType) entityPersister.getIdentifierType(),
+				(EmbeddedType) entityPersister.getIdentifierType(),
 				entityPersister.getTableName(),
 				entityPersister.getRootTableIdentifierColumnNames()
 		);
@@ -78,7 +78,7 @@ public final class CompositionSingularSubAttributesHelper {
 		return getSingularSubAttributes(
 				compositionElementDefinition.getSource(),
 				(OuterJoinLoadable) collectionPersister.getOwnerEntityPersister(),
-				(CompositeType) collectionPersister.getElementType(),
+				(EmbeddedType) collectionPersister.getElementType(),
 				collectionPersister.getTableName(),
 				collectionPersister.getElementColumnNames()
 		);
@@ -90,7 +90,7 @@ public final class CompositionSingularSubAttributesHelper {
 		return getSingularSubAttributes(
 				compositionElementDefinition.getSource(),
 				(OuterJoinLoadable) collectionPersister.getOwnerEntityPersister(),
-				(CompositeType) collectionPersister.getIndexType(),
+				(EmbeddedType) collectionPersister.getIndexType(),
 				collectionPersister.getTableName(),
 				collectionPersister.toColumns( "index" )
 		);
@@ -99,7 +99,7 @@ public final class CompositionSingularSubAttributesHelper {
 	private static Iterable<AttributeDefinition> getSingularSubAttributes(
 			final AttributeSource source,
 			final OuterJoinLoadable ownerEntityPersister,
-			final CompositeType compositeType,
+			final EmbeddedType compositeType,
 			final String lhsTableName,
 			final String[] lhsColumns) {
 		return new Iterable<AttributeDefinition>() {
@@ -223,8 +223,8 @@ public final class CompositionSingularSubAttributesHelper {
 								}
 
 								@Override
-								public CompositeType getType() {
-									return (CompositeType) type;
+								public EmbeddedType getType() {
+									return (EmbeddedType) type;
 								}
 
 								@Override
@@ -242,7 +242,7 @@ public final class CompositionSingularSubAttributesHelper {
 									return CompositionSingularSubAttributesHelper.getSingularSubAttributes(
 											this,
 											ownerEntityPersister,
-											(CompositeType) type,
+											(EmbeddedType) type,
 											lhsTableName,
 											subAttributeLhsColumns
 									);

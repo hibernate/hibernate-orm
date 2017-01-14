@@ -17,10 +17,12 @@ import org.hibernate.type.spi.Type;
  */
 @Incubating
 public class NamedParameterDescriptor implements QueryParameter {
+
+	// todo : i think this is no longer needed - its only use is from HQLQueryPlan which is going away
+
 	private final String name;
 	private Type expectedType;
 	private final int[] sourceLocations;
-	private final boolean jpaStyle;
 
 	/**
 	 * Constructs a NamedParameterDescriptor
@@ -28,13 +30,11 @@ public class NamedParameterDescriptor implements QueryParameter {
 	 * @param name The name of the parameter
 	 * @param expectedType The expected type of the parameter, according to the translator
 	 * @param sourceLocations The locations of the named parameters (aye aye aye)
-	 * @param jpaStyle Was the parameter a JPA style "named parameter"?
 	 */
-	public NamedParameterDescriptor(String name, Type expectedType, int[] sourceLocations, boolean jpaStyle) {
+	public NamedParameterDescriptor(String name, Type expectedType, int[] sourceLocations) {
 		this.name = name;
 		this.expectedType = expectedType;
 		this.sourceLocations = sourceLocations;
-		this.jpaStyle = jpaStyle;
 	}
 
 	public String getName() {
@@ -51,21 +51,12 @@ public class NamedParameterDescriptor implements QueryParameter {
 		return expectedType == null ? null : expectedType.getJavaTypeDescriptor().getJavaType();
 	}
 
-	@Override
-	public boolean isJpaPositionalParameter() {
-		return isJpaStyle();
-	}
-
 	public Type getExpectedType() {
 		return expectedType;
 	}
 
 	public int[] getSourceLocations() {
 		return sourceLocations;
-	}
-
-	public boolean isJpaStyle() {
-		return jpaStyle;
 	}
 
 	/**

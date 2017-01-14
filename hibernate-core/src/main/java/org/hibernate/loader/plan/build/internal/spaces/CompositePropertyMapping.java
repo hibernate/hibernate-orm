@@ -9,7 +9,7 @@ package org.hibernate.loader.plan.build.internal.spaces;
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -24,7 +24,7 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  */
 public class CompositePropertyMapping implements PropertyMapping {
-	private final CompositeType compositeType;
+	private final EmbeddedType compositeType;
 	private final PropertyMapping parentPropertyMapping;
 	private final String parentPropertyName;
 
@@ -36,7 +36,7 @@ public class CompositePropertyMapping implements PropertyMapping {
 	 * @param parentPropertyName The name of this composite within the parentPropertyMapping
 	 */
 	public CompositePropertyMapping(
-			CompositeType compositeType,
+			EmbeddedType compositeType,
 			PropertyMapping parentPropertyMapping,
 			String parentPropertyName) {
 		this.compositeType = compositeType;
@@ -113,7 +113,7 @@ public class CompositePropertyMapping implements PropertyMapping {
 	}
 
 	@Override
-	public CompositeType getType() {
+	public EmbeddedType getType() {
 		return compositeType;
 	}
 }

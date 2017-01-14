@@ -6,15 +6,14 @@
  */
 package org.hibernate.persister.entity.spi;
 
-import org.hibernate.persister.common.spi.AttributeContainer;
-import org.hibernate.persister.common.spi.SingularAttribute;
+import org.hibernate.persister.common.spi.SingularOrmAttribute;
 
 /**
  * Information about the entity (hierarchy wide) version
  *
  * @author Steve Ebersole
  */
-public interface VersionDescriptor extends SingularAttribute {
+public interface VersionDescriptor extends SingularOrmAttribute {
 	@Override
 	EntityPersister getAttributeContainer();
 

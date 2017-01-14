@@ -17,7 +17,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -113,7 +113,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+	Object processComponent(Object component, EmbeddedType componentType) throws HibernateException {
 		if ( component != null ) {
 			Object[] values = componentType.getPropertyValues( component, getSession() );
 			Type[] types = componentType.getSubtypes();

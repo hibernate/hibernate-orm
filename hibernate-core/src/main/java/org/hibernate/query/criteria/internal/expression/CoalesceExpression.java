@@ -9,6 +9,7 @@ package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.JpaCoalesce;
@@ -78,6 +79,6 @@ public class CoalesceExpression<T> extends AbstractExpression<T> implements JpaC
 
 	@Override
 	public SqmExpression visitExpression(CriteriaVisitor visitor) {
-		return visitor.visitCoalesce( expressions );
+		return visitor.visitCoalesce( expressions.stream().collect( Collectors.toList() ) );
 	}
 }

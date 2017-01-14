@@ -11,7 +11,7 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
@@ -80,7 +80,7 @@ public abstract class AbstractVisitor {
 	 * @param componentType
 	 * @throws HibernateException
 	 */
-	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+	Object processComponent(Object component, EmbeddedType componentType) throws HibernateException {
 		if (component!=null) {
 			processValues(
 				componentType.getPropertyValues(component, session),
@@ -107,7 +107,7 @@ public abstract class AbstractVisitor {
 			return processEntity( value, (EntityType) type );
 		}
 		else if ( type.isComponentType() ) {
-			return processComponent( value, (CompositeType) type );
+			return processComponent( value, (EmbeddedType) type );
 		}
 		else {
 			return null;

@@ -16,12 +16,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.persister.common.spi.ExpressableType;
+import org.hibernate.sqm.domain.type.SqmDomainTypeBasic;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.converter.spi.AttributeConverterDefinition;
-import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
-import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * Redefines the Type contract in terms of "basic" or "value" types.  All Type methods are implemented
@@ -31,7 +32,7 @@ import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
  *
  * @since 6.0
  */
-public interface BasicType<T> extends Type<T>, org.hibernate.sqm.domain.BasicType {
+public interface BasicType<T> extends Type<T>, SqmDomainTypeBasic, ExpressableType<T>, javax.persistence.metamodel.BasicType<T> {
 	@Override
 	JavaTypeDescriptor<T> getJavaTypeDescriptor();
 
@@ -40,13 +41,6 @@ public interface BasicType<T> extends Type<T>, org.hibernate.sqm.domain.BasicTyp
 
 	@Override
 	Comparator<T> getComparator();
-
-	/**
-	 * The converter applied to this type, if one.
-	 *
-	 * @return The applied converter.
-	 */
-	AttributeConverterDefinition<T,?> getAttributeConverterDefinition();
 
 	JdbcLiteralFormatter<T> getJdbcLiteralFormatter();
 
@@ -66,7 +60,7 @@ public interface BasicType<T> extends Type<T>, org.hibernate.sqm.domain.BasicTyp
 
 	@Override
 	default Class<T> getJavaType() {
-		return getJavaTypeDescriptor().getJavaTypeClass();
+		return getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override

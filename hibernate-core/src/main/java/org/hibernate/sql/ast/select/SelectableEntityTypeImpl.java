@@ -18,7 +18,7 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.common.internal.SingularAttributeEmbedded;
 import org.hibernate.persister.common.spi.Attribute;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.SingularAttribute;
+import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.ast.expression.Expression;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingGroup;
@@ -87,12 +87,12 @@ public class SelectableEntityTypeImpl implements Selectable {
 	private void addColumnBindingGroupEntry(
 			Attribute attribute,
 			Map<Attribute, ColumnBindingGroup> columnBindingGroupMap) {
-		if ( !SingularAttribute.class.isInstance( attribute ) ) {
+		if ( !SingularOrmAttribute.class.isInstance( attribute ) ) {
 			columnBindingGroupMap.put( attribute, ColumnBindingGroupEmptyImpl.INSTANCE );
 			return;
 		}
 
-		final SingularAttribute singularAttribute = (SingularAttribute) attribute;
+		final SingularOrmAttribute singularAttribute = (SingularOrmAttribute) attribute;
 		final ColumnBindingGroupImpl columnBindingGroup = new ColumnBindingGroupImpl();
 
 		final List<Column> columns;

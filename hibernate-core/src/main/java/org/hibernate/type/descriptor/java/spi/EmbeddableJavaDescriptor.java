@@ -12,5 +12,6 @@ package org.hibernate.type.descriptor.java.spi;
  * @author Steve Ebersole
  */
 public interface EmbeddableJavaDescriptor<T> extends ManagedJavaDescriptor<T> {
-
+	@Override
+	EmbeddableJavaDescriptor<? super T> getSuperType();
 }

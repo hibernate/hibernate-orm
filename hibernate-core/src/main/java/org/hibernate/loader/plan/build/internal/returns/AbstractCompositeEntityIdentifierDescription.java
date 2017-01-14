@@ -11,7 +11,7 @@ import org.hibernate.loader.plan.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan.build.spi.ExpandingEntityIdentifierDescription;
 import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.FetchSource;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -23,12 +23,12 @@ public abstract class AbstractCompositeEntityIdentifierDescription
 		implements ExpandingEntityIdentifierDescription {
 
 	private final EntityReference entityReference;
-	private final CompositeType identifierType;
+	private final EmbeddedType identifierType;
 
 	protected AbstractCompositeEntityIdentifierDescription(
 			EntityReference entityReference,
 			ExpandingCompositeQuerySpace compositeQuerySpace,
-			CompositeType identifierType,
+			EmbeddedType identifierType,
 			PropertyPath propertyPath) {
 		super( compositeQuerySpace, false, propertyPath );
 		this.entityReference = entityReference;

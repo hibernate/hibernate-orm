@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.walking.spi;
 
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
@@ -58,7 +59,7 @@ public interface CollectionElementDefinition {
 
 	/**
 	 * If the element type returned by {@link #getType()} is a
-	 * {@link org.hibernate.type.spi.CompositeType}, then the composite
+	 * {@link EmbeddedType}, then the composite
 	 * element definition for the collection element is returned;
 	 * otherwise, IllegalStateException is thrown.
 	 *
@@ -66,7 +67,7 @@ public interface CollectionElementDefinition {
 	 *
 	 * @throws IllegalStateException if the collection element type
 	 * returned by {@link #getType()} is not of type
-	 * {@link org.hibernate.type.spi.CompositeType}.
+	 * {@link EmbeddedType}.
 	 */
 	public CompositeCollectionElementDefinition toCompositeElementDefinition();
 }

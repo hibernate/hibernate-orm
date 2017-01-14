@@ -131,34 +131,6 @@ public class QueryPlanCache implements Serializable {
 	}
 
 	/**
-	 * Get the query plan for the given HQL query, creating it and caching it if not already cached
-	 *
-	 * @param queryString The HQL query string
-	 * @param shallow Whether the execution will be shallow
-	 * @param enabledFilters The filters enabled on the Session
-	 *
-	 * @return The query plan
-	 *
-	 * @throws QueryException Indicates a problem translating the query
-	 * @throws MappingException Indicates a problem translating the query
-	 */
-	@SuppressWarnings("unchecked")
-	public HQLQueryPlan getHQLQueryPlan(String queryString, boolean shallow, Map<String,Filter> enabledFilters)
-			throws QueryException, MappingException {
-		final HQLQueryPlanKey key = new HQLQueryPlanKey( queryString, shallow, enabledFilters );
-		HQLQueryPlan value = (HQLQueryPlan) queryPlanCache.get( key );
-		if ( value == null ) {
-			LOG.tracev( "Unable to locate HQL query plan in cache; generating ({0})", queryString );
-			value = new HQLQueryPlan( queryString, shallow, enabledFilters, factory );
-			queryPlanCache.putIfAbsent( key, value );
-		}
-		else {
-			LOG.tracev( "Located HQL query plan in cache ({0})", queryString );
-		}
-		return value;
-	}
-
-	/**
 	 * Get the query plan for the given collection HQL filter fragment, creating it and caching it if not already cached
 	 *
 	 * @param filterString The HQL filter fragment

@@ -13,6 +13,8 @@ import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
 import org.hibernate.query.criteria.internal.expression.UnaryOperatorExpression;
 import org.hibernate.query.criteria.internal.path.PluralAttributePath;
+import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
+import org.hibernate.sqm.query.predicate.SqmPredicate;
 
 /**
  * Models an <tt>IS [NOT] EMPTY</tt> restriction
@@ -40,5 +42,10 @@ public class IsEmptyPredicate<C extends Collection>
 	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do
+	}
+
+	@Override
+	public SqmPredicate visitPredicate(CriteriaVisitor visitor) {
+		return visitor.visitEmptinessPredicate( collectionPath );
 	}
 }

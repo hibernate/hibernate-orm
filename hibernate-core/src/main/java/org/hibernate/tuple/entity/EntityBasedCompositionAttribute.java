@@ -11,7 +11,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.tuple.component.AbstractCompositionAttribute;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
@@ -25,7 +25,7 @@ public class EntityBasedCompositionAttribute
 			SessionFactoryImplementor factory,
 			int attributeNumber,
 			String attributeName,
-			CompositeType attributeType,
+			EmbeddedType attributeType,
 			BaselineAttributeInformation baselineInfo) {
 		super( source, factory, attributeNumber, attributeName, attributeType, 0, baselineInfo );
 	}

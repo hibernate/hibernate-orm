@@ -7,7 +7,7 @@
 package org.hibernate.type.spi;
 
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * Models the aspect of mapping a Java type (or an individual part of a Java type) to a database column

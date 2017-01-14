@@ -38,7 +38,7 @@ import org.hibernate.persister.entity.spi.TenantDiscrimination;
 import org.hibernate.persister.entity.spi.VersionDescriptor;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -142,7 +142,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			);
 		}
 		else {
-			final CompositeType cidType = (CompositeType) identifierType;
+			final EmbeddedType cidType = (EmbeddedType) identifierType;
 			// todo : need to pass along that any built sub attributes are part of the id
 			if ( rootEntityBinding.hasIdentifierProperty() ) {
 				return  new IdentifierDescriptorCompositeAggregated(

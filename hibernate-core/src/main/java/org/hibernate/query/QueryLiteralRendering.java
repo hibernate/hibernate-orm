@@ -9,6 +9,8 @@ package org.hibernate.query;
 import java.util.Locale;
 
 /**
+ * Defines possible ways we can handle query literals in terms of handling in regards to JDBC.
+ *
  * @author Steve Ebersole
  */
 public enum QueryLiteralRendering {

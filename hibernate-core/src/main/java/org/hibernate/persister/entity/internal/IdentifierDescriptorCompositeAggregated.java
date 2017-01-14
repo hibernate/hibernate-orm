@@ -16,20 +16,20 @@ import org.hibernate.persister.common.spi.Attribute;
 import org.hibernate.persister.common.spi.AttributeContainer;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
-import org.hibernate.persister.common.spi.SingularAttribute;
+import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.IdentifierDescriptor;
 import org.hibernate.sqm.domain.EntityReference;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
  */
 public class IdentifierDescriptorCompositeAggregated
-		extends AbstractSingularAttribute<CompositeType>
-		implements IdentifierDescriptor, SingularAttribute, AttributeContainer {
+		extends AbstractSingularAttribute<EmbeddedType>
+		implements IdentifierDescriptor, SingularOrmAttribute, AttributeContainer {
 	private final EmbeddablePersister embeddablePersister;
 
 	public IdentifierDescriptorCompositeAggregated(
@@ -44,7 +44,7 @@ public class IdentifierDescriptorCompositeAggregated
 	// IdentifierDescriptor
 
 	@Override
-	public CompositeType getIdType() {
+	public EmbeddedType getIdType() {
 		return getOrmType();
 	}
 
@@ -54,7 +54,7 @@ public class IdentifierDescriptorCompositeAggregated
 	}
 
 	@Override
-	public SingularAttribute getIdAttribute() {
+	public SingularOrmAttribute getIdAttribute() {
 		return this;
 	}
 

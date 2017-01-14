@@ -10,8 +10,13 @@
 	built-in capability to track parameters - see `SqlAstSelectInterpreter#parameterBinders`
 * Remove `org.hibernate.query.QueryParameter#isPassNullsEnabled` - this is now handled based on whether
 	bind was called or not.
+* Remove HQLQueryPlan and current QueryPlanCache - see `org.hibernate.query.spi.SelectQueryPlan`
+	and `org.hibernate.query.spi.QueryInterpretations`.  Determine what to do with
+	`org.hibernate.engine.query.spi.NativeSQLQueryPlan`
 * Find deprecations and evaluate for removal
 * Find incubations and evaluate for promotion
+* Consider allowing contributors for Types and JavaTypeDescriptors (and SqlTypeDescriptor?) be
+	available via the new CDI support.  Could also allow "Java Service" lookups to find contributors
 
 
 == Open questions
@@ -25,6 +30,8 @@
 		like the legacy `org.hibernate.query.criteria.internal.ValueHandlerFactory`.  Another option
 		(my preference), considering literals must be basic types (?allow composites?) is to define a
 		`BasicType#getLiteralRenderer` (as well as an inverse `BasicType#getLiteralConsumer`).
+* Another literal related idea is to simply not render them into the SQL but instead transfer them directly to
+	the currentJdbcValues array.  That obviously only matters when literals are used in the SELECT
 * Determine how to deal with `org.hibernate.sqm.parser.criteria.tree.JpaExpression#getExpressionSqmType`.
 	It is only used in "basic contexts" (function return types, arithmetic results, etc)
 * Consider managing AttributeConverter at the Attribute-level, as opposed to at the BasicType level.
@@ -54,7 +61,7 @@
 	}
 --
 * Redesign Cache SPI as per https://hibernate.atlassian.net/browse/HHH-10707?focusedCommentId=84079&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-84079
-	and https://gist.github.com/sebersole/2c9ad6b77ea3477ba508c21c6ab61b8d
+	and https://gist.github.com/sebersole/2c9ad6b77ea3477ba508c21c6ab61b8d.  See https://hibernate.atlassian.net/browse/HHH-11356
 * Redesign `org.hibernate.cache.spi.entry.CacheEntryStructure` and friends (with better names) and make more efficient.  At the moment, to cache, we:
 .. Create a "cache entry" (object creation)
 .. "structure" the "cache entry" (object creation)

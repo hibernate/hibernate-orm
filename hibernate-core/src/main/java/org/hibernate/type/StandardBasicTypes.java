@@ -34,7 +34,7 @@ import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.basic.RegistryKeyImpl;
-import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * Centralizes access to the standard set of basic {@link Type types}.

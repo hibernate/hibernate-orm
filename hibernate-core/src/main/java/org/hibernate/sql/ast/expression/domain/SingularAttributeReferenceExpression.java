@@ -14,7 +14,7 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.common.internal.SingularAttributeEntity;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.DomainReferenceImplementor;
-import org.hibernate.persister.common.spi.SingularAttribute;
+import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.from.ColumnBinding;
 import org.hibernate.sql.ast.select.Selectable;
@@ -23,7 +23,7 @@ import org.hibernate.sql.ast.select.SelectableEmbeddedTypeImpl;
 import org.hibernate.sql.ast.select.SelectableEntityTypeImpl;
 import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -31,7 +31,7 @@ import org.hibernate.type.spi.Type;
  */
 public class SingularAttributeReferenceExpression implements DomainReferenceExpression {
 	private final ColumnBindingSource columnBindingSource;
-	private final SingularAttribute referencedAttribute;
+	private final SingularOrmAttribute referencedAttribute;
 	private final PropertyPath propertyPath;
 
 	private final Selectable selectable;
@@ -39,7 +39,7 @@ public class SingularAttributeReferenceExpression implements DomainReferenceExpr
 
 	public SingularAttributeReferenceExpression(
 			ColumnBindingSource columnBindingSource,
-			SingularAttribute referencedAttribute,
+			SingularOrmAttribute referencedAttribute,
 			PropertyPath propertyPath) {
 		this.columnBindingSource = columnBindingSource;
 		this.referencedAttribute = referencedAttribute;
@@ -48,7 +48,7 @@ public class SingularAttributeReferenceExpression implements DomainReferenceExpr
 		this.selectable = resolveSelectable( referencedAttribute );
 	}
 
-	private Selectable resolveSelectable(SingularAttribute referencedAttribute) {
+	private Selectable resolveSelectable(SingularOrmAttribute referencedAttribute) {
 		switch ( referencedAttribute.getAttributeTypeClassification() ) {
 			case BASIC: {
 				return new SelectableBasicTypeImpl(
@@ -61,7 +61,7 @@ public class SingularAttributeReferenceExpression implements DomainReferenceExpr
 				return new SelectableEmbeddedTypeImpl(
 						this,
 						getColumnBindings(),
-						(CompositeType) referencedAttribute.getOrmType()
+						(EmbeddedType) referencedAttribute.getOrmType()
 				);
 			}
 			case MANY_TO_ONE:
@@ -86,7 +86,7 @@ public class SingularAttributeReferenceExpression implements DomainReferenceExpr
 		}
 	}
 
-	public SingularAttribute getReferencedAttribute() {
+	public SingularOrmAttribute getReferencedAttribute() {
 		return referencedAttribute;
 	}
 

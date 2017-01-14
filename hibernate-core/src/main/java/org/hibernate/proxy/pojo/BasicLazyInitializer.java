@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.proxy.AbstractLazyInitializer;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * Lazy initializer for POJOs
@@ -28,7 +28,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 	protected final Method getIdentifierMethod;
 	protected final Method setIdentifierMethod;
 	protected final boolean overridesEquals;
-	protected final CompositeType componentIdType;
+	protected final EmbeddedType componentIdType;
 
 	private Object replacement;
 
@@ -38,7 +38,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 			Serializable id,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
-			CompositeType componentIdType,
+			EmbeddedType componentIdType,
 			SharedSessionContractImplementor session,
 			boolean overridesEquals) {
 		super( entityName, id, session );

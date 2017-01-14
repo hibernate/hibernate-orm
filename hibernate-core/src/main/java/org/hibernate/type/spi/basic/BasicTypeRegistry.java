@@ -18,7 +18,7 @@ import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.spi.descriptor.java.BigDecimalTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.BigIntegerTypeDescriptor;
@@ -57,7 +57,7 @@ import org.hibernate.type.spi.descriptor.java.PrimitiveCharacterArrayTypeDescrip
 import org.hibernate.type.spi.descriptor.java.SerializableTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.ShortTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.TemporalTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
 import org.hibernate.type.spi.descriptor.java.TimeZoneTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.UUIDTypeDescriptor;
 import org.hibernate.type.spi.descriptor.java.UrlTypeDescriptor;
@@ -73,7 +73,7 @@ import org.hibernate.type.spi.descriptor.sql.NCharTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.NVarcharTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.NumericTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.SmallIntTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimeTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TimestampTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.TinyIntTypeDescriptor;
@@ -181,8 +181,8 @@ public class BasicTypeRegistry {
 				comparator = javaTypeDescriptor.getComparator();
 			}
 
-			if ( TemporalTypeDescriptor.class.isInstance( javaTypeDescriptor ) ) {
-				impl = new TemporalTypeImpl( (TemporalTypeDescriptor) javaTypeDescriptor, sqlTypeDescriptor, mutabilityPlan, comparator );
+			if ( TemporalJavaDescriptor.class.isInstance( javaTypeDescriptor ) ) {
+				impl = new TemporalTypeImpl( (TemporalJavaDescriptor) javaTypeDescriptor, sqlTypeDescriptor, mutabilityPlan, comparator );
 			}
 			else {
 				impl = new BasicTypeImpl( javaTypeDescriptor, sqlTypeDescriptor, mutabilityPlan, comparator );
@@ -325,8 +325,8 @@ public class BasicTypeRegistry {
 		}
 
 		final BasicType<T> impl;
-		if ( TemporalTypeDescriptor.class.isInstance( javaTypeDescriptor ) ) {
-			final TemporalTypeDescriptor javaTemporalTypeDescriptor = (TemporalTypeDescriptor) javaTypeDescriptor;
+		if ( TemporalJavaDescriptor.class.isInstance( javaTypeDescriptor ) ) {
+			final TemporalJavaDescriptor javaTemporalTypeDescriptor = (TemporalJavaDescriptor) javaTypeDescriptor;
 			impl = new TemporalTypeImpl(
 					javaTemporalTypeDescriptor,
 					sqlTypeDescriptor,
@@ -451,12 +451,12 @@ public class BasicTypeRegistry {
 		register( type, RegistryKey.from( javaTypeDescriptor, sqlTypeDescriptor, null ) );
 	}
 
-	private void registerTemporalType(TemporalTypeDescriptor temporalTypeDescriptor, SqlTypeDescriptor sqlTypeDescriptor) {
+	private void registerTemporalType(TemporalJavaDescriptor temporalTypeDescriptor, SqlTypeDescriptor sqlTypeDescriptor) {
 		registerTemporalType( temporalTypeDescriptor, sqlTypeDescriptor, null );
 	}
 
 	@SuppressWarnings("unchecked")
-	private void registerTemporalType(TemporalTypeDescriptor temporalTypeDescriptor,
+	private void registerTemporalType(TemporalJavaDescriptor temporalTypeDescriptor,
 									  SqlTypeDescriptor sqlTypeDescriptor,
 									  MutabilityPlan mutabilityPlan) {
 		final TemporalType type = new TemporalTypeImpl(

@@ -15,7 +15,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -57,7 +57,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * {@inheritDoc}
 	 */
 	@Override
-	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+	Object processComponent(Object component, EmbeddedType componentType) throws HibernateException {
 		Type[] types = componentType.getSubtypes();
 		if ( component == null ) {
 			processValues( new Object[types.length], types );

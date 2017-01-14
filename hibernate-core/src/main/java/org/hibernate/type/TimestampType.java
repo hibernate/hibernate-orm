@@ -9,9 +9,7 @@ package org.hibernate.type;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.internal.descriptor.DateTimeUtils;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;

@@ -7,7 +7,7 @@
 
 package org.hibernate.query.internal;
 
-import org.hibernate.persister.common.spi.OrmTypeExporter;
+import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.sqm.query.Parameter;
 import org.hibernate.type.spi.Type;
@@ -35,7 +35,7 @@ public class QueryParameterPositionalImpl<T> extends AbstractQueryParameter<T> {
 				true,
 				parameter.getAnticipatedType() == null
 						? null
-						: ( (OrmTypeExporter) parameter.getAnticipatedType() ).getOrmType()
+						: ( (TypeExporter) parameter.getAnticipatedType() ).getOrmType()
 		);
 	}
 

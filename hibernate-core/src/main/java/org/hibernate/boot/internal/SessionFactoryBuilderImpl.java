@@ -53,6 +53,7 @@ import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -64,6 +65,7 @@ import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AvailableSettings.ACQUIRE_CONNECTIONS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
+import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_UPDATE_OUTSIDE_TRANSACTION;
 import static org.hibernate.cfg.AvailableSettings.AUTO_CLOSE_SESSION;
 import static org.hibernate.cfg.AvailableSettings.AUTO_EVICT_COLLECTION_CACHE;
@@ -82,6 +84,7 @@ import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.HQL_BULK_ID_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.INTERCEPTOR;
+import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
 import static org.hibernate.cfg.AvailableSettings.JPAQL_STRICT_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
@@ -112,8 +115,6 @@ import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
-import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
-import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
 
@@ -364,6 +365,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder applyQueryLiteralRendering(QueryLiteralRendering queryLiteralRendering) {
+		this.options.queryLiteralRendering = queryLiteralRendering;
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder applySecondLevelCacheSupport(boolean enabled) {
 		this.options.secondLevelCacheEnabled = enabled;
 		return this;
@@ -591,6 +598,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private final boolean procedureParameterNullPassingEnabled;
 		private final boolean collectionJoinSubqueryRewriteEnabled;
 		private boolean useOfJdbcNamedParametersEnabled;
+		private QueryLiteralRendering queryLiteralRendering;
 
 		// Caching
 		private boolean secondLevelCacheEnabled;
@@ -1264,6 +1272,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		public TimeZone getJdbcTimeZone() {
 			return this.jdbcTimeZone;
 		}
+
+		@Override
+		public QueryLiteralRendering getQueryLiteralRendering() {
+			return queryLiteralRendering;
+		}
 	}
 
 	@Override
@@ -1586,5 +1599,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return options.getJdbcTimeZone();
+	}
+
+	@Override
+	public QueryLiteralRendering getQueryLiteralRendering() {
+		return options.getQueryLiteralRendering();
 	}
 }

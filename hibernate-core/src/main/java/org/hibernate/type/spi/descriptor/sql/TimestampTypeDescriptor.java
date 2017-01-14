@@ -16,14 +16,15 @@ import java.util.Calendar;
 
 import javax.persistence.TemporalType;
 
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.descriptor.ValueBinder;
-import org.hibernate.type.spi.descriptor.ValueExtractor;
-import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.spi.ValueBinder;
+import org.hibernate.type.descriptor.spi.ValueExtractor;
+import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.TemporalTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.internal.JdbcLiteralFormatterTemporal;
+import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
+import org.hibernate.type.descriptor.sql.internal.JdbcLiteralFormatterTemporal;
 
 /**
  * Descriptor for {@link Types#TIMESTAMP TIMESTAMP} handling.
@@ -54,7 +55,7 @@ public class TimestampTypeDescriptor implements SqlTypeDescriptor {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-		return new JdbcLiteralFormatterTemporal( (TemporalTypeDescriptor) javaTypeDescriptor, TemporalType.TIMESTAMP );
+		return new JdbcLiteralFormatterTemporal( (TemporalJavaDescriptor) javaTypeDescriptor, TemporalType.TIMESTAMP );
 	}
 
 	@Override

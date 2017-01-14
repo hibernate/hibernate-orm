@@ -10,10 +10,10 @@ package org.hibernate.spatial.dialect.oracle;
 import java.sql.Types;
 
 import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
-import org.hibernate.type.spi.descriptor.ValueBinder;
-import org.hibernate.type.spi.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.spi.ValueBinder;
+import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * Descriptor for the Oracle Spatial SDO_GEOMETRY type

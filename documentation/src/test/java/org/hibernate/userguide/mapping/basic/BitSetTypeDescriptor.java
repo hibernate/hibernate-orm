@@ -2,7 +2,7 @@ package org.hibernate.userguide.mapping.basic;
 
 import java.util.BitSet;
 
-import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 
 /**

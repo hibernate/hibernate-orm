@@ -53,10 +53,9 @@ import org.hibernate.type.SetType;
 import org.hibernate.type.SortedMapType;
 import org.hibernate.type.SortedSetType;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
-import org.hibernate.persister.common.spi.DatabaseModel;
 
 /**
  * For now mainly a helper for reflection into stuff not exposed on the entity/collection persister
@@ -262,7 +261,7 @@ public class PersisterHelper {
 							creationContext,
 							(CompositeContainer) source,
 							source.asLoggableText() + '.' + attributeName,
-							(CompositeType) attributeType,
+							(EmbeddedType) attributeType,
 							columns
 					)
 			);
@@ -306,7 +305,7 @@ public class PersisterHelper {
 			PersisterCreationContext creationContext,
 			CompositeContainer compositeContainer,
 			String role,
-			CompositeType compositeType,
+			EmbeddedType compositeType,
 			List<Column> columns) {
 		return new EmbeddablePersister(
 				compositeContainer,
@@ -510,7 +509,7 @@ public class PersisterHelper {
 	}
 
 	public static SingularAttributeClassification interpretIdentifierClassification(Type ormIdType) {
-		return ormIdType instanceof CompositeType
+		return ormIdType instanceof EmbeddedType
 				? SingularAttributeClassification.EMBEDDED
 				: SingularAttributeClassification.BASIC;
 	}

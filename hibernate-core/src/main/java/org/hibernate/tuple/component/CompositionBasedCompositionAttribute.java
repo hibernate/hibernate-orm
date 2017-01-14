@@ -10,7 +10,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.tuple.BaselineAttributeInformation;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
@@ -22,7 +22,7 @@ public class CompositionBasedCompositionAttribute extends AbstractCompositionAtt
 			SessionFactoryImplementor sessionFactory,
 			int entityBasedAttributeNumber,
 			String attributeName,
-			CompositeType attributeType,
+			EmbeddedType attributeType,
 			int columnStartPosition,
 			BaselineAttributeInformation baselineInfo) {
 		super(

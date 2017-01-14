@@ -12,7 +12,7 @@ import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -70,7 +70,7 @@ public class InExpression implements Criterion {
 		final ArrayList<TypedValue> list = new ArrayList<TypedValue>();
 		final Type type = criteriaQuery.getTypeUsingProjection( criteria, propertyName );
 		if ( type.isComponentType() ) {
-			final CompositeType compositeType = (CompositeType) type;
+			final EmbeddedType compositeType = (EmbeddedType) type;
 			final Type[] subTypes = compositeType.getSubtypes();
 			for ( Object value : values ) {
 				for ( int i = 0; i < subTypes.length; i++ ) {

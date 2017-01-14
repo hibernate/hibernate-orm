@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.select.SqlSelection;
 import org.hibernate.sql.convert.results.spi.ReturnComposite;
 import org.hibernate.sql.exec.results.process.internal.ReturnAssemblerComposite;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +23,7 @@ import org.hibernate.type.spi.CompositeType;
 public class ReturnCompositeImpl implements ReturnComposite {
 	private final SelectableEmbeddedTypeImpl selectableEmbeddedType;
 	private final String resultVariable;
-	private final CompositeType compositeType;
+	private final EmbeddedType compositeType;
 
 	private final ReturnAssembler assembler;
 
@@ -31,7 +31,7 @@ public class ReturnCompositeImpl implements ReturnComposite {
 			SelectableEmbeddedTypeImpl selectableEmbeddedType,
 			String resultVariable,
 			List<SqlSelection> sqlSelections,
-			CompositeType compositeType) {
+			EmbeddedType compositeType) {
 		this.selectableEmbeddedType = selectableEmbeddedType;
 		this.resultVariable = resultVariable;
 		this.compositeType = compositeType;

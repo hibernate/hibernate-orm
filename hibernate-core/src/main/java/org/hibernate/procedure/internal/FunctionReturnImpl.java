@@ -23,7 +23,7 @@ import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -113,11 +113,6 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 	@Override
 	public Class getParameterType() {
 		return null;
-	}
-
-	@Override
-	public boolean isPassNullsEnabled() {
-		return false;
 	}
 
 	@Override

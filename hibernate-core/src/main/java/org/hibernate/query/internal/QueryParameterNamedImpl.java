@@ -7,7 +7,7 @@
 
 package org.hibernate.query.internal;
 
-import org.hibernate.persister.common.spi.OrmTypeExporter;
+import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.sqm.query.Parameter;
 import org.hibernate.type.spi.Type;
 
@@ -32,7 +32,7 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 				parameter.getName(),
 				parameter.allowMultiValuedBinding(),
 				true,
-				( (OrmTypeExporter) parameter.getAnticipatedType() ).getOrmType()
+				( (TypeExporter) parameter.getAnticipatedType() ).getOrmType()
 		);
 	}
 

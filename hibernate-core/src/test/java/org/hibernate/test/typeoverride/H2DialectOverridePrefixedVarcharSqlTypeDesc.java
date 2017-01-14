@@ -7,7 +7,7 @@
 package org.hibernate.test.typeoverride;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**

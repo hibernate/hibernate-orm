@@ -9,7 +9,7 @@ package org.hibernate.spatial;
 import com.vividsolutions.jts.geom.Geometry;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**

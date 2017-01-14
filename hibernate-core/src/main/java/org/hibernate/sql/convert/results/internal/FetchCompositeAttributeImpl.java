@@ -15,7 +15,7 @@ import org.hibernate.sql.exec.results.process.internal.CompositeReferenceInitial
 import org.hibernate.sql.exec.results.process.spi.CompositeReferenceInitializer;
 import org.hibernate.sql.exec.results.process.spi.Initializer;
 import org.hibernate.sql.exec.results.process.spi.InitializerCollector;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
@@ -60,7 +60,7 @@ public class FetchCompositeAttributeImpl extends AbstractFetchParent implements 
 	}
 
 	@Override
-	public CompositeType getFetchedType() {
+	public EmbeddedType getFetchedType() {
 		return fetchedAttribute.getOrmType();
 	}
 

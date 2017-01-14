@@ -7,12 +7,12 @@
 package org.hibernate.type.spi;
 
 import org.hibernate.MappingException;
-import org.hibernate.sqm.domain.EntityReference;
+import org.hibernate.sqm.domain.type.SqmDomainTypeEntity;
 
 /**
  * @author Steve Ebersole
  */
-public interface EntityType extends AssociationType, EntityReference {
+public interface EntityType extends AssociationType, SqmDomainTypeEntity {
 
 	/**
 	 * Is the association modeled here defined as a 1-1 in the database (physical model)?

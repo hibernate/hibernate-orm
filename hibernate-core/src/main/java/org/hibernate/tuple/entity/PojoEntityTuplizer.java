@@ -35,7 +35,7 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Instantiator;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * An {@link EntityTuplizer} specific to the pojo entity mode.
@@ -166,7 +166,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 					proxyGetIdentifierMethod,
 					proxySetIdentifierMethod,
 					persistentClass.hasEmbeddedIdentifier() ?
-							(CompositeType) persistentClass.getIdentifier().getType() :
+							(EmbeddedType) persistentClass.getIdentifier().getType() :
 							null
 			);
 		}

@@ -15,7 +15,7 @@ import java.util.Set;
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 import antlr.collections.AST;
@@ -157,9 +157,9 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 		}
 
 		if ( !explicitIdInsertion ) {
-			if ( persister.getIdentifierType() instanceof CompositeType ) {
+			if ( persister.getIdentifierType() instanceof EmbeddedType ) {
 				if ( componentIds == null ) {
-					String[] propertyNames = ( (CompositeType) persister.getIdentifierType() ).getPropertyNames();
+					String[] propertyNames = ( (EmbeddedType) persister.getIdentifierType() ).getPropertyNames();
 					componentIds = new HashSet();
 					for ( int i = 0; i < propertyNames.length; i++ ) {
 						componentIds.add( propertyNames[i] );

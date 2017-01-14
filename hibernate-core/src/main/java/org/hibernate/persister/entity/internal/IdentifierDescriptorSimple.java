@@ -12,7 +12,7 @@ import java.util.Optional;
 
 import org.hibernate.persister.common.spi.AbstractSingularAttribute;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.SingularAttribute;
+import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.IdentifierDescriptor;
@@ -24,7 +24,7 @@ import org.hibernate.type.spi.BasicType;
  */
 public class IdentifierDescriptorSimple
 		extends AbstractSingularAttribute<BasicType>
-		implements IdentifierDescriptor, SingularAttribute {
+		implements IdentifierDescriptor, SingularOrmAttribute {
 	private final List<Column> columns;
 
 	public IdentifierDescriptorSimple(
@@ -57,7 +57,7 @@ public class IdentifierDescriptorSimple
 	}
 
 	@Override
-	public SingularAttribute getIdAttribute() {
+	public SingularOrmAttribute getIdAttribute() {
 		return this;
 	}
 

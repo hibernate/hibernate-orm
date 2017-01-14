@@ -26,7 +26,7 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.spi.WrapperOptions;
 
 /**
  * Defines the "internal contract" for {@link Session} and other parts of Hibernate such as

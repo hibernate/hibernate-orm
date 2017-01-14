@@ -18,7 +18,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -198,7 +198,7 @@ public class Example implements Criterion {
 					appendComponentCondition(
 						propertyName,
 						propertyValue,
-						(CompositeType) propertyTypes[i],
+						(EmbeddedType) propertyTypes[i],
 						criteria,
 						criteriaQuery,
 						buf
@@ -257,7 +257,7 @@ public class Example implements Criterion {
 
 			if ( ! isVersionProperty && isPropertyIncluded( value, name, type ) ) {
 				if ( propertyTypes[i].isComponentType() ) {
-					addComponentTypedValues( name, value, (CompositeType) type, list, criteria, criteriaQuery );
+					addComponentTypedValues( name, value, (EmbeddedType) type, list, criteria, criteriaQuery );
 				}
 				else {
 					addPropertyTypedValue( value, type, list );
@@ -287,7 +287,7 @@ public class Example implements Criterion {
 	protected void addComponentTypedValues(
 			String path, 
 			Object component, 
-			CompositeType type,
+			EmbeddedType type,
 			List<TypedValue> list,
 			Criteria criteria, 
 			CriteriaQuery criteriaQuery) {
@@ -301,7 +301,7 @@ public class Example implements Criterion {
 				final String subpath = StringHelper.qualify( path, propertyNames[i] );
 				if ( isPropertyIncluded( value, subpath, subtype ) ) {
 					if ( subtype.isComponentType() ) {
-						addComponentTypedValues( subpath, value, (CompositeType) subtype, list, criteria, criteriaQuery );
+						addComponentTypedValues( subpath, value, (EmbeddedType) subtype, list, criteria, criteriaQuery );
 					}
 					else {
 						addPropertyTypedValue( value, subtype, list );
@@ -360,7 +360,7 @@ public class Example implements Criterion {
 	protected void appendComponentCondition(
 			String path,
 			Object component,
-			CompositeType type,
+			EmbeddedType type,
 			Criteria criteria,
 			CriteriaQuery criteriaQuery,
 			StringBuilder buf) {
@@ -377,7 +377,7 @@ public class Example implements Criterion {
 						appendComponentCondition(
 								subPath,
 								value,
-								(CompositeType) subtype,
+								(EmbeddedType) subtype,
 								criteria,
 								criteriaQuery,
 								buf

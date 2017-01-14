@@ -23,6 +23,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -711,6 +712,8 @@ public interface SessionFactoryBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	SessionFactoryBuilder applyNonJpaNativeQueryOrdinalParameterBase(Integer base);
+
+	SessionFactoryBuilder applyQueryLiteralRendering(QueryLiteralRendering queryLiteralRendering);
 
 	/**
 	 * Allows unwrapping this builder as another, more specific type.

@@ -9,7 +9,7 @@ package org.hibernate.sql.convert.spi;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.common.spi.SingularAttribute;
+import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.query.spi.ExecutionContext;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -17,7 +17,6 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.expression.NamedParameter;
 import org.hibernate.sql.ast.expression.PositionalParameter;
-import org.hibernate.sqm.domain.DomainMetamodel;
 import org.hibernate.sqm.query.from.SqmAttributeJoin;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
@@ -87,7 +86,7 @@ public class ConversionHelper {
 		}
 
 		// assume the fact that the attribute/type are entity has already been validated
-		final EntityType entityType = (EntityType) ( (SingularAttribute) joinedFromElement.getAttributeBinding().getAttribute() ).getOrmType();
+		final EntityType entityType = (EntityType) ( (SingularOrmAttribute) joinedFromElement.getAttributeBinding().getAttribute() ).getOrmType();
 		final String entityName = entityType.getAssociatedEntityName( factory );
 		return factory.getMetamodel().entityPersister( entityName );
 	}

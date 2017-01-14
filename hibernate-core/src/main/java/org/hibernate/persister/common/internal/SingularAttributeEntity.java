@@ -8,22 +8,25 @@
 package org.hibernate.persister.common.internal;
 
 import java.util.List;
-import java.util.Optional;
+
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Type;
 
 import org.hibernate.persister.common.spi.AbstractSingularAttribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.JoinableAttribute;
-import org.hibernate.persister.common.spi.JoinableAttributeContainer;
+import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.sqm.domain.EntityReference;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.spi.EntityType;
 
 
 /**
  * @author Steve Ebersole
  */
-public class SingularAttributeEntity extends AbstractSingularAttribute<EntityType> implements JoinableAttribute {
+public class SingularAttributeEntity extends AbstractSingularAttribute<EntityType>
+		implements JoinableAttribute {
 	private final SingularAttributeClassification classification;
 	private final EntityPersister entityPersister;
 	private final List<Column> columns;
@@ -31,13 +34,15 @@ public class SingularAttributeEntity extends AbstractSingularAttribute<EntityTyp
 	private List<JoinColumnMapping> joinColumnMappings;
 
 	public SingularAttributeEntity(
-			JoinableAttributeContainer declaringType,
+			ManagedTypeImplementor declaringType,
 			String name,
+			PropertyAccess propertyAccess,
 			SingularAttributeClassification classification,
 			EntityType ormType,
+			Disposition disposition,
 			EntityPersister entityPersister,
 			List<Column> columns) {
-		super( declaringType, name, ormType, true );
+		super( declaringType, name, propertyAccess, ormType, disposition, true );
 		this.classification = classification;
 		this.entityPersister = entityPersister;
 
@@ -47,8 +52,19 @@ public class SingularAttributeEntity extends AbstractSingularAttribute<EntityTyp
 	}
 
 	@Override
-	public JoinableAttributeContainer getAttributeContainer() {
-		return (JoinableAttributeContainer) super.getAttributeContainer();
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.ENTITY;
+	}
+
+	@Override
+	public PersistentAttributeType getPersistentAttributeType() {
+		// assume ManyToOne for now
+		return PersistentAttributeType.MANY_TO_ONE;
+	}
+
+	@Override
+	public boolean isAssociation() {
+		return true;
 	}
 
 	public EntityPersister getAssociatedEntityPersister() {
@@ -67,18 +83,13 @@ public class SingularAttributeEntity extends AbstractSingularAttribute<EntityTyp
 	@Override
 	public String asLoggableText() {
 		return "SingularAttributeEntity([" + getAttributeTypeClassification().name() + "] " +
-				getLeftHandSide().asLoggableText() + '.' + getAttributeName() +
+				getSource().asLoggableText() + '.' + getAttributeName() +
 				")";
 	}
 
 	@Override
 	public String toString() {
 		return asLoggableText();
-	}
-
-	@Override
-	public Optional<EntityReference> toEntityReference() {
-		return Optional.of( entityPersister );
 	}
 
 	public String getEntityName() {
@@ -88,7 +99,7 @@ public class SingularAttributeEntity extends AbstractSingularAttribute<EntityTyp
 	@Override
 	public List<JoinColumnMapping> getJoinColumnMappings() {
 		if ( joinColumnMappings == null ) {
-			this.joinColumnMappings = getAttributeContainer().resolveJoinColumnMappings( this );
+			this.joinColumnMappings = getSource().resolveJoinColumnMappings( this );
 		}
 		return joinColumnMappings;
 	}

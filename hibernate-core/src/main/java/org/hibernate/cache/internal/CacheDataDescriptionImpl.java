@@ -12,7 +12,7 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.descriptor.java.spi.IncomparableComparator;
+import org.hibernate.type.descriptor.spi.IncomparableComparator;
 
 /**
  * Standard CacheDataDescription implementation.

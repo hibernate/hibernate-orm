@@ -30,7 +30,7 @@ import org.hibernate.tuple.entity.EntityBasedCompositionAttribute;
 import org.hibernate.tuple.entity.VersionProperty;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -195,7 +195,7 @@ public final class PropertyFactory {
 						sessionFactory,
 						attributeNumber,
 						property.getName(),
-						(CompositeType) type,
+						(EmbeddedType) type,
 						new BaselineAttributeInformation.Builder()
 								.setLazy( lazyAvailable && property.isLazy() )
 								.setInsertable( property.isInsertable() )

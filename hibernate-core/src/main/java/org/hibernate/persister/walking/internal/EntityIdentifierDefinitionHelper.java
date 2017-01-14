@@ -14,7 +14,7 @@ import org.hibernate.persister.walking.spi.EncapsulatedEntityIdentifierDefinitio
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.NonEncapsulatedEntityIdentifierDefinition;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -111,8 +111,8 @@ public final class EntityIdentifierDefinitionHelper {
 			}
 
 			@Override
-			public CompositeType getType() {
-				return (CompositeType) getCompositeType();
+			public EmbeddedType getType() {
+				return (EmbeddedType) getCompositeType();
 			}
 
 			@Override
@@ -170,8 +170,8 @@ public final class EntityIdentifierDefinitionHelper {
 		}
 
 		@Override
-		public CompositeType getType() {
-			return (CompositeType) super.getType();
+		public EmbeddedType getType() {
+			return (EmbeddedType) super.getType();
 		}
 
 		@Override

@@ -6,8 +6,11 @@
  */
 package org.hibernate.type.spi;
 
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -23,6 +26,9 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.ArrayType;
 import org.hibernate.type.BagType;
@@ -79,6 +85,10 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 	private final BasicTypeRegistry basicTypeRegistry;
 
 	private boolean initialized = false;
+
+	private final Map<String,EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
+	private final Map<String,CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
+	private final Map<String,EmbeddablePersister> embeddablePersisterMap = new ConcurrentHashMap<>();
 
 	public TypeConfiguration() {
 		this( new EolScopeMapping() );
@@ -470,6 +480,42 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 			throw new IllegalStateException( "TypeDescriptorRegistryAccess (TypeConfiguration) initialization incomplete; not yet ready for access" );
 		}
 		return sqlTypeDescriptorRegistry;
+	}
+
+
+	@SuppressWarnings("unchecked")
+	public <T> EntityPersister<T> findEntityPersister(String entityName) {
+		return entityPersisterMap.get( entityName );
+	}
+
+	public void register(EntityPersister entityPersister) {
+		entityPersisterMap.put( entityPersister.getEntityName(), entityPersister );
+	}
+
+	@SuppressWarnings("unchecked")
+	public <O,C,E> CollectionPersister<O,C,E> findCollectionPersister(String roleName) {
+		return collectionPersisterMap.get( roleName );
+	}
+
+	public void register(CollectionPersister collectionPersister) {
+		collectionPersisterMap.put( collectionPersister.getRoleName(), collectionPersister );
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> EmbeddablePersister<T> findEmbeddableMapper(String roleName) {
+		return embeddablePersisterMap.get( roleName );
+	}
+
+	public void register(EmbeddablePersister mapper) {
+		embeddablePersisterMap.put( mapper.getRoleName(), mapper );
+	}
+
+	public Collection<EmbeddablePersister> getEmbeddablePersisters() {
+		return embeddablePersisterMap.values();
+	}
+
+	public Collection<EntityPersister> getEntityPersisters() {
+		return entityPersisterMap.values();
 	}
 
 }

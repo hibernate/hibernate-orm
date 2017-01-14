@@ -56,6 +56,7 @@ import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.IdentifierCollection;
@@ -66,24 +67,27 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.persister.collection.internal.PluralAttributeElementAny;
-import org.hibernate.persister.collection.internal.PluralAttributeElementBasic;
-import org.hibernate.persister.collection.internal.PluralAttributeElementEmbeddable;
-import org.hibernate.persister.collection.internal.PluralAttributeElementEntity;
-import org.hibernate.persister.collection.internal.PluralAttributeIndexBasic;
-import org.hibernate.persister.collection.internal.PluralAttributeIndexEmbeddable;
-import org.hibernate.persister.collection.internal.PluralAttributeIndexEntity;
+import org.hibernate.persister.collection.internal.CollectionElementAny;
+import org.hibernate.persister.collection.internal.CollectionElementBasicImpl;
+import org.hibernate.persister.collection.internal.CollectionElementEmbeddable;
+import org.hibernate.persister.collection.internal.CollectionElementEntity;
+import org.hibernate.persister.collection.internal.CollectionIndexBasicImpl;
+import org.hibernate.persister.collection.internal.CollectionIndexEmbeddableImpl;
+import org.hibernate.persister.collection.internal.CollectionIndexEmbeddedImpl;
+import org.hibernate.persister.collection.internal.CollectionIndexEntityImpl;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.collection.spi.PluralAttributeElement;
-import org.hibernate.persister.collection.spi.PluralAttributeId;
-import org.hibernate.persister.collection.spi.PluralAttributeIndex;
-import org.hibernate.persister.collection.spi.PluralAttributeKey;
+import org.hibernate.persister.collection.spi.CollectionElement;
+import org.hibernate.persister.collection.spi.CollectionId;
+import org.hibernate.persister.collection.spi.CollectionIndex;
+import org.hibernate.persister.collection.spi.CollectionKey;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.spi.AttributeContainer;
 import org.hibernate.persister.common.spi.DatabaseModel;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.JoinableAttributeContainer;
-import org.hibernate.persister.common.spi.SingularAttribute;
+import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.common.spi.SingularOrmAttribute;
+import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
@@ -124,7 +128,7 @@ import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
@@ -135,26 +139,23 @@ import org.hibernate.type.spi.Type;
  * @see BasicCollectionPersister
  * @see OneToManyPersister
  */
-public abstract class AbstractCollectionPersister
-		implements CollectionMetadata, SQLLoadableCollection {
+public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPersister<O,C,E> {
+//		implements CollectionMetadata, SQLLoadableCollection {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractCollectionPersister.class.getName() );
 
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final CollectionClassification collectionClassification;
-	private final AttributeContainer source;
+	private final ManagedTypeImplementor source;
 	private final String propertyName;
 
-	private final PluralAttributeKey foreignKeyDescriptor;
-	private PluralAttributeId idDescriptor;
-	private PluralAttributeElement elementDescriptor;
-	private PluralAttributeIndex indexDescriptor;
+	private final CollectionKey foreignKeyDescriptor;
+	private CollectionId idDescriptor;
+	private CollectionElement elementDescriptor;
+	private CollectionIndex indexDescriptor;
 
 	private org.hibernate.persister.common.spi.Table separateCollectionTable;
-
-	private AttributeConverter indexAttributeConverter;
-	private AttributeConverter elementAttributeConverter;
 
 	// TODO: encapsulate the protected instance variables!
 
@@ -285,7 +286,7 @@ public abstract class AbstractCollectionPersister
 		this.propertyName = propertyName;
 		this.sessionFactory = creationContext.getSessionFactory();
 		this.collectionClassification = PersisterHelper.interpretCollectionClassification( (CollectionType) collectionBinding.getType() );
-		this.foreignKeyDescriptor = new PluralAttributeKey( this );
+		this.foreignKeyDescriptor = new CollectionKey( this );
 
 		if ( collectionBinding instanceof IndexedCollection ) {
 			final Value indexValueMapping = ( (IndexedCollection) collectionBinding ).getIndex();
@@ -595,7 +596,7 @@ public abstract class AbstractCollectionPersister
 					elementColumnReaders,
 					elementColumnReaderTemplates,
 					elementFormulaTemplates,
-					(CompositeType) elementType,
+					(EmbeddedType) elementType,
 					factory
 					);
 		}
@@ -665,20 +666,39 @@ public abstract class AbstractCollectionPersister
 	public void finishInitialization(Collection collectionBinding, PersisterCreationContext creationContext) {
 		final org.hibernate.persister.common.spi.Table collectionTable = resolveCollectionTable( collectionBinding, creationContext );
 
+
+
+		if ( collectionBinding instanceof IndexedCollection ) {
+			final Value indexValueMapping = ( (IndexedCollection) collectionBinding ).getIndex();
+		}
+
+		final Value elementValueMapping = collectionBinding.getElement();
+		if ( elementValueMapping instanceof SimpleValue ) {
+			final SimpleValue simpleElementValueMapping = (SimpleValue) elementValueMapping;
+//			elementAttributeConverter = simpleElementValueMapping.getAttributeConverterDescriptor().getAttributeConverter();
+		}
+
+
+
 		if ( getIdentifierType() == null ) {
 			this.idDescriptor = null;
 		}
 		else {
-			this.idDescriptor = new PluralAttributeId(
+			this.idDescriptor = new CollectionId(
 					(BasicType) getIdentifierType(),
 					getIdentifierGenerator()
 			);
 		}
 
-		if ( !hasIndex() ) {
+		AttributeConverter elementAttributeConverter;
+
+		if ( !IndexedCollection.class.isInstance( collectionBinding ) ) {
 			this.indexDescriptor = null;
 		}
 		else {
+			final IndexedCollection indexedCollectionBinding = (IndexedCollection) collectionBinding;
+			final Value indexValueMapping = indexedCollectionBinding.getIndex();
+
 			final java.util.List<org.hibernate.persister.common.spi.Column> columns = PersisterHelper.makeValues(
 					sessionFactory,
 					getIndexType(),
@@ -686,21 +706,43 @@ public abstract class AbstractCollectionPersister
 					getIndexFormulas(),
 					collectionTable
 			);
+
+			if ( indexValueMapping instanceof SimpleValue ) {
+				final AttributeConverter indexAttributeConverter = ( (SimpleValue) indexValueMapping ).getAttributeConverterDescriptor().getAttributeConverter();
+
+			}
+			else if ( indexValueMapping instanceof Component ) {
+				final String roleName = this.getRolePrefix() + CollectionIndex.NAVIGABLE_NAME;
+				EmbeddablePersister embeddablePersister = creationContext.getTypeConfiguration().
+			}
+
 			if ( getIndexType().isComponentType() ) {
-				this.indexDescriptor = new PluralAttributeIndexEmbeddable(
+
+				EmbeddableMapper mapper = typeConfiguration.findEmbeddableMapper( roleName );
+				if ( mapper == null ) {
+					mapper = creationContext.getPersisterFactory().createEmbeddablePersister(
+							navigableType,
+							source,
+							navigableName,
+							creationContext
+					);
+					creationContext.registerEmbeddablePersister( mapper );
+				}
+
+				this.indexDescriptor = new CollectionIndexEmbeddedImpl(
 						this,
 						PersisterHelper.INSTANCE.buildEmbeddablePersister(
 								creationContext,
 								this,
 								getRole() + ".key",
-								(CompositeType) getIndexType(),
+								(EmbeddedType) getIndexType(),
 								columns
 						)
 				);
 			}
 			else if ( getIndexType().isEntityType() ) {
 				final EntityType indexTypeEntity = (EntityType) getIndexType();
-				this.indexDescriptor = new PluralAttributeIndexEntity(
+				this.indexDescriptor = new CollectionIndexEntityImpl(
 						this,
 						creationContext.getSessionFactory().getMetamodel().entityPersister(
 								indexTypeEntity.getAssociatedEntityName( creationContext.getSessionFactory() )
@@ -710,7 +752,7 @@ public abstract class AbstractCollectionPersister
 				);
 			}
 			else {
-				this.indexDescriptor = new PluralAttributeIndexBasic(
+				this.indexDescriptor = new CollectionIndexBasicImpl(
 						this,
 						(BasicType) getIndexType(),
 						indexAttributeConverter,
@@ -737,7 +779,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 
-	private PluralAttributeElement buildElementDescriptor(PersisterCreationContext creationContext) {
+	private CollectionElement buildElementDescriptor(PersisterCreationContext creationContext) {
 		final Type elementType = getElementType();
 
 		if ( elementType.isAnyType() ) {
@@ -751,7 +793,7 @@ public abstract class AbstractCollectionPersister
 					separateCollectionTable
 			);
 
-			return new PluralAttributeElementAny(
+			return new CollectionElementAny(
 					this,
 					(AnyType) elementType,
 					columns
@@ -768,13 +810,13 @@ public abstract class AbstractCollectionPersister
 					separateCollectionTable
 			);
 
-			return new PluralAttributeElementEmbeddable(
+			return new CollectionElementEmbeddable(
 					this,
 					PersisterHelper.INSTANCE.buildEmbeddablePersister(
 							creationContext,
 							this,
 							getRole() + ".value",
-							(CompositeType) elementType,
+							(EmbeddedType) elementType,
 							columns
 					)
 			);
@@ -798,7 +840,7 @@ public abstract class AbstractCollectionPersister
 					table
 			);
 
-			return new PluralAttributeElementEntity(
+			return new CollectionElementEntity(
 					this,
 					elementPersister,
 					isManyToMany()
@@ -819,7 +861,7 @@ public abstract class AbstractCollectionPersister
 					separateCollectionTable
 			);
 
-			return new PluralAttributeElementBasic(
+			return new CollectionElementBasicImpl(
 					this,
 					(BasicType) elementType,
 					elementAttributeConverter,
@@ -856,11 +898,11 @@ public abstract class AbstractCollectionPersister
 			group.setRootTableBinding( new TableBinding( separateCollectionTable, group.getAliasBase() ) );
 		}
 
-		if ( getElementReference() instanceof PluralAttributeElementEntity ) {
+		if ( getElementReference() instanceof CollectionElementEntity ) {
 			java.util.List<org.hibernate.persister.common.spi.Column> fkColumns = null;
 			java.util.List<org.hibernate.persister.common.spi.Column> fkTargetColumns = null;
 
-			final PluralAttributeElementEntity elementEntity = (PluralAttributeElementEntity) getElementReference();
+			final CollectionElementEntity elementEntity = (CollectionElementEntity) getElementReference();
 			final EntityPersister elementPersister = elementEntity.getElementPersister();
 
 			if ( separateCollectionTable != null ) {
@@ -869,7 +911,7 @@ public abstract class AbstractCollectionPersister
 					fkTargetColumns = elementPersister.getHierarchy().getIdentifierDescriptor().getColumns();
 				}
 				else {
-					SingularAttribute referencedAttribute = (SingularAttribute) elementPersister.findAttribute( elementEntity.getOrmType().getRHSUniqueKeyPropertyName() );
+					SingularOrmAttribute referencedAttribute = (SingularOrmAttribute) elementPersister.findAttribute( elementEntity.getOrmType().getRHSUniqueKeyPropertyName() );
 					fkTargetColumns = referencedAttribute.getColumns();
 				}
 			}
@@ -912,22 +954,22 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public PluralAttributeKey getForeignKeyDescriptor() {
+	public CollectionKey getForeignKeyDescriptor() {
 		return foreignKeyDescriptor;
 	}
 
 	@Override
-	public PluralAttributeId getIdDescriptor() {
+	public CollectionId getIdDescriptor() {
 		return idDescriptor;
 	}
 
 	@Override
-	public PluralAttributeElement getElementReference() {
+	public CollectionElement getElementReference() {
 		return elementDescriptor;
 	}
 
 	@Override
-	public PluralAttributeIndex getIndexReference() {
+	public CollectionIndex getIndexReference() {
 		return indexDescriptor;
 	}
 
@@ -2284,7 +2326,7 @@ public abstract class AbstractCollectionPersister
 		collectionPropertyColumnNames.put( aliasName, columnNames );
 
 		if ( type.isComponentType() ) {
-			CompositeType ct = (CompositeType) type;
+			EmbeddedType ct = (EmbeddedType) type;
 			String[] propertyNames = ct.getPropertyNames();
 			for ( int i = 0; i < propertyNames.length; i++ ) {
 				String name = propertyNames[i];
@@ -2504,8 +2546,8 @@ public abstract class AbstractCollectionPersister
 					}
 
 					@Override
-					public CompositeType getType() {
-						return (CompositeType) getIndexType();
+					public EmbeddedType getType() {
+						return (EmbeddedType) getIndexType();
 					}
 
 					@Override
@@ -2586,8 +2628,8 @@ public abstract class AbstractCollectionPersister
 					}
 
 					@Override
-					public CompositeType getType() {
-						return (CompositeType) getElementType();
+					public EmbeddedType getType() {
+						return (EmbeddedType) getElementType();
 					}
 
 					@Override

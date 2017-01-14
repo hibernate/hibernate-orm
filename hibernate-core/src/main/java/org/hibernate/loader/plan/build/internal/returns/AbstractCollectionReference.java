@@ -21,7 +21,7 @@ import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
@@ -98,12 +98,12 @@ public abstract class AbstractCollectionReference implements CollectionReference
 				final ExpandingCompositeQuerySpace compositeQuerySpace = QuerySpaceHelper.INSTANCE.makeCompositeQuerySpace(
 						collectionQuerySpace,
 						new CompositePropertyMapping(
-								(CompositeType) persister.getIndexType(),
+								(EmbeddedType) persister.getIndexType(),
 								(PropertyMapping) persister,
 								""
 						),
 						CollectionPropertyNames.COLLECTION_INDICES,
-						(CompositeType) persister.getIndexType(),
+						(EmbeddedType) persister.getIndexType(),
 						collectionQuerySpace.getExpandingQuerySpaces().generateImplicitUid(),
 						collectionQuerySpace.canJoinsBeRequired(),
 						allowIndexJoin
@@ -142,12 +142,12 @@ public abstract class AbstractCollectionReference implements CollectionReference
 			final ExpandingCompositeQuerySpace compositeQuerySpace = QuerySpaceHelper.INSTANCE.makeCompositeQuerySpace(
 					collectionQuerySpace,
 					new CompositePropertyMapping(
-							(CompositeType) persister.getElementType(),
+							(EmbeddedType) persister.getElementType(),
 							(PropertyMapping) persister,
 							""
 					),
 					CollectionPropertyNames.COLLECTION_ELEMENTS,
-					(CompositeType) persister.getElementType(),
+					(EmbeddedType) persister.getElementType(),
 					collectionQuerySpace.getExpandingQuerySpaces().generateImplicitUid(),
 					collectionQuerySpace.canJoinsBeRequired(),
 					allowElementJoin

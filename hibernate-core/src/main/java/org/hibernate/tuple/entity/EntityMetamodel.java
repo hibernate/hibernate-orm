@@ -41,7 +41,7 @@ import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
 import org.hibernate.type.spi.AssociationType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
@@ -866,7 +866,7 @@ public class EntityMetamodel implements Serializable {
 			return true;
 		}
 		else if ( type.isComponentType() ) {
-			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
+			Type[] subtypes = ( (EmbeddedType) type ).getSubtypes();
 			for ( int i = 0; i < subtypes.length; i++ ) {
 				if ( indicatesCollection( subtypes[i] ) ) {
 					return true;

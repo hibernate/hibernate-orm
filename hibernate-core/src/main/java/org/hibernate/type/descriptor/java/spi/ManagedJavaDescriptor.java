@@ -12,7 +12,7 @@ package org.hibernate.type.descriptor.java.spi;
  *
  * @author Steve Ebersole
  */
-public interface ManagedJavaDescriptor<T> extends JavaTypeDescriptor<T> {
+public interface ManagedJavaDescriptor<J> extends JavaTypeDescriptor<J> {
 	/**
 	 * Obtain the super-type for this type.
 	 * <p/>
@@ -22,5 +22,5 @@ public interface ManagedJavaDescriptor<T> extends JavaTypeDescriptor<T> {
 	 *
 	 * @return The type's super-type
 	 */
-	ManagedJavaDescriptor<? super T> getSuperType();
+	ManagedJavaDescriptor<? super J> getSuperType();
 }

@@ -15,7 +15,7 @@ import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 
 /**
@@ -70,7 +70,7 @@ public class JoinHelper {
 			String lhsPropertyName,
 			CompositeQuerySpace rightHandSide,
 			boolean rightHandSideRequired,
-			CompositeType joinedPropertyType) {
+			EmbeddedType joinedPropertyType) {
 		return new JoinImpl(
 				leftHandSide,
 				lhsPropertyName,

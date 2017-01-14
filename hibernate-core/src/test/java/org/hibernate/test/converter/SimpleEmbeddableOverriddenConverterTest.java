@@ -13,7 +13,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.spi.Type;
 
@@ -44,12 +44,12 @@ public class SimpleEmbeddableOverriddenConverterTest extends BaseNonConfigCoreFu
 	@Test
 	public void testSimpleConvertOverrides() {
 		final EntityPersister ep = sessionFactory().getEntityPersister( Person.class.getName() );
-		CompositeType homeAddressType = assertTyping( CompositeType.class, ep.getPropertyType( "homeAddress" ) );
+		EmbeddedType homeAddressType = assertTyping( EmbeddedType.class, ep.getPropertyType( "homeAddress" ) );
 		Type homeAddressCityType = findCompositeAttributeType( homeAddressType, "city" );
 		assertTyping( StringType.class, homeAddressCityType );
 	}
 
-	public Type findCompositeAttributeType(CompositeType compositeType, String attributeName) {
+	public Type findCompositeAttributeType(EmbeddedType compositeType, String attributeName) {
 		int pos = 0;
 		for ( String name : compositeType.getPropertyNames() ) {
 			if ( name.equals( attributeName ) ) {

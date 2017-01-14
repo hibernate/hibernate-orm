@@ -14,8 +14,10 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.sqm.parser.criteria.tree.path.JpaSingularAttributePath;
 
 /**
  * Models a path for a {@link SingularAttribute} generally obtained from a
@@ -23,13 +25,13 @@ import org.hibernate.query.criteria.JpaPathSourceImplementor;
  *
  * @author Steve Ebersole
  */
-public class SingularAttributePath<X> extends AbstractPathImpl<X> implements Serializable {
+public class SingularAttributePath<X> extends AbstractPathImpl<X> implements JpaSingularAttributePath<X>, Serializable {
 	private final SingularAttribute<?,X> attribute;
 	private final ManagedType<X> managedType;
 
 	@SuppressWarnings({ "unchecked" })
 	public SingularAttributePath(
-			CriteriaBuilderImpl criteriaBuilder,
+			HibernateCriteriaBuilder criteriaBuilder,
 			Class<X> javaType,
 			JpaPathSourceImplementor pathSource,
 			SingularAttribute<?, X> attribute) {

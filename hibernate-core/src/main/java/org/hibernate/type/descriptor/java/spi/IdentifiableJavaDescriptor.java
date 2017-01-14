@@ -12,12 +12,11 @@ package org.hibernate.type.descriptor.java.spi;
  *
  * @author Steve Ebersole
  */
-public interface IdentifiableJavaDescriptor<T> extends ManagedJavaDescriptor<T> {
+public interface IdentifiableJavaDescriptor<J> extends ManagedJavaDescriptor<J> {
 	/**
-	 * Overridden to further qualify the super-type
+	 * Overridden to further qualify the super-type as an identifiable-type
 	 * <p/>
 	 * {@inheritDoc}
 	 */
-	@Override
-	IdentifiableJavaDescriptor getSuperType();
+	@Override IdentifiableJavaDescriptor<? super J> getSuperType();
 }

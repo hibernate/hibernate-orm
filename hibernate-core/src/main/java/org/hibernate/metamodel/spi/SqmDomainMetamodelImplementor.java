@@ -6,10 +6,10 @@
  */
 package org.hibernate.metamodel.spi;
 
-import org.hibernate.sqm.domain.DomainMetamodel;
+import org.hibernate.sqm.domain.SqmDomainMetamodel;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmDomainMetamodelImplementor extends DomainMetamodel {
+public interface SqmDomainMetamodelImplementor extends SqmDomainMetamodel {
 }

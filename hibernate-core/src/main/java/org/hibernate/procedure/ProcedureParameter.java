@@ -6,30 +6,10 @@
  */
 package org.hibernate.procedure;
 
-import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.query.QueryParameter;
 
 /**
  * @author Steve Ebersole
  */
 public interface ProcedureParameter<T> extends QueryParameter<T> {
-	/**
-	 * How will an unbound value be handled in terms of the JDBC parameter?
-	 *
-	 * @return {@code true} here indicates that NULL should be passed; {@code false} indicates
-	 * that it is ignored.
-	 *
-	 * @see ParameterRegistrationImplementor#isPassNullsEnabled()
-	 */
-	boolean isPassNullsEnabled();
-
-	/**
-	 * Controls how unbound values for this IN/INOUT parameter registration will be handled prior to
-	 * execution.  For details see {@link org.hibernate.procedure.ParameterRegistration#enablePassingNulls}
-	 *
-	 * @param enabled {@code true} indicates that the NULL should be passed; {@code false} indicates it should not.
-	 *
-	 * @see org.hibernate.procedure.ParameterRegistration#enablePassingNulls
-	 */
-	void enablePassingNulls(boolean enabled);
 }

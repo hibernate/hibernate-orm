@@ -12,7 +12,7 @@ import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -68,10 +68,10 @@ public class Helper {
 	}
 
 	public static class ComponentAttributeSource implements AttributeSource {
-		private final CompositeType compositeType;
+		private final EmbeddedType compositeType;
 
 
-		public ComponentAttributeSource(CompositeType compositeType) {
+		public ComponentAttributeSource(EmbeddedType compositeType) {
 			this.compositeType = compositeType;
 		}
 

@@ -37,7 +37,7 @@ import org.hibernate.sql.InFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.spi.AssociationType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.spi.Type;
@@ -341,7 +341,7 @@ public class JoinWalker {
 			}
 			else if ( type.isComponentType() ) {
 				walkCompositeElementTree(
-						(CompositeType) type,
+						(EmbeddedType) type,
 						persister.getElementColumnNames(),
 						persister,
 						alias,
@@ -524,7 +524,7 @@ public class JoinWalker {
 			}
 			else if ( type.isComponentType() ) {
 				walkComponentTree(
-						(CompositeType) type,
+						(EmbeddedType) type,
 						i,
 						0,
 						persister,
@@ -539,7 +539,7 @@ public class JoinWalker {
 		// its sub-properties separately
 		final Type idType = persister.getIdentifierType();
 		if ( idType.isComponentType() ) {
-			final CompositeType cidType = (CompositeType) idType;
+			final EmbeddedType cidType = (EmbeddedType) idType;
 			if ( cidType.isEmbedded() ) {
 				// we have an embedded composite identifier.  Most likely we need to process the composite
 				// properties separately, although there is an edge case where the identifier is really
@@ -579,7 +579,7 @@ public class JoinWalker {
 	 * @throws org.hibernate.MappingException ???
 	 */
 	private void walkComponentTree(
-			final CompositeType componentType,
+			final EmbeddedType componentType,
 			final int propertyNumber,
 			int begin,
 			final OuterJoinLoadable persister,
@@ -626,7 +626,7 @@ public class JoinWalker {
 			else if ( types[i].isComponentType() ) {
 				final PropertyPath subPath = path.append( propertyNames[i] );
 				walkComponentTree(
-						(CompositeType) types[i],
+						(EmbeddedType) types[i],
 						propertyNumber,
 						begin,
 						persister,
@@ -644,7 +644,7 @@ public class JoinWalker {
 	 * For a composite element, add to a list of associations to be fetched by outerjoin
 	 */
 	private void walkCompositeElementTree(
-			final CompositeType compositeType,
+			final EmbeddedType compositeType,
 			final String[] cols,
 			final QueryableCollection persister,
 			final String alias,
@@ -689,7 +689,7 @@ public class JoinWalker {
 			else if ( types[i].isComponentType() ) {
 				final PropertyPath subPath = path.append( propertyNames[i] );
 				walkCompositeElementTree(
-						(CompositeType) types[i],
+						(EmbeddedType) types[i],
 						lhsColumns,
 						persister,
 						alias,

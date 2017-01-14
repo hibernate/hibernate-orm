@@ -132,7 +132,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.spi.AssociationType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.VersionSupport;
@@ -2113,7 +2113,7 @@ public abstract class AbstractEntityPersister
 		// aliases for composite-id's
 		if ( getIdentifierType().isComponentType() ) {
 			// Fetch embedded identifiers propertynames from the "virtual" identifier component
-			CompositeType componentId = (CompositeType) getIdentifierType();
+			EmbeddedType componentId = (EmbeddedType) getIdentifierType();
 			String[] idPropertyNames = componentId.getPropertyNames();
 			String[] idAliases = getIdentifierAliases();
 			String[] idColumnNames = getIdentifierColumnNames();
@@ -5405,7 +5405,7 @@ public abstract class AbstractEntityPersister
 			return;
 		}
 
-		final CompositeType cidType = (CompositeType) idType;
+		final EmbeddedType cidType = (EmbeddedType) idType;
 		if ( !cidType.isEmbedded() ) {
 			entityIdentifierDefinition =
 					EntityIdentifierDefinitionHelper.buildEncapsulatedCompositeIdentifierDefinition( this );

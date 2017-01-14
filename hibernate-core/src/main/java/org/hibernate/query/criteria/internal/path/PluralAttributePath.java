@@ -21,6 +21,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.JpaPathSourceImplementor;
+import org.hibernate.sqm.parser.criteria.tree.path.JpaPluralAttributePath;
 
 /**
  * Models a path for a {@link PluralAttribute} generally obtained from a
@@ -28,7 +29,7 @@ import org.hibernate.query.criteria.JpaPathSourceImplementor;
  *
  * @author Steve Ebersole
  */
-public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Serializable {
+public class PluralAttributePath<X> extends AbstractPathImpl<X> implements JpaPluralAttributePath, Serializable {
 	private final PluralAttribute<?,X,?> attribute;
 	private final CollectionPersister persister;
 

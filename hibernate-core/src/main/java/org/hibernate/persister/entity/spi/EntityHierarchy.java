@@ -6,20 +6,16 @@
  */
 package org.hibernate.persister.entity.spi;
 
-import org.hibernate.EntityMode;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
-import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.persister.common.spi.Caching;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.persister.common.internal.SingularAttributeBasic;
+import org.hibernate.persister.spi.PersisterCreationContext;
 
 /**
- * Models information used across the entire entity inheritance hierarchy.
+ * Defines access to information across the entire entity hierarchy
  *
  * @author Steve Ebersole
  */
 public interface EntityHierarchy {
-	// todo : integrate this with org.hibernate.persister.walking
-
 	/**
 	 * Access to the root entity for this hierarchy.
 	 *
@@ -27,59 +23,10 @@ public interface EntityHierarchy {
 	 */
 	EntityPersister getRootEntityPersister();
 
-	/**
-	 * The strategy used to persist inheritance for this hierarchy.
-	 *
-	 * @return The inheritance strategy for this hierarchy.
-	 */
 	InheritanceStrategy getInheritanceStrategy();
 
-	/**
-	 * The entity mode in effect for this hierarchy.
-	 *
-	 * @return The hierarchy's EntityMode.
-	 */
-	EntityMode getEntityMode();
-
 	IdentifierDescriptor getIdentifierDescriptor();
+	SingularAttributeBasic getVersionAttribute();
 
-	RowIdDescriptor getRowIdDescriptor();
-
-	DiscriminatorDescriptor getDiscriminatorDescriptor();
-
-	VersionDescriptor getVersionDescriptor();
-
-	OptimisticLockStyle getOptimisticLockStyle();
-
-	TenantDiscrimination getTenantDiscrimination();
-
-	EntityRegionAccessStrategy getEntityRegionAccessStrategy();
-
-	NaturalIdRegionAccessStrategy getNaturalIdRegionAccessStrategy();
-
-	/**
-	 * Are entities in this hierarchy mutable?
-	 * <p/>
-	 * For an entity it is only valid to define the root entity of a hierarchy as
-	 * mutable/immutable, hence why we store this on the EntityHierarchy as opposed
-	 * to the EntityPersister
-	 *
-	 * @return {@code true} if the entities in this hierarchy are mutable; {@code false}
-	 * if they are immutable.
-	 */
-	boolean isMutable();
-
-	/**
-	 * "Implicit polymorphism" is a phrase regarding how inheritance should
-	 * behave when one of the entities in the hierarchy is referenced in a
-	 * query.  The default behavior of Hibernate ("implicit polymorphism") is
-	 * that any reference to an entity in the hierarchy also implicitly refers
-	 * to all of its subclasses.
-	 *
-	 * @return {@code true} if implicit polymorphism is enabled; {@code false}
-	 * if disabled.
-	 */
-	boolean isImplicitPolymorphismEnabled();
-
-	String getWhere();
+	void finishInitialization(PersisterCreationContext creationContext, RootClass mappingType);
 }

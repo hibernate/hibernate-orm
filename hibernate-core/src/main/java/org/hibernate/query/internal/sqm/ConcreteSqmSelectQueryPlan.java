@@ -17,7 +17,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.streams.StingArrayCollector;
 import org.hibernate.loader.spi.AfterLoadAction;
-import org.hibernate.persister.common.spi.OrmTypeExporter;
+import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.JpaTupleBuilder;
 import org.hibernate.query.spi.EntityGraphQueryHint;
@@ -84,7 +84,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				for ( SqmSelection selection : sqm.getQuerySpec().getSelectClause().getSelections() ) {
 					tupleElementList.add(
 							new TupleElementImpl(
-									( (OrmTypeExporter) selection.getExpression().getExpressionType() ).getOrmType().getReturnedClass(),
+									( (TypeExporter) selection.getExpression().getExpressionType() ).getOrmType().getReturnedClass(),
 									selection.getAlias()
 							)
 					);

@@ -12,9 +12,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.collection.internal.PluralAttributeElementEntity;
+import org.hibernate.persister.collection.internal.CollectionElementEntity;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.collection.spi.PluralAttributeElement;
+import org.hibernate.persister.collection.spi.CollectionElement;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.from.ColumnBinding;
@@ -25,7 +25,7 @@ import org.hibernate.sql.ast.select.SelectableEmbeddedTypeImpl;
 import org.hibernate.sql.ast.select.SelectableEntityTypeImpl;
 import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -50,7 +50,7 @@ public class PluralAttributeElementReferenceExpression implements DomainReferenc
 
 		// todo : why are these casts to Column needed? elementReference.getColumns() returns List<Column>
 
-		final PluralAttributeElement elementReference = collectionPersister.getElementReference();
+		final CollectionElement elementReference = collectionPersister.getElementReference();
 		switch ( elementReference.getClassification() ) {
 			case BASIC: {
 				final Column column = (Column) elementReference.getColumns().get( 0 );
@@ -72,13 +72,13 @@ public class PluralAttributeElementReferenceExpression implements DomainReferenc
 				this.selectable = new SelectableEmbeddedTypeImpl(
 						this,
 						columnBindings,
-						(CompositeType) elementReference
+						(EmbeddedType) elementReference
 				);
 				break;
 			}
 			case ONE_TO_MANY:
 			case MANY_TO_MANY: {
-				final PluralAttributeElementEntity entityElement = (PluralAttributeElementEntity) collectionPersister.getElementReference();
+				final CollectionElementEntity entityElement = (CollectionElementEntity) collectionPersister.getElementReference();
 				this.columnBindings = new ArrayList<>();
 				for ( Column column : entityElement.getColumns() ) {
 					this.columnBindings.add( columnBindingSource.resolveColumnBinding( column ) );
@@ -87,7 +87,7 @@ public class PluralAttributeElementReferenceExpression implements DomainReferenc
 						this,
 						getPropertyPath(),
 						columnBindingSource,
-						( (PluralAttributeElementEntity) collectionPersister.getElementReference() ).getElementPersister(),
+						( (CollectionElementEntity) collectionPersister.getElementReference() ).getElementPersister(),
 						isShallow
 				);
 				break;
@@ -128,7 +128,7 @@ public class PluralAttributeElementReferenceExpression implements DomainReferenc
 	}
 
 	@Override
-	public PluralAttributeElement getDomainReference() {
+	public CollectionElement getDomainReference() {
 		return collectionPersister.getElementReference();
 	}
 

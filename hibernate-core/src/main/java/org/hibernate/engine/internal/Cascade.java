@@ -27,7 +27,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.spi.Type;
@@ -174,7 +174,7 @@ public final class Cascade {
 						componentPathStackDepth,
 						parent,
 						child,
-						(CompositeType) type,
+						(EmbeddedType) type,
 						anything
 				);
 			}
@@ -270,7 +270,7 @@ public final class Cascade {
 			final int componentPathStackDepth,
 			final Object parent,
 			final Object child,
-			final CompositeType componentType,
+			final EmbeddedType componentType,
 			final Object anything) {
 
 		Object[] children = null;

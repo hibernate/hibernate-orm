@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.EntityMode;
-import org.hibernate.EntityNameResolver;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -30,13 +29,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.ColumnMapping;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.DiscriminatorMappings;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.Type;
@@ -46,7 +42,7 @@ import org.hibernate.type.spi.Type;
  * 
  * @author Gavin King
  */
-public class AnyType extends AbstractType implements CompositeType, AssociationType {
+public class AnyType extends AbstractType implements EmbeddedType, AssociationType {
 	private final Type identifierType;
 	private final Type discriminatorType;
 	private final ColumnMapping[] columnMappings;

@@ -8,7 +8,7 @@ package org.hibernate.persister.collection;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.persister.entity.AbstractPropertyMapping;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -16,14 +16,14 @@ import org.hibernate.type.spi.Type;
  */
 public class CompositeElementPropertyMapping extends AbstractPropertyMapping {
 
-	private final CompositeType compositeType;
+	private final EmbeddedType compositeType;
 	
 	public CompositeElementPropertyMapping(
 			String[] elementColumns,
 			String[] elementColumnReaders,
 			String[] elementColumnReaderTemplates, 
 			String[] elementFormulaTemplates, 
-			CompositeType compositeType,
+			EmbeddedType compositeType,
 			Mapping factory)
 	throws MappingException {
 

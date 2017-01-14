@@ -19,7 +19,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.Template;
 import org.hibernate.type.spi.AssociationType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
@@ -194,7 +194,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		}
 
 		if ( type.isComponentType() ) {
-			CompositeType actype = (CompositeType) type;
+			EmbeddedType actype = (EmbeddedType) type;
 			initComponentPropertyPaths(
 					path,
 					actype,
@@ -272,7 +272,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 
 	protected void initComponentPropertyPaths(
 			final String path,
-			final CompositeType type,
+			final EmbeddedType type,
 			final String[] columns,
 			final String[] columnReaders,
 			final String[] columnReaderTemplates,

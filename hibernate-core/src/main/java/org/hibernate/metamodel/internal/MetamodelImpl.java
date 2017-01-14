@@ -66,21 +66,20 @@ import org.hibernate.persister.common.internal.SingularAttributeEmbedded;
 import org.hibernate.persister.common.spi.AttributeContainer;
 import org.hibernate.persister.common.spi.DatabaseModel;
 import org.hibernate.persister.common.spi.DerivedTable;
-import org.hibernate.persister.common.spi.OrmTypeExporter;
 import org.hibernate.persister.common.spi.PhysicalTable;
+import org.hibernate.persister.common.spi.TypeExporter;
+import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityReference;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
-import org.hibernate.sqm.domain.AttributeReference;
-import org.hibernate.sqm.domain.BasicType;
-import org.hibernate.sqm.domain.DomainReference;
-import org.hibernate.sqm.domain.EntityReference;
-import org.hibernate.sqm.domain.NoSuchAttributeException;
+import org.hibernate.sqm.domain.SqmExpressableTypeEntity;
+import org.hibernate.sqm.domain.type.SqmDomainType;
 import org.hibernate.sqm.query.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.basic.BasicTypeHelper;
@@ -101,13 +100,13 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	private final DatabaseModelImpl databaseModel  = new DatabaseModelImpl();
 
-	private final Map<String,String> imports = new ConcurrentHashMap<>();
-	private final Map<String,EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
-	private final Map<Class,String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
+	private final Map<String,String> importMap = new ConcurrentHashMap<>();
 	private final ConcurrentMap<EntityNameResolver,Object> entityNameResolvers = new ConcurrentHashMap<>();
-
-	private final Map<String,CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
+	private final Map<Class,String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
 	private final Map<String,Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
+
+	private Map<String, PolymorphicEntityReferenceImpl> polymorphicEntityReferenceMap = new HashMap<>();
+	private Map<String,SqmDomainType> javaTypeNameToDomainTypeMap = new HashMap<>();
 
 	private final Map<Class<?>, EntityTypeImpl<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
 	private final Map<Class<?>, EmbeddableTypeImpl<?>> jpaEmbeddableTypeMap = new ConcurrentHashMap<>();
@@ -115,7 +114,6 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	private final Map<String, EntityTypeImpl<?>> jpaEntityTypesByEntityName = new ConcurrentHashMap<>();
 
 	private final Map<String,EntityGraph> entityGraphMap = new ConcurrentHashMap<>();
-	private Map<String,PolymorphicEntityReferenceImpl> polymorphicEntityTypeDescriptorMap;
 
 	/**
 	 * Instantiate the MetamodelImpl.
@@ -142,7 +140,9 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 		populateDatabaseModel( mappingMetadata );
 
-		this.imports.putAll( mappingMetadata.getImports() );
+		this.importMap.putAll( mappingMetadata.getImports() );
+
+		final PersisterFactory persisterFactory = sessionFactory.getServiceRegistry().getService( PersisterFactory.class );
 
 		final PersisterCreationContext persisterCreationContext = new PersisterCreationContext() {
 			@Override
@@ -161,19 +161,84 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			}
 
 			@Override
+			public TypeConfiguration getTypeConfiguration() {
+				return typeConfiguration;
+			}
+
+			@Override
+			public PersisterFactory getPersisterFactory() {
+				return persisterFactory;
+			}
+
+			@Override
+			public void registerEntityPersister(EntityPersister entityPersister) {
+				typeConfiguration.register( entityPersister );
+
+				if ( entityPersister.getConcreteProxyClass() != null
+						&& entityPersister.getConcreteProxyClass().isInterface()
+						&& !Map.class.isAssignableFrom( entityPersister.getConcreteProxyClass() )
+						&& entityPersister.getMappedClass() != entityPersister.getConcreteProxyClass() ) {
+					// IMPL NOTE : we exclude Map based proxy interfaces here because that should
+					//		indicate MAP entity mode.0
+
+					if ( entityPersister.getMappedClass().equals( entityPersister.getConcreteProxyClass() ) ) {
+						// this part handles an odd case in the Hibernate test suite where we map an interface
+						// as the class and the proxy.  I cannot think of a real life use case for that
+						// specific test, but..
+						log.debugf(
+								"Entity [%s] mapped same interface [%s] as class and proxy",
+								entityPersister.getEntityName(),
+								entityPersister.getMappedClass()
+						);
+					}
+					else {
+						final String old = entityProxyInterfaceMap.put( entityPersister.getConcreteProxyClass(), entityPersister.getEntityName() );
+						if ( old != null ) {
+							throw new HibernateException(
+									String.format(
+											Locale.ENGLISH,
+											"Multiple entities [%s, %s] named the same interface [%s] as their proxy which is not supported",
+											old,
+											entityPersister.getEntityName(),
+											entityPersister.getConcreteProxyClass().getName()
+									)
+							);
+						}
+					}
+				}
+
+				MetamodelImpl.registerEntityNameResolvers( entityPersister, entityNameResolvers );
+			}
+
+			@Override
 			public void registerCollectionPersister(CollectionPersister collectionPersister) {
-				if ( collectionPersisterMap.put( collectionPersister.getRole(), collectionPersister ) != null ) {
-					throw new HibernateException( "CollectionPersister was already registered under that role : " + collectionPersister.getRole() );
+				typeConfiguration.register( collectionPersister );
+
+				if ( collectionPersister.getIndexReference() != null
+						&& collectionPersister.getIndexReference() instanceof EntityReference ) {
+					final String entityName = ( (EntityReference) collectionPersister.getIndexReference() ).getEntityName();
+					final Set<String> roles = collectionRolesByEntityParticipant.computeIfAbsent(
+							entityName,
+							k -> new HashSet<>()
+					);
+					roles.add( collectionPersister.getRoleName() );
+				}
+
+				if ( collectionPersister.getElementReference() instanceof EntityReference ) {
+					final String entityName = ( (EntityReference) collectionPersister.getElementReference() ).getEntityName();
+					final Set<String> roles = collectionRolesByEntityParticipant.computeIfAbsent(
+							entityName,
+							k -> new HashSet<>()
+					);
+					roles.add( collectionPersister.getRoleName() );
 				}
 			}
 
 			@Override
-			public void registerEntityNameResolvers(EntityPersister entityPersister) {
-				MetamodelImpl.registerEntityNameResolvers( entityPersister, entityNameResolvers );
+			public void registerEmbeddablePersister(EmbeddablePersister embeddablePersister) {
+				typeConfiguration.register( embeddablePersister );
 			}
 		};
-
-		final PersisterFactory persisterFactory = getSessionFactory().getServiceRegistry().getService( PersisterFactory.class );
 
 		for ( final PersistentClass model : mappingMetadata.getEntityBindings() ) {
 			final EntityRegionAccessStrategy accessStrategy = getSessionFactory().getCache().determineEntityRegionAccessStrategy(
@@ -184,42 +249,12 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 					model
 			);
 
-			final EntityPersister cp = persisterFactory.createEntityPersister(
+			persisterFactory.createEntityPersister(
 					model,
 					accessStrategy,
 					naturalIdAccessStrategy,
 					persisterCreationContext
 			);
-			entityPersisterMap.put( model.getEntityName(), cp );
-
-			if ( cp.getConcreteProxyClass() != null
-					&& cp.getConcreteProxyClass().isInterface()
-					&& !Map.class.isAssignableFrom( cp.getConcreteProxyClass() )
-					&& cp.getMappedClass() != cp.getConcreteProxyClass() ) {
-				// IMPL NOTE : we exclude Map based proxy interfaces here because that should
-				//		indicate MAP entity mode.0
-
-				if ( cp.getMappedClass().equals( cp.getConcreteProxyClass() ) ) {
-					// this part handles an odd case in the Hibernate test suite where we map an interface
-					// as the class and the proxy.  I cannot think of a real life use case for that
-					// specific test, but..
-					log.debugf( "Entity [%s] mapped same interface [%s] as class and proxy", cp.getEntityName(), cp.getMappedClass() );
-				}
-				else {
-					final String old = entityProxyInterfaceMap.put( cp.getConcreteProxyClass(), cp.getEntityName() );
-					if ( old != null ) {
-						throw new HibernateException(
-								String.format(
-										Locale.ENGLISH,
-										"Multiple entities [%s, %s] named the same interface [%s] as their proxy which is not supported",
-										old,
-										cp.getEntityName(),
-										cp.getConcreteProxyClass().getName()
-								)
-						);
-					}
-				}
-			}
 		}
 
 		persisterFactory.finishUp( persisterCreationContext );
@@ -481,7 +516,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 //	 */
 //	private MetamodelImpl(
 //			SessionFactoryImplementor sessionFactory,
-//			Map<String, String> imports,
+//			Map<String, String> importMap,
 //			Map<String, EntityPersister> entityPersisterMap,
 //			Map<Class, String> entityProxyInterfaceMap,
 //			ConcurrentHashMap<EntityNameResolver, Object> entityNameResolvers,
@@ -492,7 +527,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 //			Map<Class<?>, MappedSuperclassType<?>> mappedSuperclassTypeMap,
 //			Map<String, EntityTypeImpl<?>> entityTypesByEntityName) {
 //		this.sessionFactory = sessionFactory;
-//		this.imports = imports;
+//		this.importMap = importMap;
 //		this.entityPersisterMap = entityPersisterMap;
 //		this.entityProxyInterfaceMap = entityProxyInterfaceMap;
 //		this.entityNameResolvers = entityNameResolvers;
@@ -576,11 +611,11 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public String getImportedClassName(String className) {
-		String result = imports.get( className );
+		String result = importMap.get( className );
 		if ( result == null ) {
 			try {
 				getSessionFactory().getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
-				imports.put( className, className );
+				importMap.put( className, className );
 				return className;
 			}
 			catch ( ClassLoadingException cnfe ) {
@@ -653,7 +688,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public Map<String, EntityPersister> entityPersisters() {
-		return entityPersisterMap;
+		return typeConfiguration.;
 	}
 
 	@Override
@@ -787,51 +822,27 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public EntityReference resolveEntityReference(String entityName) {
-		final String importedName = sessionFactory.getMetamodel().getImportedClassName( entityName );
-		if ( importedName != null ) {
-			entityName = importedName;
+	public SqmExpressableTypeEntity resolveEntityReference(String entityName) {
+		if ( importMap.containsKey( entityName ) ) {
+
+		}
+		if ( importMap.containsKey( entityName ) ) {
+			entityName = importMap.get( entityName );
 		}
 
-		// look at existing non-polymorphic descriptors
-		final EntityPersister persister = sessionFactory.getMetamodel().entityPersister( entityName );
-		if ( persister != null ) {
-			return persister;
-		}
-
-		// look at existing polymorphic descriptors
-		if ( polymorphicEntityTypeDescriptorMap != null ) {
-			PolymorphicEntityReferenceImpl existingEntry = polymorphicEntityTypeDescriptorMap.get( entityName );
-			if ( existingEntry != null ) {
-				return existingEntry;
+		SqmExpressableTypeEntity entityType = typeConfiguration.findEntityPersister( entityName );
+		if ( entityType == null ) {
+			entityType = polymorphicEntityReferenceMap.get( entityName );
+			if ( entityType == null ) {
+				// see if it is an unmapped polymorphic entity reference
+				entityType = resolveUnmappedPolymorphicReference( entityName );
 			}
 		}
 
-
-		final String[] implementors = sessionFactory.getMetamodel().getImplementors( entityName );
-		if ( implementors != null ) {
-			if ( implementors.length == 1 ) {
-				return entityPersister( implementors[0] );
-			}
-			else if ( implementors.length > 1 ) {
-				final List<EntityPersister> implementDescriptors = new ArrayList<>();
-				for ( String implementor : implementors ) {
-					implementDescriptors.add( entityPersister( implementor ) );
-				}
-				if ( polymorphicEntityTypeDescriptorMap == null ) {
-					polymorphicEntityTypeDescriptorMap = new HashMap<>();
-				}
-				PolymorphicEntityReferenceImpl descriptor = new PolymorphicEntityReferenceImpl(
-						this,
-						entityName,
-						implementDescriptors
-				);
-				polymorphicEntityTypeDescriptorMap.put( entityName, descriptor );
-				return descriptor;
-			}
+		if ( entityType == null ) {
+			throw new IllegalArgumentException( "Per JPA spec : no entity named " + entityName );
 		}
-
-		throw new HibernateException( "Could not resolve entity reference [" + entityName + "] from query" );
+		return entityType;
 	}
 
 	@Override
@@ -858,14 +869,14 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			return ( (SingularAttributeEmbedded) sourceBinding ).getEmbeddablePersister().findAttribute( attributeName );
 		}
 
-		if ( sourceBinding instanceof OrmTypeExporter ) {
-			return resolveAttributeReferenceSource( ( (OrmTypeExporter) sourceBinding ) ).findAttribute( attributeName );
+		if ( sourceBinding instanceof TypeExporter ) {
+			return resolveAttributeReferenceSource( ( (TypeExporter) sourceBinding ) ).findAttribute( attributeName );
 		}
 
 		throw new IllegalArgumentException( "Unexpected type [" + sourceBinding + "] passed as 'attribute source'" );
 	}
 
-	private AttributeContainer resolveAttributeReferenceSource(OrmTypeExporter typeAccess) {
+	private AttributeContainer resolveAttributeReferenceSource(TypeExporter typeAccess) {
 		// todo
 		final Type type = typeAccess.getOrmType();
 		if ( type instanceof org.hibernate.type.spi.EntityType ) {
@@ -876,7 +887,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 					collectionPersister( ( (CollectionType) type ).getRole() ).getElementReference()
 			);
 		}
-		else if ( type instanceof CompositeType ) {
+		else if ( type instanceof EmbeddedType ) {
 			throw new org.hibernate.cfg.NotYetImplementedException( "Resolving CompositeType attribute references is not yet implemented; requires Type system changes" );
 		}
 
@@ -906,8 +917,8 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 			return (BasicType) domainReference;
 		}
 
-		if ( domainReference instanceof OrmTypeExporter ) {
-			return resolveBasicType( ( (OrmTypeExporter) domainReference ).getOrmType().getReturnedClass() );
+		if ( domainReference instanceof TypeExporter ) {
+			return resolveBasicType( ( (TypeExporter) domainReference ).getOrmType().getReturnedClass() );
 		}
 
 		throw new IllegalArgumentException( "Unexpected type [" + domainReference + "]" );

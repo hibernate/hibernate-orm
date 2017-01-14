@@ -21,7 +21,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -45,7 +45,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 	private Class[] interfaces;
 	private Method getIdentifierMethod;
 	private Method setIdentifierMethod;
-	private CompositeType componentIdType;
+	private EmbeddedType componentIdType;
 	private boolean overridesEquals;
 
 	private Class proxyClass;
@@ -60,7 +60,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 			final Set<Class> interfaces,
 			final Method getIdentifierMethod,
 			final Method setIdentifierMethod,
-			CompositeType componentIdType) throws HibernateException {
+			EmbeddedType componentIdType) throws HibernateException {
 		this.entityName = entityName;
 		this.persistentClass = persistentClass;
 		this.interfaces = toArray( interfaces );

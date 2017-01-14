@@ -11,20 +11,28 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.common.spi.AttributeContainer;
+import org.hibernate.persister.common.spi.CompositeContainer;
+import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.service.Service;
 
 /**
- * Contract for creating persister instances (both {@link EntityPersister} and {@link CollectionPersister} varieties).
+ * Contract for creating persister instances including {@link EntityPersister},
+ * {@link CollectionPersister} and {@link org.hibernate.persister.embeddable.spi.EmbeddablePersister}
  *
  * @author Steve Ebersole
  */
 public interface PersisterFactory extends Service {
 	/**
 	 * Create an entity persister instance.
+	 * <p/>
+	 * A persister will not be completely usable after return from this method.  The returned
+	 * reference is good for linking references together, etc.  The persister will be fully
+	 * initialized later via its {@link EntityPersister#afterInitialize} method during {@link #finishUp}
 	 *
 	 * @param entityBinding The mapping information describing the entity
 	 * @param entityCacheAccessStrategy The cache access strategy for the entity region
@@ -43,6 +51,10 @@ public interface PersisterFactory extends Service {
 
 	/**
 	 * Create a collection persister instance.
+	 * <p/>
+	 * A persister will not be completely usable after return from this method.  The returned
+	 * reference is good for linking references together, etc.  The persister will be fully
+	 * initialized later via its {@link EntityPersister#afterInitialize} method during {@link #finishUp}
 	 *
 	 * @param collectionBinding The mapping information describing the collection
 	 * @param cacheAccessStrategy The cache access strategy for the collection region
@@ -54,10 +66,31 @@ public interface PersisterFactory extends Service {
 	 */
 	CollectionPersister createCollectionPersister(
 			Collection collectionBinding,
-			AttributeContainer source,
-			String propertyName,
+			ManagedTypeImplementor source,
+			String localName,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			PersisterCreationContext creationContext) throws HibernateException;
 
+	/**
+	 * Create an embeddable persister instance.
+	 *
+	 * @param componentBinding The mapping information describing the composition
+	 * @param creationContext Access to additional information needed to create a persister
+	 *
+	 * @return An appropriate collection persister instance.
+	 *
+	 * @throws HibernateException Indicates a problem building the persister.
+	 */
+	EmbeddablePersister createEmbeddablePersister(
+			Component componentBinding,
+			CompositeContainer source,
+			String localName,
+			PersisterCreationContext creationContext);
+
+	/**
+	 * Called after all entity mapping descriptors have been processed.
+	 *
+	 * @param creationContext Access to additional information
+	 */
 	void finishUp(PersisterCreationContext creationContext);
 }

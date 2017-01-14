@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.from.ColumnBinding;
 import org.hibernate.sql.convert.results.internal.ReturnCompositeImpl;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
@@ -23,12 +23,12 @@ import org.hibernate.type.spi.CompositeType;
 public class SelectableEmbeddedTypeImpl implements Selectable {
 	private final Expression selectedExpression;
 	private final List<ColumnBinding> columnBindings;
-	private final CompositeType embeddedType;
+	private final EmbeddedType embeddedType;
 
 	public SelectableEmbeddedTypeImpl(
 			Expression selectedExpression,
 			List<ColumnBinding> columnBindings,
-			CompositeType embeddedType) {
+			EmbeddedType embeddedType) {
 		this.selectedExpression = selectedExpression;
 		this.columnBindings = columnBindings;
 		this.embeddedType = embeddedType;

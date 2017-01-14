@@ -21,7 +21,7 @@ import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.tuple.AbstractNonIdentifierAttribute;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.spi.AssociationType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.spi.Type;
 
@@ -45,7 +45,7 @@ public abstract class AbstractCompositionAttribute
 			SessionFactoryImplementor sessionFactory,
 			int entityBasedAttributeNumber,
 			String attributeName,
-			CompositeType attributeType,
+			EmbeddedType attributeType,
 			int columnStartPosition,
 			BaselineAttributeInformation baselineInfo) {
 		super( source, sessionFactory, entityBasedAttributeNumber, attributeName, attributeType, baselineInfo );
@@ -53,8 +53,8 @@ public abstract class AbstractCompositionAttribute
 	}
 
 	@Override
-	public CompositeType getType() {
-		return (CompositeType) super.getType();
+	public EmbeddedType getType() {
+		return (EmbeddedType) super.getType();
 	}
 
 	@Override
@@ -134,7 +134,7 @@ public abstract class AbstractCompositionAttribute
 								);
 							}
 
-							final CompositeType cType = getType();
+							final EmbeddedType cType = getType();
 							final boolean nullable =
 									cType.getPropertyNullability() == null ||
 											cType.getPropertyNullability()[subAttributeNumber];
@@ -166,7 +166,7 @@ public abstract class AbstractCompositionAttribute
 									sessionFactory(),
 									attributeNumber(),
 									name,
-									(CompositeType) type,
+									(EmbeddedType) type,
 									columnPosition,
 									new BaselineAttributeInformation.Builder()
 											.setInsertable( AbstractCompositionAttribute.this.isInsertable() )
@@ -182,7 +182,7 @@ public abstract class AbstractCompositionAttribute
 							);
 						}
 						else {
-							final CompositeType cType = getType();
+							final EmbeddedType cType = getType();
 							final boolean nullable = cType.getPropertyNullability() == null || cType.getPropertyNullability()[subAttributeNumber];
 
 							return new CompositeBasedBasicAttribute(

@@ -22,12 +22,11 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.common.internal.CompositeContainer;
 import org.hibernate.persister.common.spi.AttributeContainer;
-import org.hibernate.persister.common.spi.DatabaseModel;
-import org.hibernate.persister.common.spi.JoinableAttributeContainer;
-import org.hibernate.persister.common.spi.OrmTypeExporter;
+import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.PluralAttribute;
+import org.hibernate.persister.common.spi.TypeExporter;
+import org.hibernate.persister.embeddable.spi.EmbeddableContainer;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
@@ -37,7 +36,6 @@ import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sql.convert.spi.TableGroupProducer;
 import org.hibernate.sqm.query.from.SqmFrom;
-import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -80,22 +78,40 @@ import org.hibernate.type.spi.Type;
  * @see org.hibernate.collection.spi.PersistentCollection
  * @author Gavin King
  */
-public interface CollectionPersister
-		extends CollectionDefinition, PluralAttribute, TableGroupProducer, OrmTypeExporter, CompositeContainer {
+public interface CollectionPersister<O,C,E>
+		extends PluralAttribute<O,C,E>, TableGroupProducer, TypeExporter, EmbeddableContainer<C>, CollectionDefinition {
 
 	Class[] CONSTRUCTOR_SIGNATURE = new Class[] {
 			Collection.class,
-			AttributeContainer.class,
+			ManagedTypeImplementor.class,
 			String.class,
 			CollectionRegionAccessStrategy.class,
 			PersisterCreationContext.class
 	};
 
-
-	@Override
-	JoinableAttributeContainer getAttributeContainer();
+	// todo : in terms of org.hibernate.sqm.domain.SqmNavigableSource.findNavigable() impl, be sure to only recognize:
+	//			1) key
+	//			2) index
+	//			3) element
+	//			4) value
+	//			5) elements
+	//			6) indices
 
 	void finishInitialization(Collection collectionBinding, PersisterCreationContext creationContext);
+
+	String getRoleName();
+
+	CollectionKey getForeignKeyDescriptor();
+	CollectionId getIdDescriptor();
+
+	@Override
+	CollectionElement getElementReference();
+
+	@Override
+	CollectionIndex getIndexReference();
+
+	@Override
+	org.hibernate.type.spi.CollectionType getOrmType();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

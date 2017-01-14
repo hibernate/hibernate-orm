@@ -9,52 +9,46 @@ package org.hibernate.persister.common.internal;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.hibernate.persister.common.spi.AbstractSingularAttribute;
-import org.hibernate.persister.common.spi.AttributeContainer;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.JoinableAttribute;
+import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.SingularAttribute;
 import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
-import org.hibernate.sql.convert.spi.TableGroupProducer;
-import org.hibernate.sqm.domain.EntityReference;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.persister.embeddable.spi.EmbeddableReference;
+import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.sqm.domain.SqmNavigable;
+import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
  */
 public class SingularAttributeEmbedded
-		extends AbstractSingularAttribute<CompositeType>
-		implements SingularAttribute, CompositeReference, JoinableAttribute {
+		extends AbstractSingularAttribute<EmbeddedType>
+		implements SingularAttribute, EmbeddableReference, JoinableAttribute {
 
-	private final CompositeContainer compositeContainer;
 	private final EmbeddablePersister embeddablePersister;
 
 	public SingularAttributeEmbedded(
-			AttributeContainer declaringType,
-			CompositeContainer compositeContainer,
+			ManagedTypeImplementor declaringType,
 			String attributeName,
+			PropertyAccess propertyAccess,
+			Disposition disposition,
 			EmbeddablePersister embeddablePersister) {
-		super( declaringType, attributeName, embeddablePersister.getOrmType(), true );
-		this.compositeContainer = compositeContainer;
+		super( declaringType, attributeName, propertyAccess, embeddablePersister.getOrmType(), disposition, true );
 		this.embeddablePersister = embeddablePersister;
 	}
 
 	@Override
-	public CompositeContainer getCompositeContainer() {
-		return compositeContainer;
+	public ManagedTypeImplementor getSource() {
+		return super.getSource();
 	}
 
 	@Override
-	public TableGroupProducer resolveTableGroupProducer() {
-		return getCompositeContainer().resolveTableGroupProducer();
-	}
-
-	@Override
-	public boolean canCompositeContainCollections() {
-		return embeddablePersister.canCompositeContainCollections();
+	public EmbeddedType getExportedDomainType() {
+		return (EmbeddedType) super.getExportedDomainType();
 	}
 
 	public EmbeddablePersister getEmbeddablePersister() {
@@ -77,13 +71,23 @@ public class SingularAttributeEmbedded
 	}
 
 	@Override
-	public Optional<EntityReference> toEntityReference() {
-		return Optional.empty();
-	}
-
-	@Override
 	public List<JoinColumnMapping> getJoinColumnMappings() {
 		// there are no columns involved in a join to an embedded/composite attribute
 		return Collections.emptyList();
+	}
+
+	@Override
+	public PersistentAttributeType getPersistentAttributeType() {
+		return PersistentAttributeType.EMBEDDED;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
+	}
+
+	@Override
+	public SqmNavigable findNavigable(String navigableName) {
+		return getEmbeddablePersister().findNavigable( navigableName );
 	}
 }

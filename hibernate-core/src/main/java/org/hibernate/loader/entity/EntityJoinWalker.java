@@ -24,7 +24,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.spi.AssociationType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
@@ -142,17 +142,17 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 			if ( entityPersister != null
 					&& entityPersister.getIdentifierType().isComponentType()
 					&& ! entityPersister.getEntityMetamodel().getIdentifierProperty().isEmbedded()
-					&& hasAssociation( (CompositeType) entityPersister.getIdentifierType() ) ) {
+					&& hasAssociation( (EmbeddedType) entityPersister.getIdentifierType() ) ) {
 				aliasesForAssociationsWithCompositesIds.add( oja.getRhsAlias() );
 			}
 		}
 
-		private boolean hasAssociation(CompositeType componentType) {
+		private boolean hasAssociation(EmbeddedType componentType) {
 			for ( Type subType : componentType.getSubtypes() ) {
 				if ( subType.getClassification().equals( Type.Classification.ENTITY ) ) {
 					return true;
 				}
-				else if ( subType.isComponentType() && hasAssociation( ( (CompositeType) subType ) ) ) {
+				else if ( subType.isComponentType() && hasAssociation( ( (EmbeddedType) subType ) ) ) {
 					return true;
 				}
 			}
@@ -177,7 +177,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 				findKeyManyToOneTargetIndices(
 						keyManyToOneTargetIndices,
 						joinWithCompositeId,
-						(CompositeType) entityPersister.getIdentifierType()
+						(EmbeddedType) entityPersister.getIdentifierType()
 				);
 
 				if ( ! keyManyToOneTargetIndices.isEmpty() ) {
@@ -199,7 +199,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 		private void findKeyManyToOneTargetIndices(
 				ArrayList<Integer> keyManyToOneTargetIndices,
 				OuterJoinableAssociation joinWithCompositeId,
-				CompositeType componentType) {
+				EmbeddedType componentType) {
 			for ( Type subType : componentType.getSubtypes() ) {
 				if ( subType.getClassification().equals( Type.Classification.ENTITY ) ) {
 					Integer index = locateKeyManyToOneTargetIndex( joinWithCompositeId, (EntityType) subType );
@@ -211,7 +211,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 					findKeyManyToOneTargetIndices(
 							keyManyToOneTargetIndices,
 							joinWithCompositeId,
-							(CompositeType) subType
+							(EmbeddedType) subType
 					);
 				}
 			}

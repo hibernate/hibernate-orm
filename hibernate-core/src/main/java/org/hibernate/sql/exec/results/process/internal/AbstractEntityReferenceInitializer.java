@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.common.spi.Attribute;
 import org.hibernate.persister.common.spi.PluralAttribute;
-import org.hibernate.persister.common.spi.SingularAttribute;
+import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.convert.results.spi.EntityReference;
@@ -196,7 +196,7 @@ public abstract class AbstractEntityReferenceInitializer
 				hydratedValue = NOT_NULL_COLLECTION;
 			}
 			else {
-				SingularAttribute singularAttribute = (SingularAttribute) attribute;
+				SingularOrmAttribute singularAttribute = (SingularOrmAttribute) attribute;
 				final SqlSelectionGroup selectionGroup = sqlSelectionGroupMap.get( singularAttribute );
 				if ( selectionGroup == null ) {
 					// not selected (lazy group, etc)

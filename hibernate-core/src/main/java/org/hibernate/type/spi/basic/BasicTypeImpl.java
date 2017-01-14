@@ -19,7 +19,7 @@ import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
-import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * AbstractBasicTypeImpl implementation based on construction binding of the delegates

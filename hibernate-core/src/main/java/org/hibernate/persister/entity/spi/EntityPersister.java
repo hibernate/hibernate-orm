@@ -30,10 +30,10 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.common.internal.CompositeContainer;
-import org.hibernate.persister.common.spi.AttributeContainer;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.NavigableSource;
 import org.hibernate.persister.common.spi.Table;
+import org.hibernate.persister.embeddable.spi.EmbeddableContainer;
 import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.EntityDefinition;
@@ -43,8 +43,7 @@ import org.hibernate.sql.ast.from.TableSpace;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sql.convert.spi.TableGroupProducer;
-import org.hibernate.sqm.domain.EntityReference;
-import org.hibernate.sqm.query.JoinType;
+import org.hibernate.sqm.query.SqmJoinType;
 import org.hibernate.sqm.query.from.SqmFrom;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -56,35 +55,35 @@ import org.hibernate.type.spi.Type;
  * <p/>
  * Implementations must be thread-safe (preferably immutable).
  * <p/>
- * Unless a custom {@link org.hibernate.persister.spi.PersisterFactory} is used, it is expected
- * that implementations of EntityPersister define a constructor accepting the following arguments:<ol>
- *     <li>
- *         {@link org.hibernate.mapping.PersistentClass} - describes the metadata about the entity
- *         to be handled by the persister
- *     </li>
- *     <li>
- *         {@link EntityRegionAccessStrategy} - the second level caching strategy for this entity
- *     </li>
- *     <li>
- *         {@link NaturalIdRegionAccessStrategy} - the second level caching strategy for the natural-id
- *         defined for this entity, if one
- *     </li>
- *     <li>
- *         {@link org.hibernate.persister.spi.PersisterCreationContext} - access to additional
- *         information useful while constructing the persister.
- *     </li>
- * </ol>
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
+ * @see EntityPersister#CONSTRUCTOR_SIGNATURE
  */
-public interface EntityPersister
-		extends OptimisticCacheSource, EntityReference, AttributeContainer, CompositeContainer, TableGroupProducer, EntityDefinition {
+public interface EntityPersister<T>
+		extends OptimisticCacheSource, EntityReference<T>, NavigableSource<T>, EmbeddableContainer<T>, TableGroupProducer, EntityDefinition {
 	/**
-	 * The required signature for all EntityPersister implementations
+	 * Unless a custom {@link org.hibernate.persister.spi.PersisterFactory} is used, it is expected
+	 * that implementations of EntityPersister define a constructor accepting the following arguments:<ol>
+	 *     <li>
+	 *         {@link org.hibernate.mapping.PersistentClass} - describes the metadata about the entity
+	 *         to be handled by the persister
+	 *     </li>
+	 *     <li>
+	 *         {@link EntityRegionAccessStrategy} - the second level caching strategy for this entity
+	 *     </li>
+	 *     <li>
+	 *         {@link NaturalIdRegionAccessStrategy} - the second level caching strategy for the natural-id
+	 *         defined for this entity, if one
+	 *     </li>
+	 *     <li>
+	 *         {@link org.hibernate.persister.spi.PersisterCreationContext} - access to additional
+	 *         information useful while constructing the persister.
+	 *     </li>
+	 * </ol>
 	 */
 	Class[] CONSTRUCTOR_SIGNATURE = new Class[] {
 			PersistentClass.class,
@@ -170,7 +169,7 @@ public interface EntityPersister
 	 * @param fkColumns The left-hand side join columns
 	 * @param fkTargetColumns The right-hand side join columns
 	 */
-	void addTableJoins(TableGroup group, JoinType joinType, List<Column> fkColumns, List<Column> fkTargetColumns);
+	void addTableJoins(TableGroup group, SqmJoinType joinType, List<Column> fkColumns, List<Column> fkTargetColumns);
 
 
 

@@ -21,7 +21,7 @@ import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 
 /**
@@ -107,12 +107,12 @@ public class QuerySpaceHelper {
 		return makeCompositeQuerySpace(
 				lhsQuerySpace,
 				new CompositePropertyMapping(
-						(CompositeType) attributeDefinition.getType(),
+						(EmbeddedType) attributeDefinition.getType(),
 						lhsQuerySpace.getPropertyMapping(),
 						attributeDefinition.getName()
 				),
 				attributeDefinition.getName(),
-				(CompositeType) attributeDefinition.getType(),
+				(EmbeddedType) attributeDefinition.getType(),
 				querySpaceUid,
 				required,
 				shouldIncludeJoin
@@ -123,7 +123,7 @@ public class QuerySpaceHelper {
 			ExpandingQuerySpace lhsQuerySpace,
 			CompositePropertyMapping compositePropertyMapping,
 			String attributeName,
-			CompositeType attributeType,
+			EmbeddedType attributeType,
 			String querySpaceUid,
 			boolean required,
 			boolean shouldIncludeJoin) {

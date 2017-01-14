@@ -16,7 +16,7 @@ import org.hibernate.sql.convert.results.internal.ReturnCompositeImpl;
 import org.hibernate.sql.exec.results.process.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.exec.results.process.spi.RowProcessingState;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
@@ -24,12 +24,12 @@ import org.hibernate.type.spi.CompositeType;
 public class ReturnAssemblerComposite implements ReturnAssembler {
 	private final ReturnCompositeImpl returnComposite;
 	private final List<SqlSelection> sqlSelections;
-	private final CompositeType compositeType;
+	private final EmbeddedType compositeType;
 
 	public ReturnAssemblerComposite(
 			ReturnCompositeImpl returnComposite,
 			List<SqlSelection> sqlSelections,
-			CompositeType compositeType) {
+			EmbeddedType compositeType) {
 
 		this.returnComposite = returnComposite;
 		this.sqlSelections = sqlSelections;

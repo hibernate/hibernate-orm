@@ -11,7 +11,7 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.internal.SingularAttributeEntity;
-import org.hibernate.persister.common.spi.SingularAttribute;
+import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
@@ -75,7 +75,7 @@ public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpr
 			);
 		}
 		else {
-			final SingularAttribute singularAttribute = (SingularAttribute) singularAttributeBinding.getAttribute();
+			final SingularOrmAttribute singularAttribute = (SingularOrmAttribute) singularAttributeBinding.getAttribute();
 			final TableGroup tableGroup = buildingContext.getFromClauseIndex().findResolvedTableGroup( singularAttributeBinding.getLhs() );
 
 			if ( singularAttributeBinding.getFromElement() == null ) {

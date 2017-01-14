@@ -7,14 +7,13 @@
 
 package org.hibernate.persister.entity.spi;
 
-import org.hibernate.persister.common.spi.AttributeContainer;
-import org.hibernate.persister.common.spi.SingularAttribute;
+import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.persister.common.spi.VirtualAttribute;
 
 /**
  * @author Steve Ebersole
  */
-public interface RowIdDescriptor extends VirtualAttribute, SingularAttribute {
+public interface RowIdDescriptor extends VirtualAttribute, SingularOrmAttribute {
 	/**
 	 * This implementation returns the ROW_ID descriptor from the root
 	 * Entity persister for the hierarchy to which this descriptor is

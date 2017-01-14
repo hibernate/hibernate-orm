@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sqm.domain.type.SqmDomainType;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ForeignKeyDirection;
@@ -35,7 +36,7 @@ import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
  *
  * @since 6.0
  */
-public interface Type<T> extends org.hibernate.sqm.domain.DomainReference {
+public interface Type<T> extends SqmDomainType {
 	/**
 	 * Enumerated values for the classification of the Type.
 	 */
@@ -50,7 +51,7 @@ public interface Type<T> extends org.hibernate.sqm.domain.DomainReference {
 
 		/**
 		 * Represents composite values (what JPA calls embedded/embeddable).  Types classified as
-		 * COMPOSITE will be castable to {@link CompositeType}
+		 * COMPOSITE will be castable to {@link EmbeddedType}
 		 * <p/>
 		 * Corresponds to the JPA {@link PersistenceType#EMBEDDABLE} classification
 		 */
@@ -395,7 +396,7 @@ public interface Type<T> extends org.hibernate.sqm.domain.DomainReference {
 	}
 
 	default Class getReturnedClass() {
-		return getJavaTypeDescriptor().getJavaTypeClass();
+		return getJavaTypeDescriptor().getJavaType();
 	}
 
 	boolean[] toColumnNullness(Object value);

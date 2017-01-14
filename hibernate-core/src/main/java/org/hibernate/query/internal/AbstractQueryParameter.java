@@ -19,15 +19,12 @@ public abstract class AbstractQueryParameter<T> implements QueryParameterImpleme
 	private static final Logger log = Logger.getLogger( AbstractQueryParameter.class );
 
 	private boolean allowMultiValuedBinding;
-	private boolean isPassNullsEnabled;
 	private Type anticipatedType;
 
 	public AbstractQueryParameter(
 			boolean allowMultiValuedBinding,
-			boolean isPassNullsEnabled,
 			Type anticipatedType) {
 		this.allowMultiValuedBinding = allowMultiValuedBinding;
-		this.isPassNullsEnabled = isPassNullsEnabled;
 		this.anticipatedType = anticipatedType;
 	}
 
@@ -40,15 +37,6 @@ public abstract class AbstractQueryParameter<T> implements QueryParameterImpleme
 	@Override
 	public boolean allowsMultiValuedBinding() {
 		return allowMultiValuedBinding;
-	}
-
-	@Override
-	public boolean isPassNullsEnabled() {
-		return isPassNullsEnabled;
-	}
-
-	public void enablePassingNulls(boolean enabled) {
-		this.isPassNullsEnabled = enabled;
 	}
 
 	@Override

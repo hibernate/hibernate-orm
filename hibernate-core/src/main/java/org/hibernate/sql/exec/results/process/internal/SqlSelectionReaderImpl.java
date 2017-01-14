@@ -16,7 +16,7 @@ import org.hibernate.sql.exec.results.process.spi.JdbcValuesSourceProcessingStat
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * @author Steve Ebersole

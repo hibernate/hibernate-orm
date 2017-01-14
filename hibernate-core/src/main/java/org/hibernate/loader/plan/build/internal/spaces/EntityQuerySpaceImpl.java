@@ -13,7 +13,7 @@ import org.hibernate.loader.plan.build.spi.ExpandingQuerySpaces;
 import org.hibernate.loader.plan.spi.JoinDefinedByMetadata;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
@@ -58,7 +58,7 @@ public class EntityQuerySpaceImpl extends AbstractExpandingSourceQuerySpace impl
 		final ExpandingCompositeQuerySpace rhs = getExpandingQuerySpaces().makeCompositeQuerySpace(
 				compositeQuerySpaceUid,
 				new CompositePropertyMapping(
-						(CompositeType) getEntityPersister().getIdentifierType(),
+						(EmbeddedType) getEntityPersister().getIdentifierType(),
 						(PropertyMapping) getEntityPersister(),
 						getEntityPersister().getIdentifierPropertyName()
 				),
@@ -69,7 +69,7 @@ public class EntityQuerySpaceImpl extends AbstractExpandingSourceQuerySpace impl
 				EntityPersister.ENTITY_ID,
 				rhs,
 				canJoinsBeRequired(),
-				(CompositeType) persister.getIdentifierType()
+				(EmbeddedType) persister.getIdentifierType()
 		);
 		internalGetJoins().add( join );
 

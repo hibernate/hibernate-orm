@@ -14,7 +14,7 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface AttributeContainer extends DomainReferenceImplementor {
+public interface AttributeContainer extends NavigableSource {
 	// todo : what else would be useful here?
 
 	AttributeContainer getSuperAttributeContainer();

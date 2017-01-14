@@ -24,7 +24,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.ProxyConfiguration;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.NamingStrategy;
@@ -32,13 +32,11 @@ import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.scaffold.TypeValidation;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 import net.bytebuddy.implementation.FieldAccessor;
-import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.SuperMethodCall;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatchers;
 
-import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
@@ -51,7 +49,7 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 	private Class[] interfaces;
 	private Method getIdentifierMethod;
 	private Method setIdentifierMethod;
-	private CompositeType componentIdType;
+	private EmbeddedType componentIdType;
 	private boolean overridesEquals;
 
 	private Class proxyClass;
@@ -63,7 +61,7 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 			Set<Class> interfaces,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
-			CompositeType componentIdType) throws HibernateException {
+			EmbeddedType componentIdType) throws HibernateException {
 		this.entityName = entityName;
 		this.persistentClass = persistentClass;
 		this.interfaces = toArray( interfaces );

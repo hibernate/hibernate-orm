@@ -16,7 +16,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EncapsulatedEntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -49,7 +49,7 @@ public abstract class AbstractEntityReference extends AbstractExpandingFetchSour
 		if ( identifierDefinition.isEncapsulated() ) {
 			final EncapsulatedEntityIdentifierDefinition encapsulatedIdentifierDefinition = (EncapsulatedEntityIdentifierDefinition) identifierDefinition;
 			final Type idAttributeType = encapsulatedIdentifierDefinition.getAttributeDefinition().getType();
-			if ( ! CompositeType.class.isInstance( idAttributeType ) ) {
+			if ( ! EmbeddedType.class.isInstance( idAttributeType ) ) {
 				return new SimpleEntityIdentifierDescriptionImpl();
 			}
 		}
@@ -66,7 +66,7 @@ public abstract class AbstractEntityReference extends AbstractExpandingFetchSour
 		return new NonEncapsulatedEntityIdentifierDescription(
 				this,
 				compositeQuerySpace,
-				(CompositeType) getEntityPersister().getIdentifierType(),
+				(EmbeddedType) getEntityPersister().getIdentifierType(),
 				getPropertyPath().append( EntityPersister.ENTITY_ID )
 		);
 	}
@@ -76,7 +76,7 @@ public abstract class AbstractEntityReference extends AbstractExpandingFetchSour
 		return new EncapsulatedEntityIdentifierDescription(
 				this,
 				compositeQuerySpace,
-				(CompositeType) getEntityPersister().getIdentifierType(),
+				(EmbeddedType) getEntityPersister().getIdentifierType(),
 				getPropertyPath().append( EntityPersister.ENTITY_ID )
 		);
 	}

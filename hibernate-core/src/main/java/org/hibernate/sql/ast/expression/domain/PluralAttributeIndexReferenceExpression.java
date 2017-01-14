@@ -13,7 +13,7 @@ import java.util.List;
 
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.collection.spi.PluralAttributeIndex;
+import org.hibernate.persister.collection.spi.CollectionIndex;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.DomainReferenceImplementor;
 import org.hibernate.sql.NotYetImplementedException;
@@ -24,7 +24,7 @@ import org.hibernate.sql.ast.select.SelectableBasicTypeImpl;
 import org.hibernate.sql.ast.select.SelectableEmbeddedTypeImpl;
 import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -48,7 +48,7 @@ public class PluralAttributeIndexReferenceExpression implements DomainReferenceE
 
 		// todo : why are these casts to Column needed?  indexReference.getColumns() returns List<Column>
 
-		final PluralAttributeIndex indexReference = collectionPersister.getIndexReference();
+		final CollectionIndex indexReference = collectionPersister.getIndexReference();
 		switch ( indexReference.getClassification() ) {
 			case BASIC: {
 				final ColumnBinding columnBinding = columnBindingSource.resolveColumnBinding( (Column) indexReference.getColumns().get( 0 ) );
@@ -69,7 +69,7 @@ public class PluralAttributeIndexReferenceExpression implements DomainReferenceE
 				this.selectable = new SelectableEmbeddedTypeImpl(
 						this,
 						columnBindings,
-						(CompositeType) indexReference.getOrmType()
+						(EmbeddedType) indexReference.getOrmType()
 				);
 				break;
 			}

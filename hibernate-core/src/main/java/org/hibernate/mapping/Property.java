@@ -24,7 +24,7 @@ import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.ValueGeneration;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -96,7 +96,7 @@ public class Property implements Serializable, MetaAttributable {
 	public CascadeStyle getCascadeStyle() throws MappingException {
 		Type type = value.getType();
 		if ( type.isComponentType() ) {
-			return getCompositeCascadeStyle( (CompositeType) type, cascade );
+			return getCompositeCascadeStyle( (EmbeddedType) type, cascade );
 		}
 		else if ( type.getClassification().equals( Type.Classification.COLLECTION ) ) {
 			return getCollectionCascadeStyle( ( (Collection) value ).getElement().getType(), cascade );
@@ -106,7 +106,7 @@ public class Property implements Serializable, MetaAttributable {
 		}
 	}
 
-	private static CascadeStyle getCompositeCascadeStyle(CompositeType compositeType, String cascade) {
+	private static CascadeStyle getCompositeCascadeStyle(EmbeddedType compositeType, String cascade) {
 		if ( compositeType.getClassification().equals( Type.Classification.ANY ) ) {
 			return getCascadeStyle( cascade );
 		}
@@ -121,7 +121,7 @@ public class Property implements Serializable, MetaAttributable {
 
 	private static CascadeStyle getCollectionCascadeStyle(Type elementType, String cascade) {
 		if ( elementType.isComponentType() ) {
-			return getCompositeCascadeStyle( (CompositeType) elementType, cascade );
+			return getCompositeCascadeStyle( (EmbeddedType) elementType, cascade );
 		}
 		else {
 			return getCascadeStyle( cascade );

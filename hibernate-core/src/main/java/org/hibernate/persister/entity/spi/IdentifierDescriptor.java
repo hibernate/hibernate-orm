@@ -9,13 +9,14 @@ package org.hibernate.persister.entity.spi;
 import java.util.List;
 
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.SingularAttribute;
+import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
-public interface IdentifierDescriptor extends org.hibernate.type.spi.descriptor.java.managed.IdentifierDescriptor, SingularAttribute {
+public interface IdentifierDescriptor extends org.hibernate.type.spi.descriptor.java.managed.IdentifierDescriptor,
+		SingularOrmAttribute {
 	Type getIdType();
 
 	/**
@@ -33,7 +34,7 @@ public interface IdentifierDescriptor extends org.hibernate.type.spi.descriptor.
 	 * Note that for the case of a non-aggregated composite identifier this returns a
 	 * "virtual" attribute mapping
 	 */
-	SingularAttribute getIdAttribute();
+	SingularOrmAttribute getIdAttribute();
 
 	/**
 	 * This implementation returns the root EntityPersister for the hierarchy that

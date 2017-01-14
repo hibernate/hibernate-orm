@@ -16,9 +16,8 @@ import org.geolatte.geom.MultiPolygon;
 import org.geolatte.geom.Point;
 import org.geolatte.geom.Polygon;
 
-import org.hibernate.spatial.dialect.h2geodb.GeoDBGeometryTypeDescriptor;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**

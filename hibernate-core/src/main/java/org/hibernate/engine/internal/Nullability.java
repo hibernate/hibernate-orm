@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -123,7 +123,7 @@ public final class Nullability {
 	 */
 	private String checkSubElementsNullability(Type propertyType, Object value) throws HibernateException {
 		if ( propertyType.isComponentType() ) {
-			return checkComponentNullability( value, (CompositeType) propertyType );
+			return checkComponentNullability( value, (EmbeddedType) propertyType );
 		}
 
 		if ( propertyType.getClassification().equals( Type.Classification.COLLECTION ) ) {
@@ -133,7 +133,7 @@ public final class Nullability {
 
 			if ( collectionElementType.isComponentType() ) {
 				// check for all components values in the collection
-				final CompositeType componentType = (CompositeType) collectionElementType;
+				final EmbeddedType componentType = (EmbeddedType) collectionElementType;
 				final Iterator itr = CascadingActions.getLoadedElementsIterator( session, collectionType, value );
 				while ( itr.hasNext() ) {
 					final Object compositeElement = itr.next();
@@ -157,7 +157,7 @@ public final class Nullability {
 	 * @return property path
 	 * @throws HibernateException error while getting subcomponent values
 	 */
-	private String checkComponentNullability(Object value, CompositeType compositeType) throws HibernateException {
+	private String checkComponentNullability(Object value, EmbeddedType compositeType) throws HibernateException {
 		// IMPL NOTE : we currently skip checking "any" and "many to any" mappings.
 		//
 		// This is not the best solution.  But atm there is a mismatch between AnyType#getPropertyNullability

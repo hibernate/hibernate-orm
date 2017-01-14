@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
@@ -51,7 +51,7 @@ public class ResultSetProcessorHelper {
 					&& !entityPersister.getEntityMetamodel().getIdentifierProperty().isVirtual()
 					&& entityPersister.getEntityMetamodel().getIdentifierProperty().isEmbedded() ) {
 				// non-encapsulated composite identifier
-				final Serializable identifierState = ((CompositeType) entityPersister.getIdentifierType()).getPropertyValues(
+				final Serializable identifierState = ((EmbeddedType) entityPersister.getIdentifierType()).getPropertyValues(
 						optionalId,
 						session
 				);

@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
@@ -92,7 +92,7 @@ public final class ForeignKeys {
 				return isNullifiable( null, value ) ? null : value;
 			}
 			else if ( type.isComponentType() ) {
-				final CompositeType actype = (CompositeType) type;
+				final EmbeddedType actype = (EmbeddedType) type;
 				final Object[] subvalues = actype.getPropertyValues( value, session );
 				final Type[] subtypes = actype.getSubtypes();
 				boolean substitute = false;
@@ -353,7 +353,7 @@ public final class ForeignKeys {
 			}
 		}
 		else if ( type.isComponentType() ) {
-			final CompositeType actype = (CompositeType) type;
+			final EmbeddedType actype = (EmbeddedType) type;
 			final boolean[] subValueNullability = actype.getPropertyNullability();
 			if ( subValueNullability != null ) {
 				final String[] subPropertyNames = actype.getPropertyNames();

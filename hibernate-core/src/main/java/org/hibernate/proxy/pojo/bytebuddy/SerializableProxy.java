@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 
 import org.hibernate.proxy.AbstractSerializableProxy;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 
 public final class SerializableProxy extends AbstractSerializableProxy {
 	private final Class persistentClass;
@@ -24,7 +24,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	private final Class identifierSetterMethodClass;
 	private final Class[] identifierSetterMethodParams;
 
-	private final CompositeType componentIdType;
+	private final EmbeddedType componentIdType;
 
 	public SerializableProxy(
 			String entityName,
@@ -34,7 +34,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 			Boolean readOnly,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
-			CompositeType componentIdType) {
+			EmbeddedType componentIdType) {
 		super( entityName, id, readOnly );
 		this.persistentClass = persistentClass;
 		this.interfaces = interfaces;
@@ -99,7 +99,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 		return identifierSetterMethodParams;
 	}
 
-	protected CompositeType getComponentIdType() {
+	protected EmbeddedType getComponentIdType() {
 		return componentIdType;
 	}
 

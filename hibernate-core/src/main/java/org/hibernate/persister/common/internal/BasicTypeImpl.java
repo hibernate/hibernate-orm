@@ -7,13 +7,13 @@
 
 package org.hibernate.persister.common.internal;
 
-import org.hibernate.persister.common.spi.OrmTypeExporter;
+import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.type.BasicType;
 
 /**
  * @author Steve Ebersole
  */
-public class BasicTypeImpl<X> implements org.hibernate.sqm.domain.BasicType, OrmTypeExporter {
+public class BasicTypeImpl<X> implements org.hibernate.sqm.domain.BasicType, TypeExporter {
 	private BasicType ormBasicType;
 
 	public BasicTypeImpl(BasicType ormBasicType) {

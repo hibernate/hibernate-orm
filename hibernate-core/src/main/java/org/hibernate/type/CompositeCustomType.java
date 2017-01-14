@@ -27,7 +27,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.ColumnMapping;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.VersionSupport;
 import org.hibernate.usertype.CompositeUserType;
@@ -39,7 +39,7 @@ import org.hibernate.usertype.LoggableUserType;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class CompositeCustomType extends AbstractType implements CompositeType, BasicType {
+public class CompositeCustomType extends AbstractType implements EmbeddedType, BasicType {
 	private final CompositeUserType userType;
 	private final String[] registrationKeys;
 	private final String name;

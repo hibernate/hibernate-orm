@@ -31,9 +31,9 @@ import org.hibernate.persister.common.internal.SingularAttributeEntity;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.JoinableAttribute;
-import org.hibernate.persister.common.spi.OrmTypeExporter;
+import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.persister.common.spi.PluralAttribute;
-import org.hibernate.persister.common.spi.SingularAttribute;
+import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.NotYetImplementedException;
@@ -586,7 +586,7 @@ public class SqmSelectToSqlAstConverter
 		else if ( attributeJoin.getAttributeBinding() instanceof SingularAttributeBinding ) {
 			// apply the singular attribute fetch join
 			final SingularAttributeBinding attributeBinding = (SingularAttributeBinding) attributeJoin.getAttributeBinding();
-			final SingularAttribute boundAttribute = (SingularAttribute) attributeBinding.getAttribute();
+			final SingularOrmAttribute boundAttribute = (SingularOrmAttribute) attributeBinding.getAttribute();
 
 			switch ( boundAttribute.getAttributeTypeClassification() ) {
 				case ANY:
@@ -686,7 +686,7 @@ public class SqmSelectToSqlAstConverter
 			return null;
 		}
 
-		return ( (OrmTypeExporter) sqmType ).getOrmType();
+		return ( (TypeExporter) sqmType ).getOrmType();
 	}
 
 	protected Type extractOrmType(DomainReference expressionType, Class javaType) {

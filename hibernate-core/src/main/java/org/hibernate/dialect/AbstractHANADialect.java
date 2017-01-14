@@ -46,14 +46,14 @@ import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.BasicBinder;
 import org.hibernate.type.spi.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.NClobTypeDescriptor;
 import org.hibernate.type.spi.descriptor.sql.SmallIntTypeDescriptor;
-import org.hibernate.type.spi.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * An abstract base class for HANA dialects. <br/>

@@ -10,8 +10,9 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.DatabaseModel;
+import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.internal.PersisterFactoryImpl;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * "Parameter object" providing access to additional information that may be needed
@@ -22,9 +23,13 @@ import org.hibernate.persister.internal.PersisterFactoryImpl;
 public interface PersisterCreationContext {
 	SessionFactoryImplementor getSessionFactory();
 	MetadataImplementor getMetadata();
+
 	DatabaseModel getDatabaseModel();
 
-	void registerCollectionPersister(CollectionPersister collectionPersister);
+	TypeConfiguration getTypeConfiguration();
+	PersisterFactory getPersisterFactory();
 
-	void registerEntityNameResolvers(EntityPersister entityPersister);
+	void registerEntityPersister(EntityPersister entityPersister);
+	void registerCollectionPersister(CollectionPersister collectionPersister);
+	void registerEmbeddablePersister(EmbeddablePersister embeddablePersister);
 }

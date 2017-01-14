@@ -9,7 +9,7 @@ package org.hibernate.boot.model.type.spi;
 import java.util.Map;
 
 import org.hibernate.type.spi.basic.BasicTypeParameters;
-import org.hibernate.type.spi.descriptor.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 
 /**
  * Describes the context in which a BasicType is being defined.  Provides the process

@@ -12,5 +12,5 @@ package org.hibernate.persister.common.spi;
  *
  * @author Steve Ebersole
  */
-public interface VirtualAttribute extends Attribute {
+public interface VirtualOrmAttribute extends Attribute {
 }

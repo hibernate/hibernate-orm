@@ -38,7 +38,7 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.spi.CompositeType;
+import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.PostgresUUIDType;
@@ -713,8 +713,8 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		else {
 			whereType = persister.getElementType();
 		}
-		if ( whereType instanceof CompositeType ) {
-			CompositeType componentIndexType = (CompositeType) whereType;
+		if ( whereType instanceof EmbeddedType ) {
+			EmbeddedType componentIndexType = (EmbeddedType) whereType;
 			return !componentIndexType.hasNotNullProperty();
 		}
 		return false;

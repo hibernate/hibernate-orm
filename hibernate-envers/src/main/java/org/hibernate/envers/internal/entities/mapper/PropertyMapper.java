@@ -18,8 +18,9 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
-public interface PropertyMapper {
+public interface PropertyMapper extends ModifiedFlagMapperSupport {
 	/**
 	 * Maps properties to the given map, basing on differences between properties of new and old objects.
 	 *

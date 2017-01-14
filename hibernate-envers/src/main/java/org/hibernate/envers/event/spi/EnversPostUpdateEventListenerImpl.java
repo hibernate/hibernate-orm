@@ -20,8 +20,9 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
-public class EnversPostUpdateEventListenerImpl extends BaseEnversEventListener implements PostUpdateEventListener {
+public class EnversPostUpdateEventListenerImpl extends BaseEnversUpdateEventListener implements PostUpdateEventListener {
 	public EnversPostUpdateEventListenerImpl(EnversService enversService) {
 		super( enversService );
 	}
@@ -34,6 +35,8 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversEventListener i
 			checkIfTransactionInProgress( event.getSession() );
 
 			final AuditProcess auditProcess = getEnversService().getAuditProcessManager().get( event.getSession() );
+
+			Object[] oldState = getOldDBState( auditProcess, entityName, event );
 			final Object[] newDbState = postUpdateDBState( event );
 			final AuditWorkUnit workUnit = new ModWorkUnit(
 					event.getSession(),
@@ -42,7 +45,7 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversEventListener i
 					event.getId(),
 					event.getPersister(),
 					newDbState,
-					event.getOldState()
+					oldState
 			);
 			auditProcess.addWorkUnit( workUnit );
 
@@ -52,11 +55,18 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversEventListener i
 						event.getPersister(),
 						entityName,
 						newDbState,
-						event.getOldState(),
+						oldState,
 						event.getSession()
 				);
 			}
 		}
+	}
+
+	private Object[] getOldDBState(AuditProcess auditProcess, String entityName, PostUpdateEvent event) {
+		if ( isDetachedEntityUpdate( entityName, event.getOldState() ) ) {
+			return auditProcess.getCachedEntityState( event.getId(), entityName );
+		}
+		return event.getOldState();
 	}
 
 	private Object[] postUpdateDBState(PostUpdateEvent event) {

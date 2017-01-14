@@ -233,4 +233,14 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 	public Map<String, PropertyData> getPropertyDatas() {
 		return propertyDatas;
 	}
+
+	@Override
+	public boolean hasPropertiesWithModifiedFlag() {
+		for ( PropertyData property : getProperties().keySet() ) {
+			if ( property.isUsingModifiedFlag() ) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

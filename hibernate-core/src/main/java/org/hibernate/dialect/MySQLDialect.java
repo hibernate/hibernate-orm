@@ -22,6 +22,8 @@ import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.dialect.unique.MySQLUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
@@ -42,6 +44,8 @@ import org.hibernate.type.StandardBasicTypes;
  */
 @SuppressWarnings("deprecation")
 public class MySQLDialect extends Dialect {
+
+	private final UniqueDelegate uniqueDelegate;
 
 	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -196,6 +200,8 @@ public class MySQLDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.MAX_FETCH_DEPTH, "2" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+
+		uniqueDelegate = new MySQLUniqueDelegate( this );
 	}
 
 	protected void registerVarcharTypes() {
@@ -420,6 +426,11 @@ public class MySQLDialect extends Dialect {
 			isResultSet = ps.getMoreResults();
 		}
 		return ps.getResultSet();
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
 	}
 
 	@Override

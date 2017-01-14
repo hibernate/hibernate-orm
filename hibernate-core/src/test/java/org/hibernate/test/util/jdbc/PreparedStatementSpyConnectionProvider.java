@@ -9,6 +9,7 @@ package org.hibernate.test.util.jdbc;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,6 +34,9 @@ public class PreparedStatementSpyConnectionProvider
 		extends ConnectionProviderDelegate {
 
 	private final Map<PreparedStatement, String> preparedStatementMap = new LinkedHashMap<>();
+
+	private final List<String> executeStatements = new ArrayList<>();
+	private final List<String> executeUpdateStatements = new ArrayList<>();
 
 	private final List<Connection> acquiredConnections = new ArrayList<>( );
 
@@ -62,6 +66,22 @@ public class PreparedStatementSpyConnectionProvider
 				preparedStatementMap.put( statementSpy, sql );
 				return statementSpy;
 			} ).when( connectionSpy ).prepareStatement( anyString() );
+
+			doAnswer( invocation -> {
+				Statement statement = (Statement) invocation.callRealMethod();
+				Statement statementSpy = Mockito.spy( statement );
+				doAnswer( statementInvocation -> {
+					String sql = (String) statementInvocation.getArguments()[0];
+					executeStatements.add( sql );
+					return statementInvocation.callRealMethod();
+			    }).when( statementSpy ).execute( anyString() );
+				doAnswer( statementInvocation -> {
+					String sql = (String) statementInvocation.getArguments()[0];
+					executeUpdateStatements.add( sql );
+					return statementInvocation.callRealMethod();
+				}).when( statementSpy ).executeUpdate( anyString() );
+				return statementSpy;
+			} ).when( connectionSpy ).createStatement();
 		}
 		catch ( SQLException e ) {
 			throw new IllegalArgumentException( e );
@@ -122,6 +142,22 @@ public class PreparedStatementSpyConnectionProvider
 	 */
 	public List<PreparedStatement> getPreparedStatements() {
 		return new ArrayList<>( preparedStatementMap.keySet() );
+	}
+
+	/**
+	 * Get the SQL statements that were executed since the last clear operation.
+	 * @return list of recorded update statements.
+	 */
+	public List<String> getExecuteStatements() {
+		return executeStatements;
+	}
+
+	/**
+	 * Get the SQL update statements that were executed since the last clear operation.
+	 * @return list of recorded update statements.
+	 */
+	public List<String> getExecuteUpdateStatements() {
+		return executeUpdateStatements;
 	}
 
 	/**

@@ -133,4 +133,8 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 		return null;
 	}
 
+	@Override
+	public boolean hasPropertiesWithModifiedFlag() {
+		return propertyData != null && propertyData.isUsingModifiedFlag();
+	}
 }

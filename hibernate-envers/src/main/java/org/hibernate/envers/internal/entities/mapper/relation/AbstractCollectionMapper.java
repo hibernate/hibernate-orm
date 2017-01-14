@@ -38,6 +38,7 @@ import org.hibernate.property.access.spi.Setter;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 	protected final CommonCollectionMapperData commonCollectionMapperData;
@@ -394,5 +395,14 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 		addCollectionChanges( session, collectionChanges, deleted, RevisionType.DEL, id );
 
 		return collectionChanges;
+	}
+
+	@Override
+	public boolean hasPropertiesWithModifiedFlag() {
+		if ( commonCollectionMapperData != null ) {
+			final PropertyData propertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
+			return propertyData != null && propertyData.isUsingModifiedFlag();
+		}
+		return false;
 	}
 }

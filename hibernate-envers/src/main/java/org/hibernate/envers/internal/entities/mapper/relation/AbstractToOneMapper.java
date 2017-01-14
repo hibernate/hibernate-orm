@@ -26,6 +26,7 @@ import org.hibernate.service.ServiceRegistry;
  * Base class for property mappers that manage to-one relation.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public abstract class AbstractToOneMapper implements PropertyMapper {
 	private final ServiceRegistry serviceRegistry;
@@ -134,5 +135,10 @@ public abstract class AbstractToOneMapper implements PropertyMapper {
 		public boolean isAudited() {
 			return audited;
 		}
+	}
+
+	@Override
+	public boolean hasPropertiesWithModifiedFlag() {
+		return propertyData != null && propertyData.isUsingModifiedFlag();
 	}
 }

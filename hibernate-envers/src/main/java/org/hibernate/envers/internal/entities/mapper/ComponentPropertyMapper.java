@@ -25,6 +25,7 @@ import org.hibernate.property.access.spi.Setter;
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Lukasz Zuchowski (author at zuchos dot com)
+ * @author Chris Cranford
  */
 public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperBuilder {
 	private final PropertyData propertyData;
@@ -157,5 +158,10 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 	@Override
 	public Map<PropertyData, PropertyMapper> getProperties() {
 		return delegate.getProperties();
+	}
+
+	@Override
+	public boolean hasPropertiesWithModifiedFlag() {
+		return delegate.hasPropertiesWithModifiedFlag();
 	}
 }

@@ -16,6 +16,7 @@ import javax.persistence.FlushModeType;
 import org.hibernate.Session;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.tools.Pair;
@@ -24,6 +25,7 @@ import org.jboss.logging.Logger;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class AuditProcess implements BeforeTransactionCompletionProcess {
 	private static final Logger log = Logger.getLogger( AuditProcess.class );
@@ -34,8 +36,8 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 	private final LinkedList<AuditWorkUnit> workUnits;
 	private final Queue<AuditWorkUnit> undoQueue;
 	private final Map<Pair<String, Object>, AuditWorkUnit> usedIds;
+	private final Map<Pair<String, Object>, Object[]> entityStateCache;
 	private final EntityChangeNotifier entityChangeNotifier;
-
 	private Object revisionData;
 
 	public AuditProcess(RevisionInfoGenerator revisionInfoGenerator, SessionImplementor session) {
@@ -45,7 +47,25 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 		workUnits = new LinkedList<>();
 		undoQueue = new LinkedList<>();
 		usedIds = new HashMap<>();
+		entityStateCache = new HashMap<>();
 		entityChangeNotifier = new EntityChangeNotifier( revisionInfoGenerator, session );
+	}
+
+	public void cacheEntityState(Object id, String entityName, Object[] snapshot) {
+		final Pair<String, Object> key = new Pair<>( entityName, id );
+		if ( entityStateCache.containsKey( key ) ) {
+			throw new AuditException( "The entity [" + entityName + "] with id [" + id + "] is already cached." );
+		}
+		entityStateCache.put( key, snapshot );
+	}
+
+	public Object[] getCachedEntityState(Object id, String entityName) {
+		final Pair<String, Object> key = new Pair<>( entityName, id );
+		final Object[] entityState = entityStateCache.get( key );
+		if ( entityState != null ) {
+			entityStateCache.remove( key );
+		}
+		return entityState;
 	}
 
 	private void removeWorkUnit(AuditWorkUnit vwu) {

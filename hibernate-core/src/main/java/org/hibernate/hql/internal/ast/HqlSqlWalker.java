@@ -565,12 +565,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 					//      needed because currently persister is the one that
 					// creates and renders the join fragments for inheritance
 					//      hierarchies...
-					if ( !joinAlias.equals( referencedFromElement.getTableAlias() ) ) {
-						throw new InvalidWithClauseException(
-								"with clause can only reference columns in the driving table",
-								queryTranslatorImpl.getQueryString()
-						);
-					}
+//					if ( !joinAlias.equals( referencedFromElement.getTableAlias() ) ) {
+//						throw new InvalidWithClauseException(
+//								"with clause can only reference columns in the driving table",
+//								queryTranslatorImpl.getQueryString()
+//						);
+//					}
 				}
 			}
 			else if ( node instanceof ParameterNode ) {

@@ -18,7 +18,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.hql.internal.ast.InvalidWithClauseException;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -58,37 +57,6 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testInvalidWithSemantics() {
-		Session s = openSession();
-		Transaction txn = s.beginTransaction();
-
-		try {
-			// PROBLEM : f.bodyWeight is a reference to a column on the Animal table; however, the 'f'
-			// alias relates to the Human.friends collection which the aonther Human entity.  The issue
-			// here is the way JoinSequence and Joinable (the persister) interact to generate the
-			// joins relating to the sublcass/superclass tables
-			s.createQuery( "from Human h inner join h.friends as f with f.bodyWeight < :someLimit" )
-					.setDouble( "someLimit", 1 )
-					.list();
-			fail( "failure expected" );
-		}
-		catch( InvalidWithClauseException expected ) {
-		}
-
-		try {
-			s.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin" )
-					.setEntity( "cousin", s.load( Human.class, new Long(123) ) )
-					.list();
-			fail( "failure expected" );
-		}
-		catch( InvalidWithClauseException expected ) {
-		}
-
-		txn.commit();
-		s.close();
-	}
-
-	@Test
 	public void testWithClause() {
 		TestData data = new TestData();
 		data.prepare();
@@ -108,6 +76,11 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 				.list();
 		assertTrue( "ad-hoc on did not take effect", list.isEmpty() );
 
+		list = s.createQuery( "from Human h inner join h.friends f with f.bodyWeight < :someLimit" )
+				.setDouble( "someLimit", 25 )
+				.list();
+		assertTrue( "ad-hoc on did take effect", !list.isEmpty() );
+
 		// many-to-many
 		list = s.createQuery( "from Human h inner join h.friends as f with f.nickName like 'bubba'" )
 				.list();
@@ -117,6 +90,11 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 		list = s.createQuery( "from Human h inner join h.nickNames as nicknames with nicknames = 'abc'" )
 				.list();
 		assertTrue( "ad-hoc on did not take effect", list.isEmpty() );
+
+		list = s.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin" )
+				.setEntity( "cousin", s.load( Human.class, Long.valueOf( "123" ) ) )
+				.list();
+		assertTrue( "ad-hoc did take effect", list.isEmpty() );
 
 		txn.commit();
 		s.close();

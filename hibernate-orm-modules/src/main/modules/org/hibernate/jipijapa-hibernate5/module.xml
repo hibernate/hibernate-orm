@@ -16,8 +16,6 @@
 
     <dependencies>
         <module name="org.hibernate" slot="${slot}"/>
-        <module name="asm.asm"/>
-        <module name="com.fasterxml.classmate"/>
         <module name="javax.api"/>
         <module name="javax.annotation.api"/>
         <module name="javax.enterprise.api"/>
@@ -25,9 +23,6 @@
         <module name="javax.transaction.api"/>
         <module name="javax.validation.api"/>
         <module name="javax.xml.bind.api"/>
-        <module name="org.antlr"/>
-        <module name="org.dom4j"/>
-        <module name="org.javassist"/>
         <module name="org.jboss.as.jpa.spi"/>
         <module name="org.jboss.jandex"/>
         <module name="org.jboss.logging"/>

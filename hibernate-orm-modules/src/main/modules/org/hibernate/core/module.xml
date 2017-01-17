@@ -14,7 +14,6 @@
     </resources>
 
     <dependencies>
-        <module name="asm.asm"/>
         <module name="com.fasterxml.classmate"/>
         <module name="javax.api"/>
         <module name="javax.annotation.api"/>
@@ -25,10 +24,6 @@
         <module name="javax.xml.bind.api"/>
         <module name="org.antlr"/>
         <module name="org.dom4j"/>
-        <!-- Javassist is handled directly as a resource in order to account for
-        the likely conflict in Javassist versions
-        -->
-        <module name="org.javassist"/>
         <module name="org.jboss.as.jpa.spi"/>
         <module name="org.jboss.jandex"/>
         <module name="org.jboss.logging"/>

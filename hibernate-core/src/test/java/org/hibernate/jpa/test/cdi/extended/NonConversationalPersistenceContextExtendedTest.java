@@ -37,6 +37,7 @@ public class NonConversationalPersistenceContextExtendedTest {
 				.addClass( Event.class )
 				.addClass( NonConversationalEventManager.class )
 				.addAsManifestResource( EmptyAsset.INSTANCE, "beans.xml" )
+				.addAsManifestResource( "jboss-deployment-structure.xml" )
 				.addAsManifestResource( new StringAsset( persistenceXml().exportAsString() ), "persistence.xml" );
 	}
 

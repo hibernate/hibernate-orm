@@ -44,6 +44,7 @@ public class HibernateEnversOnWildflyTest {
 		return ShrinkWrap.create( WebArchive.class )
 				.addClass( AuditedEntity.class )
 				.addAsWebInfResource( EmptyAsset.INSTANCE, "beans.xml" )
+				.addAsWebInfResource( "jboss-deployment-structure.xml" )
 				.addAsResource( new StringAsset( persistenceXml().exportAsString() ), "META-INF/persistence.xml" );
 	}
 

@@ -107,7 +107,8 @@ public class EntityJoinFromElement extends FromElement {
 				Map enabledFilters,
 				boolean includeAllSubclassJoins,
 				String withClauseFragment,
-				String withClauseJoinAlias) throws MappingException {
+				String withClauseJoinAlias,
+				String withClauseCollectionJoinAlias) throws MappingException {
 			final String joinString;
 			switch ( joinType ) {
 				case INNER_JOIN:

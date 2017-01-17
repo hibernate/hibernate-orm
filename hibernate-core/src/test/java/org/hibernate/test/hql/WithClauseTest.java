@@ -270,6 +270,26 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-11401")
+	public void testWithClauseAsSubqueryWithKeyAndOtherJoinReference() {
+		TestData data = new TestData();
+		data.prepare();
+
+		Session s = openSession();
+		Transaction txn = s.beginTransaction();
+
+		// Just a stupid example that makes use of a column that isn't from the collection table or the target entity table
+		List list = s.createQuery( "from Human h join h.friends as friend left join h.family as f with key(f) = concat('son', friend.intValue) where h.description = 'father'" )
+				.list();
+		assertEquals( "subquery rewriting of join table did not take effect", 2, list.size() );
+
+		txn.commit();
+		s.close();
+
+		data.cleanup();
+	}
+
 	private class TestData {
 		public void prepare() {
 			Session session = openSession();
@@ -294,10 +314,12 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 			Human friend = new Human();
 			friend.setBodyWeight( 20 );
 			friend.setDescription( "friend" );
+			friend.setIntValue( 1 );
 
 			Human friend2 = new Human();
 			friend2.setBodyWeight( 20 );
 			friend2.setDescription( "friend2" );
+			friend.setIntValue( 2 );
 
 			child1.setMother( mother );
 			child1.setFather( father );

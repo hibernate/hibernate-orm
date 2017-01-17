@@ -18,6 +18,7 @@ import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
 import org.hibernate.boot.internal.SessionFactoryOptionsImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
@@ -28,6 +29,7 @@ import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.boot.ServiceRegistryTestingImpl;
 
 /**
  * Utilities for cache testing.
@@ -201,6 +203,14 @@ public class CacheTestUtil {
 			} else break;
 		}
 		throw new TimeoutException();
+	}
+
+	public static SessionFactoryOptions sfOptionsForStart() {
+		return new SessionFactoryOptionsImpl(
+				new SessionFactoryBuilderImpl.SessionFactoryOptionsStateStandardImpl(
+						ServiceRegistryTestingImpl.forUnitTesting()
+				)
+		);
 	}
 
 	/**

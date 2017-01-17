@@ -148,7 +148,8 @@ public class JoinProcessor implements SqlTokenTypes {
 				walker.getEnabledFilters(),
 				fromElement.useFromFragment() || fromElement.isDereferencedBySuperclassOrSubclassProperty(),
 				fromElement.getWithClauseFragment(),
-				fromElement.getWithClauseJoinAlias()
+				fromElement.getWithClauseJoinAlias(),
+				fromElement.getWithClauseCollectionJoinAlias()
 		);
 
 		String frag = joinFragment.toFromFragmentString();

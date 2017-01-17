@@ -6,12 +6,9 @@
  */
 package org.hibernate.type.descriptor.java.internal;
 
-import java.util.Comparator;
-
 import org.hibernate.sqm.NotYetImplementedException;
 import org.hibernate.type.descriptor.java.spi.AbstractManagedJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -25,10 +22,8 @@ public class EmbeddableJavaDescriptorImpl<J>
 	public EmbeddableJavaDescriptorImpl(
 			String typeName,
 			Class javaType,
-			EmbeddableJavaDescriptor<? super J> superTypeDescriptor,
-			MutabilityPlan mutabilityPlan,
-			Comparator comparator) {
-		super( typeName, javaType, superTypeDescriptor, mutabilityPlan, comparator );
+			EmbeddableJavaDescriptor<? super J> superTypeDescriptor) {
+		super( typeName, javaType, superTypeDescriptor, null, null );
 	}
 
 	@Override

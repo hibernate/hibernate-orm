@@ -6,7 +6,7 @@
  */
 package org.hibernate.type.spi;
 
-import org.hibernate.type.spi.descriptor.java.managed.IdentifiableTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -16,5 +16,5 @@ public interface IdentifiableType extends ManagedType {
 	IdentifiableType getSuperType();
 
 	@Override
-	IdentifiableTypeDescriptor getJavaTypeDescriptor();
+	IdentifiableJavaDescriptor getJavaTypeDescriptor();
 }

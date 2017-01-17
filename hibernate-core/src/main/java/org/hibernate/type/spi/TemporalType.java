@@ -6,7 +6,6 @@
  */
 package org.hibernate.type.spi;
 
-
 import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
 
 /**
@@ -23,4 +22,13 @@ public interface TemporalType<T> extends BasicType<T> {
 	<X> TemporalType<X> resolveTypeForPrecision(
 			javax.persistence.TemporalType precision,
 			TypeConfiguration typeConfiguration);
+
+	@Override
+	default String getTypeName() {
+		return "TemporalTypeImpl( " +
+				getJavaTypeDescriptor().getTypeName() + ", " +
+				getColumnMapping().getSqlTypeDescriptor().getSqlType() + " [" +
+				(getMutabilityPlan() == null ? "<no-mutability-plan>" : getMutabilityPlan().getClass().getSimpleName() ) + ", " +
+				(getPrecision() == null ? "<no-precision>" : getPrecision()) + "])";
+	}
 }

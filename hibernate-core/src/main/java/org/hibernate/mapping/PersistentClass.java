@@ -34,7 +34,7 @@ import org.hibernate.sql.Alias;
  *
  * @author Gavin King
  */
-public abstract class PersistentClass implements AttributeContainer, Serializable, Filterable, MetaAttributable {
+public abstract class PersistentClass implements AttributeContainer, PropertyContainer, Serializable, Filterable, MetaAttributable {
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
 	public static final String NULL_DISCRIMINATOR_MAPPING = "null";

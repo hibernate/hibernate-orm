@@ -21,6 +21,9 @@
 
 == Open questions
 
+* Should `org.hibernate.mapping.SimpleValue` just implement `org.hibernate.type.spi.BasicTypeParameters`?
+		ATM I create an anonymous inner class, but `SimpleValue` implementing `BasicTypeParameters` would
+		save an object creation every time we need to resolve a BasicType.
 * General "literal as JDBC parameter" feature based on SQM?  I currently have
 		added this via the `org.hibernate.query.QueryLiteralRendering` enum and
 		`SessionFactoryOptions.getQueryLiteralRendering`

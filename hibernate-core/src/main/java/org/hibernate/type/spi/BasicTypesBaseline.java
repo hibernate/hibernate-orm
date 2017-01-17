@@ -37,7 +37,6 @@ import org.hibernate.type.SerializableType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.TimeType;
 import org.hibernate.type.TimestampType;
-import org.hibernate.type.spi.basic.RegistryKey;
 
 /**
  * Baseline set of {@link BasicType} implementations
@@ -135,7 +134,7 @@ public class BasicTypesBaseline {
 	private void register(BasicType basicType, String... registrationKeys) {
 		typeConfiguration.getBasicTypeRegistry().register(
 				basicType,
-				RegistryKey.from( basicType )
+				BasicTypeRegistry.Key.from( basicType )
 		);
 
 		basicTypeProducerRegistry.register(

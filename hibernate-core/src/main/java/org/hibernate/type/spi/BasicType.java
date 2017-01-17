@@ -9,7 +9,6 @@ package org.hibernate.type.spi;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Comparator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -19,9 +18,8 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.common.spi.ExpressableType;
 import org.hibernate.sqm.domain.type.SqmDomainTypeBasic;
 import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
@@ -33,29 +31,24 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  * @since 6.0
  */
 public interface BasicType<T> extends Type<T>, SqmDomainTypeBasic, ExpressableType<T>, javax.persistence.metamodel.BasicType<T> {
-	@Override
-	JavaTypeDescriptor<T> getJavaTypeDescriptor();
+	BasicTypeRegistry.Key getRegistryKey();
 
 	@Override
-	MutabilityPlan<T> getMutabilityPlan();
-
-	@Override
-	Comparator<T> getComparator();
-
-	JdbcLiteralFormatter<T> getJdbcLiteralFormatter();
+	BasicJavaDescriptor<T> getJavaTypeDescriptor();
 
 	VersionSupport<T> getVersionSupport();
-
-	String getTypeName();
-
-	@Override
-	default Classification getClassification() {
-		return Classification.BASIC;
-	}
 
 	@Override
 	default String getName() {
 		return getTypeName();
+	}
+
+	@Override
+	default String getTypeName() {
+		return "BasicTypeImpl(" +
+				getJavaTypeDescriptor().getTypeName() + ", " +
+				getColumnMapping().getSqlTypeDescriptor().getSqlType() + " [" +
+				(getMutabilityPlan() == null ? "<no-mutability-plan>" : getMutabilityPlan().getClass().getSimpleName() ) + "])";
 	}
 
 	@Override
@@ -68,6 +61,29 @@ public interface BasicType<T> extends Type<T>, SqmDomainTypeBasic, ExpressableTy
 	default String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		return getJavaTypeDescriptor().extractLoggableRepresentation( (T) value );
 	}
+
+	@Override
+	default Classification getClassification() {
+		return Classification.BASIC;
+	}
+
+	@Override
+	default PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
+	default SqmDomainTypeBasic getExportedDomainType() {
+		return this;
+	}
+
+	@Override
+	default ColumnMapping[] getColumnMappings() {
+		return new ColumnMapping[] { getColumnMapping() };
+	}
+
+	ColumnMapping getColumnMapping();
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// read-write stuff
@@ -166,8 +182,9 @@ public interface BasicType<T> extends Type<T>, SqmDomainTypeBasic, ExpressableTy
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	default T deepCopy(T value, SessionFactoryImplementor factory) {
-		return getMutabilityPlan().deepCopy( value );
+		return (T) getMutabilityPlan().deepCopy( value );
 	}
 
 	@Override
@@ -177,9 +194,10 @@ public interface BasicType<T> extends Type<T>, SqmDomainTypeBasic, ExpressableTy
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map copyCache) throws HibernateException {
-		return getReplacement( (T) original, (T) target, session );
+		return getReplacement( original, target, session );
 	}
 
+	@SuppressWarnings("unchecked")
 	default T getReplacement(T original, T target, SharedSessionContractImplementor session) {
 		if ( !getMutabilityPlan().isMutable() ) {
 			return original;
@@ -188,20 +206,21 @@ public interface BasicType<T> extends Type<T>, SqmDomainTypeBasic, ExpressableTy
 			return original;
 		}
 		else {
-			return getMutabilityPlan().deepCopy( original );
+			return (T) getMutabilityPlan().deepCopy( original );
 		}
 	}
 
 	@Override
-	default Object replace(
-			Object original,
-			Object target,
+	@SuppressWarnings("unchecked")
+	default T replace(
+			T original,
+			T target,
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map copyCache,
 			ForeignKeyDirection foreignKeyDirection) throws HibernateException {
 		return ForeignKeyDirection.FROM_PARENT == foreignKeyDirection
 				? getReplacement( (T) original, (T) target, session )
-				: target;
+				: (T) target;
 	}
 }

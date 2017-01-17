@@ -562,7 +562,7 @@ public interface Type<T> extends SqmDomainType {
 	 *
 	 * @throws HibernateException A problem occurred performing the checking
 	 */
-	boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) throws HibernateException;
+	boolean isDirty(T old, T current, SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Should the parent be considered dirty, given both the old and current value?
@@ -576,7 +576,7 @@ public interface Type<T> extends SqmDomainType {
 	 *
 	 * @throws HibernateException A problem occurred performing the checking
 	 */
-	boolean isDirty(Object oldState, Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
+	boolean isDirty(T oldState, T currentState, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException;
 
 	/**
@@ -595,8 +595,8 @@ public interface Type<T> extends SqmDomainType {
 	 * @throws HibernateException A problem occurred performing the checking
 	 */
 	boolean isModified(
-			Object dbState,
-			Object currentState,
+			T dbState,
+			T currentState,
 			boolean[] checkable,
 			SharedSessionContractImplementor session)
 			throws HibernateException;

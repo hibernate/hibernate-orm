@@ -35,11 +35,11 @@ import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.basic.RegistryKey;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.BasicTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
@@ -334,9 +334,9 @@ public class MetadataBuildingProcess {
 			}
 
 			@Override
-			public void contributeType(BasicType type, RegistryKey key) {
+			public void contributeType(BasicType type, BasicTypeRegistry.Key key) {
 				// register the BasicType with the BasicTypeRegistry
-				bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register( type, RegistryKey.from( type ) );
+				bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register( type, key );
 			}
 
 			@Override

@@ -29,16 +29,18 @@ public class SingularAttributeBasic<O,J> extends AbstractSingularAttribute<O, J,
 
 	private final List<Column> columns;
 
-	private AttributeConverterDefinition attributeConverter;
+	private AttributeConverterDefinition attributeConverterInfo;
 
 	public SingularAttributeBasic(
 			ManagedTypeImplementor declaringType,
 			String name,
 			PropertyAccess propertyAccess,
-			BasicType ormType,
+			BasicType<J> ormType,
 			Disposition disposition,
+			AttributeConverterDefinition attributeConverterInfo,
 			List<Column> columns) {
 		super( declaringType, name, propertyAccess, ormType, disposition, true );
+		this.attributeConverterInfo = attributeConverterInfo;
 		this.columns = columns;
 	}
 
@@ -58,20 +60,20 @@ public class SingularAttributeBasic<O,J> extends AbstractSingularAttribute<O, J,
 	}
 
 	@Override
-	public void injectAttributeConverter(AttributeConverterDefinition  converter) {
+	public void injectAttributeConverter(AttributeConverterDefinition  attributeConverterInfo) {
 		log.debugf(
 				"AttributeConverter [%s] being injected for singular attribute '%s.%s' collection; was : %s",
-				converter,
+				attributeConverterInfo,
 				getSource().asLoggableText(),
 				getName(),
-				this.attributeConverter
+				this.attributeConverterInfo
 		);
-		this.attributeConverter = converter;
+		this.attributeConverterInfo = attributeConverterInfo;
 	}
 
 	@Override
 	public Optional<AttributeConverterDefinition > getAttributeConverter() {
-		return Optional.ofNullable( attributeConverter );
+		return Optional.ofNullable( attributeConverterInfo );
 	}
 
 	@Override

@@ -60,6 +60,7 @@ import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringNVarcharType;
 import org.hibernate.type.WrappedMaterializedBlobType;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -524,7 +525,7 @@ public class SimpleValueBinder {
 		producer.injectBasicTypeSiteContext(
 				new BasicTypeSiteContext() {
 					@Override
-					public JavaTypeDescriptor getJavaTypeDescriptor() {
+					public BasicJavaDescriptor getJavaTypeDescriptor() {
 						if ( persistentClassName != null || attributeConverterDescriptor != null ) {
 							final Class javaType = ReflectHelper.reflectedPropertyClass( persistentClassName, propertyName, buildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class ) );
 							return buildingContext.getMetadataCollector().getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( javaType );

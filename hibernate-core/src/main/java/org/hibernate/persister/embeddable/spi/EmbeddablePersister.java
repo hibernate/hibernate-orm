@@ -26,7 +26,14 @@ import org.hibernate.type.spi.EmbeddedType;
  * @author Steve Ebersole
  */
 public interface EmbeddablePersister<T>
-		extends ManagedTypeImplementor<T>, TypeExporter, EmbeddableContainer<T>, EmbeddableType<T> {
+		extends ManagedTypeImplementor<T>, TypeExporter, EmbeddableContainer<T>, EmbeddableType<T>, EmbeddableReference<T> {
+	Class[] STANDARD_CTOR_SIGNATURE = new Class[] {
+			Component.class,
+			EmbeddableContainer.class,
+			String.class,
+			PersisterCreationContext.class
+	};
+
 	void afterInitialization(
 			Component embeddableBinding,
 			PersisterCreationContext creationContext);

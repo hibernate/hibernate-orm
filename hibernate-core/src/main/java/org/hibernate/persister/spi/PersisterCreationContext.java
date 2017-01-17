@@ -22,14 +22,16 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public interface PersisterCreationContext {
 	SessionFactoryImplementor getSessionFactory();
-	MetadataImplementor getMetadata();
-
-	DatabaseModel getDatabaseModel();
 
 	TypeConfiguration getTypeConfiguration();
+	MetadataImplementor getMetadata();
+	DatabaseModel getDatabaseModel();
+
 	PersisterFactory getPersisterFactory();
 
 	void registerEntityPersister(EntityPersister entityPersister);
 	void registerCollectionPersister(CollectionPersister collectionPersister);
 	void registerEmbeddablePersister(EmbeddablePersister embeddablePersister);
+
+	void registerEntityNameResolvers(EntityPersister entityPersister);
 }

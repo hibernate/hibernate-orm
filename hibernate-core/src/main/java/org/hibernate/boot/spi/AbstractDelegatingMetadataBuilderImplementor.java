@@ -25,7 +25,7 @@ import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.basic.RegistryKey;
+import org.hibernate.type.spi.BasicTypeRegistry;
 
 import org.jboss.jandex.IndexView;
 
@@ -160,7 +160,7 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Abs
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType type, RegistryKey registryKey) {
+	public MetadataBuilder applyBasicType(BasicType type, BasicTypeRegistry.Key registryKey) {
 		delegate.applyBasicType( type, registryKey );
 		return this;
 	}

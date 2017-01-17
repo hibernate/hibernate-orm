@@ -7,8 +7,10 @@
 package org.hibernate.persister.spi;
 
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.service.Service;
 
@@ -44,4 +46,18 @@ public interface PersisterClassResolver extends Service {
 	 * @return The collection persister class to use
 	 */
 	Class<? extends CollectionPersister> getCollectionPersisterClass(Collection metadata);
+
+	/**
+	 * Returns the collection persister class for a given collection role or null
+	 * if the collection persister class should be the default.
+	 *
+	 * @param componentBinding The embeddable (technically embedded) mapping metadata
+	 *
+	 * @return The persister class to use
+	 *
+	 * @since 6.0
+	 */
+	default Class<? extends EmbeddablePersister> getEmbeddablePersisterClass(Component componentBinding) {
+		return EmbeddablePersister.class;
+	}
 }

@@ -26,7 +26,7 @@ import java.util.List;
  *
  * @author Emmanuel Bernard
  */
-public class MappedSuperclass {
+public class MappedSuperclass implements PropertyContainer {
 	private final MappedSuperclass superMappedSuperclass;
 	private final PersistentClass superPersistentClass;
 	private final List declaredProperties;
@@ -209,5 +209,15 @@ public class MappedSuperclass {
 		}
 
 		return false;
+	}
+
+	@Override
+	public PropertyContainer getSuperPropertyContainer() {
+		return superMappedSuperclass != null ? superMappedSuperclass : superPersistentClass;
+	}
+
+	@Override
+	public List<Property> getDeclaredProperties() {
+		return null;
 	}
 }

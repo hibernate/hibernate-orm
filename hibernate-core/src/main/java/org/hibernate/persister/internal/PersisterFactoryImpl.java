@@ -19,6 +19,7 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
@@ -27,6 +28,9 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.AttributeContainer;
+import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.embeddable.spi.EmbeddableContainer;
+import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.InheritanceStrategy;
 import org.hibernate.persister.spi.PersisterClassResolver;
@@ -43,6 +47,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  */
 public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegistryAwareService {
 	private ServiceRegistryImplementor serviceRegistry;
+
+	private PersisterClassResolver persisterClassResolver;
 
 	private Set<EntityHierarchyNode> roots = new HashSet<>();
 	private Map<String,EntityHierarchyNode> nameToHierarchyNodeMap = new HashMap<>();
@@ -78,6 +84,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
+		persisterClassResolver = serviceRegistry.getService( PersisterClassResolver.class );
 	}
 
 	@Override
@@ -135,7 +142,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 		Class<? extends EntityPersister> persisterClass = entityBinding.getEntityPersisterClass();
 		if ( persisterClass == null ) {
 			// Otherwise, use the persister class indicated by the PersisterClassResolver service
-			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getEntityPersisterClass( entityBinding );
+			persisterClass = persisterClassResolver.getEntityPersisterClass( entityBinding );
 		}
 
 		return instantiateEntityPersister(
@@ -264,26 +271,25 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	@SuppressWarnings( {"unchecked"})
 	public CollectionPersister createCollectionPersister(
 			Collection collectionBinding,
-			AttributeContainer source,
-			String propertyName,
+			ManagedTypeImplementor source,
+			String localName,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			PersisterCreationContext creationContext) throws HibernateException {
 		// If the metadata for the collection specified an explicit persister class, use it
 		Class<? extends CollectionPersister> persisterClass = collectionBinding.getCollectionPersisterClass();
 		if ( persisterClass == null ) {
 			// Otherwise, use the persister class indicated by the PersisterClassResolver service
-			persisterClass = serviceRegistry.getService( PersisterClassResolver.class )
-					.getCollectionPersisterClass( collectionBinding );
+			persisterClass = persisterClassResolver.getCollectionPersisterClass( collectionBinding );
 		}
-		return createCollectionPersister( persisterClass, collectionBinding, source, propertyName, cacheAccessStrategy, creationContext );
+		return createCollectionPersister( persisterClass, collectionBinding, source, localName, cacheAccessStrategy, creationContext );
 	}
 
 	@SuppressWarnings( {"unchecked"})
 	private CollectionPersister createCollectionPersister(
 			Class<? extends CollectionPersister> persisterClass,
 			Collection collectionBinding,
-			AttributeContainer source,
-			String propertyName,
+			ManagedTypeImplementor source,
+			String localName,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			PersisterCreationContext creationContext) {
 		try {
@@ -292,8 +298,50 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 				return constructor.newInstance(
 						collectionBinding,
 						source,
-						propertyName,
+						localName,
 						cacheAccessStrategy,
+						creationContext
+				);
+			}
+			catch (MappingException e) {
+				throw e;
+			}
+			catch (InvocationTargetException e) {
+				Throwable target = e.getTargetException();
+				if ( target instanceof HibernateException ) {
+					throw (HibernateException) target;
+				}
+				else {
+					throw new MappingException( "Could not instantiate collection persister " + persisterClass.getName(), target );
+				}
+			}
+			catch (Exception e) {
+				throw new MappingException( "Could not instantiate collection persister " + persisterClass.getName(), e );
+			}
+		}
+		catch (MappingException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			throw new MappingException( "Could not get constructor for " + persisterClass.getName(), e );
+		}
+	}
+
+	@Override
+	public EmbeddablePersister createEmbeddablePersister(
+			Component componentBinding,
+			EmbeddableContainer source,
+			String localName,
+			PersisterCreationContext creationContext) {
+		final Class<? extends EmbeddablePersister> persisterClass = persisterClassResolver.getEmbeddablePersisterClass( componentBinding );
+
+		try {
+			Constructor<? extends EmbeddablePersister> constructor = persisterClass.getConstructor( EmbeddablePersister.STANDARD_CTOR_SIGNATURE );
+			try {
+				return constructor.newInstance(
+						componentBinding,
+						source,
+						localName,
 						creationContext
 				);
 			}

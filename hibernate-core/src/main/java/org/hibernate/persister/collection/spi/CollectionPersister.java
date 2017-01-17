@@ -56,11 +56,11 @@ import org.hibernate.type.spi.Type;
  * Unless a customer {@link org.hibernate.persister.spi.PersisterFactory} is used, it is expected
  * that implementations of CollectionDefinition define a constructor accepting the following arguments:<ol>
  *     <li>
- *         {@link org.hibernate.mapping.Collection} - The metadata about the collection to be handled
+ *         {@link Collection} - The metadata about the collection to be handled
  *         by the persister
  *     </li>
  *     <li>
- *         {@link AttributeContainer} - Describes the thing the declares the collection
+ *         {@link ManagedTypeImplementor} - Describes the thing the declares the collection
  *     </li>
  *     <li>
  *         String - The name of the collection's attribute relative to AttributeContainer
@@ -69,7 +69,7 @@ import org.hibernate.type.spi.Type;
  *         {@link CollectionRegionAccessStrategy} - the second level caching strategy for this collection
  *     </li>
  *     <li>
- *         {@link org.hibernate.persister.spi.PersisterCreationContext} - access to additional
+ *         {@link PersisterCreationContext} - access to additional
  *         information useful while constructing the persister.
  *     </li>
  * </ol>

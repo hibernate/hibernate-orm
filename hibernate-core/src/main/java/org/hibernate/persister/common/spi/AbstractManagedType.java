@@ -16,10 +16,10 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
-import org.hibernate.type.spi.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.descriptor.java.MutabilityPlan;
 
 import org.jboss.logging.Logger;
 
@@ -159,15 +159,15 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	@Override
-	public Set<javax.persistence.metamodel.Attribute> getAttributes() {
-		final HashSet<javax.persistence.metamodel.Attribute> attributes = new HashSet<>();
+	public Set<javax.persistence.metamodel.Attribute<? super T, ?>> getAttributes() {
+		final HashSet<javax.persistence.metamodel.Attribute<? super T, ?>> attributes = new HashSet<>();
 		collectAttributes( attributes::add );
 		return attributes;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Set<javax.persistence.metamodel.Attribute> getDeclaredAttributes() {
+	public Set<javax.persistence.metamodel.Attribute<T,?>> getDeclaredAttributes() {
 		final HashSet<javax.persistence.metamodel.Attribute> attributes = new HashSet<>();
 		collectDeclaredAttributes( attributes::add );
 		return attributes.stream().collect( Collectors.toSet() );
@@ -175,7 +175,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Set<javax.persistence.metamodel.SingularAttribute> getSingularAttributes() {
+	public Set<javax.persistence.metamodel.SingularAttribute<? super T,?>> getSingularAttributes() {
 		final HashSet attributes = new HashSet();
 		collectAttributes( attributes::add, javax.persistence.metamodel.SingularAttribute.class );
 		return attributes;
@@ -183,15 +183,16 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Set<javax.persistence.metamodel.SingularAttribute> getDeclaredSingularAttributes() {
+	public Set<javax.persistence.metamodel.SingularAttribute<T,?>> getDeclaredSingularAttributes() {
 		final HashSet attributes = new HashSet<>();
 		collectDeclaredAttributes( attributes::add, javax.persistence.metamodel.SingularAttribute.class );
 		return attributes;
 	}
 
+
 	@Override
 	@SuppressWarnings("unchecked")
-	public Set<PluralAttribute<? super T, ?, ?>> getPluralAttributes() {
+	public Set<javax.persistence.metamodel.PluralAttribute<? super T, ?, ?>> getPluralAttributes() {
 		final HashSet attributes = new HashSet<>();
 		collectAttributes( attributes::add, PluralAttribute.class );
 		return attributes;
@@ -199,7 +200,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Set<PluralAttribute<T, ?, ?>> getDeclaredPluralAttributes() {
+	public Set<javax.persistence.metamodel.PluralAttribute<T, ?, ?>> getDeclaredPluralAttributes() {
 		final HashSet attributes = new HashSet<>();
 		collectDeclaredAttributes( attributes::add, PluralAttribute.class );
 		return attributes;
@@ -266,7 +267,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 			checkAttributeType( (SingularAttribute) ormAttribute, resultType );
 		}
 		else {
-			checkAttributeType( (OrmPluralAttribute) ormAttribute, resultType );
+			checkAttributeType( (PluralAttribute) ormAttribute, resultType );
 		}
 
 		return ormAttribute;
@@ -276,7 +277,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 		checkType(  ormAttribute.getName(), ormAttribute.getJavaType(), resultType );
 	}
 
-	protected void checkAttributeType(OrmPluralAttribute ormAttribute, Class resultType) {
+	protected void checkAttributeType(PluralAttribute ormAttribute, Class resultType) {
 		checkType(  ormAttribute.getName(), ormAttribute.getElementType().getJavaType(), resultType );
 	}
 

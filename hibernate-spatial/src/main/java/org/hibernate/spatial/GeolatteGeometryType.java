@@ -7,6 +7,9 @@
 
 package org.hibernate.spatial;
 
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
+
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.GeometryCollection;
 import org.geolatte.geom.LineString;
@@ -15,10 +18,6 @@ import org.geolatte.geom.MultiPoint;
 import org.geolatte.geom.MultiPolygon;
 import org.geolatte.geom.Point;
 import org.geolatte.geom.Polygon;
-
-import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 
 /**
  * a {@code Type} that maps between the database geometry type and geolatte-geom {@code Geometry}.
@@ -32,15 +31,15 @@ public class GeolatteGeometryType extends AbstractSingleColumnStandardBasicType<
 	 * Constructs an instance with the specified {@code SqlTypeDescriptor}
 	 *
 	 * @param sqlTypeDescriptor The Descriptor for the type used by the database for geometries.
-	 * @param typeDescriptorRegistryAccess
+	 * @param typeConfiguration
 	 */
 	public GeolatteGeometryType(
 			SqlTypeDescriptor sqlTypeDescriptor,
-			TypeDescriptorRegistryAccess typeDescriptorRegistryAccess) {
+			TypeConfiguration typeConfiguration) {
 		super( sqlTypeDescriptor, GeolatteGeometryJavaTypeDescriptor.INSTANCE );
 
-		typeDescriptorRegistryAccess.getSqlTypeDescriptorRegistry().addDescriptor( sqlTypeDescriptor );
-		typeDescriptorRegistryAccess.getJavaTypeDescriptorRegistry().addDescriptor( GeolatteGeometryJavaTypeDescriptor.INSTANCE );
+		typeConfiguration.getSqlTypeDescriptorRegistry().addDescriptor( sqlTypeDescriptor );
+		typeConfiguration.getJavaTypeDescriptorRegistry().addDescriptor( GeolatteGeometryJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

@@ -9,7 +9,6 @@ package org.hibernate.boot;
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
@@ -23,7 +22,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.type.spi.basic.RegistryKey;
+import org.hibernate.type.spi.BasicTypeRegistry;
 
 import org.jboss.jandex.IndexView;
 
@@ -299,7 +298,7 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyBasicType(org.hibernate.type.spi.BasicType type, RegistryKey registryKey);
+	MetadataBuilder applyBasicType(org.hibernate.type.spi.BasicType type, BasicTypeRegistry.Key registryKey);
 
 	/**
 	 * Apply an explicit TypeContributor (implicit application via ServiceLoader will still happen too)

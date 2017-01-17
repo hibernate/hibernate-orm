@@ -8,7 +8,7 @@ package org.hibernate.type.converter.spi;
 
 import javax.persistence.AttributeConverter;
 
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 
 /**
  * Internal descriptor for an AttributeConverter implementation, with the intent of being
@@ -30,7 +30,7 @@ public interface AttributeConverterDefinition<O,R> {
 	 *
 	 * @return The application domain model's attribute Java Type
 	 */
-	JavaTypeDescriptor<O> getDomainType();
+	BasicJavaDescriptor<O> getDomainType();
 
 	/**
 	 * The "intermediate" Java type of the JDBC/SQL datatype (as we'd read through ResultSet, e.g.), as
@@ -38,5 +38,5 @@ public interface AttributeConverterDefinition<O,R> {
 	 *
 	 * @return The "intermediate" JDBC/SQL Java type.
 	 */
-	JavaTypeDescriptor<R> getJdbcType();
+	BasicJavaDescriptor<R> getJdbcType();
 }

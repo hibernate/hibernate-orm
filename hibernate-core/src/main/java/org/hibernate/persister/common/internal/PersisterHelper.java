@@ -10,17 +10,25 @@ package org.hibernate.persister.common.internal;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.AttributeConverter;
+import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.AbstractAttribute;
@@ -28,19 +36,23 @@ import org.hibernate.persister.common.spi.Attribute;
 import org.hibernate.persister.common.spi.AttributeContainer;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinableAttributeContainer;
+import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.common.spi.UnionSubclassTable;
+import org.hibernate.persister.embeddable.spi.EmbeddableContainer;
 import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
+import org.hibernate.persister.common.spi.SingularAttribute.Disposition;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sqm.domain.PluralAttributeElementReference.ElementClassification;
-import org.hibernate.sqm.domain.PluralAttributeReference.CollectionClassification;
-import org.hibernate.sqm.domain.SingularAttributeReference.SingularAttributeClassification;
-import org.hibernate.sqm.query.PropertyPath;
+import org.hibernate.sqm.domain.SqmPluralAttributeElement.ElementClassification;
+import org.hibernate.sqm.domain.SqmPluralAttribute.CollectionClassification;
+import org.hibernate.sqm.domain.SqmSingularAttribute.SingularAttributeClassification;
+import org.hibernate.sqm.domain.SqmSingularAttribute;
 import org.hibernate.type.ArrayType;
 import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;
@@ -52,7 +64,13 @@ import org.hibernate.type.OrderedSetType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SortedMapType;
 import org.hibernate.type.SortedSetType;
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.internal.EntityTypeImpl;
 import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.BasicTypeParameters;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
@@ -213,29 +231,23 @@ public class PersisterHelper {
 
 	public Attribute buildAttribute(
 			PersisterCreationContext creationContext,
-			AttributeContainer source,
+			ManagedTypeImplementor source,
 			Property property,
-			String propertyName,
-			Type propertyType,
 			List<Column> columns) {
-		if ( propertyType.isCollectionType() ) {
+		if ( property.getValue() instanceof Collection ) {
 			assert columns == null || columns.isEmpty();
 
 			return buildPluralAttribute(
 					creationContext,
-					(Collection) property.getValue(),
 					source,
-					propertyName,
-					propertyType
+					property
 			);
 		}
 		else {
 			return buildSingularAttribute(
 					creationContext,
 					source,
-					property.getValue(),
-					propertyName,
-					propertyType,
+					property,
 					columns
 			);
 		}
@@ -243,43 +255,30 @@ public class PersisterHelper {
 
 	public AbstractAttribute buildSingularAttribute(
 			PersisterCreationContext creationContext,
-			AttributeContainer source,
-			Value value,
-			String attributeName,
-			Type attributeType,
+			ManagedTypeImplementor source,
+			Property property,
 			List<Column> columns) {
-		final SingularAttributeClassification classification = interpretSingularAttributeClassification( attributeType );
-		if ( classification == SingularAttributeClassification.ANY ) {
+		if ( property.getValue() instanceof Any ) {
 			throw new NotYetImplementedException();
 		}
-		else if ( classification == SingularAttributeClassification.EMBEDDED ) {
+		else if ( property.getValue() instanceof Component ) {
 			return new SingularAttributeEmbedded(
 					source,
-					(CompositeContainer) source,
-					attributeName,
-					buildEmbeddablePersister(
-							creationContext,
-							(CompositeContainer) source,
-							source.asLoggableText() + '.' + attributeName,
-							(EmbeddedType) attributeType,
-							columns
+					property.getName(),
+					resolvePropertyAccess( creationContext, property ),
+					Disposition.NORMAL,
+					creationContext.getPersisterFactory().createEmbeddablePersister(
+							(Component) property.getValue(),
+							source,
+							property.getName(),
+							creationContext
 					)
 			);
 		}
-		else if ( classification == SingularAttributeClassification.BASIC ) {
-			// todo : need to be able to locate the AttributeConverter (if one) associated with this singular basic attribute
-			final AttributeConverter attributeConverter = ( (SimpleValue) value ).getAttributeConverterDescriptor().getAttributeConverter();
-			return new SingularAttributeBasic(
-					source,
-					attributeName,
-					(BasicType) attributeType,
-					attributeConverter,
-					columns
-			);
-		}
-		else {
-			final EntityType ormEntityType = (EntityType) attributeType;
-			if ( ormEntityType.isOneToOne() ) {
+		else if ( property.getValue() instanceof ToOne ) {
+			final ToOne toOne = (ToOne) property.getValue();
+
+			if ( property.getValue() instanceof OneToOne ) {
 				// the Classification here should be ONE_TO_ONE which could represent either a real PK one-to-one
 				//		or a unique-FK one-to-one (logical).  If this is a real one-to-one then we should have
 				//		no columns passed here and should instead use the LHS (source) PK column(s)
@@ -289,32 +288,73 @@ public class PersisterHelper {
 			assert columns != null && columns.size() > 0;
 
 			return new SingularAttributeEntity(
-					(JoinableAttributeContainer) source,
-					attributeName,
-					classification,
-					ormEntityType,
-					creationContext.getSessionFactory().getMetamodel().entityPersister(
-							ormEntityType.getAssociatedEntityName( creationContext.getSessionFactory() )
-					),
+					source,
+					property.getName(),
+					resolvePropertyAccess( creationContext, property ),
+					property.getValue() instanceof OneToOne || ( (ManyToOne) property.getValue() ).isLogicalOneToOne()
+							? SingularAttributeClassification.ONE_TO_ONE
+							: SingularAttributeClassification.MANY_TO_ONE,
+					makeEntityType( creationContext, toOne ),
+					Disposition.NORMAL,
+					creationContext.getTypeConfiguration().findEntityPersister( toOne.getReferencedEntityName() ),
 					columns
 			);
 		}
+		else {
+			assert property.getValue() instanceof SimpleValue;
+
+			final SimpleValue simpleValue = (SimpleValue) property.getValue();
+
+			final AttributeConverterDefinition attributeConverterInfo = simpleValue.getAttributeConverterDescriptor();
+
+			return new SingularAttributeBasic<>(
+					source,
+					property.getName(),
+					resolvePropertyAccess( creationContext, property ),
+					resolveBasicType( creationContext, simpleValue ),
+					Disposition.NORMAL,
+					attributeConverterInfo,
+					columns
+			);
+
+		}
+
+
+
+
+		final SingularAttributeClassification classification = interpretSingularAttributeClassification( attributeType );
+		if ( classification == SingularAttributeClassification.ANY ) {
+
+		}
+		else if ( classification == SingularAttributeClassification.EMBEDDED ) {
+		}
+		else if ( classification == SingularAttributeClassification.BASIC ) {
+			// todo : need to be able to locate the AttributeConverter (if one) associated with this singular basic attribute
+		}
+		else {
+		}
 	}
 
-	public EmbeddablePersister buildEmbeddablePersister(
-			PersisterCreationContext creationContext,
-			CompositeContainer compositeContainer,
-			String role,
-			EmbeddedType compositeType,
-			List<Column> columns) {
-		return new EmbeddablePersister(
-				compositeContainer,
-				extractEmbeddableName( compositeType ),
-				role,
-				compositeType,
-				creationContext,
-				columns
+	@SuppressWarnings("unchecked")
+	private <J> BasicType<J> resolveBasicType(PersisterCreationContext creationContext, SimpleValue simpleValue) {
+		if ( simpleValue.getCurrentType() != null ) {
+			return (BasicType<J>) simpleValue.getCurrentType();
+		}
+
+		return creationContext.getTypeConfiguration().getBasicTypeRegistry().resolveBasicType(
+				simpleValue.getBasicTypeParameters(),
+				simpleValue.makeJdbcRecommendedSqlTypeMappingContext( creationContext.getTypeConfiguration() )
 		);
+	}
+
+	private EntityType makeEntityType(PersisterCreationContext creationContext, ToOne toOne) {
+		return new EntityTypeImpl(
+				null,
+		);
+	}
+
+	private PropertyAccess resolvePropertyAccess(PersisterCreationContext persisterCreationContext, Property property) {
+		throw new org.hibernate.cfg.NotYetImplementedException(  );
 	}
 
 	private static String extractEmbeddableName(Type attributeType) {
@@ -488,25 +528,6 @@ public class PersisterHelper {
 		}
 	}
 
-	public static SingularAttributeClassification interpretSingularAttributeClassification(Type attributeType) {
-		assert !attributeType.isCollectionType();
-
-		if ( attributeType.isAnyType() ) {
-			return SingularAttributeClassification.ANY;
-		}
-		else if ( attributeType.isEntityType() ) {
-			final EntityType ormEntityType = (EntityType) attributeType;
-			return ormEntityType.isOneToOne() || ormEntityType.isLogicalOneToOne()
-					? SingularAttributeClassification.ONE_TO_ONE
-					: SingularAttributeClassification.MANY_TO_ONE;
-		}
-		else if ( attributeType.isComponentType() ) {
-			return SingularAttributeClassification.EMBEDDED;
-		}
-		else {
-			return SingularAttributeClassification.BASIC;
-		}
-	}
 
 	public static SingularAttributeClassification interpretIdentifierClassification(Type ormIdType) {
 		return ormIdType instanceof EmbeddedType

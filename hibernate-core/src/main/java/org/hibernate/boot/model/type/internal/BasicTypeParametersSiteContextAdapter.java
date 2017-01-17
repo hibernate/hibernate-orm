@@ -10,11 +10,11 @@ import java.util.Comparator;
 import javax.persistence.TemporalType;
 
 import org.hibernate.boot.model.type.spi.BasicTypeSiteContext;
-import org.hibernate.type.converter.spi.AttributeConverterDefinition;
-import org.hibernate.type.spi.basic.BasicTypeParameters;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.cfg.AttributeConverterDefinition;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.BasicTypeParameters;
 
 /**
  * @author Steve Ebersole
@@ -27,7 +27,7 @@ public class BasicTypeParametersSiteContextAdapter implements BasicTypeParameter
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public BasicJavaDescriptor getJavaTypeDescriptor() {
 		return delegate.getJavaTypeDescriptor();
 	}
 
@@ -37,7 +37,7 @@ public class BasicTypeParametersSiteContextAdapter implements BasicTypeParameter
 	}
 
 	@Override
-	public AttributeConverterDefinition getAttributeConverterDefinition() {
+	public AttributeConverterDefinition  getAttributeConverterDefinition() {
 		return delegate.getAttributeConverterDefinition();
 	}
 

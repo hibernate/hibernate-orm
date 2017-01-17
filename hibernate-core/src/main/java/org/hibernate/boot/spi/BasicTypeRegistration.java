@@ -8,7 +8,7 @@ package org.hibernate.boot.spi;
 
 import org.hibernate.HibernateException;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.basic.RegistryKey;
+import org.hibernate.type.spi.BasicTypeRegistry;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
@@ -17,9 +17,9 @@ import org.hibernate.usertype.UserType;
  */
 public class BasicTypeRegistration {
 	private final BasicType basicType;
-	private final RegistryKey registryKey;
+	private final BasicTypeRegistry.Key registryKey;
 
-	public BasicTypeRegistration(BasicType basicType, RegistryKey registryKey) {
+	public BasicTypeRegistration(BasicType basicType, BasicTypeRegistry.Key registryKey) {
 		this.basicType = basicType;
 		this.registryKey = registryKey;
 	}
@@ -36,7 +36,7 @@ public class BasicTypeRegistration {
 		return basicType;
 	}
 
-	public RegistryKey getRegistryKey() {
+	public BasicTypeRegistry.Key getRegistryKey() {
 		return registryKey;
 	}
 }

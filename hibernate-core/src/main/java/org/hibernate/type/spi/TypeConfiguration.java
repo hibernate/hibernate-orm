@@ -48,8 +48,6 @@ import org.hibernate.type.SetType;
 import org.hibernate.type.SortedMapType;
 import org.hibernate.type.SortedSetType;
 import org.hibernate.type.SpecialOneToOneType;
-import org.hibernate.type.spi.basic.BasicTypeRegistry;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.usertype.ParameterizedType;
@@ -75,7 +73,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @since 6.0
  */
 @Incubating
-public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptorRegistryAccess {
+public class TypeConfiguration implements SessionFactoryObserver {
 	private static final CoreMessageLogger log = messageLogger( Scope.class );
 
 	private final Scope scope;
@@ -130,10 +128,6 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 
 	public MetadataBuildingContext getMetadataBuildingContext() {
 		return scope.getMetadataBuildingContext();
-	}
-
-	public TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
-		return this;
 	}
 
 	public BasicTypeRegistry getBasicTypeRegistry() {
@@ -461,12 +455,6 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 		}
 	}
 
-	@Override
-	public TypeConfiguration getTypeConfiguration() {
-		return this;
-	}
-
-	@Override
 	public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
 		if ( !initialized ) {
 			throw new IllegalStateException( "TypeDescriptorRegistryAccess (TypeConfiguration) initialization incomplete; not yet ready for access" );
@@ -474,7 +462,6 @@ public class TypeConfiguration implements SessionFactoryObserver, TypeDescriptor
 		return javaTypeDescriptorRegistry;
 	}
 
-	@Override
 	public SqlTypeDescriptorRegistry getSqlTypeDescriptorRegistry() {
 		if ( !initialized ) {
 			throw new IllegalStateException( "TypeDescriptorRegistryAccess (TypeConfiguration) initialization incomplete; not yet ready for access" );

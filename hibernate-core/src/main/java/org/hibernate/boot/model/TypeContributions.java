@@ -6,12 +6,11 @@
  */
 package org.hibernate.boot.model;
 
-import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.basic.RegistryKey;
-import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.descriptor.TypeDescriptorRegistryAccess;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.BasicTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Defines the target of contributing types, whether via dialects or {@link TypeContributor}
@@ -23,11 +22,7 @@ public interface TypeContributions {
 
 	void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor);
 
-	void contributeType(BasicType type, RegistryKey key);
+	void contributeType(BasicType type, BasicTypeRegistry.Key key);
 
 	TypeConfiguration getTypeConfiguration();
-
-	default TypeDescriptorRegistryAccess getTypeDescriptorRegistryAccess() {
-		return getTypeConfiguration().getTypeDescriptorRegistryAccess();
-	}
 }

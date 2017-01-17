@@ -7,12 +7,33 @@
 package org.hibernate.type.spi;
 
 import org.hibernate.MappingException;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sqm.domain.type.SqmDomainTypeEntity;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public interface EntityType extends AssociationType, SqmDomainTypeEntity {
+public interface EntityType extends IdentifiableType, SqmDomainTypeEntity {
+	EntityPersister getEntityPersister();
+
+	@Override
+	EntityJavaDescriptor getJavaTypeDescriptor();
+
+	default String getEntityName() {
+		return getJavaTypeDescriptor().getEntityName();
+	}
+
+	default String getJpaEntityName() {
+		return getJavaTypeDescriptor().getJpaEntityName();
+	}
+
+	@Override
+	default JdbcLiteralFormatter getJdbcLiteralFormatter() {
+		return null;
+	}
+
+
 
 	/**
 	 * Is the association modeled here defined as a 1-1 in the database (physical model)?

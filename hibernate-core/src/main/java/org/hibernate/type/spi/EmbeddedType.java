@@ -16,7 +16,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
 import org.hibernate.sqm.domain.type.SqmDomainTypeEmbeddable;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
-import org.hibernate.type.spi.descriptor.java.managed.JavaTypeDescriptorEmbeddableImplementor;
 
 /**
  * Contract for value types to hold collections and have cascades, etc.  The notion is that of composition.  JPA terms
@@ -30,7 +29,16 @@ public interface EmbeddedType<J> extends ManagedType<J>, SqmDomainTypeEmbeddable
 	<T> EmbeddablePersister<T> getEmbeddablePersister();
 
 	@Override
-	EmbeddableJavaDescriptor getJavaTypeDescriptor();
+	EmbeddableJavaDescriptor<J> getJavaTypeDescriptor();
+
+	@Override
+	default Classification getClassification() {
+		return Classification.COMPOSITE;
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// these need to go away or be re-thought
+
 
 	/**
 	 * Get the types of the component properties

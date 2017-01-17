@@ -7,9 +7,8 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.EntityMode;
@@ -38,7 +37,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements MetaAttributable {
+public class Component extends SimpleValue implements PropertyContainer, MetaAttributable {
 	private ArrayList<Property> properties = new ArrayList<>();
 	private String componentClassName;
 	private boolean embedded;
@@ -428,4 +427,14 @@ public class Component extends SimpleValue implements MetaAttributable {
 		}
 	}
 
+	@Override
+	public PropertyContainer getSuperPropertyContainer() {
+		// atm components/embeddables are not (yet) hierarchical
+		return null;
+	}
+
+	@Override
+	public List<Property> getDeclaredProperties() {
+		return properties;
+	}
 }

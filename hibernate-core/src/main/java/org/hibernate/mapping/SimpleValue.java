@@ -8,10 +8,13 @@ package org.hibernate.mapping;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import javax.persistence.AttributeConverter;
+import javax.persistence.EnumType;
+import javax.persistence.TemporalType;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -37,9 +40,14 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
+import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.spi.BasicTypeParameters;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
@@ -54,6 +62,8 @@ public class SimpleValue implements KeyValue {
 	private final InFlightMetadataCollector metadata;
 
 	private final List<Selectable> columns = new ArrayList<>();
+
+	private final BasicTypeParametersImpl basicTypeParameters = new BasicTypeParametersImpl();
 
 	private String typeName;
 	private Properties typeParameters;
@@ -154,10 +164,9 @@ public class SimpleValue implements KeyValue {
 					.getService( ClassLoaderService.class );
 			try {
 				final Class<AttributeConverter> converterClass = cls.classForName( converterClassName );
-				attributeConverterDescriptor = new AttributeConverterDescriptorNonAutoApplicableImpl( converterClass.newInstance(),
-																									  getMetadata().getTypeConfiguration()
-																											  .getTypeDescriptorRegistryAccess()
-																											  .getJavaTypeDescriptorRegistry()
+				attributeConverterDescriptor = new AttributeConverterDescriptorNonAutoApplicableImpl(
+						converterClass.newInstance(),
+						getMetadata().getTypeConfiguration().getJavaTypeDescriptorRegistry()
 				);
 				return;
 			}
@@ -393,6 +402,10 @@ public class SimpleValue implements KeyValue {
 		return getColumnSpan()==getType().getColumnSpan();
 	}
 
+	public Type getCurrentType() {
+		return type;
+	}
+
 	public Type getType() throws MappingException {
 		if ( type == null ) {
 			if ( basicTypeProducer == null ) {
@@ -414,6 +427,38 @@ public class SimpleValue implements KeyValue {
 		}
 
 		return type;
+	}
+
+	public JdbcRecommendedSqlTypeMappingContext makeJdbcRecommendedSqlTypeMappingContext(TypeConfiguration typeConfiguration) {
+		return new LocalJdbcRecommendedSqlTypeMappingContext( typeConfiguration );
+	}
+
+	private class LocalJdbcRecommendedSqlTypeMappingContext implements JdbcRecommendedSqlTypeMappingContext {
+		private final TypeConfiguration typeConfiguration;
+
+		private LocalJdbcRecommendedSqlTypeMappingContext(TypeConfiguration typeConfiguration) {
+			this.typeConfiguration = typeConfiguration;
+		}
+
+		@Override
+		public boolean isNationalized() {
+			return isNationalized;
+		}
+
+		@Override
+		public boolean isLob() {
+			return isLob;
+		}
+
+		@Override
+		public EnumType getEnumeratedType() {
+			return EnumType.STRING;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
+		}
 	}
 
 	private static class BasicTypeSiteContextTypeUsingReflection extends BasicTypeSiteContextSupport {
@@ -627,6 +672,49 @@ public class SimpleValue implements KeyValue {
 		@Override
 		public String[] getColumns() {
 			return columns;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public <J> BasicTypeParameters<J> getBasicTypeParameters() {
+		return basicTypeParameters;
+	}
+
+	private class BasicTypeParametersImpl implements BasicTypeParameters {
+		private BasicJavaDescriptor javaTypeDescriptor;
+		private SqlTypeDescriptor sqlTypeDescriptor;
+		private MutabilityPlan mutabilityPlan;
+		private Comparator comparator;
+		private TemporalType temporalPrecision;
+
+		@Override
+		public BasicJavaDescriptor getJavaTypeDescriptor() {
+			return javaTypeDescriptor;
+		}
+
+		@Override
+		public SqlTypeDescriptor getSqlTypeDescriptor() {
+			return sqlTypeDescriptor;
+		}
+
+		@Override
+		public AttributeConverterDefinition getAttributeConverterDefinition() {
+			return attributeConverterDescriptor;
+		}
+
+		@Override
+		public MutabilityPlan getMutabilityPlan() {
+			return mutabilityPlan;
+		}
+
+		@Override
+		public Comparator getComparator() {
+			return comparator;
+		}
+
+		@Override
+		public TemporalType getTemporalPrecision() {
+			return temporalPrecision;
 		}
 	}
 }

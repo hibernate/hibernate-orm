@@ -149,7 +149,7 @@ public class JoinSequence {
 	 * @throws MappingException Indicates a problem access the provided metadata, or incorrect metadata
 	 */
 	public JoinFragment toJoinFragment(Map enabledFilters, boolean includeAllSubclassJoins) throws MappingException {
-		return toJoinFragment( enabledFilters, includeAllSubclassJoins, null, null );
+		return toJoinFragment( enabledFilters, includeAllSubclassJoins, null, null, null );
 	}
 
 	/**
@@ -168,8 +168,9 @@ public class JoinSequence {
 			Map enabledFilters,
 			boolean includeAllSubclassJoins,
 			String withClauseFragment,
-			String withClauseJoinAlias) throws MappingException {
-		return toJoinFragment( enabledFilters, includeAllSubclassJoins, true, withClauseFragment, withClauseJoinAlias );
+			String withClauseJoinAlias,
+			String withClauseCollectionJoinAlias) throws MappingException {
+		return toJoinFragment( enabledFilters, includeAllSubclassJoins, true, withClauseFragment, withClauseJoinAlias, withClauseCollectionJoinAlias );
 	}
 
 	public JoinFragment toJoinFragment(
@@ -177,7 +178,8 @@ public class JoinSequence {
 			boolean includeAllSubclassJoins,
 			boolean renderSubclassJoins,
 			String withClauseFragment,
-			String withClauseJoinAlias) throws MappingException {
+			String withClauseJoinAlias,
+			String withClauseCollectionJoinAlias) throws MappingException {
 		final QueryJoinFragment joinFragment = new QueryJoinFragment( factory.getDialect(), useThetaStyle );
 		Iterator<Join> iter;
 		Join first;
@@ -197,7 +199,7 @@ public class JoinSequence {
 				collectionJoinSubquery
 				&& withClauseFragment != null
 				&& joins.size() > 1
-				&& withClauseFragment.contains( withClauseJoinAlias )
+				&& ( withClauseFragment.contains( withClauseJoinAlias ) || ( withClauseCollectionJoinAlias != null && withClauseFragment.contains( withClauseCollectionJoinAlias ) ) )
 				&& ( first = ( iter = joins.iterator() ).next() ).joinType == JoinType.LEFT_OUTER_JOIN
 				) {
 			final QueryJoinFragment subqueryJoinFragment = new QueryJoinFragment( factory.getDialect(), useThetaStyle );
@@ -208,7 +210,12 @@ public class JoinSequence {
 
 			// Re-alias columns of withClauseJoinAlias and rewrite withClauseFragment
 			// A list of possible delimited identifier types: https://en.wikibooks.org/wiki/SQL_Dialects_Reference/Data_structure_definition/Delimited_identifiers
-			Pattern p = Pattern.compile( Pattern.quote( withClauseJoinAlias + "." ) + "(" +
+			String prefixPattern = "(" + Pattern.quote( withClauseJoinAlias );
+			if ( withClauseCollectionJoinAlias != null ) {
+				prefixPattern += "|" + Pattern.quote( withClauseCollectionJoinAlias );
+			}
+			prefixPattern += ")" + Pattern.quote( "." );
+			Pattern p = Pattern.compile( prefixPattern + "(" +
 					"([a-zA-Z0-9_]+)|" + // Normal identifiers
 					// Ignore single quoted identifiers to avoid possible clashes with string literals
 					// and since SQLLite is the only DB supporting that style, we simply decide to not support it
@@ -225,7 +232,8 @@ public class JoinSequence {
 			int start = 0;
 			int aliasNumber = 0;
 			while ( matcher.find() ) {
-				final String column = matcher.group( 1 );
+				final String matchedTableName = matcher.group(1);
+				final String column = matcher.group( 2 );
 				// Replace non-valid simple identifier characters from the column name
 				final String alias = "c_" + aliasNumber + "_" + column.replaceAll( "[\\[\\]\\s\"']+", "" );
 				withClauseSb.append( withClauseFragment, start, matcher.start() );
@@ -235,7 +243,7 @@ public class JoinSequence {
 				withClauseSb.append( ' ' );
 
 				subqueryJoinFragment.addFromFragmentString( ", " );
-				subqueryJoinFragment.addFromFragmentString( withClauseJoinAlias );
+				subqueryJoinFragment.addFromFragmentString( matchedTableName );
 				subqueryJoinFragment.addFromFragmentString( "." );
 				subqueryJoinFragment.addFromFragmentString( column );
 				subqueryJoinFragment.addFromFragmentString( " as " );
@@ -264,6 +272,7 @@ public class JoinSequence {
 					enabledFilters,
 					false,
 					true, // TODO: only join subclasses that are needed for ON clause
+					null,
 					null,
 					null
 			);

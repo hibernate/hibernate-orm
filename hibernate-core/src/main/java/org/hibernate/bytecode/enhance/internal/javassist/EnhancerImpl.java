@@ -18,15 +18,13 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
 
+import javassist.NotFoundException;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.Managed;
-import org.hibernate.engine.spi.ManagedComposite;
-import org.hibernate.engine.spi.ManagedEntity;
-import org.hibernate.engine.spi.ManagedMappedSuperclass;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.internal.CoreLogging;
@@ -159,20 +157,19 @@ public class EnhancerImpl implements Enhancer {
 		}
 	}
 
+	// See HHH-10977 HHH-11284 HHH-11404 --- check for declaration of Managed interface on the class, not inherited
 	private boolean alreadyEnhanced(CtClass managedCtClass) {
-		if ( !PersistentAttributesHelper.isAssignable( managedCtClass, Managed.class.getName() ) ) {
+		try {
+			for ( CtClass declaredInterface : managedCtClass.getInterfaces() ) {
+				if ( PersistentAttributesHelper.isAssignable( declaredInterface, Managed.class.getName() ) ) {
+					return true;
+				}
+			}
 			return false;
 		}
-		// HHH-10977 - When a mapped superclass gets enhanced before a subclassing entity, the entity does not get enhanced, but it implements the Managed interface
-		return enhancementContext.isEntityClass( managedCtClass ) && PersistentAttributesHelper.isAssignable( managedCtClass, ManagedEntity.class.getName() )
-				|| enhancementContext.isCompositeClass( managedCtClass ) && PersistentAttributesHelper.isAssignable(
-				managedCtClass,
-				ManagedComposite.class.getName()
-		)
-				|| enhancementContext.isMappedSuperclassClass( managedCtClass ) && PersistentAttributesHelper.isAssignable(
-				managedCtClass,
-				ManagedMappedSuperclass.class.getName()
-		);
+		catch ( NotFoundException e ) {
+			throw new HibernateException( "Unable to transform class: " + e.getMessage() , e );
+		}
 	}
 
 	private byte[] getByteCode(CtClass managedCtClass) {

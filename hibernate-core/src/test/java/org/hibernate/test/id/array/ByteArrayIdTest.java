@@ -32,8 +32,12 @@ import static org.junit.Assert.assertTrue;
  * @author Piotr Krauzowicz <p.krauzowicz@visiona.pl>
  * @author Gail Badner
  */
-@SkipForDialect(value = MySQL5Dialect.class, comment = "BLOB/TEXT column 'id' used in key specification without a key length")
-@SkipForDialect(value = Oracle9iDialect.class, comment = "ORA-02329: column of datatype LOB cannot be unique or a primary key")
+@SkipForDialect(
+		value = { MySQL5Dialect.class, Oracle9iDialect.class },
+		comment =
+				"MySQL5Dialect:BLOB/TEXT column 'id' used in key specification without a key length (HHH-10904); " +
+				"Oracle9i: ORA-02329: column of datatype LOB cannot be unique or a primary key (HHH-11335)"
+)
 public class ByteArrayIdTest extends BaseCoreFunctionalTestCase {
 
 	@Override

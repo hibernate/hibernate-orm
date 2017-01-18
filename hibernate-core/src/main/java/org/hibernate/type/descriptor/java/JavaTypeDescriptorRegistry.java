@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 import org.jboss.logging.Logger;
@@ -26,7 +27,7 @@ public class JavaTypeDescriptorRegistry {
 
 	public static final JavaTypeDescriptorRegistry INSTANCE = new JavaTypeDescriptorRegistry();
 
-	private ConcurrentHashMap<Class,JavaTypeDescriptor> descriptorsByClass = new ConcurrentHashMap<Class, JavaTypeDescriptor>();
+	private ConcurrentHashMap<Class,JavaTypeDescriptor> descriptorsByClass = new ConcurrentHashMap<>();
 
 	public JavaTypeDescriptorRegistry() {
 		addDescriptorInternal( ByteTypeDescriptor.INSTANCE );
@@ -112,10 +113,6 @@ public class JavaTypeDescriptorRegistry {
 			return descriptor;
 		}
 
-		if ( Serializable.class.isAssignableFrom( cls ) ) {
-			return new SerializableTypeDescriptor( cls );
-		}
-
 		// find the first "assignable" match
 		for ( Map.Entry<Class,JavaTypeDescriptor> entry : descriptorsByClass.entrySet() ) {
 			if ( entry.getKey().isAssignableFrom( cls ) ) {
@@ -124,8 +121,33 @@ public class JavaTypeDescriptorRegistry {
 			}
 		}
 
-		log.warnf( "Could not find matching type descriptor for requested Java class [%s]; using fallback", cls.getName() );
+		if ( Serializable.class.isAssignableFrom( cls ) ) {
+			return new SerializableTypeDescriptor( cls );
+		}
+
+		log.debugf(
+				"Could not find matching JavaTypeDescriptor for requested Java class [%s]; using fallback.  " +
+						"This means Hibernate does not know how to perform certain basic operations in relation to this Java type." +
+						"",
+				cls.getName()
+		);
+		checkEqualsAndHashCode( cls );
+
 		return new FallbackJavaTypeDescriptor<T>( cls );
+	}
+
+	@SuppressWarnings("unchecked")
+	private void checkEqualsAndHashCode(Class javaType) {
+		if ( !ReflectHelper.overridesEquals( javaType ) || !ReflectHelper.overridesHashCode( javaType ) ) {
+			log.warnf(
+					"Encountered Java type [%s] for which we could not locate a JavaTypeDescriptor and " +
+							"which does not appear to implement equals and/or hashCode.  This can lead to " +
+							"significant performance problems when performing equality/dirty checking involving " +
+							"this Java type.  Consider registering a custom JavaTypeDescriptor or at least " +
+							"implementing equals/hashCode.  See the User Guide section",
+					javaType.getName()
+			);
+		}
 	}
 
 

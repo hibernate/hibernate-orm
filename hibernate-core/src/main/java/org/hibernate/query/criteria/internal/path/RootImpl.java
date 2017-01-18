@@ -7,6 +7,10 @@
 package org.hibernate.query.criteria.internal.path;
 
 import java.io.Serializable;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 
@@ -24,6 +28,7 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
 public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Serializable {
 	private final EntityType<X> entityType;
 	private final boolean allowJoins;
+	private final Set<TreatedRoot<? extends X>> treats = new LinkedHashSet<>();
 
 	public RootImpl(CriteriaBuilderImpl criteriaBuilder, EntityType<X> entityType) {
 		this( criteriaBuilder, entityType, true );
@@ -52,7 +57,7 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 	public RootImpl<X> correlateTo(CriteriaSubqueryImpl subquery) {
 		return (RootImpl<X>) super.correlateTo( subquery );
 	}
-
+	
 	@Override
 	protected boolean canBeJoinSource() {
 		return allowJoins;
@@ -90,10 +95,16 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
+	
+	public Set<TreatedRoot<? extends X>> getTreats() {
+		return treats;
+	}
 
 	@Override
 	public <T extends X> RootImpl<T> treatAs(Class<T> treatAsType) {
-		return new TreatedRoot<T>( this, treatAsType );
+		TreatedRoot<T> treatedRoot = new TreatedRoot<T>( this, treatAsType );
+		treats.add(treatedRoot);
+		return treatedRoot;
 	}
 
 	public static class TreatedRoot<T> extends RootImpl<T> {

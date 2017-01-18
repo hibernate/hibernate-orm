@@ -10,6 +10,7 @@ import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -154,6 +155,54 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 		}
 		finally {
 			em.close();
+		}
+	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-10561")
+	public void testJoinOnTreatedRoot() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		EntityTransaction entityTransaction = em.getTransaction();
+		entityTransaction.begin();
+
+		try {
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Item> criteria = cb.createQuery(Item.class);
+		Root<Item> root = criteria.from(Item.class);
+		Root<Book> treatedRoot =  cb.treat(root, Book.class);
+		criteria.where(
+				cb.equal(
+						treatedRoot.<Book, Author>join("author").<String>get("name"),
+						"Andrea Camilleri"));
+		em.createQuery(criteria.select(treatedRoot)).getResultList();
+		entityTransaction.commit();
+		}
+		finally {
+		em.close();
+		}
+	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-10767")
+	public void testJoinOnTreatedJoin() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		EntityTransaction entityTransaction = em.getTransaction();
+		entityTransaction.begin();
+
+		try {
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Bid> criteria = cb.createQuery(Bid.class);
+		Root<Bid> root = criteria.from(Bid.class);
+		Join<Book, Author> join = cb.treat(
+				root.<Bid, Item> join("item"), Book.class)
+				.<Book, Author> join("author");
+		criteria.where(cb.equal(join.<String> get("name"), "Andrea Camilleri"));
+		em.createQuery(criteria.select(root)).getResultList();
+
+		entityTransaction.commit();
+		}
+		finally {
+		em.close();
 		}
 	}
 

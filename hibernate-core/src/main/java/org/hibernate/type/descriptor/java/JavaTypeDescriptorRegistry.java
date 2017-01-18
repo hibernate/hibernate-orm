@@ -12,6 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -23,7 +25,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class JavaTypeDescriptorRegistry {
-	private static final Logger log = Logger.getLogger( JavaTypeDescriptorRegistry.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( JavaTypeDescriptorRegistry.class );
 
 	public static final JavaTypeDescriptorRegistry INSTANCE = new JavaTypeDescriptorRegistry();
 
@@ -139,14 +141,7 @@ public class JavaTypeDescriptorRegistry {
 	@SuppressWarnings("unchecked")
 	private void checkEqualsAndHashCode(Class javaType) {
 		if ( !ReflectHelper.overridesEquals( javaType ) || !ReflectHelper.overridesHashCode( javaType ) ) {
-			log.warnf(
-					"Encountered Java type [%s] for which we could not locate a JavaTypeDescriptor and " +
-							"which does not appear to implement equals and/or hashCode.  This can lead to " +
-							"significant performance problems when performing equality/dirty checking involving " +
-							"this Java type.  Consider registering a custom JavaTypeDescriptor or at least " +
-							"implementing equals/hashCode.  See the User Guide section",
-					javaType.getName()
-			);
+			log.unknownJavaTypeNoEqualsHashCode( javaType );
 		}
 	}
 

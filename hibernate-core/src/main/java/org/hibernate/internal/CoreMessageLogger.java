@@ -1755,4 +1755,15 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "A ManagedEntity was associated with a stale PersistenceContext. A ManagedEntity may only be associated with one PersistenceContext at a time; %s", id = 480)
 	void stalePersistenceContextInEntityEntry(String msg);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 481,
+			value = "Encountered Java type [%s] for which we could not locate a JavaTypeDescriptor and " +
+					"which does not appear to implement equals and/or hashCode.  This can lead to " +
+					"significant performance problems when performing equality/dirty checking involving " +
+					"this Java type.  Consider registering a custom JavaTypeDescriptor or at least " +
+					"implementing equals/hashCode."
+	)
+	void unknownJavaTypeNoEqualsHashCode(Class javaType);
 }

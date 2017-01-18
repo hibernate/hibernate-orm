@@ -199,6 +199,10 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	protected String renderLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
+		if ( !Hibernate.isInitialized( value ) ) {
+			return "<uninitialized>";
+		}
+
 		final List<String> list = new ArrayList<String>();
 		Type elemType = getElementType( factory );
 		Iterator itr = getElementsIterator( value );

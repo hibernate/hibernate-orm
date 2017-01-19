@@ -3,6 +3,47 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.1.4.Final (January 19, 2017)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/26103
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2026103%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-9864] - foreign key violation with order_inserts=true and batches with mixed subclass entities
+    * [HHH-10623] - Persist of detached entity in derived ID
+    * [HHH-10904] - Fix tests failing when switching to MySQL
+    * [HHH-11023] - Startup performance regression : schema update/validate
+    * [HHH-11061] - Attempt to resolve foreign key metadata from JDBC metadata failed to find column mappings for foreign when keywords auto quoting is enabled
+    * [HHH-11202] - IllegalAccessException on Embeddable ID after serializing Getter in cache key
+    * [HHH-11203] - UniqueConstraintGenerationTest fails on db2
+    * [HHH-11216] - @ElementCollection for enumerations is failing when enabling insert ordering
+    * [HHH-11241] - Missing column when executing HQL and criteria query with secondary table
+    * [HHH-11289] - Lazy-initializing a static Method and making accessible not thread-safe
+    * [HHH-11304] - Invalidations are not cleared when transaction rolls back
+    * [HHH-11315] - EnhancerTest fails on Oracle databases
+    * [HHH-11328] - Persist of transient entity in derived ID that is already in merge process throws javax.persistence.EntityExistsException
+    * [HHH-11329] - Too long identifiers in tests in org.hibernate.test.inheritancediscriminator.embeddable package
+    * [HHH-11330] - Skip IdentifierGeneratorWithNaturalIdCacheTest on dialects that do not support identity columns
+    * [HHH-11331] - SQLLoaderTest fails on DB2
+    * [HHH-11332] - QueryAndSQLTest and QueryTest failing on Sybase because null == null
+    * [HHH-11335] - ByteArrayIdTest and PrimitiveByteArrayIdTest failing on Oracle DBs
+    * [HHH-11337] - Incorrect SQL generated when use both left join with unrelated entity and implicit join to another entity in select-clause
+    * [HHH-11340] - Joins on Entity Joins are not rendered into SQL
+
+** New Feature
+    * [HHH-10689] - Fix tests failing when switching to Oracle
+
+** Task
+    * [HHH-10243] - document package registration for Hibernate 5
+
+** Improvement
+    * [HHH-10332] - Schema validation: ambiguous table name
+    * [HHH-11177] - Duplicate queries during startup
+    * [HHH-11220] - Auto-detect SQL Server 2016 when the major version is 13
+    * [HHH-11295] - Some improvements to EntityJoinTest
+    * [HHH-11357] - Improve result checking for tests that sort insert actions
+
+
 Changes in 5.1.3.Final (November 23, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/25350

@@ -1,7 +1,55 @@
-Hibernate 5.0 Changelog
+Hibernate 5 Changelog
 =======================
 
 Note: Please refer to JIRA to learn more about each issue.
+
+
+Changes in 5.2.7.Final (January 19, 2017)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/26401
+
+** Bug
+    * [HHH-4712] - Field named "id" (but not an @Id) in a class referenced via join table leads to "Column 'col_1_1_' not found" when retrieving old versions
+    * [HHH-8973] - support auditing revised properties on detatched objects
+    * [HHH-9108] - Envers with Embeddable having a collection of other entities results in PropertyAccessException: IllegalArgumentException
+    * [HHH-9834] - Audit table creation fails for ElementCollection Map with CLOB/NCLOB element column
+    * [HHH-10183] - Mapping for NVARCHAR in SqlServer not working with native queries; org.hibernate.MappingException: No Dialect mapping for JDBC type: -9
+    * [HHH-10561] - Join on treated root not rendered in HQL
+    * [HHH-11134] - StringIndexOutOfBoundsException in BooleanTypeDescriptor
+    * [HHH-11173] - Bytecode enhanced lazy collection won't load from cache
+    * [HHH-11202] - IllegalAccessException on Embeddable ID after serializing Getter in cache key
+    * [HHH-11236] - JPA hbm2ddl auto-generation creates ddl with invalid syntax for Unique Key with any MySQLDialect
+    * [HHH-11242] - Unable to enhance property from MappedSuperclass: class is frozen
+    * [HHH-11284] - Enhancer dirty tracking doesn't work with inherited entities
+    * [HHH-11309] - Cannot install Hibernate feature into Karaf 4.0.7
+    * [HHH-11323] - Evict during concurrent update and putFromLoad can result in stale entry in 2LC
+    * [HHH-11350] - Intermittent failure in testEvictAll/testRemoveAll
+    * [HHH-11352] - Hibernate & Paging: BROKEN when a column contains the word "FROM" for SQL Server
+    * [HHH-11364] - Unable to populate an ElementCollection (of an embeddable type) of an audited entity when the collection has a null value for a property with JoinColumn
+    * [HHH-11369] - gradle tasks fail to list
+    * [HHH-11375] - SINGLE_TABLE  associated entity query missing restriction of DiscriminatorColumn
+    * [HHH-11376] - Malformed SQL query sent to SQL Server with left outer join and pessimistic lock
+    * [HHH-11383] - Envers Query API: Cannot traverse relation of superclass with table-per-subclass mapping
+    * [HHH-11393] - Hibernate/JPA CriteriaQuery trim function generate wrong SQL for PostgreSQL
+    * [HHH-11394] - Custom WildFly modules include a duplicate dependency on Javassist
+    * [HHH-11400] - HHH90000016: Found use of deprecated 'collection property' issue for valid JPQL query
+    * [HHH-11401] - Subquery join rewrite produces wrong SQL in some cases
+    * [HHH-11404] - ManagedSuperclass not enhanced when extending another ManagedSuperclass
+    * [HHH-11407] - JPA + JDBC transaction - when a commit fails rollback is executed twice
+
+** Task
+    * [HHH-11382] - Upgrade WildFly version used for integration tests to 10.1.0.Final
+
+** Improvement
+    * [HHH-10858] - Could not find matching type descriptor for requested Java class [...]; using fallback
+    * [HHH-11339] - PutFromLoads in replicated/distributed caches should propagate asynchronously
+    * [HHH-11344] - Reduce execution time of hibernate-infinispan testsuite
+    * [HHH-11370] - Consider making javax.enterprise:cdi-api dependency "provided"
+    * [HHH-11377] - ReflectHelper#getConstantValue should consider digits as well
+    * [HHH-11388] - Fix documentation typos spotted by FabioUeno
+    * [HHH-11389] - Upgrade Byte Buddy to 1.6.0
+    * [HHH-11395] - ServiceRegistry#getService(...) throws NPE when service initiator returns null
+    * [HHH-11408] - Fixing typos in documentation
 
 
 Changes in 5.2.6.Final (December 20, 2016)

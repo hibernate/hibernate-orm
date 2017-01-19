@@ -1583,6 +1583,6 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		if (ret == null) {
 			return false;
 		}
-		return !org.hibernate.type.SerializableType.class.isInstance( ret );
+		return !org.hibernate.type.SerializableType.class.equals( ret.getClass() );
 	}
 }

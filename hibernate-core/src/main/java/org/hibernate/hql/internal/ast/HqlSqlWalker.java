@@ -23,6 +23,7 @@ import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.engine.internal.ParameterBinder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.hql.internal.CollectionProperties;
 import org.hibernate.hql.internal.antlr.HqlSqlBaseWalker;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.HqlTokenTypes;
@@ -66,6 +67,7 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.param.CollectionFilterKeyParameterSpecification;
@@ -73,6 +75,7 @@ import org.hibernate.param.NamedParameterSpecification;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.param.PositionalParameterSpecification;
 import org.hibernate.param.VersionTypeSeedParameterSpecification;
+import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
@@ -578,9 +581,30 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		DotNode dotNode = (DotNode) dot;
 		FromReferenceNode lhs = dotNode.getLhs();
 		AST rhs = lhs.getNextSibling();
-		switch ( rhs.getType() ) {
-			case SqlTokenTypes.ELEMENTS:
-			case SqlTokenTypes.INDICES:
+
+		// this used to be a switch statement based on the rhs's node type
+		//		expecting it to be SqlTokenTypes.ELEMENTS or
+		//		SqlTokenTypes.INDICES in the cases where the re-arranging is needed
+		//
+		// In such cases it additionally expects the RHS to be a CollectionFunction node.
+		//
+		// However, in my experience these assumptions sometimes did not works as sometimes the node
+		// 		types come in with the node type WEIRD_IDENT.  What this does now is to:
+		//			1) see if the LHS is a collection
+		//			2) see if the RHS is a reference to one of the "collection properties".
+		//		if both are true, we log a deprecation warning
+		if ( lhs.getDataType() != null
+				&& lhs.getDataType().isCollectionType() ) {
+			if ( CollectionProperties.isCollectionProperty( rhs.getText() ) ) {
+				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfCollectionPropertiesInHql(
+						rhs.getText(),
+						lhs.getPath()
+				);
+			}
+
+			// perform the re-arrangement
+			if ( CollectionPropertyNames.COLLECTION_INDICES.equalsIgnoreCase( rhs.getText() )
+					|| CollectionPropertyNames.COLLECTION_ELEMENTS.equalsIgnoreCase( rhs.getText() ) ) {
 				if ( LOG.isDebugEnabled() ) {
 					LOG.debugf(
 							"lookupProperty() %s => %s(%s)",
@@ -589,7 +613,17 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 							lhs.getPath()
 					);
 				}
-				CollectionFunction f = (CollectionFunction) rhs;
+
+				final CollectionFunction f;
+				if ( rhs instanceof CollectionFunction ) {
+					f = (CollectionFunction) rhs;
+				}
+				else {
+					f = new CollectionFunction();
+					f.initialize( SqlTokenTypes.METHOD_CALL, rhs.getText() );
+					f.initialize( this );
+				}
+
 				// Re-arrange the tree so that the collection function is the root and the lhs is the path.
 				f.setFirstChild( lhs );
 				lhs.setNextSibling( null );
@@ -597,11 +631,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				resolve( lhs );            // Don't forget to resolve the argument!
 				f.resolve( inSelect );    // Resolve the collection function now.
 				return f;
-			default:
-				// Resolve everything up to this dot, but don't resolve the placeholders yet.
-				dotNode.resolveFirstChild();
-				return dotNode;
+			}
 		}
+
+		// otherwise, resolve the path and return it
+		dotNode.resolveFirstChild();
+		return dotNode;
 	}
 
 	@Override

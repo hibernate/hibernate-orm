@@ -12,7 +12,7 @@ import org.hibernate.persister.collection.spi.AbstractCollectionElement;
 import org.hibernate.persister.collection.spi.CollectionElementEmbedded;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.sqm.domain.SqmNavigable;
 import org.hibernate.type.spi.EmbeddedType;
 
@@ -45,7 +45,7 @@ public class CollectionElementEmbeddedImpl
 	}
 
 	@Override
-	public EmbeddablePersister getEmbeddablePersister() {
+	public EmbeddedPersister getEmbeddablePersister() {
 		return getOrmType().getEmbeddablePersister();
 	}
 }

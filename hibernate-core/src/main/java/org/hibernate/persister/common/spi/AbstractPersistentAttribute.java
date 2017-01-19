@@ -16,12 +16,12 @@ import org.hibernate.type.spi.Type;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractAttribute<O,T> implements Attribute<O,T> {
+public abstract class AbstractPersistentAttribute<O,T> implements PersistentAttribute<O,T> {
 	private final ManagedTypeImplementor<O> container;
 	private final String name;
 	private final PropertyAccess access;
 
-	public AbstractAttribute(
+	public AbstractPersistentAttribute(
 			ManagedTypeImplementor<O> container,
 			String name,
 			PropertyAccess access) {

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.persister.embeddable.spi;
+package org.hibernate.persister.embedded.spi;
 
 import org.hibernate.persister.common.spi.ExpressableType;
 import org.hibernate.sqm.domain.SqmExpressableTypeEmbedded;
@@ -15,12 +15,12 @@ import org.hibernate.type.spi.EmbeddedType;
  *
  * @author Steve Ebersole
  */
-public interface EmbeddableReference<J> extends SqmExpressableTypeEmbedded, ExpressableType<J> {
+public interface EmbeddedReference<J> extends SqmExpressableTypeEmbedded, ExpressableType<J> {
 	@Override
-	EmbeddableContainer getSource();
+	EmbeddedContainer getSource();
 
 	@Override
 	EmbeddedType getExportedDomainType();
 
-	EmbeddablePersister getEmbeddablePersister();
+	EmbeddedPersister getEmbeddablePersister();
 }

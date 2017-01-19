@@ -4,41 +4,57 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.persister.entity.internal;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
-import org.hibernate.persister.common.spi.AbstractSingularAttribute;
-import org.hibernate.persister.common.spi.Attribute;
-import org.hibernate.persister.common.spi.AttributeContainer;
+import org.hibernate.mapping.Property;
+import org.hibernate.persister.common.internal.PersisterHelper;
+import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
-import org.hibernate.persister.common.spi.SingularOrmAttribute;
-import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
+import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.common.spi.PersistentAttribute;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
-import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.IdentifierDescriptor;
-import org.hibernate.sqm.domain.EntityReference;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
  */
-public class IdentifierDescriptorCompositeAggregated
-		extends AbstractSingularAttribute<EmbeddedType>
-		implements IdentifierDescriptor, SingularOrmAttribute, AttributeContainer {
-	private final EmbeddablePersister embeddablePersister;
+public class IdentifierDescriptorCompositeAggregated<O,J>
+		extends AbstractSingularPersistentAttribute<O,J,EmbeddedType<J>>
+		implements IdentifierDescriptor<O,J>, SingularPersistentAttribute<O,J>, NavigableSource<J> {
+	private final EmbeddedPersister embeddablePersister;
 
+	@SuppressWarnings("unchecked")
 	public IdentifierDescriptorCompositeAggregated(
 			EntityHierarchy entityHierarchy,
-			String attributeName,
-			EmbeddablePersister embeddablePersister) {
-		super( entityHierarchy.getRootEntityPersister(), attributeName, embeddablePersister.getOrmType(), false );
+			Property idAttribute,
+			EmbeddedPersister embeddablePersister) {
+		super(
+				entityHierarchy.getRootEntityPersister(),
+				idAttribute.getName(),
+				PersisterHelper.resolvePropertyAccess( entityHierarchy.getRootEntityPersister(), idAttribute ),
+				embeddablePersister.getOrmType(),
+				Disposition.ID,
+				false
+		);
 		this.embeddablePersister = embeddablePersister;
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// NavigableSource (embedded)
+
+	@Override
+	public Navigable findNavigable(String navigableName) {
+		return embeddablePersister.findNavigable( navigableName );
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// IdentifierDescriptor
@@ -54,13 +70,8 @@ public class IdentifierDescriptorCompositeAggregated
 	}
 
 	@Override
-	public SingularOrmAttribute getIdAttribute() {
+	public SingularPersistentAttribute getIdAttribute() {
 		return this;
-	}
-
-	@Override
-	public EntityPersister getAttributeContainer() {
-		return (EntityPersister) super.getAttributeContainer();
 	}
 
 	@Override
@@ -71,6 +82,17 @@ public class IdentifierDescriptorCompositeAggregated
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SingularAttribute
+
+
+	@Override
+	public PersistentAttributeType getPersistentAttributeType() {
+		return PersistentAttributeType.EMBEDDED;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
+	}
 
 	@Override
 	public SingularAttributeClassification getAttributeTypeClassification() {
@@ -83,28 +105,7 @@ public class IdentifierDescriptorCompositeAggregated
 	}
 
 	@Override
-	public AttributeContainer getSuperAttributeContainer() {
-		// composite inheritance not supported
-		return null;
-	}
-
-	@Override
-	public List<Attribute> getNonIdentifierAttributes() {
-		return Collections.emptyList();
-	}
-
-	@Override
-	public Attribute findAttribute(String name) {
-		return embeddablePersister.findAttribute( name );
-	}
-
-	@Override
-	public List<JoinColumnMapping> resolveJoinColumnMappings(Attribute attribute) {
-		return getLeftHandSide().resolveJoinColumnMappings( attribute );
-	}
-
-	@Override
-	public Optional<EntityReference> toEntityReference() {
-		return Optional.empty();
+	public List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute) {
+		return getSource().resolveJoinColumnMappings( persistentAttribute );
 	}
 }

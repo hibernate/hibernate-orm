@@ -6,17 +6,14 @@
  */
 package org.hibernate.persister.entity.spi;
 
-import org.hibernate.persister.common.spi.SingularOrmAttribute;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 
 /**
  * Information about the entity (hierarchy wide) version
  *
  * @author Steve Ebersole
  */
-public interface VersionDescriptor extends SingularOrmAttribute {
-	@Override
-	EntityPersister getAttributeContainer();
-
+public interface VersionDescriptor<O,J> extends SingularPersistentAttribute<O,J> {
 	/**
 	 * Access to the value that indicates an unsaved (transient) entity
 	 *

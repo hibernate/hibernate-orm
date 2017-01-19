@@ -4,23 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.persister.entity.spi;
 
-import org.hibernate.persister.common.spi.SingularOrmAttribute;
-import org.hibernate.persister.common.spi.VirtualAttribute;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
+import org.hibernate.persister.common.spi.VirtualPersistentAttribute;
 
 /**
  * @author Steve Ebersole
  */
-public interface RowIdDescriptor extends VirtualAttribute, SingularOrmAttribute {
-	/**
-	 * This implementation returns the ROW_ID descriptor from the root
-	 * Entity persister for the hierarchy to which this descriptor is
-	 * attached.
-	 * <p/>
-	 * {@inheritDoc}
-	 */
-	@Override
-	EntityPersister getAttributeContainer();
+public interface RowIdDescriptor<O,J> extends VirtualPersistentAttribute<O,J>, SingularPersistentAttribute<O,J> {
+	String NAVIGABLE_NAME = "{rowId}";
 }

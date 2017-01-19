@@ -7,8 +7,8 @@
 package org.hibernate.persister.entity.spi;
 
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.orm.persister.common.spi.ManagedTypeImplementor;
-import org.hibernate.orm.persister.spi.PersisterCreationContext;
+import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.spi.PersisterCreationContext;
 
 /**
  * @author Steve Ebersole

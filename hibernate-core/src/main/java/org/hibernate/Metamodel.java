@@ -6,6 +6,8 @@
  */
 package org.hibernate;
 
+import java.util.List;
+import javax.persistence.EntityGraph;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.type.spi.TypeConfiguration;
@@ -33,18 +35,9 @@ public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 	 */
 	<X> EntityType<X> entity(String entityName);
 
-	/**
-	 * See if the given name (typically encountered in an HQL/JPQL query) has an imported/replacement name.
-	 *
-	 * @param className The encountered class/entity name
-	 *
-	 * @return The imported class name.  May return {@code null} if the given name does not have an import
-	 * replacement and it does not represent a known Class name (Class loading).
-	 */
-	String getImportedClassName(String className);
+	<T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph);
 
-	/**
-	 * Get the names of all persistent classes that implement/extend the given interface/class
-	 */
-	String[] getImplementors(String entityName);
+	<T> EntityGraph<T> findEntityGraphByName(String name);
+
+	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
 }

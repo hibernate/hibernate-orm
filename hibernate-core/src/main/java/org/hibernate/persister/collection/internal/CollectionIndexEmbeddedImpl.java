@@ -13,7 +13,7 @@ import org.hibernate.persister.collection.spi.AbstractCollectionIndex;
 import org.hibernate.persister.collection.spi.CollectionIndexEmbedded;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.sqm.domain.SqmNavigable;
 import org.hibernate.sqm.domain.SqmPluralAttributeIndex;
@@ -32,7 +32,7 @@ public class CollectionIndexEmbeddedImpl
 	}
 
 	@Override
-	public EmbeddablePersister getEmbeddablePersister() {
+	public EmbeddedPersister getEmbeddablePersister() {
 		return getOrmType().getEmbeddablePersister();
 	}
 

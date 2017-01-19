@@ -35,7 +35,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 
 	private ManagedTypeImplementor  superTypeDescriptor;
 
-	private Map<String,Attribute> declaredAttributesByName;
+	private Map<String,PersistentAttribute> declaredAttributesByName;
 
 	private TypeConfiguration typeConfiguration;
 
@@ -92,24 +92,24 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 
-	protected void addAttribute(Attribute attribute) {
+	protected void addAttribute(PersistentAttribute persistentAttribute) {
 		if ( declaredAttributesByName == null ) {
 			declaredAttributesByName = new HashMap<>();
 		}
-		declaredAttributesByName.put( attribute.getAttributeName(), attribute );
+		declaredAttributesByName.put( persistentAttribute.getAttributeName(), persistentAttribute );
 	}
 
 	@Override
-	public Attribute findAttribute(String name) {
-		final Attribute declaredAttribute = findDeclaredAttribute( name );
-		if ( declaredAttribute != null ) {
-			return declaredAttribute;
+	public PersistentAttribute findAttribute(String name) {
+		final PersistentAttribute declaredPersistentAttribute = findDeclaredAttribute( name );
+		if ( declaredPersistentAttribute != null ) {
+			return declaredPersistentAttribute;
 		}
 
 		if ( getSuperType() != null ) {
-			final Attribute superAttribute = getSuperType().findAttribute( name );
-			if ( superAttribute != null ) {
-				return superAttribute;
+			final PersistentAttribute superPersistentAttribute = getSuperType().findAttribute( name );
+			if ( superPersistentAttribute != null ) {
+				return superPersistentAttribute;
 			}
 		}
 
@@ -117,7 +117,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	@Override
-	public Attribute findDeclaredAttribute(String name) {
+	public PersistentAttribute findDeclaredAttribute(String name) {
 		if ( declaredAttributesByName == null ) {
 			return null;
 		}
@@ -194,7 +194,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	@SuppressWarnings("unchecked")
 	public Set<javax.persistence.metamodel.PluralAttribute<? super T, ?, ?>> getPluralAttributes() {
 		final HashSet attributes = new HashSet<>();
-		collectAttributes( attributes::add, PluralAttribute.class );
+		collectAttributes( attributes::add, PluralPersistentAttribute.class );
 		return attributes;
 	}
 
@@ -202,18 +202,18 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	@SuppressWarnings("unchecked")
 	public Set<javax.persistence.metamodel.PluralAttribute<T, ?, ?>> getDeclaredPluralAttributes() {
 		final HashSet attributes = new HashSet<>();
-		collectDeclaredAttributes( attributes::add, PluralAttribute.class );
+		collectDeclaredAttributes( attributes::add, PluralPersistentAttribute.class );
 		return attributes;
 	}
 
 	@Override
-	public Map<String, Attribute> getAttributesByName() {
-		final Map<String, Attribute> attributeMap = new HashMap<>();
+	public Map<String, PersistentAttribute> getAttributesByName() {
+		final Map<String, PersistentAttribute> attributeMap = new HashMap<>();
 		collectAttributes( attributeMap );
 		return attributeMap;
 	}
 
-	protected void collectAttributes(Map<String, Attribute> attributeMap) {
+	protected void collectAttributes(Map<String, PersistentAttribute> attributeMap) {
 		attributeMap.putAll( getDeclaredAttributesByName() );
 		if ( superTypeDescriptor != null && superTypeDescriptor instanceof AbstractManagedType ) {
 			( (AbstractManagedType) superTypeDescriptor ).collectAttributes( attributeMap );
@@ -221,7 +221,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	@Override
-	public Map<String, Attribute> getDeclaredAttributesByName() {
+	public Map<String, PersistentAttribute> getDeclaredAttributesByName() {
 		return declaredAttributesByName == null ? Collections.emptyMap() : declaredAttributesByName;
 	}
 
@@ -239,45 +239,45 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	@Override
-	public Attribute getAttribute(String name) {
+	public PersistentAttribute getAttribute(String name) {
 		return getAttribute( name, null );
 	}
 
-	protected Attribute getAttribute(String name, Class resultType) {
-		Attribute attribute = findDeclaredAttribute( name, resultType );
-		if ( attribute == null && getSuperType() != null ) {
-			attribute = getSuperType().findDeclaredAttribute( name, resultType );
+	protected PersistentAttribute getAttribute(String name, Class resultType) {
+		PersistentAttribute persistentAttribute = findDeclaredAttribute( name, resultType );
+		if ( persistentAttribute == null && getSuperType() != null ) {
+			persistentAttribute = getSuperType().findDeclaredAttribute( name, resultType );
 		}
 
-		if ( attribute == null ) {
+		if ( persistentAttribute == null ) {
 			throw new IllegalArgumentException( "Could not resolve attribute named [" + name + "] relative to [" + this.asLoggableText() + "]" );
 		}
 
-		return attribute;
+		return persistentAttribute;
 	}
 
 	@Override
-	public Attribute findDeclaredAttribute(String name, Class resultType) {
-		final Attribute ormAttribute = declaredAttributesByName.get( name );
-		if ( ormAttribute == null ) {
+	public PersistentAttribute findDeclaredAttribute(String name, Class resultType) {
+		final PersistentAttribute ormPersistentAttribute = declaredAttributesByName.get( name );
+		if ( ormPersistentAttribute == null ) {
 			return null;
 		}
 
-		if ( ormAttribute instanceof SingularAttribute ) {
-			checkAttributeType( (SingularAttribute) ormAttribute, resultType );
+		if ( ormPersistentAttribute instanceof SingularPersistentAttribute ) {
+			checkAttributeType( (SingularPersistentAttribute) ormPersistentAttribute, resultType );
 		}
 		else {
-			checkAttributeType( (PluralAttribute) ormAttribute, resultType );
+			checkAttributeType( (PluralPersistentAttribute) ormPersistentAttribute, resultType );
 		}
 
-		return ormAttribute;
+		return ormPersistentAttribute;
 	}
 
-	protected void checkAttributeType(SingularAttribute ormAttribute, Class resultType) {
+	protected void checkAttributeType(SingularPersistentAttribute ormAttribute, Class resultType) {
 		checkType(  ormAttribute.getName(), ormAttribute.getJavaType(), resultType );
 	}
 
-	protected void checkAttributeType(PluralAttribute ormAttribute, Class resultType) {
+	protected void checkAttributeType(PluralPersistentAttribute ormAttribute, Class resultType) {
 		checkType(  ormAttribute.getName(), ormAttribute.getElementType().getJavaType(), resultType );
 	}
 
@@ -295,26 +295,26 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	@Override
-	public Attribute getDeclaredAttribute(String name) {
+	public PersistentAttribute getDeclaredAttribute(String name) {
 		return getDeclaredAttribute( name, null );
 	}
 
-	public Attribute getDeclaredAttribute(String name, Class javaType) {
-		final Attribute attribute = findDeclaredAttribute( name, javaType );
-		if ( attribute == null ) {
+	public PersistentAttribute getDeclaredAttribute(String name, Class javaType) {
+		final PersistentAttribute persistentAttribute = findDeclaredAttribute( name, javaType );
+		if ( persistentAttribute == null ) {
 			throw new IllegalArgumentException( "Could not resolve attribute named [" + name + "] relative to [" + this.asLoggableText() + "]" );
 		}
-		return attribute;
+		return persistentAttribute;
 	}
 
 	@Override
-	public SingularAttribute getSingularAttribute(String name) {
+	public SingularPersistentAttribute getSingularAttribute(String name) {
 		return getSingularAttribute( name, null );
 	}
 
 	@Override
-	public SingularAttribute getSingularAttribute(String name, Class type) {
-		return (SingularAttribute) getAttribute( name, type );
+	public SingularPersistentAttribute getSingularAttribute(String name, Class type) {
+		return (SingularPersistentAttribute) getAttribute( name, type );
 	}
 
 	@Override
@@ -323,8 +323,8 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	@Override
-	public SingularAttribute getDeclaredSingularAttribute(String name, Class type) {
-		return (SingularAttribute) getDeclaredAttribute( name, type );
+	public SingularPersistentAttribute getDeclaredSingularAttribute(String name, Class type) {
+		return (SingularPersistentAttribute) getDeclaredAttribute( name, type );
 	}
 
 	@Override

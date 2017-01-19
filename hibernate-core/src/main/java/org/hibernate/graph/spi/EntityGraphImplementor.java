@@ -7,7 +7,8 @@
 package org.hibernate.graph.spi;
 
 import javax.persistence.EntityGraph;
-import javax.persistence.metamodel.EntityType;
+
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * @author Steve Ebersole
@@ -15,7 +16,7 @@ import javax.persistence.metamodel.EntityType;
 public interface EntityGraphImplementor<T> extends EntityGraph<T>, GraphNodeImplementor {
 	boolean appliesTo(String entityName);
 
-	boolean appliesTo(EntityType<? super T> entityType);
+	boolean appliesTo(EntityPersister<? super T> entityType);
 
 	/**
 	 * Make a mutable copy of this entity graph

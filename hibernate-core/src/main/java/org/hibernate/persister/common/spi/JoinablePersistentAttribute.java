@@ -13,7 +13,7 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface JoinableAttribute<O,T> extends Attribute<O,T> {
+public interface JoinablePersistentAttribute<O,T> extends PersistentAttribute<O,T> {
 	// todo : possibly a JoinMetadata contract encapsulating:
 	//		1) "join direction" (ala ForeignKeyDirection
 	//		2) JoinColumnMappings (relative to direction)

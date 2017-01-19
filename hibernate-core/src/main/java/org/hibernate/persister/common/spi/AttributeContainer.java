@@ -19,11 +19,11 @@ public interface AttributeContainer extends NavigableSource {
 
 	AttributeContainer getSuperAttributeContainer();
 
-	List<Attribute> getNonIdentifierAttributes();
-	Attribute findAttribute(String name);
+	List<PersistentAttribute> getNonIdentifierAttributes();
+	PersistentAttribute findAttribute(String name);
 
 	// todo : overload this for entity- and collection-valued attributes
 	//		but that requires splitting SingularAttributeEntity into interface/impl
 	//		and moving the interface into SPI
-	List<JoinColumnMapping> resolveJoinColumnMappings(Attribute attribute);
+	List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute);
 }

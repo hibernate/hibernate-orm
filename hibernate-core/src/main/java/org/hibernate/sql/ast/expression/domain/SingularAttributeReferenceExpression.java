@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.common.internal.SingularAttributeEntity;
+import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.DomainReferenceImplementor;
 import org.hibernate.persister.common.spi.SingularOrmAttribute;
@@ -66,7 +66,7 @@ public class SingularAttributeReferenceExpression implements DomainReferenceExpr
 			}
 			case MANY_TO_ONE:
 			case ONE_TO_ONE: {
-				final SingularAttributeEntity entityTypedAttribute = (SingularAttributeEntity) referencedAttribute;
+				final SingularPersistentAttributeEntity entityTypedAttribute = (SingularPersistentAttributeEntity) referencedAttribute;
 				return new SelectableEntityTypeImpl(
 						this,
 						propertyPath,

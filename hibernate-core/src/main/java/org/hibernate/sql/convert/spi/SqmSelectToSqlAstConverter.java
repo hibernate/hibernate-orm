@@ -26,13 +26,13 @@ import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.internal.CompositeReference;
 import org.hibernate.persister.common.internal.PersisterHelper;
-import org.hibernate.persister.common.internal.SingularAttributeEmbedded;
-import org.hibernate.persister.common.internal.SingularAttributeEntity;
+import org.hibernate.persister.common.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
-import org.hibernate.persister.common.spi.JoinableAttribute;
+import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
+import org.hibernate.persister.common.spi.PluralPersistentAttribute;
 import org.hibernate.persister.common.spi.TypeExporter;
-import org.hibernate.persister.common.spi.PluralAttribute;
 import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
@@ -397,13 +397,13 @@ public class SqmSelectToSqlAstConverter
 		final TableGroup ownerTableGroup = fromClauseIndex.findResolvedTableGroup( joinedFromElement.getAttributeBinding().getLhs() );
 		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
 
-		final JoinableAttribute joinableAttribute = (JoinableAttribute) joinedFromElement.getAttributeBinding().getAttribute();
+		final JoinablePersistentAttribute joinableAttribute = (JoinablePersistentAttribute) joinedFromElement.getAttributeBinding().getAttribute();
 		for ( JoinColumnMapping joinColumnMapping : joinableAttribute.getJoinColumnMappings() ) {
 			// if the joinedAttribute ois a collection, we need to flip the JoinColumnMapping..
 			//		this has to do with "foreign-key directionality"
 			final Column joinLhsColumn;
 			final Column joinRhsColumn;
-			if ( joinableAttribute instanceof PluralAttribute ) {
+			if ( joinableAttribute instanceof PluralPersistentAttribute ) {
 				joinLhsColumn = joinColumnMapping.getRightHandSideColumn();
 				joinRhsColumn = joinColumnMapping.getLeftHandSideColumn();
 			}
@@ -437,8 +437,8 @@ public class SqmSelectToSqlAstConverter
 			return (CollectionPersister) joinedFromElement.getAttributeBinding().getAttribute();
 		}
 
-		if ( joinedFromElement.getAttributeBinding().getAttribute() instanceof SingularAttributeEntity ) {
-			return ( (SingularAttributeEntity) joinedFromElement.getAttributeBinding().getAttribute() ).getAssociatedEntityPersister();
+		if ( joinedFromElement.getAttributeBinding().getAttribute() instanceof SingularPersistentAttributeEntity ) {
+			return ( (SingularPersistentAttributeEntity) joinedFromElement.getAttributeBinding().getAttribute() ).getAssociatedEntityPersister();
 		}
 
 		if ( joinedFromElement.getAttributeBinding().getAttribute() instanceof CompositeReference ) {
@@ -596,7 +596,7 @@ public class SqmSelectToSqlAstConverter
 				case EMBEDDED: {
 					final FetchCompositeAttributeImpl fetch = new FetchCompositeAttributeImpl(
 							fetchParent,
-							(SingularAttributeEmbedded) boundAttribute,
+							(SingularPersistentAttributeEmbedded) boundAttribute,
 							new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN )
 					);
 					fetchParent.addFetch( fetch );
@@ -605,7 +605,7 @@ public class SqmSelectToSqlAstConverter
 				}
 				case ONE_TO_ONE:
 				case MANY_TO_ONE: {
-					final SingularAttributeEntity boundAttributeAsEntity = (SingularAttributeEntity) boundAttribute;
+					final SingularPersistentAttributeEntity boundAttributeAsEntity = (SingularPersistentAttributeEntity) boundAttribute;
 					final FetchEntityAttributeImpl fetch = new FetchEntityAttributeImpl(
 							fetchParent,
 							PersisterHelper.convert( attributeJoin.getPropertyPath() ),

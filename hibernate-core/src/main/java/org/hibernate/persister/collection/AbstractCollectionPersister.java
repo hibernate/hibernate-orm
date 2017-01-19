@@ -24,6 +24,7 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -86,8 +87,9 @@ import org.hibernate.persister.common.spi.DatabaseModel;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.JoinableAttributeContainer;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.common.spi.NavigableSource;
 import org.hibernate.persister.common.spi.SingularOrmAttribute;
-import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
@@ -125,7 +127,6 @@ import org.hibernate.sqm.query.JoinType;
 import org.hibernate.sqm.query.from.SqmAttributeJoin;
 import org.hibernate.sqm.query.from.SqmFrom;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.EmbeddedType;
@@ -151,6 +152,7 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 	private final String propertyName;
 
 	private final CollectionKey foreignKeyDescriptor;
+
 	private CollectionId idDescriptor;
 	private CollectionElement elementDescriptor;
 	private CollectionIndex indexDescriptor;
@@ -278,21 +280,22 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 
 	public AbstractCollectionPersister(
 			Collection collectionBinding,
-			AttributeContainer source,
+			ManagedTypeImplementor source,
 			String propertyName,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			PersisterCreationContext creationContext) throws MappingException, CacheException {
 		this.source = source;
 		this.propertyName = propertyName;
 		this.sessionFactory = creationContext.getSessionFactory();
-		this.collectionClassification = PersisterHelper.interpretCollectionClassification( (CollectionType) collectionBinding.getType() );
+		this.collectionClassification = PersisterHelper.interpretCollectionClassification( collectionBinding );
 		this.foreignKeyDescriptor = new CollectionKey( this );
 
+		// todo : remove -  indexAttributeConverter and elementAttributeConverter are handled on CollectionIndexBasic and CollectionElementBasic
 		if ( collectionBinding instanceof IndexedCollection ) {
 			final Value indexValueMapping = ( (IndexedCollection) collectionBinding ).getIndex();
 			if ( indexValueMapping instanceof SimpleValue ) {
 				final SimpleValue simpleIndexValueMapping = (SimpleValue) indexValueMapping;
-				indexAttributeConverter = simpleIndexValueMapping.getAttributeConverterDescriptor().getAttributeConverter();
+				indexAttributeConverter = simpleIndexValueMapping.getAttributeConverterDescriptor();
 			}
 		}
 
@@ -713,7 +716,7 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 			}
 			else if ( indexValueMapping instanceof Component ) {
 				final String roleName = this.getRolePrefix() + CollectionIndex.NAVIGABLE_NAME;
-				EmbeddablePersister embeddablePersister = creationContext.getTypeConfiguration().
+				EmbeddedPersister embeddablePersister = creationContext.getTypeConfiguration().
 			}
 
 			if ( getIndexType().isComponentType() ) {

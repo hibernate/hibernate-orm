@@ -18,8 +18,8 @@ import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MarkerObject;
-import org.hibernate.persister.common.spi.Attribute;
-import org.hibernate.persister.common.spi.PluralAttribute;
+import org.hibernate.persister.common.spi.PersistentAttribute;
+import org.hibernate.persister.common.spi.PluralPersistentAttribute;
 import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.spi.EntityPersister;
@@ -40,7 +40,7 @@ public abstract class AbstractEntityReferenceInitializer
 
 	private final EntityReference entityReference;
 	private final boolean isEntityReturn;
-	private final Map<Attribute, SqlSelectionGroup> sqlSelectionGroupMap;
+	private final Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap;
 	private final boolean isShallow;
 
 	// in-flight processing state.  reset after each row
@@ -53,7 +53,7 @@ public abstract class AbstractEntityReferenceInitializer
 			InitializerParent parent,
 			EntityReference entityReference,
 			boolean isEntityReturn,
-			Map<Attribute, SqlSelectionGroup> sqlSelectionGroupMap,
+			Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap,
 			boolean isShallow) {
 		super( parent );
 		this.entityReference = entityReference;
@@ -180,7 +180,7 @@ public abstract class AbstractEntityReferenceInitializer
 
 		final Object[] hydratedState = new Object[ numberOfNonIdentifierAttributes ];
 		int i = 0;
-		for ( Attribute attribute : concretePersister.getNonIdentifierAttributes() ) {
+		for ( PersistentAttribute persistentAttribute : concretePersister.getNonIdentifierAttributes() ) {
 			// todo : need to account for non-eager entities by calling something other than Type#resolve (which loads the entity)
 			//		something akin to org.hibernate.persister.entity.AbstractEntityPersister.hydrate() but that operates on Object[], not ResultSet
 			//
@@ -191,12 +191,12 @@ public abstract class AbstractEntityReferenceInitializer
 			//		and later something like: AttributeDescriptor#getResolver#resolve(Object[] hydratedValues, ...)
 
 			final Object hydratedValue;
-			if ( attribute instanceof PluralAttribute ) {
-				assert attribute.getOrmType() instanceof CollectionType;
+			if ( persistentAttribute instanceof PluralPersistentAttribute ) {
+				assert persistentAttribute.getOrmType() instanceof CollectionType;
 				hydratedValue = NOT_NULL_COLLECTION;
 			}
 			else {
-				SingularOrmAttribute singularAttribute = (SingularOrmAttribute) attribute;
+				SingularOrmAttribute singularAttribute = (SingularOrmAttribute) persistentAttribute;
 				final SqlSelectionGroup selectionGroup = sqlSelectionGroupMap.get( singularAttribute );
 				if ( selectionGroup == null ) {
 					// not selected (lazy group, etc)

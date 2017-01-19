@@ -10,7 +10,7 @@ package org.hibernate.persister.common.internal;
 import java.util.List;
 import java.util.Optional;
 
-import org.hibernate.persister.common.spi.AbstractSingularAttribute;
+import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.ConvertibleNavigable;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
@@ -24,14 +24,15 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class SingularAttributeBasic<O,J> extends AbstractSingularAttribute<O, J, BasicType<J>> implements ConvertibleNavigable<J> {
-	private static final Logger log = Logger.getLogger( SingularAttributeBasic.class );
+public class SingularPersistentAttributeBasic<O,J> extends AbstractSingularPersistentAttribute<O, J, BasicType<J>>
+		implements ConvertibleNavigable<J> {
+	private static final Logger log = Logger.getLogger( SingularPersistentAttributeBasic.class );
 
 	private final List<Column> columns;
 
 	private AttributeConverterDefinition attributeConverterInfo;
 
-	public SingularAttributeBasic(
+	public SingularPersistentAttributeBasic(
 			ManagedTypeImplementor declaringType,
 			String name,
 			PropertyAccess propertyAccess,

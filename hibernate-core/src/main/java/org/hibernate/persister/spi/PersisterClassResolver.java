@@ -10,7 +10,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.service.Service;
 
@@ -57,7 +57,7 @@ public interface PersisterClassResolver extends Service {
 	 *
 	 * @since 6.0
 	 */
-	default Class<? extends EmbeddablePersister> getEmbeddablePersisterClass(Component componentBinding) {
-		return EmbeddablePersister.class;
+	default Class<? extends EmbeddedPersister> getEmbeddablePersisterClass(Component componentBinding) {
+		return EmbeddedPersister.class;
 	}
 }

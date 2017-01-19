@@ -4,11 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.persister.embeddable.internal;
+package org.hibernate.persister.embedded.internal;
 
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.cfg.NotYetImplementedException;
@@ -16,31 +14,30 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.spi.AbstractManagedType;
-import org.hibernate.persister.common.spi.Attribute;
+import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.embeddable.spi.EmbeddableContainer;
-import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
+import org.hibernate.persister.embedded.spi.EmbeddedContainer;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 import org.hibernate.type.internal.EmbeddedTypeImpl;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
  */
-public class EmbeddablePersisterImpl<T> extends AbstractManagedType<T> implements EmbeddablePersister<T> {
-	private final EmbeddableContainer source;
+public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements EmbeddedPersister<T> {
+	private final EmbeddedContainer source;
 	private final String localName;
 
 	private final String roleName;
 	private final EmbeddedType ormType;
 
-	public EmbeddablePersisterImpl(
+	public EmbeddedPersisterImpl(
 			Component componentBinding,
-			EmbeddableContainer source,
+			EmbeddedContainer source,
 			String localName,
 			PersisterCreationContext creationContext) {
 		super( resolveJtd( creationContext, componentBinding ) );
@@ -97,7 +94,7 @@ public class EmbeddablePersisterImpl<T> extends AbstractManagedType<T> implement
 	}
 
 	@Override
-	public EmbeddablePersister getEmbeddablePersister() {
+	public EmbeddedPersister getEmbeddablePersister() {
 		return this;
 	}
 
@@ -107,7 +104,7 @@ public class EmbeddablePersisterImpl<T> extends AbstractManagedType<T> implement
 	}
 
 	@Override
-	public EmbeddableContainer<?> getSource() {
+	public EmbeddedContainer<?> getSource() {
 		return source;
 	}
 
@@ -122,21 +119,13 @@ public class EmbeddablePersisterImpl<T> extends AbstractManagedType<T> implement
 			// todo : Columns
 			final List<Column> columns = Collections.emptyList();
 
-			final Attribute attribute = PersisterHelper.INSTANCE.buildAttribute(
+			final PersistentAttribute persistentAttribute = PersisterHelper.INSTANCE.buildAttribute(
 					creationContext,
 					this,
-					embeddableBinding,
-					mappingProperty.getName(),
-					OrmTypeHelper.convert(
-							creationContext,
-							this,
-							locaName,
-							mappingProperty.getValue(),
-							creationContext.getTypeConfiguration()
-					),
+					property,
 					columns
 			);
-			addAttribute( attribute );
+			addAttribute( persistentAttribute );
 		}
 	}
 }

@@ -56,9 +56,10 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.sqm.domain.DomainMetamodel;
+import org.hibernate.sqm.domain.SqmDomainMetamodel;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.spi.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Base delegating implementation of the SessionFactory and SessionFactoryImplementor
@@ -200,7 +201,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Map<String, EntityPersister> getEntityPersisters() {
+	public Map<String, EntityPersister<?>> getEntityPersisters() {
 		return delegate.getEntityPersisters();
 	}
 
@@ -210,7 +211,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Map<String, CollectionPersister> getCollectionPersisters() {
+	public Map<String, CollectionPersister<?,?,?>> getCollectionPersisters() {
 		return delegate.getCollectionPersisters();
 	}
 
@@ -455,6 +456,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return delegate.getTypeConfiguration();
+	}
+
+	@Override
 	public Reference getReference() throws NamingException {
 		return delegate.getReference();
 	}
@@ -515,7 +521,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public DomainMetamodel getDomainMetamodel() {
+	public SqmDomainMetamodel getDomainMetamodel() {
 		return delegate.getDomainMetamodel();
 	}
 

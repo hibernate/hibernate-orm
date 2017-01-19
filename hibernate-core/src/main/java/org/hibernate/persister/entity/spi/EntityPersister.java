@@ -9,6 +9,7 @@ package org.hibernate.persister.entity.spi;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -31,12 +32,12 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.NavigableSource;
 import org.hibernate.persister.common.spi.Table;
-import org.hibernate.persister.embeddable.spi.EmbeddableContainer;
+import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.sql.ast.from.EntityTableGroup;
 import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.ast.from.TableSpace;
@@ -47,6 +48,7 @@ import org.hibernate.sqm.query.SqmJoinType;
 import org.hibernate.sqm.query.from.SqmFrom;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -61,10 +63,13 @@ import org.hibernate.type.spi.Type;
  *
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
- * @see EntityPersister#CONSTRUCTOR_SIGNATURE
+ * @see EntityPersister#STANDARD_CONSTRUCTOR_SIG
  */
 public interface EntityPersister<T>
-		extends OptimisticCacheSource, EntityReference<T>, NavigableSource<T>, EmbeddableContainer<T>, TableGroupProducer, EntityDefinition {
+		extends EntityReference<T>, NavigableSource<T>, EmbeddedContainer<T>,
+				TableGroupProducer, OptimisticCacheSource, IdentifiableTypeImplementor<T>,
+				EntityType<T> {
+
 	/**
 	 * Unless a custom {@link org.hibernate.persister.spi.PersisterFactory} is used, it is expected
 	 * that implementations of EntityPersister define a constructor accepting the following arguments:<ol>
@@ -85,7 +90,7 @@ public interface EntityPersister<T>
 	 *     </li>
 	 * </ol>
 	 */
-	Class[] CONSTRUCTOR_SIGNATURE = new Class[] {
+	Class[] STANDARD_CONSTRUCTOR_SIG = new Class[] {
 			PersistentClass.class,
 			EntityRegionAccessStrategy.class,
 			NaturalIdRegionAccessStrategy.class,
@@ -98,7 +103,7 @@ public interface EntityPersister<T>
 	 // todo : ultimately this needs to allow for MappedSuperclass supers
 
 	/**
-	 * Called after all EntityPersister instance have been created and (initially) initialized.
+	 * Called after all EntityPersister instance have been created;
 	 *
 	 * @param superType The entity's super's EntityPersister
 	 * @param entityBinding Should be  the same PersistentClass instance originally passed to the
@@ -106,7 +111,19 @@ public interface EntityPersister<T>
 	 * 		so we pass it in again
 	 * @param creationContext Access to the database model
 	 */
-	void finishInitialization(EntityPersister superType, PersistentClass entityBinding, PersisterCreationContext creationContext);
+	void finishInitialization(IdentifiableTypeImplementor<? super T> superType, PersistentClass entityBinding, PersisterCreationContext creationContext);
+
+	/**
+	 * Called after {@link #finishInitialization} has been called on all persisters.
+	 */
+	void postInstantiate();
+
+	/**
+	 * The entity name which this persister maps.
+	 */
+	String getEntityName();
+
+	EntityJavaDescriptor<T> getJavaTypeDescriptor();
 
 	/**
 	 * Return the SessionFactory to which this persister "belongs".
@@ -141,11 +158,6 @@ public interface EntityPersister<T>
 	 * @since 6.0
 	 */
 	IdentifierDescriptor getIdentifierDescriptor();
-
-	/**
-	 * The entity name which this persister maps.
-	 */
-	String getEntityName();
 
 	/**
 	 * Get the EntityEntryFactory indicated for the entity mapped by this persister.
@@ -206,23 +218,6 @@ public interface EntityPersister<T>
 	 * The property name of the "special" identifier property in HQL
 	 */
 	String ENTITY_ID = "id";
-
-	/**
-	 * Generate the entity definition for this object. This must be done for all
-	 * entity persisters beforeQuery calling {@link #postInstantiate()}.
-	 */
-	void generateEntityDefinition();
-
-	/**
-	 * Finish the initialization of this object. {@link #generateEntityDefinition()}
-	 * must be called for all entity persisters beforeQuery calling this method.
-	 * <p/>
-	 * Called only once per {@link org.hibernate.SessionFactory} lifecycle,
-	 * afterQuery all entity persisters have been instantiated.
-	 *
-	 * @throws org.hibernate.MappingException Indicates an issue in the metadata.
-	 */
-	void postInstantiate() throws MappingException;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -710,7 +705,7 @@ public interface EntityPersister<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Called just afterQuery the entities properties have been initialized
+	 * Called just after the entities properties have been initialized
 	 */
 	void afterInitialize(Object entity, SharedSessionContractImplementor session);
 

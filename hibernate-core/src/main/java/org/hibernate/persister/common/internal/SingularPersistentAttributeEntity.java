@@ -9,13 +9,10 @@ package org.hibernate.persister.common.internal;
 
 import java.util.List;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Type;
-
-import org.hibernate.persister.common.spi.AbstractSingularAttribute;
+import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
-import org.hibernate.persister.common.spi.JoinableAttribute;
+import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -25,15 +22,15 @@ import org.hibernate.type.spi.EntityType;
 /**
  * @author Steve Ebersole
  */
-public class SingularAttributeEntity extends AbstractSingularAttribute<EntityType>
-		implements JoinableAttribute {
+public class SingularPersistentAttributeEntity extends AbstractSingularPersistentAttribute<EntityType>
+		implements JoinablePersistentAttribute {
 	private final SingularAttributeClassification classification;
 	private final EntityPersister entityPersister;
 	private final List<Column> columns;
 
 	private List<JoinColumnMapping> joinColumnMappings;
 
-	public SingularAttributeEntity(
+	public SingularPersistentAttributeEntity(
 			ManagedTypeImplementor declaringType,
 			String name,
 			PropertyAccess propertyAccess,

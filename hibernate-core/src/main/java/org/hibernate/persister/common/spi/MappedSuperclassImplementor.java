@@ -6,11 +6,12 @@
  */
 package org.hibernate.persister.common.spi;
 
+import javax.persistence.metamodel.MappedSuperclassType;
+
+import org.hibernate.persister.entity.spi.IdentifiableTypeImplementor;
+
 /**
- * Marker interface indicating that a AttributeDescriptor represents a
- * virtual attribute (aka, not a real attribute in the domain model).
- *
  * @author Steve Ebersole
  */
-public interface VirtualOrmAttribute extends Attribute {
+public interface MappedSuperclassImplementor<T> extends IdentifiableTypeImplementor<T>, MappedSuperclassType<T> {
 }

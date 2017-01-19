@@ -8,37 +8,40 @@
 package org.hibernate.persister.entity.internal;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.hibernate.persister.common.spi.AbstractSingularAttribute;
+import org.hibernate.mapping.Property;
+import org.hibernate.persister.common.internal.PersisterHelper;
+import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.SingularOrmAttribute;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.entity.spi.IdentifiableTypeImplementor;
 import org.hibernate.persister.entity.spi.IdentifierDescriptor;
-import org.hibernate.sqm.domain.EntityReference;
 import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
-public class IdentifierDescriptorSimple
-		extends AbstractSingularAttribute<BasicType>
-		implements IdentifierDescriptor, SingularOrmAttribute {
+public class IdentifierDescriptorSimple<O,J>
+		extends AbstractSingularPersistentAttribute<O,J,BasicType<J>>
+		implements IdentifierDescriptor<O,J>, SingularPersistentAttribute<O,J> {
 	private final List<Column> columns;
 
 	public IdentifierDescriptorSimple(
 			EntityHierarchy hierarchy,
-			String attributeName,
-			BasicType ormType,
+			IdentifiableTypeImplementor declarer,
+			Property property,
+			BasicType<J> ormType,
 			List<Column> columns) {
-		super( hierarchy.getRootEntityPersister(), attributeName, ormType, false );
+		super(
+				hierarchy.getRootEntityPersister(),
+				property.getName(),
+				PersisterHelper.resolvePropertyAccess( declarer, property ),
+				ormType,
+				Disposition.ID,
+				false
+		);
 		this.columns = columns;
-	}
-
-	@Override
-	public EntityPersister getAttributeContainer() {
-		return (EntityPersister) super.getAttributeContainer();
 	}
 
 	@Override
@@ -57,7 +60,7 @@ public class IdentifierDescriptorSimple
 	}
 
 	@Override
-	public SingularOrmAttribute getIdAttribute() {
+	public SingularPersistentAttribute<O,J> getIdAttribute() {
 		return this;
 	}
 
@@ -68,11 +71,16 @@ public class IdentifierDescriptorSimple
 
 	@Override
 	public String asLoggableText() {
-		return "IdentifierSimple(" + getLeftHandSide().asLoggableText() + ")";
+		return "IdentifierSimple(" + getSource().asLoggableText() + ")";
 	}
 
 	@Override
-	public Optional<EntityReference> toEntityReference() {
-		return Optional.empty();
+	public PersistentAttributeType getPersistentAttributeType() {
+		return PersistentAttributeType.BASIC;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
 	}
 }

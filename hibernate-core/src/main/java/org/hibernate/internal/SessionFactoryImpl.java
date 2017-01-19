@@ -52,6 +52,7 @@ import org.hibernate.TypeHelper;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -128,11 +129,13 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.sqm.domain.DomainMetamodel;
+import org.hibernate.sqm.domain.SqmDomainMetamodel;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.spi.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -181,6 +184,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
+	private final transient TypeConfiguration typeConfiguration;
 	private final transient MetamodelImpl metamodel;
 	private final transient CriteriaBuilderImpl criteriaBuilder;
 	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
@@ -299,6 +303,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			LOG.debug( "Instantiated session factory" );
 
+			this.typeConfiguration = metadata.getTypeConfiguration();
+			this.typeConfiguration.scope( this );
+
 			this.metamodel = new MetamodelImpl(
 					this,
 					metadata.getTypeConfiguration()
@@ -339,13 +346,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				}
 			}
 
-			// this needs to happen afterQuery persisters are all ready to go...
+			// this needs to happen after all persisters are all ready to go...
 			this.fetchProfiles = new HashMap<>();
 			for ( org.hibernate.mapping.FetchProfile mappingProfile : metadata.getFetchProfiles() ) {
 				final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
 				for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
 					// resolve the persister owning the fetch
-					final String entityName = metamodel.getImportedClassName( mappingFetch.getEntity() );
+					final String entityName = getImportedClassName( mappingFetch.getEntity() );
 					final EntityPersister owner = entityName == null
 							? null
 							: metamodel.entityPersister( entityName );
@@ -1100,18 +1107,24 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public DomainMetamodel getDomainMetamodel() {
-		return null;
+	public SqmDomainMetamodel getDomainMetamodel() {
+		return getMetamodel();
 	}
 
 	@Override
 	public Class classByName(String name) throws ClassNotFoundException {
-		return null;
+		final String resolvedName = getMetamodel().getTypeConfiguration().getImportedClassName( name );
+		try {
+			return getServiceRegistry().getService( ClassLoaderService.class ).classForName( resolvedName );
+		}
+		catch (ClassLoadingException e) {
+			throw new ClassNotFoundException( "Unable to locate Class for name [" + name + " (" + resolvedName + ")]" );
+		}
 	}
 
 	@Override
 	public boolean useStrictJpaCompliance() {
-		return false;
+		return getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance();
 	}
 
 	static class SessionBuilderImpl<T extends SessionBuilder> implements SessionBuilderImplementor<T>, SessionCreationOptions {

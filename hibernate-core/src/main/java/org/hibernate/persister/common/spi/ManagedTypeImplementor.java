@@ -10,28 +10,31 @@ import java.util.Map;
 import java.util.function.Consumer;
 import javax.persistence.metamodel.ManagedType;
 
-import org.hibernate.persister.embeddable.spi.EmbeddableContainer;
+import org.hibernate.persister.embedded.spi.EmbeddedContainer;
+import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public interface ManagedTypeImplementor<T>
-		extends ManagedType<T>, NavigableSource<T>, EmbeddableContainer<T>, ExpressableType<T> {
+		extends ManagedType<T>, NavigableSource<T>, EmbeddedContainer<T>, ExpressableType<T> {
 	ManagedTypeImplementor<? super T> getSuperType();
+
+	ManagedJavaDescriptor<T> getJavaTypeDescriptor();
 
 	@Override
 	NavigableSource getSource();
 
-	Attribute findDeclaredAttribute(String name);
-	Attribute findDeclaredAttribute(String name, Class resultType);
+	PersistentAttribute findDeclaredAttribute(String name);
+	PersistentAttribute findDeclaredAttribute(String name, Class resultType);
 
-	Attribute findAttribute(String name);
+	PersistentAttribute findAttribute(String name);
 
-	Map<String, Attribute> getDeclaredAttributesByName();
+	Map<String, PersistentAttribute> getDeclaredAttributesByName();
 
 	<A extends javax.persistence.metamodel.Attribute> void collectDeclaredAttributes(Consumer<A> collector, Class<A> restrictionType);
 
 	<A extends javax.persistence.metamodel.Attribute> void collectAttributes(Consumer<A> collector, Class<A> restrictionType);
 
-	Map<String, Attribute> getAttributesByName();
+	Map<String, PersistentAttribute> getAttributesByName();
 }

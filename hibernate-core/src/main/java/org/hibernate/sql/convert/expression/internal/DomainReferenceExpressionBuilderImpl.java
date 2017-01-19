@@ -10,7 +10,7 @@ package org.hibernate.sql.convert.expression.internal;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.internal.PersisterHelper;
-import org.hibernate.persister.common.internal.SingularAttributeEntity;
+import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
 import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.NotYetImplementedException;
@@ -62,8 +62,8 @@ public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpr
 			SingularAttributeBinding singularAttributeBinding) {
 		final PropertyPath propertyPath = PersisterHelper.convert( singularAttributeBinding.getPropertyPath() );
 
-		if ( singularAttributeBinding.getAttribute() instanceof SingularAttributeEntity ) {
-			final SingularAttributeEntity entityTypedAttribute = (SingularAttributeEntity) singularAttributeBinding.getAttribute();
+		if ( singularAttributeBinding.getAttribute() instanceof SingularPersistentAttributeEntity ) {
+			final SingularPersistentAttributeEntity entityTypedAttribute = (SingularPersistentAttributeEntity) singularAttributeBinding.getAttribute();
 			if ( singularAttributeBinding.getFromElement() == null ) {
 				throw new IllegalStateException( "entity-typed SingularAttributeBinding did not contain SqmFrom element" );
 			}

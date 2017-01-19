@@ -9,14 +9,14 @@ package org.hibernate.persister.entity.spi;
 import java.util.List;
 
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.SingularOrmAttribute;
+import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
-public interface IdentifierDescriptor extends org.hibernate.type.spi.descriptor.java.managed.IdentifierDescriptor,
-		SingularOrmAttribute {
+public interface IdentifierDescriptor<O,J> extends Navigable<J>, SingularPersistentAttribute<O,J> {
 	Type getIdType();
 
 	/**
@@ -29,28 +29,12 @@ public interface IdentifierDescriptor extends org.hibernate.type.spi.descriptor.
 	boolean hasSingleIdAttribute();
 
 	/**
-	 * Get a SingularAttributeImplementor representation of the identifier.
+	 * Get a SingularPersistentAttribute representation of the identifier.
 	 * <p/>
 	 * Note that for the case of a non-aggregated composite identifier this returns a
-	 * "virtual" attribute mapping
+	 * "virtual" attribute mapping ({@link org.hibernate.persister.common.spi.VirtualPersistentAttribute})
 	 */
-	SingularOrmAttribute getIdAttribute();
-
-	/**
-	 * This implementation returns the root EntityPersister for the hierarchy that
-	 * this IdentifierDescriptor describes
-	 * <p/>
-	 * {@inheritDoc}
-	 *
-	 * @return
-	 */
-	@Override
-	EntityPersister getAttributeContainer();
-
-	@Override
-	default EntityPersister getLeftHandSide() {
-		return getAttributeContainer();
-	}
+	SingularPersistentAttribute<O,J> getIdAttribute();
 
 	/**
 	 * Retrieve the columns making up the identifier

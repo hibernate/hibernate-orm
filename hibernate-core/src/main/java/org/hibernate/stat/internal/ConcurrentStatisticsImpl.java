@@ -17,6 +17,7 @@ import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.streams.StreamUtils;
 import org.hibernate.service.Service;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -760,7 +761,7 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 			return ArrayHelper.toStringArray( entityStatistics.keySet() );
 		}
 		else {
-			return sessionFactory.getMetamodel().getAllEntityNames();
+			return sessionFactory.getTypeConfiguration().getEntityPersisterMap().keySet().stream().collect( StreamUtils.toStringArray() );
 		}
 	}
 
@@ -773,7 +774,7 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 			return ArrayHelper.toStringArray( collectionStatistics.keySet() );
 		}
 		else {
-			return sessionFactory.getMetamodel().getAllCollectionRoles();
+			return sessionFactory.getTypeConfiguration().getCollectionPersisterMap().keySet().stream().collect( StreamUtils.toStringArray() );
 		}
 	}
 

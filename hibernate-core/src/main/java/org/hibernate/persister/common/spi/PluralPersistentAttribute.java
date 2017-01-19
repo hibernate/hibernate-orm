@@ -12,8 +12,8 @@ import org.hibernate.sqm.domain.SqmPluralAttribute;
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttribute<O,C,E>
-		extends Attribute<O,C>, NavigableSource<E>, TypeExporter, javax.persistence.metamodel.PluralAttribute<O,C,E>, SqmPluralAttribute {
+public interface PluralPersistentAttribute<O,C,E>
+		extends PersistentAttribute<O,C>, NavigableSource<E>, TypeExporter, javax.persistence.metamodel.PluralAttribute<O,C,E>, SqmPluralAttribute {
 	@Override
 	org.hibernate.type.spi.CollectionType getOrmType();
 

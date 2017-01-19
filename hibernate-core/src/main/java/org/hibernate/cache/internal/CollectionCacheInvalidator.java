@@ -100,7 +100,7 @@ public class CollectionCacheInvalidator
 		try {
 			SessionFactoryImplementor factory = persister.getFactory();
 
-			Set<String> collectionRoles = factory.getMetamodel().getCollectionRolesByEntityParticipant( persister.getEntityName() );
+			Set<String> collectionRoles = factory.getMetamodel().getTypeConfiguration().getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( collectionRoles == null || collectionRoles.isEmpty() ) {
 				return;
 			}

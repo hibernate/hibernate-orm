@@ -17,6 +17,7 @@ import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Provides query splitting methods, which were originally in QueryTranslator.
@@ -26,8 +27,8 @@ import org.hibernate.internal.util.StringHelper;
 public final class QuerySplitter {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QuerySplitter.class );
 
-	private static final Set<String> BEFORE_CLASS_TOKENS = new HashSet<String>();
-	private static final Set<String> NOT_AFTER_CLASS_TOKENS = new HashSet<String>();
+	private static final Set<String> BEFORE_CLASS_TOKENS = new HashSet<>();
+	private static final Set<String> NOT_AFTER_CLASS_TOKENS = new HashSet<>();
 
 	static {
 		BEFORE_CLASS_TOKENS.add( "from" );
@@ -66,8 +67,8 @@ public final class QuerySplitter {
 			// just especially for the trivial collection filter
 			return new String[] { query };
 		}
-		ArrayList<String> placeholders = new ArrayList<String>();
-		ArrayList<String[]> replacements = new ArrayList<String[]>();
+		ArrayList<String> placeholders = new ArrayList<>();
+		ArrayList<EntityPersister<?>> replacements = new ArrayList<>();
 		StringBuilder templateQuery = new StringBuilder( 40 );
 
 		int start = getStartingPositionFor( tokens, templateQuery );
@@ -116,11 +117,11 @@ public final class QuerySplitter {
 			if ( process ) {
 				String importedClassName = getImportedClass( token, factory );
 				if ( importedClassName != null ) {
-					String[] implementors = factory.getImplementors( importedClassName );
+					Set<EntityPersister<?>> implementors = factory.getTypeConfiguration().getImplementors( importedClassName );
 					token = "$clazz" + count++ + "$";
-					if ( implementors != null ) {
+					if ( !implementors.isEmpty() ) {
 						placeholders.add( token );
-						replacements.add( implementors );
+						replacements.addAll( implementors );
 					}
 				}
 			}
@@ -186,6 +187,6 @@ public final class QuerySplitter {
 	}
 
 	public static String getImportedClass(String name, SessionFactoryImplementor factory) {
-		return factory.getMetamodel().getImportedClassName( name );
+		return factory.getMetamodel().getTypeConfiguration().getImportedClassName( name );
 	}
 }

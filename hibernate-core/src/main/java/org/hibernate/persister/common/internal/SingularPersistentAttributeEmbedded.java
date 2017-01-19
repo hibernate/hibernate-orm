@@ -10,14 +10,14 @@ package org.hibernate.persister.common.internal;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.persister.common.spi.AbstractSingularAttribute;
+import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
-import org.hibernate.persister.common.spi.JoinableAttribute;
+import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
-import org.hibernate.persister.common.spi.SingularAttribute;
-import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
-import org.hibernate.persister.embeddable.spi.EmbeddableReference;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
+import org.hibernate.persister.embedded.spi.EmbeddedReference;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sqm.domain.SqmNavigable;
 import org.hibernate.type.spi.EmbeddedType;
@@ -25,18 +25,18 @@ import org.hibernate.type.spi.EmbeddedType;
 /**
  * @author Steve Ebersole
  */
-public class SingularAttributeEmbedded
-		extends AbstractSingularAttribute<EmbeddedType>
-		implements SingularAttribute, EmbeddableReference, JoinableAttribute {
+public class SingularPersistentAttributeEmbedded
+		extends AbstractSingularPersistentAttribute<EmbeddedType>
+		implements SingularPersistentAttribute, EmbeddedReference, JoinablePersistentAttribute {
 
-	private final EmbeddablePersister embeddablePersister;
+	private final EmbeddedPersister embeddablePersister;
 
-	public SingularAttributeEmbedded(
+	public SingularPersistentAttributeEmbedded(
 			ManagedTypeImplementor declaringType,
 			String attributeName,
 			PropertyAccess propertyAccess,
 			Disposition disposition,
-			EmbeddablePersister embeddablePersister) {
+			EmbeddedPersister embeddablePersister) {
 		super( declaringType, attributeName, propertyAccess, embeddablePersister.getOrmType(), disposition, true );
 		this.embeddablePersister = embeddablePersister;
 	}
@@ -51,7 +51,7 @@ public class SingularAttributeEmbedded
 		return (EmbeddedType) super.getExportedDomainType();
 	}
 
-	public EmbeddablePersister getEmbeddablePersister() {
+	public EmbeddedPersister getEmbeddablePersister() {
 		return embeddablePersister;
 	}
 

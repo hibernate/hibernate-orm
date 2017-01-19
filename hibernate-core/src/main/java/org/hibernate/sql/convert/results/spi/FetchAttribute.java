@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.convert.results.spi;
 
-import org.hibernate.persister.common.spi.Attribute;
+import org.hibernate.persister.common.spi.PersistentAttribute;
 
 /**
  * Models a fetch that is specifically for an attribute.
@@ -21,5 +21,5 @@ public interface FetchAttribute extends Fetch {
 	 *
 	 * @return The fetched attribute descriptor.
 	 */
-	Attribute getFetchedAttributeDescriptor();
+	PersistentAttribute getFetchedAttributeDescriptor();
 }

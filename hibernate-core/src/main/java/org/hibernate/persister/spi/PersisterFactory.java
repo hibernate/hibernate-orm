@@ -15,14 +15,14 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
-import org.hibernate.persister.embeddable.spi.EmbeddableContainer;
-import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
+import org.hibernate.persister.embedded.spi.EmbeddedContainer;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.service.Service;
 
 /**
  * Contract for creating persister instances including {@link EntityPersister},
- * {@link CollectionPersister} and {@link org.hibernate.persister.embeddable.spi.EmbeddablePersister}
+ * {@link CollectionPersister} and {@link EmbeddedPersister}
  *
  * @author Steve Ebersole
  */
@@ -81,9 +81,9 @@ public interface PersisterFactory extends Service {
 	 *
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
-	EmbeddablePersister createEmbeddablePersister(
+	EmbeddedPersister createEmbeddablePersister(
 			Component componentBinding,
-			EmbeddableContainer source,
+			EmbeddedContainer source,
 			String localName,
 			PersisterCreationContext creationContext);
 

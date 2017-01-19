@@ -8,7 +8,7 @@
 package org.hibernate.sql.convert.results.internal;
 
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.persister.common.internal.SingularAttributeEmbedded;
+import org.hibernate.persister.common.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.sql.convert.results.spi.FetchCompositeAttribute;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.exec.results.process.internal.CompositeReferenceInitializerImpl;
@@ -22,14 +22,14 @@ import org.hibernate.type.spi.EmbeddedType;
  */
 public class FetchCompositeAttributeImpl extends AbstractFetchParent implements FetchCompositeAttribute {
 	private final FetchParent fetchParent;
-	private final SingularAttributeEmbedded fetchedAttribute;
+	private final SingularPersistentAttributeEmbedded fetchedAttribute;
 	private final FetchStrategy fetchStrategy;
 
 	private final CompositeReferenceInitializer initializer;
 
 	public FetchCompositeAttributeImpl(
 			FetchParent fetchParent,
-			SingularAttributeEmbedded fetchedAttribute,
+			SingularPersistentAttributeEmbedded fetchedAttribute,
 			FetchStrategy fetchStrategy) {
 		super(
 				fetchParent.getPropertyPath().append( fetchedAttribute.getAttributeName() ),
@@ -50,7 +50,7 @@ public class FetchCompositeAttributeImpl extends AbstractFetchParent implements 
 	}
 
 	@Override
-	public SingularAttributeEmbedded getFetchedAttributeDescriptor() {
+	public SingularPersistentAttributeEmbedded getFetchedAttributeDescriptor() {
 		return fetchedAttribute;
 	}
 

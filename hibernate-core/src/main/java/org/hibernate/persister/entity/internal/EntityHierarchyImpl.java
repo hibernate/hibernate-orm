@@ -17,6 +17,7 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.KeyValue;
@@ -31,6 +32,7 @@ import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.entity.spi.DiscriminatorDescriptor;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.entity.spi.IdentifiableTypeImplementor;
 import org.hibernate.persister.entity.spi.IdentifierDescriptor;
 import org.hibernate.persister.entity.spi.InheritanceStrategy;
 import org.hibernate.persister.entity.spi.RowIdDescriptor;
@@ -78,7 +80,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		this.optimisticLockStyle = rootEntityBinding.getOptimisticLockStyle();
 
 		final Table identifierTable = resolveIdentifierTable( creationContext, rootEntityBinding );
-		this.identifierDescriptor = interpretIdentifierDescriptor( this, creationContext, rootEntityBinding, identifierTable );
+		this.identifierDescriptor = interpretIdentifierDescriptor( this, creationContext, rootEntityBinding, rootEntityPersister, identifierTable );
 		this.rowIdDescriptor = interpretRowIdDescriptor( this, creationContext, rootEntityBinding, identifierTable );
 		this.discriminatorDescriptor = interpretDiscriminatorDescriptor( this, creationContext, rootEntityBinding, identifierTable );
 		this.versionDescriptor = interpretVersionDescriptor( this, creationContext, rootEntityBinding, identifierTable );
@@ -123,53 +125,56 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private static IdentifierDescriptor interpretIdentifierDescriptor(
 			EntityHierarchyImpl hierarchy,
 			PersisterCreationContext creationContext,
 			RootClass rootEntityBinding,
+			EntityPersister rootEntityPersister,
 			Table identifierTable) {
-		final KeyValue identifierValueMapping = rootEntityBinding.getIdentifier();
-		final Type identifierType = identifierValueMapping.getType();
-
-		final List<Column> idColumns = resolveColumns( identifierTable, identifierValueMapping, creationContext );
-
-		if ( identifierType instanceof BasicType ) {
-			return new IdentifierDescriptorSimple(
+		if ( rootEntityBinding.getIdentifierMapper() != null ) {
+			// should mean we have a "non-aggregated composite-id" (what we
+			// 		historically called an "embedded composite id")
+			return new IdentifierDescriptorCompositeNonAggregated(
 					hierarchy,
-					rootEntityBinding.getIdentifierProperty().getName(),
-					(BasicType) identifierType,
-					idColumns
+					creationContext.getPersisterFactory().createEmbeddablePersister(
+							(Component) rootEntityBinding.getIdentifier(),
+							resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
+							rootEntityBinding.getIdentifierProperty().getName(),
+							creationContext
+					)
+			);
+		}
+		else if ( rootEntityBinding.getIdentifier() instanceof Component ) {
+			// indicates we have an aggregated composite identifier (should)
+			return  new IdentifierDescriptorCompositeAggregated(
+					hierarchy,
+					rootEntityBinding.getIdentifierProperty(),
+					creationContext.getPersisterFactory().createEmbeddablePersister(
+							(Component) rootEntityBinding.getIdentifier(),
+							resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
+							rootEntityBinding.getIdentifierProperty().getName(),
+							creationContext
+					)
 			);
 		}
 		else {
-			final EmbeddedType cidType = (EmbeddedType) identifierType;
-			// todo : need to pass along that any built sub attributes are part of the id
-			if ( rootEntityBinding.hasIdentifierProperty() ) {
-				return  new IdentifierDescriptorCompositeAggregated(
-						hierarchy,
-						rootEntityBinding.getIdentifierProperty().getName(),
-						PersisterHelper.INSTANCE.buildEmbeddablePersister(
-								creationContext,
-								hierarchy.getRootEntityPersister(),
-								rootEntityBinding.getEntityName() + '.' + rootEntityBinding.getIdentifierProperty().getName(),
-								cidType,
-								idColumns
-						)
-				);
-			}
-			else {
-				return new IdentifierDescriptorCompositeNonAggregated(
-						hierarchy,
-						PersisterHelper.INSTANCE.buildEmbeddablePersister(
-								creationContext,
-								hierarchy.getRootEntityPersister(),
-								rootEntityBinding.getEntityName() + ".id",
-								cidType,
-								idColumns
-						)
-				);
-			}
+			// should indicate a simple identifier
+			return new IdentifierDescriptorSimple(
+					hierarchy,
+					resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
+					rootEntityBinding.getIdentifierProperty(),
+					(BasicType) rootEntityBinding.getIdentifier().getType(),
+					resolveColumns( identifierTable, rootEntityBinding.getIdentifier(), creationContext )
+			);
 		}
+	}
+
+	private static IdentifiableTypeImplementor resolveIdAttributeDeclarer(
+			RootClass rootEntityBinding,
+			EntityPersister rootEntityPersister) {
+		// for now assume the root entity as the declarer
+		return rootEntityPersister;
 	}
 
 	private static List<Column> resolveColumns(
@@ -275,6 +280,12 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			RootClass rootEntityBinding,
 			Table identifierTable) {
 		return null;
+	}
+
+
+	@Override
+	public void finishInitialization(PersisterCreationContext creationContext, RootClass mappingType) {
+		// anything to do?
 	}
 
 	@Override

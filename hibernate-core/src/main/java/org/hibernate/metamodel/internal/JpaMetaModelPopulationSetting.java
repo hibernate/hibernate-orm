@@ -33,20 +33,43 @@ public enum JpaMetaModelPopulationSetting {
 	}
 
 	public static JpaMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Map configurationValues) {
-		String setting = ConfigurationHelper.getString(
+		return JpaMetaModelPopulationSetting.parse( determineSetting( configurationValues ) );
+	}
+
+	private static String determineSetting(Map configurationValues) {
+		final String setting = ConfigurationHelper.getString(
+				AvailableSettings.STATIC_METAMODEL_POPULATION,
+				configurationValues,
+				null
+		);
+		if ( setting != null ) {
+			return setting;
+		}
+
+		final String legacySetting1 = ConfigurationHelper.getString(
 				AvailableSettings.JPA_METAMODEL_POPULATION,
 				configurationValues,
 				null
 		);
-		if ( setting == null ) {
-			setting = ConfigurationHelper.getString( AvailableSettings.JPA_METAMODEL_GENERATION, configurationValues, null );
-			if ( setting != null ) {
-				DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-						AvailableSettings.JPA_METAMODEL_GENERATION,
-						AvailableSettings.JPA_METAMODEL_POPULATION
-				);
-			}
+		if ( legacySetting1 != null ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+					AvailableSettings.JPA_METAMODEL_POPULATION,
+					AvailableSettings.STATIC_METAMODEL_POPULATION
+			);
+			return legacySetting1;
 		}
-		return JpaMetaModelPopulationSetting.parse( setting );
+
+		final String legacySetting2 = ConfigurationHelper.getString(
+				AvailableSettings.JPA_METAMODEL_GENERATION,
+				configurationValues,
+				null
+		);
+		if ( legacySetting2 != null ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+					AvailableSettings.JPA_METAMODEL_GENERATION,
+					AvailableSettings.STATIC_METAMODEL_POPULATION
+			);
+			return legacySetting1;
+		}
 	}
 }

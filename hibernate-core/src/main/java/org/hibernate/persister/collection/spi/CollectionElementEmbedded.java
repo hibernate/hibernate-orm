@@ -6,13 +6,13 @@
  */
 package org.hibernate.persister.collection.spi;
 
-import org.hibernate.persister.embeddable.spi.EmbeddableReference;
+import org.hibernate.persister.embedded.spi.EmbeddedReference;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
  */
-public interface CollectionElementEmbedded extends CollectionElement<EmbeddedType>, EmbeddableReference {
+public interface CollectionElementEmbedded extends CollectionElement<EmbeddedType>, EmbeddedReference {
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;

@@ -4,20 +4,21 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.persister.embeddable.spi;
+package org.hibernate.persister.embedded.spi;
 
 import java.util.Collections;
 import java.util.List;
 import javax.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.mapping.Component;
-import org.hibernate.persister.common.spi.Attribute;
+import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.convert.spi.TableGroupProducer;
+import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**
@@ -25,11 +26,11 @@ import org.hibernate.type.spi.EmbeddedType;
  *
  * @author Steve Ebersole
  */
-public interface EmbeddablePersister<T>
-		extends ManagedTypeImplementor<T>, TypeExporter, EmbeddableContainer<T>, EmbeddableType<T>, EmbeddableReference<T> {
+public interface EmbeddedPersister<T>
+		extends ManagedTypeImplementor<T>, TypeExporter, EmbeddedContainer<T>, EmbeddableType<T>, EmbeddedReference<T> {
 	Class[] STANDARD_CTOR_SIGNATURE = new Class[] {
 			Component.class,
-			EmbeddableContainer.class,
+			EmbeddedContainer.class,
 			String.class,
 			PersisterCreationContext.class
 	};
@@ -43,12 +44,15 @@ public interface EmbeddablePersister<T>
 	List<Column> collectColumns();
 
 	@Override
+	EmbeddableJavaDescriptor<T> getJavaTypeDescriptor();
+
+	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
 	}
 
 	@Override
-	EmbeddableContainer<?> getSource();
+	EmbeddedContainer<?> getSource();
 
 	@Override
 	EmbeddedType getOrmType();
@@ -80,7 +84,7 @@ public interface EmbeddablePersister<T>
 	}
 
 	@Override
-	default List<JoinColumnMapping> resolveJoinColumnMappings(Attribute attribute) {
+	default List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute) {
 		return Collections.emptyList();
 	}
 

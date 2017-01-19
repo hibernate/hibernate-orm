@@ -10,7 +10,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.DatabaseModel;
-import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -31,7 +31,5 @@ public interface PersisterCreationContext {
 
 	void registerEntityPersister(EntityPersister entityPersister);
 	void registerCollectionPersister(CollectionPersister collectionPersister);
-	void registerEmbeddablePersister(EmbeddablePersister embeddablePersister);
-
-	void registerEntityNameResolvers(EntityPersister entityPersister);
+	void registerEmbeddablePersister(EmbeddedPersister embeddablePersister);
 }

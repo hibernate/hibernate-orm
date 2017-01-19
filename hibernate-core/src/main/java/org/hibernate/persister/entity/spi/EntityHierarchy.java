@@ -6,8 +6,11 @@
  */
 package org.hibernate.persister.entity.spi;
 
+import org.hibernate.EntityMode;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.persister.common.internal.SingularAttributeBasic;
 import org.hibernate.persister.spi.PersisterCreationContext;
 
 /**
@@ -25,8 +28,22 @@ public interface EntityHierarchy {
 
 	InheritanceStrategy getInheritanceStrategy();
 
+	EntityMode getEntityMode();
+
 	IdentifierDescriptor getIdentifierDescriptor();
-	SingularAttributeBasic getVersionAttribute();
+	DiscriminatorDescriptor getDiscriminatorDescriptor();
+	VersionDescriptor getVersionDescriptor();
+	RowIdDescriptor getRowIdDescriptor();
+	OptimisticLockStyle getOptimisticLockStyle();
+	TenantDiscrimination getTenantDiscrimination();
+
+	EntityRegionAccessStrategy getEntityRegionAccessStrategy();
+	NaturalIdRegionAccessStrategy getNaturalIdRegionAccessStrategy();
+
+	String getWhere();
+
+	boolean isMutable();
+	boolean isImplicitPolymorphismEnabled();
 
 	void finishInitialization(PersisterCreationContext creationContext, RootClass mappingType);
 }

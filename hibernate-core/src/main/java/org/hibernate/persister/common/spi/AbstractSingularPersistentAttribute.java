@@ -12,14 +12,14 @@ import org.hibernate.type.spi.Type;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSingularAttribute<O,J, T extends Type<J>>
-		extends AbstractAttribute<O,J>
-		implements SingularAttribute<O,J> {
+public abstract class AbstractSingularPersistentAttribute<O,J, T extends Type<J>>
+		extends AbstractPersistentAttribute<O,J>
+		implements SingularPersistentAttribute<O,J> {
 	private final T ormType;
 	private final boolean nullable;
 	private final Disposition disposition;
 
-	public AbstractSingularAttribute(
+	public AbstractSingularPersistentAttribute(
 			ManagedTypeImplementor attributeContainer,
 			String name,
 			PropertyAccess propertyAccess,

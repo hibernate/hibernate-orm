@@ -4,73 +4,54 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.persister.common.internal;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.AttributeConverter;
-import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Any;
+import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.IdentifierBag;
+import org.hibernate.mapping.IdentifierCollection;
+import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
-import org.hibernate.mapping.Value;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.common.spi.AbstractAttribute;
-import org.hibernate.persister.common.spi.Attribute;
-import org.hibernate.persister.common.spi.AttributeContainer;
+import org.hibernate.persister.common.spi.AbstractPersistentAttribute;
+import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.JoinableAttributeContainer;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute.Disposition;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.common.spi.UnionSubclassTable;
-import org.hibernate.persister.embeddable.spi.EmbeddableContainer;
-import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
-import org.hibernate.persister.common.spi.SingularAttribute.Disposition;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.entity.spi.IdentifiableTypeImplementor;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sqm.domain.SqmPluralAttributeElement.ElementClassification;
 import org.hibernate.sqm.domain.SqmPluralAttribute.CollectionClassification;
+import org.hibernate.sqm.domain.SqmPluralAttributeElement.ElementClassification;
 import org.hibernate.sqm.domain.SqmSingularAttribute.SingularAttributeClassification;
-import org.hibernate.sqm.domain.SqmSingularAttribute;
-import org.hibernate.type.ArrayType;
-import org.hibernate.type.BagType;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.IdentifierBagType;
-import org.hibernate.type.ListType;
-import org.hibernate.type.MapType;
-import org.hibernate.type.OrderedMapType;
-import org.hibernate.type.OrderedSetType;
-import org.hibernate.type.SetType;
-import org.hibernate.type.SortedMapType;
-import org.hibernate.type.SortedSetType;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.internal.EntityTypeImpl;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.BasicTypeParameters;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
@@ -229,7 +210,7 @@ public class PersisterHelper {
 		return values;
 	}
 
-	public Attribute buildAttribute(
+	public PersistentAttribute buildAttribute(
 			PersisterCreationContext creationContext,
 			ManagedTypeImplementor source,
 			Property property,
@@ -253,7 +234,7 @@ public class PersisterHelper {
 		}
 	}
 
-	public AbstractAttribute buildSingularAttribute(
+	public AbstractPersistentAttribute buildSingularAttribute(
 			PersisterCreationContext creationContext,
 			ManagedTypeImplementor source,
 			Property property,
@@ -262,7 +243,7 @@ public class PersisterHelper {
 			throw new NotYetImplementedException();
 		}
 		else if ( property.getValue() instanceof Component ) {
-			return new SingularAttributeEmbedded(
+			return new SingularPersistentAttributeEmbedded(
 					source,
 					property.getName(),
 					resolvePropertyAccess( creationContext, property ),
@@ -287,7 +268,7 @@ public class PersisterHelper {
 			}
 			assert columns != null && columns.size() > 0;
 
-			return new SingularAttributeEntity(
+			return new SingularPersistentAttributeEntity(
 					source,
 					property.getName(),
 					resolvePropertyAccess( creationContext, property ),
@@ -307,7 +288,7 @@ public class PersisterHelper {
 
 			final AttributeConverterDefinition attributeConverterInfo = simpleValue.getAttributeConverterDescriptor();
 
-			return new SingularAttributeBasic<>(
+			return new SingularPersistentAttributeBasic<>(
 					source,
 					property.getName(),
 					resolvePropertyAccess( creationContext, property ),
@@ -317,21 +298,6 @@ public class PersisterHelper {
 					columns
 			);
 
-		}
-
-
-
-
-		final SingularAttributeClassification classification = interpretSingularAttributeClassification( attributeType );
-		if ( classification == SingularAttributeClassification.ANY ) {
-
-		}
-		else if ( classification == SingularAttributeClassification.EMBEDDED ) {
-		}
-		else if ( classification == SingularAttributeClassification.BASIC ) {
-			// todo : need to be able to locate the AttributeConverter (if one) associated with this singular basic attribute
-		}
-		else {
 		}
 	}
 
@@ -348,13 +314,19 @@ public class PersisterHelper {
 	}
 
 	private EntityType makeEntityType(PersisterCreationContext creationContext, ToOne toOne) {
+		final String referencedEntityName = toOne.getReferencedEntityName();
+		final EntityPersister<?> entityPersister = creationContext.getTypeConfiguration().findEntityPersister( referencedEntityName );
+
 		return new EntityTypeImpl(
 				null,
+				entityPersister.getJavaTypeDescriptor(),
+				creationContext.getTypeConfiguration()
 		);
 	}
 
 	private PropertyAccess resolvePropertyAccess(PersisterCreationContext persisterCreationContext, Property property) {
-		throw new org.hibernate.cfg.NotYetImplementedException(  );
+		final PropertyAccessStrategy strategy = property.getPropertyAccessStrategy( property.getPersistentClass().getMappedClass() );
+		return strategy.buildPropertyAccess( property.getPersistentClass().getMappedClass(), property.getName() );
 	}
 
 	private static String extractEmbeddableName(Type attributeType) {
@@ -362,23 +334,20 @@ public class PersisterHelper {
 		return attributeType.getName();
 	}
 
-	public Attribute buildPluralAttribute(
+	public PersistentAttribute buildPluralAttribute(
 			PersisterCreationContext creationContext,
-			Collection collectionBinding,
-			AttributeContainer source,
-			String propertyName,
-			Type attributeType) {
-		final CollectionType collectionType = (CollectionType) attributeType;
+			ManagedTypeImplementor source,
+			Property property) {
 		final PersisterFactory persisterFactory = creationContext.getSessionFactory().getServiceRegistry().getService( PersisterFactory.class );
 
-		// todo : resolve cache access
+			// todo : resolve cache access
 		final CollectionRegionAccessStrategy cachingAccess = null;
 
 		// need PersisterCreationContext - we should always have access to that when building persisters, through finalized initialization
 		final CollectionPersister collectionPersister = persisterFactory.createCollectionPersister(
-				collectionBinding,
+				(Collection) property.getValue(),
 				source,
-				propertyName,
+				property.getName(),
 				cachingAccess,
 				creationContext
 		);
@@ -386,15 +355,12 @@ public class PersisterHelper {
 		return collectionPersister;
 	}
 
-	public static org.hibernate.loader.PropertyPath convert(PropertyPath propertyPath) {
-		if ( propertyPath.getParent() == null ) {
-			return new org.hibernate.loader.PropertyPath( null, propertyPath.getLocalPath() );
-		}
-		org.hibernate.loader.PropertyPath parent = convert( propertyPath.getParent() );
-		return parent.append( propertyPath.getLocalPath() );
+	public static PropertyAccess resolvePropertyAccess(IdentifiableTypeImplementor declarer, Property property) {
+		final PropertyAccessStrategy strategy = property.getPropertyAccessStrategy( declarer.getJavaType() );
+		return strategy.buildPropertyAccess( declarer.getJavaType(), property.getName() );
 	}
 
-	public static interface CollectionMetadata {
+	public interface CollectionMetadata {
 		CollectionClassification getCollectionClassification();
 		ElementClassification getElementClassification();
 
@@ -458,40 +424,36 @@ public class PersisterHelper {
 		}
 	}
 
-	public static CollectionMetadata interpretCollectionMetadata(SessionFactoryImplementor factory, CollectionType collectionType) {
-		final CollectionPersister collectionPersister = factory.getMetamodel().collectionPersister( collectionType.getRole() );
+	public static CollectionMetadata interpretCollectionMetadata(SessionFactoryImplementor factory, Property property) {
+		final Collection collectionBinding = (Collection) property.getValue();
 
 		return new CollectionMetadataImpl(
-				interpretCollectionClassification( collectionType ),
-				interpretElementClassification( collectionPersister ),
-				collectionPersister.getKeyType(),
-				(BasicType) collectionPersister.getIdentifierType(),
-				collectionPersister.getElementType(),
-				collectionPersister.getIndexType()
+				interpretCollectionClassification( collectionBinding ),
+				interpretElementClassification( collectionBinding ),
+				collectionBinding.getKey().getType(),
+				collectionBinding instanceof IdentifierCollection
+						? (BasicType) ( (IdentifierCollection) collectionBinding ).getIdentifier().getType()
+						: null,
+				collectionBinding.getElement().getType(),
+				( (IndexedCollection) collectionBinding ).getIndex().getType()
 		);
 	}
 
-	public static CollectionClassification interpretCollectionClassification(CollectionType collectionType) {
-		if ( collectionType instanceof BagType
-				|| collectionType instanceof IdentifierBagType ) {
+	public static CollectionClassification interpretCollectionClassification(Collection collectionBinding) {
+		if ( collectionBinding instanceof Bag || collectionBinding instanceof IdentifierBag ) {
 			return CollectionClassification.BAG;
 		}
-		else if ( collectionType instanceof ListType
-				|| collectionType instanceof ArrayType ) {
+		else if ( collectionBinding instanceof org.hibernate.mapping.List ) {
 			return CollectionClassification.LIST;
 		}
-		else if ( collectionType instanceof SetType
-				|| collectionType instanceof OrderedSetType
-				|| collectionType instanceof SortedSetType ) {
+		else if ( collectionBinding instanceof org.hibernate.mapping.Set ) {
 			return CollectionClassification.SET;
 		}
-		else if ( collectionType instanceof MapType
-				|| collectionType instanceof OrderedMapType
-				|| collectionType instanceof SortedMapType ) {
+		else if ( collectionBinding instanceof org.hibernate.mapping.Map ) {
 			return CollectionClassification.MAP;
 		}
 		else {
-			final Class javaType = collectionType.getReturnedClass();
+			final Class javaType = collectionBinding.getElement().getType().getJavaType();
 			if ( Set.class.isAssignableFrom( javaType ) ) {
 				return CollectionClassification.SET;
 			}
@@ -506,22 +468,18 @@ public class PersisterHelper {
 		}
 	}
 
-	private static ElementClassification interpretElementClassification(CollectionPersister collectionPersister) {
-		final Type elementType = collectionPersister.getElementType();
-
-		if ( elementType.isAnyType() ) {
+	private static ElementClassification interpretElementClassification(Collection collectionBinding) {
+		if ( collectionBinding.getElement() instanceof Any ) {
 			return ElementClassification.ANY;
 		}
-		else if ( elementType.isComponentType() ) {
+		else if ( collectionBinding.getElement() instanceof Component ) {
 			return ElementClassification.EMBEDDABLE;
 		}
-		else if ( elementType.isEntityType() ) {
-			if ( collectionPersister.isManyToMany() ) {
-				return ElementClassification.MANY_TO_MANY;
-			}
-			else {
-				return ElementClassification.ONE_TO_MANY;
-			}
+		else if ( collectionBinding.getElement() instanceof OneToMany ) {
+			return ElementClassification.ONE_TO_MANY;
+		}
+		else if ( collectionBinding.getElement() instanceof ManyToOne ) {
+			return ElementClassification.MANY_TO_MANY;
 		}
 		else {
 			return ElementClassification.BASIC;

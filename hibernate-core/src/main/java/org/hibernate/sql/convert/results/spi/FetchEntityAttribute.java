@@ -7,12 +7,12 @@
 
 package org.hibernate.sql.convert.results.spi;
 
-import org.hibernate.persister.common.internal.SingularAttributeEntity;
+import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
 
 /**
  * @author Steve Ebersole
  */
 public interface FetchEntityAttribute extends EntityReference, FetchAttribute {
 	@Override
-	SingularAttributeEntity getFetchedAttributeDescriptor();
+	SingularPersistentAttributeEntity getFetchedAttributeDescriptor();
 }

@@ -9,7 +9,7 @@ package org.hibernate.sql.convert.results.internal;
 
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.common.internal.SingularAttributeEntity;
+import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.convert.results.spi.EntityIdentifierReference;
@@ -26,7 +26,7 @@ import org.hibernate.type.spi.Type;
  */
 public class FetchEntityAttributeImpl extends AbstractFetchParent implements FetchEntityAttribute {
 	private final FetchParent fetchParent;
-	private final SingularAttributeEntity fetchedAttribute;
+	private final SingularPersistentAttributeEntity fetchedAttribute;
 	private final EntityPersister entityPersister;
 	private final FetchStrategy fetchStrategy;
 
@@ -36,7 +36,7 @@ public class FetchEntityAttributeImpl extends AbstractFetchParent implements Fet
 			FetchParent fetchParent,
 			PropertyPath propertyPath,
 			String tableGroupUid,
-			SingularAttributeEntity fetchedAttribute,
+			SingularPersistentAttributeEntity fetchedAttribute,
 			EntityPersister entityPersister, FetchStrategy fetchStrategy) {
 		super( propertyPath, tableGroupUid );
 		this.fetchParent = fetchParent;
@@ -58,7 +58,7 @@ public class FetchEntityAttributeImpl extends AbstractFetchParent implements Fet
 	}
 
 	@Override
-	public SingularAttributeEntity getFetchedAttributeDescriptor() {
+	public SingularPersistentAttributeEntity getFetchedAttributeDescriptor() {
 		return fetchedAttribute;
 	}
 

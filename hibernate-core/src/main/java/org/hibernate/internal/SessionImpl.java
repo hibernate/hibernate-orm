@@ -1817,7 +1817,9 @@ public final class SessionImpl
 		checkOpen();
 //		checkTransactionSynchStatus();
 
-		String[] implementors = getFactory().getMetamodel().getImplementors( criteriaImpl.getEntityOrClassName() );
+		// NOTE : once we hook in SQM consumption we will not need this call anymore...
+		//		so ok to leave as call to deprecated method for now
+		String[] implementors = getFactory().getImplementors( criteriaImpl.getEntityOrClassName() );
 		int size = implementors.length;
 
 		CriteriaLoader[] loaders = new CriteriaLoader[size];
@@ -2879,12 +2881,12 @@ public final class SessionImpl
 		}
 	}
 
-	private EntityPersister locateEntityPersister(Class entityClass) {
-		return getFactory().getMetamodel().locateEntityPersister( entityClass );
+	private <T> EntityPersister<? extends T> locateEntityPersister(Class<T> entityClass) {
+		return getFactory().getTypeConfiguration().findEntityPersister( entityClass );
 	}
 
-	private EntityPersister locateEntityPersister(String entityName) {
-		return getFactory().getMetamodel().locateEntityPersister( entityName );
+	private <T> EntityPersister<? extends T> locateEntityPersister(String entityName) {
+		return getFactory().getTypeConfiguration().findEntityPersister( entityName );
 	}
 
 	private abstract class BaseNaturalIdLoadAccessImpl<T> {

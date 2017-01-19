@@ -9,7 +9,7 @@ package org.hibernate.sql.exec.results.process.internal;
 
 import java.util.Map;
 
-import org.hibernate.persister.common.spi.Attribute;
+import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.sql.convert.results.spi.EntityReference;
 import org.hibernate.sql.exec.results.process.spi.EntityReferenceInitializer;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionGroup;
@@ -22,7 +22,7 @@ public class EntityReturnInitializerImpl
 		implements EntityReferenceInitializer {
 	public EntityReturnInitializerImpl(
 			EntityReference entityReference,
-			Map<Attribute,SqlSelectionGroup> sqlSelectionGroupMap,
+			Map<PersistentAttribute,SqlSelectionGroup> sqlSelectionGroupMap,
 			boolean isShallow) {
 		super( null, entityReference, true, sqlSelectionGroupMap, isShallow );
 	}

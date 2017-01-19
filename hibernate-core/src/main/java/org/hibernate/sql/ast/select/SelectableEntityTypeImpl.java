@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.common.internal.SingularAttributeEmbedded;
-import org.hibernate.persister.common.spi.Attribute;
+import org.hibernate.persister.common.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
@@ -42,7 +42,7 @@ public class SelectableEntityTypeImpl implements Selectable {
 	private final ColumnBindingSource columnBindingSource;
 	private final EntityPersister entityPersister;
 
-	private final LinkedHashMap<Attribute, ColumnBindingGroup> columnBindingGroupMap;
+	private final LinkedHashMap<PersistentAttribute, ColumnBindingGroup> columnBindingGroupMap;
 	private final boolean isShallow;
 
 	public SelectableEntityTypeImpl(
@@ -59,8 +59,8 @@ public class SelectableEntityTypeImpl implements Selectable {
 		this.isShallow = isShallow;
 	}
 
-	private LinkedHashMap<Attribute, ColumnBindingGroup> buildColumnBindingGroupMap(boolean isShallow) {
-		final LinkedHashMap<Attribute, ColumnBindingGroup> columnBindingGroupMap = new LinkedHashMap<>();
+	private LinkedHashMap<PersistentAttribute, ColumnBindingGroup> buildColumnBindingGroupMap(boolean isShallow) {
+		final LinkedHashMap<PersistentAttribute, ColumnBindingGroup> columnBindingGroupMap = new LinkedHashMap<>();
 
 		// no matter what, include:
 		//		1) identifier
@@ -76,8 +76,8 @@ public class SelectableEntityTypeImpl implements Selectable {
 
 		// Only render the rest of the attributes if !shallow
 		if ( !isShallow ) {
-			for ( Attribute attribute : entityPersister.getNonIdentifierAttributes() ) {
-				addColumnBindingGroupEntry( attribute, columnBindingGroupMap );
+			for ( PersistentAttribute persistentAttribute : entityPersister.getNonIdentifierAttributes() ) {
+				addColumnBindingGroupEntry( persistentAttribute, columnBindingGroupMap );
 			}
 		}
 
@@ -85,19 +85,19 @@ public class SelectableEntityTypeImpl implements Selectable {
 	}
 
 	private void addColumnBindingGroupEntry(
-			Attribute attribute,
-			Map<Attribute, ColumnBindingGroup> columnBindingGroupMap) {
-		if ( !SingularOrmAttribute.class.isInstance( attribute ) ) {
-			columnBindingGroupMap.put( attribute, ColumnBindingGroupEmptyImpl.INSTANCE );
+			PersistentAttribute persistentAttribute,
+			Map<PersistentAttribute, ColumnBindingGroup> columnBindingGroupMap) {
+		if ( !SingularOrmAttribute.class.isInstance( persistentAttribute ) ) {
+			columnBindingGroupMap.put( persistentAttribute, ColumnBindingGroupEmptyImpl.INSTANCE );
 			return;
 		}
 
-		final SingularOrmAttribute singularAttribute = (SingularOrmAttribute) attribute;
+		final SingularOrmAttribute singularAttribute = (SingularOrmAttribute) persistentAttribute;
 		final ColumnBindingGroupImpl columnBindingGroup = new ColumnBindingGroupImpl();
 
 		final List<Column> columns;
-		if ( attribute instanceof SingularAttributeEmbedded ) {
-			columns = ( (SingularAttributeEmbedded) singularAttribute ).getEmbeddablePersister().collectColumns();
+		if ( persistentAttribute instanceof SingularPersistentAttributeEmbedded ) {
+			columns = ( (SingularPersistentAttributeEmbedded) singularAttribute ).getEmbeddablePersister().collectColumns();
 		}
 		else {
 			columns = singularAttribute.getColumns();
@@ -107,7 +107,7 @@ public class SelectableEntityTypeImpl implements Selectable {
 			columnBindingGroup.addColumnBinding( columnBindingSource.resolveColumnBinding( column ) );
 		}
 
-		columnBindingGroupMap.put( attribute, columnBindingGroup );
+		columnBindingGroupMap.put( persistentAttribute, columnBindingGroup );
 	}
 
 	@Override
@@ -128,10 +128,10 @@ public class SelectableEntityTypeImpl implements Selectable {
 		);
 	}
 
-	private Map<Attribute, SqlSelectionGroup> buildSqlSelectionGroupMap(ReturnResolutionContext resolutionContext) {
-		final Map<Attribute, SqlSelectionGroup> sqlSelectionGroupMap = new HashMap<>();
+	private Map<PersistentAttribute, SqlSelectionGroup> buildSqlSelectionGroupMap(ReturnResolutionContext resolutionContext) {
+		final Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap = new HashMap<>();
 
-		for ( Map.Entry<Attribute, ColumnBindingGroup> entry : columnBindingGroupMap.entrySet() ) {
+		for ( Map.Entry<PersistentAttribute, ColumnBindingGroup> entry : columnBindingGroupMap.entrySet() ) {
 			sqlSelectionGroupMap.put(
 					entry.getKey(),
 					toSqlSelectionGroup( entry.getValue(), resolutionContext )

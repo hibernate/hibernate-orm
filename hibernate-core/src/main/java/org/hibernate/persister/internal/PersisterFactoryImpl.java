@@ -27,10 +27,9 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.common.spi.AttributeContainer;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
-import org.hibernate.persister.embeddable.spi.EmbeddableContainer;
-import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
+import org.hibernate.persister.embedded.spi.EmbeddedContainer;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.InheritanceStrategy;
 import org.hibernate.persister.spi.PersisterClassResolver;
@@ -162,7 +161,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
 			PersisterCreationContext creationContext) {
 		try {
-			final Constructor<? extends EntityPersister> constructor = persisterClass.getConstructor( EntityPersister.CONSTRUCTOR_SIGNATURE );
+			final Constructor<? extends EntityPersister> constructor = persisterClass.getConstructor( EntityPersister.STANDARD_CONSTRUCTOR_SIG );
 			try {
 				return constructor.newInstance(
 						entityBinding,
@@ -328,15 +327,15 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	}
 
 	@Override
-	public EmbeddablePersister createEmbeddablePersister(
+	public EmbeddedPersister createEmbeddablePersister(
 			Component componentBinding,
-			EmbeddableContainer source,
+			EmbeddedContainer source,
 			String localName,
 			PersisterCreationContext creationContext) {
-		final Class<? extends EmbeddablePersister> persisterClass = persisterClassResolver.getEmbeddablePersisterClass( componentBinding );
+		final Class<? extends EmbeddedPersister> persisterClass = persisterClassResolver.getEmbeddablePersisterClass( componentBinding );
 
 		try {
-			Constructor<? extends EmbeddablePersister> constructor = persisterClass.getConstructor( EmbeddablePersister.STANDARD_CTOR_SIGNATURE );
+			Constructor<? extends EmbeddedPersister> constructor = persisterClass.getConstructor( EmbeddedPersister.STANDARD_CTOR_SIGNATURE );
 			try {
 				return constructor.newInstance(
 						componentBinding,
@@ -421,12 +420,9 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 				throw new HibernateException( "EntityPersister not yet known; cannot finishUp" );
 			}
 
-			getEntityPersister().generateEntityDefinition();
-			getEntityPersister().postInstantiate();
-			creationContext.registerEntityNameResolvers( getEntityPersister() );
-
 			// initialize the EntityPersister represented by this hierarchy node
 			getEntityPersister().finishInitialization( superType, entityBinding , creationContext );
+			getEntityPersister().postInstantiate();
 
 			if ( subEntityNodes != null ) {
 				// pass finishUp processing to each of the sub-entity hierarchy nodes (recursive)
@@ -465,7 +461,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	 * @deprecated Use {@link PersisterFactoryImpl#ENTITY_PERSISTER_CONSTRUCTOR_ARGS} instead.
 	 */
 	@Deprecated
-	public static final Class[] ENTITY_PERSISTER_CONSTRUCTOR_ARGS = EntityPersister.CONSTRUCTOR_SIGNATURE;
+	public static final Class[] ENTITY_PERSISTER_CONSTRUCTOR_ARGS = EntityPersister.STANDARD_CONSTRUCTOR_SIG;
 
 	/**
 	 * @deprecated Use {@link CollectionPersister#CONSTRUCTOR_SIGNATURE} instead

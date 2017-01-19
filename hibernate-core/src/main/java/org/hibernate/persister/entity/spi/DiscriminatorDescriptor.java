@@ -7,8 +7,8 @@
 package org.hibernate.persister.entity.spi;
 
 import org.hibernate.persister.common.spi.TypeExporter;
-import org.hibernate.persister.common.spi.SingularOrmAttribute;
-import org.hibernate.persister.common.spi.VirtualAttribute;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
+import org.hibernate.persister.common.spi.VirtualPersistentAttribute;
 
 /**
  * Binding of the discriminator in a entity hierarchy
@@ -16,7 +16,7 @@ import org.hibernate.persister.common.spi.VirtualAttribute;
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  */
-public interface DiscriminatorDescriptor
-		extends TypeExporter, VirtualAttribute, SingularOrmAttribute {
+public interface DiscriminatorDescriptor<O,J>
+		extends TypeExporter<J>, VirtualPersistentAttribute<O,J>, SingularPersistentAttribute<O,J> {
 }
 

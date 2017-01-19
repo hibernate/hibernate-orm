@@ -20,7 +20,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.embeddable.spi.EmbeddablePersister;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.sqm.NotYetImplementedException;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -57,8 +57,8 @@ public class EmbeddedTypeImpl<T> extends AbstractManagedType implements Embedded
 	}
 
 	@Override
-	public EmbeddablePersister<T> getEmbeddablePersister() {
-		return getTypeConfiguration().findEmbeddableMapper( roleName );
+	public EmbeddedPersister<T> getEmbeddablePersister() {
+		return getTypeConfiguration().findEmbeddablePersister( roleName );
 	}
 
 	@Override

@@ -22,11 +22,10 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.common.spi.AttributeContainer;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
-import org.hibernate.persister.common.spi.PluralAttribute;
+import org.hibernate.persister.common.spi.PluralPersistentAttribute;
 import org.hibernate.persister.common.spi.TypeExporter;
-import org.hibernate.persister.embeddable.spi.EmbeddableContainer;
+import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
@@ -79,7 +78,7 @@ import org.hibernate.type.spi.Type;
  * @author Gavin King
  */
 public interface CollectionPersister<O,C,E>
-		extends PluralAttribute<O,C,E>, TableGroupProducer, TypeExporter, EmbeddableContainer<C>, CollectionDefinition {
+		extends PluralPersistentAttribute<O,C,E>, TableGroupProducer, TypeExporter, EmbeddedContainer<C> {
 
 	Class[] CONSTRUCTOR_SIGNATURE = new Class[] {
 			Collection.class,

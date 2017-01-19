@@ -7,19 +7,16 @@
 
 package org.hibernate.persister.entity.internal;
 
+import java.lang.reflect.Member;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.persister.common.spi.PhysicalColumn;
-import org.hibernate.persister.common.spi.AttributeContainer;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.common.spi.PhysicalColumn;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
-import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.RowIdDescriptor;
-import org.hibernate.sqm.domain.EntityReference;
-import org.hibernate.sqm.domain.SingularAttributeReference;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -47,18 +44,13 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 	}
 
 	@Override
-	public Optional<EntityReference> toEntityReference() {
-		return null;
-	}
-
-	@Override
 	public String getAttributeName() {
-		return "<row_id>";
+		return NAVIGABLE_NAME;
 	}
 
 	@Override
-	public EntityPersister getAttributeContainer() {
-		return hierarchy.getRootEntityPersister();
+	public Disposition getDisposition() {
+		return Disposition.NORMAL;
 	}
 
 	@Override
@@ -72,12 +64,82 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 	}
 
 	@Override
-	public SingularAttributeReference.SingularAttributeClassification getAttributeTypeClassification() {
-		return SingularAttributeReference.SingularAttributeClassification.BASIC;
+	public String asLoggableText() {
+		return NAVIGABLE_NAME;
 	}
 
 	@Override
-	public String asLoggableText() {
-		return "ROW_ID";
+	public boolean isId() {
+		return false;
+	}
+
+	@Override
+	public boolean isVersion() {
+		return false;
+	}
+
+	@Override
+	public boolean isOptional() {
+		return false;
+	}
+
+	@Override
+	public javax.persistence.metamodel.Type getType() {
+		return this;
+	}
+
+	@Override
+	public ManagedTypeImplementor getSource() {
+		return hierarchy.getRootEntityPersister();
+	}
+
+	@Override
+	public BindableType getBindableType() {
+		return BindableType.SINGULAR_ATTRIBUTE;
+	}
+
+	@Override
+	public Class getBindableJavaType() {
+		return getOrmType().getJavaType();
+	}
+
+	@Override
+	public PersistentAttributeType getPersistentAttributeType() {
+		return PersistentAttributeType.BASIC;
+	}
+
+	@Override
+	public boolean isAssociation() {
+		return false;
+	}
+
+	@Override
+	public boolean isCollection() {
+		return false;
+	}
+
+	@Override
+	public String getNavigableName() {
+		return NAVIGABLE_NAME;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
+	public SingularAttributeClassification getAttributeTypeClassification() {
+		return SingularAttributeClassification.BASIC;
+	}
+
+	@Override
+	public Member getJavaMember() {
+		return null;
+	}
+
+	@Override
+	public String getTypeName() {
+		return getOrmType().getName();
 	}
 }

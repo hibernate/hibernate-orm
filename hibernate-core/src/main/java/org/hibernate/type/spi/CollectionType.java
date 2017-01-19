@@ -6,6 +6,10 @@
  */
 package org.hibernate.type.spi;
 
+import java.io.Serializable;
+
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 
 /**
@@ -33,4 +37,6 @@ public interface CollectionType extends Type {
 	default JdbcLiteralFormatter getJdbcLiteralFormatter() {
 		return null;
 	}
+
+	PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key);
 }

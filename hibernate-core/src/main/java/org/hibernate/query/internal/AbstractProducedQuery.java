@@ -429,7 +429,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		if ( value instanceof TypedParameterValue ) {
 			setParameter( parameter, ( (TypedParameterValue) value ).getValue(), ( (TypedParameterValue) value ).getType() );
 		}
-		else if ( value instanceof Collection ) {
+		else if ( value instanceof Collection && !isTypeRegistered( value.getClass() ) ) {
+			// second check is in case an org.hibernate.boot.model.TypeContributor registers a type that implements Collection
 			locateListBinding( parameter ).setBindValues( (Collection) value );
 		}
 		else {
@@ -447,7 +448,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		else if ( value == null ) {
 			locateBinding( parameter ).setBindValue( null, type );
 		}
-		else if ( value instanceof Collection ) {
+		else if ( value instanceof Collection && !isTypeRegistered( value.getClass() ) ) {
+			// second check is in case an org.hibernate.boot.model.TypeContributor registers a type that implements Collection
 			locateListBinding( parameter ).setBindValues( (Collection) value, type );
 		}
 		else {
@@ -475,7 +477,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			final TypedParameterValue  typedValueWrapper = (TypedParameterValue) value;
 			setParameter( name, typedValueWrapper.getValue(), typedValueWrapper.getType() );
 		}
-		else if ( value instanceof Collection ) {
+		else if ( value instanceof Collection && !isTypeRegistered( value.getClass() ) ) {
+			// second check is in case an org.hibernate.boot.model.TypeContributor registers a type that implements Collection
 			setParameterList( name, (Collection) value );
 		}
 		else {
@@ -492,7 +495,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			final TypedParameterValue typedParameterValue = (TypedParameterValue) value;
 			setParameter( position, typedParameterValue.getValue(), typedParameterValue.getType() );
 		}
-		if ( value instanceof Collection ) {
+		else if ( value instanceof Collection && !isTypeRegistered( value.getClass() ) ) {
+			// second check is in case an org.hibernate.boot.model.TypeContributor registers a type that implements Collection
 			setParameterList( Integer.toString( position ), (Collection) value );
 		}
 		else {
@@ -1572,5 +1576,13 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 
 	protected ExceptionConverter getExceptionConverter(){
 		return producer.getExceptionConverter();
+	}
+
+	private boolean isTypeRegistered(Class cl) {
+		Type ret = producer.getFactory().resolveParameterBindType( cl );
+		if (ret == null) {
+			return false;
+		}
+		return !org.hibernate.type.SerializableType.class.isInstance( ret );
 	}
 }

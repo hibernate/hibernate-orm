@@ -3,6 +3,32 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.0.12.Final (January 19, 2016)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/25351
+
+** Bug
+     * [HHH-10659] - Natural Id 2nd level Cache not working when Identity is database generated
+     * [HHH-10998] - NullPointerException when using join with subselect in hbm mapping
+     * [HHH-11012] - Hibernate Spatial Geometry Not Serializable
+     * [HHH-11083] - WrongClassException using Infinispan and sharing cache regions
+     * [HHH-11087] - MySQL56SpatialDialect does not register geometry types causing Geometry types are not correctly deserialized
+     * [HHH-11149] - Update plugin parameters for maven enhancer plugin
+     * [HHH-11159] - JPA CriteriaUpdate - NullLiteral causes IllegalArgumentException: Could not convert java type to Hibernate type
+     * [HHH-11182] - HQL subquery with constraint property in superclass does not join superclass table
+     * [HHH-11197] - Hibernate Spatial cannot parse WKT from PostGIS
+     * [HHH-11202] - IllegalAccessException on Embeddable ID after serializing Getter in cache key
+     * [HHH-11241] - Missing column when executing HQL and criteria query with secondary table
+     * [HHH-11289] - Lazy-initializing a static Method and making accessible not thread-safe
+
+** Task
+     * [HHH-10243] - document package registration for Hibernate 5
+     * [HHH-11271] - Fix hidden failure in InfinispanRegionFactoryTestCase#testTimestampValidation
+
+** Improvement
+     * [HHH-11116] - Improve the JPA bootstrapping section in the User Guide
+     * [HHH-11142] - Document supported use/implications of @Cache / @Cacheable
+
 Changes in 5.0.11.Final (September 19, 2016)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/24050

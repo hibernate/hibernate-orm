@@ -746,7 +746,7 @@ This property can not be combined with `hibernate.ejb.interceptor`.
 |`hibernate.jmx.agentId` | | The agent identifier of the associated `MBeanServer`.
 |`hibernate.jmx.defaultDomain` | | The domain name of the associated `MBeanServer`.
 |`hibernate.jmx.sessionFactoryName` | | The `SessionFactory` name appended to the object name the Manageable Bean is registered with. If null, the `hibernate.session_factory_name` configuration value is used.
-|`org.hibernate.core | | The default object domain appended to the object name the Manageable Bean is registered with.
+|`org.hibernate.core` | | The default object domain appended to the object name the Manageable Bean is registered with.
 |===================================================================================================================================================================================================================================
 
 [[configurations-jacc]]

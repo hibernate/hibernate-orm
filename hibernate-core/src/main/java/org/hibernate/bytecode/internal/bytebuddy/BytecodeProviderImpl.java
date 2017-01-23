@@ -10,8 +10,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import net.bytebuddy.TypeCache;
 import org.hibernate.HibernateException;
@@ -73,7 +71,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						.load(clazz.getClassLoader())
 						.getLoaded();
 			}
-		}, clazz);
+		}, FAST_CLASSES);
 
 		fastClass = FAST_CLASSES.insert( clazz.getClassLoader(), clazz.getName(), fastClass );
 
@@ -94,7 +92,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						.load(clazz.getClassLoader())
 						.getLoaded();
 			}
-		}, clazz);
+		}, BULK_ACCESSORS);
 
 		try {
 			return new ReflectionOptimizerImpl(

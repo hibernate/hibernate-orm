@@ -114,7 +114,7 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 						.load(persistentClass.getClassLoader())
 						.getLoaded();
 			}
-		}, persistentClass);
+		}, CACHE);
 	}
 
 	@Override

@@ -74,11 +74,11 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		);
 
 		String sql = String.format(
-				"select t.table_name as {t.tableName}, %s as {t.daysOld} from ALL_TABLES t  where t.table_name = 'AUDIT_ACTIONS' ",
+				"select t.Z_TABLE_NAME as {t.tableName}, %s as {t.daysOld} from ALL_TABLES t  where t.Z_TABLE_NAME = 'AUDIT_ACTIONS' ",
 				dateFunctionRendered
 		);
 		String sql2 = String.format(
-				"select table_name as t_name, %s as t_time from ALL_TABLES   where table_name = 'AUDIT_ACTIONS' ",
+				"select Z_TABLE_NAME as t_name, %s as t_time from ALL_TABLES   where Z_TABLE_NAME = 'AUDIT_ACTIONS' ",
 				dateFunctionRendered
 		);
 
@@ -219,12 +219,12 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		List chaoses = s.createSQLQuery( "select * from Chaos where chaos_size is null or chaos_size = :chaos_size" )
+		List chaoses = s.createSQLQuery( "select * from Z_CHAOS where chaos_size is null or chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null )
 				.list();
 		assertEquals( 1, chaoses.size() );
 
-		chaoses = s.createSQLQuery( "select * from Chaos where chaos_size = :chaos_size" )
+		chaoses = s.createSQLQuery( "select * from Z_CHAOS where chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null )
 				.list();
 		// should be no results because null != null
@@ -260,12 +260,12 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		List chaoses = s.createSQLQuery( "select * from Chaos where chaos_size is null or chaos_size = :chaos_size" )
+		List chaoses = s.createSQLQuery( "select * from Z_CHAOS where chaos_size is null or chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
 				.list();
 		assertEquals( 1, chaoses.size() );
 
-		chaoses = s.createSQLQuery( "select * from Chaos where chaos_size = :chaos_size" )
+		chaoses = s.createSQLQuery( "select * from Z_CHAOS where chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
 				.list();
 		// should be no results because null != null

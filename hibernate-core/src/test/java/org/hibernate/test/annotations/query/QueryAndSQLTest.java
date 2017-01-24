@@ -74,11 +74,11 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		);
 
 		String sql = String.format(
-				"select t.table_name as {t.tableName}, %s as {t.daysOld} from ALL_TABLES t  where t.table_name = 'AUDIT_ACTIONS' ",
+				"select t.TABLE_NAME as {t.tableName}, %s as {t.daysOld} from ALL_TABLES t  where t.TABLE_NAME = 'AUDIT_ACTIONS' ",
 				dateFunctionRendered
 		);
 		String sql2 = String.format(
-				"select table_name as t_name, %s as t_time from ALL_TABLES   where table_name = 'AUDIT_ACTIONS' ",
+				"select TABLE_NAME as t_name, %s as t_time from ALL_TABLES   where TABLE_NAME = 'AUDIT_ACTIONS' ",
 				dateFunctionRendered
 		);
 
@@ -97,7 +97,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@FailureExpected(jiraKey = "HHH-2225")
 	public void testNativeQueryWithFormulaAttributeWithoutAlias() {
-		String sql = "select table_name , sysdate() from all_tables  where table_name = 'AUDIT_ACTIONS' ";
+		String sql = "select TABLE_NAME , sysdate() from all_tables  where TABLE_NAME = 'AUDIT_ACTIONS' ";
 		Session s = openSession();
 		s.beginTransaction();
 		s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();
@@ -219,12 +219,12 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		List chaoses = s.createSQLQuery( "select * from Chaos where chaos_size is null or chaos_size = :chaos_size" )
+		List chaoses = s.createSQLQuery( "select * from CHAOS where chaos_size is null or chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null )
 				.list();
 		assertEquals( 1, chaoses.size() );
 
-		chaoses = s.createSQLQuery( "select * from Chaos where chaos_size = :chaos_size" )
+		chaoses = s.createSQLQuery( "select * from CHAOS where chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null )
 				.list();
 		// should be no results because null != null
@@ -260,12 +260,12 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		List chaoses = s.createSQLQuery( "select * from Chaos where chaos_size is null or chaos_size = :chaos_size" )
+		List chaoses = s.createSQLQuery( "select * from CHAOS where chaos_size is null or chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
 				.list();
 		assertEquals( 1, chaoses.size() );
 
-		chaoses = s.createSQLQuery( "select * from Chaos where chaos_size = :chaos_size" )
+		chaoses = s.createSQLQuery( "select * from CHAOS where chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
 				.list();
 		// should be no results because null != null

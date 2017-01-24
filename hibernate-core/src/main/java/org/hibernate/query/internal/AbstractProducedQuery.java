@@ -1579,10 +1579,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	}
 
 	private boolean isTypeRegistered(Class cl) {
-		Type ret = producer.getFactory().resolveParameterBindType( cl );
-		if (ret == null) {
-			return false;
-		}
-		return !org.hibernate.type.SerializableType.class.equals( ret.getClass() );
+		Type ret = producer.getFactory().getTypeResolver().basic( cl.getName() );
+		return ret != null;
 	}
 }

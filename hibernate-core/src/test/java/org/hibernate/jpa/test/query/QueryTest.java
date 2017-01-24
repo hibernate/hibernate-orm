@@ -6,9 +6,12 @@
  */
 package org.hibernate.jpa.test.query;
 
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
@@ -34,16 +37,17 @@ import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.Wallet;
 import org.hibernate.stat.Statistics;
+import org.hibernate.test.type.StringifiedCollectionTypeContributor.LongList;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Assert;
 import org.junit.Test;
-import junit.framework.Assert;
 
-import static junit.framework.Assert.assertNull;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -69,6 +73,34 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		options.put( AvailableSettings.GENERATE_STATISTICS, "true" );
+
+		try {
+			ArrayList<ClassLoader> loaders = new ArrayList<>();
+			Enumeration<URL> testBases = getClass().getClassLoader().getResources( "org/hibernate/" );
+			// simple getResource returns null without trying
+			String path = null;
+			while ( testBases.hasMoreElements() ) {
+				URL testbase = testBases.nextElement();
+				String basepath = testbase.toString();
+				if ( basepath.contains( "/resources/test/org/hibernate" ) ) {
+					path = basepath;
+					break;
+				}
+			}
+			if (path == null) {
+				// check will always be valid unless gradle is replaced or drastically changed beyond recognition
+				throw new IllegalStateException( "Could not find test resources path" );
+			}
+			path = path + "test/spi/";
+			URL url = new URL( path );
+			URLClassLoader ucl = new URLClassLoader( new URL[]{ url } );
+
+			loaders.add( ucl );
+			options.put( org.hibernate.cfg.AvailableSettings.CLASSLOADERS, loaders );
+		}
+		catch (java.io.IOException mue) {
+			throw new IllegalStateException( mue );
+		}
 	}
 
 	@Test
@@ -1449,6 +1481,43 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		}
 		finally {
 			entityManager.close();
+		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11409")
+	public void testParameterRegisterredCollection() {
+		final EntityManager em  = getOrCreateEntityManager();
+		try {
+			em.getTransaction().begin();
+			{
+				Item item = new Item( "LongList", "[5,11,6123,-61235,24]" );
+				em.persist( item );
+				// deallocate item after braces close
+			}
+			em.getTransaction().commit();
+
+			em.getTransaction().begin();
+			LongList ll = new LongList();
+			ll.add( 5L );
+			ll.add( 11L );
+			ll.add( 6123L );
+			ll.add( -61235L );
+			ll.add( 24L );
+			Query tq = em.createNativeQuery( "SELECT * FROM Item WHERE descr = ?", Item.class );
+			tq.setParameter(1, ll);
+			Item item = (Item) tq.getSingleResult();
+			em.getTransaction().commit();
+			assertEquals( "LongList", item.getName() );
+		}
+		catch (Exception e) {
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			em.close();
 		}
 	}
 }

@@ -1,0 +1,1 @@
+Base directory for configurations using optional classes loaded via java.util.ServiceLoader

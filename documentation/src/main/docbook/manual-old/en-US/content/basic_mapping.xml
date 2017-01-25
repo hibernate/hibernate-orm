@@ -225,7 +225,7 @@ public class Flight implements Serializable {
                columnNames={"comp_prefix", "flight_number"} ) )
 public class Flight implements Serializable {
     @Column(name="comp_prefix")
-    public String getCompagnyPrefix() { return companyPrefix; }
+    public String getCompanyPrefix() { return companyPrefix; }
 
     @Column(name="flight_number")
     public String getNumber() { return number; }

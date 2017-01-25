@@ -13,18 +13,18 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.UUID;
 
+import org.hibernate.type.descriptor.java.internal.UUIDJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.basic.BasicTypeImpl;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.internal.UUIDJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.BasicBinder;
 import org.hibernate.type.descriptor.sql.spi.BasicExtractor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Specialized type mapping for {@link UUID} and the Postgres UUID data type (which is mapped as OTHER in its
@@ -37,7 +37,12 @@ public class PostgresUUIDType extends BasicTypeImpl<UUID> {
 	public static final PostgresUUIDType INSTANCE = new PostgresUUIDType();
 
 	public PostgresUUIDType() {
-		super( UUIDJavaDescriptor.INSTANCE, PostgresUUIDSqlTypeDescriptor.INSTANCE );
+		super(
+				UUIDJavaDescriptor.INSTANCE,
+				UUIDJavaDescriptor.INSTANCE.getMutabilityPlan(),
+				UUIDJavaDescriptor.INSTANCE.getComparator(),
+				PostgresUUIDSqlTypeDescriptor.INSTANCE
+		);
 	}
 
 	public String getName() {
@@ -86,8 +91,8 @@ public class PostgresUUIDType extends BasicTypeImpl<UUID> {
 		public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 				@Override
-				protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( rs.getObject( name ), options );
+				protected X doExtract(ResultSet rs, int position, WrapperOptions options) throws SQLException {
+					return javaTypeDescriptor.wrap( rs.getObject( position ), options );
 				}
 
 				@Override

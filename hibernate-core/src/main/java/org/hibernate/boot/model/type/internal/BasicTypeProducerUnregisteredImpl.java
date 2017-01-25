@@ -10,7 +10,10 @@ import org.hibernate.boot.model.type.spi.AbstractBasicTypeProducer;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * A BasicTypeProducer intended for use in cases where the producer will not be registered.
+ * A BasicTypeProducer implementation representing cases where the site did
+ * not refer to a specific BasicType/BasicTypeProducer by name.  These are
+ * "site-specific" BasicTypeProducer instances, meaning they will not be
+ * registered with the BasicTypeProducerRegistry
  *
  * @author Steve Ebersole
  */

@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.persistence.Parameter;
 import javax.persistence.ParameterMode;
@@ -45,7 +46,7 @@ public class ParameterManager implements ParameterRegistry {
 
 	public ParameterManager(ProcedureCallImpl procedureCall) {
 		this.procedureCall = procedureCall;
-		this.globalParameterPassNullsSetting = procedureCall.getProducer().getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
+		this.globalParameterPassNullsSetting = procedureCall.getSession().getFactory().getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
 	}
 
 	@Override
@@ -153,7 +154,7 @@ public class ParameterManager implements ParameterRegistry {
 		if ( parameterStrategy == ParameterStrategy.UNKNOWN ) {
 			// protect to only do this check once
 			// todo : this also depends on our assumption that ProcedureCall / StoredProcedureQuery named parameters correlate directly to JDBC named parameters.
-			final ExtractedDatabaseMetaData databaseMetaData = procedureCall.getProducer()
+			final ExtractedDatabaseMetaData databaseMetaData = procedureCall.getSession()
 					.getJdbcServices()
 					.getJdbcEnvironment()
 					.getExtractedDatabaseMetaData();
@@ -229,6 +230,17 @@ public class ParameterManager implements ParameterRegistry {
 		}
 
 		parameterRegistrations.forEach( collector::collect );
+	}
+
+	@Override
+	public boolean hasAnyMatching(Predicate<? super QueryParameter> filter) {
+		for ( ParameterRegistrationImplementor<?> parameterRegistration : parameterRegistrations ) {
+			if ( filter.test( parameterRegistration ) ) {
+				return true;
+			}
+		}
+
+		return true;
 	}
 
 	@Override
@@ -367,7 +379,7 @@ public class ParameterManager implements ParameterRegistry {
 		return new ParameterBindImpl<>(
 				parameter.getHibernateType(),
 				parameter,
-				procedureCall.getProducer().getFactory()
+				procedureCall.getSession().getFactory()
 		);
 	}
 

@@ -33,7 +33,9 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.spi.Type;
@@ -57,7 +59,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return The producer of this query
 	 */
-	QueryProducer getProducer();
+	SharedSessionContract getSession();
 
 	/**
 	 * Get the query string.  Note that this may be {@code null} or some other

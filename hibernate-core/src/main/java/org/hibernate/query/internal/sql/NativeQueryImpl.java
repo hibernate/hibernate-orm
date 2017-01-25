@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -107,7 +108,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 			boolean callable,
 			List<String> querySpaces,
 			List<NativeSQLQueryReturn> queryReturns) {
-		super( session, session );
+		super( session );
 
 		this.sqlString = queryString;
 		this.callable = callable;
@@ -189,7 +190,9 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 
 	@Override
 	public Set<Parameter<?>> getParameters() {
-		return parameterMetadata.collectAllParametersJpa();
+		final HashSet<Parameter<?>> parameters = new HashSet<>();
+		parameterMetadata.collectAllParameters( parameters::add );
+		return parameters;
 	}
 
 	@Override
@@ -197,10 +200,12 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 		return parameterBindings;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public List<JdbcParameterBinder> getParameterBinders() {
 		return parameterBinders;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public boolean isAutoDiscoverTypes() {
 		return autoDiscoverTypes;
 	}
@@ -213,7 +218,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 
 	@Override
 	public NativeQuery<R> setResultSetMapping(String name) {
-		ResultSetMappingDefinition mapping = getProducer().getFactory().getNamedQueryRepository().getResultSetMappingDefinition( name );
+		ResultSetMappingDefinition mapping = getSession().getFactory().getNamedQueryRepository().getResultSetMappingDefinition( name );
 		if ( mapping == null ) {
 			throw new MappingException( "Unknown SqlResultSetMapping [" + name + "]" );
 		}
@@ -286,7 +291,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 		//
 		// NOTE : this was added for JPA initially.  Perhaps we want to only do this from JPA usage?
 		if ( shouldFlush() ) {
-			getExecutionContext().flush();
+			getSession().flush();
 		}
 	}
 
@@ -308,10 +313,10 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 	}
 
 	private boolean shouldFlush() {
-		if ( getExecutionContext().isTransactionInProgress() ) {
+		if ( getSession().isTransactionInProgress() ) {
 			FlushMode effectiveFlushMode = getHibernateFlushMode();
 			if ( effectiveFlushMode == null ) {
-				effectiveFlushMode = getExecutionContext().getHibernateFlushMode();
+				effectiveFlushMode = getSession().getHibernateFlushMode();
 			}
 
 			if ( effectiveFlushMode == FlushMode.ALWAYS ) {
@@ -319,7 +324,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 			}
 
 			if ( effectiveFlushMode == FlushMode.AUTO ) {
-				if ( getProducer().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+				if ( getSession().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
 					return true;
 				}
 			}
@@ -331,11 +336,10 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 	@Override
 	@SuppressWarnings("unchecked")
 	protected List<R> doList() {
-		getExecutionContext().prepareForQueryExecution( false );
+		getSession().prepareForQueryExecution( false );
 
 		return resolveSelectQueryPlan().performList(
-				(SharedSessionContractImplementor) getProducer(),
-				getExecutionContext(),
+				getSession(),
 				getQueryOptions(),
 				parameterBindings
 		);
@@ -347,13 +351,13 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 
 		final QueryInterpretations.Key cacheKey = NativeInterpretationsKey.generateFrom( this );
 		if ( cacheKey != null ) {
-			queryPlan = getProducer().getFactory().getQueryInterpretations().getSelectQueryPlan( cacheKey );
+			queryPlan = getSession().getFactory().getQueryInterpretations().getSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			queryPlan = new SelectQueryPlanImpl<>( this );
 			if ( cacheKey != null ) {
-				getProducer().getFactory().getQueryInterpretations().cacheSelectQueryPlan( cacheKey, queryPlan );
+				getSession().getFactory().getQueryInterpretations().cacheSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}
 
@@ -363,11 +367,10 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 
 	@Override
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
-		getExecutionContext().prepareForQueryExecution( false );
+		getSession().prepareForQueryExecution( false );
 
 		return resolveSelectQueryPlan().performScroll(
-				(SharedSessionContractImplementor) getProducer(),
-				getExecutionContext(),
+				getSession(),
 				getQueryOptions(),
 				parameterBindings,
 				scrollMode
@@ -382,11 +385,10 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 
 	protected int doExecuteUpdate() {
 		// trigger the transaction-in-progress checks...
-		getExecutionContext().prepareForQueryExecution( true );
+		getSession().prepareForQueryExecution( true );
 
 		return resolveNonSelectQueryPlan().executeUpdate(
-				(SharedSessionContractImplementor) getProducer(),
-				getExecutionContext(),
+				getSession(),
 				getQueryOptions(),
 				parameterBindings
 		);
@@ -397,13 +399,13 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 
 		final QueryInterpretations.Key cacheKey = NativeInterpretationsKey.generateFrom( this );
 		if ( cacheKey != null ) {
-			queryPlan = getProducer().getFactory().getQueryInterpretations().getNonSelectQueryPlan( cacheKey );
+			queryPlan = getSession().getFactory().getQueryInterpretations().getNonSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			queryPlan = new NonSelectQueryPlanImpl( this );
 			if ( cacheKey != null ) {
-				getProducer().getFactory().getQueryInterpretations().cacheNonSelectQueryPlan( cacheKey, queryPlan );
+				getSession().getFactory().getQueryInterpretations().cacheNonSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}
 
@@ -424,15 +426,12 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 	@Override
 	public NativeQueryImplementor<R> addScalar(String columnAlias, Type type) {
 		addReturnBuilder(
-				new NativeQueryReturnBuilder() {
-					public NativeSQLQueryReturn buildReturn() {
-						return new NativeSQLQueryScalarReturn( columnAlias, type );
-					}
-				}
+				() -> new NativeSQLQueryScalarReturn( columnAlias, type )
 		);
 		return this;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected void addReturnBuilder(NativeQueryReturnBuilder builder) {
 		if ( queryReturnBuilders == null ) {
 			queryReturnBuilders = new ArrayList<>();
@@ -551,13 +550,14 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 
 	@Override
 	public NativeQueryImplementor<R> addSynchronizedEntityName(String entityName) throws MappingException {
-		addQuerySpaces( getProducer().getFactory().getMetamodel().entityPersister( entityName ).getQuerySpaces() );
+		addQuerySpaces( getSession().getFactory().getTypeConfiguration().resolveEntityPersister( entityName ).getQuerySpaces() );
 		return this;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public NativeQueryImplementor<R> addSynchronizedEntityClass(Class entityClass) throws MappingException {
-		addQuerySpaces( getProducer().getFactory().getMetamodel().entityPersister( entityClass.getName() ).getQuerySpaces() );
+		addQuerySpaces( getSession().getFactory().getTypeConfiguration().resolveEntityPersister( entityClass ).getQuerySpaces() );
 		return this;
 	}
 
@@ -741,6 +741,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public NativeQueryImplementor<R> setParameterList(QueryParameter parameter, Collection values) {
 		super.setParameterList( parameter, values );
 		return this;

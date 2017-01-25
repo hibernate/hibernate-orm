@@ -49,6 +49,7 @@ import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sqm.domain.SqmPluralAttribute.CollectionClassification;
 import org.hibernate.sqm.domain.SqmPluralAttributeElement.ElementClassification;
 import org.hibernate.sqm.domain.SqmSingularAttribute.SingularAttributeClassification;
+import org.hibernate.sqm.query.SqmPropertyPath;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.internal.EntityTypeImpl;
 import org.hibernate.type.spi.BasicType;
@@ -63,6 +64,20 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  */
 public class PersisterHelper {
+
+	public static org.hibernate.loader.PropertyPath convert(SqmPropertyPath propertyPath) {
+		if ( propertyPath.getParent() == null ) {
+			return new org.hibernate.loader.PropertyPath( null, propertyPath.getLocalPath() );
+		}
+		org.hibernate.loader.PropertyPath parent = convert( propertyPath.getParent() );
+		return parent.append( propertyPath.getLocalPath() );
+	}
+
+
+
+
+
+
 	private final Method subclassTableSpanMethod;
 	private final Method subclassPropertyTableNumberMethod;
 	private final Method subclassPropertyColumnsMethod;

@@ -35,7 +35,7 @@ public interface CollectionReference {
 	 *
 	 * @return The collection index metadata as a FetchSource, or {@code null}.
 	 */
-	CollectionFetchableIndex getIndexGraph();
+	FetchableCollectionIndex getIndexGraph();
 
 	/**
 	 * Retrieve the metadata about the elements of this collection *as a FetchSource*.  Will return
@@ -45,7 +45,7 @@ public interface CollectionReference {
 	 *
 	 * @return The collection element metadata as a FetchSource, or {@code null}.
 	 */
-	CollectionFetchableElement getElementGraph();
+	FetchableCollectionElement getElementGraph();
 
 	/**
 	 * Retrieve the PropertyPath to this reference.

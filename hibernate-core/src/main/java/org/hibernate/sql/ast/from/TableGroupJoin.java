@@ -7,18 +7,18 @@
 package org.hibernate.sql.ast.from;
 
 import org.hibernate.sql.ast.predicate.Predicate;
-import org.hibernate.sqm.query.JoinType;
+import org.hibernate.sqm.query.SqmJoinType;
 
 /**
  * @author Steve Ebersole
  */
 public class TableGroupJoin {
-	private final JoinType joinType;
+	private final SqmJoinType joinType;
 	private final TableGroup joinedGroup;
 	private final Predicate predicate;
 
 	public TableGroupJoin(
-			JoinType joinType,
+			SqmJoinType joinType,
 			TableGroup joinedGroup,
 			Predicate predicate) {
 		this.joinType = joinType;
@@ -26,7 +26,7 @@ public class TableGroupJoin {
 		this.predicate = predicate;
 	}
 
-	public JoinType getJoinType() {
+	public SqmJoinType getJoinType() {
 		return joinType;
 	}
 

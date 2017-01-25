@@ -20,7 +20,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
-import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractQuery;
@@ -32,15 +31,17 @@ import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
+import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.sqm.QuerySplitter;
+import org.hibernate.sqm.query.SqmNonSelectStatement;
+import org.hibernate.sqm.query.SqmParameter;
 import org.hibernate.sqm.query.SqmSelectStatement;
 import org.hibernate.sqm.query.SqmStatement;
-import org.hibernate.sqm.query.SqmStatementNonSelect;
 
 /**
  * {@link Query} implementation based on an SQM
@@ -57,17 +58,15 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
-	private EntityGraphQueryHint entityGraphQueryHint;
-
 	public QuerySqmImpl(
 			String sourceQueryString,
 			SqmStatement sqmStatement,
 			Class resultType,
 			SharedSessionContractImplementor producer) {
-		super( producer, producer );
+		super( producer );
 
 		if ( resultType != null ) {
-			if ( sqmStatement instanceof SqmStatementNonSelect ) {
+			if ( sqmStatement instanceof SqmNonSelectStatement ) {
 				throw new IllegalArgumentException( "Non-select queries cannot be typed" );
 			}
 		}
@@ -84,7 +83,7 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 		Map<String, QueryParameter> namedQueryParameters = null;
 		Map<Integer, QueryParameter> positionalQueryParameters = null;
 
-		for ( org.hibernate.sqm.query.Parameter parameter : sqm.getQueryParameters() ) {
+		for ( SqmParameter parameter : sqm.getQueryParameters() ) {
 			if ( parameter.getName() != null ) {
 				if ( namedQueryParameters == null ) {
 					namedQueryParameters = new HashMap<>();
@@ -107,6 +106,7 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 		return new ParameterMetadataImpl( namedQueryParameters, positionalQueryParameters );
 	}
+
 
 	private boolean isSelect() {
 		return sqmStatement instanceof SqmSelectStatement;
@@ -132,11 +132,11 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 	}
 
 	public EntityGraphQueryHint getEntityGraphHint() {
-		return entityGraphQueryHint;
+		return getQueryOptions().getEntityGraphQueryHint();
 	}
 
 	@Override
-	public ParameterMetadata getParameterMetadata() {
+	public ParameterMetadataImplementor getParameterMetadata() {
 		return parameterMetadata;
 	}
 
@@ -197,8 +197,8 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 			return (T) queryOptions;
 		}
 
-		if ( cls.isInstance( entityGraphQueryHint ) ) {
-			return (T) entityGraphQueryHint;
+		if ( cls.isInstance( queryOptions.getEntityGraphQueryHint() ) ) {
+			return (T) queryOptions.getEntityGraphQueryHint();
 		}
 
 		throw new PersistenceException( "Unrecognized unwrap type [" + cls.getName() + "]" );
@@ -212,7 +212,9 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 	@Override
 	protected void applyEntityGraphQueryHint(String hintName, EntityGraphImpl entityGraph) {
-		this.entityGraphQueryHint = new EntityGraphQueryHint( hintName, entityGraph );
+		queryOptions.setEntityGraphQueryHint(
+				new EntityGraphQueryHint( hintName, entityGraph )
+		);
 	}
 
 
@@ -220,19 +222,21 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 	protected void collectHints(Map<String, Object> hints) {
 		super.collectHints( hints );
 
-		if ( entityGraphQueryHint != null ) {
-			hints.put( entityGraphQueryHint.getHintName(), entityGraphQueryHint.getOriginEntityGraph() );
+		if ( queryOptions.getEntityGraphQueryHint() != null ) {
+			hints.put(
+					queryOptions.getEntityGraphQueryHint().getHintName(),
+					queryOptions.getEntityGraphQueryHint().getOriginEntityGraph()
+			);
 		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	protected List<R> doList() {
-		getExecutionContext().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
+		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
 		return resolveSelectQueryPlan().performList(
-				(SharedSessionContractImplementor) getProducer(),
-				getExecutionContext(),
+				getSession(),
 				getQueryOptions(),
 				getQueryParameterBindings()
 		);
@@ -254,13 +258,13 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 		final QueryInterpretations.Key cacheKey = SqmInterpretationsKey.generateFrom( this );
 		if ( cacheKey != null ) {
-			queryPlan = getProducer().getFactory().getQueryInterpretations().getSelectQueryPlan( cacheKey );
+			queryPlan = getSession().getFactory().getQueryInterpretations().getSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			queryPlan = buildSelectQueryPlan();
 			if ( cacheKey != null ) {
-				getProducer().getFactory().getQueryInterpretations().cacheSelectQueryPlan( cacheKey, queryPlan );
+				getSession().getFactory().getQueryInterpretations().cacheSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}
 
@@ -276,7 +280,6 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 			return buildConcreteSelectQueryPlan(
 					concreteSqmStatements[0],
 					getResultType(),
-					getEntityGraphHint(),
 					getQueryOptions()
 			);
 		}
@@ -292,7 +295,6 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 			aggregatedQueryPlans[i] = buildConcreteSelectQueryPlan(
 					concreteSqmStatements[i],
 					getResultType(),
-					getEntityGraphHint(),
 					getQueryOptions()
 			);
 		}
@@ -303,11 +305,9 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 	private SelectQueryPlan<R> buildConcreteSelectQueryPlan(
 			SqmSelectStatement concreteSqmStatement,
 			Class<R> resultType,
-			EntityGraphQueryHint entityGraphHint,
 			QueryOptions queryOptions) {
 		return new ConcreteSqmSelectQueryPlan<>(
 				concreteSqmStatement,
-				entityGraphHint,
 				resultType,
 				queryOptions
 		);
@@ -316,11 +316,10 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	protected Iterator<R> doIterate() {
-		getExecutionContext().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
+		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
 		return resolveSelectQueryPlan().performIterate(
-				(SharedSessionContractImplementor) getProducer(),
-				getExecutionContext(),
+				getSession(),
 				getQueryOptions(),
 				getQueryParameterBindings()
 		);
@@ -328,11 +327,10 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 	@Override
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
-		getExecutionContext().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
+		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
 		return resolveSelectQueryPlan().performScroll(
-				(SharedSessionContractImplementor) getProducer(),
-				getExecutionContext(),
+				getSession(),
 				getQueryOptions(),
 				getQueryParameterBindings(),
 				scrollMode
@@ -341,11 +339,10 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 	@Override
 	protected int doExecuteUpdate() {
-		getExecutionContext().prepareForQueryExecution( true );
+		getSession().prepareForQueryExecution( true );
 
 		return resolveNonSelectQueryPlan().executeUpdate(
-				(SharedSessionContractImplementor) getProducer(),
-				getExecutionContext(),
+				getSession(),
 				getQueryOptions(),
 				getQueryParameterBindings()
 		);
@@ -361,13 +358,13 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 		final QueryInterpretations.Key cacheKey = SqmInterpretationsKey.generateFrom( this );
 		if ( cacheKey != null ) {
-			queryPlan = getProducer().getFactory().getQueryInterpretations().getNonSelectQueryPlan( cacheKey );
+			queryPlan = getSession().getFactory().getQueryInterpretations().getNonSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			queryPlan = buildNonSelectQueryPlan();
 			if ( cacheKey != null ) {
-				getProducer().getFactory().getQueryInterpretations().cacheNonSelectQueryPlan( cacheKey, queryPlan );
+				getSession().getFactory().getQueryInterpretations().cacheNonSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}
 

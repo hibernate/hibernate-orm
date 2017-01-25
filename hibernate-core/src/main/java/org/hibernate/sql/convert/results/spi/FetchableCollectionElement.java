@@ -7,11 +7,11 @@
 package org.hibernate.sql.convert.results.spi;
 
 /**
- * A collection element which is a {@link FetchParent}.
+ * A collection element which is a fetchable and is therefore also a {@link FetchParent}.
  *
  * @author Steve Ebersole
  */
-public interface CollectionFetchableElement extends FetchParent {
+public interface FetchableCollectionElement extends FetchParent {
 	/**
 	 * Reference back to the collection to which this element belongs
 	 *

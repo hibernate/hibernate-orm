@@ -24,7 +24,6 @@ import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.internal.ScrollableResultsIterator;
-import org.hibernate.query.spi.ExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -63,8 +62,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			QueryParameterBindings queryParameterBindings,
 			RowTransformer<R> rowTransformer,
 			Callback callback,
-			SharedSessionContractImplementor persistenceContext,
-			ExecutionContext executionContext) {
+			SharedSessionContractImplementor persistenceContext) {
 		return executeQuery(
 				jdbcSelect,
 				queryOptions,
@@ -72,7 +70,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				rowTransformer,
 				persistenceContext,
 				callback,
-				executionContext,
 				Connection::prepareStatement,
 				ListResultsConsumer.instance()
 		);
@@ -86,8 +83,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			QueryParameterBindings queryParameterBindings,
 			RowTransformer<R> rowTransformer,
 			Callback callback,
-			SharedSessionContractImplementor persistenceContext,
-			ExecutionContext executionContext) {
+			SharedSessionContractImplementor persistenceContext) {
 		return executeQuery(
 				jdbcSelect,
 				queryOptions,
@@ -95,7 +91,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				rowTransformer,
 				persistenceContext,
 				callback,
-				executionContext,
 				(connection, sql) -> connection.prepareStatement(
 						sql,
 						scrollMode.toResultSetType(),
@@ -113,8 +108,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			QueryParameterBindings queryParameterBindings,
 			RowTransformer<R> rowTransformer,
 			Callback callback,
-			SharedSessionContractImplementor persistenceContext,
-			ExecutionContext executionContext) {
+			SharedSessionContractImplementor persistenceContext) {
 		final ScrollableResultsImplementor<R> scrollableResults = scroll(
 				jdbcSelect,
 				ScrollMode.FORWARD_ONLY,
@@ -122,8 +116,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				queryParameterBindings,
 				rowTransformer,
 				callback,
-				persistenceContext,
-				executionContext
+				persistenceContext
 		);
 		final ScrollableResultsIterator<R> iterator = new ScrollableResultsIterator<>( scrollableResults );
 		final Spliterator<R> spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
@@ -217,7 +210,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			RowTransformer<R> rowTransformer,
 			SharedSessionContractImplementor persistenceContext,
 			Callback callback,
-			ExecutionContext executionContext,
 			PreparedStatementCreator statementCreator,
 			ResultsConsumer<T,R> resultsConsumer) {
 		final JdbcValuesSource jdbcValuesSource = resolveJdbcValuesSource(
@@ -228,7 +220,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 						jdbcSelect,
 						queryOptions,
 						statementCreator,
-						(ps, queryOptions1, session) -> ps.executeQuery(),
+						(ps, x1, x2) -> ps.executeQuery(),
 						queryParameterBindings
 				),
 				persistenceContext

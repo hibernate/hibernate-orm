@@ -10,8 +10,8 @@ package org.hibernate.sql.exec.spi;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.ExecutionContext;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.QuerySpec;
@@ -83,21 +83,18 @@ public class SqlAstSelectInterpreter {
 	/**
 	 * Perform interpretation of a select query, returning the SqlSelectInterpretation
 	 *
-	 * @param sqmSelectInterpretation
-	 * @param shallow
-	 * @param sessionFactory
-	 * @param parameterBindings
-	 *
-	 * @param executionContext
 	 * @return The interpretation result
 	 */
 	public static JdbcSelect interpret(
 			SqmSelectInterpretation sqmSelectInterpretation,
 			boolean shallow,
-			SessionFactoryImplementor sessionFactory,
-			QueryParameterBindings parameterBindings,
-			ExecutionContext executionContext) {
-		final SqlAstSelectInterpreter walker = new SqlAstSelectInterpreter( sessionFactory, parameterBindings, executionContext, shallow );
+			SharedSessionContractImplementor persistenceContext,
+			QueryParameterBindings parameterBindings) {
+		final SqlAstSelectInterpreter walker = new SqlAstSelectInterpreter(
+				persistenceContext,
+				parameterBindings,
+				shallow
+		);
 		walker.visitSelectQuery( sqmSelectInterpretation.getSqlSelectAst() );
 		return new JdbcSelectImpl(
 				walker.sqlBuffer.toString(),
@@ -108,9 +105,8 @@ public class SqlAstSelectInterpreter {
 	}
 
 	// pre-req state
-	private final SessionFactoryImplementor sessionFactory;
+	private final SharedSessionContractImplementor persistenceContext;
 	private final QueryParameterBindings parameterBindings;
-	private final ExecutionContext executionContext;
 	private final boolean shallow;
 
 	// In-flight state
@@ -122,13 +118,11 @@ public class SqlAstSelectInterpreter {
 	private boolean currentlyInSelections;
 
 	private SqlAstSelectInterpreter(
-			SessionFactoryImplementor sessionFactory,
+			SharedSessionContractImplementor persistenceContext,
 			QueryParameterBindings parameterBindings,
-			ExecutionContext executionContext,
 			boolean shallow) {
-		this.sessionFactory = sessionFactory;
+		this.persistenceContext = persistenceContext;
 		this.parameterBindings = parameterBindings;
-		this.executionContext = executionContext;
 		this.shallow = shallow;
 	}
 
@@ -406,7 +400,7 @@ public class SqlAstSelectInterpreter {
 	public void visitNamedParameter(NamedParameter namedParameter) {
 		parameterBinders.add( namedParameter.getParameterBinder() );
 
-		final Type type = ConversionHelper.resolveType( namedParameter, parameterBindings, executionContext );
+		final Type type = ConversionHelper.resolveType( namedParameter, parameterBindings, persistenceContext );
 
 		final int columnCount = type.getColumnSpan();
 		final boolean needsParens = currentlyInPredicate && columnCount > 1;
@@ -453,7 +447,7 @@ public class SqlAstSelectInterpreter {
 	public void visitPositionalParameter(PositionalParameter positionalParameter) {
 		parameterBinders.add( positionalParameter.getParameterBinder() );
 
-		final Type type = ConversionHelper.resolveType( positionalParameter, parameterBindings, executionContext );
+		final Type type = ConversionHelper.resolveType( positionalParameter, parameterBindings, persistenceContext );
 
 		final int columnCount = type.getColumnSpan();
 		final boolean needsParens = currentlyInPredicate && columnCount > 1;
@@ -475,7 +469,11 @@ public class SqlAstSelectInterpreter {
 	}
 
 	public void visitQueryLiteral(QueryLiteral queryLiteral) {
-		switch( sessionFactory.getSessionFactoryOptions().getQueryLiteralRendering() ) {
+		final QueryLiteralRendering queryLiteralRendering = persistenceContext.getFactory()
+				.getSessionFactoryOptions()
+				.getQueryLiteralRendering();
+
+		switch( queryLiteralRendering ) {
 			case AS_LITERAL: {
 				renderAsLiteral( queryLiteral );
 				break;
@@ -495,7 +493,7 @@ public class SqlAstSelectInterpreter {
 			}
 			default: {
 				throw new IllegalArgumentException(
-						"Unrecognized QueryLiteralRendering : " + sessionFactory.getSessionFactoryOptions().getQueryLiteralRendering()
+						"Unrecognized QueryLiteralRendering : " + queryLiteralRendering
 				);
 			}
 		}

@@ -44,7 +44,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	// covariant overrides
 
 	@Override
-	QueryProducerImplementor getProducer();
+	QueryProducerImplementor getSession();
 
 	@Override
 	QueryImplementor<R> setHibernateFlushMode(FlushMode flushMode);

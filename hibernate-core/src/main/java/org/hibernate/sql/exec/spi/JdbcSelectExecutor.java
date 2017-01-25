@@ -13,12 +13,10 @@ import java.util.stream.Stream;
 import org.hibernate.Incubating;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.spi.ExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.convert.spi.Callback;
-import org.hibernate.sql.exec.results.process.spi.JdbcValuesSourceProcessingOptions;
 
 /**
  * An executor for JdbcSelect operations.
@@ -37,8 +35,7 @@ public interface JdbcSelectExecutor {
 			QueryParameterBindings queryParameterBindings,
 			RowTransformer<R> rowTransformer,
 			Callback callback,
-			SharedSessionContractImplementor persistenceContext,
-			ExecutionContext executionContext);
+			SharedSessionContractImplementor persistenceContext);
 
 	<R> ScrollableResultsImplementor<R> scroll(
 			JdbcSelect jdbcSelect,
@@ -47,8 +44,7 @@ public interface JdbcSelectExecutor {
 			QueryParameterBindings queryParameterBindings,
 			RowTransformer<R> rowTransformer,
 			Callback callback,
-			SharedSessionContractImplementor persistenceContext,
-			ExecutionContext executionContext);
+			SharedSessionContractImplementor persistenceContext);
 
 	<R> Stream<R> stream(
 			JdbcSelect jdbcSelect,
@@ -56,6 +52,5 @@ public interface JdbcSelectExecutor {
 			QueryParameterBindings queryParameterBindings,
 			RowTransformer<R> rowTransformer,
 			Callback callback,
-			SharedSessionContractImplementor persistenceContext,
-			ExecutionContext executionContext);
+			SharedSessionContractImplementor persistenceContext);
 }

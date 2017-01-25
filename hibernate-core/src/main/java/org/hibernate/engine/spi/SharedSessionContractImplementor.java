@@ -29,14 +29,14 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.query.spi.ExecutionContext;
+import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder.Options;
-import org.hibernate.type.spi.Type;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
+import org.hibernate.type.spi.Type;
 
 /**
  * Defines the internal contract shared between {@link org.hibernate.Session} and
@@ -68,7 +68,8 @@ import org.hibernate.type.descriptor.spi.WrapperOptions;
  * @author Steve Ebersole
  */
 public interface SharedSessionContractImplementor
-		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions, QueryProducerImplementor, ExecutionContext {
+		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions, QueryProducerImplementor,
+		QueryParameterBindingTypeResolver {
 
 	// todo : this is the shared contract between Session and StatelessSession, but it defines methods that StatelessSession does not implement
 	//	(it just throws UnsupportedOperationException).  To me it seems like it is better to properly isolate those methods
@@ -136,6 +137,8 @@ public interface SharedSessionContractImplementor
 	 * </ul>
 	 */
 	void checkOpen(boolean markForRollbackIfClosed);
+
+	void prepareForQueryExecution(boolean requiresTxn);
 
 	/**
 	 * Marks current transaction (if one) for rollback only
@@ -294,6 +297,8 @@ public interface SharedSessionContractImplementor
 	 */
 	ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
 			throws HibernateException;
+
+	boolean isDefaultReadOnly();
 
 	/**
 	 * Execute a native SQL query, and return the results as a fully built list.

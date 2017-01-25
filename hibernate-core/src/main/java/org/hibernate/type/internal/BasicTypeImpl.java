@@ -7,15 +7,17 @@
 package org.hibernate.type.internal;
 
 import java.io.Serializable;
+import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.exec.results.process.spi.JdbcValuesSourceProcessingState;
+import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -23,16 +25,34 @@ import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.BasicTypeRegistry;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.VersionSupport;
 
 /**
  * @author Steve Ebersole
  */
-public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T> {
+public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T>, SqlSelectionReader<T> {
 	private final ColumnMapping columnMapping;
 	private final BasicTypeRegistry.Key registryKey;
 	private final JdbcLiteralFormatter jdbcLiteralFormatter;
+
+	@SuppressWarnings("unchecked")
+	public BasicTypeImpl(BasicJavaDescriptor javaDescriptor, ColumnMapping columnMapping) {
+		this( javaDescriptor, javaDescriptor.getMutabilityPlan(), javaDescriptor.getComparator(), columnMapping );
+	}
+
+	@SuppressWarnings("unchecked")
+	public BasicTypeImpl(BasicJavaDescriptor javaDescriptor, SqlTypeDescriptor sqlTypeDescriptor) {
+		this( javaDescriptor, new ColumnMapping( sqlTypeDescriptor ) );
+	}
+
+	@SuppressWarnings("unchecked")
+	public BasicTypeImpl(
+			BasicJavaDescriptor javaDescriptor,
+			MutabilityPlan mutabilityPlan,
+			Comparator comparator,
+			SqlTypeDescriptor sqlTypeDescriptor) {
+		this( javaDescriptor, mutabilityPlan, comparator, new ColumnMapping( sqlTypeDescriptor ) );
+	}
 
 	@SuppressWarnings("unchecked")
 	public BasicTypeImpl(
@@ -44,15 +64,6 @@ public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T
 		this.columnMapping = columnMapping;
 		this.registryKey = BasicTypeRegistry.Key.from( javaDescriptor, columnMapping.getSqlTypeDescriptor() );
 		this.jdbcLiteralFormatter = columnMapping.getSqlTypeDescriptor().getJdbcLiteralFormatter( getJavaTypeDescriptor() );
-	}
-
-	@SuppressWarnings("unchecked")
-	public BasicTypeImpl(
-			BasicJavaDescriptor javaDescriptor,
-			MutabilityPlan mutabilityPlan,
-			Comparator comparator,
-			SqlTypeDescriptor sqlTypeDescriptor) {
-		this( javaDescriptor, mutabilityPlan, comparator, new ColumnMapping( sqlTypeDescriptor ) );
 	}
 
 	@Override
@@ -90,6 +101,47 @@ public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T
 	@Override
 	public VersionSupport<T> getVersionSupport() {
 		return null;
+	}
+
+	@Override
+	public SqlSelectionReader<T> getSqlSelectionReader() {
+		return this;
+	}
+
+	@Override
+	public T read(
+			ResultSet resultSet,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+			SqlSelection sqlSelection) throws SQLException {
+		return getColumnMapping().getSqlTypeDescriptor().getExtractor( getJavaTypeDescriptor() ).extract(
+				resultSet,
+				sqlSelection.getJdbcResultSetIndex(),
+				jdbcValuesSourceProcessingState.getPersistenceContext()
+		);
+	}
+
+	@Override
+	public T extractParameterValue(
+			CallableStatement statement,
+			int jdbcParameterIndex,
+			SharedSessionContractImplementor session) throws SQLException {
+		return getColumnMapping().getSqlTypeDescriptor().getExtractor( getJavaTypeDescriptor() ).extract(
+				statement,
+				jdbcParameterIndex,
+				session
+		);
+	}
+
+	@Override
+	public T extractParameterValue(
+			CallableStatement statement,
+			String jdbcParameterName,
+			SharedSessionContractImplementor session) throws SQLException {
+		return getColumnMapping().getSqlTypeDescriptor().getExtractor( getJavaTypeDescriptor() ).extract(
+				statement,
+				jdbcParameterName,
+				session
+		);
 	}
 
 
@@ -150,4 +202,5 @@ public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T
 	public int[] sqlTypes() throws MappingException {
 		return new int[] { getColumnMapping().getSqlTypeDescriptor().getSqlType() };
 	}
+
 }

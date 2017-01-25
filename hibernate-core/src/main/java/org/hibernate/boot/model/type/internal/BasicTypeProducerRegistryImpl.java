@@ -41,11 +41,6 @@ public class BasicTypeProducerRegistryImpl implements BasicTypeProducerRegistry 
 	}
 
 	@Override
-	public BasicTypeProducer makeUnregisteredProducer() {
-		return new BasicTypeProducerUnregisteredImpl(typeConfiguration);
-	}
-
-	@Override
 	public BasicTypeProducerRegistry register(TypeDefinition typeDefinition) {
 		return register( typeDefinition, DuplicationStrategy.OVERWRITE );
 	}
@@ -62,7 +57,6 @@ public class BasicTypeProducerRegistryImpl implements BasicTypeProducerRegistry 
 		// register under the BasicType-implementor's class name
 		register(
 				new BasicTypeProducerTypeDefinitionImpl(
-						typeDefinition.getTypeImplementorClass().getName(),
 						typeDefinition,
 						typeConfiguration
 				),

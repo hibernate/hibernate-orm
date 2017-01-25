@@ -99,7 +99,7 @@ public class ProcedureCallImpl<R>
 	 * @param procedureName The name of the procedure to call
 	 */
 	public ProcedureCallImpl(SharedSessionContractImplementor session, String procedureName) {
-		super( session, session );
+		super( session );
 		this.procedureName = procedureName;
 
 		this.parameterManager = new ParameterManager( this );
@@ -116,7 +116,7 @@ public class ProcedureCallImpl<R>
 	 * @param resultClasses The classes making up the result
 	 */
 	public ProcedureCallImpl(final SharedSessionContractImplementor session, String procedureName, Class... resultClasses) {
-		super( session, session );
+		super( session );
 		this.procedureName = procedureName;
 
 		this.parameterManager = new ParameterManager( this );
@@ -167,7 +167,7 @@ public class ProcedureCallImpl<R>
 	 * @param resultSetMappings The names of the result set mappings making up the result
 	 */
 	public ProcedureCallImpl(final SharedSessionContractImplementor session, String procedureName, String... resultSetMappings) {
-		super( session, session );
+		super( session );
 		this.procedureName = procedureName;
 
 		this.parameterManager = new ParameterManager( this );
@@ -226,7 +226,7 @@ public class ProcedureCallImpl<R>
 	 */
 	@SuppressWarnings("unchecked")
 	ProcedureCallImpl(SharedSessionContractImplementor session, ProcedureCallMementoImpl memento) {
-		super( session, session );
+		super( session );
 		this.procedureName = memento.getProcedureName();
 
 		this.parameterManager = new ParameterManager( this );
@@ -241,13 +241,8 @@ public class ProcedureCallImpl<R>
 	}
 
 
-	@Override
-	public SharedSessionContractImplementor getProducer() {
-		return (SharedSessionContractImplementor) super.getProducer();
-	}
-
 	public SharedSessionContractImplementor getSession() {
-		return getProducer();
+		return (SharedSessionContractImplementor) super.getSession();
 	}
 
 	@Override
@@ -368,7 +363,7 @@ public class ProcedureCallImpl<R>
 		// but another approach would be to have different "SqlTreeExecutor" impls, i.e.. JdbcCallExecutor, JdbcSelectExecutor, etc
 		// this approach has a lot of benefits
 
-		final CallableStatementSupport callableStatementSupport = getProducer().getFactory().getJdbcServices()
+		final CallableStatementSupport callableStatementSupport = getSession().getFactory().getJdbcServices()
 				.getJdbcEnvironment()
 				.getDialect()
 				.getCallableStatementSupport();
@@ -587,16 +582,16 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class type, ParameterMode mode) {
-		getProducer().checkOpen( true );
+		getSession().checkOpen( true );
 
 		try {
 			registerParameter( position, type, mode );
 		}
 		catch (HibernateException he) {
-			throw getProducer().getExceptionConverter().convert( he );
+			throw getSession().getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
-			getProducer().markForRollbackOnly();
+			getSession().markForRollbackOnly();
 			throw e;
 		}
 
@@ -605,15 +600,15 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode) {
-		getProducer().checkOpen( true );
+		getSession().checkOpen( true );
 		try {
 			registerParameter( parameterName, type, mode );
 		}
 		catch (HibernateException he) {
-			throw getProducer().getExceptionConverter().convert( he );
+			throw getSession().getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
-			getProducer().markForRollbackOnly();
+			getSession().markForRollbackOnly();
 			throw e;
 		}
 
@@ -633,10 +628,10 @@ public class ProcedureCallImpl<R>
 			return false;
 		}
 		catch (HibernateException he) {
-			throw getProducer().getExceptionConverter().convert( he );
+			throw getSession().getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
-			getProducer().markForRollbackOnly();
+			getSession().markForRollbackOnly();
 			throw e;
 		}
 	}
@@ -650,7 +645,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	protected int doExecuteUpdate() {
-		if ( ! getProducer().isTransactionInProgress() ) {
+		if ( ! getSession().isTransactionInProgress() ) {
 			throw new TransactionRequiredException( "javax.persistence.Query.executeUpdate requires active transaction" );
 		}
 
@@ -715,10 +710,10 @@ public class ProcedureCallImpl<R>
 			return -1;
 		}
 		catch (HibernateException he) {
-			throw getProducer().getExceptionConverter().convert( he );
+			throw getSession().getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
-			getProducer().markForRollbackOnly();
+			getSession().markForRollbackOnly();
 			throw e;
 		}
 	}
@@ -741,10 +736,10 @@ public class ProcedureCallImpl<R>
 			return null;
 		}
 		catch (HibernateException he) {
-			throw getProducer().getExceptionConverter().convert( he );
+			throw getSession().getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
-			getProducer().markForRollbackOnly();
+			getSession().markForRollbackOnly();
 			throw e;
 		}
 	}
@@ -774,8 +769,8 @@ public class ProcedureCallImpl<R>
 			return (T) queryOptions;
 		}
 
-		if ( cls.isInstance( getProducer() ) ) {
-			return (T) getProducer();
+		if ( cls.isInstance( getSession() ) ) {
+			return (T) getSession();
 		}
 
 		if ( ProcedureOutputs.class.isAssignableFrom( cls ) ) {

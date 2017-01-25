@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.from;
 
 import org.hibernate.sql.ast.predicate.Predicate;
 import org.hibernate.sql.convert.IllegalJoinSpecificationException;
-import org.hibernate.sqm.query.JoinType;
+import org.hibernate.sqm.query.SqmJoinType;
 
 /**
  * Represents a join to a {@link TableBinding}; roughly equivalent to a SQL join.
@@ -16,23 +16,23 @@ import org.hibernate.sqm.query.JoinType;
  * @author Steve Ebersole
  */
 public class TableJoin {
-	private final JoinType joinType;
+	private final SqmJoinType joinType;
 	private final TableBinding joinedTableBinding;
 	private final Predicate predicate;
 
-	public TableJoin(JoinType joinType, TableBinding joinedTableBinding, Predicate predicate) {
+	public TableJoin(SqmJoinType joinType, TableBinding joinedTableBinding, Predicate predicate) {
 		this.joinType = joinType;
 		this.joinedTableBinding = joinedTableBinding;
 		this.predicate = predicate;
 
-		if ( joinType == JoinType.CROSS ) {
+		if ( joinType == SqmJoinType.CROSS ) {
 			if ( predicate != null ) {
 				throw new IllegalJoinSpecificationException( "Cross join cannot include join predicate" );
 			}
 		}
 	}
 
-	public JoinType getJoinType() {
+	public SqmJoinType getJoinType() {
 		return joinType;
 	}
 

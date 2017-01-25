@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.sort;
 
 import org.hibernate.sql.ast.expression.Expression;
-import org.hibernate.sqm.query.order.SortOrder;
+import org.hibernate.sqm.query.order.SqmSortOrder;
 
 /**
  * @author Steve Ebersole
@@ -15,9 +15,9 @@ import org.hibernate.sqm.query.order.SortOrder;
 public class SortSpecification {
 	private final Expression sortExpression;
 	private final String collation;
-	private final SortOrder sortOrder;
+	private final SqmSortOrder sortOrder;
 
-	public SortSpecification(Expression sortExpression, String collation, SortOrder sortOrder) {
+	public SortSpecification(Expression sortExpression, String collation, SqmSortOrder sortOrder) {
 		this.sortExpression = sortExpression;
 		this.collation = collation;
 		this.sortOrder = sortOrder;
@@ -31,7 +31,7 @@ public class SortSpecification {
 		return collation;
 	}
 
-	public SortOrder getSortOrder() {
+	public SqmSortOrder getSortOrder() {
 		return sortOrder;
 	}
 }

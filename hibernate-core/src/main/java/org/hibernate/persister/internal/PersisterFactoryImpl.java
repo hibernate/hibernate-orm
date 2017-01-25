@@ -31,6 +31,7 @@ import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.entity.spi.IdentifiableTypeImplementor;
 import org.hibernate.persister.entity.spi.InheritanceStrategy;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -415,7 +416,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			subEntityNodes.add( subEntityNode );
 		}
 
-		public void finishUp(EntityPersister superType, PersisterCreationContext creationContext) {
+		public void finishUp(IdentifiableTypeImplementor superType, PersisterCreationContext creationContext) {
 			if ( getEntityPersister() == null ) {
 				throw new HibernateException( "EntityPersister not yet known; cannot finishUp" );
 			}

@@ -17,6 +17,9 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  * @since 6.0
  */
 public class ColumnMapping {
+	// todo : better name
+	//		ColumnDefinition?
+
 	private final SqlTypeDescriptor sqlTypeDescriptor;
 	private final Size dictatedSize;
 	private final Size defaultSize;

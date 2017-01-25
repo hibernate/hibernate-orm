@@ -7,6 +7,8 @@
 
 package org.hibernate.query.spi;
 
+import java.util.function.Predicate;
+
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 
@@ -19,4 +21,6 @@ public interface ParameterMetadataImplementor extends ParameterMetadata {
 	}
 
 	void collectAllParameters(ParameterCollector collector);
+
+	boolean hasAnyMatching(Predicate<? super QueryParameter> filter);
 }

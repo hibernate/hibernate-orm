@@ -16,22 +16,22 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
+ * A BasicTypeProducer implementation for cases where the mapping referred to a "type definition".
+ *
  * @author Steve Ebersole
  */
 public class BasicTypeProducerTypeDefinitionImpl extends AbstractBasicTypeProducer {
-	private final String name;
 	private final TypeDefinition typeDefinition;
 
-	public BasicTypeProducerTypeDefinitionImpl(String name, TypeDefinition typeDefinition, TypeConfiguration typeConfiguration) {
+	public BasicTypeProducerTypeDefinitionImpl(TypeDefinition typeDefinition, TypeConfiguration typeConfiguration) {
 		super( typeConfiguration );
 
 		// we use assertions here because BasicTypeProducerRegistryImpl already performs an if check.
 		// The assertions here are nice still for unit tests
 
-		assert StringHelper.isEmpty( name ) : "Registration name is required";
-		assert typeDefinition.getTypeImplementorClass() == null : "Name of BasicType implementation class is required";
+		assert StringHelper.isNotEmpty( typeDefinition.getName() ) : "Registration name is required";
+		assert typeDefinition.getTypeImplementorClass() != null : "Name of BasicType implementation class is required";
 
-		this.name = name;
 		this.typeDefinition = typeDefinition;
 	}
 
@@ -56,6 +56,6 @@ public class BasicTypeProducerTypeDefinitionImpl extends AbstractBasicTypeProduc
 
 	@Override
 	public String getName() {
-		return name;
+		return typeDefinition.getName();
 	}
 }

@@ -146,8 +146,8 @@ public class SqlTypeDescriptorRegistry implements SqlTypeDescriptorBaseline.Base
 
 			return new BasicExtractor( javaTypeDescriptor, this ) {
 				@Override
-				protected Object doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-					return rs.getObject( name );
+				protected Object doExtract(ResultSet rs, int position, WrapperOptions options) throws SQLException {
+					return rs.getObject( position );
 				}
 
 				@Override

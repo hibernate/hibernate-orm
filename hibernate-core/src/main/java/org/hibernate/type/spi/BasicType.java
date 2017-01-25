@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.common.spi.ExpressableType;
+import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
 import org.hibernate.sqm.domain.type.SqmDomainTypeBasic;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -37,6 +38,12 @@ public interface BasicType<T> extends Type<T>, SqmDomainTypeBasic, ExpressableTy
 	BasicJavaDescriptor<T> getJavaTypeDescriptor();
 
 	VersionSupport<T> getVersionSupport();
+
+	/**
+	 * Get the SqlSelectionReader that can be used to read values of this type
+	 * from JDBC ResultSets
+	 */
+	SqlSelectionReader<T> getSqlSelectionReader();
 
 	@Override
 	default String getName() {
@@ -120,7 +127,8 @@ public interface BasicType<T> extends Type<T>, SqmDomainTypeBasic, ExpressableTy
 	}
 
 	default T nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session) throws SQLException {
-		return remapSqlTypeDescriptor( session ).getExtractor( getJavaTypeDescriptor() ).extract( rs, name, session );
+		throw new UnsupportedOperationException( "Name-based reads no longer supported" );
+//		return remapSqlTypeDescriptor( session ).getExtractor( getJavaTypeDescriptor() ).extract( rs, name, session );
 	}
 
 	@Override

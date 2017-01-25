@@ -20,6 +20,12 @@ import org.hibernate.type.spi.BasicTypeParameters;
 public interface BasicTypeSiteContext extends JdbcRecommendedSqlTypeMappingContext, BasicTypeParameters {
 	Map getLocalTypeParameters();
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo : are these needed?
+	//		they are needed to build the (singular) attribute, but for Type
+	//		I don't think they are needed
+
 	boolean isId();
 	boolean isVersion();
 }

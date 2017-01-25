@@ -20,16 +20,16 @@ public interface ValueExtractor<X> {
 	 * Extract value from result set
 	 *
 	 * @param rs The result set from which to extract the value
-	 * @param name The name by which to extract the value from the result set
+	 * @param position The position of the value to extract.
 	 * @param options The options
 	 *
 	 * @return The extracted value
 	 *
-	 * @throws SQLException Indicates a JDBC error occurred.
+	 * @throws SQLException Exceptions from the underlying JDBC objects are simply re-thrown.
 	 */
-	X extract(ResultSet rs, String name, WrapperOptions options) throws SQLException;
+	X extract(ResultSet rs, int position, WrapperOptions options) throws SQLException;
 
 	X extract(CallableStatement statement, int index, WrapperOptions options) throws SQLException;
 
-	X extract(CallableStatement statement, String[] paramNames, WrapperOptions options) throws SQLException;
+	X extract(CallableStatement statement, String name, WrapperOptions options) throws SQLException;
 }

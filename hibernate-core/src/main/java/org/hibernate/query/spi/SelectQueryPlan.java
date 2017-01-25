@@ -21,19 +21,16 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public interface SelectQueryPlan<R> {
 	List<R> performList(
 			SharedSessionContractImplementor persistenceContext,
-			ExecutionContext executionContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings);
 
 	Iterator<R> performIterate(
 			SharedSessionContractImplementor persistenceContext,
-			ExecutionContext executionContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings);
 
 	ScrollableResultsImplementor performScroll(
 			SharedSessionContractImplementor persistenceContext,
-			ExecutionContext executionContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings,
 			ScrollMode scrollMode);

@@ -12,6 +12,7 @@ import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.Limit;
 import org.hibernate.query.spi.QueryOptions;
@@ -39,7 +40,7 @@ public class SqmInterpretationsKey implements QueryInterpretations.Key {
 			return false;
 		}
 
-		if ( hasMultiValuedParameters( query.getParameterMetadata() ) ) {
+		if ( query.getParameterMetadata().hasAnyMatching( QueryParameter::allowsMultiValuedBinding ) ) {
 			return false;
 		}
 
@@ -52,15 +53,6 @@ public class SqmInterpretationsKey implements QueryInterpretations.Key {
 		}
 
 		return true;
-	}
-
-	private static boolean hasMultiValuedParameters(ParameterMetadata parameterMetadata) {
-		for ( QueryParameter<?> queryParameter : parameterMetadata.collectAllParameters() ) {
-			if ( queryParameter.allowsMultiValuedBinding() ) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private static boolean hasLimit(Limit limit) {

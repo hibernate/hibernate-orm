@@ -20,7 +20,7 @@ import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
  *
  * @see ReturnScalar
  * @see ReturnDynamicInstantiation
- * @see EntityReturn
+ * @see ReturnEntity
  * @see ReturnCollection
  *
  * @author Steve Ebersole

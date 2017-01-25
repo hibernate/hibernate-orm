@@ -9,9 +9,9 @@ package org.hibernate.sql.convert.spi;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.common.spi.SingularOrmAttribute;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.query.spi.ExecutionContext;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.NotYetImplementedException;
@@ -28,7 +28,7 @@ public class ConversionHelper {
 	public static Type resolveType(
 			NamedParameter parameter,
 			QueryParameterBindings bindings,
-			ExecutionContext executionContext) {
+			SharedSessionContractImplementor persistenceContext) {
 		final QueryParameterBinding binding = bindings.getBinding( parameter.getName() );
 		if ( binding != null ) {
 			if ( binding.getBindType() != null ) {
@@ -44,7 +44,7 @@ public class ConversionHelper {
 			throw new NotYetImplementedException( "Support for Type determination for multi-valued parameters is not yet implemented" );
 		}
 		else if ( binding.isBound() ) {
-			return executionContext.resolveParameterBindType( binding.getBindValue() );
+			return persistenceContext.resolveParameterBindType( binding.getBindValue() );
 		}
 
 		throw new QueryException( "Unable to determine Type for named parameter [:" + parameter.getName() + "]" );
@@ -53,7 +53,7 @@ public class ConversionHelper {
 	public static Type resolveType(
 			PositionalParameter parameter,
 			QueryParameterBindings bindings,
-			ExecutionContext executionContext) {
+			SharedSessionContractImplementor persistenceContext) {
 		final QueryParameterBinding binding = bindings.getBinding( parameter.getPosition() );
 		if ( binding != null ) {
 			if ( binding.getBindType() != null ) {
@@ -69,7 +69,7 @@ public class ConversionHelper {
 			throw new NotYetImplementedException( "Support for Type determination for multi-valued parameters is not yet implemented" );
 		}
 		else if ( binding != null && binding.isBound() ) {
-			return executionContext.resolveParameterBindType( binding.getBindValue() );
+			return persistenceContext.resolveParameterBindType( binding.getBindValue() );
 		}
 
 		throw new QueryException( "Unable to determine Type for positional parameter [?" + parameter.getPosition() + "]" );
@@ -86,8 +86,8 @@ public class ConversionHelper {
 		}
 
 		// assume the fact that the attribute/type are entity has already been validated
-		final EntityType entityType = (EntityType) ( (SingularOrmAttribute) joinedFromElement.getAttributeBinding().getAttribute() ).getOrmType();
-		final String entityName = entityType.getAssociatedEntityName( factory );
-		return factory.getMetamodel().entityPersister( entityName );
+		final EntityType entityType = (EntityType) ( ( SingularPersistentAttribute) joinedFromElement.getAttributeBinding().getBoundNavigable() ).getOrmType();
+		final String entityName = entityType.getAssociatedEntityName();
+		return factory.getTypeConfiguration().resolveEntityPersister( entityName );
 	}
 }

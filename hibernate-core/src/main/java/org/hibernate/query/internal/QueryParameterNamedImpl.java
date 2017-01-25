@@ -8,7 +8,7 @@
 package org.hibernate.query.internal;
 
 import org.hibernate.persister.common.spi.TypeExporter;
-import org.hibernate.sqm.query.Parameter;
+import org.hibernate.sqm.query.SqmParameter;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -24,23 +24,21 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 	 *
 	 * @return The parameter descriptor
 	 */
-	public static <T> QueryParameterNamedImpl<T> fromSqm(Parameter parameter) {
+	public static <T> QueryParameterNamedImpl<T> fromSqm(SqmParameter parameter) {
 		assert parameter.getName() != null;
 		assert parameter.getPosition() == null;
 
 		return new QueryParameterNamedImpl<T>(
 				parameter.getName(),
 				parameter.allowMultiValuedBinding(),
-				true,
 				( (TypeExporter) parameter.getAnticipatedType() ).getOrmType()
 		);
 	}
 
 	public static <T> QueryParameterNamedImpl<T> fromNativeQuery(String name) {
-		return new QueryParameterNamedImpl<>(
+		return new QueryParameterNamedImpl<T>(
 				name,
 				false,
-				true,
 				null
 		);
 	}
@@ -50,9 +48,8 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 	private QueryParameterNamedImpl(
 			String name,
 			boolean allowMultiValuedBinding,
-			boolean isPassNullsEnabled,
 			Type anticipatedType) {
-		super( allowMultiValuedBinding, isPassNullsEnabled, anticipatedType );
+		super( allowMultiValuedBinding, anticipatedType );
 		this.name = name;
 	}
 

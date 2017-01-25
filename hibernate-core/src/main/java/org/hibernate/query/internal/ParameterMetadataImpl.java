@@ -10,6 +10,7 @@ package org.hibernate.query.internal;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import javax.persistence.Parameter;
 
 import org.hibernate.QueryParameterException;
@@ -106,6 +107,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 		throw new IllegalArgumentException( "Could not resolve javax.persistence.Parameter to org.hibernate.query.QueryParameter" );
 	}
 
+
 	@Override
 	public void collectAllParameters(ParameterCollector collector) {
 		if ( !hasNamedParameters() && !hasPositionalParameters() ) {
@@ -119,5 +121,26 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 		for ( QueryParameter queryParameter : positionalQueryParameters.values() ) {
 			collector.collect( queryParameter );
 		}
+	}
+
+	@Override
+	public boolean hasAnyMatching(Predicate<? super QueryParameter> filter) {
+		if ( !hasNamedParameters() && !hasPositionalParameters() ) {
+			return false;
+		}
+
+		for ( QueryParameter queryParameter : namedQueryParameters.values() ) {
+			if ( filter.test( queryParameter ) ) {
+				return true;
+			}
+		}
+
+		for ( QueryParameter queryParameter : positionalQueryParameters.values() ) {
+			if ( filter.test( queryParameter ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

@@ -74,7 +74,6 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 					.getFactory()
 					.getMetamodel()
 					.getTypeConfiguration()
-					.getTypeDescriptorRegistryAccess()
 					.getSqlTypeDescriptorRegistry()
 					.getDescriptor( jdbcTypeCode );
 
@@ -178,7 +177,6 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 					.getFactory()
 					.getMetamodel()
 					.getTypeConfiguration()
-					.getTypeDescriptorRegistryAccess()
 					.getJavaTypeDescriptorRegistry()
 					.getDescriptor( basicType.getReturnedClass() );
 

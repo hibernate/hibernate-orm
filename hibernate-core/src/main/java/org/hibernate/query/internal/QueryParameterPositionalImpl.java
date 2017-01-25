@@ -9,7 +9,7 @@ package org.hibernate.query.internal;
 
 import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.sqm.query.Parameter;
+import org.hibernate.sqm.query.SqmParameter;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -25,25 +25,23 @@ public class QueryParameterPositionalImpl<T> extends AbstractQueryParameter<T> {
 	 *
 	 * @return The parameter descriptor
 	 */
-	public static <T> QueryParameter<T> fromSqm(Parameter parameter) {
+	public static <T> QueryParameter<T> fromSqm(SqmParameter parameter) {
 		assert parameter.getPosition() != null;
 		assert parameter.getName() == null;
 
-		return new QueryParameterPositionalImpl<>(
+		return new QueryParameterPositionalImpl<T>(
 				parameter.getPosition(),
 				parameter.allowMultiValuedBinding(),
-				true,
-				parameter.getAnticipatedType() == null
-						? null
-						: ( (TypeExporter) parameter.getAnticipatedType() ).getOrmType()
+				parameter.getAnticipatedType() != null ?
+						( (TypeExporter) parameter.getAnticipatedType() ).getOrmType() :
+						null
 		);
 	}
 
 	public static <T> QueryParameterPositionalImpl<T> fromNativeQuery(int position) {
-		return new QueryParameterPositionalImpl<>(
+		return new QueryParameterPositionalImpl<T>(
 				position,
 				false,
-				true,
 				null
 		);
 	}
@@ -53,19 +51,13 @@ public class QueryParameterPositionalImpl<T> extends AbstractQueryParameter<T> {
 	private QueryParameterPositionalImpl(
 			Integer position,
 			boolean allowMultiValuedBinding,
-			boolean isPassNullsEnabled,
 			Type anticipatedType) {
-		super( allowMultiValuedBinding, isPassNullsEnabled, anticipatedType );
+		super( allowMultiValuedBinding, anticipatedType );
 		this.position = position;
 	}
 
 	@Override
 	public Integer getPosition() {
 		return position;
-	}
-
-	@Override
-	public boolean isJpaPositionalParameter() {
-		return true;
 	}
 }

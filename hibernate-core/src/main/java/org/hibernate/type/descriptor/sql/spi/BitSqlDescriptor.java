@@ -13,13 +13,12 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.spi.JdbcLiteralFormatter;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.internal.JdbcLiteralFormatterNumericData;
+import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Types#BIT BIT} handling.
@@ -52,7 +51,8 @@ public class BitSqlDescriptor implements SqlTypeDescriptor {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-		return new JdbcLiteralFormatterNumericData( javaTypeDescriptor, Boolean.class );
+		// todo : how to handle this
+		return null;
 	}
 
 	@Override
@@ -75,8 +75,8 @@ public class BitSqlDescriptor implements SqlTypeDescriptor {
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
-			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getBoolean( name ), options );
+			protected X doExtract(ResultSet rs, int position, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( rs.getBoolean( position ), options );
 			}
 
 			@Override

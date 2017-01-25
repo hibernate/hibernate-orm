@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
 import org.hibernate.internal.SessionFactoryImpl;

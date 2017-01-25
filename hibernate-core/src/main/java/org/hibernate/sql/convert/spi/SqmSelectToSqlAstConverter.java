@@ -7,8 +7,6 @@
 
 package org.hibernate.sql.convert.spi;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,10 +19,11 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
+import org.hibernate.hql.internal.ast.tree.OrderByClause;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.common.internal.CompositeReference;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
@@ -32,8 +31,8 @@ import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
 import org.hibernate.persister.common.spi.PluralPersistentAttribute;
-import org.hibernate.persister.common.spi.TypeExporter;
-import org.hibernate.persister.common.spi.SingularOrmAttribute;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
+import org.hibernate.persister.embedded.spi.EmbeddedReference;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.NotYetImplementedException;
@@ -59,7 +58,6 @@ import org.hibernate.sql.ast.expression.PositionalParameter;
 import org.hibernate.sql.ast.expression.QueryLiteral;
 import org.hibernate.sql.ast.expression.SumFunction;
 import org.hibernate.sql.ast.expression.UnaryOperationExpression;
-import org.hibernate.sql.ast.expression.domain.DomainReferenceExpression;
 import org.hibernate.sql.ast.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.from.EntityTableGroup;
 import org.hibernate.sql.ast.from.TableGroup;
@@ -80,6 +78,7 @@ import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.ast.select.Selection;
 import org.hibernate.sql.ast.select.SqlSelectable;
 import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.ast.sort.SortSpecification;
 import org.hibernate.sql.convert.ConversionException;
 import org.hibernate.sql.convert.SyntaxException;
 import org.hibernate.sql.convert.expression.internal.DomainReferenceExpressionBuilderImpl;
@@ -95,7 +94,7 @@ import org.hibernate.sql.convert.results.spi.ReturnDynamicInstantiation;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sql.exec.results.process.internal.SqlSelectionImpl;
 import org.hibernate.sqm.BaseSemanticQueryWalker;
-import org.hibernate.sqm.domain.DomainReference;
+import org.hibernate.sqm.domain.SqmExpressableType;
 import org.hibernate.sqm.query.SqmDeleteStatement;
 import org.hibernate.sqm.query.SqmInsertSelectStatement;
 import org.hibernate.sqm.query.SqmQuerySpec;
@@ -124,26 +123,25 @@ import org.hibernate.sqm.query.expression.NullifSqmExpression;
 import org.hibernate.sqm.query.expression.PositionalParameterSqmExpression;
 import org.hibernate.sqm.query.expression.SqmExpression;
 import org.hibernate.sqm.query.expression.UnaryOperationSqmExpression;
-import org.hibernate.sqm.query.expression.domain.AttributeBinding;
-import org.hibernate.sqm.query.expression.domain.EntityBinding;
-import org.hibernate.sqm.query.expression.domain.PluralAttributeBinding;
-import org.hibernate.sqm.query.expression.domain.PluralAttributeElementBinding;
-import org.hibernate.sqm.query.expression.domain.SingularAttributeBinding;
+import org.hibernate.sqm.query.expression.domain.SqmAttributeBinding;
+import org.hibernate.sqm.query.expression.domain.SqmEntityBinding;
+import org.hibernate.sqm.query.expression.domain.SqmPluralAttributeBinding;
+import org.hibernate.sqm.query.expression.domain.SqmSingularAttributeBinding;
 import org.hibernate.sqm.query.expression.function.AvgFunctionSqmExpression;
 import org.hibernate.sqm.query.expression.function.CountFunctionSqmExpression;
 import org.hibernate.sqm.query.expression.function.CountStarFunctionSqmExpression;
 import org.hibernate.sqm.query.expression.function.MaxFunctionSqmExpression;
 import org.hibernate.sqm.query.expression.function.MinFunctionSqmExpression;
 import org.hibernate.sqm.query.expression.function.SumFunctionSqmExpression;
-import org.hibernate.sqm.query.from.FromElementSpace;
 import org.hibernate.sqm.query.from.SqmAttributeJoin;
 import org.hibernate.sqm.query.from.SqmCrossJoin;
 import org.hibernate.sqm.query.from.SqmEntityJoin;
 import org.hibernate.sqm.query.from.SqmFromClause;
+import org.hibernate.sqm.query.from.SqmFromElementSpace;
 import org.hibernate.sqm.query.from.SqmJoin;
 import org.hibernate.sqm.query.from.SqmRoot;
-import org.hibernate.sqm.query.order.OrderByClause;
-import org.hibernate.sqm.query.order.SortSpecification;
+import org.hibernate.sqm.query.order.SqmOrderByClause;
+import org.hibernate.sqm.query.order.SqmSortSpecification;
 import org.hibernate.sqm.query.predicate.AndSqmPredicate;
 import org.hibernate.sqm.query.predicate.BetweenSqmPredicate;
 import org.hibernate.sqm.query.predicate.GroupedSqmPredicate;
@@ -161,9 +159,9 @@ import org.hibernate.sqm.query.select.SqmDynamicInstantiationArgument;
 import org.hibernate.sqm.query.select.SqmDynamicInstantiationTarget;
 import org.hibernate.sqm.query.select.SqmSelectClause;
 import org.hibernate.sqm.query.select.SqmSelection;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.spi.basic.BasicTypeHelper;
 
 import org.jboss.logging.Logger;
 
@@ -173,6 +171,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  * @author John O'Hara
  */
+@SuppressWarnings("unchecked")
 public class SqmSelectToSqlAstConverter
 		extends BaseSemanticQueryWalker
 		implements DomainReferenceExpressionBuilder.BuildingContext, ReturnResolutionContext {
@@ -191,12 +190,12 @@ public class SqmSelectToSqlAstConverter
 	 */
 	public static SqmSelectInterpretation interpret(
 			SqmSelectStatement statement,
-			SessionFactoryImplementor factory,
+			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
 			boolean isShallow,
 			Callback callback) {
 		final SqmSelectToSqlAstConverter walker = new SqmSelectToSqlAstConverter(
-				factory,
+				persistenceContext.getFactory(),
 				queryOptions,
 				isShallow,
 				callback
@@ -264,7 +263,7 @@ public class SqmSelectToSqlAstConverter
 		if ( statement.getQuerySpec().getOrderByClause() != null ) {
 			currentClauseStack.push( Clause.ORDER );
 			try {
-				for ( SortSpecification sortSpecification : statement.getQuerySpec().getOrderByClause().getSortSpecifications() ) {
+				for ( SqmSortSpecification sortSpecification : statement.getQuerySpec().getOrderByClause().getSortSpecifications() ) {
 					sqlAst.addSortSpecification( visitSortSpecification( sortSpecification ) );
 				}
 			}
@@ -277,13 +276,13 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public OrderByClause visitOrderByClause(OrderByClause orderByClause) {
+	public OrderByClause visitOrderByClause(SqmOrderByClause orderByClause) {
 		throw new AssertionFailure( "Unexpected visitor call" );
 	}
 
 	@Override
-	public org.hibernate.sql.ast.sort.SortSpecification visitSortSpecification(SortSpecification sortSpecification) {
-		return new org.hibernate.sql.ast.sort.SortSpecification(
+	public SortSpecification visitSortSpecification(SqmSortSpecification sortSpecification) {
+		return new SortSpecification(
 				(Expression) sortSpecification.getSortExpression().accept( this ),
 				sortSpecification.getCollation(),
 				sortSpecification.getSortOrder()
@@ -347,7 +346,7 @@ public class SqmSelectToSqlAstConverter
 	private TableSpace tableSpace;
 
 	@Override
-	public TableSpace visitFromElementSpace(FromElementSpace fromElementSpace) {
+	public TableSpace visitFromElementSpace(SqmFromElementSpace fromElementSpace) {
 		tableSpace = fromClauseIndex.currentFromClause().makeTableSpace();
 		try {
 			visitRootEntityFromElement( fromElementSpace.getRoot() );
@@ -368,8 +367,8 @@ public class SqmSelectToSqlAstConverter
 			return resolvedTableGroup;
 		}
 
-		final EntityBinding binding = sqmRoot.getDomainReferenceBinding();
-		final EntityPersister entityPersister = (EntityPersister) binding.getBoundDomainReference();
+		final SqmEntityBinding binding = sqmRoot.getBinding();
+		final EntityPersister entityPersister = (EntityPersister) binding.getBoundNavigable();
 		final EntityTableGroup group = entityPersister.buildTableGroup(
 				sqmRoot,
 				tableSpace,
@@ -394,10 +393,12 @@ public class SqmSelectToSqlAstConverter
 				fromClauseIndex
 		);
 
-		final TableGroup ownerTableGroup = fromClauseIndex.findResolvedTableGroup( joinedFromElement.getAttributeBinding().getLhs() );
+		final TableGroup ownerTableGroup = fromClauseIndex.findResolvedTableGroup(
+				joinedFromElement.getAttributeBinding().getSourceBinding().getExportedFromElement()
+		);
 		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
 
-		final JoinablePersistentAttribute joinableAttribute = (JoinablePersistentAttribute) joinedFromElement.getAttributeBinding().getAttribute();
+		final JoinablePersistentAttribute<?,?> joinableAttribute = (JoinablePersistentAttribute) joinedFromElement.getAttributeBinding().getBoundNavigable();
 		for ( JoinColumnMapping joinColumnMapping : joinableAttribute.getJoinColumnMappings() ) {
 			// if the joinedAttribute ois a collection, we need to flip the JoinColumnMapping..
 			//		this has to do with "foreign-key directionality"
@@ -433,20 +434,20 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	private TableGroupProducer resolveTableGroupProducer(SqmAttributeJoin joinedFromElement) {
-		if ( joinedFromElement.getAttributeBinding().getAttribute() instanceof CollectionPersister ) {
-			return (CollectionPersister) joinedFromElement.getAttributeBinding().getAttribute();
+		if ( joinedFromElement.getAttributeBinding().getBoundNavigable() instanceof CollectionPersister ) {
+			return (CollectionPersister) joinedFromElement.getAttributeBinding().getBoundNavigable();
 		}
 
-		if ( joinedFromElement.getAttributeBinding().getAttribute() instanceof SingularPersistentAttributeEntity ) {
-			return ( (SingularPersistentAttributeEntity) joinedFromElement.getAttributeBinding().getAttribute() ).getAssociatedEntityPersister();
+		if ( joinedFromElement.getAttributeBinding().getBoundNavigable() instanceof SingularPersistentAttributeEntity ) {
+			return ( (SingularPersistentAttributeEntity) joinedFromElement.getAttributeBinding().getBoundNavigable() ).getAssociatedEntityPersister();
 		}
 
-		if ( joinedFromElement.getAttributeBinding().getAttribute() instanceof CompositeReference ) {
-			return ( (CompositeReference) joinedFromElement.getAttributeBinding().getAttribute() ).resolveTableGroupProducer();
+		if ( joinedFromElement.getAttributeBinding().getBoundNavigable() instanceof EmbeddedReference ) {
+			return ( (EmbeddedReference) joinedFromElement.getAttributeBinding().getBoundNavigable() ).resolveTableGroupProducer();
 		}
 		// otherwise - we have an exception condition
 
-		// todo : we could handle composites as well - another good argument for CompositeReference
+		// todo : we could handle composites as well - another good argument for EmbeddedReference
 		//		or just walking the composite's AttributeContainer until we hit a collection or entity
 
 		throw new ConversionException( "Could not resolve TableGroupProducer from SqmAttributeJoin [" + joinedFromElement + "]" );
@@ -563,7 +564,7 @@ public class SqmSelectToSqlAstConverter
 
 
 		for ( SqmAttributeJoin fetchedJoin : fetchedJoins ) {
-			final AttributeBinding fetchedAttributeBinding = fetchedJoin.getAttributeBinding();
+			final SqmAttributeBinding fetchedAttributeBinding = fetchedJoin.getAttributeBinding();
 			// todo  : need this method added to EntityGraphImplementor
 			//final String attributeName = fetchedAttributeBinding.getAttribute().getAttributeName();
 			//final AttributeNodeImplementor attributeNode = entityGraphImplementor.findAttributeNode( attributeName );
@@ -573,9 +574,9 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	private void applyFetchesAndEntityGraph(FetchParent fetchParent, SqmAttributeJoin attributeJoin, AttributeNodeImplementor attributeNode) {
-		if ( attributeJoin.getAttributeBinding() instanceof PluralAttributeBinding ) {
+		if ( attributeJoin.getAttributeBinding() instanceof SqmPluralAttributeBinding ) {
 			// apply the plural attribute fetch join
-			final PluralAttributeBinding pluralAttributeBinding = (PluralAttributeBinding) attributeJoin.getAttributeBinding();
+			final SqmPluralAttributeBinding pluralAttributeBinding = (SqmPluralAttributeBinding) attributeJoin.getAttributeBinding();
 
 			// todo : work out how to model collection fetches...
 			//		mainly... do we need a "grouping" fetch?  And if so, should
@@ -583,10 +584,10 @@ public class SqmSelectToSqlAstConverter
 			// 		does it represent each by itself?
 
 		}
-		else if ( attributeJoin.getAttributeBinding() instanceof SingularAttributeBinding ) {
+		else if ( attributeJoin.getAttributeBinding() instanceof SqmSingularAttributeBinding ) {
 			// apply the singular attribute fetch join
-			final SingularAttributeBinding attributeBinding = (SingularAttributeBinding) attributeJoin.getAttributeBinding();
-			final SingularOrmAttribute boundAttribute = (SingularOrmAttribute) attributeBinding.getAttribute();
+			final SqmSingularAttributeBinding attributeBinding = (SqmSingularAttributeBinding) attributeJoin.getAttributeBinding();
+			final SingularPersistentAttribute boundAttribute = (SingularPersistentAttribute) attributeBinding.getBoundNavigable();
 
 			switch ( boundAttribute.getAttributeTypeClassification() ) {
 				case ANY:
@@ -608,7 +609,7 @@ public class SqmSelectToSqlAstConverter
 					final SingularPersistentAttributeEntity boundAttributeAsEntity = (SingularPersistentAttributeEntity) boundAttribute;
 					final FetchEntityAttributeImpl fetch = new FetchEntityAttributeImpl(
 							fetchParent,
-							PersisterHelper.convert( attributeJoin.getPropertyPath() ),
+							PersisterHelper.convert( attributeBinding.getPropertyPath() ),
 							attributeJoin.getUniqueIdentifier(),
 							boundAttributeAsEntity,
 							boundAttributeAsEntity.getAssociatedEntityPersister(),
@@ -628,7 +629,6 @@ public class SqmSelectToSqlAstConverter
 		final DynamicInstantiation sqlTree = new DynamicInstantiation( target );
 
 		for ( SqmDynamicInstantiationArgument argument : dynamicInstantiation.getArguments() ) {
-			// validate use of aliases
 			validateDynamicInstantiationArgument( target, argument );
 
 			// generate the SqlSelections (if any) and get the SQL AST Expression
@@ -643,7 +643,10 @@ public class SqmSelectToSqlAstConverter
 		return sqlTree;
 	}
 
+	@SuppressWarnings("unused")
 	private void validateDynamicInstantiationArgument(Class target, SqmDynamicInstantiationArgument argument) {
+		// validate use of aliases
+		// todo : I think this ^^ is lready handled elsewhere
 	}
 
 	private Class interpret(SqmDynamicInstantiationTarget instantiationTarget) {
@@ -656,53 +659,50 @@ public class SqmSelectToSqlAstConverter
 		return instantiationTarget.getJavaType();
 	}
 
-	@Override
-	public DomainReferenceExpression visitAttributeReferenceExpression(AttributeBinding attributeBinding) {
-		if ( attributeBinding instanceof PluralAttributeBinding ) {
-			return getCurrentDomainReferenceExpressionBuilder().buildPluralAttributeExpression(
-					this,
-					(PluralAttributeBinding) attributeBinding
-			);
-		}
-		else {
-			return getCurrentDomainReferenceExpressionBuilder().buildSingularAttributeExpression(
-					this,
-					(SingularAttributeBinding) attributeBinding
-			);
-		}
-	}
+
+//	@Override
+//	public DomainReferenceExpression visitAttributeReferenceExpression(AttributeBinding attributeBinding) {
+//		if ( attributeBinding instanceof PluralAttributeBinding ) {
+//			return getCurrentDomainReferenceExpressionBuilder().buildPluralAttributeExpression(
+//					this,
+//					(PluralAttributeBinding) attributeBinding
+//			);
+//		}
+//		else {
+//			return getCurrentDomainReferenceExpressionBuilder().buildSingularAttributeExpression(
+//					this,
+//					(SingularAttributeBinding) attributeBinding
+//			);
+//		}
+//	}
 
 	@Override
 	public QueryLiteral visitLiteralStringExpression(LiteralStringSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), String.class ),
+				extractOrmType( expression.getExpressionType(), StandardBasicTypes.STRING ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
 
-	protected Type extractOrmType(DomainReference sqmType) {
-		if ( sqmType == null ) {
-			return null;
+	private Type extractOrmType(SqmExpressableType expressableType, Type fallbackType) {
+		final Type resolvedType = extractOrmType( expressableType );
+		if ( resolvedType != null ) {
+			return resolvedType;
 		}
-
-		return ( (TypeExporter) sqmType ).getOrmType();
+		return fallbackType;
 	}
 
-	protected Type extractOrmType(DomainReference expressionType, Class javaType) {
-		final Type type = extractOrmType( expressionType );
-		if ( type != null ) {
-			return type;
-		}
 
-		return BasicTypeHelper.getRegisteredBasicType( javaType, factory.getMetamodel().getTypeConfiguration() );
+	private Type extractOrmType(SqmExpressableType expressableType) {
+		return (Type) expressableType.getExportedDomainType();
 	}
 
 	@Override
 	public QueryLiteral visitLiteralCharacterExpression(LiteralCharacterSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), Character.class ),
+				extractOrmType( expression.getExpressionType(), StandardBasicTypes.CHARACTER ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -711,7 +711,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralDoubleExpression(LiteralDoubleSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), Double.class ),
+				extractOrmType( expression.getExpressionType(), StandardBasicTypes.DOUBLE ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -720,7 +720,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralIntegerExpression(LiteralIntegerSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), Integer.class ),
+				extractOrmType( expression.getExpressionType(), StandardBasicTypes.INTEGER ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -729,7 +729,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralBigIntegerExpression(LiteralBigIntegerSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), BigInteger.class ),
+				extractOrmType( expression.getExpressionType(), StandardBasicTypes.BIG_INTEGER ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -738,7 +738,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralBigDecimalExpression(LiteralBigDecimalSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), BigDecimal.class ),
+				extractOrmType( expression.getExpressionType(), StandardBasicTypes.BIG_DECIMAL ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -747,7 +747,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralFloatExpression(LiteralFloatSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), Float.class ),
+				extractOrmType( expression.getExpressionType(), StandardBasicTypes.FLOAT ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -756,7 +756,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralLongExpression(LiteralLongSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), Long.class ),
+				extractOrmType( expression.getExpressionType(), StandardBasicTypes.LONG ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -765,7 +765,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralTrueExpression(LiteralTrueSqmExpression expression) {
 		return new QueryLiteral(
 				Boolean.TRUE,
-				extractOrmType( expression.getExpressionType(), Boolean.class ),
+				extractOrmType( expression.getExpressionType(), StandardBasicTypes.BOOLEAN ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -774,7 +774,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralFalseExpression(LiteralFalseSqmExpression expression) {
 		return new QueryLiteral(
 				Boolean.FALSE,
-				extractOrmType( expression.getExpressionType(), Boolean.class ),
+				extractOrmType( expression.getExpressionType(), StandardBasicTypes.BOOLEAN ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -792,6 +792,7 @@ public class SqmSelectToSqlAstConverter
 	public Object visitConstantEnumExpression(ConstantEnumSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getValue(),
+				// todo : how do I resolve the Type for an enum?
 				extractOrmType( expression.getExpressionType(), expression.getValue().getClass() ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
@@ -1047,20 +1048,20 @@ public class SqmSelectToSqlAstConverter
 		return new ConcatExpression(
 				(Expression) expression.getLeftHandOperand().accept( this ),
 				(Expression) expression.getLeftHandOperand().accept( this ),
-				null //(BasicType) extractOrmType( expression.getExpressionType() )
+				(BasicType) extractOrmType( expression.getExpressionType() )
 		);
 	}
 
-	@Override
-	public Object visitPluralAttributeElementBinding(PluralAttributeElementBinding binding) {
-		final TableGroup resolvedTableGroup = fromClauseIndex.findResolvedTableGroup( binding.getFromElement() );
-
-		return getCurrentDomainReferenceExpressionBuilder().buildPluralAttributeElementReferenceExpression(
-				binding,
-				resolvedTableGroup,
-				PersisterHelper.convert( binding.getPropertyPath() )
-		);
-	}
+//	@Override
+//	public Object visitPluralAttributeElementBinding(PluralAttributeElementBinding binding) {
+//		final TableGroup resolvedTableGroup = fromClauseIndex.findResolvedTableGroup( binding.getFromElement() );
+//
+//		return getCurrentDomainReferenceExpressionBuilder().buildPluralAttributeElementReferenceExpression(
+//				binding,
+//				resolvedTableGroup,
+//				PersisterHelper.convert( binding.getPropertyPath() )
+//		);
+//	}
 
 
 

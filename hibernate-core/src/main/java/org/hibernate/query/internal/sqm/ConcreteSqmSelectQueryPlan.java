@@ -20,12 +20,10 @@ import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.JpaTupleBuilder;
-import org.hibernate.query.spi.EntityGraphQueryHint;
-import org.hibernate.query.spi.ExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.sql.convert.spi.Callback;
 import org.hibernate.sql.convert.spi.SqmSelectInterpretation;
 import org.hibernate.sql.convert.spi.SqmSelectToSqlAstConverter;
@@ -38,7 +36,6 @@ import org.hibernate.sql.exec.internal.TupleElementImpl;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.RowTransformer;
 import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
-import org.hibernate.sqm.domain.DomainMetamodel;
 import org.hibernate.sqm.query.SqmSelectStatement;
 import org.hibernate.sqm.query.select.SqmSelection;
 
@@ -47,16 +44,13 @@ import org.hibernate.sqm.query.select.SqmSelection;
  */
 public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement sqm;
-	private final EntityGraphQueryHint entityGraphHint;
 	private final RowTransformer<R> rowTransformer;
 
 	public ConcreteSqmSelectQueryPlan(
 			SqmSelectStatement sqm,
-			EntityGraphQueryHint entityGraphHint,
 			Class<R> resultType,
 			QueryOptions queryOptions) {
 		this.sqm = sqm;
-		this.entityGraphHint = entityGraphHint;
 
 		this.rowTransformer = determineRowTransformer( sqm, resultType, queryOptions );
 	}
@@ -146,7 +140,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	@SuppressWarnings("unchecked")
 	public List<R> performList(
 			SharedSessionContractImplementor persistenceContext,
-			ExecutionContext executionContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings) {
 		verifyQueryIsSelect();
@@ -163,7 +156,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		// todo : SelectStatementInterpreter needs to account for the EntityGraph hint
 		final SqmSelectInterpretation interpretation = SqmSelectToSqlAstConverter.interpret(
 				sqm,
-				persistenceContext.getFactory(),
+				persistenceContext,
 				queryOptions,
 				shallow,
 				callback
@@ -172,9 +165,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		final JdbcSelect jdbcSelect = SqlAstSelectInterpreter.interpret(
 				interpretation,
 				shallow,
-				persistenceContext.getFactory(),
-				inputParameterBindings,
-				executionContext
+				persistenceContext,
+				inputParameterBindings
 		);
 
 		return new JdbcSelectExecutorStandardImpl().list(
@@ -183,8 +175,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				inputParameterBindings,
 				rowTransformer,
 				callback,
-				persistenceContext,
-				executionContext
+				persistenceContext
 		);
 	}
 
@@ -199,7 +190,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	@Override
 	public Iterator<R> performIterate(
 			SharedSessionContractImplementor persistenceContext,
-			ExecutionContext executionContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings) {
 		verifyQueryIsSelect();
@@ -212,7 +202,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	@SuppressWarnings("unchecked")
 	public ScrollableResultsImplementor performScroll(
 			SharedSessionContractImplementor persistenceContext,
-			ExecutionContext executionContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings,
 			ScrollMode scrollMode) {
@@ -230,7 +219,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		// todo : SelectStatementInterpreter needs to account for the EntityGraph hint
 		final SqmSelectInterpretation interpretation = SqmSelectToSqlAstConverter.interpret(
 				sqm,
-				persistenceContext.getFactory(),
+				persistenceContext,
 				queryOptions,
 				shallow,
 				callback
@@ -239,9 +228,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		final JdbcSelect jdbcSelect = SqlAstSelectInterpreter.interpret(
 				interpretation,
 				shallow,
-				persistenceContext.getFactory(),
-				inputParameterBindings,
-				executionContext
+				persistenceContext,
+				inputParameterBindings
 		);
 
 		return new JdbcSelectExecutorStandardImpl().scroll(
@@ -251,8 +239,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				inputParameterBindings,
 				rowTransformer,
 				callback,
-				persistenceContext,
-				executionContext
+				persistenceContext
 		);
 	}
 }

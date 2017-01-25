@@ -6,10 +6,6 @@
  */
 package org.hibernate.test.hql;
 
-/**
- * @author Andrea Boriero
- */
-
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -24,6 +20,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Test;
 
@@ -36,9 +33,10 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * @author Andrea Boriero
+ * @author Christian Beikov
  */
 public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestCase {
-	private final KeyValue keyValue = new KeyValue();
+	private final KeyValue keyValue = new KeyValue( "key1" );
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -63,7 +61,7 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 			testEntity.values = map;
 			s.save( testEntity );
 
-			KeyValue keyValue2 = new KeyValue();
+			KeyValue keyValue2 = new KeyValue( "key2" );
 			s.save( keyValue2 );
 			TestEntity testEntity2 = new TestEntity();
 			EmbeddableValue embeddableValue2 = new EmbeddableValue();
@@ -152,6 +150,17 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 		s.close();
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-10577")
+	public void testMapKeyExpressionDereferenceInSelect() {
+		doInHibernate( this::sessionFactory, s -> {
+			List<String> keyValueNames = s.createQuery( "select key(v).name as name from TestEntity te join te.values v order by name", String.class ).list();
+			assertEquals( 2, keyValueNames.size() );
+			assertEquals( "key1", keyValueNames.get( 0 ) );
+			assertEquals( "key2", keyValueNames.get( 1 ) );
+		} );
+	}
+
 	@Override
 	protected boolean isCleanupTestDataRequired() {
 		return true;
@@ -174,6 +183,15 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 		@Id
 		@GeneratedValue
 		Long id;
+
+		String name;
+
+		public KeyValue() {
+		}
+
+		public KeyValue(String name) {
+			this.name = name;
+		}
 	}
 
 	@Embeddable

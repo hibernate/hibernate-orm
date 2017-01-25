@@ -199,7 +199,7 @@ public final class AnnotationBinder {
 	}
 
 	public static void bindDefaults(MetadataBuildingContext context) {
-		Map defaults = context.getBuildingOptions().getReflectionManager().getDefaults();
+		Map defaults = context.getBootstrapContext().getReflectionManager().getDefaults();
 
 		// id generators ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -281,7 +281,7 @@ public final class AnnotationBinder {
 	public static void bindPackage(String packageName, MetadataBuildingContext context) {
 		XPackage pckg;
 		try {
-			pckg = context.getBuildingOptions().getReflectionManager().packageForName( packageName );
+			pckg = context.getBootstrapContext().getReflectionManager().packageForName( packageName );
 		}
 		catch (ClassLoadingException e) {
 			LOG.packageNotFound( packageName );
@@ -964,7 +964,7 @@ public final class AnnotationBinder {
 		XClass classWithIdClass = inheritanceState.getClassWithIdClass( false );
 		if ( classWithIdClass != null ) {
 			IdClass idClass = classWithIdClass.getAnnotation( IdClass.class );
-			XClass compositeClass = context.getBuildingOptions().getReflectionManager().toXClass( idClass.value() );
+			XClass compositeClass = context.getBootstrapContext().getReflectionManager().toXClass( idClass.value() );
 			PropertyData inferredData = new PropertyPreloadedData(
 					entityBinder.getPropertyAccessType(), "id", compositeClass
 			);
@@ -1093,7 +1093,7 @@ public final class AnnotationBinder {
 
 			}
 			else {
-				final XClass idClass = context.getBuildingOptions().getReflectionManager().toXClass(
+				final XClass idClass = context.getBootstrapContext().getReflectionManager().toXClass(
 						associatedClassWithIdClass.getAnnotation( IdClass.class ).value()
 				);
 				return idClass.equals( compositeClass );
@@ -1358,7 +1358,7 @@ public final class AnnotationBinder {
 	private static void bindFilterDef(FilterDef defAnn, MetadataBuildingContext context) {
 		Map<String, Type> params = new HashMap<String, Type>();
 		for ( ParamDef param : defAnn.parameters() ) {
-			params.put( param.name(), context.getMetadataCollector().getTypeResolver().heuristicType( param.type() ) );
+			params.put( param.name(), context.getMetadataCollector().heuristicType( param.type() ) );
 		}
 		FilterDefinition def = new FilterDefinition( defAnn.name(), defAnn.defaultCondition(), params );
 		LOG.debugf( "Binding filter definition: %s", def.getFilterName() );
@@ -1523,7 +1523,7 @@ public final class AnnotationBinder {
 				declaringClass,
 				property,
 				propertyContainer.getClassLevelAccessType().getType(),
-				context.getBuildingOptions().getReflectionManager()
+				context.getBootstrapContext().getReflectionManager()
 		);
 
 		/*
@@ -1571,7 +1571,7 @@ public final class AnnotationBinder {
 										// the actual @XToOne property
 										propertyContainer.getClassLevelAccessType().getType(),
 										//TODO we should get the right accessor but the same as id would do
-										context.getBuildingOptions().getReflectionManager()
+										context.getBootstrapContext().getReflectionManager()
 								);
 								context.getMetadataCollector().addPropertyAnnotatedWithMapsIdSpecj(
 										entity,
@@ -2074,7 +2074,7 @@ public final class AnnotationBinder {
 					collectionBinder.setFkJoinColumns( joinColumns );
 					mappedBy = oneToManyAnn.mappedBy();
 					collectionBinder.setTargetEntity(
-							context.getBuildingOptions().getReflectionManager().toXClass( oneToManyAnn.targetEntity() )
+							context.getBootstrapContext().getReflectionManager().toXClass( oneToManyAnn.targetEntity() )
 					);
 					collectionBinder.setCascadeStrategy(
 							getCascadeStrategy(
@@ -2093,7 +2093,7 @@ public final class AnnotationBinder {
 					mappedBy = "";
 					final Class<?> targetElement = elementCollectionAnn.targetClass();
 					collectionBinder.setTargetEntity(
-							context.getBuildingOptions().getReflectionManager().toXClass( targetElement )
+							context.getBootstrapContext().getReflectionManager().toXClass( targetElement )
 					);
 					//collectionBinder.setCascadeStrategy( getCascadeStrategy( embeddedCollectionAnn.cascade(), hibernateCascade ) );
 					collectionBinder.setOneToMany( true );
@@ -2101,7 +2101,7 @@ public final class AnnotationBinder {
 				else if ( manyToManyAnn != null ) {
 					mappedBy = manyToManyAnn.mappedBy();
 					collectionBinder.setTargetEntity(
-							context.getBuildingOptions().getReflectionManager().toXClass( manyToManyAnn.targetEntity() )
+							context.getBootstrapContext().getReflectionManager().toXClass( manyToManyAnn.targetEntity() )
 					);
 					collectionBinder.setCascadeStrategy(
 							getCascadeStrategy(
@@ -2113,7 +2113,7 @@ public final class AnnotationBinder {
 				else if ( property.isAnnotationPresent( ManyToAny.class ) ) {
 					mappedBy = "";
 					collectionBinder.setTargetEntity(
-							context.getBuildingOptions().getReflectionManager().toXClass( void.class )
+							context.getBootstrapContext().getReflectionManager().toXClass( void.class )
 					);
 					collectionBinder.setCascadeStrategy( getCascadeStrategy( null, hibernateCascade, false, false ) );
 					collectionBinder.setOneToMany( false );
@@ -3174,7 +3174,7 @@ public final class AnnotationBinder {
 					@Override
 					public Class getIdType() {
 						if ( javaType == null ) {
-							javaType = buildingContext.getBuildingOptions()
+							javaType = buildingContext.getBootstrapContext()
 									.getReflectionManager()
 									.toClass( javaTypeXClass );
 						}
@@ -3310,7 +3310,7 @@ public final class AnnotationBinder {
 	}
 
 	public static boolean isDefault(XClass clazz, MetadataBuildingContext context) {
-		return context.getBuildingOptions().getReflectionManager().equals( clazz, void.class );
+		return context.getBootstrapContext().getReflectionManager().equals( clazz, void.class );
 	}
 
 	/**
@@ -3324,8 +3324,8 @@ public final class AnnotationBinder {
 	public static Map<XClass, InheritanceState> buildInheritanceStates(
 			List<XClass> orderedClasses,
 			MetadataBuildingContext buildingContext) {
-		ReflectionManager reflectionManager = buildingContext.getBuildingOptions().getReflectionManager();
-		Map<XClass, InheritanceState> inheritanceStatePerClass = new HashMap<XClass, InheritanceState>(
+		ReflectionManager reflectionManager = buildingContext.getBootstrapContext().getReflectionManager();
+		Map<XClass, InheritanceState> inheritanceStatePerClass = new HashMap<>(
 				orderedClasses.size()
 		);
 		for ( XClass clazz : orderedClasses ) {

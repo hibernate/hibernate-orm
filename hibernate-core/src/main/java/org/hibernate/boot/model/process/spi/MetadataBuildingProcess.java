@@ -78,23 +78,26 @@ public class MetadataBuildingProcess {
 			final MetadataSources sources,
 			final BootstrapContext bootstrapContext,
 			final MetadataBuildingOptions options) {
-		return complete( prepare( sources, bootstrapContext, options ), bootstrapContext, options );
+		return complete( prepare( sources, bootstrapContext ), bootstrapContext, options );
 	}
 
 	/**
 	 * First step of 2-phase for MetadataSources->Metadata process
 	 *
 	 * @param sources The MetadataSources
-	 * @param options The building options
+	 * @param bootstrapContext The bootstrapContext
 	 *
 	 * @return Token/memento representing all known users resources (classes, packages, mapping files, etc).
 	 */
 	public static ManagedResources prepare(
 			final MetadataSources sources,
-			final BootstrapContext bootstrapContext,
-			final MetadataBuildingOptions options) {
+			final BootstrapContext bootstrapContext) {
 		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline( sources, bootstrapContext );
-		ScanningCoordinator.INSTANCE.coordinateScan( managedResources, options, sources.getXmlMappingBinderAccess() );
+		ScanningCoordinator.INSTANCE.coordinateScan(
+				managedResources,
+				bootstrapContext,
+				sources.getXmlMappingBinderAccess()
+		);
 		return managedResources;
 	}
 
@@ -257,7 +260,7 @@ public class MetadataBuildingProcess {
 		processor.processFilterDefinitions();
 		processor.processFetchProfiles();
 
-		final Set<String> processedEntityNames = new HashSet<String>();
+		final Set<String> processedEntityNames = new HashSet<>();
 		processor.prepareForEntityHierarchyProcessing();
 		processor.processEntityHierarchies( processedEntityNames );
 		processor.postProcessEntityHierarchies();
@@ -301,20 +304,6 @@ public class MetadataBuildingProcess {
 
 		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
 	}
-
-//	private static JandexInitManager buildJandexInitializer(
-//			MetadataBuildingOptions options,
-//			ClassLoaderAccess classLoaderAccess) {
-//		final boolean autoIndexMembers = ConfigurationHelper.getBoolean(
-//				org.hibernate.cfg.AvailableSettings.ENABLE_AUTO_INDEX_MEMBER_TYPES,
-//				options.getServiceRegistry().getService( ConfigurationService.class ).getSettings(),
-//				false
-//		);
-//
-//		return new JandexInitManager( options.getJandexView(), classLoaderAccess, autoIndexMembers );
-//	}
-
-
 
 
 	private static void handleTypes(

@@ -163,7 +163,7 @@ public final class Collections {
 		//TODO: better to pass the id in as an argument?
 		ce.setCurrentKey( type.getKeyOfOwner( entity, session ) );
 
-		final boolean isBytecodeEnhanced = persister.getOwnerEntityPersister().getInstrumentationMetadata().isEnhancedForLazyLoading();
+		final boolean isBytecodeEnhanced = persister.getOwnerEntityPersister().getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 		if ( isBytecodeEnhanced && !collection.wasInitialized() ) {
 			// skip it
 			LOG.debugf(

@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.AttributeConverter;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
@@ -30,8 +29,8 @@ import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.service.ServiceRegistry;
@@ -57,7 +56,7 @@ public class ScanningCoordinator {
 
 	public void coordinateScan(
 			ManagedResourcesImpl managedResources,
-			MetadataBuildingOptions options,
+			BootstrapContext options,
 			XmlMappingBinderAccess xmlMappingBinderAccess) {
 		if ( options.getScanEnvironment() == null ) {
 			return;
@@ -65,7 +64,7 @@ public class ScanningCoordinator {
 
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
-				options.getTempClassLoader(),
+				options.getJpaTempClassLoader(),
 				classLoaderService
 		);
 
@@ -84,7 +83,7 @@ public class ScanningCoordinator {
 	private static final Class[] SINGLE_ARG = new Class[] { ArchiveDescriptorFactory.class };
 
 	@SuppressWarnings("unchecked")
-	private static Scanner buildScanner(MetadataBuildingOptions options, ClassLoaderAccess classLoaderAccess) {
+	private static Scanner buildScanner(BootstrapContext options, ClassLoaderAccess classLoaderAccess) {
 		final Object scannerSetting = options.getScanner();
 		final ArchiveDescriptorFactory archiveDescriptorFactory = options.getArchiveDescriptorFactory();
 
@@ -186,7 +185,7 @@ public class ScanningCoordinator {
 	public void applyScanResultsToManagedResources(
 			ManagedResourcesImpl managedResources,
 			ScanResult scanResult,
-			MetadataBuildingOptions options,
+			BootstrapContext options,
 			XmlMappingBinderAccess xmlMappingBinderAccess) {
 
 		final ScanEnvironment scanEnvironment = options.getScanEnvironment();
@@ -231,8 +230,8 @@ public class ScanningCoordinator {
 				// converter classes are safe to load because we never enhance them,
 				// and notice we use the ClassLoaderService specifically, not the temp ClassLoader (if any)
 				managedResources.addAttributeConverterDefinition(
-						AttributeConverterDefinition.from(
-								classLoaderService.<AttributeConverter>classForName( classDescriptor.getName() )
+						AttributeConverterDefinition.from(options.getClassmateContext(),
+														  classLoaderService.classForName( classDescriptor.getName() )
 						)
 				);
 			}
@@ -275,4 +274,5 @@ public class ScanningCoordinator {
 			);
 		}
 	}
+
 }

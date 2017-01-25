@@ -54,40 +54,6 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 		return delegate.getMappingDefaults();
 	}
 
-	@Override
-	public List<BasicTypeRegistration> getBasicTypeRegistrations() {
-		return delegate.getBasicTypeRegistrations();
-	}
-
-	@Override
-	public IndexView getJandexView() {
-		return delegate.getJandexView();
-	}
-
-	@Override
-	public ScanOptions getScanOptions() {
-		return delegate.getScanOptions();
-	}
-
-	@Override
-	public ScanEnvironment getScanEnvironment() {
-		return delegate.getScanEnvironment();
-	}
-
-	@Override
-	public Object getScanner() {
-		return delegate.getScanner();
-	}
-
-	@Override
-	public ArchiveDescriptorFactory getArchiveDescriptorFactory() {
-		return delegate.getArchiveDescriptorFactory();
-	}
-
-	@Override
-	public ClassLoader getTempClassLoader() {
-		return delegate.getTempClassLoader();
-	}
 
 	@Override
 	public ImplicitNamingStrategy getImplicitNamingStrategy() {
@@ -97,11 +63,6 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public PhysicalNamingStrategy getPhysicalNamingStrategy() {
 		return delegate.getPhysicalNamingStrategy();
-	}
-
-	@Override
-	public ReflectionManager getReflectionManager() {
-		return delegate.getReflectionManager();
 	}
 
 	@Override
@@ -122,11 +83,6 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter() {
 		return delegate.getIdGenerationTypeInterpreter();
-	}
-
-	@Override
-	public List<CacheRegionDefinition> getCacheRegionDefinitions() {
-		return delegate.getCacheRegionDefinitions();
 	}
 
 	@Override
@@ -157,21 +113,6 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public List<MetadataSourceType> getSourceProcessOrdering() {
 		return delegate.getSourceProcessOrdering();
-	}
-
-	@Override
-	public Map<String, SQLFunction> getSqlFunctions() {
-		return delegate.getSqlFunctions();
-	}
-
-	@Override
-	public List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
-		return delegate.getAuxiliaryDatabaseObjectList();
-	}
-
-	@Override
-	public List<AttributeConverterDefinition> getAttributeConverters() {
-		return delegate.getAttributeConverters();
 	}
 
 	@Override

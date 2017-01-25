@@ -8,7 +8,6 @@ package org.hibernate.cache.internal;
 
 import java.io.Serializable;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.spi.Type;
 
@@ -41,24 +40,22 @@ final class OldCacheKeyImplementation implements Serializable {
 	 * @param type The Hibernate type mapping
 	 * @param entityOrRoleName The entity or collection-role name.
 	 * @param tenantId The tenant identifier associated this data.
-	 * @param factory The session factory for which we are caching
 	 */
 	OldCacheKeyImplementation(
 			final Object id,
 			final Type type,
 			final String entityOrRoleName,
-			final String tenantId,
-			final SessionFactoryImplementor factory) {
+			final String tenantId) {
 		this.id = id;
 		this.type = type;
 		this.entityOrRoleName = entityOrRoleName;
 		this.tenantId = tenantId;
-		this.hashCode = calculateHashCode( type, factory );
+		this.hashCode = calculateHashCode( type );
 	}
 
-	private int calculateHashCode(Type type, SessionFactoryImplementor factory) {
-		int result = type.getHashCode( id, factory );
-		result = 31 * result + (tenantId != null ? tenantId.hashCode() : 0);
+	private int calculateHashCode(Type type) {
+		int result = type.getHashCode( id );
+		result = 31 * result + ( tenantId != null ? tenantId.hashCode() : 0 );
 		return result;
 	}
 

@@ -149,11 +149,6 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public TypeDefinition getTypeDefinition(String typeName) {
-		return delegate.getTypeDefinition( typeName );
-	}
-
-	@Override
 	public Map<String, FilterDefinition> getFilterDefinitions() {
 		return delegate.getFilterDefinitions();
 	}

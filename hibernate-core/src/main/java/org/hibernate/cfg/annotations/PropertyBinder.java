@@ -420,7 +420,7 @@ public class PropertyBinder {
 			AnnotationValueGeneration<A> valueGeneration = (AnnotationValueGeneration<A>) generationType.newInstance();
 			valueGeneration.initialize(
 					annotation,
-					buildingContext.getBuildingOptions().getReflectionManager().toClass( property.getType() )
+					buildingContext.getBootstrapContext().getReflectionManager().toClass( property.getType() )
 			);
 
 			return valueGeneration;

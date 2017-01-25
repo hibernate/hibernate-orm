@@ -143,7 +143,7 @@ public abstract class ResultSetMappingBinder {
 		final String typeName = rtnSource.getType();
 		Type type = null;
 		if ( typeName != null ) {
-			type = context.getMetadataCollector().getTypeResolver().heuristicType( typeName );
+			type = context.getMetadataCollector().heuristicType( typeName );
 			if ( type == null ) {
 				throw new MappingException(
 						String.format(

@@ -17,11 +17,12 @@ import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -34,7 +35,7 @@ import org.hibernate.testing.bytecode.enhancement.EnhancerTestTask;
  */
 public abstract class AbstractExecutable implements EnhancerTestTask {
 	private static final Dialect dialect = Dialect.getDialect();
-	private HibernateEntityManagerFactory entityManagerFactory;
+	private SessionFactory factory;
 	private EntityManager em;
 
     @Override
@@ -48,11 +49,11 @@ public abstract class AbstractExecutable implements EnhancerTestTask {
 //			throw new RuntimeException( "Isolated ClassLoader not yet set as TCCL" );
 //		}
 
-		entityManagerFactory =  Bootstrap.getEntityManagerFactoryBuilder(
+		factory =  Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor( getClass().getSimpleName() ),
 				buildSettings(),
 				classLoader
-		).build().unwrap( HibernateEntityManagerFactory.class );
+		).build().unwrap( SessionFactory.class );
 
 		prepared();
 	}
@@ -71,18 +72,18 @@ public abstract class AbstractExecutable implements EnhancerTestTask {
 				em.close();
 			}
 			em = null;
-			entityManagerFactory.close();
-			entityManagerFactory = null;
+			factory.close();
+			factory = null;
 		}
 	}
 
-	protected HibernateEntityManagerFactory getEntityManagerFactory() {
-		return entityManagerFactory;
+	protected SessionFactoryImplementor getEntityManagerFactory() {
+		return factory;
 	}
 
 	protected EntityManager getOrCreateEntityManager() {
 		if ( em == null || !em.isOpen() ) {
-			em = entityManagerFactory.createEntityManager();
+			em = factory.createEntityManager();
 		}
 		return em;
 	}

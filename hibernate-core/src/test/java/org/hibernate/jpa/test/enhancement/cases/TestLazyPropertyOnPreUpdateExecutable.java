@@ -22,8 +22,8 @@ import static org.junit.Assert.assertTrue;
 public class TestLazyPropertyOnPreUpdateExecutable extends AbstractExecutable {
 	@Override
 	protected void prepared() {
-		final EntityPersister ep = getEntityManagerFactory().getSessionFactory().getEntityPersister( EntityWithLazyProperty.class.getName() );
-		assertTrue( ep.getInstrumentationMetadata().isEnhancedForLazyLoading() );
+		final EntityPersister ep = getEntityManagerFactory().getEntityPersister( EntityWithLazyProperty.class.getName() );
+		assertTrue( ep.getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() );
 	}
 
 	@Override

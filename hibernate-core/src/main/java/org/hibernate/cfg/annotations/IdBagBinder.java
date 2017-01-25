@@ -63,7 +63,7 @@ public class IdBagBinder extends BagBinder {
 							null,
 							property,
 							null, //default access should not be useful
-							buildingContext.getBuildingOptions().getReflectionManager()
+							buildingContext.getBootstrapContext().getReflectionManager()
 					),
 					"id"
 			);

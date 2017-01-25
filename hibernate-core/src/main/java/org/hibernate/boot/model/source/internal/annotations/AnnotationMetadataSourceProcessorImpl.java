@@ -66,7 +66,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		this.rootMetadataBuildingContext = rootMetadataBuildingContext;
 		this.jandexView = jandexView;
 
-		this.reflectionManager = rootMetadataBuildingContext.getBuildingOptions().getReflectionManager();
+		this.reflectionManager = rootMetadataBuildingContext.getBootstrapContext().getReflectionManager();
 
 		if ( CollectionHelper.isNotEmpty( managedResources.getAnnotatedPackageNames() ) ) {
 			annotatedPackages.addAll( managedResources.getAnnotatedPackageNames() );
@@ -321,7 +321,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( definition );
 		}
 
-		public void addAttributeConverter(Class<? extends AttributeConverter> converterClass) {
+		public void addAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
 			rootMetadataBuildingContext.getMetadataCollector().addAttributeConverter( converterClass );
 		}
 	}

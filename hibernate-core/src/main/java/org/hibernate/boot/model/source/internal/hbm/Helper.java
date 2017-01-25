@@ -30,7 +30,7 @@ import org.hibernate.boot.model.source.spi.SizeSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.boot.model.source.spi.ToolingHint;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -255,35 +255,20 @@ public class Helper {
 	}
 
 	public static Class reflectedPropertyClass(
-			MetadataBuildingContext buildingContext,
+			BootstrapContext bootstrapContext,
 			String attributeOwnerClassName,
 			String attributeName) {
-		final Class attributeOwnerClass = buildingContext.getClassLoaderAccess().classForName( attributeOwnerClassName );
+		final Class attributeOwnerClass = bootstrapContext.getClassLoaderAccess().classForName(
+				attributeOwnerClassName );
 		return reflectedPropertyClass(
-				buildingContext,
 				attributeOwnerClass,
 				attributeName
 		);
 	}
 
 	public static Class reflectedPropertyClass(
-			MetadataBuildingContext buildingContext,
 			Class attributeOwnerClass,
 			final String attributeName) {
-//		return BeanInfoHelper.visitBeanInfo(
-//				attributeOwnerClass,
-//				new BeanInfoHelper.ReturningBeanInfoDelegate<Class>() {
-//					@Override
-//					public Class processBeanInfo(BeanInfo beanInfo) throws Exception {
-//						for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
-//							if ( propertyDescriptor.getName().equals( attributeName ) ) {
-//								return propertyDescriptor.getPropertyType();
-//							}
-//						}
-//						return null;
-//					}
-//				}
-//		);
 		return ReflectHelper.reflectedPropertyClass( attributeOwnerClass, attributeName );
 	}
 }

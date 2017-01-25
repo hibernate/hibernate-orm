@@ -170,7 +170,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 			definition.addQueryReturn(
 					new NativeSQLQueryScalarReturn(
 							normalizeColumnQuoting( column.name() ),
-							column.type() != null ? context.getMetadataCollector().getTypeResolver().heuristicType( column.type().getName() ) : null
+							column.type() != null ? context.getMetadataCollector().heuristicType( column.type().getName() ) : null
 					)
 			);
 		}
@@ -181,7 +181,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 				columnReturns.add(
 						new NativeSQLQueryScalarReturn(
 								normalizeColumnQuoting( columnResult.name() ),
-								columnResult.type() != null ? context.getMetadataCollector().getTypeResolver().heuristicType( columnResult.type().getName() ) : null
+								columnResult.type() != null ? context.getMetadataCollector().heuristicType( columnResult.type().getName() ) : null
 						)
 				);
 			}

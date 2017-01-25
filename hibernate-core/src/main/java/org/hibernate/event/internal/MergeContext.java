@@ -215,7 +215,7 @@ class MergeContext implements Map {
 	 * method is called, then <code>managedEntity</code> must be the same as what is already associated
 	 * with <code>mergeEntity</code>.
 	 *
-	 * @param mergeEntity the mergge entity; must be non-null
+	 * @param mergeEntity the merge entity; must be non-null
 	 * @param managedEntity the managed entity; must be non-null
 	 * @param isOperatedOn indicates if the merge operation is performed on the mergeEntity.
 	 *

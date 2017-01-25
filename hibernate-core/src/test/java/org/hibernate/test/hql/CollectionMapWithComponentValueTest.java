@@ -11,11 +11,14 @@ import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.query.Query;
@@ -43,6 +46,7 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
+				BaseTestEntity.class,
 				TestEntity.class,
 				KeyValue.class
 		};
@@ -53,14 +57,20 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 		doInHibernate( this::sessionFactory, s -> {
 			s.save( keyValue );
 
+			BaseTestEntity baseTestEntity1 = new BaseTestEntity();
 			TestEntity testEntity = new TestEntity();
 			Map<KeyValue, EmbeddableValue> map = new HashMap<>();
 			map.put( keyValue, embeddableValue );
 			testEntity.values = map;
 			s.save( testEntity );
+			baseTestEntity1.entities = new HashSet<TestEntity>();
+			baseTestEntity1.entities.add( testEntity );
+			s.save( baseTestEntity1 );
 
 			KeyValue keyValue2 = new KeyValue( "key2" );
 			s.save( keyValue2 );
+			BaseTestEntity baseTestEntity2 = new BaseTestEntity();
+			s.save( baseTestEntity2 );
 			TestEntity testEntity2 = new TestEntity();
 			Map<KeyValue, EmbeddableValue> map2 = new HashMap<>();
 			map.put( keyValue2, embeddableValue );
@@ -176,9 +186,30 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 		} );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-10537")
+	public void testLeftJoinMapAndUseKeyExpression() {
+		doInHibernate( this::sessionFactory, s -> {
+			// Assert that a left join is used for joining the map key entity table
+			List keyValues= s.createQuery( "select key(v) from BaseTestEntity bte left join bte.entities te left join te.values v" ).list();
+			assertEquals( 2, keyValues.size() );
+		} );
+	}
+
 	@Override
 	protected boolean isCleanupTestDataRequired() {
 		return true;
+	}
+
+	@Entity(name = "BaseTestEntity")
+	@Table(name = "BASE_TEST_ENTITY")
+	public static class BaseTestEntity {
+		@Id
+		@GeneratedValue
+		Long id;
+
+		@OneToMany
+		Set<TestEntity> entities;
 	}
 
 	@Entity(name = "TestEntity")

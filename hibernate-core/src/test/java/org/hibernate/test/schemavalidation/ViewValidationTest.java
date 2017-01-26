@@ -17,27 +17,26 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.Oracle9iDialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.RequiresDialects;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Allows the BaseCoreFunctionalTestCase to create the schema using TestEntity.  The test method validates against an
- * identical entity, but using the synonym name.
- *
- * When SYNONYM are used, the GROUPED Strategy cannot be applied because when the tableNamePattern was not provided
- * java.sql.DatabaseMetaData#getColumns(...) Oracle implementation returns only the columns related with the synonym
- *
- * @author Brett Meyer
+ * @author Andrea Boriero
  */
-@RequiresDialect(Oracle9iDialect.class)
-public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
+@RequiresDialects({
+		@RequiresDialect(PostgreSQL81Dialect.class),
+		@RequiresDialect(H2Dialect.class)
+})
+public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 	private StandardServiceRegistry ssr;
 
 	@Override
@@ -50,7 +49,7 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 		Session s = openSession();
 		try {
 			s.getTransaction().begin();
-			s.createSQLQuery( "CREATE SYNONYM test_synonym FOR test_entity" ).executeUpdate();
+			s.createSQLQuery( "CREATE VIEW test_synonym AS SELECT * FROM test_entity" ).executeUpdate();
 			s.getTransaction().commit();
 		}
 		catch (Exception e) {
@@ -68,7 +67,7 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 		Session s = openSession();
 		try {
 			s.getTransaction().begin();
-			s.createSQLQuery( "DROP SYNONYM test_synonym FORCE" ).executeUpdate();
+			s.createSQLQuery( "DROP VIEW test_synonym CASCADE" ).executeUpdate();
 			s.getTransaction().commit();
 		}
 		catch (Exception e) {
@@ -78,6 +77,27 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 		finally {
 			s.close();
+		}
+	}
+
+	@Test
+	public void testSynonymUsingGroupedSchemaValidator() {
+		ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
+				.applySetting(
+						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
+						JdbcMetadaAccessStrategy.GROUPED
+				)
+				.build();
+		try {
+			final MetadataSources metadataSources = new MetadataSources( ssr );
+			metadataSources.addAnnotatedClass( TestEntityWithSynonym.class );
+			metadataSources.addAnnotatedClass( TestEntity.class );
+
+			new SchemaValidator().validate( metadataSources.buildMetadata() );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
 		}
 	}
 
@@ -175,4 +195,5 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 			this.value = value;
 		}
 	}
+
 }

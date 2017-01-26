@@ -737,7 +737,7 @@ public class BinderHelper {
 			value.setMetaType( metaAnnDef.metaType() );
 
 			HashMap values = new HashMap();
-			Type metaType = context.getMetadataCollector().getTypeResolver().heuristicType( value.getMetaType() );
+			Type metaType = context.getMetadataCollector().heuristicType( value.getMetaType() );
 			for (MetaValue metaValue : metaAnnDef.metaValues()) {
 				try {
 					Object discrim = ( (org.hibernate.type.DiscriminatorType) metaType ).stringToObject( metaValue
@@ -853,7 +853,7 @@ public class BinderHelper {
 
 		if ( retrieve ) {
 			return context.getMetadataCollector().getMappedSuperclass(
-					context.getBuildingOptions().getReflectionManager().toClass( declaringClass )
+					context.getBootstrapContext().getReflectionManager().toClass( declaringClass )
 			);
 		}
 		else {
@@ -872,7 +872,7 @@ public class BinderHelper {
 			MetadataBuildingContext buildingContext) {
 		final XClass persistentXClass;
 		try {
-			persistentXClass = buildingContext.getBuildingOptions().getReflectionManager()
+			persistentXClass = buildingContext.getBootstrapContext().getReflectionManager()
 					.classForName( propertyHolder.getPersistentClass().getClassName() );
 		}
 		catch ( ClassLoadingException e ) {

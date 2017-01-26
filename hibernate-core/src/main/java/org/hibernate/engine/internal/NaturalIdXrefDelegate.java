@@ -362,7 +362,7 @@ public class NaturalIdXrefDelegate {
 			for ( int naturalIdPropertyIndex : naturalIdPropertyIndexes ) {
 				final Type type = persister.getPropertyType( persister.getPropertyNames()[ naturalIdPropertyIndex ] );
 				naturalIdTypes[i] = type;
-				final int elementHashCode = values[i] == null ? 0 :type.getHashCode( values[i], persister.getFactory() );
+				final int elementHashCode = values[i] == null ? 0 : type.getHashCode( values[i] );
 				hashCodeCalculation = prime * hashCodeCalculation + elementHashCode;
 				i++;
 			}
@@ -413,8 +413,8 @@ public class NaturalIdXrefDelegate {
 		private final EntityPersister persister;
 		private final Type[] naturalIdTypes;
 
-		private Map<Serializable, CachedNaturalId> pkToNaturalIdMap = new ConcurrentHashMap<Serializable, CachedNaturalId>();
-		private Map<CachedNaturalId, Serializable> naturalIdToPkMap = new ConcurrentHashMap<CachedNaturalId, Serializable>();
+		private Map<Serializable, CachedNaturalId> pkToNaturalIdMap = new ConcurrentHashMap<>();
+		private Map<CachedNaturalId, Serializable> naturalIdToPkMap = new ConcurrentHashMap<>();
 
 		private List<CachedNaturalId> invalidNaturalIdList;
 
@@ -467,7 +467,7 @@ public class NaturalIdXrefDelegate {
 
 		public void stashInvalidNaturalIdReference(Object[] invalidNaturalIdValues) {
 			if ( invalidNaturalIdList == null ) {
-				invalidNaturalIdList = new ArrayList<CachedNaturalId>();
+				invalidNaturalIdList = new ArrayList<>();
 			}
 			invalidNaturalIdList.add( new CachedNaturalId( persister, invalidNaturalIdValues ) );
 		}

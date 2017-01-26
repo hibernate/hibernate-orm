@@ -10,7 +10,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.FlushMode;
+import javax.persistence.FlushModeType;
+
 import org.hibernate.stat.SecondLevelCacheStatistics;
 
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
@@ -130,7 +131,7 @@ public class BulkOperationsTest extends SingleNodeTest {
 			+ " (select customer FROM Customer as customer where customer.name = :cName)";
 
 		int rowsAffected = withTxSessionApply(s ->
-				s.createQuery( deleteHQL ).setFlushMode( FlushMode.AUTO )
+				s.createQuery( deleteHQL ).setFlushMode( FlushModeType.AUTO )
 					.setParameter( "cName", "Red Hat" ).executeUpdate());
 		return rowsAffected;
 	}
@@ -141,7 +142,7 @@ public class BulkOperationsTest extends SingleNodeTest {
 			+ " where contact.customer.name = :cName";
 
 		return (List<Integer>) withTxSessionApply(s -> s.createQuery(selectHQL)
-				.setFlushMode(FlushMode.AUTO)
+				.setFlushMode(FlushModeType.AUTO)
 				.setParameter("cName", customerName)
 				.list());
 	}
@@ -152,7 +153,7 @@ public class BulkOperationsTest extends SingleNodeTest {
 			+ " where contact.tlf = :cTLF";
 
 		return (List<Integer>) withTxSessionApply(s -> s.createQuery(selectHQL)
-				.setFlushMode(FlushMode.AUTO)
+				.setFlushMode(FlushModeType.AUTO)
 				.setParameter("cTLF", tlf)
 				.list());
 	}
@@ -160,7 +161,7 @@ public class BulkOperationsTest extends SingleNodeTest {
 	public int updateContacts(String name, String newTLF) throws Exception {
 		String updateHQL = "update Contact set tlf = :cNewTLF where name = :cName";
 		return withTxSessionApply(s -> s.createQuery( updateHQL )
-					.setFlushMode( FlushMode.AUTO )
+					.setFlushMode( FlushModeType.AUTO )
 					.setParameter( "cNewTLF", newTLF )
 					.setParameter( "cName", name )
 					.executeUpdate());
@@ -173,7 +174,7 @@ public class BulkOperationsTest extends SingleNodeTest {
 			List<Contact> list = s.createQuery(queryHQL).setParameter("cName", name).list();
 			list.get(0).setTlf(newTLF);
 			return s.createQuery(updateHQL)
-					.setFlushMode(FlushMode.AUTO)
+					.setFlushMode(FlushModeType.AUTO)
 					.setParameter("cNewTLF", newTLF)
 					.setParameter("cName", name)
 					.executeUpdate();
@@ -188,8 +189,8 @@ public class BulkOperationsTest extends SingleNodeTest {
 		String deleteContactHQL = "delete from Contact";
 		String deleteCustomerHQL = "delete from Customer";
 		withTxSession(s -> {
-			s.createQuery(deleteContactHQL).setFlushMode(FlushMode.AUTO).executeUpdate();
-			s.createQuery(deleteCustomerHQL).setFlushMode(FlushMode.AUTO).executeUpdate();
+			s.createQuery(deleteContactHQL).setFlushMode(FlushModeType.AUTO).executeUpdate();
+			s.createQuery(deleteCustomerHQL).setFlushMode(FlushModeType.AUTO).executeUpdate();
 		});
 	}
 

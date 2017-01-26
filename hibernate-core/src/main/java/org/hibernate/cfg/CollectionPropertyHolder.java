@@ -407,7 +407,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	private Class determineElementClass(XClass elementXClass) {
 		if ( elementXClass != null ) {
 			try {
-				return getContext().getBuildingOptions().getReflectionManager().toClass( elementXClass );
+				return getContext().getBootstrapContext().getReflectionManager().toClass( elementXClass );
 			}
 			catch (Exception e) {
 				log.debugf(
@@ -464,7 +464,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	private Class determineKeyClass(XClass keyXClass) {
 		if ( keyXClass != null ) {
 			try {
-				return getContext().getBuildingOptions().getReflectionManager().toClass( keyXClass );
+				return getContext().getBootstrapContext().getReflectionManager().toClass( keyXClass );
 			}
 			catch (Exception e) {
 				log.debugf(

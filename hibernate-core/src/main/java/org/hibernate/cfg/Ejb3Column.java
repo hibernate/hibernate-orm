@@ -366,7 +366,7 @@ public class Ejb3Column {
 		}
 		else {
 			getMappingColumn().setValue( value );
-			value.addColumn( getMappingColumn(), insertable, updatable );
+			value.addColumn( getMappingColumn() );
 			value.getTable().addColumn( getMappingColumn() );
 			addColumnBinding( value );
 			table = value.getTable();
@@ -536,8 +536,6 @@ public class Ejb3Column {
 
 					final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
 					final Database database = context.getMetadataCollector().getDatabase();
-					final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
-					final PhysicalNamingStrategy physicalNamingStrategy = context.getBuildingOptions().getPhysicalNamingStrategy();
 
 					javax.persistence.Column col = actualCols[index];
 

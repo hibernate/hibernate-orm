@@ -13,7 +13,7 @@ import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.test.cache.infinispan.functional.entities.Account;
 import org.hibernate.test.cache.infinispan.functional.entities.AccountHolder;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 
 import static org.hibernate.test.cache.infinispan.util.TxUtil.withTxSession;
@@ -64,7 +64,7 @@ public class AccountDAO {
 		return withTxSessionApply(useJta, sessionFactory, session -> {
 			Query query = session.createQuery(
 					"select account from Account as account where account.branch = :branch");
-			query.setString("branch", branch);
+			query.setParameter("branch", branch);
 			if (useRegion) {
 				query.setCacheRegion("AccountRegion");
 			}

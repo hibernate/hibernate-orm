@@ -46,13 +46,12 @@ public interface SQLFunction {
 	 * Note, the 'firstArgumentType' parameter should match the one passed into {@link #render}
 	 *
 	 * @param firstArgumentType The type of the first argument
-	 * @param mapping The mapping source.
 	 *
 	 * @return The type to be expected as a return.
 	 *
 	 * @throws org.hibernate.QueryException Indicates an issue resolving the return type.
 	 */
-	public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException;
+	public Type getReturnType(Type firstArgumentType) throws QueryException;
 
 	/**
 	 * Render the function call as SQL fragment.

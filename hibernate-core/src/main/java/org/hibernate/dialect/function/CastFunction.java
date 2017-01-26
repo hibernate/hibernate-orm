@@ -9,7 +9,6 @@ package org.hibernate.dialect.function;
 import java.util.List;
 
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.spi.Type;
 
@@ -35,7 +34,7 @@ public class CastFunction implements SQLFunction {
 	}
 
 	@Override
-	public Type getReturnType(Type columnType, Mapping mapping) throws QueryException {
+	public Type getReturnType(Type columnType) throws QueryException {
 		// this is really just a guess, unless the caller properly identifies the 'type' argument here
 		return columnType;
 	}

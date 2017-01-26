@@ -14,7 +14,6 @@ import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.Type;
@@ -90,7 +89,7 @@ public class StandardAnsiSqlAggregationFunctions {
 
 		protected final int determineJdbcTypeCode(Type firstArgumentType, SessionFactoryImplementor factory) throws QueryException {
 			try {
-				final int[] jdbcTypeCodes = firstArgumentType.sqlTypes( factory );
+				final int[] jdbcTypeCodes = firstArgumentType.sqlTypes();
 				if ( jdbcTypeCodes.length != 1 ) {
 					throw new QueryException( "multiple-column type in avg()" );
 				}
@@ -154,8 +153,8 @@ public class StandardAnsiSqlAggregationFunctions {
 		}
 
 		@Override
-		public Type getReturnType(Type firstArgumentType, Mapping mapping) {
-			final int jdbcType = determineJdbcTypeCode( firstArgumentType, mapping );
+		public Type getReturnType(Type firstArgumentType) {
+			final int jdbcType = determineJdbcTypeCode( firstArgumentType );
 
 			// First allow the actual type to control the return value; the underlying sqltype could
 			// actually be different
@@ -195,9 +194,9 @@ public class StandardAnsiSqlAggregationFunctions {
 			return firstArgumentType;
 		}
 
-		protected final int determineJdbcTypeCode(Type type, Mapping mapping) throws QueryException {
+		protected final int determineJdbcTypeCode(Type type) throws QueryException {
 			try {
-				final int[] jdbcTypeCodes = type.sqlTypes( mapping );
+				final int[] jdbcTypeCodes = type.sqlTypes();
 				if ( jdbcTypeCodes.length != 1 ) {
 					throw new QueryException( "multiple-column type in sum()" );
 				}

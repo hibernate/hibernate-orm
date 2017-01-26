@@ -41,6 +41,6 @@ public class TypeEquivalance implements Equivalence<Object> {
 
 	@Override
 	public int compare(Object x, Object y) {
-		return type.compare(x, y);
+		return type.getComparator().compare(x, y);
 	}
 }

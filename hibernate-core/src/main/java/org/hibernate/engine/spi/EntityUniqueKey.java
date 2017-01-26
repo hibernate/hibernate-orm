@@ -64,7 +64,7 @@ public class EntityUniqueKey implements Serializable {
 		int result = 17;
 		result = 37 * result + entityName.hashCode();
 		result = 37 * result + uniqueKeyName.hashCode();
-		result = 37 * result + keyType.getHashCode( key, factory );
+		result = 37 * result + keyType.getHashCode( key );
 		return result;
 	}
 

@@ -1372,7 +1372,7 @@ public abstract class CollectionBinder {
 		else if ( anyAnn != null ) {
 			//@ManyToAny
 			//Make sure that collTyp is never used during the @ManyToAny branch: it will be set to void.class
-			PropertyData inferredData = new PropertyInferredData(null, property, "unsupported", buildingContext.getBuildingOptions().getReflectionManager() );
+			PropertyData inferredData = new PropertyInferredData(null, property, "unsupported", buildingContext.getBootstrapContext().getReflectionManager() );
 			//override the table
 			for (Ejb3Column column : inverseJoinColumns) {
 				column.setTable( collValue.getCollectionTable() );

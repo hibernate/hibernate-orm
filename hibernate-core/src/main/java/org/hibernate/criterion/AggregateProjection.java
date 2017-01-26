@@ -39,8 +39,7 @@ public class AggregateProjection extends SimpleProjection {
 	public Type[] getTypes(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		return new Type[] {
 				getFunction( criteriaQuery ).getReturnType(
-						criteriaQuery.getType( criteria, getPropertyName() ),
-						criteriaQuery.getFactory()
+						criteriaQuery.getType( criteria, getPropertyName() )
 				)
 		};
 	}

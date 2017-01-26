@@ -24,7 +24,7 @@ public class RowCountProjection extends SimpleProjection {
 
 	@Override
 	public Type[] getTypes(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-		final Type countFunctionReturnType = getFunction( criteriaQuery ).getReturnType( null, criteriaQuery.getFactory() );
+		final Type countFunctionReturnType = getFunction( criteriaQuery ).getReturnType( null );
 		return new Type[] { countFunctionReturnType };
 	}
 

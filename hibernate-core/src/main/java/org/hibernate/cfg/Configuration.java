@@ -149,11 +149,11 @@ public class Configuration {
 	protected void reset() {
 		implicitNamingStrategy = ImplicitNamingStrategyJpaCompliantImpl.INSTANCE;
 		physicalNamingStrategy = PhysicalNamingStrategyStandardImpl.INSTANCE;
-		namedQueries = new HashMap<String,NamedQueryDefinition>();
-		namedSqlQueries = new HashMap<String,NamedSQLQueryDefinition>();
-		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
-		namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>();
-		namedProcedureCallMap = new HashMap<String, NamedProcedureCallDefinition>(  );
+		namedQueries = new HashMap<>();
+		namedSqlQueries = new HashMap<>();
+		sqlResultSetMappings = new HashMap<>();
+		namedEntityGraphMap = new HashMap<>();
+		namedProcedureCallMap = new HashMap<>(  );
 
 		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
 		entityTuplizerFactory = new EntityTuplizerFactory();
@@ -753,8 +753,8 @@ public class Configuration {
 	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified
 	 * by its "entity attribute" parameterized type?
 	 */
-	public void addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
-		addAttributeConverter( AttributeConverterDefinition.from( attributeConverterClass, autoApply ) );
+	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
+		addAttributeConverter( AttributeConverterDefinition.from( , attributeConverterClass, autoApply ) );
 	}
 
 	/**

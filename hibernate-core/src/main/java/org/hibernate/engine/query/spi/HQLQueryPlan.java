@@ -34,8 +34,6 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.internal.util.collections.JoinedIterator;
-import org.hibernate.query.internal.old.OldParameterMetadataImpl;
-import org.hibernate.query.internal.sql.NativeQueryParameterMetadataBuilder;
 import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.type.spi.Type;

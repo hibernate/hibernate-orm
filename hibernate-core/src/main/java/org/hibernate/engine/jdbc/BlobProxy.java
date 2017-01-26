@@ -15,7 +15,7 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
-import org.hibernate.type.descriptor.java.internal.DataHelper;
+import org.hibernate.type.descriptor.java.internal.LobStreamDataHelper;
 
 /**
  * Manages aspects of proxying {@link Blob} references for non-contextual creation, including proxy creation and
@@ -114,7 +114,7 @@ public class BlobProxy implements InvocationHandler {
 					// total length, however that is at odds with the getBytes(long,int) behavior.
 					throw new SQLException( "Length must be great-than-or-equal to zero." );
 				}
-				return DataHelper.subStream( getStream(), start-1, length );
+				return LobStreamDataHelper.subStream( getStream(), start-1, length );
 			}
 		}
 		if ( "getBytes".equals( methodName ) ) {
@@ -127,7 +127,7 @@ public class BlobProxy implements InvocationHandler {
 				if ( length < 0 ) {
 					throw new SQLException( "Length must be great-than-or-equal to zero." );
 				}
-				return DataHelper.extractBytes( getStream(), start-1, length );
+				return LobStreamDataHelper.extractBytes( getStream(), start-1, length );
 			}
 		}
 		if ( "free".equals( methodName ) && argCount == 0 ) {
@@ -199,7 +199,7 @@ public class BlobProxy implements InvocationHandler {
 		@Override
 		public byte[] getBytes() {
 			if ( bytes == null ) {
-				bytes = DataHelper.extractBytes( stream );
+				bytes = LobStreamDataHelper.extractBytes( stream );
 			}
 			return bytes;
 		}

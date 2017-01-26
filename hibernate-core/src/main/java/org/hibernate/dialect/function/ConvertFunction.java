@@ -8,7 +8,6 @@ package org.hibernate.dialect.function;
 import java.util.List;
 
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.Type;
@@ -30,7 +29,7 @@ public class ConvertFunction implements SQLFunction {
 	}
 
 	@Override
-	public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
+	public Type getReturnType(Type firstArgumentType) throws QueryException {
 		return StandardBasicTypes.STRING;
 	}
 

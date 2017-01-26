@@ -20,7 +20,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.hibernate.FlushMode;
+import javax.persistence.FlushModeType;
+
 import org.hibernate.LockMode;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.stat.SecondLevelCacheStatistics;
@@ -173,8 +174,8 @@ public class ConcurrentWriteTest extends SingleNodeTest {
 		String deleteContactHQL = "delete from Contact";
 		String deleteCustomerHQL = "delete from Customer";
 		withTxSession(s -> {
-			s.createQuery(deleteContactHQL).setFlushMode(FlushMode.AUTO).executeUpdate();
-			s.createQuery(deleteCustomerHQL).setFlushMode(FlushMode.AUTO).executeUpdate();
+			s.createQuery(deleteContactHQL).setFlushMode( FlushModeType.AUTO).executeUpdate();
+			s.createQuery(deleteCustomerHQL).setFlushMode(FlushModeType.AUTO).executeUpdate();
 		});
 	}
 

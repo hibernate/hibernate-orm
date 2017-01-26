@@ -9,7 +9,6 @@ package org.hibernate.dialect.function;
 import java.util.List;
 
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.spi.Type;
 
@@ -30,7 +29,7 @@ public class NvlFunction implements SQLFunction {
 	}
 
 	@Override
-	public Type getReturnType(Type argumentType, Mapping mapping) throws QueryException {
+	public Type getReturnType(Type argumentType) throws QueryException {
 		return argumentType;
 	}
 

@@ -109,7 +109,7 @@ public class Order implements Serializable {
 		final String[] columns = criteriaQuery.getColumnsUsingProjection( criteria, propertyName );
 		final Type type = criteriaQuery.getTypeUsingProjection( criteria, propertyName );
 		final SessionFactoryImplementor factory = criteriaQuery.getFactory();
-		final int[] sqlTypes = type.sqlTypes( factory );
+		final int[] sqlTypes = type.sqlTypes();
 
 		final StringBuilder fragment = new StringBuilder();
 		for ( int i=0; i<columns.length; i++ ) {

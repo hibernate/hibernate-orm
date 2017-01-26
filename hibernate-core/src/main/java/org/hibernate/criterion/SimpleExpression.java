@@ -71,7 +71,7 @@ public class SimpleExpression implements Criterion {
 			fragment.append( '(' );
 		}
 		final SessionFactoryImplementor factory = criteriaQuery.getFactory();
-		final int[] sqlTypes = type.sqlTypes( factory );
+		final int[] sqlTypes = type.sqlTypes();
 		for ( int i = 0; i < columns.length; i++ ) {
 			final boolean lower = ignoreCase && (sqlTypes[i] == Types.VARCHAR || sqlTypes[i] == Types.CHAR || 
 					sqlTypes[i] == Types.NVARCHAR || sqlTypes[i] == Types.NCHAR);

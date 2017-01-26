@@ -94,7 +94,7 @@ public final class Cascade {
 
 					// For bytecode enhanced entities, need to fetch the attribute
 					if ( hasUninitializedLazyProperties && persister.getPropertyLaziness()[i] && action.performOnLazyProperty() ) {
-						LazyAttributeLoadingInterceptor interceptor = persister.getInstrumentationMetadata().extractInterceptor( parent );
+						LazyAttributeLoadingInterceptor interceptor = persister.getBytecodeEnhancementMetadata().extractInterceptor( parent );
 						child = interceptor.fetchAttribute( parent, propertyName );
 					}
 					else {

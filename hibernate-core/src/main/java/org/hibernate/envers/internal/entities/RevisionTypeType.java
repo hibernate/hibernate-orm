@@ -6,91 +6,72 @@
  */
 package org.hibernate.envers.internal.entities;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
+import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.type.IntegerType;
-import org.hibernate.usertype.UserType;
+import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
+import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * A hibernate type for the {@link RevisionType} enum.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
-public class RevisionTypeType implements UserType, Serializable {
-	private static final long serialVersionUID = -1053201518229282688L;
+public class RevisionTypeType extends BasicTypeImpl<RevisionType> {
+	public static final RevisionTypeType INSTANCE = new RevisionTypeType();
 
-	private static final int[] SQL_TYPES = {Types.TINYINT};
-
-	@Override
-	public int[] sqlTypes() {
-		return SQL_TYPES;
+	public RevisionTypeType() {
+		super( RevisionTypeJavaDescriptor.INSTANCE, TinyIntSqlDescriptor.INSTANCE );
 	}
 
 	@Override
-	public Class returnedClass() {
-		return RevisionType.class;
+	public String asLoggableText() {
+		return getTypeName();
 	}
 
 	@Override
-	public RevisionType nullSafeGet(ResultSet resultSet, String[] names, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		final Integer representationInt = IntegerType.INSTANCE.nullSafeGet( resultSet, names[0], session );
-		return representationInt == null ?
-				null :
-				RevisionType.fromRepresentation( representationInt.byteValue() );
+	public Object nullSafeGet(
+			ResultSet rs,
+			String[] names,
+			SharedSessionContractImplementor session,
+			Object owner) throws HibernateException, SQLException {
+		final BasicType<Integer> integerType = getIntegerType( session );
+		final Integer value = integerType.nullSafeGet( rs, names[0], session );
+		return value != null ? RevisionType.fromRepresentation( value.byteValue() ) : null;
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement preparedStatement, Object value, int index, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
-		IntegerType.INSTANCE.nullSafeSet(
-				preparedStatement,
-				(value == null ? null : ( (RevisionType) value ).getRepresentation().intValue()),
+	public void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
+		final BasicType<Integer> integerType = getIntegerType( session );
+		integerType.nullSafeSet(
+				st,
+				( value == null ? null : ( (RevisionType) value ).getRepresentation().intValue() ),
 				index,
 				session
 		);
 	}
 
-	@Override
-	public Object deepCopy(Object value) throws HibernateException {
-		return value;
+	private BasicType<Integer> getIntegerType(SharedSessionContractImplementor session) {
+		return session.getFactory().getTypeConfiguration().getBasicTypeRegistry().getBasicType( Integer.class );
 	}
 
 	@Override
-	public boolean isMutable() {
-		return false;
-	}
-
-	@Override
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
-		return cached;
-	}
-
-	@Override
-	public Serializable disassemble(Object value) throws HibernateException {
-		return (Serializable) value;
-	}
-
-	@Override
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
-		return original;
-	}
-
-	@Override
-	public int hashCode(Object x) throws HibernateException {
-		return x.hashCode();
-	}
-
-	@Override
-	public boolean equals(Object x, Object y) throws HibernateException {
-		return EqualsHelper.equals( x, y );
+	public RevisionType replace(RevisionType original,
+			RevisionType target,
+			SharedSessionContractImplementor session,
+			Object owner,
+			Map copyCache) throws HibernateException {
+		return null;
 	}
 }

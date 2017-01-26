@@ -21,7 +21,6 @@ import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.query.Query;
-import org.hibernate.type.CustomType;
 
 /**
  * A class for incrementally building a HQL query.
@@ -252,7 +251,7 @@ public class QueryBuilder {
 				query.setParameter(
 						paramValue.getKey(),
 						paramValue.getValue(),
-						new CustomType( new RevisionTypeType() )
+						RevisionTypeType.INSTANCE
 				);
 			}
 			else {

@@ -13,9 +13,13 @@ import org.hibernate.envers.query.projection.AuditProjection;
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
-@Incubating
+@Incubating(since = "5.2")
 interface AuditQueryImplementor extends AuditQuery {
-
+	/**
+	 * Register an entity audit projection.
+	 *
+	 * @param entityName The entity name
+	 * @param projection The projection to apply for entity
+	 */
 	void registerProjection(final String entityName, final AuditProjection projection);
-
 }

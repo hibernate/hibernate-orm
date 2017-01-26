@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.boot.spi.AuditMetadataBuildingOptions;
 import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
@@ -68,7 +68,7 @@ public final class AuditMetadataGenerator {
 			AuditMetadataGenerator.class.getName()
 	);
 
-	private final InFlightMetadataCollector metadata;
+	private final MetadataImplementor metadata;
 	private final ServiceRegistry serviceRegistry;
 	private final AuditMetadataBuildingOptions options;
 	private final Element revisionInfoRelationMapping;
@@ -95,7 +95,7 @@ public final class AuditMetadataGenerator {
 	private final Map<String, Map<Join, Element>> entitiesJoins;
 
 	public AuditMetadataGenerator(
-			InFlightMetadataCollector metadata,
+			MetadataImplementor metadata,
 			ServiceRegistry serviceRegistry,
 			AuditMetadataBuildingOptions options,
 			Element revisionInfoRelationMapping,
@@ -119,7 +119,7 @@ public final class AuditMetadataGenerator {
 		classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
 
-	public InFlightMetadataCollector getMetadata() {
+	public MetadataImplementor getMetadata() {
 		return metadata;
 	}
 

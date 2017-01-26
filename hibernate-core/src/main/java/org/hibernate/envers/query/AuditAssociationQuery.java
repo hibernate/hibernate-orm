@@ -19,7 +19,7 @@ import org.hibernate.envers.query.projection.AuditProjection;
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
-@Incubating
+@Incubating(since = "5.2")
 public interface AuditAssociationQuery<Q extends AuditQuery> extends AuditQuery {
 
 	@Override

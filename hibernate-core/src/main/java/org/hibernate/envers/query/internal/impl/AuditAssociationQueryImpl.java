@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.criteria.JoinType;
@@ -27,6 +29,7 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.query.AuditAssociationQuery;
+import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.criteria.internal.CriteriaTools;
 import org.hibernate.envers.query.order.AuditOrder;
@@ -36,7 +39,7 @@ import org.hibernate.envers.query.projection.AuditProjection;
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  * @author Chris Cranford
  */
-@Incubating
+@Incubating(since = "5.2")
 public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 		implements AuditAssociationQuery<Q>, AuditQueryImplementor {
 
@@ -207,6 +210,12 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 
 	@Override
 	public AuditAssociationQueryImpl<Q> setFlushMode(FlushMode flushMode) {
+		parent.setFlushMode( flushMode );
+		return this;
+	}
+
+	@Override
+	public AuditQuery setFlushMode(FlushModeType flushMode) {
 		parent.setFlushMode( flushMode );
 		return this;
 	}

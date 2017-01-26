@@ -494,8 +494,8 @@ public class SimpleValue implements KeyValue {
 		}
 
 		@Override
-		public JavaTypeDescriptor getJavaTypeDescriptor() {
-			return javaTypeDescriptor;
+		public BasicJavaDescriptor getJavaTypeDescriptor() {
+			return (BasicJavaDescriptor) javaTypeDescriptor;
 		}
 
 		@Override

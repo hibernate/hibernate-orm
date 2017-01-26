@@ -22,9 +22,6 @@ import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
-import javassist.CtClass;
-import javassist.CtField;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -36,7 +33,6 @@ import org.hibernate.boot.cfgxml.internal.ConfigLoader;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
-import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -225,8 +221,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		this.managedResources = MetadataBuildingProcess.prepare(
 				metadataSources,
-				metamodelBuilder.getBootstrapContext(),
-				metamodelBuilder.getMetadataBuildingOptions()
+				metamodelBuilder.getBootstrapContext()
 		);
 
 		withValidatorFactory( configurationValues.get( org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY ) );

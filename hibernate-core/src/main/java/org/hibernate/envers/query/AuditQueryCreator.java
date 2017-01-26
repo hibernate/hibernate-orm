@@ -228,7 +228,7 @@ public class AuditQueryCreator {
 	 *
 	 * @since 6.0
 	 */
-	@Incubating
+	@Incubating(since = "6.0")
 	public AuditQuery forRevisionsOfEntity(Class<?> clazz, boolean selectDeletedEntities) {
 		clazz = getTargetClassIfProxied( clazz );
 		return new RevisionsOfEntityQuery(
@@ -253,7 +253,7 @@ public class AuditQueryCreator {
 	 *
 	 * @since 6.0
 	 */
-	@Incubating
+	@Incubating(since = "6.0")
 	public AuditQuery forRevisionsOfEntity(Class<?> clazz, String entityName, boolean selectDeletedEntities) {
 		clazz = getTargetClassIfProxied( clazz );
 		return new RevisionsOfEntityQuery(

@@ -12,7 +12,7 @@ import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAudit
 import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
-import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.SerializableToBlobType;

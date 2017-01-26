@@ -71,5 +71,7 @@ public enum JpaMetaModelPopulationSetting {
 			);
 			return legacySetting1;
 		}
+
+		return null;
 	}
 }

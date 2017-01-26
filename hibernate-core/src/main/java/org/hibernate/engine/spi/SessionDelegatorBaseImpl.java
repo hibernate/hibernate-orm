@@ -64,6 +64,7 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.Type;
 
 /**
  * This class is meant to be extended.
@@ -1145,5 +1146,15 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return delegate.getJdbcTimeZone();
+	}
+
+	@Override
+	public Type resolveParameterBindType(Object bindValue) {
+		return delegate.resolveParameterBindType( bindValue );
+	}
+
+	@Override
+	public Type resolveParameterBindType(Class clazz) {
+		return delegate.resolveParameterBindType( clazz );
 	}
 }

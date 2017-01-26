@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.criteria.JoinType;
@@ -202,6 +203,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	private String cacheRegion;
 	private String comment;
 	private FlushMode flushMode;
+	private FlushModeType flushModeType;
 	private CacheMode cacheMode;
 	private Integer timeout;
 	private LockOptions lockOptions = new LockOptions( LockMode.NONE );
@@ -233,6 +235,12 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 
 	public AuditQuery setFlushMode(FlushMode flushMode) {
 		this.flushMode = flushMode;
+		return this;
+	}
+
+	@Override
+	public AuditQuery setFlushMode(FlushModeType flushMode) {
+		this.flushModeType = flushMode;
 		return this;
 	}
 
@@ -290,7 +298,10 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 			query.setComment( comment );
 		}
 		if ( flushMode != null ) {
-			query.setFlushMode( flushMode );
+			query.setHibernateFlushMode( flushMode );
+		}
+		if ( flushModeType != null ) {
+			query.setFlushMode( flushModeType );
 		}
 		if ( cacheMode != null ) {
 			query.setCacheMode( cacheMode );

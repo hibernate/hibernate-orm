@@ -15,6 +15,7 @@ import org.hibernate.service.ServiceRegistry;
  * Envers specific TypeContributor
  *
  * @author Brett Meyer
+ * @author Chris Cranford
  */
 public class TypeContributorImpl implements TypeContributor {
 	@Override
@@ -23,11 +24,6 @@ public class TypeContributorImpl implements TypeContributor {
 		if ( !enversService.isEnabled() ) {
 			return;
 		}
-
-		typeContributions.contributeType(
-				new RevisionTypeType(),
-				new String[] { RevisionTypeType.class.getName() }
-		);
+		typeContributions.contributeType( RevisionTypeType.INSTANCE, RevisionTypeType.INSTANCE.getRegistryKey() );
 	}
-
 }

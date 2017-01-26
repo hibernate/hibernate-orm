@@ -11,6 +11,7 @@ import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.spi.LoadState;
 
 import org.hibernate.Hibernate;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
@@ -66,12 +67,18 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 		}
 
 		if ( entity instanceof HibernateProxy ) {
-			final HibernateProxy proxy = (HibernateProxy) entity;
-			return proxy.getHibernateLazyInitializer().getIdentifier();
+			return ((HibernateProxy) entity).getHibernateLazyInitializer().getIdentifier();
 		}
 		else if ( entity instanceof ManagedEntity ) {
-			final ManagedEntity enhancedEntity = (ManagedEntity) entity;
-			return enhancedEntity.$$_hibernate_getEntityEntry().getId();
+			EntityEntry entityEntry = ((ManagedEntity) entity).$$_hibernate_getEntityEntry();
+			if ( entityEntry != null ) {
+				return entityEntry.getId();
+			}
+			else {
+				// HHH-11426 - best effort to deal with the case of detached entities
+				log.debug( "javax.persistence.PersistenceUnitUtil.getIdentifier may not be able to read identifier of a detached entity" );
+				return getIdentifierFromPersister( entity );
+			}
 		}
 		else {
 			log.debugf(
@@ -79,13 +86,17 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 							"(although Hibernate also adapts this support to its proxies); " +
 							"however the passed entity was not enhanced (nor a proxy).. may not be able to read identifier"
 			);
-			final Class entityClass = Hibernate.getClass( entity );
-			final EntityPersister persister = sessionFactory.getMetamodel().entityPersister( entityClass );
-			if ( persister == null ) {
-				throw new IllegalArgumentException( entityClass + " is not an entity" );
-			}
-			//TODO does that work for @IdClass?
-			return persister.getIdentifier( entity );
+			return getIdentifierFromPersister( entity );
 		}
 	}
+
+	private Object getIdentifierFromPersister(Object entity) {
+		Class<?> entityClass = Hibernate.getClass( entity );
+		EntityPersister persister = sessionFactory.getMetamodel().entityPersister( entityClass );
+		if ( persister == null ) {
+			throw new IllegalArgumentException( entityClass.getName() + " is not an entity" );
+		}
+		return persister.getIdentifier( entity, null );
+	}
+
 }

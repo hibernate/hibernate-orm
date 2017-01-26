@@ -8,6 +8,7 @@ package org.hibernate.test.bytecode.enhancement;
 
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 
+import org.hibernate.test.bytecode.enhancement.detached.DetachedGetIdentifierTestTask;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
@@ -81,6 +82,12 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@Test
 	public void testDirty() {
 		EnhancerTestUtils.runEnhancerTestTask( DirtyTrackingTestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11426" )
+	public void testDetached() {
+		EnhancerTestUtils.runEnhancerTestTask( DetachedGetIdentifierTestTask.class );
 	}
 
 	@Test

@@ -49,6 +49,7 @@ dependencies {
 	// http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
 	compile "org.osgi:org.osgi.core:${osgiCoreVersion}"
 	compile "org.osgi:org.osgi.compendium:${osgiCoreVersion}"
+	compile "net.bytebuddy:byte-buddy:${byteBuddyVersion}"
 
 	testCompile "org.ops4j.pax.exam:pax-exam:${paxExamVersion}"
 	testCompile "org.ops4j.pax.exam:pax-exam-junit4:${paxExamVersion}"
@@ -102,7 +103,7 @@ def osgiDescription() {
 jar {
 	manifest {
 		instruction 'Bundle-Activator', 'org.hibernate.osgi.HibernateBundleActivator'
-
+        instruction 'Provide-Capability', 'osgi.service;effective:=active;objectClass=javax.persistence.spi.PersistenceProvider'
 		instructionFirst 'Import-Package',
 			// TODO: Shouldn't have to explicitly list this, but the plugin
 			// generates it with a [1.0,2) version.

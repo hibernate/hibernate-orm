@@ -17,6 +17,12 @@
 * Find incubations and evaluate for promotion
 * Consider allowing contributors for Types and JavaTypeDescriptors (and SqlTypeDescriptor?) be
 	available via the new CDI support.  Could also allow "Java Service" lookups to find contributors
+* `org.hibernate.tuple.ValueGenerator` currently only works with temporal values.  We need to extend that
+	to also work with numeric values (for full "version" coverage).  Add a `#seed` method with a default
+	impl (Java 8 ftw!) that simply call `#next`.  *This affects legacy uses of things like `DbTimestampValue`*
+* Finish removing `#fromString` and `#toString` impls from various `BasicJavaDescriptor` impls and
+	(use the default impl) move handling of String-based conversions into `#wrap` and `#unwrap`.
+	Tedious task, so adding a todo note here - bu partially done.
 
 
 == Open questions
@@ -74,3 +80,12 @@
 Would be more efficient to combine (a) and (b).  Both are controlled by the persister anyway
 --
 * Determine how to handle `org.hibernate.query.QueryParameter#allowsMultiValuedBinding` for criteria queries
+* Should we rename `JTD#wrap` and `JTD#unwrap` to be more readily understandable by simply the name?
+	Maybe `#to` / `#from`?  The idea with `#unwrap` is that is is defined by JPA so that it woud be
+	easy to grasp, but we all generally need to look to Javadoc every time we deal with them.
+* `JTD#toString(Object)`, `JTD#fromString(String)`, `BasicType#toString(Object)` and
+	`BasicType#fromString(String)` all seem worthless.  Can these just be handled via
+	 `JTD#unwrap` and `JTD#wrap`?  May be a performance impact , but really... where are these used/useful?
+	 Although WrapperOptions does come into play.
+* Should we drop `JTD#areEquals`?  That is really the same thing as `JTD#getComparator().compare() == 0`.
+ 	*Assuming JTD comparator is never used for identity-based comparison*.

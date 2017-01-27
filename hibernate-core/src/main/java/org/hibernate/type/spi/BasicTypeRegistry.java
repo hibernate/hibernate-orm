@@ -54,8 +54,7 @@ import org.hibernate.type.descriptor.java.internal.UUIDJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.UrlJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.ZonedDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.sql.spi.BigIntSqlDescriptor;
@@ -475,13 +474,6 @@ public class BasicTypeRegistry {
 		// based on AnyType
 
 		// Immutable types
-		registerTemporalType( JdbcDateJavaDescriptor.INSTANCE, DateSqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
-		registerTemporalType( JdbcTimeJavaDescriptor.INSTANCE, TimeSqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
-		registerTemporalType( JdbcTimestampJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
-		registerTemporalType( CalendarTimeJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
-		registerTemporalType( CalendarDateJavaDescriptor.INSTANCE, DateSqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
-		registerBasicType( PrimitiveByteArrayJavaDescriptor.INSTANCE, VarbinarySqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
-		registerBasicType( SerializableJavaDescriptor.INSTANCE, VarbinarySqlDescriptor.INSTANCE, ImmutableMutabilityPlan.INSTANCE );
 	}
 
 	private void registerBasicType(BasicJavaDescriptor javaTypeDescriptor, SqlTypeDescriptor sqlTypeDescriptor) {

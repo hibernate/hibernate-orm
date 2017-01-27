@@ -13,18 +13,15 @@ import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.Map;
-import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sqm.domain.type.SqmDomainType;
-import org.hibernate.type.AnyType;
-import org.hibernate.type.CollectionType;
 import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
 
 /**
  * Base contract in the Hibernate "(mapping) type system".
@@ -36,101 +33,15 @@ import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
  *
  * @since 6.0
  */
-public interface Type<T> extends SqmDomainType {
-	/**
-	 * Enumerated values for the classification of the Type.
-	 */
-	enum Classification {
-		/**
-		 * Represents basic types (Strings, Integers, enums, etc).  Types classified as
-		 * BASIC will be castable to {@link BasicType}.
-		 * <p/>
-		 * Corresponds to the JPA {@link PersistenceType#BASIC} classification
-		 */
-		BASIC( PersistenceType.BASIC ),
-
-		/**
-		 * Represents composite values (what JPA calls embedded/embeddable).  Types classified as
-		 * COMPOSITE will be castable to {@link EmbeddedType}
-		 * <p/>
-		 * Corresponds to the JPA {@link PersistenceType#EMBEDDABLE} classification
-		 */
-		COMPOSITE( PersistenceType.EMBEDDABLE ),
-
-		/**
-		 * Represents reverse-discriminated values (where the discriminator is on the FK side of the association).
-		 * Types classified as ANY will be castable to {@link AnyType}
-		 * <p/>
-		 * Has no corresponding JPA classification.  JPA simply has no such concept.
-		 */
-		ANY( null ),
-
-		/**
-		 * Represents an entity value (either as a root, one-to-one or many-to-one).  Types classified
-		 * as ENTITY will be castable to {@link EntityType}
-		 * <p/>
-		 * Corresponds to the JPA {@link PersistenceType#ENTITY} classification
-		 */
-		ENTITY( PersistenceType.ENTITY ),
-
-		/**
-		 * Generally an abstract idea, represents a "mapped superclass" in the inheritance hierarchy.
-		 * <p/>
-		 * Corresponds to the JPA {@link PersistenceType#MAPPED_SUPERCLASS} classification
-		 */
-		MAPPED_SUPERCLASS( PersistenceType.MAPPED_SUPERCLASS ),
-
-		/**
-		 * Represents a plural attribute, including the FK.   Types classified as COLLECTION
-		 * will be castable to {@link CollectionType}
-		 * <p/>
-		 * Has no corresponding JPA classification.  JPA handles this via PluralAttribute and the
-		 * fact that support for Collection types in JPA is extremely narrow.
-		 */
-		COLLECTION( null );
-
-		private final PersistenceType jpaPersistenceType;
-
-		Classification(PersistenceType jpaPersistenceType) {
-			this.jpaPersistenceType = jpaPersistenceType;
-		}
-
-		public PersistenceType getJpaPersistenceType() {
-			return jpaPersistenceType;
-		}
-
-		public static Classification fromJpaPersistenceType(PersistenceType jpaPersistenceType) {
-			switch ( jpaPersistenceType ) {
-				case BASIC: {
-					return BASIC;
-				}
-				case MAPPED_SUPERCLASS: {
-					return MAPPED_SUPERCLASS;
-				}
-				case EMBEDDABLE: {
-					return COMPOSITE;
-				}
-				case ENTITY: {
-					return ENTITY;
-				}
-				default: {
-					return null;
-				}
-			}
-		}
-	}
+public interface Type<T> extends org.hibernate.type.Type<T>, SqmDomainType {
+	@Override
+	JavaTypeDescriptor<T> getJavaTypeDescriptor();
 
 	/**
-	 * Return the classification of this Type.
-	 *
-	 * @return The Type's classification/categorization
-	 */
-	Classification getClassification();
-
-
-	/**
-	 * Returns the abbreviated name of the Type.  Mostly used historically for short-name
+	 * Returns the abbreviated name of the Type.  Supported usage is for short-name
 	 * referencing of the Type in {@code hbm.xml} mappings.
+	 *
+	 * @todo Remove this?  I think we decided on a more "type descriptor"-level configuration of which Type to use
 	 *
 	 * @return The Type name
 	 */
@@ -144,13 +55,6 @@ public interface Type<T> extends SqmDomainType {
 	 * @return The column mapping for this Type
 	 */
 	ColumnMapping[] getColumnMappings();
-
-	/**
-	 * Obtain a descriptor for the Java side of a value mapping.
-	 *
-	 * @return The Java type descriptor.
-	 */
-	JavaTypeDescriptor getJavaTypeDescriptor();
 
 	/**
 	 * The mutability of this type.  Generally follows

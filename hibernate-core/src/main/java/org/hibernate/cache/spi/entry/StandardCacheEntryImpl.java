@@ -20,7 +20,7 @@ import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.TypeHelper;
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * Standard representation of entity cached data using the "disassembled state".

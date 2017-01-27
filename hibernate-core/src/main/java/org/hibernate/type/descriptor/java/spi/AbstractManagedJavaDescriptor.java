@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java.spi;
 
 import java.util.Comparator;
 
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 

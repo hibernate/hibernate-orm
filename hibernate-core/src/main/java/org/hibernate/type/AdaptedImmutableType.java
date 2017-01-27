@@ -10,7 +10,7 @@ import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.basic.BasicTypeImpl;
 import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * Optimize a mutable type, if the user promises not to mutable the

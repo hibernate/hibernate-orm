@@ -21,7 +21,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.CollectionType;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.Type;

@@ -8,17 +8,18 @@ package org.hibernate.test.version.sybase;
 
 import javax.persistence.OptimisticLockException;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.type.BinaryType;
+import org.hibernate.type.RowVersionType;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.VersionType;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.BinaryType;
-import org.hibernate.type.RowVersionType;
-import org.hibernate.type.VersionType;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -196,9 +197,8 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertTrue(
-				"owner version was incremented", BinaryType.INSTANCE.isEqual(
-				steveTimestamp, steve.getTimestamp()
-		)
+				"owner version was incremented",
+				StandardBasicTypes.BINARY.isEqual( steveTimestamp, steve.getTimestamp() )
 		);
 
 		s = openSession();
@@ -209,9 +209,8 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertTrue(
-				"owner version was incremented", BinaryType.INSTANCE.isEqual(
-				steveTimestamp, steve.getTimestamp()
-		)
+				"owner version was incremented",
+				StandardBasicTypes.BINARY.isEqual( steveTimestamp, steve.getTimestamp() )
 		);
 
 		s = openSession();

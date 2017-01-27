@@ -27,14 +27,6 @@ public class BigDecimalJavaDescriptor extends AbstractNumericJavaDescriptor<BigD
 		super( BigDecimal.class );
 	}
 
-	public String toString(BigDecimal value) {
-		return value.toString();
-	}
-
-	public BigDecimal fromString(String string) {
-		return new BigDecimal( string );
-	}
-
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
 		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.NUMERIC );
@@ -69,6 +61,9 @@ public class BigDecimalJavaDescriptor extends AbstractNumericJavaDescriptor<BigD
 		if ( Float.class.isAssignableFrom( type ) ) {
 			return (X) Float.valueOf( value.floatValue() );
 		}
+		if ( String.class.equals( type ) ) {
+			return (X) type.toString();
+		}
 		throw unknownUnwrap( type );
 	}
 
@@ -84,6 +79,9 @@ public class BigDecimalJavaDescriptor extends AbstractNumericJavaDescriptor<BigD
 		}
 		if ( Number.class.isInstance( value ) ) {
 			return BigDecimal.valueOf( ( (Number) value ).doubleValue() );
+		}
+		if ( String.class.isInstance( value ) ) {
+			return new BigDecimal( (String) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}

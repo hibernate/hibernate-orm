@@ -9,7 +9,7 @@ package org.hibernate.type.internal;
 import java.util.Comparator;
 
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.ManagedType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;

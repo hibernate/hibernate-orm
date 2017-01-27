@@ -19,6 +19,9 @@ class SDOBooleanType extends BooleanType {
 
 	private static final long serialVersionUID = 1L;
 
+	public SDOBooleanType() {
+	}
+
 	/**
 	 * <p/>
 	 * This type's name is <tt>sdo_boolean</tt>

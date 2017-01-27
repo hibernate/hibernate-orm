@@ -38,7 +38,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.type.spi.BasicTypesBaseline;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -84,8 +83,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.typeConfiguration = new TypeConfiguration();
 		this.basicTypeProducerRegistry = new BasicTypeProducerRegistryImpl( typeConfiguration );
 
-		initializeTypes( typeConfiguration, basicTypeProducerRegistry );
-
 		this.classLoaderAccess = new ClassLoaderAccessImpl( serviceRegistry.getService( ClassLoaderService.class ) );
 		this.hcannReflectionManager = generateHcannReflectionManager();
 		this.classmateContext = new ClassmateContext();
@@ -112,10 +109,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 				ArchiveDescriptorFactory.class,
 				configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
 		);
-	}
-
-	private static void initializeTypes(TypeConfiguration typeConfiguration, BasicTypeProducerRegistry basicTypeProducerRegistry) {
-		BasicTypesBaseline.prime( typeConfiguration, basicTypeProducerRegistry );
 	}
 
 	private JavaReflectionManager generateHcannReflectionManager() {

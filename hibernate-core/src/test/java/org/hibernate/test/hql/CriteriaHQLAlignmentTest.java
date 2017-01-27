@@ -21,10 +21,9 @@ import org.hibernate.hql.internal.ast.tree.SelectClause;
 import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
-import org.hibernate.type.BigDecimalType;
-import org.hibernate.type.BigIntegerType;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -127,12 +126,12 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 	    // SUM returns BigInteger when applied to state-fields of type BigInteger 
 		translator = createNewQueryTranslator( "select sum(h.bigIntegerValue) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", BigIntegerType.INSTANCE, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", StandardBasicTypes.BIG_INTEGER, translator.getReturnTypes()[0] );
 		
 		// SUM and BigDecimal when applied to state-fields of type BigDecimal.
 		translator = createNewQueryTranslator( "select sum(h.bigDecimalValue) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", BigDecimalType.INSTANCE, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", StandardBasicTypes.BIG_DECIMAL, translator.getReturnTypes()[0] );
 
 		// special case to test classicquery special case handling of count(*)
 		String hql = "select count(*) from Human h";

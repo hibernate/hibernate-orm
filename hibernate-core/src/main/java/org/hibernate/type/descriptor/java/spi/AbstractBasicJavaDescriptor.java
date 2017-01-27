@@ -10,6 +10,7 @@ import java.util.Comparator;
 import javax.persistence.metamodel.BasicType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * Abstract adapter for JavaTypeDescriptor implementations describing a "basic type" as defined

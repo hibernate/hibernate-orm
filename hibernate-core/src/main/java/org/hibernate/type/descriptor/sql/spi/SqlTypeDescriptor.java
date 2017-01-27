@@ -19,17 +19,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface SqlTypeDescriptor {
-	/**
-	 * Retrieve the JDBC/SQL type-code that this descriptor represents.
-	 * <p/>
-	 * For a "standard" type that would match the corresponding value in
-	 * {@link java.sql.Types}.
-	 *
-	 * @return typeCode The JDBC/SQL type-code
-	 */
-	int getSqlType();
-
+public interface SqlTypeDescriptor extends org.hibernate.type.descriptor.sql.SqlTypeDescriptor {
 	/**
 	 * Is this descriptor available for remapping?
 	 * <p/>

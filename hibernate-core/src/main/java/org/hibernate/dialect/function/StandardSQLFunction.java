@@ -7,6 +7,7 @@
 package org.hibernate.dialect.function;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.spi.Type;
@@ -46,6 +47,28 @@ public class StandardSQLFunction implements SQLFunction {
 	public StandardSQLFunction(String name, Type registeredType) {
 		this.name = name;
 		this.registeredType = registeredType;
+	}
+
+	/**
+	 * Construct a standard SQL function definition with a static return type.
+	 *
+	 * @param name The name of the function.
+	 * @param registeredType The static return type.
+	 */
+	public StandardSQLFunction(String name, org.hibernate.type.Type registeredType) {
+		if ( !Type.class.isInstance( registeredType ) ) {
+			throw new IllegalArgumentException(
+					String.format(
+							Locale.ROOT,
+							"Function return type must be an implementation of` %s`, found : %s",
+							Type.class.getName(),
+							registeredType
+					)
+			);
+		}
+
+		this.name = name;
+		this.registeredType = (Type) registeredType;
 	}
 
 	/**

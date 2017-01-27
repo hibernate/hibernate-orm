@@ -24,7 +24,6 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -68,26 +67,23 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.persister.collection.internal.CollectionElementAny;
 import org.hibernate.persister.collection.internal.CollectionElementBasicImpl;
-import org.hibernate.persister.collection.internal.CollectionElementEmbeddable;
 import org.hibernate.persister.collection.internal.CollectionElementEntity;
 import org.hibernate.persister.collection.internal.CollectionIndexBasicImpl;
-import org.hibernate.persister.collection.internal.CollectionIndexEmbeddableImpl;
 import org.hibernate.persister.collection.internal.CollectionIndexEmbeddedImpl;
 import org.hibernate.persister.collection.internal.CollectionIndexEntityImpl;
-import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.collection.spi.CollectionElement;
+import org.hibernate.persister.collection.spi.CollectionElementEmbedded;
 import org.hibernate.persister.collection.spi.CollectionId;
 import org.hibernate.persister.collection.spi.CollectionIndex;
 import org.hibernate.persister.collection.spi.CollectionKey;
+import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.persister.collection.spi.Collele.CollectionElementAny;
 import org.hibernate.persister.common.internal.PersisterHelper;
-import org.hibernate.persister.common.spi.AttributeContainer;
 import org.hibernate.persister.common.spi.DatabaseModel;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.JoinableAttributeContainer;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
-import org.hibernate.persister.common.spi.NavigableSource;
 import org.hibernate.persister.common.spi.SingularOrmAttribute;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -813,7 +809,7 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 					separateCollectionTable
 			);
 
-			return new CollectionElementEmbeddable(
+			return new CollectionElementEmbedded(
 					this,
 					PersisterHelper.INSTANCE.buildEmbeddablePersister(
 							creationContext,

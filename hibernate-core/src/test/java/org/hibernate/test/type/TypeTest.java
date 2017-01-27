@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.type;
+
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -20,48 +21,26 @@ import java.util.Locale;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.EntityMode;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.BigDecimalType;
-import org.hibernate.type.BigIntegerType;
-import org.hibernate.type.BinaryType;
-import org.hibernate.type.BooleanType;
-import org.hibernate.type.ByteSupport;
 import org.hibernate.type.CalendarDateType;
 import org.hibernate.type.CalendarType;
-import org.hibernate.type.CharArrayType;
-import org.hibernate.type.CharacterArrayType;
-import org.hibernate.type.CharacterType;
-import org.hibernate.type.ClassType;
-import org.hibernate.type.CurrencyType;
 import org.hibernate.type.DateType;
-import org.hibernate.type.DoubleType;
-import org.hibernate.type.FloatType;
-import org.hibernate.type.ImageType;
 import org.hibernate.type.IntegerType;
-import org.hibernate.type.LocaleType;
 import org.hibernate.type.LongType;
-import org.hibernate.type.MaterializedBlobType;
-import org.hibernate.type.MaterializedClobType;
-import org.hibernate.type.NumericBooleanType;
-import org.hibernate.type.SerializableType;
 import org.hibernate.type.ShortType;
-import org.hibernate.type.StringType;
-import org.hibernate.type.TextType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.TimeType;
-import org.hibernate.type.TimeZoneType;
 import org.hibernate.type.TimestampType;
-import org.hibernate.type.TrueFalseType;
-import org.hibernate.type.YesNoType;
+import org.hibernate.type.Type;
+import org.hibernate.type.spi.BasicType;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -69,6 +48,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("UnnecessaryBoxing")
 public class TypeTest extends BaseUnitTestCase {
 	private SessionImplementor session;
 
@@ -96,7 +76,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final BigDecimal copy = BigDecimal.valueOf( 100 );
 		final BigDecimal different = BigDecimal.valueOf( 999 );
 
-		runBasicTests( BigDecimalType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.BIG_DECIMAL, original, copy, different );
 	}
 
 	@Test
@@ -105,7 +85,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final BigInteger copy = BigInteger.valueOf( 100 );
 		final BigInteger different = BigInteger.valueOf( 999 );
 
-		runBasicTests( BigIntegerType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.BIG_INTEGER, original, copy, different );
 	}
 
 	@Test
@@ -114,9 +94,9 @@ public class TypeTest extends BaseUnitTestCase {
 		final byte[] copy = new byte[] { 1, 2, 3, 4 };
 		final byte[] different = new byte[] { 4, 3, 2, 1 };
 
-		runBasicTests( BinaryType.INSTANCE, original, copy, different );
-		runBasicTests( ImageType.INSTANCE, original, copy, different );
-		runBasicTests( MaterializedBlobType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.BINARY, original, copy, different );
+		runBasicTests( StandardBasicTypes.IMAGE, original, copy, different );
+		runBasicTests( StandardBasicTypes.MATERIALIZED_BLOB, original, copy, different );
 	}
 
 	@Test
@@ -126,10 +106,10 @@ public class TypeTest extends BaseUnitTestCase {
 		final Boolean copy = new Boolean( true );
 		final Boolean different = Boolean.FALSE;
 
-		runBasicTests( BooleanType.INSTANCE, original, copy, different );
-		runBasicTests( NumericBooleanType.INSTANCE, original, copy, different );
-		runBasicTests( YesNoType.INSTANCE, original, copy, different );
-		runBasicTests( TrueFalseType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.BOOLEAN, original, copy, different );
+		runBasicTests( StandardBasicTypes.NUMERIC_BOOLEAN, original, copy, different );
+		runBasicTests( StandardBasicTypes.YES_NO, original, copy, different );
+		runBasicTests( StandardBasicTypes.TRUE_FALSE, original, copy, different );
 	}
 
 	@Test
@@ -138,7 +118,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Byte copy = new Byte( (byte) 0 );
 		final Byte different = 9;
 
-		runBasicTests( ByteSupport.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.BYTE, original, copy, different );
 	}
 
 	@Test
@@ -174,7 +154,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Character[] copy = new Character[] { 'a', 'b' };
 		final Character[] different = new Character[] { 'a', 'b', 'c' };
 
-		runBasicTests( CharacterArrayType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.CHARACTER_ARRAY, original, copy, different );
 	}
 
 	@Test
@@ -183,7 +163,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Character copy = new Character( 'a' );
 		final Character different = 'b';
 
-		runBasicTests( CharacterType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.CHARACTER, original, copy, different );
 	}
 
 	@Test
@@ -192,8 +172,8 @@ public class TypeTest extends BaseUnitTestCase {
 		final char[] copy = new char[] { 'a', 'b' };
 		final char[] different = new char[] { 'a', 'b', 'c' };
 
-		runBasicTests( CharArrayType.INSTANCE, original, copy, different );
-		runBasicTests( CharArrayType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.CHAR_ARRAY, original, copy, different );
+		runBasicTests( StandardBasicTypes.CHAR_ARRAY, original, copy, different );
 	}
 
 	@Test
@@ -202,7 +182,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Class copy = (Class) SerializationHelper.clone( original );
 		final Class different = String.class;
 
-		runBasicTests( ClassType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.CLASS, original, copy, different );
 	}
 
 	@Test
@@ -211,7 +191,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Currency copy = Currency.getInstance( Locale.US );
 		final Currency different = Currency.getInstance( Locale.UK );
 
-		runBasicTests( CurrencyType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.CURRENCY, original, copy, different );
 	}
 
 	@Test
@@ -234,7 +214,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Double copy = Double.valueOf( 100 );
 		final Double different = Double.valueOf( 999 );
 
-		runBasicTests( DoubleType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.DOUBLE, original, copy, different );
 	}
 
 	@Test
@@ -243,7 +223,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Float copy = Float.valueOf( 100 );
 		final Float different = Float.valueOf( 999 );
 
-		runBasicTests( FloatType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.FLOAT, original, copy, different );
 	}
 
 	@Test
@@ -261,7 +241,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Locale copy = new Locale( "ab" );
 		final Locale different = new Locale( "yz" );
 
-		runBasicTests( LocaleType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.LOCALE, original, copy, different );
 	}
 
 	@Test
@@ -290,8 +270,8 @@ public class TypeTest extends BaseUnitTestCase {
 		final SerializableImpl copy = new SerializableImpl(1);
 		final SerializableImpl different = new SerializableImpl(2);
 
-		runBasicTests( SerializableType.INSTANCE, original, copy, different );
-		runBasicTests( new SerializableType<SerializableImpl>( SerializableImpl.class ), original, copy, different );
+		runBasicTests( StandardBasicTypes.SERIALIZABLE, original, copy, different );
+		runBasicTests( StandardBasicTypes.SERIALIZABLE, original, copy, different );
 	}
 
 	@Test
@@ -309,9 +289,9 @@ public class TypeTest extends BaseUnitTestCase {
 		final String copy = new String( original.toCharArray() );
 		final String different = "xyz";
 
-		runBasicTests( StringType.INSTANCE, original, copy, different );
-		runBasicTests( TextType.INSTANCE, original, copy, different );
-		runBasicTests( MaterializedClobType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.STRING, original, copy, different );
+		runBasicTests( StandardBasicTypes.TEXT, original, copy, different );
+		runBasicTests( StandardBasicTypes.MATERIALIZED_CLOB, original, copy, different );
 	}
 
 	@Test
@@ -353,41 +333,45 @@ public class TypeTest extends BaseUnitTestCase {
 		final TimeZone copy = new SimpleTimeZone( -1, "abc" );
 		final TimeZone different = new SimpleTimeZone( -2, "xyz" );
 
-		runBasicTests( TimeZoneType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.TIMEZONE, original, copy, different );
 	}
 
-	protected <T> void runBasicTests(AbstractSingleColumnStandardBasicType<T> type, T original, T copy, T different) {
+	@SuppressWarnings("unchecked")
+	protected <T> void runBasicTests(Type<T> type, T original, T copy, T different) {
+		assertTrue( type instanceof BasicType );
+		final BasicType basicType = (BasicType) type;
+
 		final boolean nonCopyable = Class.class.isInstance( original ) || Currency.class.isInstance( original );
 		if ( ! nonCopyable ) {
 			// these checks exclude classes which cannot really be cloned (singetons/enums)
 			assertFalse( original == copy );
 		}
 
-		assertTrue( original == type.replace( original, copy, null, null, null ) );
+		assertTrue( original == basicType.replace( original, copy, null, null, null ) );
 
-		assertTrue( type.isSame( original, copy ) );
-		assertTrue( type.isEqual( original, copy ) );
-		assertTrue( type.isEqual( original, copy ) );
-		assertTrue( type.isEqual( original, copy, null ) );
+		assertTrue( basicType.isSame( original, copy ) );
+		assertTrue( basicType.isEqual( original, copy ) );
+		assertTrue( basicType.isEqual( original, copy ) );
+		assertTrue( basicType.isEqual( original, copy, null ) );
 
-		assertFalse( type.isSame( original, different ) );
-		assertFalse( type.isEqual( original, different ) );
-		assertFalse( type.isEqual( original, different ) );
-		assertFalse( type.isEqual( original, different, null ) );
+		assertFalse( basicType.isSame( original, different ) );
+		assertFalse( basicType.isEqual( original, different ) );
+		assertFalse( basicType.isEqual( original, different ) );
+		assertFalse( basicType.isEqual( original, different, null ) );
 
-		assertFalse( type.isDirty( original, copy , session ) );
-		assertFalse( type.isDirty( original, copy , ArrayHelper.FALSE, session ) );
-		assertFalse( type.isDirty( original, copy , ArrayHelper.TRUE, session ) );
+		assertFalse( basicType.isDirty( original, copy , session ) );
+		assertFalse( basicType.isDirty( original, copy , ArrayHelper.FALSE, session ) );
+		assertFalse( basicType.isDirty( original, copy , ArrayHelper.TRUE, session ) );
 
-		assertTrue( type.isDirty( original, different , session ) );
-		assertFalse( type.isDirty( original, different , ArrayHelper.FALSE, session ) );
-		assertTrue( type.isDirty( original, different , ArrayHelper.TRUE, session ) );
+		assertTrue( basicType.isDirty( original, different , session ) );
+		assertFalse( basicType.isDirty( original, different , ArrayHelper.FALSE, session ) );
+		assertTrue( basicType.isDirty( original, different , ArrayHelper.TRUE, session ) );
 
-		assertFalse( type.isModified( original, copy, ArrayHelper.FALSE, session ) );
-		assertFalse( type.isModified( original, copy, ArrayHelper.TRUE, session ) );
+		assertFalse( basicType.isModified( original, copy, ArrayHelper.FALSE, session ) );
+		assertFalse( basicType.isModified( original, copy, ArrayHelper.TRUE, session ) );
 
-		assertTrue( type.isModified( original, different, ArrayHelper.FALSE, session ) );
-		assertTrue( type.isModified( original, different, ArrayHelper.TRUE, session ) );
+		assertTrue( basicType.isModified( original, different, ArrayHelper.FALSE, session ) );
+		assertTrue( basicType.isModified( original, different, ArrayHelper.TRUE, session ) );
 	}
 
 }

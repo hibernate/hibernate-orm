@@ -12,12 +12,10 @@ import java.sql.Clob;
  * An entity containing all kinds of good LOB-type data...
  * <p/>
  * {@link #clobLocator} is used to hold CLOB data that is materialized lazily
- * via a JDBC CLOB locator; it is mapped via the
- * {@link org.hibernate.type.ClobType}
+ * via a JDBC CLOB locator
  * <p/>
  * {@link #blobLocator} is used to hold BLOB data that is materialized lazily
- * via a JDBC BLOB locator; it is mapped via the
- * {@link org.hibernate.type.BlobType}
+ * via a JDBC BLOB locator
  * 
  *
  * @author Steve Ebersole

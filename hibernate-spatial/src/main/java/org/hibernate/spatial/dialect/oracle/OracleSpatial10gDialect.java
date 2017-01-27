@@ -467,7 +467,9 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 
 		private SpatialRelateFunction(final String name, final int relation) {
 			super(
-					name, isOGCStrict() ? StandardBasicTypes.BOOLEAN
+					name,
+					isOGCStrict()
+							? (Type) StandardBasicTypes.BOOLEAN
 							: new SDOBooleanType()
 			);
 			this.relation = relation;

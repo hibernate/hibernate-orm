@@ -24,7 +24,7 @@ import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.sqm.NotYetImplementedException;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.JdbcLiteralFormatter;

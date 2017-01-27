@@ -8,6 +8,8 @@ package org.hibernate.type.descriptor.java.spi;
 
 import java.util.Comparator;
 
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+
 /**
  * @author Steve Ebersole
  */

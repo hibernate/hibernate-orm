@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.converter;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 import org.jboss.logging.Logger;

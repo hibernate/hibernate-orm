@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java.spi;
 import java.util.Comparator;
 
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 import org.jboss.logging.Logger;
 

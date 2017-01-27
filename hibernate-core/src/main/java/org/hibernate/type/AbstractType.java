@@ -20,7 +20,7 @@ import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * Abstract superclass of the built in Type hierarchy.

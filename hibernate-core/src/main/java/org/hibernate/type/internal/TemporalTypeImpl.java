@@ -8,7 +8,8 @@ package org.hibernate.type.internal;
 
 import java.util.Comparator;
 
-import org.hibernate.type.descriptor.java.spi.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicTypeRegistry;
@@ -23,22 +24,43 @@ public class TemporalTypeImpl<T> extends BasicTypeImpl<T> implements TemporalTyp
 	private final javax.persistence.TemporalType precision;
 
 	public TemporalTypeImpl(
-			TemporalJavaDescriptor javaDescriptor,
+			TemporalJavaDescriptor<T> javaDescriptor,
 			MutabilityPlan mutabilityPlan,
 			Comparator comparator,
 			ColumnMapping columnMapping,
 			javax.persistence.TemporalType precision) {
-		this( javaDescriptor, mutabilityPlan, comparator, columnMapping.getSqlTypeDescriptor(), precision );
+		super( javaDescriptor, mutabilityPlan, comparator, columnMapping );
+		this.precision = determinePrecision( precision, javaDescriptor );
 	}
 
 	public TemporalTypeImpl(
-			TemporalJavaDescriptor javaDescriptor,
+			TemporalJavaDescriptor<T> javaDescriptor,
 			MutabilityPlan mutabilityPlan,
 			Comparator comparator,
 			SqlTypeDescriptor sqlTypeDescriptor,
 			javax.persistence.TemporalType precision) {
-		super( javaDescriptor, mutabilityPlan, comparator, new ColumnMapping( sqlTypeDescriptor ) );
-		this.precision = precision == null ? javaDescriptor.getPrecision() : precision;
+		super( javaDescriptor, mutabilityPlan, comparator, sqlTypeDescriptor );
+		this.precision = determinePrecision( precision, javaDescriptor );
+	}
+
+	private static <T> javax.persistence.TemporalType determinePrecision(
+			javax.persistence.TemporalType precision,
+			TemporalJavaDescriptor<T> javaDescriptor) {
+		return precision == null ? javaDescriptor.getPrecision() : precision;
+	}
+
+	public TemporalTypeImpl(
+			TemporalJavaDescriptor<T> javaDescriptor,
+			SqlTypeDescriptor sqlDescriptor,
+			ImmutableMutabilityPlan mutabilityPlan) {
+		super( javaDescriptor, mutabilityPlan, null, sqlDescriptor );
+		this.precision = determinePrecision( null, javaDescriptor );
+	}
+
+	public TemporalTypeImpl(
+			TemporalJavaDescriptor<T> javaDescriptor,
+			SqlTypeDescriptor sqlDescriptor) {
+		this( javaDescriptor, sqlDescriptor, null );
 	}
 
 	@Override

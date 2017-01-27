@@ -5,13 +5,14 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.generated;
-import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.type.StandardBasicTypes;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.BinaryType;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -46,12 +47,12 @@ public abstract class AbstractGeneratedPropertyTest extends BaseCoreFunctionalTe
 
 			s = openSession();
 			t = s.beginTransaction();
-			entity = ( GeneratedPropertyEntity ) s.get( GeneratedPropertyEntity.class, entity.getId() );
-			assertTrue( BinaryType.INSTANCE.isEqual( bytes, entity.getLastModified() ) );
+			entity = s.get( GeneratedPropertyEntity.class, entity.getId() );
+			assertTrue( StandardBasicTypes.BINARY.isEqual( bytes, entity.getLastModified() ) );
 			t.commit();
 			s.close();
 
-			assertTrue( BinaryType.INSTANCE.isEqual( bytes, entity.getLastModified() ) );
+			assertTrue( StandardBasicTypes.BINARY.isEqual( bytes, entity.getLastModified() ) );
 
 			s = openSession();
 			t = s.beginTransaction();

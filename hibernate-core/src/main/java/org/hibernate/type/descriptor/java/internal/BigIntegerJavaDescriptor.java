@@ -28,16 +28,6 @@ public class BigIntegerJavaDescriptor extends AbstractNumericJavaDescriptor<BigI
 	}
 
 	@Override
-	public String toString(BigInteger value) {
-		return value.toString();
-	}
-
-	@Override
-	public BigInteger fromString(String string) {
-		return new BigInteger( string );
-	}
-
-	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
 		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.BIGINT );
 	}
@@ -72,6 +62,9 @@ public class BigIntegerJavaDescriptor extends AbstractNumericJavaDescriptor<BigI
 		if ( Float.class.isAssignableFrom( type ) ) {
 			return (X) Float.valueOf( value.floatValue() );
 		}
+		if ( String.class.equals( type ) ) {
+			return (X) value.toString();
+		}
 		throw unknownUnwrap( type );
 	}
 
@@ -88,6 +81,9 @@ public class BigIntegerJavaDescriptor extends AbstractNumericJavaDescriptor<BigI
 		}
 		if ( Number.class.isInstance( value ) ) {
 			return BigInteger.valueOf( ( (Number) value ).longValue() );
+		}
+		if ( String.class.isInstance( value ) ) {
+			return new BigInteger( (String) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}

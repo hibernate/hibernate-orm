@@ -35,6 +35,7 @@ import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
@@ -94,6 +95,7 @@ import org.hibernate.type.SetType;
 import org.hibernate.type.SortedMapType;
 import org.hibernate.type.SortedSetType;
 import org.hibernate.type.SpecialOneToOneType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -126,15 +128,13 @@ import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.det
 public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObserver {
 	private static final CoreMessageLogger log = messageLogger( Scope.class );
 
+	// todo : (
 	private final Scope scope;
 	private boolean initialized = false;
 
+	// things available during both boot and runtime ("active") lifecycle phases
 	private final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
 	private final SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
-
-	// todo : review with eye on using JavaTypeDescriptor instead of Class and Strings
-	//		see
-
 	private final BasicTypeRegistry basicTypeRegistry;
 
 	private final DatabaseModelImpl databaseModel  = new DatabaseModelImpl();
@@ -154,6 +154,12 @@ public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObse
 
 	private final Map<String,EntityGraph> entityGraphMap = new ConcurrentHashMap<>();
 
+	// todo (6.0) : I believe that Mapping can go away.  In all respects TypeConfiguration is meant as a replacement for the concept Mapping is meant to solve
+
+	public TypeConfiguration(BootstrapContext bootstrapContext) {
+		this();
+		StandardBasicTypes.prime( this, bootstrapContext.getBasicTypeProducerRegistry() );
+	}
 
 	public TypeConfiguration() {
 		this( new EolScopeMapping() );

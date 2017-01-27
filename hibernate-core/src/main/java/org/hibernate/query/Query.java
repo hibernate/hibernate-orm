@@ -16,6 +16,7 @@ import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -31,6 +32,8 @@ import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BigDecimalType;
@@ -89,7 +92,7 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	 * Retrieve a Stream over the query results.
 	 * <p/>
 	 * In the initial implementation (5.2) this returns a simple sequential Stream.  The plan
-	 * is to return a a smarter stream in 6.0 leveraging the SQM model.
+	 * is to return a a smarter stream in 6.x leveraging the SQM model.
 	 *
 	 * <p>
 	 *
@@ -128,8 +131,55 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// covariant overrides
+	// Overrides for methods we do not want deprecated
 
+	@Override
+	ScrollableResults scroll();
+
+	@Override
+	ScrollableResults scroll(ScrollMode scrollMode);
+
+	@Override
+	List<R> list();
+
+	default List<R> getResultList() {
+		return list();
+	}
+
+	@Override
+	R uniqueResult();
+
+	default R getSingleResult() {
+		return uniqueResult();
+	}
+
+	@Override
+	FlushMode getHibernateFlushMode();
+
+	@Override
+	CacheMode getCacheMode();
+
+	@Override
+	String getCacheRegion();
+
+	@Override
+	Integer getFetchSize();
+
+	@Override
+	LockOptions getLockOptions();
+
+	@Override
+	String getComment();
+
+	@Override
+	String getQueryString();
+
+	@Override
+	ParameterMetadata getParameterMetadata();
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+	// covariant overrides
 
 	@Override
 	Query<R> setMaxResults(int maxResult);

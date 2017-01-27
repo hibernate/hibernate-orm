@@ -423,10 +423,6 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 */
 	List<R> list();
 
-	default List<R> getResultList() {
-		return list();
-	}
-
 	/**
 	 * Convenience method to return a single instance that matches
 	 * the query, or {@code null} if the query returns no results.
@@ -436,10 +432,6 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @throws NonUniqueResultException if there is more than one matching result
 	 */
 	R uniqueResult();
-
-	default R getSingleResult() {
-		return uniqueResult();
-	}
 
 	/**
 	 * Access to information about query parameters.

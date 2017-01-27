@@ -10,6 +10,7 @@ import javassist.CtClass;
 
 import org.hibernate.test.bytecode.enhancement.association.inherited.InheritedAttributeAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.otherentityentrycontext.OtherEntityEntryContextTestTask;
+import org.hibernate.test.bytecode.enhancement.cascade.CascadeWithFkConstraintTestTask;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -118,6 +119,12 @@ public class EnhancerTest extends BaseUnitTestCase {
 		EnhancerTestUtils.runEnhancerTestTask( CascadeDeleteTestTask.class );
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-10252" )
+	public void testCascadeFkDelete() {
+		EnhancerTestUtils.runEnhancerTestTask( CascadeWithFkConstraintTestTask.class );
+	}
+	
 	@Test
 	@TestForIssue( jiraKey = "HHH-10055" )
 	public void testLazyCollectionHandling() {

@@ -209,7 +209,7 @@ public class EntityEnhancer extends PersistentAttributesEnhancer {
 	}
 
 	private List<CtField> collectCollectionFields(CtClass managedCtClass) {
-		List<CtField> collectionList = new ArrayList<>();
+		List<CtField> collectionList = new ArrayList<CtField>();
 
 		for ( CtField ctField : managedCtClass.getDeclaredFields() ) {
 			// skip static fields and skip fields added by enhancement

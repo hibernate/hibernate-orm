@@ -1,5 +1,14 @@
 = Active questions and todo list for 6.0
 
+== Related major Jira issues
+
+* HHH-10954 - Integrate SQM into upstream ORM
+* HHH-10873 - Type systems consolidation + org.hibernate.type refactoring
+* HHH-11263 - Introduce BootstrapContext
+* HHH-11356 - Adjust the 2nd-Cache SPIs to better reflect supported uses
+* HHH-11391	- Improved metadata about a basic-typed value
+
+
 == TODO items
 
 * Migrate LoadPlan to SQM/SQL AST
@@ -25,6 +34,12 @@
 	Tedious task, so adding a todo note here - bu partially done.
 
 
+== Follow on items (todo later)
+
+* Another literal related idea is to simply not render them into the SQL but instead transfer them directly to
+	the currentJdbcValues array.  That obviously only matters when literals are used in the SELECT
+
+
 == Open questions
 
 * Should `org.hibernate.mapping.SimpleValue` just implement `org.hibernate.type.spi.BasicTypeParameters`?
@@ -39,8 +54,6 @@
 		like the legacy `org.hibernate.query.criteria.internal.ValueHandlerFactory`.  Another option
 		(my preference), considering literals must be basic types (?allow composites?) is to define a
 		`BasicType#getLiteralRenderer` (as well as an inverse `BasicType#getLiteralConsumer`).
-* Another literal related idea is to simply not render them into the SQL but instead transfer them directly to
-	the currentJdbcValues array.  That obviously only matters when literals are used in the SELECT
 * Determine how to deal with `org.hibernate.sqm.parser.criteria.tree.JpaExpression#getExpressionSqmType`.
 	It is only used in "basic contexts" (function return types, arithmetic results, etc)
 * Consider managing AttributeConverter at the Attribute-level, as opposed to at the BasicType level.

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.spi.Type;
@@ -27,7 +27,7 @@ public class OneToOne extends ToOne {
 	private String propertyName;
 	private String entityName;
 
-	public OneToOne(MetadataImplementor metadata, Table table, PersistentClass owner) throws MappingException {
+	public OneToOne(InFlightMetadataCollector metadata, Table table, PersistentClass owner) throws MappingException {
 		super( metadata, table );
 		this.identifier = owner.getKey();
 		this.entityName = owner.getEntityName();

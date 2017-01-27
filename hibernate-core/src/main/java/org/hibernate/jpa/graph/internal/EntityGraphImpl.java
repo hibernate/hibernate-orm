@@ -18,6 +18,7 @@ import javax.persistence.metamodel.ManagedType;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * The Hibernate implementation of the JPA EntityGraph contract.
@@ -138,6 +139,11 @@ public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGr
 	@SuppressWarnings("unchecked")
 	public boolean appliesTo(String entityName) {
 		return appliesTo( getFactory().getMetamodel().entity( entityName ) );
+	}
+
+	@Override
+	public boolean appliesTo(EntityPersister<? super T> entityType) {
+		return appliesTo( entityType.getEntityName() );
 	}
 
 	public boolean appliesTo(EntityType<? super T> entityType) {

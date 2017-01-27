@@ -530,6 +530,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return properties;
 	}
 
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
+	}
+
 	protected void validateNotClosed() {
 		if ( isClosed ) {
 			throw new IllegalStateException( "EntityManagerFactory is closed" );

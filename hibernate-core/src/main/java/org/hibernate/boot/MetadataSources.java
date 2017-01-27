@@ -138,6 +138,15 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
+	 * Get a builder for metadata where non-default options can be specified.
+	 *
+	 * @return The built metadata.
+	 */
+	public MetadataBuilder getMetadataBuilder(StandardServiceRegistry serviceRegistry) {
+		return getMetadataBuilder( serviceRegistry, new ClassmateContext() );
+	}
+
+	/**
 	 * In case a custom {@link MetadataBuilderFactory} creates a custom builder, return that one, otherwise the default
 	 * builder.
 	 */

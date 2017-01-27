@@ -1239,7 +1239,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
-	protected static <R> R uniqueElement(List<R> list) throws NonUniqueResultException {
+	public static <R> R uniqueElement(List<R> list) throws NonUniqueResultException {
 		int size = list.size();
 		if ( size == 0 ) {
 			return null;

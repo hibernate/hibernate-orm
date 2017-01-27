@@ -93,7 +93,7 @@ public class EntitiesConfigurator {
 
 	private EntitiesConfigurations complete(
 			ClassesAuditingData classesAuditingData,
-			MetadataImplementor metadata,
+			InFlightMetadataCollector metadata,
 			MappingCollector mappingCollector,
 			Document revisionInfoXmlMapping,
 			Element revisionInfoRelationMapping) {

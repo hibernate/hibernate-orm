@@ -27,6 +27,7 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
 
@@ -383,7 +384,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	}
 	@Override
 	public Object uniqueResult() throws HibernateException {
-		return AbstractProducedQuery.uniqueElement( list() );
+		return AbstractQuery.uniqueElement( list() );
 	}
 
 	protected void before() {

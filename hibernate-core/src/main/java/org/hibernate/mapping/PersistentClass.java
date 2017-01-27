@@ -7,12 +7,9 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.*;
+import java.util.List;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
@@ -967,6 +964,16 @@ public abstract class PersistentClass implements AttributeContainer, PropertyCon
 			iterators.add( join.getDeclaredPropertyIterator() );
 		}
 		return new JoinedIterator( iterators );
+	}
+
+	@Override
+	public List<Property> getDeclaredProperties() {
+		return declaredProperties;
+	}
+
+	@Override
+	public PropertyContainer getSuperPropertyContainer() {
+		return superMappedSuperclass;
 	}
 
 	public void addMappedsuperclassProperty(Property p) {

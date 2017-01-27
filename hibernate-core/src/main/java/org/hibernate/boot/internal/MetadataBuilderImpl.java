@@ -81,7 +81,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	public MetadataBuilderImpl(MetadataSources sources) {
 		this(
 				sources,
-				getStandardServiceRegistry( sources.getServiceRegistry() )
+				getStandardServiceRegistry( sources.getServiceRegistry() ),
+				new ClassmateContext()
 		);
 	}
 
@@ -110,9 +111,9 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 	}
 
-	public MetadataBuilderImpl(MetadataSources sources, StandardServiceRegistry serviceRegistry) {
+	public MetadataBuilderImpl(MetadataSources sources, StandardServiceRegistry serviceRegistry, ClassmateContext classmateContext) {
 		this.sources = sources;
-		this.bootstrapContext = new BootstrapContextImpl( serviceRegistry );
+		this.bootstrapContext = new BootstrapContextImpl( serviceRegistry, classmateContext );
 		this.options = new MetadataBuildingOptionsImpl( serviceRegistry );
 
 		for ( MetadataSourcesContributor contributor :

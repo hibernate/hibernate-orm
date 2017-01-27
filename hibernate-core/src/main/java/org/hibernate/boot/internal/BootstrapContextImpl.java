@@ -77,15 +77,15 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 
-	public BootstrapContextImpl(StandardServiceRegistry serviceRegistry) {
+	public BootstrapContextImpl(StandardServiceRegistry serviceRegistry, ClassmateContext classmateContext) {
 		this.serviceRegistry = serviceRegistry;
+		this.classmateContext = classmateContext;
 
 		this.typeConfiguration = new TypeConfiguration();
 		this.basicTypeProducerRegistry = new BasicTypeProducerRegistryImpl( typeConfiguration );
 
 		this.classLoaderAccess = new ClassLoaderAccessImpl( serviceRegistry.getService( ClassLoaderService.class ) );
 		this.hcannReflectionManager = generateHcannReflectionManager();
-		this.classmateContext = new ClassmateContext();
 
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );

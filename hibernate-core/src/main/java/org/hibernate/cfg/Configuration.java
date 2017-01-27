@@ -29,6 +29,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
@@ -88,6 +89,7 @@ public class Configuration {
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 	private final MetadataSources metadataSources;
+	private final ClassmateContext classmateContext;
 
 	// used during processing mappings
 	private ImplicitNamingStrategy implicitNamingStrategy;
@@ -121,12 +123,14 @@ public class Configuration {
 	public Configuration(BootstrapServiceRegistry serviceRegistry) {
 		this.bootstrapServiceRegistry = serviceRegistry;
 		this.metadataSources = new MetadataSources( serviceRegistry );
+		this.classmateContext = new ClassmateContext();
 		reset();
 	}
 
 	public Configuration(MetadataSources metadataSources) {
 		this.bootstrapServiceRegistry = getBootstrapRegistry( metadataSources.getServiceRegistry() );
 		this.metadataSources = metadataSources;
+		this.classmateContext = new ClassmateContext();
 		reset();
 	}
 
@@ -651,7 +655,7 @@ public class Configuration {
 	public SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
 		log.debug( "Building session factory using provided StandardServiceRegistry" );
 
-		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry );
+		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry, classmateContext );
 		if ( implicitNamingStrategy != null ) {
 			metadataBuilder.applyImplicitNamingStrategy( implicitNamingStrategy );
 		}
@@ -754,7 +758,7 @@ public class Configuration {
 	 * by its "entity attribute" parameterized type?
 	 */
 	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
-		addAttributeConverter( AttributeConverterDefinition.from( , attributeConverterClass, autoApply ) );
+		addAttributeConverter( AttributeConverterDefinition.from( classmateContext , attributeConverterClass, autoApply ) );
 	}
 
 	/**
@@ -762,8 +766,8 @@ public class Configuration {
 	 *
 	 * @param attributeConverterClass The AttributeConverter class.
 	 */
-	public void addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
-		addAttributeConverter( AttributeConverterDefinition.from( attributeConverterClass ) );
+	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass) {
+		addAttributeConverter( AttributeConverterDefinition.from( classmateContext, attributeConverterClass ) );
 	}
 
 	/**
@@ -774,7 +778,7 @@ public class Configuration {
 	 * @param attributeConverter The AttributeConverter instance.
 	 */
 	public void addAttributeConverter(AttributeConverter attributeConverter) {
-		addAttributeConverter( AttributeConverterDefinition.from( attributeConverter ) );
+		addAttributeConverter( AttributeConverterDefinition.from( classmateContext, attributeConverter ) );
 	}
 
 	/**
@@ -787,7 +791,7 @@ public class Configuration {
 	 * by its "entity attribute" parameterized type?
 	 */
 	public void addAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
-		addAttributeConverter( AttributeConverterDefinition.from( attributeConverter, autoApply ) );
+		addAttributeConverter( AttributeConverterDefinition.from( classmateContext, attributeConverter, autoApply ) );
 	}
 
 	public void addAttributeConverter(AttributeConverterDefinition definition) {

@@ -24,6 +24,7 @@ import javax.xml.transform.dom.DOMSource;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
+import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -131,8 +132,8 @@ public class MetadataSources implements Serializable {
 	 *
 	 * @return The built metadata.
 	 */
-	public MetadataBuilder getMetadataBuilder(StandardServiceRegistry serviceRegistry) {
-		MetadataBuilderImpl defaultBuilder = new MetadataBuilderImpl( this, serviceRegistry );
+	public MetadataBuilder getMetadataBuilder(StandardServiceRegistry serviceRegistry, ClassmateContext classmateContext) {
+		MetadataBuilderImpl defaultBuilder = new MetadataBuilderImpl( this, serviceRegistry, classmateContext );
 		return getCustomBuilderOrDefault( defaultBuilder );
 	}
 
@@ -179,8 +180,8 @@ public class MetadataSources implements Serializable {
 		return getMetadataBuilder().build();
 	}
 
-	public Metadata buildMetadata(StandardServiceRegistry serviceRegistry) {
-		return getMetadataBuilder( serviceRegistry ).build();
+	public Metadata buildMetadata(StandardServiceRegistry serviceRegistry, ClassmateContext classmateContext) {
+		return getMetadataBuilder( serviceRegistry, classmateContext ).build();
 	}
 
 	/**

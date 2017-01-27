@@ -34,7 +34,7 @@ import org.hibernate.type.spi.Type;
  * Another reason is to make it more convenient to implement custom serialization protocols when the
  * implementation supports clustering.
  *
- * @see Type#getHashCode(Object, SessionFactoryImplementor)
+ * @see Type#getHashCode(Object)
  * @see Type#isEqual(Object, Object)
  * @author Sanne Grinovero
  * @since 5.0
@@ -42,11 +42,11 @@ import org.hibernate.type.spi.Type;
 public class DefaultCacheKeysFactory {
 
 	public static Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return new OldCacheKeyImplementation( id, persister.getKeyType(), persister.getRole(), tenantIdentifier, factory );
+		return new OldCacheKeyImplementation( id, persister.getKeyType(), persister.getRole(), tenantIdentifier );
 	}
 
 	public static Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return new OldCacheKeyImplementation( id, persister.getIdentifierType(), persister.getRootEntityName(), tenantIdentifier, factory );
+		return new OldCacheKeyImplementation( id, persister.getIdentifierType(), persister.getRootEntityName(), tenantIdentifier );
 	}
 
 	public static Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {

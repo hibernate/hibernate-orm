@@ -13,6 +13,7 @@ import org.hibernate.test.bytecode.enhancement.lazy.group.LazyGroupUpdateTestTas
 import org.hibernate.test.bytecode.enhancement.lazy.group.SimpleLazyGroupUpdateTestTask;
 import org.hibernate.test.bytecode.enhancement.association.InheritedAttributeAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.otherentityentrycontext.OtherEntityEntryContextTestTask;
+import org.hibernate.test.bytecode.enhancement.cascade.CascadeWithFkConstraintTestTask;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
@@ -131,6 +132,12 @@ public class EnhancerTest extends BaseUnitTestCase {
 		EnhancerTestUtils.runEnhancerTestTask( CascadeDeleteTestTask.class );
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-10252" )
+	public void testCascadeFkDelete() {
+		EnhancerTestUtils.runEnhancerTestTask( CascadeWithFkConstraintTestTask.class );
+	}
+	
 	@Test
 	@TestForIssue( jiraKey = "HHH-10055" )
 	public void testLazyCollectionHandling() {

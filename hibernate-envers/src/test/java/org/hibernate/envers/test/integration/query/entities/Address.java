@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.test.integration.query.entities;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -21,6 +22,8 @@ public class Address {
 	private Long id;
 
 	private String street;
+
+	@Column(name = "`number`")
 	private int number;
 
 	public Address() {

@@ -21,12 +21,11 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.CharacterArrayType;
-import org.hibernate.type.CharacterNCharType;
-import org.hibernate.type.CharacterType;
 import org.hibernate.type.MaterializedClobType;
 import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.NClobType;
 import org.hibernate.type.NTextType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringNVarcharType;
 import org.hibernate.type.StringType;
 
@@ -112,10 +111,10 @@ public class SimpleNationalizedTest extends BaseUnitTestCase {
 			prop = pc.getProperty( "ncharacterAtt" );
 			if ( metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ) {
 				// See issue HHH-10693
-				assertSame( CharacterType.INSTANCE, prop.getType() );
+				assertSame( StandardBasicTypes.CHARACTER, prop.getType() );
 			}
 			else {
-				assertSame( CharacterNCharType.INSTANCE, prop.getType() );
+				assertSame( StandardBasicTypes.CHARACTER_NCHAR, prop.getType() );
 			}
 		}
 		finally {

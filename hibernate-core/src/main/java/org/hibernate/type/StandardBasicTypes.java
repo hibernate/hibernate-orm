@@ -82,6 +82,7 @@ import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.LongNVarcharSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.LongVarbinarySqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.LongVarcharSqlDescriptor;
+import org.hibernate.type.descriptor.sql.spi.NCharSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.NClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.NumericSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
@@ -284,6 +285,14 @@ public final class StandardBasicTypes {
 	);
 
 	/**
+	 * The standard Hibernate type for mapping {@link Character} to JDBC {@link java.sql.Types#NCHAR NCHAR(1)}.
+	 */
+	public static final Type<Character> CHARACTER_NCHAR = new BasicTypeImpl<>(
+			CharacterJavaDescriptor.INSTANCE,
+			NCharSqlDescriptor.INSTANCE
+	);
+
+	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
 	public static final Type<String> STRING = new BasicTypeImpl<>(
@@ -351,11 +360,32 @@ public final class StandardBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#CLOB CLOB}.
 	 *
-	 * @see #MATERIALIZED_CLOB
 	 * @see #TEXT
 	 */
 	public static final Type<String> MATERIALIZED_CLOB = new BasicTypeImpl<>(
 			StringJavaDescriptor.INSTANCE,
+			ClobSqlDescriptor.DEFAULT
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@code char[]} to JDBC {@link java.sql.Types#CLOB CLOB}.
+	 *
+	 * @see #MATERIALIZED_CLOB
+	 * @see #TEXT
+	 */
+	public static final Type<String> MATERIALIZED_CLOB_CHAR_ARRAY = new BasicTypeImpl<>(
+			PrimitiveCharacterArrayJavaDescriptor.INSTANCE,
+			ClobSqlDescriptor.DEFAULT
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@code Character[]} to JDBC {@link java.sql.Types#CLOB CLOB}.
+	 *
+	 * @see #MATERIALIZED_CLOB
+	 * @see #TEXT
+	 */
+	public static final Type<String> MATERIALIZED_CLOB_CHARACTER_ARRAY = new BasicTypeImpl<>(
+			CharacterArrayJavaDescriptor.INSTANCE,
 			ClobSqlDescriptor.DEFAULT
 	);
 
@@ -721,6 +751,14 @@ public final class StandardBasicTypes {
 		);
 
 		handle(
+				CHARACTER_NCHAR,
+				null,
+				typeConfiguration,
+				basicTypeProducerRegistry,
+				"character_nchar"
+		);
+
+		handle(
 				STRING,
 				"org.hibernate.type.StringType",
 				typeConfiguration,
@@ -782,6 +820,22 @@ public final class StandardBasicTypes {
 				typeConfiguration,
 				basicTypeProducerRegistry,
 				"materialized_clob"
+		);
+
+		handle(
+				MATERIALIZED_CLOB_CHAR_ARRAY,
+				"org.hibernate.type.PrimitiveCharacterArrayClobType",
+				typeConfiguration,
+				basicTypeProducerRegistry,
+				"materialized_clob_char_array"
+		);
+
+		handle(
+				MATERIALIZED_CLOB_CHARACTER_ARRAY,
+				"org.hibernate.type.CharacterArrayClobType",
+				typeConfiguration,
+				basicTypeProducerRegistry,
+				"materialized_clob_character_array"
 		);
 
 		handle(

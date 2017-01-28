@@ -6,9 +6,8 @@
  */
 package org.hibernate.type.descriptor.java.internal;
 
-import java.sql.Types;
-
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -21,35 +20,18 @@ import static java.lang.Boolean.TRUE;
  *
  * @author Steve Ebersole
  */
-public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> {
+public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> implements Primitive<Boolean> {
 	public static final BooleanJavaDescriptor INSTANCE = new BooleanJavaDescriptor();
 
-	private final char characterValueTrue;
-	private final char characterValueFalse;
-
-	private final char characterValueTrueLC;
-
-	private final String stringValueTrue;
-	private final String stringValueFalse;
-
 	public BooleanJavaDescriptor() {
-		this( 'Y', 'N' );
-	}
-
-	public BooleanJavaDescriptor(char characterValueTrue, char characterValueFalse) {
 		super( Boolean.class );
-		this.characterValueTrue = Character.toUpperCase( characterValueTrue );
-		this.characterValueFalse = Character.toUpperCase( characterValueFalse );
-
-		characterValueTrueLC = Character.toLowerCase( characterValueTrue );
-
-		stringValueTrue = String.valueOf( characterValueTrue );
-		stringValueFalse = String.valueOf( characterValueFalse );
 	}
 
 	@Override
 	public SqlTypeDescriptor getJdbcRecommendedSqlType(JdbcRecommendedSqlTypeMappingContext context) {
-		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.BOOLEAN );
+		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor(
+				context.getPreferredSqlTypeCodeForBoolean()
+		);
 	}
 
 	@Override
@@ -81,6 +63,16 @@ public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> 
 		return (long) toInt( value );
 	}
 
+	@Override
+	public Class getPrimitiveClass() {
+		return boolean.class;
+	}
+
+	@Override
+	public Boolean getDefaultValue() {
+		return Boolean.FALSE;
+	}
+
 	@SuppressWarnings({ "unchecked" })
 	@Override
 	public <X> X unwrap(Boolean value, Class<X> type, WrapperOptions options) {
@@ -100,16 +92,24 @@ public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> 
 			return (X) toInteger( value );
 		}
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) toInteger( value );
+			return (X) toLong( value );
 		}
+//		if ( Character.class.isAssignableFrom( type ) ) {
+//			return (X) Character.valueOf( value ? characterValueTrue : characterValueFalse );
+//		}
+//		if ( String.class.isAssignableFrom( type ) ) {
+//			return (X) (value ? stringValueTrue : stringValueFalse);
+//		}
 		if ( Character.class.isAssignableFrom( type ) ) {
-			return (X) Character.valueOf( value ? characterValueTrue : characterValueFalse );
+			final char charValue = value ? 'T' : 'F';
+			return (X) Character.valueOf( charValue );
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) (value ? stringValueTrue : stringValueFalse);
+			return (X) value.toString();
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Boolean wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
@@ -125,13 +125,17 @@ public class BooleanJavaDescriptor extends AbstractBasicJavaDescriptor<Boolean> 
 		if ( Character.class.isInstance( value ) ) {
 			return isTrue( (Character) value ) ? TRUE : FALSE;
 		}
+//		if ( String.class.isInstance( value ) ) {
+//			return isTrue( ( (String) value ).charAt( 0 ) ) ? TRUE : FALSE;
+//		}
 		if ( String.class.isInstance( value ) ) {
-			return isTrue( ( (String) value ).charAt( 0 ) ) ? TRUE : FALSE;
+			return Boolean.valueOf( (String) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}
 
 	private boolean isTrue(char charValue) {
-		return charValue == characterValueTrue || charValue == characterValueTrueLC;
+//		return charValue == 't' || charValue == 'T' || charValue == 'y' || charValue == 'Y';
+		return charValue == 'T';
 	}
 }

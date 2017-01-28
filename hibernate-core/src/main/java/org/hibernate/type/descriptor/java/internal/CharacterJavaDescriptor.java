@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -19,7 +20,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class CharacterJavaDescriptor extends AbstractBasicJavaDescriptor<Character> {
+public class CharacterJavaDescriptor extends AbstractBasicJavaDescriptor<Character> implements Primitive<Character> {
 	public static final CharacterJavaDescriptor INSTANCE = new CharacterJavaDescriptor();
 
 	public CharacterJavaDescriptor() {
@@ -78,5 +79,15 @@ public class CharacterJavaDescriptor extends AbstractBasicJavaDescriptor<Charact
 			return (char) nbr.shortValue();
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public Class getPrimitiveClass() {
+		return char.class;
+	}
+
+	@Override
+	public Character getDefaultValue() {
+		throw new UnsupportedOperationException( "char has no non-null default" );
 	}
 }

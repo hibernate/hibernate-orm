@@ -6,13 +6,15 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+import java.io.Serializable;
+
 /**
  * @author Steve Ebersole
  */
-public interface NumericJavaDescriptor<T> extends BasicJavaDescriptor<T> {
-	// todo : <T extends Number>?
-	// 		^^ That limits us to JDK numeric types.  But without that there is not much
-	//		else we can do with it...
-
-	// todo : define standard toInt, toLong, toXyz... style methods
+public interface NumericJavaDescriptor<T extends Serializable> extends BasicJavaDescriptor<T>, Primitive<T> {
+	// todo (6.0) : ? - implement these?
+//	Byte toByte(Boolean value);
+//	Short toShort(Boolean value);
+//	Integer toInteger(Boolean value);
+//	Long toLong(Boolean value);
 }

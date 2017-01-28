@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.spi;
 
+import java.sql.Types;
 import javax.persistence.EnumType;
 
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -42,9 +43,17 @@ public interface JdbcRecommendedSqlTypeMappingContext {
 	EnumType getEnumeratedType();
 
 	/**
+	 * When mapping a boolean type to the database what is the preferred SQL type code to use?
+	 * <p/>
+	 * Specifically names the key into the
+	 * {@link org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry}.
+	 */
+	default int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BOOLEAN;
+	}
+
+	/**
 	 * Provides access to the TypeConfiguration for access to various type-system registries.
-	 *
-	 * @return The TypeDescriptorRegistryAccess to use
 	 */
 	TypeConfiguration getTypeConfiguration();
 }

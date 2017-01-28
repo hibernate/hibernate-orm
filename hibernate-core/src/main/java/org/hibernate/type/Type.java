@@ -112,7 +112,9 @@ public interface Type<T> {
 	 * Get the Java type handled by this Hibernate mapping Type.  May return {@code null}
 	 * in the case of non-basic types in dynamic domain models.
 	 */
-	Class<T> getJavaType();
+	default Class<T> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
 
 	boolean isEqual(T one, T another);
 }

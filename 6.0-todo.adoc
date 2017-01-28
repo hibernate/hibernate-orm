@@ -24,20 +24,47 @@
 	`org.hibernate.engine.query.spi.NativeSQLQueryPlan`
 * Find deprecations and evaluate for removal
 * Find incubations and evaluate for promotion
-* Consider allowing contributors for Types and JavaTypeDescriptors (and SqlTypeDescriptor?) be
-	available via the new CDI support.  Could also allow "Java Service" lookups to find contributors
+* Allow "Java ServiceLoader" lookups to find contributors
 * `org.hibernate.tuple.ValueGenerator` currently only works with temporal values.  We need to extend that
 	to also work with numeric values (for full "version" coverage).  Add a `#seed` method with a default
 	impl (Java 8 ftw!) that simply call `#next`.  *This affects legacy uses of things like `DbTimestampValue`*
 * Finish removing `#fromString` and `#toString` impls from various `BasicJavaDescriptor` impls and
 	(use the default impl) move handling of String-based conversions into `#wrap` and `#unwrap`.
 	Tedious task, so adding a todo note here - bu partially done.
+* Move `org.hibernate.secure` to `org.hibernate.resource.jacc`?
+* Move `org.hibernate.jmx` to `org.hibernate.resource.jmx`?
+* Parameterized ScrollableResults signature - change signature of row access methods or add new row access methods?
+* Remove `org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport`.  Since we already baseline on Java 8there is
+	no need for the reflection anymore
+* Drop support for loading an entity by passing the instance to populate ("optional entity instance" et al)
+* Redesign Cache SPI as per https://hibernate.atlassian.net/browse/HHH-10707?focusedCommentId=84079&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-84079
+	and https://gist.github.com/sebersole/2c9ad6b77ea3477ba508c21c6ab61b8d.  See https://hibernate.atlassian.net/browse/HHH-11356
+* Redesign `org.hibernate.cache.spi.entry.CacheEntryStructure` and friends (with better names) and make more
+ 	efficient.  At the moment, to cache, we:
+.. Create a "cache entry" (object creation)
+.. "structure" the "cache entry" (object creation)
+.. add "structured data" to the cache.
++
+--
+Would be more efficient to combine (a) and (b).  Both are controlled by the persister anyway
+--
+* Handle `org.hibernate.query.QueryParameter#allowsMultiValuedBinding` for criteria queries
+* Change how we handle boolean/Boolean types in terms of JavaTypeDescriptor, specifically how we convert them
+	to/from their representation in the database (most databases do not support a boolean data type) such as
+	1/0, 'T'/'F', 'Y'/'N', etc.  The initial design plan is to leverage AttributeConverter on the Navigable
+	for this purpose:
+	** If the user has attached an AttributeConverter to the attribute we'd simply use that
+	** Otherwise, we'd look to a config setting that tells us the true/false storage values
+	** Finally we'd ask the Dialect
 
 
 == Follow on items (todo later)
 
 * Another literal related idea is to simply not render them into the SQL but instead transfer them directly to
 	the currentJdbcValues array.  That obviously only matters when literals are used in the SELECT
+* Session#stream API - accepts entity to stream, operations on the stream get translated to SQL up until a forEach etc call
+* Do we want to expose some form of Returns from Query objects as a sort of "result metadata"?  This would play
+	the same role that Query returning Type does now (but Type is too limiting hence its removal)
 
 
 == Open questions
@@ -54,20 +81,10 @@
 		like the legacy `org.hibernate.query.criteria.internal.ValueHandlerFactory`.  Another option
 		(my preference), considering literals must be basic types (?allow composites?) is to define a
 		`BasicType#getLiteralRenderer` (as well as an inverse `BasicType#getLiteralConsumer`).
-* Determine how to deal with `org.hibernate.sqm.parser.criteria.tree.JpaExpression#getExpressionSqmType`.
-	It is only used in "basic contexts" (function return types, arithmetic results, etc)
-* Consider managing AttributeConverter at the Attribute-level, as opposed to at the BasicType level.
-	See `org.hibernate.persister.common.spi.ConvertibleDomainReference`.
-* Move `org.hibernate.secure` to `org.hibernate.resource.jacc`?
-* Move `org.hibernate.jmx` to `org.hibernate.resource.jmx`?
-* Remove (or just deprecate for now?) org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport.  IIRC we decided to
-	baseline ORM 6.0 on Java 8 so no need for the reflection anymore
-* Session#stream API - accepts entity to stream, operations on the stream get translated to SQL up until a forEach etc call
-* Parameterized ScrollableResults signature - change signature of row access methods or add new row access methods?
+* [.line-through]#Determine how to deal with `org.hibernate.sqm.parser.criteria.tree.JpaExpression#getExpressionSqmType`.
+	It is only used in "basic contexts" (function return types, arithmetic results, etc)#
 * Drop `Query#iterate` support (shallow queries)?
-* Drop support for loading an entity by passing the instance to populate ("optional entity instance" et al)?
-* Do we want to expose some form of Returns from Query objects as a sort of "result metadata"?  This would play
-	the same role that Query returning Type does now (but Type is too limiting hence its removal)
+
 * Consider dropping `org.hibernate.cache.spi.QueryCache` in favor of direct coordination between:
 	** `org.hibernate.cache.spi.QueryResultsRegion`
 	** `org.hibernate.cache.spi.UpdateTimestampsCache`
@@ -82,17 +99,6 @@
 				SharedSessionContractImplementor session);
 	}
 --
-* Redesign Cache SPI as per https://hibernate.atlassian.net/browse/HHH-10707?focusedCommentId=84079&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-84079
-	and https://gist.github.com/sebersole/2c9ad6b77ea3477ba508c21c6ab61b8d.  See https://hibernate.atlassian.net/browse/HHH-11356
-* Redesign `org.hibernate.cache.spi.entry.CacheEntryStructure` and friends (with better names) and make more efficient.  At the moment, to cache, we:
-.. Create a "cache entry" (object creation)
-.. "structure" the "cache entry" (object creation)
-.. add "structured data" to the cache.
-+
---
-Would be more efficient to combine (a) and (b).  Both are controlled by the persister anyway
---
-* Determine how to handle `org.hibernate.query.QueryParameter#allowsMultiValuedBinding` for criteria queries
 * Should we rename `JTD#wrap` and `JTD#unwrap` to be more readily understandable by simply the name?
 	Maybe `#to` / `#from`?  The idea with `#unwrap` is that is is defined by JPA so that it woud be
 	easy to grasp, but we all generally need to look to Javadoc every time we deal with them.

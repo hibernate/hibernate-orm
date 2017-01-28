@@ -26,8 +26,6 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.type.CalendarDateType;
-import org.hibernate.type.CalendarType;
 import org.hibernate.type.DateType;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;
@@ -130,7 +128,7 @@ public class TypeTest extends BaseUnitTestCase {
 		different.set( Calendar.DAY_OF_MONTH, 9 );
 		different.set( Calendar.YEAR, 2999 );
 
-		runBasicTests( CalendarDateType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.CALENDAR_DATE, original, copy, different );
 	}
 
 	@Test
@@ -145,7 +143,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Calendar different = new GregorianCalendar();
 		different.setTimeInMillis( now + 9999 );
 
-		runBasicTests( CalendarType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.CALENDAR, original, copy, different );
 	}
 
 	@Test

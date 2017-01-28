@@ -21,8 +21,9 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  */
 public class ByteJavaDescriptor extends AbstractNumericJavaDescriptor<Byte> {
 	public static final ByteJavaDescriptor INSTANCE = new ByteJavaDescriptor();
+	public static final Byte ZERO = (byte) 0;
 
-	public ByteJavaDescriptor() {
+	private ByteJavaDescriptor() {
 		super( Byte.class );
 	}
 
@@ -69,6 +70,7 @@ public class ByteJavaDescriptor extends AbstractNumericJavaDescriptor<Byte> {
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Byte wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
@@ -84,5 +86,15 @@ public class ByteJavaDescriptor extends AbstractNumericJavaDescriptor<Byte> {
 			return Byte.valueOf( ( (String) value ) );
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public Class getPrimitiveClass() {
+		return byte.class;
+	}
+
+	@Override
+	public Byte getDefaultValue() {
+		return ZERO;
 	}
 }

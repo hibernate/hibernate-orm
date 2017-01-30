@@ -16,6 +16,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hamcrest.core.Is.is;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -32,25 +33,18 @@ public class FilterInheritanceTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void prepareTest() throws Exception {
-		openSession();
-		session.beginTransaction();
-
-		persistTestData();
-
-		session.getTransaction().commit();
-		session.close();
+		doInHibernate( this::sessionFactory, session -> {
+			persistTestData();
+		});
 	}
 
 	@Override
 	protected void cleanupTest() throws Exception {
 		super.cleanupTest();
-		openSession();
-		session.beginTransaction();
-
-		session.createQuery( "delete from Human" ).executeUpdate();
-		session.createQuery( "delete from Mammal" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+		doInHibernate( this::sessionFactory, session -> {
+			session.createQuery("delete from Human").executeUpdate();
+			session.createQuery("delete from Mammal").executeUpdate();
+		});
 	}
 
 	protected void persistTestData() {

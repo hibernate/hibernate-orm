@@ -52,6 +52,7 @@ import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.cache.CachingRegionFactory;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import org.junit.After;
 import org.junit.Before;
 
@@ -481,11 +482,9 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void cleanupTestData() throws Exception {
-		Session s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete from java.lang.Object" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		doInHibernate(this::sessionFactory, s -> {
+			s.createQuery("delete from java.lang.Object").executeUpdate();
+		});
 	}
 
 

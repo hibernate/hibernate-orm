@@ -7,6 +7,14 @@
 package org.hibernate.event.internal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.AttributeNode;
+import javax.persistence.Subgraph;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -19,12 +27,16 @@ import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.collection.internal.AbstractPersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -40,6 +52,8 @@ import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jpa.graph.internal.EntityGraphImpl;
+import org.hibernate.jpa.graph.internal.SubgraphImpl;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -754,6 +768,34 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		values = ( (StandardCacheEntryImpl) entry ).assemble(
 				entity, entityId, subclassPersister, session.getInterceptor(), session
 		);
+
+		LoadQueryInfluencers queryInfluencers = session.getLoadQueryInfluencers();
+		EntityGraphImpl<?> graph = null;
+		Set<String> attributeList = new HashSet<>();
+		
+		if(queryInfluencers.getFetchGraph() != null) {
+			graph = (EntityGraphImpl<?>) queryInfluencers.getFetchGraph();
+		}
+		else if(queryInfluencers.getLoadGraph() != null) {
+			graph = (EntityGraphImpl<?>) queryInfluencers.getLoadGraph();
+		}
+		
+		if(graph != null) {
+			String entityJavaType = graph.getEntityType().getJavaType().getName();
+			for(AttributeNode<?> attribute : graph.getAttributeNodes()) {
+				attributeList.add(entityJavaType + "." + attribute.getAttributeName());
+				if(attribute.getSubgraphs().size() > 0) {
+					throw new NotYetImplementedException("SubGraphs are not supported ATM!!!");
+				}
+			}
+		}
+		for(Object value : values) {
+			if(value instanceof AbstractPersistentCollection 
+					&& attributeList.contains(((AbstractPersistentCollection) value).getRole())) {
+				persistenceContext.addNonLazyCollection((AbstractPersistentCollection) value);
+			}
+		}
+		
 		if ( ( (StandardCacheEntryImpl) entry ).isDeepCopyNeeded() ) {
 			TypeHelper.deepCopy(
 					values,
@@ -788,7 +830,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				subclassPersister,
 				false
 		);
-		subclassPersister.afterInitialize( entity, session );
+		subclassPersister.afterInitialize( entity, session );		
 		persistenceContext.initializeNonLazyCollections();
 
 		//PostLoad is needed for EJB3

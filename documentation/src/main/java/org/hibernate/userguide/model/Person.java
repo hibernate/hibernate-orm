@@ -96,8 +96,8 @@ import javax.persistence.Version;
             "   pr.version AS \"pr.version\", " +
             "   ph.id AS \"ph.id\", " +
             "   ph.person_id AS \"ph.person_id\", " +
-            "   ph.phone_number AS \"ph.phone_number\", " +
-            "   ph.type AS \"ph.type\" " +
+            "   ph.phone_number AS \"ph.number\", " +
+            "   ph.phone_type AS \"ph.type\" " +
             "FROM person pr " +
             "JOIN phone ph ON pr.id = ph.person_id " +
             "WHERE pr.name LIKE :name",

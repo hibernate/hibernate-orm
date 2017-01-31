@@ -59,7 +59,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 		else {
 			final ServiceRegistry serviceRegistry =
-					component.getMetadata().getMetadataBuildingOptions().getServiceRegistry();
+					component.getBuildingContext().getMetadataBuildingOptions().getServiceRegistry();
 			final PropertyAccess propertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
 					componentClass,
 					parentPropertyName

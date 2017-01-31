@@ -175,8 +175,10 @@ public class PropertyBinder {
 		final String containerClassName = holder.getClassName();
 		holder.startingProperty( property );
 
-		simpleValueBinder = new SimpleValueBinder();
-		simpleValueBinder.setBuildingContext( buildingContext );
+		simpleValueBinder = new SimpleValueBinder(
+				SimpleValueBinder.Kind.ATTRIBUTE,
+				buildingContext
+		);
 		simpleValueBinder.setPropertyName( name );
 		simpleValueBinder.setReturnedClassName( returnedClassName );
 		simpleValueBinder.setColumns( columns );

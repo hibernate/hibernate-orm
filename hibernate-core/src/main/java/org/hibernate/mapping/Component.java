@@ -18,7 +18,6 @@ import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
@@ -120,7 +119,7 @@ public class Component extends SimpleValue implements PropertyContainer, MetaAtt
 	}
 
 	public Class getComponentClass() throws MappingException {
-		final ClassLoaderService classLoaderService = getMetadata().getMetadataBuildingOptions()
+		final ClassLoaderService classLoaderService = getBuildingContext().getMetadataBuildingOptions()
 				.getServiceRegistry()
 				.getService( ClassLoaderService.class );
 		try {
@@ -166,8 +165,8 @@ public class Component extends SimpleValue implements PropertyContainer, MetaAtt
 	@Override
 	public Type getType() throws MappingException {
 		// TODO : temporary initial step towards HHH-1907
-		final ComponentMetamodel metamodel = new ComponentMetamodel( this, getMetadata().getMetadataBuildingOptions() );
-		final TypeConfiguration typeConfiguration = getMetadata().getTypeConfiguration();
+		final ComponentMetamodel metamodel = new ComponentMetamodel( this, getBuildingContext().getMetadataBuildingOptions() );
+		final TypeConfiguration typeConfiguration = getBuildingContext().getTypeConfiguration();
 		return isEmbedded() ? typeConfiguration.embeddedComponent( metamodel ) : typeConfiguration.component( metamodel );
 	}
 

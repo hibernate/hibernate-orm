@@ -1502,8 +1502,10 @@ public abstract class CollectionBinder {
 			else {
 				holder.prepare( property );
 
-				SimpleValueBinder elementBinder = new SimpleValueBinder();
-				elementBinder.setBuildingContext( buildingContext );
+				SimpleValueBinder elementBinder = new SimpleValueBinder(
+						SimpleValueBinder.Kind.COLLECTION_ELEMENT,
+						buildingContext
+				);
 				elementBinder.setReturnedClassName( collType.getName() );
 				if ( elementColumns == null || elementColumns.length == 0 ) {
 					elementColumns = new Ejb3Column[1];

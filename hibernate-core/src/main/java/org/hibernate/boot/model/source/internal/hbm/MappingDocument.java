@@ -149,6 +149,11 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return rootBuildingContext.getPreferredSqlTypeCodeForBoolean();
+	}
+
+	@Override
 	public void prepare() {
 		// nothing to do here
 	}

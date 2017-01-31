@@ -253,8 +253,10 @@ public class MapBinder extends CollectionBinder {
 					mapValue.setIndex( component );
 				}
 				else {
-					SimpleValueBinder elementBinder = new SimpleValueBinder();
-					elementBinder.setBuildingContext( buildingContext );
+					SimpleValueBinder elementBinder = new SimpleValueBinder(
+							SimpleValueBinder.Kind.COLLECTION_ELEMENT,
+							buildingContext
+					);
 					elementBinder.setReturnedClassName( mapKeyType );
 
 					Ejb3Column[] elementColumns = mapKeyColumns;

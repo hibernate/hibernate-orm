@@ -9,7 +9,7 @@ package org.hibernate.boot.model.type.internal;
 import java.util.Comparator;
 import javax.persistence.TemporalType;
 
-import org.hibernate.boot.model.type.spi.BasicTypeSiteContext;
+import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -20,9 +20,9 @@ import org.hibernate.type.spi.BasicTypeParameters;
  * @author Steve Ebersole
  */
 public class BasicTypeParametersSiteContextAdapter implements BasicTypeParameters {
-	private BasicTypeSiteContext delegate;
+	private BasicTypeResolver delegate;
 
-	public BasicTypeParametersSiteContextAdapter(BasicTypeSiteContext delegate) {
+	public BasicTypeParametersSiteContextAdapter(BasicTypeResolver delegate) {
 		this.delegate = delegate;
 	}
 

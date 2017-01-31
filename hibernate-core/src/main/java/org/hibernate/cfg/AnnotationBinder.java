@@ -149,6 +149,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.IsThisStillNeededException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Any;
@@ -2741,6 +2742,7 @@ public final class AnnotationBinder {
 		SimpleValue id;
 		final String propertyName = inferredData.getPropertyName();
 		HashMap<String, IdGenerator> localGenerators = new HashMap<String, IdGenerator>();
+
 		if ( isComposite ) {
 			id = fillComponent(
 					propertyHolder,
@@ -2768,21 +2770,25 @@ public final class AnnotationBinder {
 			setupComponentTuplizer( property, componentId );
 		}
 		else {
-			//TODO I think this branch is never used. Remove.
+			// todo (6.0) : I think this branch is never used.  Remove.
+			//		For the moment I comment it out and throw an exception so that we can verify this.
 
-			for ( Ejb3Column column : columns ) {
-				column.forceNotNull(); //this is an id
-			}
-			SimpleValueBinder value = new SimpleValueBinder();
-			value.setPropertyName( propertyName );
-			value.setReturnedClassName( inferredData.getTypeName() );
-			value.setColumns( columns );
-			value.setPersistentClassName( persistentClassName );
-			value.setBuildingContext( buildingContext );
-			value.setType( inferredData.getProperty(), inferredData.getClassOrElement(), persistentClassName, null );
-			value.setAccessType( propertyAccessor );
-			id = value.make();
+			throw new IsThisStillNeededException();
+
+//			for ( Ejb3Column column : columns ) {
+//				column.forceNotNull(); //this is an id
+//			}
+//			SimpleValueBinder value = new SimpleValueBinder();
+//			value.setPropertyName( propertyName );
+//			value.setReturnedClassName( inferredData.getTypeName() );
+//			value.setColumns( columns );
+//			value.setPersistentClassName( persistentClassName );
+//			value.setBuildingContext( buildingContext );
+//			value.setType( inferredData.getProperty(), inferredData.getClassOrElement(), persistentClassName, null );
+//			value.setAccessType( propertyAccessor );
+//			id = value.make();
 		}
+
 		rootClass.setIdentifier( id );
 		BinderHelper.makeIdGenerator(
 				id,

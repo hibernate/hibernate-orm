@@ -7,7 +7,7 @@
 package org.hibernate.boot.model.type.internal;
 
 import org.hibernate.boot.model.type.spi.BasicTypeProducer;
-import org.hibernate.boot.model.type.spi.BasicTypeSiteContext;
+import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -34,7 +34,7 @@ public class BasicTypeProducerInstanceImpl implements BasicTypeProducer {
 	}
 
 	@Override
-	public BasicTypeProducer injectBasicTypeSiteContext(BasicTypeSiteContext context) {
+	public BasicTypeProducer injectBasicTypeSiteContext(BasicTypeResolver context) {
 		// nothing to do here
 		return this;
 	}

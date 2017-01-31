@@ -41,7 +41,7 @@ import org.hibernate.type.spi.BasicType;
 public interface BasicTypeProducer {
 	String getName();
 
-	BasicTypeProducer injectBasicTypeSiteContext(BasicTypeSiteContext context);
+	BasicTypeProducer injectBasicTypeSiteContext(BasicTypeResolver context);
 
 	BasicType produceBasicType();
 }

@@ -20,13 +20,14 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.internal.AttributeConverterDescriptorNonAutoApplicableImpl;
-import org.hibernate.boot.model.type.spi.BasicTypeProducer;
-import org.hibernate.boot.model.type.spi.BasicTypeSiteContextSupport;
+import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.BasicTypeResolverConvertibleSupport;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -38,15 +39,16 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicTypeParameters;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
@@ -59,7 +61,7 @@ public class SimpleValue implements KeyValue {
 
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
-	private final InFlightMetadataCollector metadata;
+	private final MetadataBuildingContext buildingContext;
 
 	private final List<Selectable> columns = new ArrayList<>();
 
@@ -81,19 +83,19 @@ public class SimpleValue implements KeyValue {
 
 	private AttributeConverterDescriptor attributeConverterDescriptor;
 	private Type type;
-	private BasicTypeProducer basicTypeProducer;
+	private BasicTypeResolver basicTypeResolver;
 
-	public SimpleValue(InFlightMetadataCollector metadata) {
-		this.metadata = metadata;
+	public SimpleValue(MetadataBuildingContext buildingContext) {
+		this.buildingContext = buildingContext;
 	}
 
-	public SimpleValue(InFlightMetadataCollector metadata, Table table) {
-		this( metadata );
+	public SimpleValue(MetadataBuildingContext buildingContext, Table table) {
+		this( buildingContext );
 		this.table = table;
 	}
 
-	public InFlightMetadataCollector getMetadata() {
-		return metadata;
+	public MetadataBuildingContext getBuildingContext() {
+		return buildingContext;
 	}
 
 	public AttributeConverterDescriptor getAttributeConverterDescriptor() {
@@ -102,7 +104,7 @@ public class SimpleValue implements KeyValue {
 
 	@Override
 	public ServiceRegistry getServiceRegistry() {
-		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
+		return getBuildingContext().getMetadataCollector().getMetadataBuildingOptions().getServiceRegistry();
 	}
 
 	@Override
@@ -159,14 +161,14 @@ public class SimpleValue implements KeyValue {
 	public void setTypeName(String typeName) {
 		if ( typeName != null && typeName.startsWith( AttributeConverterDescriptor.EXPLICIT_TYPE_NAME_PREFIX ) ) {
 			final String converterClassName = typeName.substring( AttributeConverterDescriptor.EXPLICIT_TYPE_NAME_PREFIX.length() );
-			final ClassLoaderService cls = getMetadata().getMetadataBuildingOptions()
+			final ClassLoaderService cls = getBuildingContext().getMetadataCollector().getMetadataBuildingOptions()
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );
 			try {
 				final Class<AttributeConverter> converterClass = cls.classForName( converterClassName );
 				attributeConverterDescriptor = new AttributeConverterDescriptorNonAutoApplicableImpl(
 						converterClass.newInstance(),
-						getMetadata().getTypeConfiguration().getJavaTypeDescriptorRegistry()
+						getBuildingContext().getBootstrapContext().getTypeConfiguration().getJavaTypeDescriptorRegistry()
 				);
 				return;
 			}
@@ -273,7 +275,7 @@ public class SimpleValue implements KeyValue {
 		}
 
 		// TODO : we should pass along all settings once "config lifecycle" is hashed out...
-		final ConfigurationService cs = metadata.getMetadataBuildingOptions().getServiceRegistry()
+		final ConfigurationService cs = buildingContext.getMetadataCollector().getMetadataBuildingOptions().getServiceRegistry()
 				.getService( ConfigurationService.class );
 
 		params.put(
@@ -408,11 +410,11 @@ public class SimpleValue implements KeyValue {
 
 	public Type getType() throws MappingException {
 		if ( type == null ) {
-			if ( basicTypeProducer == null ) {
+			if ( basicTypeResolver == null ) {
 				throw new MappingException( "Access to Type was requested, but Type is not yet resolved and no BasicTypeProducer was injected" );
 			}
 
-			type = basicTypeProducer.produceBasicType();
+			type = basicTypeResolver.resolveBasicType();
 		}
 
 		if ( type == null ) {
@@ -461,34 +463,39 @@ public class SimpleValue implements KeyValue {
 		}
 	}
 
-	private static class BasicTypeSiteContextTypeUsingReflection extends BasicTypeSiteContextSupport {
-		private final AttributeConverterDefinition attributeConverterDescriptor;
+	private static class BasicTypeResolverUsingReflection extends BasicTypeResolverConvertibleSupport {
 		private final JavaTypeDescriptor javaTypeDescriptor;
 		private final SqlTypeDescriptor sqlTypeDescriptor;
+		private final boolean isLob;
+		private final boolean isNationalized;
 
-		public BasicTypeSiteContextTypeUsingReflection(
-				AttributeConverterDescriptor attributeConverterDescriptor,
+		public BasicTypeResolverUsingReflection(
+				MetadataBuildingContext buildingContext,
+				AttributeConverterDescriptor converterDefinition,
 				String className,
 				String propertyName,
-				InFlightMetadataCollector metadata) {
-			this.attributeConverterDescriptor = attributeConverterDescriptor;
+				boolean isLob,
+				boolean isNationalized) {
+			super( buildingContext, converterDefinition );
+			this.isLob = isLob;
+			this.isNationalized = isNationalized;
 
-			if ( attributeConverterDescriptor == null ) {
+			if ( converterDefinition == null ) {
 				final Class attributeType = ReflectHelper.reflectedPropertyClass(
 						className,
 						propertyName,
-						metadata.getMetadataBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class )
+						buildingContext.getBootstrapContext().getServiceRegistry().getService( ClassLoaderService.class )
 				);
-				javaTypeDescriptor = metadata.getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( attributeType );
+				javaTypeDescriptor = buildingContext.getBootstrapContext().getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( attributeType );
 				sqlTypeDescriptor = javaTypeDescriptor.getJdbcRecommendedSqlType(
-						metadata.getTypeConfiguration().getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext()
+						buildingContext.getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext()
 				);
 
 			}
 			else {
-				javaTypeDescriptor = attributeConverterDescriptor.getDomainType();
-				sqlTypeDescriptor = attributeConverterDescriptor.getJdbcType().getJdbcRecommendedSqlType(
-						metadata.getTypeConfiguration().getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext()
+				javaTypeDescriptor = converterDefinition.getDomainType();
+				sqlTypeDescriptor = converterDefinition.getJdbcType().getJdbcRecommendedSqlType(
+						buildingContext.getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry().getBaseJdbcRecommendedSqlTypeMappingContext()
 				);
 			}
 		}
@@ -504,25 +511,45 @@ public class SimpleValue implements KeyValue {
 		}
 
 		@Override
-		public AttributeConverterDefinition getAttributeConverterDefinition() {
-			return attributeConverterDescriptor;
+		public boolean isNationalized() {
+			return isNationalized;
+		}
+
+		@Override
+		public boolean isLob() {
+			return isLob;
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForBoolean() {
+			return ConfigurationHelper.getPreferredSqlTypeCodeForBoolean(
+					getBuildingContext().getBootstrapContext().getServiceRegistry()
+			);
 		}
 	}
 
 
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
-		basicTypeProducer.injectBasicTypeSiteContext(
-				new BasicTypeSiteContextTypeUsingReflection(
-						attributeConverterDescriptor,
-						className,
-						propertyName,
-						metadata
-				)
+		if ( basicTypeResolver == null ) {
+			// for now throw an exception - not sure yet if this is valid
+			//		it would mean (most likely) that annotation binding injected
+			//		a BasicTypeResolver earlier and then calling this method (or
+			//		something else calls it after).  Throw the exception for now
+			//		because I want to see if this happens in reality.
+			throw new NotYetImplementedException( "not yet sure this is a valid condition" );
+		}
+		basicTypeResolver = new BasicTypeResolverUsingReflection(
+				buildingContext,
+				attributeConverterDescriptor,
+				className,
+				propertyName,
+				isLob,
+				isNationalized
 		);
 	}
 
 	public boolean isTypeSpecified() {
-		return typeName!=null;
+		return typeName != null;
 	}
 
 	public void setTypeParameters(Properties parameterMap) {
@@ -585,7 +612,7 @@ public class SimpleValue implements KeyValue {
 					? null
 					: xProperty.getAnnotations();
 
-			final ClassLoaderService classLoaderService = getMetadata().getMetadataBuildingOptions()
+			final ClassLoaderService classLoaderService = getBuildingContext().getMetadataBuildingOptions()
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );
 			typeParameters.put(
@@ -608,8 +635,8 @@ public class SimpleValue implements KeyValue {
 		}
 	}
 
-	public void setBasicTypeProducer(BasicTypeProducer basicTypeProducer) {
-		this.basicTypeProducer = basicTypeProducer;
+	public void setBasicTypeResolver(BasicTypeResolver basicTypeResolver) {
+		this.basicTypeResolver = basicTypeResolver;
 	}
 
 	private static final class ParameterTypeImpl implements DynamicParameterizedType.ParameterType {

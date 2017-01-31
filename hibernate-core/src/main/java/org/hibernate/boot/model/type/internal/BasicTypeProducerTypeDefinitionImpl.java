@@ -44,11 +44,11 @@ public class BasicTypeProducerTypeDefinitionImpl extends AbstractBasicTypeProduc
 			params.putAll( typeDefinition.getParameters() );
 		}
 
-		if ( getBasicTypeSiteContext() != null && CollectionHelper.isNotEmpty( getBasicTypeSiteContext().getLocalTypeParameters() ) ) {
+		if ( getBasicTypeResolver() != null && CollectionHelper.isNotEmpty( getBasicTypeResolver().getLocalTypeParameters() ) ) {
 			if ( params == null ) {
 				params = new HashMap<>();
 			}
-			params.putAll( getBasicTypeSiteContext().getLocalTypeParameters() );
+			params.putAll( getBasicTypeResolver().getLocalTypeParameters() );
 		}
 
 		return params;

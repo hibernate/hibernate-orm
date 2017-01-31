@@ -12,6 +12,10 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
  * @author Steve Ebersole
@@ -62,5 +66,10 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 	@Override
 	public ObjectNameNormalizer getObjectNameNormalizer() {
 		return objectNameNormalizer;
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( bootstrapContext.getServiceRegistry() );
 	}
 }

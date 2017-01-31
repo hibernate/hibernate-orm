@@ -91,7 +91,7 @@ import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.boot.model.source.spi.VersionAttributeSource;
 import org.hibernate.boot.model.type.internal.BasicTypeProducerUnregisteredImpl;
 import org.hibernate.boot.model.type.spi.BasicTypeProducer;
-import org.hibernate.boot.model.type.spi.BasicTypeSiteContext;
+import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
@@ -715,7 +715,7 @@ public class ModelBinder {
 				sourceDocument,
 				idSource.getIdentifierAttributeSource().getTypeInformation(),
 				idValue,
-				new BasicTypeSiteContext() {
+				new BasicTypeResolver() {
 					@Override
 					public Map getLocalTypeParameters() {
 						return idSource.getIdentifierAttributeSource().getTypeInformation().getParameters();
@@ -1077,7 +1077,7 @@ public class ModelBinder {
 				sourceDocument,
 				versionAttributeSource.getTypeInformation(),
 				versionValue,
-				new BasicTypeSiteContext() {
+				new BasicTypeResolver() {
 					@Override
 					public Map getLocalTypeParameters() {
 						return versionAttributeSource.getTypeInformation().getParameters();
@@ -1194,7 +1194,7 @@ public class ModelBinder {
 			final EntityHierarchySourceImpl hierarchySource,
 			RootClass rootEntityDescriptor) {
 		final SimpleValue discriminatorValue = new SimpleValue(
-				sourceDocument.getMetadataCollector(),
+				sourceDocument,
 				rootEntityDescriptor.getTable()
 		);
 		rootEntityDescriptor.setDiscriminator( discriminatorValue );
@@ -1206,73 +1206,7 @@ public class ModelBinder {
 		bindSimpleValueType(
 				sourceDocument,
 				new HibernateTypeSourceImpl( typeName ),
-				discriminatorValue,
-				new BasicTypeSiteContext() {
-					@Override
-					public Map getLocalTypeParameters() {
-						return null;
-					}
-
-					@Override
-					public boolean isId() {
-						return false;
-					}
-
-					@Override
-					public boolean isVersion() {
-						return false;
-					}
-
-					@Override
-					public BasicJavaDescriptor getJavaTypeDescriptor() {
-						return null;
-					}
-
-					@Override
-					public SqlTypeDescriptor getSqlTypeDescriptor() {
-						return null;
-					}
-
-					@Override
-					public AttributeConverterDefinition getAttributeConverterDefinition() {
-						return null;
-					}
-
-					@Override
-					public MutabilityPlan getMutabilityPlan() {
-						return null;
-					}
-
-					@Override
-					public Comparator getComparator() {
-						return null;
-					}
-
-					@Override
-					public TemporalType getTemporalPrecision() {
-						return null;
-					}
-
-					@Override
-					public boolean isNationalized() {
-						return false;
-					}
-
-					@Override
-					public boolean isLob() {
-						return false;
-					}
-
-					@Override
-					public EnumType getEnumeratedType() {
-						return null;
-					}
-
-					@Override
-					public TypeConfiguration getTypeConfiguration() {
-						return sourceDocument.getMetadataCollector().getTypeConfiguration();
-					}
-				}
+				discriminatorValue
 		);
 
 		relationalObjectBinder.bindColumnOrFormula(
@@ -1361,7 +1295,7 @@ public class ModelBinder {
 					final Property attribute = createBasicAttribute(
 							mappingDocument,
 							basicAttributeSource,
-							new SimpleValue( mappingDocument.getMetadataCollector(), table ),
+							new SimpleValue( mappingDocument, table ),
 							entityDescriptor.getClassName()
 					);
 
@@ -2100,7 +2034,7 @@ public class ModelBinder {
 				sourceDocument,
 				attributeSource.getTypeInformation(),
 				value,
-				new BasicTypeSiteContext() {
+				new BasicTypeResolver() {
 					@Override
 					public Map getLocalTypeParameters() {
 						return attributeSource.getTypeInformation().getParameters();
@@ -2928,7 +2862,7 @@ public class ModelBinder {
 				attribute = createBasicAttribute(
 						sourceDocument,
 						(SingularAttributeSourceBasic) attributeSource,
-						new SimpleValue( sourceDocument.getMetadataCollector(), component.getTable() ),
+						new SimpleValue( sourceDocument, component.getTable() ),
 						component.getComponentClassName()
 				);
 			}
@@ -2990,14 +2924,13 @@ public class ModelBinder {
 	private static void bindSimpleValueType(
 			MappingDocument mappingDocument,
 			HibernateTypeSource typeSource,
-			SimpleValue simpleValue,
-			BasicTypeSiteContext siteContext) {
+			SimpleValue simpleValue) {
 		if ( mappingDocument.getBuildingOptions().useNationalizedCharacterData() ) {
 			simpleValue.makeNationalized();
 		}
 
 		final BasicTypeProducer typeProducer = resolveTypeProducer( mappingDocument, typeSource );
-		simpleValue.setBasicTypeProducer( typeProducer );
+		simpleValue.setBasicTypeResolver( typeProducer );
 		typeProducer.injectBasicTypeSiteContext( siteContext );
 	}
 
@@ -3584,7 +3517,7 @@ public class ModelBinder {
 						mappingDocument,
 						idSource.getTypeInformation(),
 						idBinding,
-						new BasicTypeSiteContext() {
+						new BasicTypeResolver() {
 							@Override
 							public Map getLocalTypeParameters() {
 								return idSource.getTypeInformation().getParameters();
@@ -3692,7 +3625,7 @@ public class ModelBinder {
 						getMappingDocument(),
 						elementSource.getExplicitHibernateTypeSource(),
 						elementBinding,
-						new BasicTypeSiteContext() {
+						new BasicTypeResolver() {
 							@Override
 							public Map getLocalTypeParameters() {
 								return elementSource.getExplicitHibernateTypeSource().getParameters();
@@ -4247,7 +4180,7 @@ public class ModelBinder {
 				mappingDocument,
 				indexSource.getTypeInformation(),
 				indexBinding,
-				new BasicTypeSiteContext() {
+				new BasicTypeResolver() {
 					@Override
 					public Map getLocalTypeParameters() {
 						return indexSource.getTypeInformation().getParameters();
@@ -4359,7 +4292,7 @@ public class ModelBinder {
 					mappingDocument,
 					mapKeySource.getTypeInformation(),
 					value,
-					new BasicTypeSiteContext() {
+					new BasicTypeResolver() {
 						@Override
 						public Map getLocalTypeParameters() {
 							return mapKeySource.getTypeInformation().getParameters();

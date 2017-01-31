@@ -6,18 +6,17 @@
  */
 package org.hibernate.testing.boot;
 
-import org.hibernate.boot.internal.ClassLoaderAccessImpl;
+import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.type.TypeResolver;
 
 /**
 * @author Steve Ebersole
@@ -26,8 +25,7 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 	private final MetadataBuildingOptions buildingOptions;
 	private final MappingDefaults mappingDefaults;
 	private final InFlightMetadataCollector metadataCollector;
-	private final ClassLoaderAccessImpl classLoaderAccess;
-
+	private final BootstrapContext bootstrapContext;
 	private final ObjectNameNormalizer objectNameNormalizer;
 
 	public MetadataBuildingContextTestingImpl() {
@@ -36,9 +34,12 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 
 	public MetadataBuildingContextTestingImpl(StandardServiceRegistry serviceRegistry) {
 		buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		bootstrapContext = new BootstrapContextImpl(
+				serviceRegistry,
+				null
+		);
 		mappingDefaults = new MetadataBuilderImpl.MappingDefaultsImpl( serviceRegistry );
-		metadataCollector = new InFlightMetadataCollectorImpl( buildingOptions );
-		classLoaderAccess = new ClassLoaderAccessImpl( null, serviceRegistry );
+		metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext,buildingOptions );
 
 		objectNameNormalizer = new ObjectNameNormalizer() {
 			@Override
@@ -64,8 +65,13 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 	}
 
 	@Override
-	public ClassLoaderAccess getClassLoaderAccess() {
-		return classLoaderAccess;
+	public BootstrapContext getBootstrapContext() {
+		return null;
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return 0;
 	}
 
 	@Override

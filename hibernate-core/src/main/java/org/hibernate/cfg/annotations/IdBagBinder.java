@@ -55,8 +55,12 @@ public class IdBagBinder extends BagBinder {
 				property, unique, associationTableBinder, ignoreNotFound, getBuildingContext()
 		);
 		CollectionId collectionIdAnn = property.getAnnotation( CollectionId.class );
+
 		if ( collectionIdAnn != null ) {
-			SimpleValueBinder simpleValue = new SimpleValueBinder();
+			SimpleValueBinder simpleValue = new SimpleValueBinder(
+					SimpleValueBinder.Kind.COLLECTION_ID,
+					buildingContext
+			);
 
 			PropertyData propertyData = new WrappedInferredData(
 					new PropertyInferredData(
@@ -91,7 +95,7 @@ public class IdBagBinder extends BagBinder {
 				throw new AnnotationException( "@CollectionId is missing type: "
 						+ StringHelper.qualify( propertyHolder.getPath(), propertyName ) );
 			}
-			simpleValue.setBuildingContext( getBuildingContext() );
+
 			SimpleValue id = simpleValue.make();
 			( (IdentifierCollection) collection ).setIdentifier( id );
 			String generator = collectionIdAnn.generator();

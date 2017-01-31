@@ -61,7 +61,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
 		if (referencedEntityName == null) {
-			final ClassLoaderService cls = getMetadata().getMetadataBuildingOptions()
+			final ClassLoaderService cls = getBuildingContext().getMetadataBuildingOptions()
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );
 			referencedEntityName = ReflectHelper.reflectedPropertyClass( className, propertyName, cls ).getName();

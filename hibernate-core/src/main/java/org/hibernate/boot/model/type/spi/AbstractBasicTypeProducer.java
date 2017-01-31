@@ -14,31 +14,31 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public abstract class AbstractBasicTypeProducer implements BasicTypeProducer {
 	private final TypeConfiguration typeConfiguration;
-	private BasicTypeSiteContext basicTypeSiteContext;
+	private BasicTypeResolver basicTypeResolver;
 
 	protected AbstractBasicTypeProducer(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
 	}
 
 	@Override
-	public BasicTypeProducer injectBasicTypeSiteContext(BasicTypeSiteContext basicTypeSiteContext) {
-		this.basicTypeSiteContext = basicTypeSiteContext;
+	public BasicTypeProducer injectBasicTypeSiteContext(BasicTypeResolver basicTypeResolver) {
+		this.basicTypeResolver = basicTypeResolver;
 		return this;
 	}
 
-	protected BasicTypeSiteContext getBasicTypeSiteContext() {
-		return basicTypeSiteContext;
+	protected BasicTypeResolver getBasicTypeResolver() {
+		return basicTypeResolver;
 	}
 
 	@Override
 	public BasicType produceBasicType() {
-		if ( basicTypeSiteContext == null ) {
+		if ( basicTypeResolver == null ) {
 			return null;
 		}
 
 		return typeConfiguration.getBasicTypeRegistry().resolveBasicType(
-				basicTypeSiteContext,
-				basicTypeSiteContext
+				basicTypeResolver,
+				basicTypeResolver
 		);
 	}
 }

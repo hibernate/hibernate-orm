@@ -1677,4 +1677,10 @@ public interface AvailableSettings {
 	 * by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.
 	 */
 	String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
+
+	/**
+	 * Global setting identifying the preferred JDBC type code for storing
+	 * boolean values.  The fallback is to ask the Dialect
+	 */
+	String PREFERRED_BOOLEAN_JDBC_TYPE_CODE = "hibernate.type.perferred_boolean_jdbc_type_code";
 }

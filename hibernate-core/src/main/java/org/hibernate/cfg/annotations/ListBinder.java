@@ -116,10 +116,13 @@ public class ListBinder extends CollectionBinder {
 			List list = (List) this.collection;
 			if ( !list.isOneToMany() ) indexColumn.forceNotNull();
 			indexColumn.setPropertyHolder( valueHolder );
-			SimpleValueBinder value = new SimpleValueBinder();
+
+			SimpleValueBinder value = new SimpleValueBinder(
+					SimpleValueBinder.Kind.COLLECTION_INDEX,
+					buildingContext
+			);
 			value.setColumns( new Ejb3Column[] { indexColumn } );
 			value.setExplicitType( "integer" );
-			value.setBuildingContext( getBuildingContext() );
 			SimpleValue indexValue = value.make();
 			indexColumn.linkWithValue( indexValue );
 			list.setIndex( indexValue );

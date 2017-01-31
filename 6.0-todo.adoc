@@ -56,6 +56,27 @@ Would be more efficient to combine (a) and (b).  Both are controlled by the pers
 	** If the user has attached an AttributeConverter to the attribute we'd simply use that
 	** Otherwise, we'd look to a config setting that tells us the true/false storage values
 	** Finally we'd ask the Dialect
+* While building Metadata during bootstrap, it is important to minimize Class loading - at least on the
+	application ClassLoader (we can always safely load things on the "JPA temp ClassLoader").  To that end,
+	the general process for determining the type of an attribute should be something like:
+	** (Create HCANN such that it prefers the JPA temp ClassLoader if available.  See
+		`BootstrapContextImpl#generateHcannClassLoaderDelegate`)
+	** When we get an XProperty from HCANN check it for any of the annotations that indicate that this is a
+		non-basic and non-embedded attribute.  The reason we check is that JPA says that any attribute
+		not otherwise annotated is considered a basic attribute; however Hibernate does allow this for embedded
+		as well - the Embeddable Class should not be loaded either.
+	** If the attribute is deemed to be Basic then build the SimpleValue and pass in the "SiteContext"
+		encompassing the XProperty.
+			*** At this point it is safe to load the Class of the `XClass` from `XProperty#getType` at any
+				time we need.
+			*** Specifically, we would need this eventually to resolve the `JavaTypeDescriptor`, but again,
+				we should delay this because later-known additional info could adjust the `JavaTypeDescriptor`
+				we want to use.  Or is this all relative to the "SiteContext" and any information already
+				known (config values, e.g.)?
+			*** See if the SiteContext indicates a particular `SqlTypeDescriptor`.  If so, use it.  If not,
+				ask the `JavaTypeDescriptor` for its `#getJdbcRecommendedSqlType` and use that.
+			*** and so on..
+
 
 
 == Follow on items (todo later)

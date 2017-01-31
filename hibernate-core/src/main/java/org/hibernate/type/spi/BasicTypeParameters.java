@@ -15,8 +15,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
- * Essentially acts as a parameter-object to {@link BasicTypeRegistry#resolveBasicType}.  Defines
- * the
+ * Essentially acts as a parameter-object to {@link BasicTypeRegistry#resolveBasicType}.
  *
  * @author Steve Ebersole
  */

@@ -41,7 +41,7 @@ public class Any extends SimpleValue {
 	}
 
 	public Type getType() throws MappingException {
-		return getMetadata().any(
+		return getBuildingContext().any(
 				keyTypeProducer.produceBasicType(),
 				discriminatorTypeProducer.produceBasicType(),
 				discriminatorMap

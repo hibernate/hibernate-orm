@@ -246,6 +246,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected BootstrapServiceRegistry buildBootstrapServiceRegistry() {
 		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
+		builder.applyClassLoader( getClass().getClassLoader() );
 		prepareBootstrapRegistryBuilder( builder );
 		return builder.build();
 	}

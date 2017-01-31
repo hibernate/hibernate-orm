@@ -201,4 +201,10 @@ abstract public class DialectChecks {
 			return dialect.supportsPartitionBy();
 		}
 	}
+
+	public static class SupportNonQueryValuesListInCTE implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsValuesList() && dialect.supportsNonQueryInCTE();
+		}
+	}
 }

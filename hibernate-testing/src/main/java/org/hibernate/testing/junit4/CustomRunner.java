@@ -261,25 +261,13 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 			}
 		}
 
-		boolean foundMatch = false;
+
 		// @RequiresDialects & @RequiresDialect
 		final List<RequiresDialect> requiresDialects = Helper.collectAnnotations(
 				RequiresDialect.class, RequiresDialects.class, frameworkMethod, getTestClass()
 		);
-		for ( RequiresDialect requiresDialectAnn : requiresDialects ) {
-			for ( Class<? extends Dialect> dialectClass : requiresDialectAnn.value() ) {
-				foundMatch = requiresDialectAnn.strictMatching()
-						? dialectClass.equals( dialect.getClass() )
-						: dialectClass.isInstance( dialect );
-				if ( foundMatch ) {
-					break;
-				}
-			}
-			if ( foundMatch ) {
-				break;
-			}
-		}
-		if ( !foundMatch ) {
+
+		if ( !requiresDialects.isEmpty() && !isDialectMatchingRequired( requiresDialects ) ) {
 			return buildIgnore( requiresDialects );
 		}
 
@@ -306,6 +294,24 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		}
 
 		return null;
+	}
+
+	private boolean isDialectMatchingRequired(List<RequiresDialect> requiresDialects) {
+		boolean foundMatch = false;
+		for ( RequiresDialect requiresDialectAnn : requiresDialects ) {
+			for ( Class<? extends Dialect> dialectClass : requiresDialectAnn.value() ) {
+				foundMatch = requiresDialectAnn.strictMatching()
+						? dialectClass.equals( dialect.getClass() )
+						: dialectClass.isInstance( dialect );
+				if ( foundMatch ) {
+					break;
+				}
+			}
+			if ( foundMatch ) {
+				break;
+			}
+		}
+		return foundMatch;
 	}
 
 	private Ignore buildIgnore(Skip skip) {

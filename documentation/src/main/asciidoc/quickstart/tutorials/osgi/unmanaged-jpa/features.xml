@@ -9,7 +9,7 @@
   <feature name="hibernate-test">
 
     <!-- JTA -->
-    <bundle start-level="30">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
+    <bundle start-level="30">mvn:org.jboss.spec.javax.transaction/jboss-transaction-api_1.2_spec/1.0.1.Final</bundle>
 
     <!-- JPA -->
     <bundle start-level="30">mvn:org.hibernate.javax.persistence/hibernate-jpa-2.1-api/1.0.0.Final</bundle>

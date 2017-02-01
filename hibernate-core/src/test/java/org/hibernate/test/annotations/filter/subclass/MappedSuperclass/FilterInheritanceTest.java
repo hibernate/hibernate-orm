@@ -34,53 +34,36 @@ public class FilterInheritanceTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void prepareTest() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
-			persistTestData();
-		});
+			Mammal mammal = new Mammal();
+			mammal.setName( "unimportant" );
+			session.persist( mammal );
+
+			Human human = new Human();
+			human.setName( "unimportant" );
+			session.persist( human );
+
+			Human human1 = new Human();
+			human1.setName( "unimportant_1" );
+			session.persist( human1 );
+		} );
 	}
 
 	@Override
-	protected void cleanupTest() throws Exception {
-		super.cleanupTest();
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery("delete from Human").executeUpdate();
-			session.createQuery("delete from Mammal").executeUpdate();
-		});
-	}
-
-	protected void persistTestData() {
-		Mammal mammal = new Mammal();
-		mammal.setName( "unimportant" );
-		session.persist( mammal );
-
-		Human human = new Human();
-		human.setName( "unimportant" );
-		session.persist( human );
-
-		Human human1 = new Human();
-		human1.setName( "unimportant_1" );
-		session.persist( human1 );
+	protected boolean isCleanupTestDataRequired() {
+		return true;
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8895")
-	public void testSlectFromHuman() throws Exception {
-		openSession();
-		session.enableFilter( "nameFilter" ).setParameter( "name", "unimportant" );
-		try {
-			transaction = session.beginTransaction();
+	public void testSelectFromHuman() throws Exception {
+		doInHibernate( this::sessionFactory, session -> {
+			session.enableFilter( "nameFilter" ).setParameter( "name", "unimportant" );
+
 			List humans = session.createQuery( "SELECT h FROM Human h" ).list();
 
 			assertThat( humans.size(), is( 1 ) );
 			Human human = (Human) humans.get( 0 );
-			assertThat(human.getName(), is("unimportant"));
-
-			transaction.commit();
-		}
-		catch (Exception e) {
-			if ( transaction != null ) {
-				transaction.rollback();
-			}
-			throw e;
-		}
+			assertThat( human.getName(), is( "unimportant" ) );
+		} );
 	}
 }

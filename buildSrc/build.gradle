@@ -25,6 +25,8 @@ buildDir = "target"
 dependencies {
 	compile gradleApi()
 	compile localGroovy()
+	compile 'net.bytebuddy:byte-buddy:1.6.7'
+	compile group: 'net.bytebuddy', name: 'byte-buddy-agent', version: '1.6.7'
 
 	compile 'org.hibernate.build.gradle:gradle-animalSniffer-plugin:1.0.1.Final'
 	compile 'org.hibernate.build.gradle:hibernate-matrix-testing:2.0.0-SNAPSHOT'

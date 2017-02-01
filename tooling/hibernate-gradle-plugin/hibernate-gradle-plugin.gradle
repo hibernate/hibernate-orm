@@ -1,3 +1,5 @@
+import org.hibernate.build.JavaGradlePluginDisablePublishing
+
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -22,4 +24,9 @@ dependencies {
 mavenPom {
 	name = 'Hibernate Gradle plugin'
 	description = "Gradle plugin for integrating Hibernate functionality into your build"
+}
+
+project.plugins.withType( JavaGradlePluginPlugin ) {
+	JavaGradlePluginDisablePublishing disablePublishing = new JavaGradlePluginDisablePublishing();
+	disablePublishing.disable();
 }

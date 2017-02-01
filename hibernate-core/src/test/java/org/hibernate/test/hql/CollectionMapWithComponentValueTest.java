@@ -74,7 +74,7 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 			s.save( baseTestEntity2 );
 			TestEntity testEntity2 = new TestEntity();
 			Map<KeyValue, EmbeddableValue> map2 = new HashMap<>();
-			map.put( keyValue2, embeddableValue );
+			map2.put( keyValue2, embeddableValue );
 			testEntity2.values = map2;
 			s.save( testEntity2 );
 		}
@@ -221,6 +221,7 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 		{
 			// Assert that a left join is used for joining the map key entity table
 			List keyValues= s.createQuery( "select key(v) from BaseTestEntity bte left join bte.entities te left join te.values v" ).list();
+			System.out.println( keyValues );
 			assertEquals( 2, keyValues.size() );
 		}
 		s.getTransaction().commit();

@@ -64,7 +64,7 @@ public class JoinOnClauseTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11437")
-	public void testOnClauseUsesNonDrivingTableAlias() {
+	public void testOnClauseUsesSuperclassAttribute() {
 		Session s = openSession();
 		s.getTransaction().begin();
 		{

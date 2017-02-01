@@ -87,6 +87,10 @@ public class JoinSequence {
 		this.treatAsDeclarations.addAll( treatAsDeclarations );
 	}
 
+	protected Set<String> getTreatAsDeclarations() {
+		return treatAsDeclarations;
+	}
+
 
 	/**
 	 * Create a full, although shallow, copy.
@@ -269,7 +273,7 @@ public class JoinSequence {
 		);
 	}
 
-	private boolean isIncluded(String alias) {
+	protected boolean isIncluded(String alias) {
 		return selector != null && selector.includeSubclasses( alias );
 	}
 

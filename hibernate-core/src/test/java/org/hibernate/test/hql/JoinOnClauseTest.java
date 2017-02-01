@@ -60,7 +60,7 @@ public class JoinOnClauseTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11437")
-	public void testOnClauseUsesNonDrivingTableAlias() {
+	public void testOnClauseUsesSuperclassAttribute() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			List<Book> result = entityManager.createQuery( "SELECT DISTINCT b1 FROM Book b1 JOIN Book b2 ON b1.price = b2.price", Book.class )
 				.getResultList();

@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import antlr.collections.AST;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.NameGenerator;
@@ -56,6 +57,19 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 	@Override
 	public Class getAggregationResultType() {
 		return Map.Entry.class;
+	}
+
+
+	@Override
+	public void resolve(
+			boolean generateJoin,
+			boolean implicitJoin,
+			String classAlias,
+			AST parent) throws SemanticException {
+		if (parent != null) {
+			throw new SemanticException( expressionDescription() + " expression cannot be further de-referenced" );
+		}
+		super.resolve(generateJoin, implicitJoin, classAlias, parent);
 	}
 
 	@Override

@@ -73,7 +73,7 @@ public class JoinSequence {
 		return fromPart;
 	}
 
-	private Set<String> treatAsDeclarations;
+	protected Set<String> treatAsDeclarations;
 
 	public void applyTreatAsDeclarations(Set<String> treatAsDeclarations) {
 		if ( treatAsDeclarations == null || treatAsDeclarations.isEmpty() ) {
@@ -407,7 +407,7 @@ public class JoinSequence {
 		);
 	}
 
-	private boolean isIncluded(String alias) {
+	protected boolean isIncluded(String alias) {
 		return selector != null && selector.includeSubclasses( alias );
 	}
 

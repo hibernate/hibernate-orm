@@ -8,6 +8,7 @@ package org.hibernate.hql.internal.ast.tree;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -129,10 +130,22 @@ public class EntityJoinFromElement extends FromElement {
 
 			final StringBuilder buffer = new StringBuilder();
 			buffer.append( joinString )
+					.append( '(' )
 					.append( entityTableText )
 					.append( ' ' )
-					.append( entityTableAlias )
-					.append( " on " );
+					.append( entityTableAlias );
+
+			String whereFragment = addSubclassJoins(
+					buffer,
+					entityTableAlias,
+					entityType.getAssociatedJoinable(factory),
+					true,
+					includeAllSubclassJoins,
+					// ugh.. this is needed because of how HQL parser (FromElementFactory/SessionFactoryHelper)
+					// builds the JoinSequence for HQL joins
+					treatAsDeclarations
+			);
+			buffer.append( ") on " );
 
 			final String filters = 	entityType.getOnCondition(
 					entityTableAlias,
@@ -149,15 +162,30 @@ public class EntityJoinFromElement extends FromElement {
 				buffer.append( withClauseFragment );
 			}
 
-			return new EntityJoinJoinFragment( buffer.toString() );
+			return new EntityJoinJoinFragment( buffer.toString(), whereFragment );
 		}
+
+		private String addSubclassJoins(
+				StringBuilder buffer,
+				String alias,
+				Joinable joinable,
+				boolean innerJoin,
+				boolean includeSubclassJoins,
+				Set<String> treatAsDeclarations) {
+			final boolean include = includeSubclassJoins && isIncluded( alias );
+			buffer.append( joinable.fromJoinFragment( alias, innerJoin, include, treatAsDeclarations ) );
+			return joinable.whereJoinFragment( alias, innerJoin, include, treatAsDeclarations );
+		}
+
 	}
 
 	private static class EntityJoinJoinFragment extends JoinFragment {
 		private final String fragmentString;
+		private final String whereFragment;
 
-		public EntityJoinJoinFragment(String fragmentString) {
+		public EntityJoinJoinFragment(String fragmentString, String whereFragment) {
 			this.fragmentString = fragmentString;
+			this.whereFragment = whereFragment;
 		}
 
 		@Override
@@ -194,7 +222,7 @@ public class EntityJoinFromElement extends FromElement {
 
 		@Override
 		public String toWhereFragmentString() {
-			return null;
+			return whereFragment;
 		}
 
 		@Override

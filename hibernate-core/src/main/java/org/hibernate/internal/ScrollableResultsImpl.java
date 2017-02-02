@@ -193,7 +193,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 				getResultSet(),
 				getSession(),
 				getQueryParameters(),
-				false
+				true
 		);
 		if ( result != null && result.getClass().isArray() ) {
 			currentRow = (Object[]) result;

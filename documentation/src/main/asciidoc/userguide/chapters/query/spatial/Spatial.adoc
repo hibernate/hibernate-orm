@@ -43,7 +43,7 @@ Hibernate Spatial requires some configuration prior to start using it.
 [[spatial-configuration-dependency]]
 ==== Dependency
 
-You need to include the `hibernate-spatial` dependency in your build environment.
+You need to include the `hibernate-orm-spatial` dependency in your build environment.
 For Maven, you need to add the following dependency:
 
 [[spatial-configuration-maven-example]]
@@ -52,8 +52,8 @@ For Maven, you need to add the following dependency:
 [source,xml]
 ----
 <dependency>
-    <groupId>org.hibernate</groupId>
-    <artifactId>hibernate-spatial</artifactId>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-orm-spatial</artifactId>
     <version>${hibernate.version}</version>
 </dependency>
 ----

@@ -78,7 +78,7 @@ idea {
 		vcs = 'Git'
     }
     module {
-        name = "hibernate-orm"
+        name = "hibernate-orm-parent"
     }
 }
 
@@ -109,7 +109,7 @@ subprojects { subProject ->
 		return;
 	}
 
-	if ( subProject.name.startsWith( 'hibernate-orm-modules' ) ) {
+	if ( subProject.name.startsWith( 'hibernate-wildfly-modules' ) ) {
 		return;
 	}
 
@@ -208,7 +208,7 @@ subprojects { subProject ->
 		JavaCompile javaCompileTask = project.tasks.findByName( sourceSet.compileJavaTaskName ) as JavaCompile
 
 		// NOTE : this aptDir stuff is needed until we can have IntelliJ run annotation processors for us
-		//		which cannot happen until we can fold hibernate-testing back into hibernate-core/src/test
+		//		which cannot happen until we can fold hibernate-testing back into hibernate-orm/src/test
 		//		which cannot happen until... ugh
 		File aptDir = subProject.file( "${subProject.buildDir}/generated-src/apt/${sourceSet.name}" )
 		sourceSet.allJava.srcDir( aptDir )
@@ -417,19 +417,19 @@ subprojects { subProject ->
 			}
 			relocationPom( MavenPublication ) {
 				groupId 'org.hibernate'
+				artifactId getArtifactIdForRelocation()
 
 				pom.withXml {
 					def relocation = asNode().appendNode( 'distributionManagement' ).appendNode( 'relocation' )
 					relocation.appendNode( 'groupId', group )
+					relocation.appendNode( 'artifactId', project.name)
 				}
 			}
 
-
-
 			// http://issues.gradle.org/browse/GRADLE-2966
 			// Once ^^ is resolved:
-			//		1) Move hibernate-testing module into hibernate-core tests
-			//		2) Define a second publication on hibernate-core for publishing the testing jar
+			//		1) Move hibernate-testing module into hibernate-orm tests
+			//		2) Define a second publication on hibernate-orm for publishing the testing jar
 			// We could kind of do this now, but it would just be the jar.  Every module would still need
 			// to duplicate the testing dependencies.  Well, on second thought, we could centralize the
 			// testing dependencies here within the subprojects block
@@ -443,6 +443,10 @@ subprojects { subProject ->
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+}
+
+def getArtifactIdForRelocation(){
+	name
 }
 
 task release(type: Task, dependsOn: 'release:release')

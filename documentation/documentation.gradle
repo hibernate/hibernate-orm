@@ -51,16 +51,16 @@ dependencies {
 	asciidoclet 'org.asciidoctor:asciidoclet:0.+'
 
 	compile( libraries.jpa )
-	compile( project( ':hibernate-jpamodelgen' ) )
+	compile( project( ':hibernate-orm-jpamodelgen' ) )
 
 	testCompile( 'org.apache.commons:commons-lang3:3.4' )
 
-	testCompile( project(':hibernate-core') )
-	testCompile( project(':hibernate-ehcache') )
-	testCompile( project(':hibernate-spatial') )
-	testCompile( project(path: ':hibernate-core', configuration: 'tests') )
+	testCompile( project(':hibernate-orm') )
+	testCompile( project(':hibernate-orm-ehcache') )
+	testCompile( project(':hibernate-orm-spatial') )
+	testCompile( project(path: ':hibernate-orm', configuration: 'tests') )
 
-	testCompile( project(':hibernate-testing') )
+	testCompile( project(':hibernate-orm-testing') )
 
 	testCompile( libraries.mockito )
 	testCompile( libraries.mockito_inline )
@@ -160,7 +160,7 @@ task aggregateJavadocs(type: Javadoc) {
     Set<String> internalPackages = new HashSet<String>()
     parent.subprojects.each{ Project subProject->
         // skip certain sub-projects
-		if ( ['release','documentation', 'hibernate-orm-modules'].contains( subProject.name ) ) {
+		if ( ['release','documentation', 'hibernate-wildfly-modules'].contains( subProject.name ) ) {
 			return;
 		}
 

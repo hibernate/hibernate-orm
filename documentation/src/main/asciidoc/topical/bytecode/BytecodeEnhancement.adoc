@@ -55,7 +55,7 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath "org.hibernate:hibernate-gradle-plugin:5.1.0.Final"
+		classpath "org.hibernate.orm:hibernate-orm-gradle-plugin:5.1.0.Final"
 	}
 }
 
@@ -125,7 +125,7 @@ already in use. The XML snippet below is an example of how to declare and config
         [...]
         <plugin>
             <groupId>org.hibernate.orm.tooling</groupId>
-            <artifactId>hibernate-enhance-maven-plugin</artifactId>
+            <artifactId>hibernate-orm-enhance-maven-plugin</artifactId>
             <version>$currentHibernateVersion</version>
             <executions>
                 <execution>

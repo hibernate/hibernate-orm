@@ -103,11 +103,11 @@ distributions {
             from rootProject.file( 'hibernate_logo.gif' )
 
             into('lib/required') {
-                from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'jta' }
-                from parent.project( 'hibernate-core' ).configurations.runtime
-                from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+                from parent.project( 'hibernate-orm' ).configurations.provided.files { dep -> dep.name == 'jta' }
+                from parent.project( 'hibernate-orm' ).configurations.runtime
+                from parent.project( 'hibernate-orm' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
                 // for now,
-                from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'javassist' }
+                from parent.project( 'hibernate-orm' ).configurations.provided.files { dep -> dep.name == 'javassist' }
             }
 
 //            into( 'lib/jpa' ) {
@@ -116,41 +116,41 @@ distributions {
 
             into( 'lib/spatial' ) {
                 from(
-                        ( parent.project( 'hibernate-spatial' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-spatial' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+                        ( parent.project( 'hibernate-orm-spatial' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+                                + parent.project( 'hibernate-orm-spatial' ).configurations.runtime )
+                                - parent.project( 'hibernate-orm' ).configurations.runtime
+                                - parent.project( 'hibernate-orm' ).configurations.archives.allArtifacts.files
                 )
             }
 
             into( 'lib/jpa-metamodel-generator' ) {
-                from parent.project( 'hibernate-jpamodelgen' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+                from parent.project( 'hibernate-orm-jpamodelgen' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
             }
 
             into( 'lib/envers' ) {
                 from(
-                        ( parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-envers' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+                        ( parent.project( 'hibernate-orm-envers' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+                                + parent.project( 'hibernate-orm-envers' ).configurations.runtime )
+                                - parent.project( 'hibernate-orm' ).configurations.runtime
+                                - parent.project( 'hibernate-orm' ).configurations.archives.allArtifacts.files
                 )
             }
 
             into( 'lib/osgi' ) {
                 from(
-                        ( parent.project( 'hibernate-osgi' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-osgi' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+                        ( parent.project( 'hibernate-orm-osgi' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+                                + parent.project( 'hibernate-orm-osgi' ).configurations.runtime )
+                                - parent.project( 'hibernate-orm' ).configurations.runtime
+                                - parent.project( 'hibernate-orm' ).configurations.archives.allArtifacts.files
                 )
                 from(
-                        parent.project( 'hibernate-osgi' ).extensions.karafFeatures.featuresXmlFile
+                        parent.project( 'hibernate-orm-osgi' ).extensions.karafFeatures.featuresXmlFile
                 )
             }
 
             // todo : this closure is problematic as it does not write into the hibernate-release-$project.version directory
             // due to http://issues.gradle.org/browse/GRADLE-1450
-            [ 'hibernate-c3p0', 'hibernate-proxool', 'hibernate-ehcache', 'hibernate-infinispan' ].each { feature ->
+            [ 'hibernate-orm-c3p0', 'hibernate-orm-proxool', 'hibernate-orm-ehcache', 'hibernate-orm-infinispan' ].each { feature ->
                 final String shortName = feature.substring( 'hibernate-'.length() );
 // WORKAROUND http://issues.gradle.org/browse/GRADLE-1450
 //                into('lib/optional/' + shortName) {
@@ -158,8 +158,8 @@ distributions {
                     from (
                             ( parent.project( feature ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
                                     + parent.project( feature ).configurations.runtime )
-                                    - parent.project( 'hibernate-core' ).configurations.runtime
-                                    - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+                                    - parent.project( 'hibernate-orm' ).configurations.runtime
+                                    - parent.project( 'hibernate-orm' ).configurations.archives.allArtifacts.files
                     )
                 }
             }

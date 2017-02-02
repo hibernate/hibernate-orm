@@ -174,8 +174,8 @@ http://repository.jboss.com/[JBoss Maven repository] under:
 [subs="verbatim,attributes"]
 ----
 <dependency>
-    <groupId>org.hibernate</groupId>
-    <artifactId>hibernate-jpamodelgen</artifactId>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-orm-jpamodelgen</artifactId>
     <version>{version}</version>
 </dependency>
 ----
@@ -309,8 +309,8 @@ for annotation processing can be used:
     </executions>
     <dependencies>
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-jpamodelgen</artifactId>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-orm-jpamodelgen</artifactId>
             <version>WORKING</version>
         </dependency>
     </dependencies>

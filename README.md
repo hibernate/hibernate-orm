@@ -78,13 +78,13 @@ sub-project and execute that task if the sub-project defines it.  To execute a t
 either:
 
 1. `cd` into that module directory and execute the task
-2. name the "task path".  For example, in order to run the tests for the _hibernate-core_ module from the root directory you could say `gradle hibernate-core:test`
+2. name the "task path".  For example, in order to run the tests for the _hibernate-orm_ module from the root directory you could say `gradle hibernate-core:test`
 
 Common Java related tasks
 -------------------------
 
 * _build_ - Assembles (jars) and tests this project
-* _buildDependents_ - Assembles and tests this project and all projects that depend on it.  So think of running this in hibernate-core, Gradle would assemble and test hibernate-core as well as hibernate-envers (because envers depends on core)
+* _buildDependents_ - Assembles and tests this project and all projects that depend on it.  So think of running this in hibernate-orm, Gradle would assemble and test hibernate-orm as well as hibernate-orm-envers (because envers depends on core)
 * _classes_ - Compiles the main classes
 * _testClasses_ - Compiles the test classes
 * _compile_ (Hibernate addition) - Performs all compilation tasks including staging resources from both main and test

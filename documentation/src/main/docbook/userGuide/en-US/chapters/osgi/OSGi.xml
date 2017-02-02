@@ -54,10 +54,10 @@
     </section>
 
     <section>
-        <title>hibernate-osgi</title>
+        <title>hibernate-orm-osgi</title>
         <para>
-            Rather than embed OSGi capabilities into hibernate-core, hibernate-entitymanager, and sub-modules,
-            hibernate-osgi was created.  It's purposefully separated, isolating all OSGi dependencies.  It provides an
+            Rather than embed OSGi capabilities into hibernate-orm, hibernate-entitymanager, and sub-modules,
+            hibernate-orm-osgi was created.  It's purposefully separated, isolating all OSGi dependencies.  It provides an
             OSGi-specific ClassLoader (aggregates the container's CL with core and entitymanager CLs), JPA persistence
             provider, SF/EMF bootstrapping, entities/mappings scanner, and service management.
         </para>
@@ -71,7 +71,7 @@
         Hibernate produces and releases its own <literal>features.xml</literal> that defines a core <literal>hibernate-orm</literal>,
         as well as additional features for optional functionality (caching, Envers, etc.).
         This is included in the binary distribution, as well as deployed to the JBoss Nexus repository
-        (using the <literal>org.hibernate</literal> groupId and <literal>hibernate-osgi</literal> with the <literal>karaf.xml</literal> classifier).
+        (using the <literal>org.hibernate</literal> groupId and <literal>hibernate-orm-osgi</literal> with the <literal>karaf.xml</literal> classifier).
       </para>
 
       <para>
@@ -81,7 +81,7 @@
       </para>
 
       <para>
-        hibernate-osgi, theoretically, supports a variety of OSGi containers, such as Equinox.  In that case,
+        hibernate-orm-osgi, theoretically, supports a variety of OSGi containers, such as Equinox.  In that case,
         please use features.xml as a reference for necessary bundles to activate and their correct ordering.  However,
         note that Karaf starts a number of bundles automatically, several of which would need to be installed manually
         on alternatives.
@@ -102,7 +102,7 @@
         <para>
             The Enterprise OSGi specification includes container-managed JPA.  The container is responsible for
             discovering persistence units in bundles and automatically creating the <literal>EntityManagerFactory</literal> (one EMF per PU).
-            It uses the JPA provider (hibernate-osgi) that has registered itself with the OSGi
+            It uses the JPA provider (hibernate-orm-osgi) that has registered itself with the OSGi
             <literal>PersistenceProvider</literal> service.
         </para>
 
@@ -240,7 +240,7 @@
         <section>
         	<title>Obtaining an EntityMangerFactory</title>
         	<para>
-        		<literal>hibernate-osgi</literal> registers an OSGi service, using the JPA <literal>PersistenceProvider</literal> interface
+        		<literal>hibernate-orm-osgi</literal> registers an OSGi service, using the JPA <literal>PersistenceProvider</literal> interface
         		name, that bootstraps and creates an <literal>EntityManagerFactory</literal> specific for OSGi
         		environments.  It is VITAL that your EMF be obtained through the service, rather than creating it
         		manually.  The service handles the OSGi ClassLoader, discovered extension points, scanning, etc.  Manually
@@ -298,7 +298,7 @@
         <section>
         	<title>Obtaining an SessionFactory</title>
         	<para>
-            <literal>hibernate-osgi</literal> registers an OSGi service, using the <literal>SessionFactory</literal> interface
+            <literal>hibernate-orm-osgi</literal> registers an OSGi service, using the <literal>SessionFactory</literal> interface
         		name, that bootstraps and creates an <literal>SessionFactory</literal> specific for OSGi
         		environments.  It is VITAL that your SF be obtained through the service, rather than creating it
         		manually.  The service handles the OSGi ClassLoader, discovered extension points, scanning, etc.  Manually
@@ -329,9 +329,9 @@
     	
     	<para>
     		Multiple contracts exist to allow applications to integrate with and extend Hibernate capabilities.  Most
-    		apps utilize JDK services to provide their implementations.  <literal>hibernate-osgi</literal> supports the same
+    		apps utilize JDK services to provide their implementations.  <literal>hibernate-orm-osgi</literal> supports the same
     		extensions through OSGi services.  Implement and register them in any of the three configurations.
-        <literal>hibernate-osgi</literal> will discover and integrate them during EMF/SF bootstrapping.  Supported extension points
+        <literal>hibernate-orm-osgi</literal> will discover and integrate them during EMF/SF bootstrapping.  Supported extension points
     		are as follows.  The specified interface should be used during service registration.
     		
     		<itemizedlist>

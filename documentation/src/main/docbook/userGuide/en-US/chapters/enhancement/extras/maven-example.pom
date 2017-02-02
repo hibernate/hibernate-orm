@@ -3,7 +3,7 @@
         [...]
         <plugin>
             <groupId>org.hibernate.orm.tooling</groupId>
-            <artifactId>hibernate-enhance-maven-plugin</artifactId>
+            <artifactId>hibernate-orm-enhance-maven-plugin</artifactId>
             <version>$hibernateVersion</version>
             <executions>
                 <execution>

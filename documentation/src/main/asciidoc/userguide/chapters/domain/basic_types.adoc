@@ -1056,6 +1056,24 @@ include::{extrasdir}/basic/basic-jpa-convert-period-string-converter-sql-example
 ----
 ====
 
+[[basic-jpa-convert-type]]
+===== `AttributeConverter` Java and JDBC types
+
+In cases when the Java type specified for the "database side" of the conversion (the second `AttributeConverter` bind parameter) is not known,
+Hibernate will fallback to a `java.io.Serializable` type.
+
+If the Java type is not know to Hibernate, you will encounter the following message:
+
+> HHH000481: Encountered Java type for which we could not locate a JavaTypeDescriptor and which does not appear to implement equals and/or hashCode.
+> This can lead to significant performance problems when performing equality/dirty checking involving this Java type.
+> Consider registering a custom JavaTypeDescriptor or at least implementing equals/hashCode.
+
+Whether a Java type is "known" means it has an entry in the `JavaTypeDescriptorRegistry`.
+While by default Hibernate loads many JDK types into the `JavaTypeDescriptorRegistry`, an application can also expand the `JavaTypeDescriptorRegistry` by
+adding new `JavaTypeDescriptor` entries.
+
+This way, Hibernate will also know how to handle a specific Java Object type at the JDBC level.
+
 [[basic-jpa-convert-mutability]]
 ===== JPA 2.1 `AttributeConverter` Mutability Plan
 

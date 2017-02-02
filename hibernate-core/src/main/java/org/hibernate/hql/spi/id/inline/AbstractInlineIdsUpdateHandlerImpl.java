@@ -101,9 +101,7 @@ public abstract class AbstractInlineIdsUpdateHandlerImpl
 						if ( assignmentParameterSpecifications[i] != null ) {
 							for ( int x = 0; x < assignmentParameterSpecifications[i].length; x++ ) {
 								position += assignmentParameterSpecifications[i][x]
-										.bind( ps, queryParameters, session,
-											   position
-										);
+										.bind( ps, queryParameters, session, position );
 							}
 						}
 						session

@@ -5,6 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 apply plugin: 'java-gradle-plugin'
+apply plugin:  org.hibernate.build.JavaGradlePluginDisablePublishing
+
 
 apply plugin: 'groovy'
 apply plugin: 'maven'

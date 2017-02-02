@@ -73,7 +73,7 @@ public class JoinSequence {
 		return fromPart;
 	}
 
-	protected Set<String> treatAsDeclarations;
+	private Set<String> treatAsDeclarations;
 
 	public void applyTreatAsDeclarations(Set<String> treatAsDeclarations) {
 		if ( treatAsDeclarations == null || treatAsDeclarations.isEmpty() ) {
@@ -85,6 +85,10 @@ public class JoinSequence {
 		}
 
 		this.treatAsDeclarations.addAll( treatAsDeclarations );
+	}
+
+	protected Set<String> getTreatAsDeclarations() {
+		return treatAsDeclarations;
 	}
 
 

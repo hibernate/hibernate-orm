@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.Queryable;
@@ -129,23 +130,34 @@ public class EntityJoinFromElement extends FromElement {
 			}
 
 			final StringBuilder buffer = new StringBuilder();
-			buffer.append( joinString )
-					.append( '(' )
-					.append( entityTableText )
+			final AbstractEntityPersister joinable = (AbstractEntityPersister) entityType.getAssociatedJoinable(factory);
+
+			buffer.append( joinString );
+
+			Set<String> treatAsDeclarations = getTreatAsDeclarations();
+			final boolean include = includeAllSubclassJoins && isIncluded( entityTableAlias );
+			String fromFragment = joinable.fromJoinFragment( entityTableAlias, true, include, treatAsDeclarations );
+			String whereFragment = joinable.whereJoinFragment( entityTableAlias, true, include, treatAsDeclarations );
+
+			// We need a table group only when having e.g. a left join of a polymorphic entity
+			// fromFragment is empty if the entity is non-polymorphic
+			// Inner joined entity joins can avoid using the table grouping since the condition can be moved to the where clause
+			boolean renderTableGroup = !fromFragment.isEmpty() && joinType != JoinType.INNER_JOIN;
+
+			if ( renderTableGroup ) {
+				buffer.append( '(' );
+			}
+
+			buffer.append( entityTableText )
 					.append( ' ' )
 					.append( entityTableAlias );
 
-			String whereFragment = addSubclassJoins(
-					buffer,
-					entityTableAlias,
-					entityType.getAssociatedJoinable(factory),
-					true,
-					includeAllSubclassJoins,
-					// ugh.. this is needed because of how HQL parser (FromElementFactory/SessionFactoryHelper)
-					// builds the JoinSequence for HQL joins
-					treatAsDeclarations
-			);
-			buffer.append( ") on " );
+			if ( renderTableGroup ) {
+				buffer.append( fromFragment )
+						.append( ')' );
+			}
+
+			buffer.append( " on " );
 
 			final String filters = 	entityType.getOnCondition(
 					entityTableAlias,
@@ -154,27 +166,43 @@ public class EntityJoinFromElement extends FromElement {
 					Collections.<String>emptySet()
 			);
 
-			buffer.append( filters );
-			if ( withClauseFragment != null ) {
-				if ( StringHelper.isNotEmpty( filters ) ) {
-					buffer.append( " and " );
+			if ( fromFragment.isEmpty() || renderTableGroup ) {
+				buffer.append( filters );
+				if ( withClauseFragment != null ) {
+					if ( StringHelper.isNotEmpty( filters ) ) {
+						buffer.append( " and " );
+					}
+					buffer.append( withClauseFragment );
 				}
-				buffer.append( withClauseFragment );
+			}
+			else {
+				// We know there is a fromFragment and that we shouldn't render a table group
+				// This means the entity is polymorphic and the entity join is an inner join
+				// We move the with clause stuff to the where clause but still need to have a valid on condition
+				buffer.append( "1=1" );
+				buffer.append( fromFragment );
+
+				// Proper capacity to avoid resizing
+				StringBuilder whereBuffer = new StringBuilder(
+						10
+							+ whereFragment.length()
+							+ filters.length()
+							+ withClauseFragment.length()
+				);
+				whereBuffer.append(whereFragment);
+				if ( !filters.isEmpty() ) {
+					whereBuffer.append( " and " );
+					whereBuffer.append( filters );
+				}
+				if ( !withClauseFragment.isEmpty() ) {
+					whereBuffer.append( " and " );
+					whereBuffer.append( withClauseFragment );
+				}
+
+				whereFragment = whereBuffer.toString();
 			}
 
 			return new EntityJoinJoinFragment( buffer.toString(), whereFragment );
-		}
-
-		private String addSubclassJoins(
-				StringBuilder buffer,
-				String alias,
-				Joinable joinable,
-				boolean innerJoin,
-				boolean includeSubclassJoins,
-				Set<String> treatAsDeclarations) {
-			final boolean include = includeSubclassJoins && isIncluded( alias );
-			buffer.append( joinable.fromJoinFragment( alias, innerJoin, include, treatAsDeclarations ) );
-			return joinable.whereJoinFragment( alias, innerJoin, include, treatAsDeclarations );
 		}
 
 	}

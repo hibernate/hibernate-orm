@@ -55,7 +55,7 @@ public class BidirectionalOptionalOneToOneTest
 		} );
 	}
 
-	@javax.persistence.Entity
+	@javax.persistence.Entity( name = "Parent" )
 	public static class Parent {
 
 		@Id
@@ -79,7 +79,7 @@ public class BidirectionalOptionalOneToOneTest
 
 	}
 
-	@javax.persistence.Entity
+	@javax.persistence.Entity( name = "Child" )
 	public static class Child {
 
 		@Id

@@ -51,6 +51,9 @@ dependencies {
 	compile "org.osgi:org.osgi.compendium:${osgiCoreVersion}"
 	compile "net.bytebuddy:byte-buddy:${byteBuddyVersion}"
 
+	// Needed by JBoss JTA
+	runtime( libraries.interceptor )
+
 	testCompile "org.ops4j.pax.exam:pax-exam:${paxExamVersion}"
 	testCompile "org.ops4j.pax.exam:pax-exam-junit4:${paxExamVersion}"
 	testCompile "org.ops4j.pax.exam:pax-exam-container-karaf:${paxExamVersion}"
@@ -173,6 +176,13 @@ karafFeatures {
 				match {
 					group = 'org.hibernate.javax.persistence'
 					module = 'hibernate-jpa-2.1-api'
+				}
+				dependency = true
+			}
+			bundle {
+				match {
+					group = 'javax.interceptor'
+					module = 'javax.interceptor-api'
 				}
 				dependency = true
 			}

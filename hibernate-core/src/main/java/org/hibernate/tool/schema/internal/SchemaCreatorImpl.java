@@ -435,8 +435,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		try {
+			String sqlStringFormatted = formatter.format( sqlString );
 			for ( GenerationTarget target : targets ) {
-				target.accept( formatter.format( sqlString ) );
+				target.accept( sqlStringFormatted );
 			}
 		}
 		catch (CommandAcceptanceException e) {

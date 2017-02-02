@@ -519,9 +519,10 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			ExecutionOptions options,
 			GenerationTarget... targets) {
 		if ( !StringHelper.isEmpty( sqlString ) ) {
+			String sqlStringFormatted = formatter.format( sqlString );
 			for ( GenerationTarget target : targets ) {
 				try {
-					target.accept( formatter.format( sqlString ) );
+					target.accept( sqlStringFormatted );
 				}
 				catch (CommandAcceptanceException e) {
 					if ( !quiet ) {

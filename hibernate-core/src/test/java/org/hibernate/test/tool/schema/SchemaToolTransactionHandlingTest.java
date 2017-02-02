@@ -17,6 +17,7 @@ import javax.transaction.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.tool.schema.SourceType;
@@ -79,9 +80,9 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 			throw new RuntimeException( "Unable to access JTA Transaction prior to starting test", e );
 		}
 
+		final StandardServiceRegistry registry = buildJtaStandardServiceRegistry();
 		// perform the test...
 		try {
-			final StandardServiceRegistry registry = buildJtaStandardServiceRegistry();
 			final SchemaManagementTool smt = registry.getService( SchemaManagementTool.class );
 			final SchemaDropper schemaDropper = smt.getSchemaDropper( Collections.emptyMap() );
 			final SchemaCreator schemaCreator = smt.getSchemaCreator( Collections.emptyMap() );
@@ -118,6 +119,7 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 		finally {
 			try {
 				jtaTransaction.commit();
+				((StandardServiceRegistryImpl) registry).destroy();
 			}
 			catch (Exception e) {
 				// not much we can do...
@@ -146,9 +148,9 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 			throw new RuntimeException( "Unable to access JTA Transaction prior to starting test", e );
 		}
 
+		final StandardServiceRegistry registry = buildJtaStandardServiceRegistry();
 		// perform the test...
 		try {
-			final StandardServiceRegistry registry = buildJtaStandardServiceRegistry();
 			final SchemaManagementTool smt = registry.getService( SchemaManagementTool.class );
 
 			final Metadata mappings = buildMappings( registry );
@@ -189,6 +191,7 @@ public class SchemaToolTransactionHandlingTest extends BaseUnitTestCase {
 		finally {
 			try {
 				jtaTransaction.commit();
+				((StandardServiceRegistryImpl) registry).destroy();
 			}
 			catch (Exception e) {
 				// not much we can do...

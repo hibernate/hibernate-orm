@@ -27,6 +27,12 @@
          <expiration max-idle="100000" interval="5000"/>
       </invalidation-cache-configuration>
 
+      <replicated-cache-configuration name="replicated-entity" mode="SYNC" remote-timeout="20000" statistics="false" statistics-available="false">
+         <locking concurrency-level="1000" acquire-timeout="15000"/>
+         <transaction mode="NONE" />
+         <expiration max-idle="100000" interval="5000"/>
+      </replicated-cache-configuration>
+
       <!-- A config appropriate for query caching. Does not replicate queries. -->
       <local-cache-configuration name="local-query" statistics="false" statistics-available="false">
          <locking concurrency-level="1000" acquire-timeout="15000"/>

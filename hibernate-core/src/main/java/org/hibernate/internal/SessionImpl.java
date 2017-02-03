@@ -3568,13 +3568,13 @@ public final class SessionImpl
 	public void setProperty(String propertyName, Object value) {
 		checkOpen();
 
-		if ( ENTITY_MANAGER_SPECIFIC_PROPERTIES.contains( propertyName ) ) {
-			properties.put( propertyName, value );
-			applyProperties();
+		if ( !( value instanceof Serializable ) ) {
+			log.warnf( "Property '" + propertyName + "' is not serializable, value won't be set." );
+			return;
 		}
-		else {
-			log.debugf( "Trying to set a property which is not supported on entity manager level" );
-		}
+
+		properties.put( propertyName, value );
+		applyProperties();
 	}
 
 	@Override

@@ -8,12 +8,14 @@ package org.hibernate.engine.internal;
 
 import java.util.*;
 import java.util.Collections;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.hql.internal.ast.tree.ImpliedFromElement;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
@@ -132,6 +134,17 @@ public class JoinSequence {
 	}
 
 	/**
+	 * Embedds an implied from element into this sequence
+	 *
+	 * @param fromElement The implied from element to embedd
+	 * @return The Join memento
+	 */
+	public JoinSequence addJoin(ImpliedFromElement fromElement) {
+		joins.addAll( fromElement.getJoinSequence().joins );
+		return this;
+	}
+
+	/**
 	 * Generate a JoinFragment
 	 *
 	 * @return The JoinFragment
@@ -153,7 +166,7 @@ public class JoinSequence {
 	 * @throws MappingException Indicates a problem access the provided metadata, or incorrect metadata
 	 */
 	public JoinFragment toJoinFragment(Map enabledFilters, boolean includeAllSubclassJoins) throws MappingException {
-		return toJoinFragment( enabledFilters, includeAllSubclassJoins, null, null, null );
+		return toJoinFragment( enabledFilters, includeAllSubclassJoins, null );
 	}
 
 	/**
@@ -162,7 +175,6 @@ public class JoinSequence {
 	 * @param enabledFilters The filters associated with the originating session to properly define join conditions
 	 * @param includeAllSubclassJoins Should all subclass joins be added to the rendered JoinFragment?
 	 * @param withClauseFragment The with clause (which represents additional join restrictions) fragment
-	 * @param withClauseJoinAlias The
 	 *
 	 * @return The JoinFragment
 	 *
@@ -171,19 +183,15 @@ public class JoinSequence {
 	public JoinFragment toJoinFragment(
 			Map enabledFilters,
 			boolean includeAllSubclassJoins,
-			String withClauseFragment,
-			String withClauseJoinAlias,
-			String withClauseCollectionJoinAlias) throws MappingException {
-		return toJoinFragment( enabledFilters, includeAllSubclassJoins, true, withClauseFragment, withClauseJoinAlias, withClauseCollectionJoinAlias );
+			String withClauseFragment) throws MappingException {
+		return toJoinFragment( enabledFilters, includeAllSubclassJoins, true, withClauseFragment );
 	}
 
 	public JoinFragment toJoinFragment(
 			Map enabledFilters,
 			boolean includeAllSubclassJoins,
 			boolean renderSubclassJoins,
-			String withClauseFragment,
-			String withClauseJoinAlias,
-			String withClauseCollectionJoinAlias) throws MappingException {
+			String withClauseFragment) throws MappingException {
 		final QueryJoinFragment joinFragment = new QueryJoinFragment( factory.getDialect(), useThetaStyle );
 		Iterator<Join> iter;
 		Join first;
@@ -199,98 +207,32 @@ public class JoinSequence {
 
 			last = rootJoinable;
 		}
-		else if (
-				collectionJoinSubquery
-				&& withClauseFragment != null
-				&& joins.size() > 1
-				&& ( withClauseFragment.contains( withClauseJoinAlias ) || ( withClauseCollectionJoinAlias != null && withClauseFragment.contains( withClauseCollectionJoinAlias ) ) )
-				&& ( first = ( iter = joins.iterator() ).next() ).joinType == JoinType.LEFT_OUTER_JOIN
-				) {
-			final QueryJoinFragment subqueryJoinFragment = new QueryJoinFragment( factory.getDialect(), useThetaStyle );
-			subqueryJoinFragment.addFromFragmentString( "(select " );
-
-			subqueryJoinFragment.addFromFragmentString( first.getAlias() );
-			subqueryJoinFragment.addFromFragmentString( ".*" );
-
-			// Re-alias columns of withClauseJoinAlias and rewrite withClauseFragment
-			// A list of possible delimited identifier types: https://en.wikibooks.org/wiki/SQL_Dialects_Reference/Data_structure_definition/Delimited_identifiers
-			String prefixPattern = "(" + Pattern.quote( withClauseJoinAlias );
-			if ( withClauseCollectionJoinAlias != null ) {
-				prefixPattern += "|" + Pattern.quote( withClauseCollectionJoinAlias );
-			}
-			prefixPattern += ")" + Pattern.quote( "." );
-			Pattern p = Pattern.compile( prefixPattern + "(" +
-					"([a-zA-Z0-9_]+)|" + // Normal identifiers
-					// Ignore single quoted identifiers to avoid possible clashes with string literals
-					// and since SQLLite is the only DB supporting that style, we simply decide to not support it
-					//"('[a-zA-Z0-9_]+'((''[a-zA-Z0-9_]+)+')?)|" + // Single quoted identifiers
-					"(\"[a-zA-Z0-9_]+\"((\"\"[a-zA-Z0-9_]+)+\")?)|" + // Double quoted identifiers
-					"(`[a-zA-Z0-9_]+`((``[a-zA-Z0-9_]+)+`)?)|" + // MySQL quoted identifiers
-					"(\\[[a-zA-Z0-9_\\s]+\\])" + // MSSQL quoted identifiers
-				")"
-			);
-			Matcher matcher = p.matcher( withClauseFragment );
-			StringBuilder withClauseSb = new StringBuilder( withClauseFragment.length() );
-			withClauseSb.append( " and " );
-
-			int start = 0;
-			int aliasNumber = 0;
-			while ( matcher.find() ) {
-				final String matchedTableName = matcher.group(1);
-				final String column = matcher.group( 2 );
-				// Replace non-valid simple identifier characters from the column name
-				final String alias = "c_" + aliasNumber + "_" + column.replaceAll( "[\\[\\]\\s\"']+", "" );
-				withClauseSb.append( withClauseFragment, start, matcher.start() );
-				withClauseSb.append( first.getAlias() );
-				withClauseSb.append( '.' );
-				withClauseSb.append( alias );
-				withClauseSb.append( ' ' );
-
-				subqueryJoinFragment.addFromFragmentString( ", " );
-				subqueryJoinFragment.addFromFragmentString( matchedTableName );
-				subqueryJoinFragment.addFromFragmentString( "." );
-				subqueryJoinFragment.addFromFragmentString( column );
-				subqueryJoinFragment.addFromFragmentString( " as " );
-				subqueryJoinFragment.addFromFragmentString( alias );
-
-				start = matcher.end();
-				aliasNumber++;
+		else if ( needsTableGroupJoin( joins, withClauseFragment ) ) {
+			iter = joins.iterator();
+			first = iter.next();
+			final String joinString;
+			switch (first.joinType) {
+				case INNER_JOIN:
+					joinString = " inner join ";
+					break;
+				case LEFT_OUTER_JOIN:
+					joinString = " left outer join ";
+					break;
+				case RIGHT_OUTER_JOIN:
+					joinString = " right outer join ";
+					break;
+				case FULL_JOIN:
+					joinString = " full outer join ";
+					break;
+				default:
+					throw new AssertionFailure("undefined join type");
 			}
 
-			withClauseSb.append( withClauseFragment, start, withClauseFragment.length() );
-
-			subqueryJoinFragment.addFromFragmentString( " from " );
-			subqueryJoinFragment.addFromFragmentString( first.joinable.getTableName() );
-			subqueryJoinFragment.addFromFragmentString( " " );
-			subqueryJoinFragment.addFromFragmentString( first.getAlias() );
-
-			// Render following join sequences in a sub-sequence
-			JoinSequence subSequence = new JoinSequence( factory );
-
-			while ( iter.hasNext() ) {
-				Join join = iter.next();
-				subSequence.joins.add( join );
-			}
-
-			JoinFragment subFragment = subSequence.toJoinFragment(
-					enabledFilters,
-					false,
-					true, // TODO: only join subclasses that are needed for ON clause
-					null,
-					null,
-					null
-			);
-			subqueryJoinFragment.addFragment( subFragment );
-			subqueryJoinFragment.addFromFragmentString( ")" );
-
-			joinFragment.addJoin(
-					subqueryJoinFragment.toFromFragmentString(),
-					first.getAlias(),
-					first.getLHSColumns(),
-					JoinHelper.getRHSColumnNames( first.getAssociationType(), factory ),
-					first.joinType,
-					withClauseSb.toString()
-			);
+			joinFragment.addFromFragmentString( joinString );
+			joinFragment.addFromFragmentString( " (" );
+			joinFragment.addFromFragmentString( first.joinable.getTableName() );
+			joinFragment.addFromFragmentString( " " );
+			joinFragment.addFromFragmentString( first.getAlias() );
 
 			for ( Join join : joins ) {
 				// Skip joining the first join node as it is contained in the subquery
@@ -308,6 +250,7 @@ public class JoinSequence {
 						joinFragment,
 						join.getAlias(),
 						join.getJoinable(),
+						// TODO: Think about if this could be made always true
 						join.joinType == JoinType.INNER_JOIN,
 						includeAllSubclassJoins,
 						// ugh.. this is needed because of how HQL parser (FromElementFactory/SessionFactoryHelper)
@@ -315,6 +258,26 @@ public class JoinSequence {
 						treatAsDeclarations
 				);
 			}
+
+			joinFragment.addFromFragmentString( ")" );
+			joinFragment.addFromFragmentString( " on " );
+
+			final String rhsAlias = first.getAlias();
+			final String[] lhsColumns = first.getLHSColumns();
+			final String[] rhsColumns = JoinHelper.getRHSColumnNames( first.getAssociationType(), factory );
+			for ( int j=0; j < lhsColumns.length; j++) {
+				joinFragment.addFromFragmentString( lhsColumns[j] );
+				joinFragment.addFromFragmentString( "=" );
+				joinFragment.addFromFragmentString( rhsAlias );
+				joinFragment.addFromFragmentString( "." );
+				joinFragment.addFromFragmentString( rhsColumns[j] );
+				if ( j < lhsColumns.length - 1 ) {
+					joinFragment.addFromFragmentString( " and " );
+				}
+			}
+
+			joinFragment.addFromFragmentString( " and " );
+			joinFragment.addFromFragmentString( withClauseFragment );
 
 			return joinFragment;
 		}
@@ -387,6 +350,72 @@ public class JoinSequence {
 		}
 
 		return joinFragment;
+	}
+
+	private boolean needsTableGroupJoin(List<Join> joins, String withClauseFragment) {
+		// If the rewrite is disabled or we don't have a with clause, we don't need a table group join
+		if ( !collectionJoinSubquery || StringHelper.isEmpty( withClauseFragment ) ) {
+			return false;
+		}
+		// If we only have one join, a table group join is only necessary if subclass columns are used in the with clause
+		if ( joins.size() < 2 ) {
+			return isSubclassAliasDereferenced( joins.get( 0 ), withClauseFragment );
+		}
+		// If more than one table is involved and this is not an inner join, we definitely need a table group join
+		// i.e. a left join has to be made for the table group to retain the join semantics
+		if ( joins.get( 0 ).getJoinType() != JoinType.INNER_JOIN ) {
+			return true;
+		}
+		// If a subclass columns is used, we need a table group, otherwise we generate wrong SQL by putting the ON condition to the first join
+		if ( isSubclassAliasDereferenced( joins.get( 0 ), withClauseFragment ) ) {
+			return true;
+		}
+
+		// Normally, the ON condition of a HQL join is put on the ON clause of the first SQL join
+		// Since the ON condition could refer to columns from subsequently joined tables i.e. joins with index > 0
+		// or could refer to columns of subclass tables, the SQL could be wrong
+		// To avoid generating wrong SQL, we detect these cases here i.e. a subsequent join alias is used in the ON condition
+		// If we find out that this is the case, we return true and generate a table group join
+
+		// Skip the first since that is the driving join
+		for ( int i = 1; i < joins.size(); i++ ) {
+			Join join = joins.get( i );
+
+			if ( isAliasDereferenced( withClauseFragment, join.getAlias() ) || isSubclassAliasDereferenced( join, withClauseFragment ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean isSubclassAliasDereferenced(Join join, String withClauseFragment) {
+		if ( join.getJoinable() instanceof AbstractEntityPersister ) {
+			AbstractEntityPersister persister = (AbstractEntityPersister) join.getJoinable();
+			int subclassTableSpan = persister.getSubclassTableSpan();
+			for ( int j = 1; j < subclassTableSpan; j++ ) {
+				String subclassAlias = AbstractEntityPersister.generateTableAlias( join.getAlias(), j );
+				if ( isAliasDereferenced( withClauseFragment, subclassAlias ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean isAliasDereferenced(String withClauseFragment, String alias) {
+		// See if the with clause contains the join alias
+		int index = withClauseFragment.indexOf( alias );
+		int dotIndex = index + alias.length();
+		if ( index != -1
+				// Check that the join alias is not a suffix
+				&& ( index == 0 || !Character.isLetterOrDigit( withClauseFragment.charAt( index - 1 ) ) )
+				// Check that the join alias gets de-referenced i.e. the next char is a dot
+				&& dotIndex < withClauseFragment.length() && withClauseFragment.charAt( dotIndex ) == '.' ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	@SuppressWarnings("SimplifiableIfStatement")

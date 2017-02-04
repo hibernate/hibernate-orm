@@ -22,6 +22,7 @@ import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.DotNode;
 import org.hibernate.hql.internal.ast.tree.FromClause;
 import org.hibernate.hql.internal.ast.tree.FromElement;
+import org.hibernate.hql.internal.ast.tree.ImpliedFromElement;
 import org.hibernate.hql.internal.ast.tree.ParameterContainer;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.classic.ParserHelper;
@@ -106,7 +107,22 @@ public class JoinProcessor implements SqlTokenTypes {
 			}
 		}
 		else {
-			fromElements = fromClause.getFromElements();
+			fromElements = new ArrayList( fromClause.getFromElements().size() );
+			ListIterator<FromElement> liter = fromClause.getFromElements().listIterator();
+			while ( liter.hasNext() ) {
+				FromElement fromElement = liter.next();
+
+				// We found an implied from element that is used in the WITH clause of another from element, so it need to become part of it's join sequence
+				if ( fromElement instanceof ImpliedFromElement
+						&& fromElement.getOrigin().getWithClauseFragment() != null
+						&& fromElement.getOrigin().getWithClauseFragment().contains( fromElement.getTableAlias() ) ) {
+					fromElement.getOrigin().getJoinSequence().addJoin( (ImpliedFromElement) fromElement );
+					// This from element will be rendered as part of the origins join sequence
+					fromElement.setText("");
+				} else {
+					fromElements.add( fromElement );
+				}
+			}
 		}
 
 		// Iterate through the alias,JoinSequence pairs and generate SQL token nodes.
@@ -147,9 +163,7 @@ public class JoinProcessor implements SqlTokenTypes {
 		JoinFragment joinFragment = join.toJoinFragment(
 				walker.getEnabledFilters(),
 				fromElement.useFromFragment() || fromElement.isDereferencedBySuperclassOrSubclassProperty(),
-				fromElement.getWithClauseFragment(),
-				fromElement.getWithClauseJoinAlias(),
-				fromElement.getWithClauseCollectionJoinAlias()
+				fromElement.getWithClauseFragment()
 		);
 
 		String frag = joinFragment.toFromFragmentString();

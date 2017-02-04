@@ -296,7 +296,7 @@ public abstract class AbstractEntityPersister
 
 	protected abstract boolean isClassOrSuperclassTable(int j);
 
-	protected abstract int getSubclassTableSpan();
+	public abstract int getSubclassTableSpan();
 
 	protected abstract int getTableSpan();
 

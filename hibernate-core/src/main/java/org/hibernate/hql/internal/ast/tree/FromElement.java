@@ -70,8 +70,6 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	private List<FromElement> destinations;
 	private boolean manyToMany;
 	private String withClauseFragment;
-	private String withClauseJoinAlias;
-	private String withClauseCollectionJoinAlias;
 	private boolean dereferencedBySuperclassProperty;
 	private boolean dereferencedBySubclassProperty;
 
@@ -627,17 +625,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		return withClauseFragment;
 	}
 
-	public String getWithClauseJoinAlias() {
-		return withClauseJoinAlias;
-	}
-
-	public String getWithClauseCollectionJoinAlias() {
-		return withClauseCollectionJoinAlias;
-	}
-
-	public void setWithClauseFragment(String withClauseJoinAlias, String withClauseCollectionJoinAlias, String withClauseFragment) {
-		this.withClauseJoinAlias = withClauseJoinAlias;
-		this.withClauseCollectionJoinAlias = withClauseCollectionJoinAlias;
+	public void setWithClauseFragment(String withClauseFragment) {
 		this.withClauseFragment = withClauseFragment;
 	}
 

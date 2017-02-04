@@ -17,12 +17,14 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
@@ -438,13 +440,20 @@ public class Table implements RelationalModel, Serializable, Exportable {
 
 	public Iterator sqlAlterStrings(
 			Dialect dialect,
-			Mapping p,
+			Metadata metadata,
 			TableInformation tableInfo,
 			String defaultCatalog,
 			String defaultSchema) throws HibernateException {
+		
+		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
 
 		StringBuilder root = new StringBuilder( "alter table " )
-				.append( getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
+				.append( 
+						jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+								tableInfo.getName(),
+								dialect
+						) 
+				)
 				.append( ' ' )
 				.append( dialect.getAddColumnString() );
 
@@ -461,7 +470,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 						.append( ' ' )
 						.append( column.getQuotedName( dialect ) )
 						.append( ' ' )
-						.append( column.getSqlType( dialect, p ) );
+						.append( column.getSqlType( dialect, metadata ) );
 
 				String defaultValue = column.getDefaultValue();
 				if ( defaultValue != null ) {

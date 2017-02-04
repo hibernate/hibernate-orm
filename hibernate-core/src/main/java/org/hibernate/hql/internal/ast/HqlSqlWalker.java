@@ -499,23 +499,10 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			NodeTraverser traverser = new NodeTraverser( visitor );
 			traverser.traverseDepthFirst( hqlSqlWithNode );
 
-			String withClauseJoinAlias = fromElement.getTableAlias();
-			String withClauseCollectionJoinAlias = fromElement.getCollectionTableAlias();
-//			else {
-//				FromElement referencedFromElement = visitor.getReferencedFromElement();
-//				if ( referencedFromElement != fromElement ) {
-//					LOG.warnf(
-//							"with-clause expressions do not reference the from-clause element to which the " +
-//									"with-clause was associated.  The query may not work as expected [%s]",
-//							queryTranslatorImpl.getQueryString()
-//					);
-//				}
-//			}
-
 			SqlGenerator sql = new SqlGenerator( getSessionFactoryHelper().getFactory() );
 			sql.whereExpr( hqlSqlWithNode.getFirstChild() );
 
-			fromElement.setWithClauseFragment( withClauseJoinAlias, withClauseCollectionJoinAlias, "(" + sql.getSQL() + ")" );
+			fromElement.setWithClauseFragment( "(" + sql.getSQL() + ")" );
 		}
 		catch (SemanticException e) {
 			throw e;

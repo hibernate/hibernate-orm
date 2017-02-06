@@ -17,10 +17,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.AssociationOverride;
+import javax.persistence.AssociationOverrides;
 import javax.persistence.CollectionTable;
 import javax.persistence.ConstraintMode;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
@@ -35,6 +37,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyJoinColumn;
 import javax.persistence.MapKeyJoinColumns;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
@@ -69,7 +72,8 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 				Vehicle.class,
 				VehicleBuyInfo.class,
 				Car.class,
-				Truck.class
+				Truck.class,
+				Company.class
 		};
 	}
 
@@ -130,7 +134,19 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 
 	@Test
 	public void testAssociationOverride() {
-		assertForeignKey( "FK_CUSTOMER_COMPANY_OWNER", "OWNER_PERSON_ID" );
+		// class level association overrides
+		assertForeignKey( "FK_COMPANY_OWNER", "OWNER_PERSON_ID" );
+		assertForeignKey( "FK_COMPANY_CREDIT_CARD", "CREDIT_CARD_ID" );
+		assertForeignKey( "FK_COMPANY_CREDIT_CARD3", "CREDIT_CARD_ID3" );
+		assertNoForeignKey( "FK_COMPANY_OWNER2", "OWNER_PERSON_ID2" );
+		assertNoForeignKey( "FK_COMPANY_CREDIT_CARD2", "CREDIT_CARD_ID2" );
+		assertNoForeignKey( "FK_COMPANY_CREDIT_CARD4", "CREDIT_CARD_ID4" );
+
+		// embeddable association overrides
+		assertForeignKey( "FK_COMPANY_CARD", "AO_CI_CC_ID" );
+		assertNoForeignKey( "FK_COMPANY_CARD2", "AO_CI_CC_ID2" );
+		assertForeignKey( "FK_COMPANY_CARD3", "AO_CI_CC_ID3" );
+		assertNoForeignKey( "FK_COMPANY_CARD4", "AO_CI_CC_ID4" );
 	}
 
 	@Test
@@ -377,8 +393,8 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 		public boolean fourWheelDrive;
 	}
 
-	@Entity(name = "Company")
-	public static abstract class Company {
+	@MappedSuperclass
+	public static abstract class AbstractCompany {
 
 		@Id
 		@GeneratedValue
@@ -387,15 +403,107 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 		@ManyToOne
 		@JoinColumn( name = "OWNER_ID" )
 		public Person owner;
+
+		@ManyToOne
+		@JoinColumn( name = "OWNER_ID2" )
+		public Person owner2;
+
+		@OneToOne
+		@JoinColumn( name = "CC_ID" )
+		public CreditCard creditCard;
+
+		@OneToOne
+		@JoinColumn( name = "CC_ID2" )
+		public CreditCard creditCard2;
+
+		@OneToMany
+		@JoinColumn( name = "CC_ID3" )
+		public List<CreditCard> creditCards1;
+
+		@OneToMany
+		@JoinColumn( name = "CC_ID4" )
+		public List<CreditCard> creditCards2;
 	}
 
-	@Entity(name = "CustomerCompany")
-	@AssociationOverride(
-			name = "owner",
-			joinColumns = @JoinColumn( name = "OWNER_PERSON_ID" ),
-			foreignKey = @ForeignKey( name = "FK_CUSTOMER_COMPANY_OWNER" )
-	)
-	public static class CustomerCompany extends Company {
+	@Embeddable
+	public static class CompanyInfo {
+		public String data;
 
+		@OneToMany
+		@JoinColumn( name = "CI_CC_ID", foreignKey = @ForeignKey( name = "FK_CI_CC" ) )
+		public List<CreditCard> cards;
+
+		@OneToMany
+		@JoinColumn( name = "CI_CC_ID2", foreignKey = @ForeignKey( name = "FK_CI_CC2" ) )
+		public List<CreditCard> cards2;
+
+		@ManyToOne
+		@JoinColumn( name = "CI_CC_ID3", foreignKey = @ForeignKey( name = "FK_CI_CC3" ) )
+		public CreditCard cards3;
+
+		@ManyToOne
+		@JoinColumn( name = "CI_CC_ID4", foreignKey = @ForeignKey( name = "FK_CI_CC4" ) )
+		public CreditCard cards4;
+	}
+
+	@Entity(name = "Company")
+	@AssociationOverrides({
+			@AssociationOverride(
+					name = "owner",
+					joinColumns = @JoinColumn( name = "OWNER_PERSON_ID" ),
+					foreignKey = @ForeignKey( name = "FK_COMPANY_OWNER" )
+			),
+			@AssociationOverride(
+					name = "owner2",
+					joinColumns = @JoinColumn( name = "OWNER_PERSON_ID2" ),
+					foreignKey = @ForeignKey( name = "FK_COMPANY_OWNER2", value = ConstraintMode.NO_CONSTRAINT )
+			),
+			@AssociationOverride(
+					name = "creditCard",
+					joinColumns = @JoinColumn( name = "CREDIT_CARD_ID" ),
+					foreignKey = @ForeignKey( name = "FK_COMPANY_CREDIT_CARD" )
+			),
+			@AssociationOverride(
+					name = "creditCard2",
+					joinColumns = @JoinColumn( name = "CREDIT_CARD_ID2" ),
+					foreignKey = @ForeignKey( name = "FK_COMPANY_CREDIT_CARD2", value = ConstraintMode.NO_CONSTRAINT )
+			),
+			@AssociationOverride(
+					name = "creditCards1",
+					joinColumns = @JoinColumn( name = "CREDIT_CARD_ID3" ),
+					foreignKey = @ForeignKey( name = "FK_COMPANY_CREDIT_CARD3" )
+			),
+			@AssociationOverride(
+					name = "creditCards2",
+					joinColumns = @JoinColumn( name = "CREDIT_CARD_ID4" ),
+					foreignKey = @ForeignKey( name = "FK_COMPANY_CREDIT_CARD4", value = ConstraintMode.NO_CONSTRAINT )
+			)
+
+	})
+	public static class Company extends AbstractCompany {
+		@Embedded
+		@AssociationOverrides({
+				@AssociationOverride(
+						name = "cards",
+						joinColumns = @JoinColumn( name = "AO_CI_CC_ID" ),
+						foreignKey = @ForeignKey( name = "FK_COMPANY_CARD" )
+				),
+				@AssociationOverride(
+						name = "cards2",
+						joinColumns = @JoinColumn( name = "AO_CI_CC_ID2" ),
+						foreignKey = @ForeignKey( name = "FK_COMPANY_CARD2", value = ConstraintMode.NO_CONSTRAINT )
+				),
+				@AssociationOverride(
+						name = "cards3",
+						joinColumns = @JoinColumn( name = "AO_CI_CC_ID3" ),
+						foreignKey = @ForeignKey( name = "FK_COMPANY_CARD3" )
+				),
+				@AssociationOverride(
+						name = "cards4",
+						joinColumns = @JoinColumn( name = "AO_CI_CC_ID4" ),
+						foreignKey = @ForeignKey( name = "FK_COMPANY_CARD4", value = ConstraintMode.NO_CONSTRAINT )
+				)
+		})
+		public CompanyInfo info;
 	}
 }

@@ -12,8 +12,11 @@ import java.util.Map;
 import java.util.Random;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
+import javax.persistence.ConstraintMode;
 import javax.persistence.InheritanceType;
 import javax.persistence.MapKeyClass;
+import javax.persistence.MapKeyJoinColumn;
+import javax.persistence.MapKeyJoinColumns;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -294,6 +297,20 @@ public class MapBinder extends CollectionBinder {
 					col.forceNotNull();
 				}
 			}
+
+			if ( element != null ) {
+				final javax.persistence.ForeignKey foreignKey = getMapKeyForeignKey( property );
+				if ( foreignKey != null ) {
+					if ( foreignKey.value() == ConstraintMode.NO_CONSTRAINT ) {
+						element.setForeignKeyName( "none" );
+					}
+					else {
+						element.setForeignKeyName( StringHelper.nullIfEmpty( foreignKey.name() ) );
+						element.setForeignKeyDefinition( StringHelper.nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+					}
+				}
+			}
+
 			if ( isIndexOfEntities ) {
 				bindManytoManyInverseFk(
 						collectionEntity,
@@ -304,6 +321,20 @@ public class MapBinder extends CollectionBinder {
 				);
 			}
 		}
+	}
+
+	private javax.persistence.ForeignKey getMapKeyForeignKey(XProperty property) {
+		final MapKeyJoinColumns mapKeyJoinColumns = property.getAnnotation( MapKeyJoinColumns.class );
+		if ( mapKeyJoinColumns != null ) {
+			return mapKeyJoinColumns.foreignKey();
+		}
+		else {
+			final MapKeyJoinColumn mapKeyJoinColumn = property.getAnnotation( MapKeyJoinColumn.class );
+			if ( mapKeyJoinColumn != null ) {
+				return mapKeyJoinColumn.foreignKey();
+			}
+		}
+		return null;
 	}
 
 	private boolean mappingDefinedAttributeOverrideOnMapKey(XProperty property) {

@@ -8,7 +8,6 @@ package org.hibernate.id;
 
 import java.util.Properties;
 
-import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -88,34 +87,35 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 	@Test
 	public void testHiLoAlgorithm() {
 		sessionImpl = (SessionImpl) sessionFactory.openSession();
+		try {
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			// historically the hilo generators skipped the initial block of values;
+			// so the first generated id value is maxlo + 1, here be 4
+			assertEquals(4L, generateValue());
+			// which should also perform the first read on the sequence which should set it to its "start with" value (1)
+			assertEquals(1L, extractSequenceValue());
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// historically the hilo generators skipped the initial block of values;
-		// so the first generated id value is maxlo + 1, here be 4
-		assertEquals( 4L, generateValue() );
-		// which should also perform the first read on the sequence which should set it to its "start with" value (1)
-		assertEquals( 1L, extractSequenceValue() );
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			assertEquals(5L, generateValue());
+			assertEquals(1L, extractSequenceValue());
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		assertEquals( 5L, generateValue() );
-		assertEquals( 1L, extractSequenceValue() );
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			assertEquals(6L, generateValue());
+			assertEquals(1L, extractSequenceValue());
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		assertEquals( 6L, generateValue() );
-		assertEquals( 1L, extractSequenceValue() );
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			assertEquals(7L, generateValue());
+			// unlike the newer strategies, the db value will not get update here. It gets updated on the next invocation
+			// afterQuery a clock over
+			assertEquals(1L, extractSequenceValue());
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		assertEquals( 7L, generateValue() );
-		// unlike the newer strategies, the db value will not get update here. It gets updated on the next invocation
-		// afterQuery a clock over
-		assertEquals( 1L, extractSequenceValue() );
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		assertEquals( 8L, generateValue() );
-		// this should force an increment in the sequence value
-		assertEquals( 2L, extractSequenceValue() );
-
-		((Session) sessionImpl).close();
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			assertEquals(8L, generateValue());
+			// this should force an increment in the sequence value
+			assertEquals(2L, extractSequenceValue());
+		} finally {
+			sessionImpl.close();
+		}
 	}
 
 	private long extractSequenceValue() {
@@ -123,10 +123,12 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 	}
 
 	private long generateValue() {
-		Long generatedValue;
-		Transaction transaction = ((Session) sessionImpl).beginTransaction();
-		generatedValue = (Long) generator.generate( sessionImpl, null );
-		transaction.commit();
-		return generatedValue.longValue();
+		Transaction transaction =  sessionImpl.beginTransaction();
+		try {
+			return  (Long) generator.generate( sessionImpl, null );
+		}
+		finally {
+			transaction.commit();
+		}
 	}
 }

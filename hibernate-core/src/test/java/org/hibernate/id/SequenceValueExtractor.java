@@ -43,7 +43,7 @@ public class SequenceValueExtractor {
 			queryString = "select " + sequenceName + ".currval from dual";
 		}
 		else if ( dialect instanceof SQLServer2012Dialect ) {
-			queryString = "SELECT CONVERT(varchar(200), Current_value) FROM SYS.Sequences WHERE name = '" + sequenceName + "'";
+			queryString = "SELECT CONVERT(varchar(200), Current_value) FROM sys.sequences WHERE name = '" + sequenceName + "'";
 		}
 		else if ( dialect instanceof HSQLDialect ) {
 

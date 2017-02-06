@@ -657,8 +657,20 @@ public final class AnnotationBinder {
 				}
 				else {
 					final PrimaryKeyJoinColumn pkJoinColumn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
-					if ( pkJoinColumn != null && pkJoinColumn.foreignKey() != null
-							&& !StringHelper.isEmpty( pkJoinColumn.foreignKey().name() ) ) {
+					final PrimaryKeyJoinColumns pkJoinColumns = clazzToProcess.getAnnotation( PrimaryKeyJoinColumns.class );
+
+					if ( pkJoinColumns != null && pkJoinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+						// don't apply a constraint based on ConstraintMode
+						key.setForeignKeyName( "none" );
+					}
+					else if ( pkJoinColumns != null && !StringHelper.isEmpty( pkJoinColumns.foreignKey().name() ) ) {
+						key.setForeignKeyName( pkJoinColumns.foreignKey().name() );
+					}
+					else if ( pkJoinColumn != null && pkJoinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+						// don't apply a constraint based on ConstraintMode
+						key.setForeignKeyName( "none" );
+					}
+					else if ( pkJoinColumn != null && !StringHelper.isEmpty( pkJoinColumn.foreignKey().name() ) ) {
 						key.setForeignKeyName( pkJoinColumn.foreignKey().name() );
 					}
 				}

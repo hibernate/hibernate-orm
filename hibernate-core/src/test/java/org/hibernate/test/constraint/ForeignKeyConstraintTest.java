@@ -35,6 +35,8 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyJoinColumn;
 import javax.persistence.MapKeyJoinColumns;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.PrimaryKeyJoinColumns;
 import javax.persistence.SecondaryTable;
@@ -60,6 +62,7 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
+				CreditCard.class,
 				Person.class,
 				Student.class,
 				Professor.class,
@@ -73,11 +76,19 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 	@Test
 	public void testJoinColumn() {
 		assertForeignKey( "FK_CAR_OWNER", "OWNER_PERSON_ID" );
+		assertForeignKey( "FK_CAR_OWNER3", "OWNER_PERSON_ID3" );
+		assertForeignKey( "FK_PERSON_CC", "PERSON_CC_ID" );
+		assertNoForeignKey( "FK_CAR_OWNER2", "OWNER_PERSON_ID2" );
+		assertNoForeignKey( "FK_CAR_OWNER4", "OWNER_PERSON_ID4" );
+		assertNoForeignKey( "FK_PERSON_CC2", "PERSON_CC_ID2" );
 	}
 
 	@Test
 	public void testJoinColumns() {
 		assertForeignKey( "FK_STUDENT_CAR", "CAR_NR", "CAR_VENDOR_NR" );
+		assertForeignKey( "FK_STUDENT_CAR3", "CAR_NR3", "CAR_VENDOR_NR3" );
+		assertNoForeignKey( "FK_STUDENT_CAR2", "CAR_NR2", "CAR_VENDOR_NR2" );
+		assertNoForeignKey( "FK_STUDENT_CAR4", "CAR_NR4", "CAR_VENDOR_NR4" );
 	}
 
 	@Test
@@ -165,6 +176,12 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 			}
 		}
 	}
+
+	@Entity(name = "CreditCard")
+	public static class CreditCard {
+		@Id
+		public String number;
+	}
 	
 	@Entity(name = "Person")
 	@Inheritance( strategy = InheritanceType.JOINED )
@@ -173,6 +190,14 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 		@GeneratedValue
 		@javax.persistence.Column( nullable = false, unique = true)
 		public long id;
+
+		@OneToMany
+		@JoinColumn(name = "PERSON_CC_ID", foreignKey = @ForeignKey( name = "FK_PERSON_CC" ) )
+		public List<CreditCard> creditCards;
+
+		@OneToMany
+		@JoinColumn(name = "PERSON_CC_ID2", foreignKey = @ForeignKey( name = "FK_PERSON_CC2", value = ConstraintMode.NO_CONSTRAINT ) )
+		public List<CreditCard> creditCards2;
 	}
 
 	@Entity(name = "Professor")
@@ -183,7 +208,7 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 	public static class Professor extends Person {
 
 	}
-	
+
 	@Entity(name = "Student")
 	@PrimaryKeyJoinColumn( name = "PERSON_ID", foreignKey = @ForeignKey( name = "FK_STUDENT_PERSON" ) )
 	public static class Student extends Person {
@@ -200,6 +225,36 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 				foreignKey = @ForeignKey( name = "FK_STUDENT_CAR" )
 		)
 		public Car car;
+
+		@ManyToOne
+		@JoinColumns(
+				value = {
+						@JoinColumn( name = "CAR_NR2", referencedColumnName = "CAR_NR" ),
+						@JoinColumn( name = "CAR_VENDOR_NR2", referencedColumnName = "VENDOR_NR" )
+				},
+				foreignKey = @ForeignKey( name = "FK_STUDENT_CAR2", value = ConstraintMode.NO_CONSTRAINT )
+		)
+		public Car car2;
+
+		@OneToOne
+		@JoinColumns(
+				value = {
+						@JoinColumn( name = "CAR_NR3", referencedColumnName = "CAR_NR" ),
+						@JoinColumn( name = "CAR_VENDOR_NR3", referencedColumnName = "VENDOR_NR" )
+				},
+				foreignKey = @ForeignKey( name = "FK_STUDENT_CAR3" )
+		)
+		public Car car3;
+
+		@OneToOne
+		@JoinColumns(
+				value = {
+						@JoinColumn( name = "CAR_NR4", referencedColumnName = "CAR_NR" ),
+						@JoinColumn( name = "CAR_VENDOR_NR4", referencedColumnName = "VENDOR_NR" )
+				},
+				foreignKey = @ForeignKey( name = "FK_STUDENT_CAR4", value = ConstraintMode.NO_CONSTRAINT )
+		)
+		public Car car4;
 
 		@ManyToMany
 		@JoinTable(
@@ -284,6 +339,18 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 		@JoinColumn( name = "OWNER_PERSON_ID", foreignKey = @ForeignKey( name = "FK_CAR_OWNER") )
 		public Person owner;
 
+		@ManyToOne
+		@JoinColumn( name = "OWNER_PERSON_ID2", foreignKey = @ForeignKey( name = "FK_CAR_OWNER2", value = ConstraintMode.NO_CONSTRAINT ) )
+		public Person owner2;
+
+		@OneToOne
+		@JoinColumn( name = "OWNER_PERSON_ID3", foreignKey = @ForeignKey( name = "FK_CAR_OWNER3") )
+		public Person owner3;
+
+		@OneToOne
+		@JoinColumn( name = "OWNER_PERSON_ID4", foreignKey = @ForeignKey( name = "FK_CAR_OWNER4", value = ConstraintMode.NO_CONSTRAINT ) )
+		public Person owner4;
+
 		@ElementCollection
 		@CollectionTable(
 				name = "OWNER_INFO",
@@ -307,7 +374,7 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 			foreignKey = @ForeignKey( name = "FK_TRUCK_VEHICLE", value = ConstraintMode.NO_CONSTRAINT )
 	)
 	public static class Truck extends Vehicle {
-		private boolean fourWheelDrive;
+		public boolean fourWheelDrive;
 	}
 
 	@Entity(name = "Company")

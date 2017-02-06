@@ -2906,6 +2906,7 @@ public final class AnnotationBinder {
 		}
 		
 		final JoinColumn joinColumn = property.getAnnotation( JoinColumn.class );
+		final JoinColumns joinColumns = property.getAnnotation( JoinColumns.class );
 
 		//Make sure that JPA1 key-many-to-one columns are read only tooj
 		boolean hasSpecjManyToOne=false;
@@ -2934,8 +2935,8 @@ public final class AnnotationBinder {
 		final String propertyName = inferredData.getPropertyName();
 		value.setTypeUsingReflection( propertyHolder.getClassName(), propertyName );
 
-		if ( joinColumn != null
-				&& joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+		if ( ( joinColumn != null && joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT )
+				|| ( joinColumns != null && joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) ) {
 			// not ideal...
 			value.setForeignKeyName( "none" );
 		}
@@ -2943,6 +2944,10 @@ public final class AnnotationBinder {
 			final ForeignKey fk = property.getAnnotation( ForeignKey.class );
 			if ( fk != null && StringHelper.isNotEmpty( fk.name() ) ) {
 				value.setForeignKeyName( fk.name() );
+			}
+			else if ( joinColumns != null ) {
+				value.setForeignKeyName( StringHelper.nullIfEmpty( joinColumns.foreignKey().name() ) );
+				value.setForeignKeyDefinition( StringHelper.nullIfEmpty( joinColumns.foreignKey().foreignKeyDefinition() ) );
 			}
 			else if ( joinColumn != null ) {
 				value.setForeignKeyName( StringHelper.nullIfEmpty( joinColumn.foreignKey().name() ) );

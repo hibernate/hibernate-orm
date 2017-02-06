@@ -45,6 +45,67 @@ _dynamic_ (sometimes referred to as runtime)::
     HQL/JPQL::: and both Hibernate and JPA Criteria queries have the ability to specify fetching, specific to said query.
     entity graphs::: Starting in Hibernate 4.2 (JPA 2.1) this is also an option.
 
+[[fetching-direct-vs-query]]
+=== Direct fetching vs entity queries
+
+To see the difference between direct fetching and entity queries in regard to eagerly fetched associations, consider the following entities:
+
+[[fetching-direct-vs-query-domain-model-example]]
+.Domain model
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-domain-model-example]
+----
+====
+
+The `Employee` entity has a `@ManyToOne` association to a `Department` which is fetched eagerly.
+
+When issuing a direct entity fetch, Hibernate executed the following SQL query:
+
+[[fetching-direct-vs-query-direct-fetching-example]]
+.Direct fetching example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-direct-fetching-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/fetching-direct-vs-query-direct-fetching-example.sql[]
+----
+====
+
+The `LEFT JOIN` clause is added to the generated SQL query because this association is required to be fetched eagerly.
+
+On the other hand, if you are using an entity query that does not contain a `JOIN FETCH` directive to the `Department` association:
+
+[[fetching-direct-vs-query-entity-query-example]]
+.Entity query fetching example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-entity-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/fetching-direct-vs-query-entity-query-example.sql[]
+----
+====
+
+Hibernate uses a secondary select instead. This is because the entity query fetch policy cannot be overridden,
+so Hibernate requires a secondary select to ensure that the EAGER association is fetched prior to returning the result to the user.
+
+[IMPORTANT]
+====
+If you forget to JOIN FETCH all EAGER associations, Hibernate is going to issue a secondary select for each and every one of those
+which, in turn, can lean to N+1 query issues.
+
+For this reason, you should prefer LAZY associations.
+====
+
 [[fetching-strategies]]
 === Applying fetch strategies
 
@@ -82,7 +143,7 @@ include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-no-fetching-exam
 ====
 
 In this example, the application gets the `Employee` data.
-However, because all associations from `Employee `are declared as LAZY (JPA defines the default for collections as LAZY) no other data is fetched.
+However, because all associations from `Employee` are declared as LAZY (JPA defines the default for collections as LAZY) no other data is fetched.
 
 If the login process does not need access to the `Employee` information specifically, another fetching optimization here would be to limit the width of the query results.
 
@@ -99,7 +160,7 @@ include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-no-fetching-scal
 === Dynamic fetching via queries
 
 For the second use case, consider a screen displaying the `Projects` for an `Employee`.
-Certainly access to the `Employee `is needed, as is the collection of `Projects` for that Employee. Information about `Departments`, other `Employees` or other `Projects` is not needed.
+Certainly access to the `Employee` is needed, as is the collection of `Projects` for that Employee. Information about `Departments`, other `Employees` or other `Projects` is not needed.
 
 [[fetching-strategies-dynamic-fetching-jpql-example]]
 .Dynamic JPQL fetching example
@@ -119,7 +180,7 @@ include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching
 ----
 ====
 
-In this example we have an `Employee `and their `Projects` loaded in a single query shown both as an HQL query and a JPA Criteria query.
+In this example we have an `Employee` and their `Projects` loaded in a single query shown both as an HQL query and a JPA Criteria query.
 In both cases, this resolves to exactly one database query to get all that information.
 
 [[fetching-strategies-dynamic-fetching-entity-graph]]

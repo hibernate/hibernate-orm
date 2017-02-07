@@ -118,8 +118,8 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 				final String name = extractName( zipEntry );
 				final String relativeName = extractRelativeName( zipEntry );
 				final InputStreamAccess inputStreamAccess;
-				try {
-					inputStreamAccess = buildByteBasedInputStreamAccess( name, jarFile.getInputStream( zipEntry ) );
+				try (InputStream is = jarFile.getInputStream( zipEntry )) {
+					inputStreamAccess = buildByteBasedInputStreamAccess( name, is );
 				}
 				catch (IOException e) {
 					throw new ArchiveException(

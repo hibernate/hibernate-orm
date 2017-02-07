@@ -15,7 +15,7 @@ limit this change to just the Oracle12cDialect.  So starting in 5.1 applications
 implicitly mapping `byte[]` and `Byte[]` values will start seeing those handled as `BLOB` data rather than `LONG RAW`
 data.  For existing applications that want to continue to use Oracle12cDialect and still continue to implicitly map
 `byte[]` and `Byte[]` attributes to `LONG RAW`, there is a new configuration setting you can use to enable that:
-`hibernate.dialect.oracle.prefer_longvarbinary`, which is false by default (map to `BLOB`).
+`hibernate.dialect.oracle.prefer_long_raw`, which is false by default (map to `BLOB`).
 
 
 == Changes to schema management tooling

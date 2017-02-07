@@ -960,9 +960,9 @@ public abstract class CollectionBinder {
 			String clause = whereOnCollection.clause();
 			if ( StringHelper.isNotEmpty( clause ) ) {
 				if ( whereBuffer.length() > 0 ) {
-					whereBuffer.append( StringHelper.WHITESPACE );
+					whereBuffer.append( ' ' );
 					whereBuffer.append( Junction.Nature.AND.getOperator() );
-					whereBuffer.append( StringHelper.WHITESPACE );
+					whereBuffer.append( ' ' );
 				}
 				whereBuffer.append( clause );
 			}

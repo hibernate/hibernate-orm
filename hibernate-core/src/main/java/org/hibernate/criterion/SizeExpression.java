@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.sql.ConditionFragment;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.StandardBasicTypes;
 
 /**
  * Used to define a restriction on a collection property based on its size.

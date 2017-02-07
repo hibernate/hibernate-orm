@@ -19,7 +19,7 @@ import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.StandardBasicTypes;
 
 /**
  * A dialect for Microsoft SQL 2005. (HHH-3936 fix)

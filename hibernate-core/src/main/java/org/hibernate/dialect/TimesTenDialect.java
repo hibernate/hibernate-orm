@@ -29,7 +29,7 @@ import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.StandardBasicTypes;
 
 /**
  * A SQL dialect for TimesTen 5.1.

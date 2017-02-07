@@ -17,7 +17,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.sql.ForUpdateFragment;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.StandardBasicTypes;
 
 /**
  * An SQL dialect targeting Sybase Adaptive Server Enterprise (ASE) 15.7 and higher.

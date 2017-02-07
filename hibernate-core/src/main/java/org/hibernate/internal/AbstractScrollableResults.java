@@ -23,7 +23,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.loader.Loader;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.StandardBasicTypes;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -194,97 +194,97 @@ public abstract class AbstractScrollableResults implements ScrollableResultsImpl
 
 	@Override
 	public final BigDecimal getBigDecimal(int col) throws HibernateException {
-		return (BigDecimal) getFinal( col, (Type) StandardBasicTypes.BIG_DECIMAL );
+		return (BigDecimal) getFinal( col, StandardBasicTypes.BIG_DECIMAL );
 	}
 
 	@Override
 	public final BigInteger getBigInteger(int col) throws HibernateException {
-		return (BigInteger) getFinal( col, (Type) StandardBasicTypes.BIG_INTEGER );
+		return (BigInteger) getFinal( col, StandardBasicTypes.BIG_INTEGER );
 	}
 
 	@Override
 	public final byte[] getBinary(int col) throws HibernateException {
-		return (byte[]) getFinal( col, (Type) StandardBasicTypes.BINARY );
+		return (byte[]) getFinal( col, StandardBasicTypes.BINARY );
 	}
 
 	@Override
 	public final String getText(int col) throws HibernateException {
-		return (String) getFinal( col, (Type) StandardBasicTypes.TEXT );
+		return (String) getFinal( col, StandardBasicTypes.TEXT );
 	}
 
 	@Override
 	public final Blob getBlob(int col) throws HibernateException {
-		return (Blob) getNonFinal( col, (Type) StandardBasicTypes.BLOB );
+		return (Blob) getNonFinal( col, StandardBasicTypes.BLOB );
 	}
 
 	@Override
 	public final Clob getClob(int col) throws HibernateException {
-		return (Clob) getNonFinal( col, (Type) StandardBasicTypes.CLOB );
+		return (Clob) getNonFinal( col, StandardBasicTypes.CLOB );
 	}
 
 	@Override
 	public final Boolean getBoolean(int col) throws HibernateException {
-		return (Boolean) getFinal( col, (Type) StandardBasicTypes.BOOLEAN );
+		return (Boolean) getFinal( col, StandardBasicTypes.BOOLEAN );
 	}
 
 	@Override
 	public final Byte getByte(int col) throws HibernateException {
-		return (Byte) getFinal( col, (Type) StandardBasicTypes.BYTE );
+		return (Byte) getFinal( col, StandardBasicTypes.BYTE );
 	}
 
 	@Override
 	public final Character getCharacter(int col) throws HibernateException {
-		return (Character) getFinal( col, (Type) StandardBasicTypes.CHARACTER );
+		return (Character) getFinal( col, StandardBasicTypes.CHARACTER );
 	}
 
 	@Override
 	public final Date getDate(int col) throws HibernateException {
-		return (Date) getNonFinal( col, (Type) StandardBasicTypes.TIMESTAMP );
+		return (Date) getNonFinal( col, StandardBasicTypes.TIMESTAMP );
 	}
 
 	@Override
 	public final Calendar getCalendar(int col) throws HibernateException {
-		return (Calendar) getNonFinal( col, (Type) StandardBasicTypes.CALENDAR );
+		return (Calendar) getNonFinal( col, StandardBasicTypes.CALENDAR );
 	}
 
 	@Override
 	public final Double getDouble(int col) throws HibernateException {
-		return (Double) getFinal( col, (Type) StandardBasicTypes.DOUBLE );
+		return (Double) getFinal( col, StandardBasicTypes.DOUBLE );
 	}
 
 	@Override
 	public final Float getFloat(int col) throws HibernateException {
-		return (Float) getFinal( col, (Type) StandardBasicTypes.FLOAT );
+		return (Float) getFinal( col, StandardBasicTypes.FLOAT );
 	}
 
 	@Override
 	public final Integer getInteger(int col) throws HibernateException {
-		return (Integer) getFinal( col, (Type) StandardBasicTypes.INTEGER );
+		return (Integer) getFinal( col, StandardBasicTypes.INTEGER );
 	}
 
 	@Override
 	public final Long getLong(int col) throws HibernateException {
-		return (Long) getFinal( col, (Type) StandardBasicTypes.LONG );
+		return (Long) getFinal( col, StandardBasicTypes.LONG );
 	}
 
 	@Override
 	public final Short getShort(int col) throws HibernateException {
-		return (Short) getFinal( col, (Type) StandardBasicTypes.SHORT );
+		return (Short) getFinal( col, StandardBasicTypes.SHORT );
 	}
 
 	@Override
 	public final String getString(int col) throws HibernateException {
-		return (String) getFinal( col, (Type) StandardBasicTypes.STRING );
+		return (String) getFinal( col, StandardBasicTypes.STRING );
 	}
 
 	@Override
 	public final Locale getLocale(int col) throws HibernateException {
-		return (Locale) getFinal( col, (Type) StandardBasicTypes.LOCALE );
+		return (Locale) getFinal( col, StandardBasicTypes.LOCALE );
 	}
 
 	@Override
 	public final TimeZone getTimeZone(int col) throws HibernateException {
-		return (TimeZone) getNonFinal( col, (Type) StandardBasicTypes.TIMEZONE );
+		return (TimeZone) getNonFinal( col, StandardBasicTypes.TIMEZONE );
 	}
 
 	@Override

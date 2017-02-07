@@ -1466,7 +1466,7 @@ public final class AnnotationBinder {
 			}
 			discriminatorColumn.setJoins( secondaryTables );
 			discriminatorColumn.setPropertyHolder( propertyHolder );
-			SimpleValue discriminatorColumnBinding = new SimpleValue( context.getMetadataCollector(), rootClass.getTable() );
+			SimpleValue discriminatorColumnBinding = new SimpleValue( context, rootClass.getTable() );
 			rootClass.setDiscriminator( discriminatorColumnBinding );
 			discriminatorColumn.linkWithValue( discriminatorColumnBinding );
 			discriminatorColumnBinding.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );
@@ -3330,7 +3330,6 @@ public final class AnnotationBinder {
 	public static Map<XClass, InheritanceState> buildInheritanceStates(
 			List<XClass> orderedClasses,
 			MetadataBuildingContext buildingContext) {
-		ReflectionManager reflectionManager = buildingContext.getBootstrapContext().getReflectionManager();
 		Map<XClass, InheritanceState> inheritanceStatePerClass = new HashMap<>(
 				orderedClasses.size()
 		);
@@ -3364,9 +3363,6 @@ public final class AnnotationBinder {
 	}
 
 	private static boolean hasAnnotationsOnIdClass(XClass idClass) {
-//		if(idClass.getAnnotation(Embeddable.class) != null)
-//			return true;
-
 		List<XProperty> properties = idClass.getDeclaredProperties( XClass.ACCESS_FIELD );
 		for ( XProperty property : properties ) {
 			if ( property.isAnnotationPresent( Column.class ) || property.isAnnotationPresent( OneToMany.class ) ||

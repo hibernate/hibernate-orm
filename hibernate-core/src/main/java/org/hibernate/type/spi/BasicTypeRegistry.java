@@ -411,7 +411,6 @@ public class BasicTypeRegistry {
 	private void registerBasicTypes() {
 		registerBasicType( BooleanJavaDescriptor.INSTANCE, BooleanSqlDescriptor.INSTANCE );
 		registerBasicType( IntegerJavaDescriptor.INSTANCE, IntegerSqlDescriptor.INSTANCE );
-		registerBasicType( new BooleanJavaDescriptor( 'T', 'F' ), CharSqlDescriptor.INSTANCE );
 		registerBasicType( BooleanJavaDescriptor.INSTANCE, CharSqlDescriptor.INSTANCE );
 
 		registerBasicType( ByteJavaDescriptor.INSTANCE, TinyIntSqlDescriptor.INSTANCE );

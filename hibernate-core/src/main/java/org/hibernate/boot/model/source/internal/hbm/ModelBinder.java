@@ -7,15 +7,12 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-import javax.persistence.EnumType;
-import javax.persistence.TemporalType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -90,7 +87,6 @@ import org.hibernate.boot.model.source.spi.TableSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.boot.model.source.spi.VersionAttributeSource;
 import org.hibernate.boot.model.type.internal.BasicTypeProducerUnregisteredImpl;
-import org.hibernate.boot.model.type.spi.BasicTypeProducer;
 import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -147,12 +143,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.tuple.GeneratedValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.converter.spi.AttributeConverterDefinition;
-import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * Responsible for coordinating the binding of all information inside entity tags ({@code <class/>}, etc).
@@ -706,7 +697,7 @@ public class ModelBinder {
 		final IdentifierSourceSimple idSource = (IdentifierSourceSimple) hierarchySource.getIdentifierSource();
 
 		final SimpleValue idValue = new SimpleValue(
-				sourceDocument.getMetadataCollector(),
+				sourceDocument,
 				rootEntityDescriptor.getTable()
 		);
 		rootEntityDescriptor.setIdentifier( idValue );
@@ -714,73 +705,7 @@ public class ModelBinder {
 		bindSimpleValueType(
 				sourceDocument,
 				idSource.getIdentifierAttributeSource().getTypeInformation(),
-				idValue,
-				new BasicTypeResolver() {
-					@Override
-					public Map getLocalTypeParameters() {
-						return idSource.getIdentifierAttributeSource().getTypeInformation().getParameters();
-					}
-
-					@Override
-					public boolean isId() {
-						return true;
-					}
-
-					@Override
-					public boolean isVersion() {
-						return false;
-					}
-
-					@Override
-					public BasicJavaDescriptor getJavaTypeDescriptor() {
-						return null;
-					}
-
-					@Override
-					public SqlTypeDescriptor getSqlTypeDescriptor() {
-						return null;
-					}
-
-					@Override
-					public AttributeConverterDefinition getAttributeConverterDefinition() {
-						return null;
-					}
-
-					@Override
-					public MutabilityPlan getMutabilityPlan() {
-						return null;
-					}
-
-					@Override
-					public Comparator getComparator() {
-						return null;
-					}
-
-					@Override
-					public TemporalType getTemporalPrecision() {
-						return null;
-					}
-
-					@Override
-					public boolean isNationalized() {
-						return false;
-					}
-
-					@Override
-					public boolean isLob() {
-						return false;
-					}
-
-					@Override
-					public EnumType getEnumeratedType() {
-						return null;
-					}
-
-					@Override
-					public TypeConfiguration getTypeConfiguration() {
-						return sourceDocument.getMetadataCollector().getTypeConfiguration();
-					}
-				}
+				idValue
 		);
 
 		final String propertyName = idSource.getIdentifierAttributeSource().getName();
@@ -1067,7 +992,7 @@ public class ModelBinder {
 		final VersionAttributeSource versionAttributeSource = hierarchySource.getVersionAttributeSource();
 
 		final SimpleValue versionValue = new SimpleValue(
-				sourceDocument.getMetadataCollector(),
+				sourceDocument,
 				rootEntityDescriptor.getTable()
 		);
 
@@ -1076,73 +1001,7 @@ public class ModelBinder {
 		bindSimpleValueType(
 				sourceDocument,
 				versionAttributeSource.getTypeInformation(),
-				versionValue,
-				new BasicTypeResolver() {
-					@Override
-					public Map getLocalTypeParameters() {
-						return versionAttributeSource.getTypeInformation().getParameters();
-					}
-
-					@Override
-					public boolean isId() {
-						return false;
-					}
-
-					@Override
-					public boolean isVersion() {
-						return true;
-					}
-
-					@Override
-					public BasicJavaDescriptor getJavaTypeDescriptor() {
-						return null;
-					}
-
-					@Override
-					public SqlTypeDescriptor getSqlTypeDescriptor() {
-						return null;
-					}
-
-					@Override
-					public AttributeConverterDefinition getAttributeConverterDefinition() {
-						return null;
-					}
-
-					@Override
-					public MutabilityPlan getMutabilityPlan() {
-						return null;
-					}
-
-					@Override
-					public Comparator getComparator() {
-						return null;
-					}
-
-					@Override
-					public TemporalType getTemporalPrecision() {
-						return null;
-					}
-
-					@Override
-					public boolean isNationalized() {
-						return false;
-					}
-
-					@Override
-					public boolean isLob() {
-						return false;
-					}
-
-					@Override
-					public EnumType getEnumeratedType() {
-						return null;
-					}
-
-					@Override
-					public TypeConfiguration getTypeConfiguration() {
-						return sourceDocument.getMetadataCollector().getTypeConfiguration();
-					}
-				}
+				versionValue
 		);
 
 		relationalObjectBinder.bindColumnsAndFormulas(
@@ -1422,7 +1281,7 @@ public class ModelBinder {
 					final Property attribute = createAnyAssociationAttribute(
 							mappingDocument,
 							anyAttributeSource,
-							new Any( mappingDocument.getMetadataCollector(), table ),
+							new Any( mappingDocument, table ),
 							entityDescriptor.getEntityName()
 					);
 
@@ -2033,73 +1892,7 @@ public class ModelBinder {
 		bindSimpleValueType(
 				sourceDocument,
 				attributeSource.getTypeInformation(),
-				value,
-				new BasicTypeResolver() {
-					@Override
-					public Map getLocalTypeParameters() {
-						return attributeSource.getTypeInformation().getParameters();
-					}
-
-					@Override
-					public boolean isId() {
-						return false;
-					}
-
-					@Override
-					public boolean isVersion() {
-						return false;
-					}
-
-					@Override
-					public BasicJavaDescriptor getJavaTypeDescriptor() {
-						return null;
-					}
-
-					@Override
-					public SqlTypeDescriptor getSqlTypeDescriptor() {
-						return null;
-					}
-
-					@Override
-					public AttributeConverterDefinition getAttributeConverterDefinition() {
-						return null;
-					}
-
-					@Override
-					public MutabilityPlan getMutabilityPlan() {
-						return null;
-					}
-
-					@Override
-					public Comparator getComparator() {
-						return null;
-					}
-
-					@Override
-					public TemporalType getTemporalPrecision() {
-						return null;
-					}
-
-					@Override
-					public boolean isNationalized() {
-						return false;
-					}
-
-					@Override
-					public boolean isLob() {
-						return false;
-					}
-
-					@Override
-					public EnumType getEnumeratedType() {
-						return null;
-					}
-
-					@Override
-					public TypeConfiguration getTypeConfiguration() {
-						return sourceDocument.getMetadataCollector().getTypeConfiguration();
-					}
-				}
+				value
 		);
 
 		relationalObjectBinder.bindColumnsAndFormulas(
@@ -2501,19 +2294,19 @@ public class ModelBinder {
 			Any anyBinding,
 			final AttributeRole attributeRole,
 			AttributePath attributePath) {
-		final BasicTypeProducer keyTypeProducer = resolveTypeProducer(
+		final BasicTypeResolver keyTypeResolver = resolveBasicTypeResolver(
 				sourceDocument,
 				anyMapping.getKeySource().getTypeSource()
 		);
-		anyBinding.setIdentifierTypeProducer( keyTypeProducer );
+		anyBinding.setIdentifierTypeResolver( keyTypeResolver );
 
-		final BasicTypeProducer discriminatorTypeProducer = resolveTypeProducer(
+		final BasicTypeResolver discriminatorTypeResolver = resolveBasicTypeResolver(
 				sourceDocument,
 				anyMapping.getDiscriminatorSource().getTypeSource()
 		);
-		anyBinding.setDiscriminatorTypeProducer( discriminatorTypeProducer );
+		anyBinding.setDiscriminatorTypeResolver( discriminatorTypeResolver );
 
-		final BasicType discriminatorType = discriminatorTypeProducer.produceBasicType();
+		final BasicType discriminatorType = discriminatorTypeResolver.resolveBasicType();
 
 		for ( Map.Entry<String,String> discriminatorValueMappings : anyMapping.getDiscriminatorSource().getValueMappings().entrySet() ) {
 			try {
@@ -2894,7 +2687,7 @@ public class ModelBinder {
 				attribute = createAnyAssociationAttribute(
 						sourceDocument,
 						(SingularAttributeSourceAny) attributeSource,
-						new Any( sourceDocument.getMetadataCollector(), component.getTable() ),
+						new Any( sourceDocument, component.getTable() ),
 						component.getComponentClassName()
 				);
 			}
@@ -2929,19 +2722,18 @@ public class ModelBinder {
 			simpleValue.makeNationalized();
 		}
 
-		final BasicTypeProducer typeProducer = resolveTypeProducer( mappingDocument, typeSource );
+		final BasicTypeResolver typeProducer = resolveBasicTypeResolver( mappingDocument, typeSource );
 		simpleValue.setBasicTypeResolver( typeProducer );
-		typeProducer.injectBasicTypeSiteContext( siteContext );
 	}
 
-	private static BasicTypeProducer resolveTypeProducer(
+	private static BasicTypeResolver resolveBasicTypeResolver(
 			MappingDocument mappingDocument,
 			HibernateTypeSource typeSource) {
 		final String typeName = typeSource.getName();
 
 		if ( StringHelper.isNotEmpty( typeName ) ) {
-			final BasicTypeProducer registered = mappingDocument.getMetadataCollector().getBootstrapContext()
-					.getBasicTypeProducerRegistry()
+			final BasicTypeResolver registered = mappingDocument.getMetadataCollector().getBootstrapContext()
+					.getBasicTypeResolverRegistry()
 					.resolve( typeSource.getName() );
 			if ( registered != null ) {
 				return registered;
@@ -3509,80 +3301,14 @@ public class ModelBinder {
 			if ( idSource != null ) {
 				final IdentifierCollection idBagBinding = (IdentifierCollection) getCollectionBinding();
 				final SimpleValue idBinding = new SimpleValue(
-						mappingDocument.getMetadataCollector(),
+						mappingDocument,
 						idBagBinding.getCollectionTable()
 				);
 
 				bindSimpleValueType(
 						mappingDocument,
 						idSource.getTypeInformation(),
-						idBinding,
-						new BasicTypeResolver() {
-							@Override
-							public Map getLocalTypeParameters() {
-								return idSource.getTypeInformation().getParameters();
-							}
-
-							@Override
-							public boolean isId() {
-								return false;
-							}
-
-							@Override
-							public boolean isVersion() {
-								return false;
-							}
-
-							@Override
-							public BasicJavaDescriptor getJavaTypeDescriptor() {
-								return null;
-							}
-
-							@Override
-							public SqlTypeDescriptor getSqlTypeDescriptor() {
-								return null;
-							}
-
-							@Override
-							public AttributeConverterDefinition getAttributeConverterDefinition() {
-								return null;
-							}
-
-							@Override
-							public MutabilityPlan getMutabilityPlan() {
-								return null;
-							}
-
-							@Override
-							public Comparator getComparator() {
-								return null;
-							}
-
-							@Override
-							public TemporalType getTemporalPrecision() {
-								return null;
-							}
-
-							@Override
-							public boolean isNationalized() {
-								return false;
-							}
-
-							@Override
-							public boolean isLob() {
-								return false;
-							}
-
-							@Override
-							public EnumType getEnumeratedType() {
-								return null;
-							}
-
-							@Override
-							public TypeConfiguration getTypeConfiguration() {
-								return mappingDocument.getMetadataCollector().getTypeConfiguration();
-							}
-						}
+						idBinding
 				);
 
 				relationalObjectBinder.bindColumn(
@@ -3617,80 +3343,14 @@ public class ModelBinder {
 				final PluralAttributeElementSourceBasic elementSource =
 						(PluralAttributeElementSourceBasic) getPluralAttributeSource().getElementSource();
 				final SimpleValue elementBinding = new SimpleValue(
-						getMappingDocument().getMetadataCollector(),
+						getMappingDocument(),
 						getCollectionBinding().getCollectionTable()
 				);
 
 				bindSimpleValueType(
 						getMappingDocument(),
 						elementSource.getExplicitHibernateTypeSource(),
-						elementBinding,
-						new BasicTypeResolver() {
-							@Override
-							public Map getLocalTypeParameters() {
-								return elementSource.getExplicitHibernateTypeSource().getParameters();
-							}
-
-							@Override
-							public boolean isId() {
-								return false;
-							}
-
-							@Override
-							public boolean isVersion() {
-								return false;
-							}
-
-							@Override
-							public BasicJavaDescriptor getJavaTypeDescriptor() {
-								return null;
-							}
-
-							@Override
-							public SqlTypeDescriptor getSqlTypeDescriptor() {
-								return null;
-							}
-
-							@Override
-							public AttributeConverterDefinition getAttributeConverterDefinition() {
-								return null;
-							}
-
-							@Override
-							public MutabilityPlan getMutabilityPlan() {
-								return null;
-							}
-
-							@Override
-							public Comparator getComparator() {
-								return null;
-							}
-
-							@Override
-							public TemporalType getTemporalPrecision() {
-								return null;
-							}
-
-							@Override
-							public boolean isNationalized() {
-								return false;
-							}
-
-							@Override
-							public boolean isLob() {
-								return false;
-							}
-
-							@Override
-							public EnumType getEnumeratedType() {
-								return null;
-							}
-
-							@Override
-							public TypeConfiguration getTypeConfiguration() {
-								return mappingDocument.getMetadataCollector().getTypeConfiguration();
-							}
-						}
+						elementBinding
 				);
 
 				relationalObjectBinder.bindColumnsAndFormulas(
@@ -3701,10 +3361,9 @@ public class ModelBinder {
 						new RelationalObjectBinder.ColumnNamingDelegate() {
 							@Override
 							public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
-//								return implicitNamingStrategy.determineBasicColumnName(
-//										elementSource
-//								);
-								return context.getMetadataCollector().getDatabase().toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
+								return context.getMetadataCollector()
+										.getDatabase()
+										.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
 							}
 						}
 				);
@@ -3927,7 +3586,7 @@ public class ModelBinder {
 				final PluralAttributeElementSourceManyToAny elementSource =
 						(PluralAttributeElementSourceManyToAny) getPluralAttributeSource().getElementSource();
 				final Any elementBinding = new Any(
-						getMappingDocument().getMetadataCollector(),
+						getMappingDocument(),
 						getCollectionBinding().getCollectionTable()
 				);
 				bindAny(
@@ -4172,80 +3831,14 @@ public class ModelBinder {
 				(PluralAttributeSequentialIndexSource) attributeSource.getIndexSource();
 
 		final SimpleValue indexBinding = new SimpleValue(
-				mappingDocument.getMetadataCollector(),
+				mappingDocument,
 				collectionBinding.getCollectionTable()
 		);
 
 		bindSimpleValueType(
 				mappingDocument,
 				indexSource.getTypeInformation(),
-				indexBinding,
-				new BasicTypeResolver() {
-					@Override
-					public Map getLocalTypeParameters() {
-						return indexSource.getTypeInformation().getParameters();
-					}
-
-					@Override
-					public boolean isId() {
-						return false;
-					}
-
-					@Override
-					public boolean isVersion() {
-						return false;
-					}
-
-					@Override
-					public BasicJavaDescriptor getJavaTypeDescriptor() {
-						return (BasicJavaDescriptor) getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( Integer.class );
-					}
-
-					@Override
-					public SqlTypeDescriptor getSqlTypeDescriptor() {
-						return null;
-					}
-
-					@Override
-					public AttributeConverterDefinition getAttributeConverterDefinition() {
-						return null;
-					}
-
-					@Override
-					public MutabilityPlan getMutabilityPlan() {
-						return null;
-					}
-
-					@Override
-					public Comparator getComparator() {
-						return null;
-					}
-
-					@Override
-					public TemporalType getTemporalPrecision() {
-						return null;
-					}
-
-					@Override
-					public boolean isNationalized() {
-						return false;
-					}
-
-					@Override
-					public boolean isLob() {
-						return false;
-					}
-
-					@Override
-					public EnumType getEnumeratedType() {
-						return null;
-					}
-
-					@Override
-					public TypeConfiguration getTypeConfiguration() {
-						return mappingDocument.getMetadataCollector().getTypeConfiguration();
-					}
-				}
+				indexBinding
 		);
 
 		relationalObjectBinder.bindColumnsAndFormulas(
@@ -4285,79 +3878,13 @@ public class ModelBinder {
 			final PluralAttributeMapKeySourceBasic mapKeySource =
 					(PluralAttributeMapKeySourceBasic) pluralAttributeSource.getIndexSource();
 			final SimpleValue value = new SimpleValue(
-					mappingDocument.getMetadataCollector(),
+					mappingDocument,
 					collectionBinding.getCollectionTable()
 			);
 			bindSimpleValueType(
 					mappingDocument,
 					mapKeySource.getTypeInformation(),
-					value,
-					new BasicTypeResolver() {
-						@Override
-						public Map getLocalTypeParameters() {
-							return mapKeySource.getTypeInformation().getParameters();
-						}
-
-						@Override
-						public boolean isId() {
-							return false;
-						}
-
-						@Override
-						public boolean isVersion() {
-							return false;
-						}
-
-						@Override
-						public BasicJavaDescriptor getJavaTypeDescriptor() {
-							return null;
-						}
-
-						@Override
-						public SqlTypeDescriptor getSqlTypeDescriptor() {
-							return null;
-						}
-
-						@Override
-						public AttributeConverterDefinition getAttributeConverterDefinition() {
-							return null;
-						}
-
-						@Override
-						public MutabilityPlan getMutabilityPlan() {
-							return null;
-						}
-
-						@Override
-						public Comparator getComparator() {
-							return null;
-						}
-
-						@Override
-						public TemporalType getTemporalPrecision() {
-							return null;
-						}
-
-						@Override
-						public boolean isNationalized() {
-							return false;
-						}
-
-						@Override
-						public boolean isLob() {
-							return false;
-						}
-
-						@Override
-						public EnumType getEnumeratedType() {
-							return null;
-						}
-
-						@Override
-						public TypeConfiguration getTypeConfiguration() {
-							return mappingDocument.getMetadataCollector().getTypeConfiguration();
-						}
-					}
+					value
 			);
 			if ( !value.isTypeSpecified() ) {
 				throw new MappingException(
@@ -4440,7 +3967,7 @@ public class ModelBinder {
 			final PluralAttributeMapKeyManyToAnySource mapKeySource =
 					(PluralAttributeMapKeyManyToAnySource) pluralAttributeSource.getIndexSource();
 			final Any mapKeyBinding = new Any(
-					mappingDocument.getMetadataCollector(),
+					mappingDocument,
 					collectionBinding.getCollectionTable()
 			);
 			bindAny(

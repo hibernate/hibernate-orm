@@ -93,7 +93,9 @@ public interface Type<T> extends org.hibernate.type.Type<T>, SqmDomainType {
 	 */
 	JdbcLiteralFormatter getJdbcLiteralFormatter();
 
-
+	default Class<T> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

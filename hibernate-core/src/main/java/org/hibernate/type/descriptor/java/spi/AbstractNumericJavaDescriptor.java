@@ -6,10 +6,12 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+import java.io.Serializable;
+
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractNumericJavaDescriptor<T> extends AbstractBasicJavaDescriptor<T> implements NumericJavaDescriptor<T> {
+public abstract class AbstractNumericJavaDescriptor<T extends Serializable> extends AbstractBasicJavaDescriptor<T> implements NumericJavaDescriptor<T> {
 	public AbstractNumericJavaDescriptor(Class<T> type) {
 		super( type );
 	}

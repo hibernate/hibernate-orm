@@ -18,6 +18,8 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
+import org.hibernate.boot.model.type.spi.BasicTypeResolver;
+import org.hibernate.boot.model.type.spi.BasicTypeResolverRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.dialect.function.SQLFunction;
@@ -46,6 +48,8 @@ public interface BootstrapContext {
 	TypeConfiguration getTypeConfiguration();
 
 	BasicTypeProducerRegistry getBasicTypeProducerRegistry();
+
+	BasicTypeResolverRegistry getBasicTypeResolverRegistry();
 
 	/**
 	 * Access the temporary ClassLoader passed to us as defined by

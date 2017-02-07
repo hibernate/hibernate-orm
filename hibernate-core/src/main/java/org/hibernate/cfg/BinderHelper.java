@@ -67,7 +67,7 @@ public class BinderHelper {
 	}
 
 	static {
-		Set<String> primitiveNames = new HashSet<String>();
+		Set<String> primitiveNames = new HashSet<>();
 		primitiveNames.add( byte.class.getName() );
 		primitiveNames.add( short.class.getName() );
 		primitiveNames.add( int.class.getName() );
@@ -722,7 +722,7 @@ public class BinderHelper {
 			boolean optional,
 			MetadataBuildingContext context) {
 		//All FK columns should be in the same table
-		Any value = new Any( context.getMetadataCollector(), columns[0].getTable() );
+		Any value = new Any( context, columns[0].getTable() );
 		AnyMetaDef metaAnnDef = inferredData.getProperty().getAnnotation( AnyMetaDef.class );
 
 		if ( metaAnnDef != null ) {

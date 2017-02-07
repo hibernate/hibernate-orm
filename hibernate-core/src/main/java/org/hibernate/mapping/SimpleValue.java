@@ -612,7 +612,7 @@ public class SimpleValue implements KeyValue {
 					? null
 					: xProperty.getAnnotations();
 
-			final ClassLoaderService classLoaderService = getBuildingContext().getMetadataBuildingOptions()
+			final ClassLoaderService classLoaderService = getBuildingContext().getBootstrapContext()
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );
 			typeParameters.put(

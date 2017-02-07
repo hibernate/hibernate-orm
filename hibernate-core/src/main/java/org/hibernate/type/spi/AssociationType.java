@@ -12,9 +12,7 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.sqm.domain.AttributeReference;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.spi.Type;
 
 /**
  * A type that represents some kind of association between entities.
@@ -78,6 +76,4 @@ public interface AssociationType extends Type {
 	 * no columns to be updated?
 	 */
 	public abstract boolean isAlwaysDirtyChecked();
-
-
 }

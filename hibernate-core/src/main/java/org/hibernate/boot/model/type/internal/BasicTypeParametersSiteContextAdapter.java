@@ -9,8 +9,8 @@ package org.hibernate.boot.model.type.internal;
 import java.util.Comparator;
 import javax.persistence.TemporalType;
 
-import org.hibernate.boot.model.type.spi.BasicTypeResolver;
-import org.hibernate.cfg.AttributeConverterDefinition;
+import org.hibernate.cfg.BasicTypeResolverConvertibleSupport;
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -20,9 +20,9 @@ import org.hibernate.type.spi.BasicTypeParameters;
  * @author Steve Ebersole
  */
 public class BasicTypeParametersSiteContextAdapter implements BasicTypeParameters {
-	private BasicTypeResolver delegate;
+	private BasicTypeResolverConvertibleSupport delegate;
 
-	public BasicTypeParametersSiteContextAdapter(BasicTypeResolver delegate) {
+	public BasicTypeParametersSiteContextAdapter(BasicTypeResolverConvertibleSupport delegate) {
 		this.delegate = delegate;
 	}
 
@@ -37,7 +37,7 @@ public class BasicTypeParametersSiteContextAdapter implements BasicTypeParameter
 	}
 
 	@Override
-	public AttributeConverterDefinition  getAttributeConverterDefinition() {
+	public AttributeConverterDefinition getAttributeConverterDefinition() {
 		return delegate.getAttributeConverterDefinition();
 	}
 

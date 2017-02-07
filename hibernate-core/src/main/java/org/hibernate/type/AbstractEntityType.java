@@ -150,12 +150,12 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 		return referenceToPrimaryKey;
 	}
 
-	@Override
-	public String getRHSUniqueKeyPropertyName() {
-		// Return null if this type references a PK.  This is important for
-		// associations' use of mappedBy referring to a derived ID.
-		return referenceToPrimaryKey ? null : uniqueKeyPropertyName;
-	}
+//	@Override
+//	public String getRHSUniqueKeyPropertyName() {
+//		// Return null if this type references a PK.  This is important for
+//		// associations' use of mappedBy referring to a derived ID.
+//		return referenceToPrimaryKey ? null : uniqueKeyPropertyName;
+//	}
 
 	@Override
 	public String getLHSPropertyName() {

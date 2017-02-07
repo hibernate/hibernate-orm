@@ -11,7 +11,9 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.type.spi.BasicTypeProducer;
+import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -23,12 +25,12 @@ public class Any extends SimpleValue {
 	private String identifierTypeName;
 	private String metaTypeName = "string";
 
-	private BasicTypeProducer keyTypeProducer;
+	private BasicTypeResolver keyTypeResolver;
 
-	private BasicTypeProducer discriminatorTypeProducer;
+	private BasicTypeResolver discriminatorTypeResolver;
 	private Map<Object,String> discriminatorMap;
 
-	public Any(InFlightMetadataCollector metadata, Table table) {
+	public Any(MetadataBuildingContext metadata, Table table) {
 		super( metadata, table );
 	}
 
@@ -41,9 +43,9 @@ public class Any extends SimpleValue {
 	}
 
 	public Type getType() throws MappingException {
-		return getBuildingContext().any(
-				keyTypeProducer.produceBasicType(),
-				discriminatorTypeProducer.produceBasicType(),
+		return getBuildingContext().getMetadataCollector().any(
+				keyTypeResolver.resolveBasicType(),
+				discriminatorTypeResolver.resolveBasicType(),
 				discriminatorMap
 		);
 	}
@@ -74,12 +76,12 @@ public class Any extends SimpleValue {
 		return visitor.accept(this);
 	}
 
-	public void setIdentifierTypeProducer(BasicTypeProducer keyTypeProducer) {
-		this.keyTypeProducer = keyTypeProducer;
+	public void setIdentifierTypeResolver(BasicTypeResolver keyTypeResolver) {
+		this.keyTypeResolver = keyTypeResolver;
 	}
 
-	public void setDiscriminatorTypeProducer(BasicTypeProducer discriminatorTypeProducer) {
-		this.discriminatorTypeProducer = discriminatorTypeProducer;
+	public void setDiscriminatorTypeResolver(BasicTypeResolver discriminatorTypeResolver) {
+		this.discriminatorTypeResolver = discriminatorTypeResolver;
 	}
 
 	public void addDiscriminatorMapping(Object discriminatorValue, String mappedEntityName) {

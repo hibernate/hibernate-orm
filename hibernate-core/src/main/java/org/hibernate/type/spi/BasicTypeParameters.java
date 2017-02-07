@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 public interface BasicTypeParameters<T> {
 	BasicJavaDescriptor<T> getJavaTypeDescriptor();
 	SqlTypeDescriptor getSqlTypeDescriptor();
-	AttributeConverterDefinition  getAttributeConverterDefinition();
+	AttributeConverterDefinition getAttributeConverterDefinition();
 	MutabilityPlan<T> getMutabilityPlan();
 	Comparator<T> getComparator();
 	javax.persistence.TemporalType getTemporalPrecision();

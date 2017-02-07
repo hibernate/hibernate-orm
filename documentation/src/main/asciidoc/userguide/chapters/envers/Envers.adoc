@@ -24,8 +24,7 @@ However, for each audited entity, a new table is introduced - `entity_table_AUD`
 [NOTE]
 ====
 Envers automatically creates audit tables if `hibernate.hbm2ddl.auto` option is set to `create`, `create-drop` or `update`.
-Otherwise, to export complete database schema programmatically, use `org.hibernate.envers.tools.hbm2ddl.EnversSchemaGenerator`.
-Appropriate DDL statements can be also generated with Ant task described later in this manual.
+Appropriate DDL statements can also be generated with an Ant task in <<envers-generateschema>>.
 ====
 
 Instead of annotating the whole class and auditing all properties, you can annotate only some persistent properties with `@Audited`.

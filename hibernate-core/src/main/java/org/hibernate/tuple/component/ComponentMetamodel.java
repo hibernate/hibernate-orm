@@ -70,7 +70,7 @@ public class ComponentMetamodel implements Serializable {
 				component
 		) : componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
 
-		final ConfigurationService cs = component.getBuildingContext().getMetadataBuildingOptions().getServiceRegistry()
+		final ConfigurationService cs = component.getBuildingContext().getBootstrapContext().getServiceRegistry()
 				.getService(ConfigurationService.class);
 
 		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(

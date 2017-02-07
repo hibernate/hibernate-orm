@@ -28,9 +28,9 @@ public class ManyToOne extends ToOne {
 	}
 
 	public Type getType() throws MappingException {
-		return getBuildingContext().getTypeConfiguration().manyToOne(
+		return getBuildingContext().getBootstrapContext().getTypeConfiguration().manyToOne(
 				getReferencedEntityName(),
-				referenceToPrimaryKey, 
+				referenceToPrimaryKey,
 				getReferencedPropertyName(),
 				isLazy(),
 				isUnwrapProxy(),

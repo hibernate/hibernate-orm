@@ -605,7 +605,7 @@ public class ModelBinder {
 
 		// KEY
 		final SimpleValue keyBinding = new DependantValue(
-				mappingDocument.getMetadataCollector(),
+				mappingDocument.getMetadataCollector().getTypeConfiguration().getMetadataBuildingContext(),
 				primaryTable,
 				entityDescriptor.getIdentifier()
 		);
@@ -1792,7 +1792,7 @@ public class ModelBinder {
 		}
 
 		final SimpleValue keyBinding = new DependantValue(
-				mappingDocument.getMetadataCollector(),
+				mappingDocument.getBootstrapContext().getTypeConfiguration().getMetadataBuildingContext(),
 				secondaryTable,
 				persistentClass.getIdentifier()
 		);
@@ -3207,7 +3207,7 @@ public class ModelBinder {
 				keyVal = (KeyValue) getCollectionBinding().getOwner().getRecursiveProperty( propRef ).getValue();
 			}
 			final DependantValue key = new DependantValue(
-					mappingDocument.getMetadataCollector(),
+					mappingDocument.getBootstrapContext().getTypeConfiguration().getMetadataBuildingContext(),
 					getCollectionBinding().getCollectionTable(),
 					keyVal
 			);

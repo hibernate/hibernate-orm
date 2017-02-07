@@ -781,7 +781,13 @@ public class EntityBinder {
 	}
 
 	private void bindJoinToPersistentClass(Join join, Ejb3JoinColumn[] ejb3JoinColumns, MetadataBuildingContext buildingContext) {
-		SimpleValue key = new DependantValue( buildingContext.getMetadataCollector(), join.getTable(), persistentClass.getIdentifier() );
+		SimpleValue key = new DependantValue(
+				buildingContext.getBootstrapContext()
+						.getTypeConfiguration()
+						.getMetadataBuildingContext(),
+				join.getTable(),
+				persistentClass.getIdentifier()
+		);
 		join.setKey( key );
 		setFKNameIfDefined( join );
 		key.setCascadeDeleteEnabled( false );

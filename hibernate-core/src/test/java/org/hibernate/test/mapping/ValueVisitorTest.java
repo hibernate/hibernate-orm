@@ -68,7 +68,7 @@ public class ValueVisitorTest extends BaseUnitTestCase {
 		new Array( metadata, rootClass ).accept( vv );
 		new Bag( metadata, rootClass ).accept( vv );
 		new Component( metadata, rootClass ).accept( vv );
-		new DependantValue( metadata, tbl, null ).accept( vv );
+		new DependantValue( metadata.getTypeConfiguration().getMetadataBuildingContext(), tbl, null ).accept( vv );
 		new IdentifierBag( metadata, rootClass ).accept( vv );
 		new List( metadata, rootClass ).accept( vv );
 		new ManyToOne( metadata, tbl ).accept( vv );

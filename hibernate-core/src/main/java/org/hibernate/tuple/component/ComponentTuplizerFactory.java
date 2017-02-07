@@ -35,7 +35,7 @@ public class ComponentTuplizerFactory implements Serializable {
 
 	public ComponentTuplizerFactory(MetadataBuildingOptions metadataBuildingOptions) {
 		classLoaderAccess = new ClassLoaderAccessImpl(
-				metadataBuildingOptions.getTempClassLoader(),
+				metadataBuildingOptions.g,
 				metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class )
 		);
 	}

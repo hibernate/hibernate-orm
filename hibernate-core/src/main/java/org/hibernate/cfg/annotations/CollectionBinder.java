@@ -1112,7 +1112,13 @@ public abstract class CollectionBinder {
 					.getReferencedProperty( propRef )
 					.getValue();
 		}
-		DependantValue key = new DependantValue( buildingContext.getMetadataCollector(), collValue.getCollectionTable(), keyVal );
+		DependantValue key = new DependantValue(
+				buildingContext.getBootstrapContext()
+						.getTypeConfiguration()
+						.getMetadataBuildingContext(),
+				collValue.getCollectionTable(),
+				keyVal
+		);
 		key.setTypeName( null );
 		Ejb3Column.checkPropertyConsistency( joinColumns, collValue.getOwnerEntityName() );
 		key.setNullable( joinColumns.length == 0 || joinColumns[0].isNullable() );

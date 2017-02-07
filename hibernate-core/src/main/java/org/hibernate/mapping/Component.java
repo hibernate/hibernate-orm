@@ -66,7 +66,7 @@ public class Component extends SimpleValue implements PropertyContainer, MetaAtt
 	}
 
 	public Component(InFlightMetadataCollector metadata, Table table, PersistentClass owner) throws MappingException {
-		super( metadata, table );
+		super( metadata.getTypeConfiguration().getMetadataBuildingContext(), table );
 		this.owner = owner;
 	}
 
@@ -119,8 +119,7 @@ public class Component extends SimpleValue implements PropertyContainer, MetaAtt
 	}
 
 	public Class getComponentClass() throws MappingException {
-		final ClassLoaderService classLoaderService = getBuildingContext().getMetadataBuildingOptions()
-				.getServiceRegistry()
+		final ClassLoaderService classLoaderService = getBuildingContext().getBootstrapContext().getServiceRegistry()
 				.getService( ClassLoaderService.class );
 		try {
 			return classLoaderService.classForName( componentClassName );
@@ -165,8 +164,8 @@ public class Component extends SimpleValue implements PropertyContainer, MetaAtt
 	@Override
 	public Type getType() throws MappingException {
 		// TODO : temporary initial step towards HHH-1907
-		final ComponentMetamodel metamodel = new ComponentMetamodel( this, getBuildingContext().getMetadataBuildingOptions() );
-		final TypeConfiguration typeConfiguration = getBuildingContext().getTypeConfiguration();
+		final ComponentMetamodel metamodel = new ComponentMetamodel( this, getBuildingContext().getBuildingOptions() );
+		final TypeConfiguration typeConfiguration = getBuildingContext().getBootstrapContext().getTypeConfiguration();
 		return isEmbedded() ? typeConfiguration.embeddedComponent( metamodel ) : typeConfiguration.component( metamodel );
 	}
 

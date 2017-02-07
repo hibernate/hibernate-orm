@@ -651,7 +651,13 @@ public final class AnnotationBinder {
 			if ( inheritanceState.hasParents() ) {
 				onDeleteAppropriate = true;
 				final JoinedSubclass jsc = ( JoinedSubclass ) persistentClass;
-				SimpleValue key = new DependantValue( context.getMetadataCollector(), jsc.getTable(), jsc.getIdentifier() );
+				SimpleValue key = new DependantValue(
+						context.getMetadataCollector()
+								.getTypeConfiguration()
+								.getMetadataBuildingContext(),
+						jsc.getTable(),
+						jsc.getIdentifier()
+				);
 				jsc.setKey( key );
 				ForeignKey fk = clazzToProcess.getAnnotation( ForeignKey.class );
 				if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.name() ) ) {

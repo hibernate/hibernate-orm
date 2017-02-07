@@ -23,14 +23,6 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -52,14 +44,6 @@ import javassist.bytecode.SignatureAttribute;
 import javassist.bytecode.StackMapTable;
 import javassist.bytecode.annotation.Annotation;
 import javassist.bytecode.stackmap.MapMaker;
-
-import javax.persistence.ElementCollection;
-import javax.persistence.Embedded;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.Transient;
-
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.EnhancementException;
 import org.hibernate.engine.spi.EntityEntry;
@@ -70,6 +54,20 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
+
+import javax.persistence.ElementCollection;
+import javax.persistence.Embedded;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import javax.persistence.Transient;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.List;
 
 /**
  * @author Steve Ebersole
@@ -653,7 +651,7 @@ public class Enhancer  {
     private void createCollectionDirtyCheckMethod(CtClass managedCtClass) throws CannotCompileException {
         StringBuilder builder = new StringBuilder("private boolean ")
                 .append(EnhancerConstants.TRACKER_COLLECTION_CHANGED_NAME)
-                .append("() { if ($$_hibernate_getInterceptor() == null || ")
+                .append("() { if (")
                 .append(EnhancerConstants.TRACKER_COLLECTION_NAME)
                 .append(" == null) return false; ");
 
@@ -1140,10 +1138,9 @@ public class Enhancer  {
         private String entityMethodBody(CtField currentValue) {
             StringBuilder inlineBuilder = new StringBuilder();
             try {
-                inlineBuilder.append("if ( $$_hibernate_getInterceptor() != null ");
                 //primitives || enums
                 if(currentValue.getType().isPrimitive() || currentValue.getType().isEnum()) {
-                    inlineBuilder.append("&& "+currentValue.getName()+" != $1)");
+                    inlineBuilder.append("if("+currentValue.getName()+" != $1)");
                 }
                 //simple data types
                 else if(currentValue.getType().getName().startsWith("java.lang") ||
@@ -1153,7 +1150,7 @@ public class Enhancer  {
                         currentValue.getType().getName().startsWith("java.util.Date") ||
                         currentValue.getType().getName().startsWith("java.util.Calendar")
                         ) {
-                    inlineBuilder.append("&& (("+currentValue.getName()+" == null) || (!" +currentValue.getName()+".equals( $1))))");
+                    inlineBuilder.append("if("+currentValue.getName()+" == null || !" +currentValue.getName()+".equals( $1))");
                 }
                 //all other objects
                 else {
@@ -1172,7 +1169,7 @@ public class Enhancer  {
                     }
 
                     //todo: for now just call equals, should probably do something else here
-                    inlineBuilder.append("&& (("+currentValue.getName()+" == null) || (!" +currentValue.getName()+".equals( $1))))");
+                    inlineBuilder.append("if("+currentValue.getName()+" == null || !" +currentValue.getName()+".equals( $1))");
                 }
 
                 inlineBuilder.append( EnhancerConstants.TRACKER_CHANGER_NAME+"(\""+currentValue.getName()+"\");");

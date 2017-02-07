@@ -23,33 +23,10 @@
  */
 package org.hibernate.test.bytecode.enhancement;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
-import java.io.ByteArrayInputStream;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtField;
 import javassist.LoaderClassPath;
-
-import javax.persistence.ElementCollection;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-
-import org.hibernate.EntityMode;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
@@ -60,6 +37,26 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
+
+import javax.persistence.ElementCollection;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import java.io.ByteArrayInputStream;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -184,14 +181,14 @@ public class EnhancerTest extends BaseUnitTestCase {
 		assertSame( entityInstance, nextGetter.invoke( entityInstance ) );
 
 		// add an attribute interceptor...
-		Method interceptorGetter = entityClass.getMethod( EnhancerConstants.INTERCEPTOR_GETTER_NAME );
-		Method interceptorSetter = entityClass.getMethod( EnhancerConstants.INTERCEPTOR_SETTER_NAME, PersistentAttributeInterceptor.class );
-
-		assertNull( interceptorGetter.invoke( entityInstance ) );
-		entityClass.getMethod( "getId" ).invoke( entityInstance );
-
-		interceptorSetter.invoke( entityInstance, new LocalPersistentAttributeInterceptor() );
-		assertNotNull(interceptorGetter.invoke(entityInstance));
+//		Method interceptorGetter = entityClass.getMethod( EnhancerConstants.INTERCEPTOR_GETTER_NAME );
+//		Method interceptorSetter = entityClass.getMethod( EnhancerConstants.INTERCEPTOR_SETTER_NAME, PersistentAttributeInterceptor.class );
+//
+//		assertNull( interceptorGetter.invoke( entityInstance ) );
+//		entityClass.getMethod( "getId" ).invoke( entityInstance );
+//
+//		interceptorSetter.invoke( entityInstance, new LocalPersistentAttributeInterceptor() );
+//		assertNotNull(interceptorGetter.invoke(entityInstance));
 
 		// dirty checking is unfortunately just printlns for now... just verify the test output
 		entityClass.getMethod( "getId" ).invoke( entityInstance );

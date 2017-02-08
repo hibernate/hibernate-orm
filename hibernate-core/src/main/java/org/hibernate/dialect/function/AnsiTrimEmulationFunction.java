@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.dialect.function;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A {@link SQLFunction} implementation that emulates the ANSI SQL trim function
@@ -174,43 +174,43 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	 */
 	public AnsiTrimEmulationFunction(String ltrimFunctionName, String rtrimFunctionName, String replaceFunctionName) {
 		leadingSpaceTrim = new SQLFunctionTemplate(
-				StandardBasicTypes.STRING,
+				StandardSpiBasicTypes.STRING,
 				LEADING_SPACE_TRIM_TEMPLATE.replaceAll( LTRIM, ltrimFunctionName )
 		);
 
 		trailingSpaceTrim = new SQLFunctionTemplate(
-				StandardBasicTypes.STRING,
+				StandardSpiBasicTypes.STRING,
 				TRAILING_SPACE_TRIM_TEMPLATE.replaceAll( RTRIM, rtrimFunctionName )
 		);
 
 		bothSpaceTrim = new SQLFunctionTemplate(
-				StandardBasicTypes.STRING,
+				StandardSpiBasicTypes.STRING,
 				BOTH_SPACE_TRIM_TEMPLATE.replaceAll( LTRIM, ltrimFunctionName )
 						.replaceAll( RTRIM, rtrimFunctionName )
 		);
 
 		bothSpaceTrimFrom = new SQLFunctionTemplate(
-				StandardBasicTypes.STRING,
+				StandardSpiBasicTypes.STRING,
 				BOTH_SPACE_TRIM_FROM_TEMPLATE.replaceAll( LTRIM, ltrimFunctionName )
 						.replaceAll( RTRIM, rtrimFunctionName )
 		);
 
 		leadingTrim = new SQLFunctionTemplate(
-				StandardBasicTypes.STRING,
+				StandardSpiBasicTypes.STRING,
 				LEADING_TRIM_TEMPLATE.replaceAll( LTRIM, ltrimFunctionName )
 						.replaceAll( RTRIM, rtrimFunctionName )
 						.replaceAll( REPLACE,replaceFunctionName )
 		);
 
 		trailingTrim = new SQLFunctionTemplate(
-				StandardBasicTypes.STRING,
+				StandardSpiBasicTypes.STRING,
 				TRAILING_TRIM_TEMPLATE.replaceAll( LTRIM, ltrimFunctionName )
 						.replaceAll( RTRIM, rtrimFunctionName )
 						.replaceAll( REPLACE,replaceFunctionName )
 		);
 
 		bothTrim = new SQLFunctionTemplate(
-				StandardBasicTypes.STRING,
+				StandardSpiBasicTypes.STRING,
 				BOTH_TRIM_TEMPLATE.replaceAll( LTRIM, ltrimFunctionName )
 						.replaceAll( RTRIM, rtrimFunctionName )
 						.replaceAll( REPLACE,replaceFunctionName )

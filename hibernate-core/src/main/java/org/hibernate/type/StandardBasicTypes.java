@@ -27,6 +27,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -49,22 +50,22 @@ public final class StandardBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#BIT BIT}.
 	 */
-	public static final Type<Boolean> BOOLEAN = org.hibernate.type.spi.StandardBasicTypes.BOOLEAN;
+	public static final Type<Boolean> BOOLEAN = StandardSpiBasicTypes.BOOLEAN;
 
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#INTEGER INTEGER}.
 	 */
-	public static final Type<Boolean> NUMERIC_BOOLEAN = org.hibernate.type.spi.StandardBasicTypes.NUMERIC_BOOLEAN;
+	public static final Type<Boolean> NUMERIC_BOOLEAN = StandardSpiBasicTypes.NUMERIC_BOOLEAN;
 
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#CHAR CHAR(1)} (using 'T'/'F').
 	 */
-	public static final Type<Boolean> TRUE_FALSE = org.hibernate.type.spi.StandardBasicTypes.TRUE_FALSE;
+	public static final Type<Boolean> TRUE_FALSE = StandardSpiBasicTypes.TRUE_FALSE;
 
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#CHAR CHAR(1)} (using 'Y'/'N').
 	 */
-	public static final Type<Boolean> YES_NO = org.hibernate.type.spi.StandardBasicTypes.YES_NO;
+	public static final Type<Boolean> YES_NO = StandardSpiBasicTypes.YES_NO;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -73,30 +74,30 @@ public final class StandardBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Byte} to JDBC {@link java.sql.Types#TINYINT TINYINT}.
 	 */
-	public static final Type<Byte> BYTE = org.hibernate.type.spi.StandardBasicTypes.BYTE;
+	public static final Type<Byte> BYTE = StandardSpiBasicTypes.BYTE;
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.
 	 */
-	public static final Type<byte[]> BINARY = org.hibernate.type.spi.StandardBasicTypes.BINARY;
+	public static final Type<byte[]> BINARY = StandardSpiBasicTypes.BINARY;
 
 	/**
 	 * The standard Hibernate type for mapping {@link Byte Byte[]} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.
 	 */
-	public static final Type<Byte[]> WRAPPER_BINARY = org.hibernate.type.spi.StandardBasicTypes.WRAPPER_BINARY;
+	public static final Type<Byte[]> WRAPPER_BINARY = StandardSpiBasicTypes.WRAPPER_BINARY;
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#LONGVARBINARY LONGVARBINARY}.
 	 *
 	 * @see #MATERIALIZED_BLOB
 	 */
-	public static final Type<byte[]> IMAGE = org.hibernate.type.spi.StandardBasicTypes.IMAGE;
+	public static final Type<byte[]> IMAGE = StandardSpiBasicTypes.IMAGE;
 	/**
 	 * The standard Hibernate type for mapping {@link java.sql.Blob} to JDBC {@link java.sql.Types#BLOB BLOB}.
 	 *
 	 * @see #MATERIALIZED_BLOB
 	 */
-	public static final Type<Blob> BLOB = org.hibernate.type.spi.StandardBasicTypes.BLOB;
+	public static final Type<Blob> BLOB = StandardSpiBasicTypes.BLOB;
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#BLOB BLOB}.
@@ -104,7 +105,7 @@ public final class StandardBasicTypes {
 	 * @see #MATERIALIZED_BLOB
 	 * @see #IMAGE
 	 */
-	public static final Type<byte[]> MATERIALIZED_BLOB = org.hibernate.type.spi.StandardBasicTypes.MATERIALIZED_BLOB;
+	public static final Type<byte[]> MATERIALIZED_BLOB = StandardSpiBasicTypes.MATERIALIZED_BLOB;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -113,36 +114,36 @@ public final class StandardBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Short} to JDBC {@link java.sql.Types#SMALLINT SMALLINT}.
 	 */
-	public static final Type<Short> SHORT = org.hibernate.type.spi.StandardBasicTypes.SHORT;
+	public static final Type<Short> SHORT = StandardSpiBasicTypes.SHORT;
 
 	/**
 	 * The standard Hibernate type for mapping {@link Integer} to JDBC {@link java.sql.Types#INTEGER INTEGER}.
 	 */
-	public static final Type<Integer> INTEGER = org.hibernate.type.spi.StandardBasicTypes.INTEGER;
+	public static final Type<Integer> INTEGER = StandardSpiBasicTypes.INTEGER;
 	/**
 	 * The standard Hibernate type for mapping {@link Long} to JDBC {@link java.sql.Types#BIGINT BIGINT}.
 	 */
-	public static final Type<Long> LONG = org.hibernate.type.spi.StandardBasicTypes.LONG;
+	public static final Type<Long> LONG = StandardSpiBasicTypes.LONG;
 
 	/**
 	 * The standard Hibernate type for mapping {@link Float} to JDBC {@link java.sql.Types#FLOAT FLOAT}.
 	 */
-	public static final Type<Float> FLOAT = org.hibernate.type.spi.StandardBasicTypes.FLOAT;
+	public static final Type<Float> FLOAT = StandardSpiBasicTypes.FLOAT;
 
 	/**
 	 * The standard Hibernate type for mapping {@link Double} to JDBC {@link java.sql.Types#DOUBLE DOUBLE}.
 	 */
-	public static final Type<Double> DOUBLE = org.hibernate.type.spi.StandardBasicTypes.DOUBLE;
+	public static final Type<Double> DOUBLE = StandardSpiBasicTypes.DOUBLE;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.math.BigInteger} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
 	 */
-	public static final Type<BigInteger> BIG_INTEGER = org.hibernate.type.spi.StandardBasicTypes.BIG_INTEGER;
+	public static final Type<BigInteger> BIG_INTEGER = StandardSpiBasicTypes.BIG_INTEGER;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.math.BigDecimal} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
 	 */
-	public static final Type<BigDecimal> BIG_DECIMAL = org.hibernate.type.spi.StandardBasicTypes.BIG_DECIMAL;
+	public static final Type<BigDecimal> BIG_DECIMAL = StandardSpiBasicTypes.BIG_DECIMAL;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -151,63 +152,63 @@ public final class StandardBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Character} to JDBC {@link java.sql.Types#CHAR CHAR(1)}.
 	 */
-	public static final Type<Character> CHARACTER = org.hibernate.type.spi.StandardBasicTypes.CHARACTER;
+	public static final Type<Character> CHARACTER = StandardSpiBasicTypes.CHARACTER;
 
 	/**
 	 * The standard Hibernate type for mapping {@link Character} to JDBC {@link java.sql.Types#NCHAR NCHAR(1)}.
 	 */
-	public static final Type<Character> CHARACTER_NCHAR = org.hibernate.type.spi.StandardBasicTypes.CHARACTER_NCHAR;
+	public static final Type<Character> CHARACTER_NCHAR = StandardSpiBasicTypes.CHARACTER_NCHAR;
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final Type<String> STRING = org.hibernate.type.spi.StandardBasicTypes.STRING;
+	public static final Type<String> STRING = StandardSpiBasicTypes.STRING;
 
 	/**
 	 * The standard Hibernate type for mapping {@code char[]} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final Type<char[]> CHAR_ARRAY = org.hibernate.type.spi.StandardBasicTypes.CHAR_ARRAY;
+	public static final Type<char[]> CHAR_ARRAY = StandardSpiBasicTypes.CHAR_ARRAY;
 
 	/**
 	 * The standard Hibernate type for mapping {@link Character Character[]} to JDBC
 	 * {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final Type<Character[]> CHARACTER_ARRAY = org.hibernate.type.spi.StandardBasicTypes.CHARACTER_ARRAY;
+	public static final Type<Character[]> CHARACTER_ARRAY = StandardSpiBasicTypes.CHARACTER_ARRAY;
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#LONGVARCHAR LONGVARCHAR}.
 	 * <p/>
 	 * Similar to a {@link #MATERIALIZED_CLOB}
 	 */
-	public static final Type<String> TEXT = org.hibernate.type.spi.StandardBasicTypes.TEXT;
+	public static final Type<String> TEXT = StandardSpiBasicTypes.TEXT;
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#LONGNVARCHAR LONGNVARCHAR}.
 	 * <p/>
 	 * Similar to a {@link #MATERIALIZED_NCLOB}
 	 */
-	public static final Type<String> NTEXT = org.hibernate.type.spi.StandardBasicTypes.NTEXT;
+	public static final Type<String> NTEXT = StandardSpiBasicTypes.NTEXT;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.sql.Clob} to JDBC {@link java.sql.Types#CLOB CLOB}.
 	 *
 	 * @see #MATERIALIZED_CLOB
 	 */
-	public static final Type<Clob> CLOB = org.hibernate.type.spi.StandardBasicTypes.CLOB;
+	public static final Type<Clob> CLOB = StandardSpiBasicTypes.CLOB;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.sql.NClob} to JDBC {@link java.sql.Types#NCLOB NCLOB}.
 	 *
 	 * @see #MATERIALIZED_NCLOB
 	 */
-	public static final Type<NClob> NCLOB = org.hibernate.type.spi.StandardBasicTypes.NCLOB;
+	public static final Type<NClob> NCLOB = StandardSpiBasicTypes.NCLOB;
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#CLOB CLOB}.
 	 *
 	 * @see #TEXT
 	 */
-	public static final Type<String> MATERIALIZED_CLOB = org.hibernate.type.spi.StandardBasicTypes.MATERIALIZED_CLOB;
+	public static final Type<String> MATERIALIZED_CLOB = StandardSpiBasicTypes.MATERIALIZED_CLOB;
 
 	/**
 	 * The standard Hibernate type for mapping {@code char[]} to JDBC {@link java.sql.Types#CLOB CLOB}.
@@ -215,7 +216,7 @@ public final class StandardBasicTypes {
 	 * @see #MATERIALIZED_CLOB
 	 * @see #TEXT
 	 */
-	public static final Type<String> MATERIALIZED_CLOB_CHAR_ARRAY = org.hibernate.type.spi.StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY;
+	public static final Type<String> MATERIALIZED_CLOB_CHAR_ARRAY = StandardSpiBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY;
 
 	/**
 	 * The standard Hibernate type for mapping {@code Character[]} to JDBC {@link java.sql.Types#CLOB CLOB}.
@@ -223,14 +224,14 @@ public final class StandardBasicTypes {
 	 * @see #MATERIALIZED_CLOB
 	 * @see #TEXT
 	 */
-	public static final Type<String> MATERIALIZED_CLOB_CHARACTER_ARRAY = org.hibernate.type.spi.StandardBasicTypes.MATERIALIZED_CLOB_CHARACTER_ARRAY;
+	public static final Type<String> MATERIALIZED_CLOB_CHARACTER_ARRAY = StandardSpiBasicTypes.MATERIALIZED_CLOB_CHARACTER_ARRAY;
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#NCLOB NCLOB}.
 	 *
 	 * @see #MATERIALIZED_CLOB
 	 * @see #NTEXT
 	 */
-	public static final Type<String> MATERIALIZED_NCLOB = org.hibernate.type.spi.StandardBasicTypes.MATERIALIZED_NCLOB;
+	public static final Type<String> MATERIALIZED_NCLOB = StandardSpiBasicTypes.MATERIALIZED_NCLOB;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -239,70 +240,70 @@ public final class StandardBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Duration} to JDBC {@link java.sql.Types#BIGINT BIGINT}.
 	 */
-	public static final Type<Duration> DURATION = org.hibernate.type.spi.StandardBasicTypes.DURATION;
+	public static final Type<Duration> DURATION = StandardSpiBasicTypes.DURATION;
 
 	/**
 	 * The standard Hibernate type for mapping {@link LocalDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final Type<LocalDateTime> LOCAL_DATE_TIME = org.hibernate.type.spi.StandardBasicTypes.LOCAL_DATE_TIME;
+	public static final Type<LocalDateTime> LOCAL_DATE_TIME = StandardSpiBasicTypes.LOCAL_DATE_TIME;
 
 	/**
 	 * The standard Hibernate type for mapping {@link LocalDate} to JDBC {@link java.sql.Types#DATE DATE}.
 	 */
-	public static final Type<LocalDate> LOCAL_DATE = org.hibernate.type.spi.StandardBasicTypes.LOCAL_DATE;
+	public static final Type<LocalDate> LOCAL_DATE = StandardSpiBasicTypes.LOCAL_DATE;
 
 	/**
 	 * The standard Hibernate type for mapping {@link LocalTime} to JDBC {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final Type<LocalTime> LOCAL_TIME = org.hibernate.type.spi.StandardBasicTypes.LOCAL_TIME;
+	public static final Type<LocalTime> LOCAL_TIME = StandardSpiBasicTypes.LOCAL_TIME;
 
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final Type<OffsetDateTime> OFFSET_DATE_TIME = org.hibernate.type.spi.StandardBasicTypes.OFFSET_DATE_TIME;
+	public static final Type<OffsetDateTime> OFFSET_DATE_TIME = StandardSpiBasicTypes.OFFSET_DATE_TIME;
 
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final Type<OffsetTime> OFFSET_TIME = org.hibernate.type.spi.StandardBasicTypes.OFFSET_TIME;
+	public static final Type<OffsetTime> OFFSET_TIME = StandardSpiBasicTypes.OFFSET_TIME;
 	/**
 	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final Type<ZonedDateTime> ZONED_DATE_TIME = org.hibernate.type.spi.StandardBasicTypes.ZONED_DATE_TIME;
+	public static final Type<ZonedDateTime> ZONED_DATE_TIME = StandardSpiBasicTypes.ZONED_DATE_TIME;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.util.Date} ({@link java.sql.Time}) to JDBC
 	 * {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final Type<Date> TIME = org.hibernate.type.spi.StandardBasicTypes.TIME;
+	public static final Type<Date> TIME = StandardSpiBasicTypes.TIME;
 	/**
 	 * The standard Hibernate type for mapping {@link java.util.Date} ({@link java.sql.Date}) to JDBC
 	 * {@link java.sql.Types#DATE DATE}.
 	 */
-	public static final Type<Date> DATE = org.hibernate.type.spi.StandardBasicTypes.DATE;
+	public static final Type<Date> DATE = StandardSpiBasicTypes.DATE;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.util.Date} ({@link java.sql.Timestamp}) to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final Type<Date> TIMESTAMP = org.hibernate.type.spi.StandardBasicTypes.TIMESTAMP;
+	public static final Type<Date> TIMESTAMP = StandardSpiBasicTypes.TIMESTAMP;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.util.Calendar} to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final Type<Calendar> CALENDAR = org.hibernate.type.spi.StandardBasicTypes.CALENDAR;
+	public static final Type<Calendar> CALENDAR = StandardSpiBasicTypes.CALENDAR;
 	/**
 	 * The standard Hibernate type for mapping {@link java.util.Calendar} to JDBC
 	 * {@link java.sql.Types#DATE DATE}.
 	 */
-	public static final Type<Calendar> CALENDAR_DATE = org.hibernate.type.spi.StandardBasicTypes.CALENDAR_DATE;
+	public static final Type<Calendar> CALENDAR_DATE = StandardSpiBasicTypes.CALENDAR_DATE;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.util.Calendar} to JDBC
 	 * {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final Type<Calendar> CALENDAR_TIME = org.hibernate.type.spi.StandardBasicTypes.CALENDAR_TIME;
+	public static final Type<Calendar> CALENDAR_TIME = StandardSpiBasicTypes.CALENDAR_TIME;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -311,12 +312,12 @@ public final class StandardBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link java.util.UUID} to JDBC {@link java.sql.Types#BINARY BINARY}.
 	 */
-	public static final Type<UUID> UUID_BINARY = org.hibernate.type.spi.StandardBasicTypes.UUID_BINARY;
+	public static final Type<UUID> UUID_BINARY = StandardSpiBasicTypes.UUID_BINARY;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.util.UUID} to JDBC {@link java.sql.Types#CHAR CHAR}.
 	 */
-	public static final Type<UUID> UUID_CHAR = org.hibernate.type.spi.StandardBasicTypes.UUID_CHAR;
+	public static final Type<UUID> UUID_CHAR = StandardSpiBasicTypes.UUID_CHAR;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -325,34 +326,34 @@ public final class StandardBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Class} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final Type<Class> CLASS = org.hibernate.type.spi.StandardBasicTypes.CLASS;
+	public static final Type<Class> CLASS = StandardSpiBasicTypes.CLASS;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.util.Currency} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final Type<Currency> CURRENCY = org.hibernate.type.spi.StandardBasicTypes.CURRENCY;
+	public static final Type<Currency> CURRENCY = StandardSpiBasicTypes.CURRENCY;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.util.Locale} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final Type<Locale> LOCALE = org.hibernate.type.spi.StandardBasicTypes.LOCALE;
+	public static final Type<Locale> LOCALE = StandardSpiBasicTypes.LOCALE;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.io.Serializable} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.
 	 */
-	public static final Type<Serializable> SERIALIZABLE = org.hibernate.type.spi.StandardBasicTypes.SERIALIZABLE;
+	public static final Type<Serializable> SERIALIZABLE = StandardSpiBasicTypes.SERIALIZABLE;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.util.TimeZone} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final Type<TimeZone> TIMEZONE = org.hibernate.type.spi.StandardBasicTypes.TIMEZONE;
+	public static final Type<TimeZone> TIMEZONE = StandardSpiBasicTypes.TIMEZONE;
 	/**
 	 * The standard Hibernate type for mapping {@link java.net.URL} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
-	public static final Type<java.net.URL> URL = org.hibernate.type.spi.StandardBasicTypes.URL;
+	public static final Type<java.net.URL> URL = StandardSpiBasicTypes.URL;
 
 	public static void prime(TypeConfiguration typeConfiguration, BasicTypeProducerRegistry basicTypeProducerRegistry) {
-		org.hibernate.type.spi.StandardBasicTypes.prime( typeConfiguration, basicTypeProducerRegistry );
+		StandardSpiBasicTypes.prime( typeConfiguration, basicTypeProducerRegistry );
 	}
 
 }

@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -37,7 +37,7 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 
 	@Override
 	public final Type getReturnType(Type argumentType) throws QueryException {
-		return StandardBasicTypes.STRING;
+		return StandardSpiBasicTypes.STRING;
 	}
 
 	@Override

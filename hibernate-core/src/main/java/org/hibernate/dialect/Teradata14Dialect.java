@@ -30,7 +30,7 @@ import org.hibernate.mapping.Index;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A dialect for the Teradata database
@@ -52,8 +52,8 @@ public class Teradata14Dialect extends TeradataDialect {
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
-		registerFunction( "current_time", new SQLFunctionTemplate( StandardBasicTypes.TIME, "current_time" ) );
-		registerFunction( "current_date", new SQLFunctionTemplate( StandardBasicTypes.DATE, "current_date" ) );
+		registerFunction( "current_time", new SQLFunctionTemplate( StandardSpiBasicTypes.TIME, "current_time" ) );
+		registerFunction( "current_date", new SQLFunctionTemplate( StandardSpiBasicTypes.DATE, "current_date" ) );
 
 		TeraIndexExporter =  new TeradataIndexExporter( this );
 	}

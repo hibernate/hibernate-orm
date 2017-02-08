@@ -12,7 +12,7 @@ import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
 
@@ -39,118 +39,118 @@ public class SybaseASE15Dialect extends SybaseDialect {
 		registerColumnType( Types.REAL, "real" );
 		registerColumnType( Types.BOOLEAN, "tinyint" );
 
-		registerFunction( "second", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(second, ?1)" ) );
-		registerFunction( "minute", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(minute, ?1)" ) );
-		registerFunction( "hour", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(hour, ?1)" ) );
-		registerFunction( "extract", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(?1, ?3)" ) );
-		registerFunction( "mod", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "?1 % ?2" ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datalength(?1) * 8" ) );
+		registerFunction( "second", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(second, ?1)" ) );
+		registerFunction( "minute", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(minute, ?1)" ) );
+		registerFunction( "hour", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(hour, ?1)" ) );
+		registerFunction( "extract", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(?1, ?3)" ) );
+		registerFunction( "mod", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "?1 % ?2" ) );
+		registerFunction( "bit_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datalength(?1) * 8" ) );
 		registerFunction(
 				"trim", new AnsiTrimEmulationFunction(
 						AnsiTrimEmulationFunction.LTRIM, AnsiTrimEmulationFunction.RTRIM, "str_replace"
 				)
 		);
 
-		registerFunction( "atan2", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "atn2(?1, ?2)" ) );
-		registerFunction( "atn2", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "atn2(?1, ?2)" ) );
+		registerFunction( "atan2", new SQLFunctionTemplate( StandardSpiBasicTypes.DOUBLE, "atn2(?1, ?2)" ) );
+		registerFunction( "atn2", new SQLFunctionTemplate( StandardSpiBasicTypes.DOUBLE, "atn2(?1, ?2)" ) );
 
-		registerFunction( "biginttohex", new SQLFunctionTemplate( StandardBasicTypes.STRING, "biginttohext(?1)" ) );
-		registerFunction( "char_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "char_length(?1)" ) );
-		registerFunction( "charindex", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "charindex(?1, ?2)" ) );
+		registerFunction( "biginttohex", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "biginttohext(?1)" ) );
+		registerFunction( "char_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "char_length(?1)" ) );
+		registerFunction( "charindex", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "charindex(?1, ?2)" ) );
 		registerFunction( "coalesce", new VarArgsSQLFunction( "coalesce(", ",", ")" ) );
-		registerFunction( "col_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "col_length(?1, ?2)" ) );
-		registerFunction( "col_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "col_name(?1, ?2)" ) );
+		registerFunction( "col_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "col_length(?1, ?2)" ) );
+		registerFunction( "col_name", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "col_name(?1, ?2)" ) );
 		// Sybase has created current_date and current_time inplace of getdate()
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE ) );
+		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardSpiBasicTypes.TIME ) );
+		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardSpiBasicTypes.DATE ) );
 
 
-		registerFunction( "data_pages", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "data_pages(?1, ?2)" ) );
+		registerFunction( "data_pages", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "data_pages(?1, ?2)" ) );
 		registerFunction(
-				"data_pages", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "data_pages(?1, ?2, ?3)" )
+				"data_pages", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "data_pages(?1, ?2, ?3)" )
 		);
 		registerFunction(
-				"data_pages", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "data_pages(?1, ?2, ?3, ?4)" )
+				"data_pages", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "data_pages(?1, ?2, ?3, ?4)" )
 		);
-		registerFunction( "datalength", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datalength(?1)" ) );
-		registerFunction( "dateadd", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "dateadd(?1, ?2, ?3)" ) );
-		registerFunction( "datediff", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datediff(?1, ?2, ?3)" ) );
-		registerFunction( "datepart", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(?1, ?2)" ) );
-		registerFunction( "datetime", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "datetime" ) );
-		registerFunction( "db_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "db_id(?1)" ) );
-		registerFunction( "difference", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "difference(?1,?2)" ) );
-		registerFunction( "db_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "db_name(?1)" ) );
-		registerFunction( "has_role", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "has_role(?1, ?2)" ) );
-		registerFunction( "hextobigint", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "hextobigint(?1)" ) );
-		registerFunction( "hextoint", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "hextoint(?1)" ) );
-		registerFunction( "host_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "host_id" ) );
-		registerFunction( "host_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "host_name" ) );
-		registerFunction( "inttohex", new SQLFunctionTemplate( StandardBasicTypes.STRING, "inttohex(?1)" ) );
-		registerFunction( "is_quiesced", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "is_quiesced(?1)" ) );
+		registerFunction( "datalength", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datalength(?1)" ) );
+		registerFunction( "dateadd", new SQLFunctionTemplate( StandardSpiBasicTypes.TIMESTAMP, "dateadd(?1, ?2, ?3)" ) );
+		registerFunction( "datediff", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datediff(?1, ?2, ?3)" ) );
+		registerFunction( "datepart", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(?1, ?2)" ) );
+		registerFunction( "datetime", new SQLFunctionTemplate( StandardSpiBasicTypes.TIMESTAMP, "datetime" ) );
+		registerFunction( "db_id", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "db_id(?1)" ) );
+		registerFunction( "difference", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "difference(?1,?2)" ) );
+		registerFunction( "db_name", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "db_name(?1)" ) );
+		registerFunction( "has_role", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "has_role(?1, ?2)" ) );
+		registerFunction( "hextobigint", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "hextobigint(?1)" ) );
+		registerFunction( "hextoint", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "hextoint(?1)" ) );
+		registerFunction( "host_id", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "host_id" ) );
+		registerFunction( "host_name", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "host_name" ) );
+		registerFunction( "inttohex", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "inttohex(?1)" ) );
+		registerFunction( "is_quiesced", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "is_quiesced(?1)" ) );
 		registerFunction(
-				"is_sec_service_on", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "is_sec_service_on(?1)" )
+				"is_sec_service_on", new SQLFunctionTemplate( StandardSpiBasicTypes.BOOLEAN, "is_sec_service_on(?1)" )
 		);
-		registerFunction( "object_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "object_id(?1)" ) );
-		registerFunction( "object_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "object_name(?1)" ) );
-		registerFunction( "pagesize", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "pagesize(?1)" ) );
-		registerFunction( "pagesize", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "pagesize(?1, ?2)" ) );
-		registerFunction( "pagesize", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "pagesize(?1, ?2, ?3)" ) );
+		registerFunction( "object_id", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "object_id(?1)" ) );
+		registerFunction( "object_name", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "object_name(?1)" ) );
+		registerFunction( "pagesize", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "pagesize(?1)" ) );
+		registerFunction( "pagesize", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "pagesize(?1, ?2)" ) );
+		registerFunction( "pagesize", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "pagesize(?1, ?2, ?3)" ) );
 		registerFunction(
-				"partition_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "partition_id(?1, ?2)" )
-		);
-		registerFunction(
-				"partition_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "partition_id(?1, ?2, ?3)" )
+				"partition_id", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "partition_id(?1, ?2)" )
 		);
 		registerFunction(
-				"partition_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "partition_name(?1, ?2)" )
+				"partition_id", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "partition_id(?1, ?2, ?3)" )
 		);
 		registerFunction(
-				"partition_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "partition_name(?1, ?2, ?3)" )
+				"partition_name", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "partition_name(?1, ?2)" )
 		);
-		registerFunction( "patindex", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "patindex" ) );
-		registerFunction( "proc_role", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "proc_role" ) );
-		registerFunction( "role_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "role_name" ) );
+		registerFunction(
+				"partition_name", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "partition_name(?1, ?2, ?3)" )
+		);
+		registerFunction( "patindex", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "patindex" ) );
+		registerFunction( "proc_role", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "proc_role" ) );
+		registerFunction( "role_name", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "role_name" ) );
 		// check return type
-		registerFunction( "row_count", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "row_count" ) );
-		registerFunction( "rand2", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "rand2(?1)" ) );
-		registerFunction( "rand2", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "rand2" ) );
-		registerFunction( "replicate", new SQLFunctionTemplate( StandardBasicTypes.STRING, "replicate(?1,?2)" ) );
-		registerFunction( "role_contain", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "role_contain" ) );
-		registerFunction( "role_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "role_id" ) );
-		registerFunction( "reserved_pages", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "reserved_pages" ) );
-		registerFunction( "right", new SQLFunctionTemplate( StandardBasicTypes.STRING, "right" ) );
-		registerFunction( "show_role", new SQLFunctionTemplate( StandardBasicTypes.STRING, "show_role" ) );
+		registerFunction( "row_count", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "row_count" ) );
+		registerFunction( "rand2", new SQLFunctionTemplate( StandardSpiBasicTypes.DOUBLE, "rand2(?1)" ) );
+		registerFunction( "rand2", new SQLFunctionTemplate( StandardSpiBasicTypes.DOUBLE, "rand2" ) );
+		registerFunction( "replicate", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "replicate(?1,?2)" ) );
+		registerFunction( "role_contain", new SQLFunctionTemplate( StandardSpiBasicTypes.BOOLEAN, "role_contain" ) );
+		registerFunction( "role_id", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "role_id" ) );
+		registerFunction( "reserved_pages", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "reserved_pages" ) );
+		registerFunction( "right", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "right" ) );
+		registerFunction( "show_role", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "show_role" ) );
 		registerFunction(
-				"show_sec_services", new SQLFunctionTemplate( StandardBasicTypes.STRING, "show_sec_services" )
+				"show_sec_services", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "show_sec_services" )
 		);
-		registerFunction( "sortkey", new VarArgsSQLFunction( StandardBasicTypes.BINARY, "sortkey(", ",", ")" ) );
-		registerFunction( "soundex", new SQLFunctionTemplate( StandardBasicTypes.STRING, "sounded" ) );
-		registerFunction( "stddev", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "stddev" ) );
-		registerFunction( "stddev_pop", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "stddev_pop" ) );
-		registerFunction( "stddev_samp", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "stddev_samp" ) );
-		registerFunction( "stuff", new SQLFunctionTemplate( StandardBasicTypes.STRING, "stuff" ) );
-		registerFunction( "substring", new VarArgsSQLFunction( StandardBasicTypes.STRING, "substring(", ",", ")" ) );
-		registerFunction( "suser_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "suser_id" ) );
-		registerFunction( "suser_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "suser_name" ) );
-		registerFunction( "tempdb_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "tempdb_id" ) );
-		registerFunction( "textvalid", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "textvalid" ) );
-		registerFunction( "to_unichar", new SQLFunctionTemplate( StandardBasicTypes.STRING, "to_unichar(?1)" ) );
+		registerFunction( "sortkey", new VarArgsSQLFunction( StandardSpiBasicTypes.BINARY, "sortkey(", ",", ")" ) );
+		registerFunction( "soundex", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "sounded" ) );
+		registerFunction( "stddev", new SQLFunctionTemplate( StandardSpiBasicTypes.DOUBLE, "stddev" ) );
+		registerFunction( "stddev_pop", new SQLFunctionTemplate( StandardSpiBasicTypes.DOUBLE, "stddev_pop" ) );
+		registerFunction( "stddev_samp", new SQLFunctionTemplate( StandardSpiBasicTypes.DOUBLE, "stddev_samp" ) );
+		registerFunction( "stuff", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "stuff" ) );
+		registerFunction( "substring", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "substring(", ",", ")" ) );
+		registerFunction( "suser_id", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "suser_id" ) );
+		registerFunction( "suser_name", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "suser_name" ) );
+		registerFunction( "tempdb_id", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "tempdb_id" ) );
+		registerFunction( "textvalid", new SQLFunctionTemplate( StandardSpiBasicTypes.BOOLEAN, "textvalid" ) );
+		registerFunction( "to_unichar", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "to_unichar(?1)" ) );
 		registerFunction(
 				"tran_dumptable_status",
-				new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "ran_dumptable_status(?1)" )
+				new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "ran_dumptable_status(?1)" )
 		);
-		registerFunction( "uhighsurr", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "uhighsurr" ) );
-		registerFunction( "ulowsurr", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "ulowsurr" ) );
-		registerFunction( "uscalar", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "uscalar" ) );
-		registerFunction( "used_pages", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "used_pages" ) );
-		registerFunction( "user_id", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "user_id" ) );
-		registerFunction( "user_name", new SQLFunctionTemplate( StandardBasicTypes.STRING, "user_name" ) );
-		registerFunction( "valid_name", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "valid_name" ) );
-		registerFunction( "valid_user", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "valid_user" ) );
-		registerFunction( "variance", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "variance" ) );
-		registerFunction( "var_pop", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "var_pop" ) );
-		registerFunction( "var_samp", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "var_samp" ) );
-		registerFunction( "sysdate", new NoArgSQLFunction("getdate", StandardBasicTypes.TIMESTAMP) );
+		registerFunction( "uhighsurr", new SQLFunctionTemplate( StandardSpiBasicTypes.BOOLEAN, "uhighsurr" ) );
+		registerFunction( "ulowsurr", new SQLFunctionTemplate( StandardSpiBasicTypes.BOOLEAN, "ulowsurr" ) );
+		registerFunction( "uscalar", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "uscalar" ) );
+		registerFunction( "used_pages", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "used_pages" ) );
+		registerFunction( "user_id", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "user_id" ) );
+		registerFunction( "user_name", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "user_name" ) );
+		registerFunction( "valid_name", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "valid_name" ) );
+		registerFunction( "valid_user", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "valid_user" ) );
+		registerFunction( "variance", new SQLFunctionTemplate( StandardSpiBasicTypes.DOUBLE, "variance" ) );
+		registerFunction( "var_pop", new SQLFunctionTemplate( StandardSpiBasicTypes.DOUBLE, "var_pop" ) );
+		registerFunction( "var_samp", new SQLFunctionTemplate( StandardSpiBasicTypes.DOUBLE, "var_samp" ) );
+		registerFunction( "sysdate", new NoArgSQLFunction( "getdate", StandardSpiBasicTypes.TIMESTAMP) );
 
 		registerSybaseKeywords();
 	}

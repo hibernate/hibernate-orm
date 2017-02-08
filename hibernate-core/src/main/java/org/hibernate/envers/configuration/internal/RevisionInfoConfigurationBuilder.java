@@ -51,7 +51,7 @@ import org.jboss.logging.Logger;
 
 import org.dom4j.Document;
 import org.dom4j.Element;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -95,7 +95,7 @@ public class RevisionInfoConfigurationBuilder {
 		}
 
 		revisionInfoIdData = new PropertyData( "id", "id", "field", null );
-		revisionInfoTimestampData = new RevisionTimestampData( "timestamp", "timestamp", "field", null, StandardBasicTypes.LONG );
+		revisionInfoTimestampData = new RevisionTimestampData( "timestamp", "timestamp", "field", null, StandardSpiBasicTypes.LONG );
 		modifiedEntityNamesData = new PropertyData( "modifiedEntityNames", "modifiedEntityNames", "field", null );
 		revisionPropType = "integer";
 	}

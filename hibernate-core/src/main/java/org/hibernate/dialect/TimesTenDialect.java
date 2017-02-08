@@ -29,7 +29,7 @@ import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A SQL dialect for TimesTen 5.1.
@@ -77,12 +77,12 @@ public class TimesTenDialect extends Dialect {
 		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
 		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
 		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
-		registerFunction( "concat", new StandardSQLFunction( "concat", StandardBasicTypes.STRING ) );
+		registerFunction( "concat", new StandardSQLFunction( "concat", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "mod", new StandardSQLFunction( "mod" ) );
-		registerFunction( "to_char", new StandardSQLFunction( "to_char", StandardBasicTypes.STRING ) );
-		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "getdate", new NoArgSQLFunction( "getdate", StandardBasicTypes.TIMESTAMP, false ) );
+		registerFunction( "to_char", new StandardSQLFunction( "to_char", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardSpiBasicTypes.TIMESTAMP ) );
+		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardSpiBasicTypes.TIMESTAMP, false ) );
+		registerFunction( "getdate", new NoArgSQLFunction( "getdate", StandardSpiBasicTypes.TIMESTAMP, false ) );
 		registerFunction( "nvl", new StandardSQLFunction( "nvl" ) );
 
 	}

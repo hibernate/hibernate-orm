@@ -16,7 +16,7 @@ import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A SQL dialect for Ingres 9.3 and later versions.
@@ -71,22 +71,22 @@ public class Ingres9Dialect extends IngresDialect {
 		super();
 		registerDateTimeFunctions();
 		registerDateTimeColumnTypes();
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
+		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "(", "||", ")" ) );
 	}
 
 	/**
 	 * Register functions current_time, current_timestamp, current_date
 	 */
 	protected void registerDateTimeFunctions() {
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME, false ) );
+		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardSpiBasicTypes.TIME, false ) );
 		registerFunction(
 				"current_timestamp", new NoArgSQLFunction(
-				"current_timestamp",
-				StandardBasicTypes.TIMESTAMP,
-				false
+						"current_timestamp",
+						StandardSpiBasicTypes.TIMESTAMP,
+						false
 		)
 		);
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
+		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardSpiBasicTypes.DATE, false ) );
 	}
 
 	/**

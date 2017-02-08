@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -30,7 +30,7 @@ public class StaticPrecisionFspTimestampFunction extends NoArgSQLFunction {
 	 * @param hasParenthesesIfNoArguments Does the function call need parenthesis if there are no arguments?
 	 */
 	public StaticPrecisionFspTimestampFunction(String name, boolean hasParenthesesIfNoArguments) {
-		super( name, StandardBasicTypes.TIMESTAMP, hasParenthesesIfNoArguments );
+		super( name, StandardSpiBasicTypes.TIMESTAMP, hasParenthesesIfNoArguments );
 		renderedString = null;
 	}
 
@@ -43,7 +43,7 @@ public class StaticPrecisionFspTimestampFunction extends NoArgSQLFunction {
 	 * @throws java.lang.IllegalArgumentException if {@code fsp} < 0.
 	 */
 	public StaticPrecisionFspTimestampFunction(String name, int fsp) {
-		super( name, StandardBasicTypes.TIMESTAMP);
+		super( name, StandardSpiBasicTypes.TIMESTAMP);
 		if ( fsp < 0 ) {
 			throw new IllegalArgumentException( "fsp must be >= 0" );
 		}

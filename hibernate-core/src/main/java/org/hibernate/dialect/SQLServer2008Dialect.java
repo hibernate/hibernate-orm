@@ -10,7 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.NullPrecedence;
 import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A dialect for Microsoft SQL Server 2008 with JDBC Driver 3.0 and above
@@ -31,7 +31,7 @@ public class SQLServer2008Dialect extends SQLServer2005Dialect {
 		registerColumnType( Types.NVARCHAR, "nvarchar(MAX)" );
 
 		registerFunction(
-				"current_timestamp", new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP, false )
+				"current_timestamp", new NoArgSQLFunction( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP, false )
 		);
 	}
 	

@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -30,7 +30,7 @@ public class PositionSubstringFunction implements SQLFunction {
 
 	@Override
 	public Type getReturnType(Type firstArgumentType) throws QueryException {
-		return StandardBasicTypes.INTEGER;
+		return StandardSpiBasicTypes.INTEGER;
 	}
 
 	@Override

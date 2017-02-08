@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.sql.ConditionFragment;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * Used to define a restriction on a collection property based on its size.
@@ -57,7 +57,7 @@ public class SizeExpression implements Criterion {
 
 	@Override
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-		return new TypedValue[] { new TypedValue( StandardBasicTypes.INTEGER, size ) };
+		return new TypedValue[] { new TypedValue( StandardSpiBasicTypes.INTEGER, size ) };
 	}
 
 	@Override

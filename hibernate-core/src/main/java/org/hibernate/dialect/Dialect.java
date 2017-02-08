@@ -102,7 +102,7 @@ import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.Type;
@@ -155,30 +155,30 @@ public abstract class Dialect implements ConversionContext {
 		StandardAnsiSqlAggregationFunctions.primeFunctionMap( sqlFunctions );
 
 		// standard sql92 functions (can be overridden by subclasses)
-		registerFunction( "substring", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substring(?1, ?2, ?3)" ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "locate(?1, ?2, ?3)" ) );
-		registerFunction( "trim", new SQLFunctionTemplate( StandardBasicTypes.STRING, "trim(?1 ?2 ?3 ?4)" ) );
-		registerFunction( "length", new StandardSQLFunction( "length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "bit_length", new StandardSQLFunction( "bit_length", StandardBasicTypes.INTEGER ) );
+		registerFunction( "substring", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "substring(?1, ?2, ?3)" ) );
+		registerFunction( "locate", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "locate(?1, ?2, ?3)" ) );
+		registerFunction( "trim", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "trim(?1 ?2 ?3 ?4)" ) );
+		registerFunction( "length", new StandardSQLFunction( "length", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "bit_length", new StandardSQLFunction( "bit_length", StandardSpiBasicTypes.INTEGER ) );
 		registerFunction( "coalesce", new StandardSQLFunction( "coalesce" ) );
 		registerFunction( "nullif", new StandardSQLFunction( "nullif" ) );
 		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod", StandardBasicTypes.INTEGER) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE) );
+		registerFunction( "mod", new StandardSQLFunction( "mod", StandardSpiBasicTypes.INTEGER) );
+		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardSpiBasicTypes.DOUBLE) );
 		registerFunction( "upper", new StandardSQLFunction("upper") );
 		registerFunction( "lower", new StandardSQLFunction("lower") );
 		registerFunction( "cast", new CastFunction() );
-		registerFunction( "extract", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(?1 ?2 ?3)") );
+		registerFunction( "extract", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(?1 ?2 ?3)") );
 
 		//map second/minute/hour/day/month/year to ANSI extract(), override on subclasses
-		registerFunction( "second", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(second from ?1)") );
-		registerFunction( "minute", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(minute from ?1)") );
-		registerFunction( "hour", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(hour from ?1)") );
-		registerFunction( "day", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(day from ?1)") );
-		registerFunction( "month", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(month from ?1)") );
-		registerFunction( "year", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(year from ?1)") );
+		registerFunction( "second", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(second from ?1)") );
+		registerFunction( "minute", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(minute from ?1)") );
+		registerFunction( "hour", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(hour from ?1)") );
+		registerFunction( "day", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(day from ?1)") );
+		registerFunction( "month", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(month from ?1)") );
+		registerFunction( "year", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(year from ?1)") );
 
-		registerFunction( "str", new SQLFunctionTemplate(StandardBasicTypes.STRING, "cast(?1 as char)") );
+		registerFunction( "str", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "cast(?1 as char)") );
 
 		registerColumnType( Types.BIT, "bit" );
 		registerColumnType( Types.BOOLEAN, "boolean" );
@@ -210,30 +210,30 @@ public abstract class Dialect implements ConversionContext {
 		registerColumnType( Types.NCLOB, "nclob" );
 
 		// register hibernate types for default use in scalar sqlquery type auto detection
-		registerHibernateType( Types.BIGINT, StandardBasicTypes.BIG_INTEGER.getName() );
-		registerHibernateType( Types.BINARY, StandardBasicTypes.BINARY.getName() );
-		registerHibernateType( Types.BIT, StandardBasicTypes.BOOLEAN.getName() );
-		registerHibernateType( Types.BOOLEAN, StandardBasicTypes.BOOLEAN.getName() );
-		registerHibernateType( Types.CHAR, StandardBasicTypes.CHARACTER.getName() );
-		registerHibernateType( Types.CHAR, 1, StandardBasicTypes.CHARACTER.getName() );
-		registerHibernateType( Types.CHAR, 255, StandardBasicTypes.STRING.getName() );
-		registerHibernateType( Types.DATE, StandardBasicTypes.DATE.getName() );
-		registerHibernateType( Types.DOUBLE, StandardBasicTypes.DOUBLE.getName() );
-		registerHibernateType( Types.FLOAT, StandardBasicTypes.FLOAT.getName() );
-		registerHibernateType( Types.INTEGER, StandardBasicTypes.INTEGER.getName() );
-		registerHibernateType( Types.SMALLINT, StandardBasicTypes.SHORT.getName() );
-		registerHibernateType( Types.TINYINT, StandardBasicTypes.BYTE.getName() );
-		registerHibernateType( Types.TIME, StandardBasicTypes.TIME.getName() );
-		registerHibernateType( Types.TIMESTAMP, StandardBasicTypes.TIMESTAMP.getName() );
-		registerHibernateType( Types.VARCHAR, StandardBasicTypes.STRING.getName() );
-		registerHibernateType( Types.VARBINARY, StandardBasicTypes.BINARY.getName() );
-		registerHibernateType( Types.LONGVARCHAR, StandardBasicTypes.TEXT.getName() );
-		registerHibernateType( Types.LONGVARBINARY, StandardBasicTypes.IMAGE.getName() );
-		registerHibernateType( Types.NUMERIC, StandardBasicTypes.BIG_DECIMAL.getName() );
-		registerHibernateType( Types.DECIMAL, StandardBasicTypes.BIG_DECIMAL.getName() );
-		registerHibernateType( Types.BLOB, StandardBasicTypes.BLOB.getName() );
-		registerHibernateType( Types.CLOB, StandardBasicTypes.CLOB.getName() );
-		registerHibernateType( Types.REAL, StandardBasicTypes.FLOAT.getName() );
+		registerHibernateType( Types.BIGINT, StandardSpiBasicTypes.BIG_INTEGER.getName() );
+		registerHibernateType( Types.BINARY, StandardSpiBasicTypes.BINARY.getName() );
+		registerHibernateType( Types.BIT, StandardSpiBasicTypes.BOOLEAN.getName() );
+		registerHibernateType( Types.BOOLEAN, StandardSpiBasicTypes.BOOLEAN.getName() );
+		registerHibernateType( Types.CHAR, StandardSpiBasicTypes.CHARACTER.getName() );
+		registerHibernateType( Types.CHAR, 1, StandardSpiBasicTypes.CHARACTER.getName() );
+		registerHibernateType( Types.CHAR, 255, StandardSpiBasicTypes.STRING.getName() );
+		registerHibernateType( Types.DATE, StandardSpiBasicTypes.DATE.getName() );
+		registerHibernateType( Types.DOUBLE, StandardSpiBasicTypes.DOUBLE.getName() );
+		registerHibernateType( Types.FLOAT, StandardSpiBasicTypes.FLOAT.getName() );
+		registerHibernateType( Types.INTEGER, StandardSpiBasicTypes.INTEGER.getName() );
+		registerHibernateType( Types.SMALLINT, StandardSpiBasicTypes.SHORT.getName() );
+		registerHibernateType( Types.TINYINT, StandardSpiBasicTypes.BYTE.getName() );
+		registerHibernateType( Types.TIME, StandardSpiBasicTypes.TIME.getName() );
+		registerHibernateType( Types.TIMESTAMP, StandardSpiBasicTypes.TIMESTAMP.getName() );
+		registerHibernateType( Types.VARCHAR, StandardSpiBasicTypes.STRING.getName() );
+		registerHibernateType( Types.VARBINARY, StandardSpiBasicTypes.BINARY.getName() );
+		registerHibernateType( Types.LONGVARCHAR, StandardSpiBasicTypes.TEXT.getName() );
+		registerHibernateType( Types.LONGVARBINARY, StandardSpiBasicTypes.IMAGE.getName() );
+		registerHibernateType( Types.NUMERIC, StandardSpiBasicTypes.BIG_DECIMAL.getName() );
+		registerHibernateType( Types.DECIMAL, StandardSpiBasicTypes.BIG_DECIMAL.getName() );
+		registerHibernateType( Types.BLOB, StandardSpiBasicTypes.BLOB.getName() );
+		registerHibernateType( Types.CLOB, StandardSpiBasicTypes.CLOB.getName() );
+		registerHibernateType( Types.REAL, StandardSpiBasicTypes.FLOAT.getName() );
 
 		if(supportsPartitionBy()) {
 			registerKeyword( "PARTITION" );

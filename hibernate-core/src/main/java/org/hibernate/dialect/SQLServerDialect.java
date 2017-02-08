@@ -18,7 +18,7 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.descriptor.sql.spi.SmallIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
@@ -43,14 +43,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.BOOLEAN, "bit" );
 
-		registerFunction( "second", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(second, ?1)" ) );
-		registerFunction( "minute", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(minute, ?1)" ) );
-		registerFunction( "hour", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(hour, ?1)" ) );
-		registerFunction( "locate", new StandardSQLFunction( "charindex", StandardBasicTypes.INTEGER ) );
+		registerFunction( "second", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(second, ?1)" ) );
+		registerFunction( "minute", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(minute, ?1)" ) );
+		registerFunction( "hour", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(hour, ?1)" ) );
+		registerFunction( "locate", new StandardSQLFunction( "charindex", StandardSpiBasicTypes.INTEGER ) );
 
-		registerFunction( "extract", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(?1, ?3)" ) );
-		registerFunction( "mod", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "?1 % ?2" ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datalength(?1) * 8" ) );
+		registerFunction( "extract", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(?1, ?3)" ) );
+		registerFunction( "mod", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "?1 % ?2" ) );
+		registerFunction( "bit_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datalength(?1) * 8" ) );
 
 		registerFunction( "trim", new AnsiTrimEmulationFunction() );
 

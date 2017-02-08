@@ -35,7 +35,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.jboss.logging.Logger;
 
@@ -274,7 +274,7 @@ public class TableStructure implements DatabaseStructure {
 				database,
 				table,
 				valueColumnNameText,
-				(BasicType) StandardBasicTypes.LONG
+				StandardSpiBasicTypes.LONG
 		);
 		table.addColumn( valueColumn );
 

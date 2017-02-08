@@ -20,7 +20,7 @@ import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.jboss.logging.Logger;
 
 import java.sql.CallableStatement;
@@ -84,89 +84,89 @@ public class Oracle9Dialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, "false" );
 
 		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
+		registerFunction( "sign", new StandardSQLFunction( "sign", StandardSpiBasicTypes.INTEGER ) );
 
-		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cosh", new StandardSQLFunction( "cosh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "ln", new StandardSQLFunction( "ln", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sinh", new StandardSQLFunction( "sinh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "stddev", new StandardSQLFunction( "stddev", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tanh", new StandardSQLFunction( "tanh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "variance", new StandardSQLFunction( "variance", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "acos", new StandardSQLFunction( "acos", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "asin", new StandardSQLFunction( "asin", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "atan", new StandardSQLFunction( "atan", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "cos", new StandardSQLFunction( "cos", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "cosh", new StandardSQLFunction( "cosh", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "exp", new StandardSQLFunction( "exp", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "ln", new StandardSQLFunction( "ln", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "sin", new StandardSQLFunction( "sin", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "sinh", new StandardSQLFunction( "sinh", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "stddev", new StandardSQLFunction( "stddev", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "tan", new StandardSQLFunction( "tan", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "tanh", new StandardSQLFunction( "tanh", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "variance", new StandardSQLFunction( "variance", StandardSpiBasicTypes.DOUBLE ) );
 
 		registerFunction( "round", new StandardSQLFunction( "round" ) );
 		registerFunction( "trunc", new StandardSQLFunction( "trunc" ) );
 		registerFunction( "ceil", new StandardSQLFunction( "ceil" ) );
 		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
 
-		registerFunction( "chr", new StandardSQLFunction( "chr", StandardBasicTypes.CHARACTER ) );
+		registerFunction( "chr", new StandardSQLFunction( "chr", StandardSpiBasicTypes.CHARACTER ) );
 		registerFunction( "initcap", new StandardSQLFunction( "initcap" ) );
 		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
 		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
 		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
 		registerFunction( "soundex", new StandardSQLFunction( "soundex" ) );
 		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.INTEGER ) );
+		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardSpiBasicTypes.INTEGER ) );
 
-		registerFunction( "to_char", new StandardSQLFunction( "to_char", StandardBasicTypes.STRING ) );
-		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardBasicTypes.TIMESTAMP ) );
+		registerFunction( "to_char", new StandardSQLFunction( "to_char", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardSpiBasicTypes.TIMESTAMP ) );
 
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIME, false ) );
+		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardSpiBasicTypes.DATE, false ) );
+		registerFunction( "current_time", new NoArgSQLFunction( "current_timestamp", StandardSpiBasicTypes.TIME, false ) );
 		registerFunction(
 				"current_timestamp", new NoArgSQLFunction(
-				"current_timestamp",
-				StandardBasicTypes.TIMESTAMP,
-				false
+						"current_timestamp",
+						StandardSpiBasicTypes.TIMESTAMP,
+						false
 		)
 		);
 
-		registerFunction( "last_day", new StandardSQLFunction( "last_day", StandardBasicTypes.DATE ) );
-		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.DATE, false ) );
-		registerFunction( "systimestamp", new NoArgSQLFunction( "systimestamp", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "uid", new NoArgSQLFunction( "uid", StandardBasicTypes.INTEGER, false ) );
-		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING, false ) );
+		registerFunction( "last_day", new StandardSQLFunction( "last_day", StandardSpiBasicTypes.DATE ) );
+		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardSpiBasicTypes.DATE, false ) );
+		registerFunction( "systimestamp", new NoArgSQLFunction( "systimestamp", StandardSpiBasicTypes.TIMESTAMP, false ) );
+		registerFunction( "uid", new NoArgSQLFunction( "uid", StandardSpiBasicTypes.INTEGER, false ) );
+		registerFunction( "user", new NoArgSQLFunction( "user", StandardSpiBasicTypes.STRING, false ) );
 
-		registerFunction( "rowid", new NoArgSQLFunction( "rowid", StandardBasicTypes.LONG, false ) );
-		registerFunction( "rownum", new NoArgSQLFunction( "rownum", StandardBasicTypes.LONG, false ) );
+		registerFunction( "rowid", new NoArgSQLFunction( "rowid", StandardSpiBasicTypes.LONG, false ) );
+		registerFunction( "rownum", new NoArgSQLFunction( "rownum", StandardSpiBasicTypes.LONG, false ) );
 
 		// Multi-param string dialect functions...
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "||", "" ) );
-		registerFunction( "instr", new StandardSQLFunction( "instr", StandardBasicTypes.INTEGER ) );
-		registerFunction( "instrb", new StandardSQLFunction( "instrb", StandardBasicTypes.INTEGER ) );
-		registerFunction( "lpad", new StandardSQLFunction( "lpad", StandardBasicTypes.STRING ) );
-		registerFunction( "replace", new StandardSQLFunction( "replace", StandardBasicTypes.STRING ) );
-		registerFunction( "rpad", new StandardSQLFunction( "rpad", StandardBasicTypes.STRING ) );
-		registerFunction( "substr", new StandardSQLFunction( "substr", StandardBasicTypes.STRING ) );
-		registerFunction( "substrb", new StandardSQLFunction( "substrb", StandardBasicTypes.STRING ) );
-		registerFunction( "translate", new StandardSQLFunction( "translate", StandardBasicTypes.STRING ) );
+		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "", "||", "" ) );
+		registerFunction( "instr", new StandardSQLFunction( "instr", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "instrb", new StandardSQLFunction( "instrb", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "lpad", new StandardSQLFunction( "lpad", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "replace", new StandardSQLFunction( "replace", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "rpad", new StandardSQLFunction( "rpad", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "substr", new StandardSQLFunction( "substr", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "substrb", new StandardSQLFunction( "substrb", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "translate", new StandardSQLFunction( "translate", StandardSpiBasicTypes.STRING ) );
 
-		registerFunction( "substring", new StandardSQLFunction( "substr", StandardBasicTypes.STRING ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "instr(?2,?1)" ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "vsize(?1)*8" ) );
+		registerFunction( "substring", new StandardSQLFunction( "substr", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "locate", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "instr(?2,?1)" ) );
+		registerFunction( "bit_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "vsize(?1)*8" ) );
 		registerFunction( "coalesce", new NvlFunction() );
 
 		// Multi-param numeric dialect functions...
-		registerFunction( "atan2", new StandardSQLFunction( "atan2", StandardBasicTypes.FLOAT ) );
-		registerFunction( "log", new StandardSQLFunction( "log", StandardBasicTypes.INTEGER ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod", StandardBasicTypes.INTEGER ) );
+		registerFunction( "atan2", new StandardSQLFunction( "atan2", StandardSpiBasicTypes.FLOAT ) );
+		registerFunction( "log", new StandardSQLFunction( "log", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "mod", new StandardSQLFunction( "mod", StandardSpiBasicTypes.INTEGER ) );
 		registerFunction( "nvl", new StandardSQLFunction( "nvl" ) );
 		registerFunction( "nvl2", new StandardSQLFunction( "nvl2" ) );
-		registerFunction( "power", new StandardSQLFunction( "power", StandardBasicTypes.FLOAT ) );
+		registerFunction( "power", new StandardSQLFunction( "power", StandardSpiBasicTypes.FLOAT ) );
 
 		// Multi-param date dialect functions...
-		registerFunction( "add_months", new StandardSQLFunction( "add_months", StandardBasicTypes.DATE ) );
-		registerFunction( "months_between", new StandardSQLFunction( "months_between", StandardBasicTypes.FLOAT ) );
-		registerFunction( "next_day", new StandardSQLFunction( "next_day", StandardBasicTypes.DATE ) );
+		registerFunction( "add_months", new StandardSQLFunction( "add_months", StandardSpiBasicTypes.DATE ) );
+		registerFunction( "months_between", new StandardSQLFunction( "months_between", StandardSpiBasicTypes.FLOAT ) );
+		registerFunction( "next_day", new StandardSQLFunction( "next_day", StandardSpiBasicTypes.DATE ) );
 
-		registerFunction( "str", new StandardSQLFunction( "to_char", StandardBasicTypes.STRING ) );
+		registerFunction( "str", new StandardSQLFunction( "to_char", StandardSpiBasicTypes.STRING ) );
 	}
 
 	@Override

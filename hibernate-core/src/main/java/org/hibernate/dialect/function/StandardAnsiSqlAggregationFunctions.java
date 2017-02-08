@@ -15,7 +15,7 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -34,7 +34,7 @@ public class StandardAnsiSqlAggregationFunctions {
 		public static final CountFunction INSTANCE = new CountFunction();
 
 		protected CountFunction() {
-			super( "count", StandardBasicTypes.LONG );
+			super( "count", StandardSpiBasicTypes.LONG );
 		}
 
 		@Override
@@ -78,7 +78,7 @@ public class StandardAnsiSqlAggregationFunctions {
 		public static final AvgFunction INSTANCE = new AvgFunction();
 
 		protected AvgFunction() {
-			super( "avg", StandardBasicTypes.DOUBLE );
+			super( "avg", StandardSpiBasicTypes.DOUBLE );
 		}
 
 		@Override
@@ -158,19 +158,19 @@ public class StandardAnsiSqlAggregationFunctions {
 
 			// First allow the actual type to control the return value; the underlying sqltype could
 			// actually be different
-			if ( firstArgumentType == StandardBasicTypes.BIG_INTEGER ) {
-				return StandardBasicTypes.BIG_INTEGER;
+			if ( firstArgumentType == StandardSpiBasicTypes.BIG_INTEGER ) {
+				return StandardSpiBasicTypes.BIG_INTEGER;
 			}
-			else if ( firstArgumentType == StandardBasicTypes.BIG_DECIMAL ) {
-				return StandardBasicTypes.BIG_DECIMAL;
+			else if ( firstArgumentType == StandardSpiBasicTypes.BIG_DECIMAL ) {
+				return StandardSpiBasicTypes.BIG_DECIMAL;
 			}
-			else if ( firstArgumentType == StandardBasicTypes.LONG
-					|| firstArgumentType == StandardBasicTypes.SHORT
-					|| firstArgumentType == StandardBasicTypes.INTEGER ) {
-				return StandardBasicTypes.LONG;
+			else if ( firstArgumentType == StandardSpiBasicTypes.LONG
+					|| firstArgumentType == StandardSpiBasicTypes.SHORT
+					|| firstArgumentType == StandardSpiBasicTypes.INTEGER ) {
+				return StandardSpiBasicTypes.LONG;
 			}
-			else if ( firstArgumentType == StandardBasicTypes.FLOAT || firstArgumentType == StandardBasicTypes.DOUBLE)  {
-				return StandardBasicTypes.DOUBLE;
+			else if ( firstArgumentType == StandardSpiBasicTypes.FLOAT || firstArgumentType == StandardSpiBasicTypes.DOUBLE)  {
+				return StandardSpiBasicTypes.DOUBLE;
 			}
 
 			// finally use the jdbcType if == on Hibernate types did not find a match.
@@ -181,13 +181,13 @@ public class StandardAnsiSqlAggregationFunctions {
 					|| jdbcType == Types.DOUBLE
 					|| jdbcType == Types.DECIMAL
 					|| jdbcType == Types.REAL) {
-				return StandardBasicTypes.DOUBLE;
+				return StandardSpiBasicTypes.DOUBLE;
 			}
 			else if ( jdbcType == Types.BIGINT
 					|| jdbcType == Types.INTEGER
 					|| jdbcType == Types.SMALLINT
 					|| jdbcType == Types.TINYINT ) {
-				return StandardBasicTypes.LONG;
+				return StandardSpiBasicTypes.LONG;
 			}
 
 			// as a last resort, return the type of the first argument

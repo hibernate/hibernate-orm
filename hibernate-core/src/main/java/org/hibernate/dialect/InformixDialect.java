@@ -28,7 +28,7 @@ import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * Informix dialect.<br>
@@ -74,13 +74,13 @@ public class InformixDialect extends Dialect {
 		registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
 		registerColumnType( Types.VARCHAR, 32739, "lvarchar($l)" );
 
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
-		registerFunction( "substring", new SQLFunctionTemplate(StandardBasicTypes.STRING, "substring(?1 FROM ?2 FOR ?3)"));
-		registerFunction( "substr", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substr(?1, ?2, ?3)"));
+		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "(", "||", ")" ) );
+		registerFunction( "substring", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "substring(?1 FROM ?2 FOR ?3)"));
+		registerFunction( "substr", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "substr(?1, ?2, ?3)"));
 		registerFunction( "coalesce", new NvlFunction());
 		registerFunction( "nvl", new NvlFunction());
-		registerFunction( "current_timestamp", new NoArgSQLFunction( "current", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "today", StandardBasicTypes.DATE, false ) );
+		registerFunction( "current_timestamp", new NoArgSQLFunction( "current", StandardSpiBasicTypes.TIMESTAMP, false ) );
+		registerFunction( "current_date", new NoArgSQLFunction( "today", StandardSpiBasicTypes.DATE, false ) );
 
 		uniqueDelegate = new InformixUniqueDelegate( this );
 	}

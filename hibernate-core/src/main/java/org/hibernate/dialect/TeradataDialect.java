@@ -16,7 +16,7 @@ import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.type.spi.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A dialect for the Teradata database created by MCR as part of the
@@ -55,13 +55,13 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 		registerColumnType( Types.BLOB, "BLOB" );
 		registerColumnType( Types.CLOB, "CLOB" );
 
-		registerFunction( "year", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "extract(year from ?1)" ) );
-		registerFunction( "length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "character_length(?1)" ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
-		registerFunction( "substring", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substring(?1 from ?2 for ?3)" ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.STRING, "position(?1 in ?2)" ) );
-		registerFunction( "mod", new SQLFunctionTemplate( StandardBasicTypes.STRING, "?1 mod ?2" ) );
-		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "cast(?1 as varchar(255))" ) );
+		registerFunction( "year", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(year from ?1)" ) );
+		registerFunction( "length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "character_length(?1)" ) );
+		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "(", "||", ")" ) );
+		registerFunction( "substring", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "substring(?1 from ?2 for ?3)" ) );
+		registerFunction( "locate", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "position(?1 in ?2)" ) );
+		registerFunction( "mod", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "?1 mod ?2" ) );
+		registerFunction( "str", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "cast(?1 as varchar(255))" ) );
 
 		// bit_length feels a bit broken to me. We have to cast to char in order to
 		// pass when a numeric value is supplied. But of course the answers given will
@@ -69,16 +69,16 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 		// a char string but will be 8 or 16 bytes as a true numeric.
 		// Jay Nance 2006-09-22
 		registerFunction(
-				"bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "octet_length(cast(?1 as char))*4" )
+				"bit_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "octet_length(cast(?1 as char))*4" )
 		);
 
 		// The preference here would be
 		//   SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_timestamp(?1)", false)
 		// but this appears not to work.
 		// Jay Nance 2006-09-22
-		registerFunction( "current_timestamp", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_timestamp" ) );
-		registerFunction( "current_time", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_time" ) );
-		registerFunction( "current_date", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_date" ) );
+		registerFunction( "current_timestamp", new SQLFunctionTemplate( StandardSpiBasicTypes.TIMESTAMP, "current_timestamp" ) );
+		registerFunction( "current_time", new SQLFunctionTemplate( StandardSpiBasicTypes.TIMESTAMP, "current_time" ) );
+		registerFunction( "current_date", new SQLFunctionTemplate( StandardSpiBasicTypes.TIMESTAMP, "current_date" ) );
 		// IBID for current_time and current_date
 
 		registerKeyword( "password" );

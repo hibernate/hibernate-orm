@@ -60,7 +60,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 				try {
 					getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
 					if ( getLockable().isVersioned() ) {
-						getLockable().getVersionSupport().nullSafeSet(
+						getLockable().getVersionType().nullSafeSet(
 								st,
 								version,
 								getLockable().getIdentifierType().getColumnSpan() + 1,

@@ -76,14 +76,14 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 			try {
 				final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 				try {
-					lockable.getVersionSupport().nullSafeSet( st, version, 1, session );
+					lockable.getVersionType().nullSafeSet( st, version, 1, session );
 					int offset = 2;
 
 					lockable.getIdentifierType().nullSafeSet( st, id, offset, session );
 					offset += lockable.getIdentifierType().getColumnSpan();
 
 					if ( lockable.isVersioned() ) {
-						lockable.getVersionSupport().nullSafeSet( st, version, offset, session );
+						lockable.getVersionType().nullSafeSet( st, version, offset, session );
 					}
 
 					final int affected = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st );

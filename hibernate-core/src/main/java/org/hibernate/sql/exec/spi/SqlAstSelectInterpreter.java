@@ -61,9 +61,11 @@ import org.hibernate.sql.ast.predicate.Predicate;
 import org.hibernate.sql.ast.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.select.SelectClause;
 import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.ast.sort.SortSpecification;
 import org.hibernate.sql.convert.spi.ConversionHelper;
 import org.hibernate.sql.convert.spi.SqmSelectInterpretation;
 import org.hibernate.sql.exec.internal.JdbcSelectImpl;
+import org.hibernate.sqm.query.order.SqmSortOrder;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -160,6 +162,59 @@ public class SqlAstSelectInterpreter {
 			finally {
 				currentlyInPredicate = wasPreviouslyInPredicate;
 			}
+		}
+
+		final List<SortSpecification> sortSpecifications = querySpec.getSortSpecifications();
+		if ( sortSpecifications != null && !sortSpecifications.isEmpty() ) {
+			appendSql( " order by " );
+
+			String separator = "";
+			for (SortSpecification sortSpecification : sortSpecifications ) {
+				appendSql( separator );
+				visitSortSpecification( sortSpecification );
+				separator = ", ";
+			}
+		}
+
+		visitLimitOffsetClause( querySpec );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ORDER BY clause
+
+	public void visitSortSpecification(SortSpecification sortSpecification) {
+		sortSpecification.getSortExpression().accept( this );
+
+		final String collation = sortSpecification.getCollation();
+		if ( collation != null ) {
+			appendSql( " collate " );
+			appendSql( collation );
+		}
+
+		final SqmSortOrder sortOrder = sortSpecification.getSortOrder();
+		if ( sortOrder == SqmSortOrder.ASCENDING ) {
+			appendSql( " asc" );
+		} else if ( sortOrder == SqmSortOrder.DESCENDING ) {
+			appendSql( " desc" );
+		}
+
+		// TODO: null precedence handling
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// LIMIT/OFFSET clause
+
+	public void visitLimitOffsetClause(QuerySpec querySpec) {
+		if ( querySpec.getOffsetClauseExpression() != null ) {
+			appendSql( " offset " );
+			querySpec.getOffsetClauseExpression().accept( this );
+			appendSql( " rows" );
+		}
+
+		if ( querySpec.getLimitClauseExpression() != null ) {
+			appendSql( " fetch first " );
+			querySpec.getLimitClauseExpression().accept( this );
+			appendSql( " rows only" );
 		}
 	}
 

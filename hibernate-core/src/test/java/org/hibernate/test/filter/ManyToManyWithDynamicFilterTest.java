@@ -15,6 +15,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -108,6 +109,7 @@ public class ManyToManyWithDynamicFilterTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Entity(name = "User")
+	@Table(name = "`User`")
 	@FilterDef(name = "activeUserFilter", defaultCondition = "active = true")
 	@Filter(name = "activeUserFilter")
 	public static class User extends AbstractEntity {

@@ -163,6 +163,7 @@ import org.hibernate.sqm.query.select.SqmSelectClause;
 import org.hibernate.sqm.query.select.SqmSelection;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -709,7 +710,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralStringExpression(LiteralStringSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.STRING ),
+				extractOrmType( expression.getExpressionType(), StandardSpiBasicTypes.STRING ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -731,7 +732,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralCharacterExpression(LiteralCharacterSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.CHARACTER ),
+				extractOrmType( expression.getExpressionType(), StandardSpiBasicTypes.CHARACTER ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -740,7 +741,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralDoubleExpression(LiteralDoubleSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.DOUBLE ),
+				extractOrmType( expression.getExpressionType(), StandardSpiBasicTypes.DOUBLE ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -749,7 +750,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralIntegerExpression(LiteralIntegerSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.INTEGER ),
+				extractOrmType( expression.getExpressionType(), StandardSpiBasicTypes.INTEGER ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -758,7 +759,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralBigIntegerExpression(LiteralBigIntegerSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.BIG_INTEGER ),
+				extractOrmType( expression.getExpressionType(), StandardSpiBasicTypes.BIG_INTEGER ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -767,7 +768,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralBigDecimalExpression(LiteralBigDecimalSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.BIG_DECIMAL ),
+				extractOrmType( expression.getExpressionType(), StandardSpiBasicTypes.BIG_DECIMAL ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -776,7 +777,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralFloatExpression(LiteralFloatSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.FLOAT ),
+				extractOrmType( expression.getExpressionType(), StandardSpiBasicTypes.FLOAT ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -785,7 +786,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralLongExpression(LiteralLongSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.LONG ),
+				extractOrmType( expression.getExpressionType(), StandardSpiBasicTypes.LONG ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -794,7 +795,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralTrueExpression(LiteralTrueSqmExpression expression) {
 		return new QueryLiteral(
 				Boolean.TRUE,
-				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.BOOLEAN ),
+				extractOrmType( expression.getExpressionType(), StandardSpiBasicTypes.BOOLEAN ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -803,7 +804,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralFalseExpression(LiteralFalseSqmExpression expression) {
 		return new QueryLiteral(
 				Boolean.FALSE,
-				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.BOOLEAN ),
+				extractOrmType( expression.getExpressionType(), StandardSpiBasicTypes.BOOLEAN ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}

@@ -187,7 +187,7 @@ public class JCacheRegionFactory implements RegionFactory {
 		final Cache<Object, Object> cache = cacheManager.getCache( regionName );
 		if ( cache == null ) {
 			try {
-				return cacheManager.createCache( regionName, newDefaultConfig( properties, metadata ) );
+				return createCache( regionName, properties, metadata );
 			}
 			catch ( CacheException e ) {
 				final Cache<Object, Object> existing = cacheManager.getCache( regionName );
@@ -198,6 +198,10 @@ public class JCacheRegionFactory implements RegionFactory {
 			}
 		}
 		return cache;
+	}
+
+	protected Cache<Object, Object> createCache(String regionName, Properties properties, CacheDataDescription metadata) {
+		return cacheManager.createCache( regionName, newDefaultConfig( properties, metadata ) );
 	}
 
 	protected Configuration<Object, Object> newDefaultConfig(Properties properties, CacheDataDescription metadata) {

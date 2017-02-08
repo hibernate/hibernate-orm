@@ -18,5 +18,6 @@ public enum Clause {
 	WHERE,
 	GROUP,
 	HAVING,
-	ORDER
+	ORDER,
+	LIMIT
 }

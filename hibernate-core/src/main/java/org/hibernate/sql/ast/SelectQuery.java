@@ -6,18 +6,11 @@
  */
 package org.hibernate.sql.ast;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import org.hibernate.sql.ast.sort.SortSpecification;
-
 /**
  * @author Steve Ebersole
  */
 public class SelectQuery {
 	private final QuerySpec querySpec;
-	private List<SortSpecification> sortSpecifications;
 
 	public SelectQuery(QuerySpec querySpec) {
 		this.querySpec = querySpec;
@@ -27,19 +20,4 @@ public class SelectQuery {
 		return querySpec;
 	}
 
-	public List<SortSpecification> getSortSpecifications() {
-		if ( sortSpecifications == null ) {
-			return Collections.emptyList();
-		}
-		else {
-			return Collections.unmodifiableList( sortSpecifications );
-		}
-	}
-
-	public void addSortSpecification(SortSpecification sortSpecification) {
-		if ( sortSpecifications == null ) {
-			sortSpecifications = new ArrayList<>();
-		}
-		sortSpecifications.add( sortSpecification );
-	}
 }

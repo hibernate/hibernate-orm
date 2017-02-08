@@ -142,6 +142,7 @@ import org.hibernate.sqm.query.from.SqmJoin;
 import org.hibernate.sqm.query.from.SqmRoot;
 import org.hibernate.sqm.query.order.SqmOrderByClause;
 import org.hibernate.sqm.query.order.SqmSortSpecification;
+import org.hibernate.sqm.query.paging.SqmLimitOffsetClause;
 import org.hibernate.sqm.query.predicate.AndSqmPredicate;
 import org.hibernate.sqm.query.predicate.BetweenSqmPredicate;
 import org.hibernate.sqm.query.predicate.GroupedSqmPredicate;
@@ -260,18 +261,6 @@ public class SqmSelectToSqlAstConverter
 		final QuerySpec querySpec = visitQuerySpec( statement.getQuerySpec() );
 		final SelectQuery sqlAst = new SelectQuery( querySpec );
 
-		if ( statement.getQuerySpec().getOrderByClause() != null ) {
-			currentClauseStack.push( Clause.ORDER );
-			try {
-				for ( SqmSortSpecification sortSpecification : statement.getQuerySpec().getOrderByClause().getSortSpecifications() ) {
-					sqlAst.addSortSpecification( visitSortSpecification( sortSpecification ) );
-				}
-			}
-			finally {
-				currentClauseStack.pop();
-			}
-		}
-
 		return sqlAst;
 	}
 
@@ -321,6 +310,38 @@ public class SqmSelectToSqlAstConverter
 
 			// todo : group-by
 			// todo : having
+
+			if ( querySpec.getOrderByClause() != null ) {
+				currentClauseStack.push( Clause.ORDER );
+				try {
+                    for ( SqmSortSpecification sortSpecification : querySpec.getOrderByClause().getSortSpecifications() ) {
+						astQuerySpec.addSortSpecification( visitSortSpecification( sortSpecification ) );
+                    }
+                }
+				finally {
+                    currentClauseStack.pop();
+                }
+			}
+
+			final SqmLimitOffsetClause limitOffsetClause = querySpec.getLimitOffsetClause();
+			if ( limitOffsetClause != null ) {
+				currentClauseStack.push( Clause.LIMIT );
+				try {
+                    if ( limitOffsetClause.getLimitExpression() != null ) {
+                        astQuerySpec.setLimitClauseExpression(
+                                (Expression) limitOffsetClause.getLimitExpression().accept( this )
+                        );
+                    }
+                    if ( limitOffsetClause.getOffsetExpression() != null ) {
+                        astQuerySpec.setOffsetClauseExpression(
+                                (Expression) limitOffsetClause.getOffsetExpression().accept( this )
+                        );
+                    }
+				}
+				finally {
+					currentClauseStack.pop();
+				}
+			}
 
 			return astQuerySpec;
 		}

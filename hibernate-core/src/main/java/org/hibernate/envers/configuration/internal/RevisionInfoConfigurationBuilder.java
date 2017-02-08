@@ -46,12 +46,12 @@ import org.hibernate.envers.internal.revisioninfo.RevisionTimestampValueResolver
 import org.hibernate.envers.internal.tools.MutableBoolean;
 import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.type.LongType;
 
 import org.jboss.logging.Logger;
 
 import org.dom4j.Document;
 import org.dom4j.Element;
+import org.hibernate.type.spi.StandardBasicTypes;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -95,7 +95,7 @@ public class RevisionInfoConfigurationBuilder {
 		}
 
 		revisionInfoIdData = new PropertyData( "id", "id", "field", null );
-		revisionInfoTimestampData = new RevisionTimestampData( "timestamp", "timestamp", "field", null, new LongType() );
+		revisionInfoTimestampData = new RevisionTimestampData( "timestamp", "timestamp", "field", null, StandardBasicTypes.LONG );
 		modifiedEntityNamesData = new PropertyData( "modifiedEntityNames", "modifiedEntityNames", "field", null );
 		revisionPropType = "integer";
 	}

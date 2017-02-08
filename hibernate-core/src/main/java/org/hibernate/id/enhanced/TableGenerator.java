@@ -45,8 +45,8 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.StandardBasicTypes;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -676,7 +676,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 					database,
 					table,
 					segmentColumnName,
-					StringType.INSTANCE,
+					(BasicType) StandardBasicTypes.STRING,
 					dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 )
 			);
 			segmentColumn.setNullable( false );
@@ -690,7 +690,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 					database,
 					table,
 					valueColumnName,
-					LongType.INSTANCE
+					(BasicType) StandardBasicTypes.LONG
 			);
 			table.addColumn( valueColumn );
 		}

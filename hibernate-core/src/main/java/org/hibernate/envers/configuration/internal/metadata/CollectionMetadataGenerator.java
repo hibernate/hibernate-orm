@@ -952,7 +952,9 @@ public final class CollectionMetadataGenerator {
 		else if ( collectionValue.getElement() instanceof ManyToOne ) {
 			// Case for bi-directional relation with @JoinTable on the owning @ManyToOne side.
 			final ManyToOne manyToOneValue = (ManyToOne) collectionValue.getElement();
-			referencedClass = manyToOneValue.getBuildingContext().getEntityBinding( manyToOneValue.getReferencedEntityName() );
+			referencedClass = manyToOneValue.getBuildingContext().getMetadataCollector().getEntityBinding(
+					manyToOneValue.getReferencedEntityName()
+			);
 		}
 		return referencedClass;
 	}

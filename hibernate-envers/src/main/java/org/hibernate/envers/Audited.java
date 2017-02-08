@@ -25,7 +25,9 @@ import java.lang.annotation.Target;
 public @interface Audited {
 	/**
 	 * Specifies modification store to use
+	 * @deprecated since 5.2, to be removed in 6.0 with no replacement.
 	 */
+	@Deprecated
 	ModificationStore modStore() default ModificationStore.FULL;
 
 	/**

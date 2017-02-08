@@ -11,7 +11,7 @@ import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AssociationKey;
-import org.hibernate.persister.walking.spi.AssociationVisitationStrategy;
+import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
@@ -23,7 +23,7 @@ import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 /**
  * @author Steve Ebersole
  */
-public class LoggingAssociationVisitationStrategy implements AssociationVisitationStrategy {
+public class NavigableVisitationStrategyLoggingImpl implements NavigableVisitationStrategy {
 	private int depth = 1;
 
 	@Override

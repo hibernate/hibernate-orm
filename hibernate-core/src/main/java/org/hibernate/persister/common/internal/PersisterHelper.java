@@ -9,6 +9,7 @@ package org.hibernate.persister.common.internal;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +28,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.persister.collection.spi.CollectionPersister;
@@ -373,6 +375,14 @@ public class PersisterHelper {
 	public static PropertyAccess resolvePropertyAccess(IdentifiableTypeImplementor declarer, Property property) {
 		final PropertyAccessStrategy strategy = property.getPropertyAccessStrategy( declarer.getJavaType() );
 		return strategy.buildPropertyAccess( declarer.getJavaType(), property.getName() );
+	}
+
+	public static List<Column> makeValues(
+			SessionFactoryImplementor sessionFactory,
+			Type type,
+			Iterator<Selectable> columnIterator,
+			Table separateCollectionTable) {
+		return null;
 	}
 
 	public interface CollectionMetadata {

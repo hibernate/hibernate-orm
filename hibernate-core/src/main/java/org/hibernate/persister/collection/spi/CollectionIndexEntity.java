@@ -12,7 +12,7 @@ import org.hibernate.type.spi.EntityType;
 /**
  * @author Steve Ebersole
  */
-public interface CollectionIndexEntity extends CollectionIndex<EntityType>, EntityReference {
+public interface CollectionIndexEntity<J> extends CollectionIndex<J,EntityType<J>>, EntityReference<J> {
 	@Override
 	EntityType getExportedDomainType();
 }

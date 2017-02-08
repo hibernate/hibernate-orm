@@ -14,7 +14,7 @@ import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -64,7 +64,7 @@ public class NamedParameter extends AbstractParameter {
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter walker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
 		walker.visitNamedParameter( this );
 	}
 }

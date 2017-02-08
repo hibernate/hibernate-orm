@@ -10,7 +10,7 @@ package org.hibernate.sql.ast.expression;
 import org.hibernate.sql.ast.from.ColumnBinding;
 import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.convert.ConversionException;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -34,7 +34,7 @@ public class ColumnBindingExpression implements Expression {
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter walker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
 		walker.visitColumnBindingExpression( this );
 	}
 

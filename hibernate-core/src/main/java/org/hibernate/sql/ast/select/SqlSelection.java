@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.ast.select;
 
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 
 /**
  * @author Steve Ebersole
@@ -30,5 +30,5 @@ public interface SqlSelection {
 		return getValuesArrayPosition() + 1;
 	}
 
-	void accept(SqlAstSelectInterpreter interpreter);
+	void accept(SqlSelectAstToJdbcSelectConverter interpreter);
 }

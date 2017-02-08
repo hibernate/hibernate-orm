@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.convert.results.spi;
 
 import org.hibernate.persister.entity.spi.EntityPersister;
@@ -31,4 +30,43 @@ public interface EntityReference extends FetchParent, InitializerSource {
 	 * @return The identifier description.
 	 */
 	EntityIdentifierReference getIdentifierReference();
+
+
+//	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//	// org.hibernate.loader.plan.spi.EntityReference impls
+//
+//	@Override
+//	default String getQuerySpaceUid() {
+//		return null;
+//	}
+//
+//	@Override
+//	default String getTableGroupUniqueIdentifier() {
+//		return null;
+//	}
+//
+//	@Override
+//	default InitializerParent getInitializerParentForFetchInitializers() {
+//		return null;
+//	}
+//
+//	@Override
+//	default void addFetch(Fetch fetch) {
+//
+//	}
+//
+//	@Override
+//	default EntityIdentifierDescription getIdentifierDescription() {
+//		return getIdentifierReference();
+//	}
+//
+//	@Override
+//	default BidirectionalEntityReference[] getBidirectionalEntityReferences() {
+//		return new BidirectionalEntityReference[0];
+//	}
+//
+//	@Override
+//	default org.hibernate.loader.plan.spi.EntityReference resolveEntityReference() {
+//		return null;
+//	}
 }

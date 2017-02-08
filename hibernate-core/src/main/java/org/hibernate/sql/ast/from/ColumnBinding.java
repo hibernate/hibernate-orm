@@ -13,7 +13,7 @@ import org.hibernate.persister.common.spi.Column;
 import org.hibernate.sql.ast.select.SqlSelectable;
 import org.hibernate.sql.exec.results.process.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -56,7 +56,7 @@ public class ColumnBinding implements SqlSelectable {
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter interpreter) {
+	public void accept(SqlSelectAstToJdbcSelectConverter interpreter) {
 		interpreter.visitColumnBinding( this );
 	}
 

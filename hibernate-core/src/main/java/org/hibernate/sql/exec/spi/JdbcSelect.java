@@ -13,7 +13,7 @@ import org.hibernate.sql.ast.select.SqlSelection;
 import org.hibernate.sql.convert.results.spi.Return;
 
 /**
- * Represents the {@link SqlAstSelectInterpreter}'s interpretation of a select query
+ * Represents the {@link SqlSelectAstToJdbcSelectConverter}'s interpretation of a select query
  *
  * @author Steve Ebersole
  */

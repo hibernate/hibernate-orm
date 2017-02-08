@@ -119,7 +119,8 @@ public class Component extends SimpleValue implements PropertyContainer, MetaAtt
 	}
 
 	public Class getComponentClass() throws MappingException {
-		final ClassLoaderService classLoaderService = getBuildingContext().getBootstrapContext().getServiceRegistry()
+		final ClassLoaderService classLoaderService = getBuildingContext().getBuildingOptions()
+				.getServiceRegistry()
 				.getService( ClassLoaderService.class );
 		try {
 			return classLoaderService.classForName( componentClassName );

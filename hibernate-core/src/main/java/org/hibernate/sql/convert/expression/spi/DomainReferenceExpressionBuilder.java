@@ -12,7 +12,7 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
-import org.hibernate.sql.ast.expression.domain.DomainReferenceExpression;
+import org.hibernate.sql.ast.expression.domain.NavigableReferenceExpression;
 import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
@@ -26,21 +26,21 @@ import org.hibernate.sqm.query.expression.domain.SingularAttributeBinding;
 public interface DomainReferenceExpressionBuilder {
 	boolean isShallow();
 
-	DomainReferenceExpression buildEntityExpression(
+	NavigableReferenceExpression buildEntityExpression(
 			BuildingContext buildingContext,
 			ColumnBindingSource columnBindingSource,
 			EntityPersister improvedEntityPersister,
 			PropertyPath propertyPath);
 
-	DomainReferenceExpression buildSingularAttributeExpression(
+	NavigableReferenceExpression buildSingularAttributeExpression(
 			BuildingContext buildingContext,
 			SingularAttributeBinding singularAttributeBinding);
 
-	DomainReferenceExpression buildPluralAttributeExpression(
+	NavigableReferenceExpression buildPluralAttributeExpression(
 			BuildingContext buildingContext,
 			PluralAttributeBinding attributeBinding);
 
-	DomainReferenceExpression buildPluralAttributeElementReferenceExpression(
+	NavigableReferenceExpression buildPluralAttributeElementReferenceExpression(
 			PluralAttributeElementBinding binding,
 			TableGroup resolvedTableGroup,
 			PropertyPath convert);

@@ -11,10 +11,10 @@ import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 /**
  * @author Steve Ebersole
  */
-public interface IdentifiableType extends ManagedType {
+public interface IdentifiableType<E> extends ManagedType<E> {
 	@Override
-	IdentifiableType getSuperType();
+	IdentifiableType<? super E> getSuperType();
 
 	@Override
-	IdentifiableJavaDescriptor getJavaTypeDescriptor();
+	IdentifiableJavaDescriptor<E> getJavaTypeDescriptor();
 }

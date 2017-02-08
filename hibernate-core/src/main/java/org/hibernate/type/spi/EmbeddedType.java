@@ -13,6 +13,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.sqm.domain.type.SqmDomainTypeEmbeddable;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -24,12 +25,21 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  * @author Steve Ebersole
  */
 public interface EmbeddedType<J> extends ManagedType<J>, SqmDomainTypeEmbeddable, TypeConfigurationAware {
-	String getRoleName();
+	NavigableRole getNavigableRole();
+
+	default String getRoleName() {
+		return getNavigableRole().getFullPath();
+	}
 
 	<T> EmbeddedPersister<T> getEmbeddablePersister();
 
 	@Override
 	EmbeddableJavaDescriptor<J> getJavaTypeDescriptor();
+
+	@Override
+	default Class<J> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
 
 	@Override
 	default Classification getClassification() {

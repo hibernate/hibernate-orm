@@ -63,12 +63,18 @@ import org.hibernate.type.spi.Type;
  *
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
- * @see EntityPersister#STANDARD_CONSTRUCTOR_SIG
+ * @see #STANDARD_CONSTRUCTOR_SIG
  */
 public interface EntityPersister<T>
 		extends EntityReference<T>, NavigableSource<T>, EmbeddedContainer<T>,
 				TableGroupProducer, OptimisticCacheSource, IdentifiableTypeImplementor<T>,
 				EntityType<T> {
+
+	// todo (6.0) : ? - can OptimisticCacheSource stuff go away?
+	// 		It was added for caches like JBoss Tree Cache that supported MVCC-based
+	//		transactional consistency via integration with JTA.  Do not believe
+	//		any of our existing cache integrations support MVCC.
+
 
 	/**
 	 * Unless a custom {@link org.hibernate.persister.spi.PersisterFactory} is used, it is expected

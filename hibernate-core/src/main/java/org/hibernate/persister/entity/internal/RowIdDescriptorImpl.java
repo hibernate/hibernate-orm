@@ -14,9 +14,18 @@ import java.util.List;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.common.spi.PhysicalColumn;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.RowIdDescriptor;
+import org.hibernate.sql.ast.from.TableGroup;
+import org.hibernate.sql.ast.from.TableSpace;
+import org.hibernate.sql.convert.internal.FromClauseIndex;
+import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
+import org.hibernate.sql.convert.results.spi.Fetch;
+import org.hibernate.sql.convert.results.spi.FetchParent;
+import org.hibernate.sql.convert.results.spi.Return;
+import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -91,6 +100,31 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 	@Override
 	public ManagedTypeImplementor getSource() {
 		return hierarchy.getRootEntityPersister();
+	}
+
+	@Override
+	public void visitNavigable(NavigableVisitationStrategy visitor) {
+		visitor.visitRowId( this );
+	}
+
+	@Override
+	public TableGroup buildTableGroup(
+			TableSpace tableSpace,
+			SqlAliasBaseManager sqlAliasBaseManager,
+			FromClauseIndex fromClauseIndex) {
+		throw new NotYetImplementedException();
+	}
+
+	@Override
+	public Return generateReturn(
+			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Fetch generateFetch(
+			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

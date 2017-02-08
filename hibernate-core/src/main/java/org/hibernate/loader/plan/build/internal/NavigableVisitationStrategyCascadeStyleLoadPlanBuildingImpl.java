@@ -21,8 +21,8 @@ import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
  *
  * @author Steve Ebersole
  */
-public class CascadeStyleLoadPlanBuildingAssociationVisitationStrategy
-		extends FetchStyleLoadPlanBuildingAssociationVisitationStrategy {
+public class SqlSelectPlanBuilderNavigableVisitor
+		extends SqlSelectPlanBuilder {
 	private static final FetchStrategy EAGER = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 	private static final FetchStrategy DELAYED = new FetchStrategy( FetchTiming.DELAYED, FetchStyle.SELECT );
 
@@ -37,7 +37,7 @@ public class CascadeStyleLoadPlanBuildingAssociationVisitationStrategy
 	 * @param loadQueryInfluencers The options which can influence the SQL query needed to perform the load.
 	 * @param lockMode The lock mode.
 	 */
-	public CascadeStyleLoadPlanBuildingAssociationVisitationStrategy(
+	public NavigableVisitationStrategyCascadeStyleLoadPlanBuildingImpl(
 			CascadingAction cascadeActionToMatch,
 			SessionFactoryImplementor sessionFactory,
 			LoadQueryInfluencers loadQueryInfluencers,

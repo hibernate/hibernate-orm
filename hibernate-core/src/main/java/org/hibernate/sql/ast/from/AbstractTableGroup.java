@@ -87,7 +87,7 @@ public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSou
 	}
 
 	@Override
-	public PropertyPath getPropertyPath() {
+	public PropertyPath getNavigablePath() {
 		return propertyPath;
 	}
 

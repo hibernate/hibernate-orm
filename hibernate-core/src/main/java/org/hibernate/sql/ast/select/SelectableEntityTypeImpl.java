@@ -14,17 +14,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEmbedded;
-import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.SingularOrmAttribute;
+import org.hibernate.persister.common.spi.PersistentAttribute;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.ast.expression.Expression;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingGroup;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingGroupEmptyImpl;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingGroupImpl;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
+import org.hibernate.sql.ast.expression.domain.NavigablePath;
 import org.hibernate.sql.ast.from.ColumnBinding;
 import org.hibernate.sql.convert.results.internal.ReturnEntityImpl;
 import org.hibernate.sql.convert.results.spi.Return;
@@ -38,21 +38,21 @@ import org.hibernate.sql.exec.results.process.spi.SqlSelectionGroupEmpty;
  */
 public class SelectableEntityTypeImpl implements Selectable {
 	private final Expression expression;
-	private final PropertyPath propertyPath;
+	private final NavigablePath navigablePath;
 	private final ColumnBindingSource columnBindingSource;
-	private final EntityPersister entityPersister;
+	private final EntityPersister<?> entityPersister;
 
 	private final LinkedHashMap<PersistentAttribute, ColumnBindingGroup> columnBindingGroupMap;
 	private final boolean isShallow;
 
 	public SelectableEntityTypeImpl(
 			Expression expression,
-			PropertyPath propertyPath,
+			NavigablePath navigablePath,
 			ColumnBindingSource columnBindingSource,
 			EntityPersister entityPersister,
 			boolean isShallow) {
 		this.expression = expression;
-		this.propertyPath = propertyPath;
+		this.navigablePath = navigablePath;
 		this.columnBindingSource = columnBindingSource;
 		this.entityPersister = entityPersister;
 		this.columnBindingGroupMap = buildColumnBindingGroupMap( isShallow );
@@ -76,7 +76,7 @@ public class SelectableEntityTypeImpl implements Selectable {
 
 		// Only render the rest of the attributes if !shallow
 		if ( !isShallow ) {
-			for ( PersistentAttribute persistentAttribute : entityPersister.getNonIdentifierAttributes() ) {
+			for ( PersistentAttribute<?,?> persistentAttribute : entityPersister.getPersistentAttributes() ) {
 				addColumnBindingGroupEntry( persistentAttribute, columnBindingGroupMap );
 			}
 		}
@@ -87,12 +87,12 @@ public class SelectableEntityTypeImpl implements Selectable {
 	private void addColumnBindingGroupEntry(
 			PersistentAttribute persistentAttribute,
 			Map<PersistentAttribute, ColumnBindingGroup> columnBindingGroupMap) {
-		if ( !SingularOrmAttribute.class.isInstance( persistentAttribute ) ) {
+		if ( !SingularPersistentAttribute.class.isInstance( persistentAttribute ) ) {
 			columnBindingGroupMap.put( persistentAttribute, ColumnBindingGroupEmptyImpl.INSTANCE );
 			return;
 		}
 
-		final SingularOrmAttribute singularAttribute = (SingularOrmAttribute) persistentAttribute;
+		final SingularPersistentAttribute singularAttribute = (SingularPersistentAttribute) persistentAttribute;
 		final ColumnBindingGroupImpl columnBindingGroup = new ColumnBindingGroupImpl();
 
 		final List<Column> columns;
@@ -123,7 +123,7 @@ public class SelectableEntityTypeImpl implements Selectable {
 				resultVariable,
 				isShallow,
 				buildSqlSelectionGroupMap( returnResolutionContext ),
-				propertyPath,
+				navigablePath,
 				columnBindingSource.getTableGroup().getUid()
 		);
 	}

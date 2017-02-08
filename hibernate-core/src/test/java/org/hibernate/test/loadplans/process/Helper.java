@@ -10,8 +10,8 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
+import org.hibernate.loader.plan.build.internal.SqlSelectPlanBuilder;
+import org.hibernate.loader.plan.build.spi.MetamodelDrivenSqlSelectPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.query.internal.QueryBuildingParametersImpl;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
@@ -39,12 +39,12 @@ public class Helper implements QueryBuildingParameters {
 	}
 
 	public LoadPlan buildLoadPlan(SessionFactoryImplementor sf, EntityPersister entityPersister) {
-		final FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
+		final SqlSelectPlanBuilder strategy = new SqlSelectPlanBuilder(
 				sf,
 				queryBuildingParameters.getQueryInfluencers(),
 				queryBuildingParameters.getLockMode()
 		);
-		return MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
+		return MetamodelDrivenSqlSelectPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
 	}
 
 	public LoadQueryDetails buildLoadQueryDetails(EntityPersister entityPersister, SessionFactoryImplementor sf) {

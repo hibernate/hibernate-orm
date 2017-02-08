@@ -13,8 +13,8 @@ import org.hibernate.sqm.domain.SqmPluralAttributeElementBasic;
 /**
  * @author Steve Ebersole
  */
-public interface CollectionElementBasic
-		extends CollectionElement<BasicType>, ConvertibleNavigable, SqmPluralAttributeElementBasic {
+public interface CollectionElementBasic<J>
+		extends CollectionElement<J,BasicType<J>>, ConvertibleNavigable<J>, SqmPluralAttributeElementBasic {
 	@Override
-	BasicType getExportedDomainType();
+	BasicType<J> getExportedDomainType();
 }

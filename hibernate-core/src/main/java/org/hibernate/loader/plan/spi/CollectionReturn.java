@@ -6,11 +6,16 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import org.hibernate.sql.convert.results.spi.ReturnCollection;
+
 /**
  * Models the a persistent collection as root {@link Return}.  Pertinent to collection initializer
  * ({@link org.hibernate.loader.plan.spi.LoadPlan.Disposition#COLLECTION_INITIALIZER}) LoadPlans only,
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link ReturnCollection}
  */
+@Deprecated
 public interface CollectionReturn extends CollectionReference, Return {
 }

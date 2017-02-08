@@ -8,25 +8,39 @@ package org.hibernate.persister.collection.spi;
 
 import java.util.List;
 
+import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractCollectionIndex<T extends Type> implements CollectionIndex<T> {
+public abstract class AbstractCollectionIndex<J, T extends Type<J>> implements CollectionIndex<J,T> {
 	private final CollectionPersister persister;
 	private final T ormType;
 	private final List<Column> columns;
+	private final NavigableRole navigableRole;
 
 	public AbstractCollectionIndex(CollectionPersister persister, T ormType, List<Column> columns) {
 		this.persister = persister;
 		this.ormType = ormType;
 		this.columns = columns;
+		this.navigableRole = persister.getNavigableRole().append( NAVIGABLE_NAME );
 	}
+
 	@Override
 	public CollectionPersister getSource() {
 		return persister;
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
+	}
+
+	@Override
+	public T getOrmType() {
+		return ormType;
 	}
 
 	@Override
@@ -40,18 +54,13 @@ public abstract class AbstractCollectionIndex<T extends Type> implements Collect
 	}
 
 	@Override
-	public Class getJavaType() {
+	public Class<J> getJavaType() {
 		return getOrmType().getJavaType();
 	}
 
 	@Override
 	public String getNavigableName() {
 		return NAVIGABLE_NAME;
-	}
-
-	@Override
-	public T getOrmType() {
-		return ormType;
 	}
 
 	@Override

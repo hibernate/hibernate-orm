@@ -9,36 +9,57 @@ package org.hibernate.persister.collection.internal;
 import java.util.List;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.mapping.Collection;
 import org.hibernate.persister.collection.spi.AbstractCollectionElement;
 import org.hibernate.persister.collection.spi.CollectionElementEntity;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.sql.ast.from.TableGroup;
+import org.hibernate.sql.ast.from.TableSpace;
+import org.hibernate.sql.convert.internal.FromClauseIndex;
+import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
+import org.hibernate.sql.convert.results.spi.Fetch;
+import org.hibernate.sql.convert.results.spi.FetchParent;
+import org.hibernate.sql.convert.results.spi.Return;
+import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sqm.domain.SqmNavigable;
-import org.hibernate.sqm.domain.SqmPluralAttributeElement;
 import org.hibernate.type.spi.EntityType;
 
 /**
  * @author Steve Ebersole
  */
-public class CollectionElementEntityImpl
-		extends AbstractCollectionElement<EntityType>
-		implements CollectionElementEntity {
+public class CollectionElementEntityImpl<J>
+		extends AbstractCollectionElement<J,EntityType<J>>
+		implements CollectionElementEntity<J> {
+
+	private final ElementClassification elementClassification;
 
 	public CollectionElementEntityImpl(
 			CollectionPersister persister,
-			EntityType ormType,
+			Collection mappingBinding,
+			EntityType<J> ormType,
+			ElementClassification elementClassification,
 			List<Column> columns) {
 		super( persister, ormType, columns );
+		this.elementClassification = elementClassification;
 	}
 
 	@Override
-	public EntityType getExportedDomainType() {
-		return (EntityType) super.getExportedDomainType();
+	@SuppressWarnings("unchecked")
+	public EntityType<J> getExportedDomainType() {
+		return (EntityType<J>) super.getExportedDomainType();
 	}
 
 	@Override
-	public EntityPersister getEntityPersister() {
+	public EntityType<J> getOrmType() {
+		return super.getOrmType();
+	}
+
+	@Override
+	public EntityPersister<J> getEntityPersister() {
 		return getOrmType().getEntityPersister();
 	}
 
@@ -58,12 +79,40 @@ public class CollectionElementEntityImpl
 	}
 
 	@Override
-	public SqmPluralAttributeElement.ElementClassification getClassification() {
-		return SqmPluralAttributeElement.ElementClassification.ONE_TO_MANY;
+	public ElementClassification getClassification() {
+		return elementClassification;
 	}
 
 	@Override
 	public Type.PersistenceType getPersistenceType() {
 		return Type.PersistenceType.ENTITY;
+	}
+
+	@Override
+	public void visitNavigable(NavigableVisitationStrategy visitor) {
+		visitor.visitCollectionElementEntity( this );
+	}
+
+	@Override
+	public TableGroup buildTableGroup(
+			TableSpace tableSpace,
+			SqlAliasBaseManager sqlAliasBaseManager,
+			FromClauseIndex fromClauseIndex) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public Return generateReturn(
+			ReturnResolutionContext returnResolutionContext,
+			TableGroup tableGroup) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public Fetch generateFetch(
+			ReturnResolutionContext returnResolutionContext,
+			TableGroup tableGroup,
+			FetchParent fetchParent) {
+		throw new NotYetImplementedException(  );
 	}
 }

@@ -58,6 +58,7 @@ import org.hibernate.sql.ast.expression.PositionalParameter;
 import org.hibernate.sql.ast.expression.QueryLiteral;
 import org.hibernate.sql.ast.expression.SumFunction;
 import org.hibernate.sql.ast.expression.UnaryOperationExpression;
+import org.hibernate.sql.ast.expression.domain.NavigablePath;
 import org.hibernate.sql.ast.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.from.EntityTableGroup;
 import org.hibernate.sql.ast.from.TableGroup;
@@ -85,7 +86,7 @@ import org.hibernate.sql.convert.expression.internal.DomainReferenceExpressionBu
 import org.hibernate.sql.convert.expression.spi.DomainReferenceExpressionBuilder;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
-import org.hibernate.sql.convert.internal.SqmSelectInterpretationImpl;
+import org.hibernate.sql.convert.internal.SqlSelectPlanImpl;
 import org.hibernate.sql.convert.results.internal.FetchCompositeAttributeImpl;
 import org.hibernate.sql.convert.results.internal.FetchEntityAttributeImpl;
 import org.hibernate.sql.convert.results.spi.FetchParent;
@@ -178,6 +179,8 @@ public class SqmSelectToSqlAstConverter
 		implements DomainReferenceExpressionBuilder.BuildingContext, ReturnResolutionContext {
 	private static final Logger log = Logger.getLogger( SqmSelectToSqlAstConverter.class );
 
+	private final Stack<NavigablePath> navigablePathStack = new Stack<>();
+
 	/**
 	 * Main entry point into SQM SelectStatement interpretation
 	 *
@@ -189,7 +192,7 @@ public class SqmSelectToSqlAstConverter
 	 *
 	 * @return The interpretation
 	 */
-	public static SqmSelectInterpretation interpret(
+	public static SqlSelectPlan interpret(
 			SqmSelectStatement statement,
 			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
@@ -230,11 +233,16 @@ public class SqmSelectToSqlAstConverter
 		pushDomainExpressionBuilder( isShallow );
 	}
 
-	private SqmSelectInterpretation interpret(SqmSelectStatement statement) {
-		return new SqmSelectInterpretationImpl(
+	private SqlSelectPlan interpret(SqmSelectStatement statement) {
+		return new SqlSelectPlanImpl(
 				visitSelectStatement( statement ),
 				queryReturns
 		);
+	}
+
+	@Override
+	public NavigablePath currentNavigablePath() {
+		return navigablePathStack.getCurrent();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -630,7 +638,7 @@ public class SqmSelectToSqlAstConverter
 					final SingularPersistentAttributeEntity boundAttributeAsEntity = (SingularPersistentAttributeEntity) boundAttribute;
 					final FetchEntityAttributeImpl fetch = new FetchEntityAttributeImpl(
 							fetchParent,
-							PersisterHelper.convert( attributeBinding.getPropertyPath() ),
+							currentNavigablePath().append( attributeBinding.getBoundNavigable().getNavigableName() ),
 							attributeJoin.getUniqueIdentifier(),
 							boundAttributeAsEntity,
 							boundAttributeAsEntity.getAssociatedEntityPersister(),
@@ -701,7 +709,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralStringExpression(LiteralStringSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), StandardBasicTypes.STRING ),
+				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.STRING ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -723,7 +731,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralCharacterExpression(LiteralCharacterSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), StandardBasicTypes.CHARACTER ),
+				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.CHARACTER ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -732,7 +740,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralDoubleExpression(LiteralDoubleSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), StandardBasicTypes.DOUBLE ),
+				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.DOUBLE ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -741,7 +749,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralIntegerExpression(LiteralIntegerSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), StandardBasicTypes.INTEGER ),
+				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.INTEGER ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -750,7 +758,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralBigIntegerExpression(LiteralBigIntegerSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), StandardBasicTypes.BIG_INTEGER ),
+				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.BIG_INTEGER ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -759,7 +767,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralBigDecimalExpression(LiteralBigDecimalSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), StandardBasicTypes.BIG_DECIMAL ),
+				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.BIG_DECIMAL ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -768,7 +776,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralFloatExpression(LiteralFloatSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), StandardBasicTypes.FLOAT ),
+				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.FLOAT ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -777,7 +785,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralLongExpression(LiteralLongSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getLiteralValue(),
-				extractOrmType( expression.getExpressionType(), StandardBasicTypes.LONG ),
+				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.LONG ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -786,7 +794,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralTrueExpression(LiteralTrueSqmExpression expression) {
 		return new QueryLiteral(
 				Boolean.TRUE,
-				extractOrmType( expression.getExpressionType(), StandardBasicTypes.BOOLEAN ),
+				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.BOOLEAN ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -795,7 +803,7 @@ public class SqmSelectToSqlAstConverter
 	public QueryLiteral visitLiteralFalseExpression(LiteralFalseSqmExpression expression) {
 		return new QueryLiteral(
 				Boolean.FALSE,
-				extractOrmType( expression.getExpressionType(), StandardBasicTypes.BOOLEAN ),
+				extractOrmType( expression.getExpressionType(), (Type) StandardBasicTypes.BOOLEAN ),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -814,7 +822,8 @@ public class SqmSelectToSqlAstConverter
 		return new QueryLiteral(
 				expression.getValue(),
 				// todo : how do I resolve the Type for an enum?
-				extractOrmType( expression.getExpressionType(), expression.getValue().getClass() ),
+				//extractOrmType( expression.getExpressionType(), expression.getValue().getClass() ),
+				(Type) expression.getExpressionType().getExportedDomainType(),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}
@@ -823,7 +832,7 @@ public class SqmSelectToSqlAstConverter
 	public Object visitConstantFieldExpression(ConstantFieldSqmExpression expression) {
 		return new QueryLiteral(
 				expression.getValue(),
-				extractOrmType( expression.getExpressionType(), expression.getValue().getClass() ),
+				(Type) expression.getExpressionType().getExportedDomainType(),
 				currentClauseStack.getCurrent() == Clause.SELECT
 		);
 	}

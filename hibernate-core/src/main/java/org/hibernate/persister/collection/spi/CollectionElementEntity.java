@@ -7,9 +7,10 @@
 package org.hibernate.persister.collection.spi;
 
 import org.hibernate.persister.entity.spi.EntityReference;
+import org.hibernate.type.spi.EntityType;
 
 /**
  * @author Steve Ebersole
  */
-public interface CollectionElementEntity extends CollectionElement, EntityReference {
+public interface CollectionElementEntity<E> extends CollectionElement<E,EntityType<E>>, EntityReference<E> {
 }

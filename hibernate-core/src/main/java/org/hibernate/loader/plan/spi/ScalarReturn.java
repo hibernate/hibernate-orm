@@ -15,6 +15,7 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  * @author Gail Badner
  */
+@Deprecated
 public interface ScalarReturn extends Return {
 
 	/**

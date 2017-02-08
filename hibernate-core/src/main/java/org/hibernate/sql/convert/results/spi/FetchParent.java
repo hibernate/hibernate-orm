@@ -4,12 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.convert.results.spi;
 
 import java.util.List;
 
-import org.hibernate.loader.PropertyPath;
+import org.hibernate.sql.ast.expression.domain.NavigablePath;
 import org.hibernate.sql.exec.results.process.spi.InitializerParent;
 
 /**
@@ -23,7 +22,7 @@ public interface FetchParent {
 	 *
 	 * @return The property path
 	 */
-	PropertyPath getPropertyPath();
+	NavigablePath getNavigablePath();
 
 	/**
 	 * Get the UID for this fetch source's query space.
@@ -38,6 +37,10 @@ public interface FetchParent {
 
 	/**
 	 * Retrieve the fetches owned by this fetch source.
+	 * <p/>
+	 * This is why generics suck :(  Ideally this would override
+	 * FetchSource#getFetches and give a covariant return of a List of
+	 * org.hibernate.sql.convert.results.spi.Fetch
 	 *
 	 * @return The owned fetches.
 	 */

@@ -7,18 +7,52 @@
 * HHH-11263 - Introduce BootstrapContext
 * HHH-11356 - Adjust the 2nd-Cache SPIs to better reflect supported uses
 * HHH-11391	- Improved metadata about a basic-typed value
+* HHH-11358 - Changes to persister contracts
 
+== TODO items for persister / load-plan work:
+
+* For 6.0 (or further):
+	** split concept of NavigablePath and NavigableRole (PropertyPath renamed).  NavigablePath
+		represents an ongoing path in a query; NavigableRole represents the static role of an attribute
+		in relation to a root entity
+	** keep `org.hibernate.loader.plan.spi.LoadPlan`, but deprecate it favor of
+		`org.hibernate.sql.convert.spi.SqmSelectInterpretation`.
+	** have `SqmSelectInterpretation` extend `LoadPlan` and implement all of its methods via calls to
+		the `SqmSelectInterpretation` methods.
+	** find all usage of `LoadPlan` and replace it with `SqmSelectInterpretation`, this will include delegation
+		between various load-plan contracts and the SQL-AST counter-part, such as:
+		*** `AssociationVisitationStrategy` -> `NavigableVisitationStrategy`
+		*** `EntityDefinition` -> ? `EntityReference` or `EntityPersister`?
+		*** `AttributeSource` -> ? `PersistentAttribute` or `Navigable`?
+		*** `org.hibernate.loader.plan.spi.Return` -> `org.hibernate.sql.convert.results.spi.Return`
+			**** `org.hibernate.loader.plan.spi.ScalarReturn` ->
+			`org.hibernate.sql.convert.results.spi.ReturnScalar`
+			**** `org.hibernate.loader.plan.spi.EntityReturn` ->
+				`org.hibernate.sql.convert.results.spi.ReturnEntity`
+			**** etc..
+		*** `org.hibernate.loader.plan.spi.QuerySpaces` -> `org.hibernate.sql.ast.from.FromClause` ?
+			**** `org.hibernate.loader.plan.spi.QuerySpace` -> `org.hibernate.sql.ast.from.TableSpace`
+			**** etc..
+		*** etc..
+	** need to investigate the impact on counter-parts for "result assembly".
+	** be sure to test bi-directional "key-many-to-one" references.  That is something LoadPlan code does a lot of
+		work to handle properly.  Need to find the test that Gail wrote for this.
+	** Be sure to implement Callback handling for "subsequent actions" such as...
+		*** follow-on locking
+		*** join fetch conversions to subselect fetches - immediately improves our subselect fetch handling simply
+			by having a SQL AST so we can know what to build the "subselect" based on - no more bug-prone String manip.
 
 == TODO items
 
+* Consider splitting AST visitors/listeners into smaller pieces.  Good article on the subject -> http://jakubdziworski.github.io/java/2016/04/01/antlr_visitor_vs_listener.html
+* Consider a unified and generalized initialization series for `MappedSuperclassImplementor` and `EntityPersister`,
+and maybe `EmbeddedPersister` as well to cover all `ManagedTypeImplementor` types.
 * Migrate LoadPlan to SQM/SQL AST
 * related (^^) - drop Loader?  Or retrofit it to leverage JdbcSelectExecutor.
 * Drop old QueryTranslator and both impls
 * Drop `org.hibernate.query.criteria.internal.ParameterContainer`.  This is already handled during
 	SQM -> SQL-AST conversion.  `org.hibernate.sql.exec.spi.SqlAstSelectInterpreter` already has
 	built-in capability to track parameters - see `SqlAstSelectInterpreter#parameterBinders`
-* Remove `org.hibernate.query.QueryParameter#isPassNullsEnabled` - this is now handled based on whether
-	bind was called or not.
 * Remove HQLQueryPlan and current QueryPlanCache - see `org.hibernate.query.spi.SelectQueryPlan`
 	and `org.hibernate.query.spi.QueryInterpretations`.  Determine what to do with
 	`org.hibernate.engine.query.spi.NativeSQLQueryPlan`

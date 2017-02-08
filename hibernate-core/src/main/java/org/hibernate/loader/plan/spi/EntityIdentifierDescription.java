@@ -11,6 +11,7 @@ package org.hibernate.loader.plan.spi;
  *
  * @author Steve Ebersole
  */
+@Deprecated
 public interface EntityIdentifierDescription {
 	/**
 	 * Can this EntityIdentifierDescription be treated as a FetchSource and if so does it have any
@@ -19,7 +20,7 @@ public interface EntityIdentifierDescription {
 	 * @return {@code true} iff {@code this} can be cast to {@link FetchSource} and (afterQuery casting) it returns
 	 * non-empty results for {@link FetchSource#getFetches()}
 	 */
-	public boolean hasFetches();
+	boolean hasFetches();
 
 	/**
 	 * Can this EntityIdentifierDescription be treated as a FetchSource and if so does it have any
@@ -28,5 +29,5 @@ public interface EntityIdentifierDescription {
 	 * @return {@code true} iff {@code this} can be cast to {@link FetchSource} and (afterQuery casting) it returns
 	 * non-empty results for {@link FetchSource#getBidirectionalEntityReferences()}
 	 */
-	public boolean hasBidirectionalEntityReferences();
+	boolean hasBidirectionalEntityReferences();
 }

@@ -25,7 +25,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.sql.convert.spi.Callback;
-import org.hibernate.sql.convert.spi.SqmSelectInterpretation;
+import org.hibernate.sql.convert.spi.SqlSelectPlan;
 import org.hibernate.sql.convert.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.RowTransformerPassThruImpl;
@@ -35,7 +35,7 @@ import org.hibernate.sql.exec.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.exec.internal.TupleElementImpl;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.RowTransformer;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sqm.query.SqmSelectStatement;
 import org.hibernate.sqm.query.select.SqmSelection;
 
@@ -154,7 +154,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		};
 
 		// todo : SelectStatementInterpreter needs to account for the EntityGraph hint
-		final SqmSelectInterpretation interpretation = SqmSelectToSqlAstConverter.interpret(
+		final SqlSelectPlan interpretation = SqmSelectToSqlAstConverter.interpret(
 				sqm,
 				persistenceContext,
 				queryOptions,
@@ -162,7 +162,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				callback
 		);
 
-		final JdbcSelect jdbcSelect = SqlAstSelectInterpreter.interpret(
+		final JdbcSelect jdbcSelect = SqlSelectAstToJdbcSelectConverter.interpret(
 				interpretation,
 				shallow,
 				persistenceContext,
@@ -217,7 +217,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		};
 
 		// todo : SelectStatementInterpreter needs to account for the EntityGraph hint
-		final SqmSelectInterpretation interpretation = SqmSelectToSqlAstConverter.interpret(
+		final SqlSelectPlan interpretation = SqmSelectToSqlAstConverter.interpret(
 				sqm,
 				persistenceContext,
 				queryOptions,
@@ -225,7 +225,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				callback
 		);
 
-		final JdbcSelect jdbcSelect = SqlAstSelectInterpreter.interpret(
+		final JdbcSelect jdbcSelect = SqlSelectAstToJdbcSelectConverter.interpret(
 				interpretation,
 				shallow,
 				persistenceContext,

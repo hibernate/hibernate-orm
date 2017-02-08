@@ -15,8 +15,8 @@ import org.hibernate.persister.collection.spi.CollectionPersister;
 /**
  * @author Steve Ebersole
  */
-public interface CollectionType extends Type {
-	<O,C,E> CollectionPersister<O,C,E> getCollectionPersister();
+public interface CollectionType<O,C,E> extends Type<C> {
+	CollectionPersister<O,C,E> getCollectionPersister();
 
 	@Override
 	default Classification getClassification() {
@@ -24,7 +24,7 @@ public interface CollectionType extends Type {
 	}
 
 	@Override
-	default Class getJavaType() {
+	default Class<C> getJavaType() {
 		return getCollectionPersister().getJavaType();
 	}
 

@@ -6,14 +6,21 @@
  */
 package org.hibernate.persister.entity.spi;
 
+import javax.persistence.metamodel.IdentifiableType;
+
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.spi.PersisterCreationContext;
 
 /**
+ * Hibernate extension SPI for working with {@link IdentifiableType} implementations, which includes
+ * both mapped-superclasses {@link org.hibernate.persister.common.spi.MappedSuperclassImplementor}
+ * and {@link EntityPersister}
+ *
  * @author Steve Ebersole
  */
-public interface IdentifiableTypeImplementor<T> extends ManagedTypeImplementor<T>, javax.persistence.metamodel.IdentifiableType<T> {
+public interface IdentifiableTypeImplementor<T> extends ManagedTypeImplementor<T>, IdentifiableType<T> {
 	@Override
 	default IdentifiableTypeImplementor<? super T> getSupertype() {
 		return getSuperType();

@@ -17,10 +17,10 @@ import javax.persistence.OneToMany;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.loader.plan.build.internal.CascadeStyleLoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
+import org.hibernate.loader.plan.build.internal.NavigableVisitationStrategyCascadeStyleLoadPlanBuildingImpl;
+import org.hibernate.loader.plan.build.internal.SqlSelectPlanBuilder;
 import org.hibernate.loader.plan.build.spi.LoadPlanTreePrinter;
-import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
+import org.hibernate.loader.plan.build.spi.MetamodelDrivenSqlSelectPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.EntityFetch;
@@ -52,12 +52,12 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testSimpleBuild() {
 		EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata(Message.class);
-		FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
+		SqlSelectPlanBuilder strategy = new SqlSelectPlanBuilder(
 				sessionFactory(),
 				LoadQueryInfluencers.NONE,
 				LockMode.NONE
 		);
-		LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, ep );
+		LoadPlan plan = MetamodelDrivenSqlSelectPlanBuilder.buildRootEntityLoadPlan( strategy, ep );
 		assertFalse( plan.hasAnyScalarReturns() );
 		assertEquals( 1, plan.getReturns().size() );
 		Return rtn = plan.getReturns().get( 0 );
@@ -75,13 +75,13 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testCascadeBasedBuild() {
 		EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata(Message.class);
-		CascadeStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new CascadeStyleLoadPlanBuildingAssociationVisitationStrategy(
+		NavigableVisitationStrategyCascadeStyleLoadPlanBuildingImpl strategy = new NavigableVisitationStrategyCascadeStyleLoadPlanBuildingImpl(
 				CascadingActions.MERGE,
 				sessionFactory(),
 				LoadQueryInfluencers.NONE,
 				LockMode.NONE
 		);
-		LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, ep );
+		LoadPlan plan = MetamodelDrivenSqlSelectPlanBuilder.buildRootEntityLoadPlan( strategy, ep );
 		assertFalse( plan.hasAnyScalarReturns() );
 		assertEquals( 1, plan.getReturns().size() );
 		Return rtn = plan.getReturns().get( 0 );
@@ -99,12 +99,12 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testCollectionInitializerCase() {
 		CollectionPersister cp = sessionFactory().getCollectionPersister( Poster.class.getName() + ".messages" );
-		FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
+		SqlSelectPlanBuilder strategy = new SqlSelectPlanBuilder(
 				sessionFactory(),
 				LoadQueryInfluencers.NONE,
 				LockMode.NONE
 		);
-		LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootCollectionLoadPlan( strategy, cp );
+		LoadPlan plan = MetamodelDrivenSqlSelectPlanBuilder.buildRootCollectionLoadPlan( strategy, cp );
 		assertFalse( plan.hasAnyScalarReturns() );
 		assertEquals( 1, plan.getReturns().size() );
 		Return rtn = plan.getReturns().get( 0 );

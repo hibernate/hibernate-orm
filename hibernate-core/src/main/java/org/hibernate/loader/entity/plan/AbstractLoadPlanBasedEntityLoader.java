@@ -22,10 +22,9 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.loader.plan.build.internal.FetchGraphLoadPlanBuildingStrategy;
-import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan.build.internal.LoadGraphLoadPlanBuildingStrategy;
-import org.hibernate.loader.plan.build.spi.LoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
+import org.hibernate.loader.plan.build.internal.SqlSelectPlanBuilder;
+import org.hibernate.loader.plan.build.spi.MetamodelDrivenSqlSelectPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AbstractLoadPlanBasedLoader;
 import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
@@ -61,7 +60,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 		this.uniqueKeyType = uniqueKeyType;
 		this.entityName = entityPersister.getEntityName();
 
-		final LoadPlanBuildingAssociationVisitationStrategy strategy;
+		final SqlSelectPlanBuilderNavigableVisitor strategy;
 		if ( buildingParameters.getQueryInfluencers().getFetchGraph() != null ) {
 			strategy = new FetchGraphLoadPlanBuildingStrategy(
 					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
@@ -73,12 +72,12 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			);
 		}
 		else {
-			strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
+			strategy = new SqlSelectPlanBuilder(
 					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
 			);
 		}
 
-		final LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
+		final LoadPlan plan = MetamodelDrivenSqlSelectPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
 		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
 				plan,
 				uniqueKeyColumnNames,

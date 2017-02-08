@@ -22,8 +22,11 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.common.NavigableRole;
+import org.hibernate.persister.common.spi.ExpressableType;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.PluralPersistentAttribute;
+import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.entity.spi.EntityPersister;
@@ -78,7 +81,7 @@ import org.hibernate.type.spi.Type;
  * @author Gavin King
  */
 public interface CollectionPersister<O,C,E>
-		extends PluralPersistentAttribute<O,C,E>, TableGroupProducer, TypeExporter, EmbeddedContainer<C> {
+		extends PluralPersistentAttribute<O,C,E>, TableGroupProducer, TypeExporter<C>, EmbeddedContainer<C> {
 
 	Class[] CONSTRUCTOR_SIGNATURE = new Class[] {
 			Collection.class,
@@ -98,7 +101,15 @@ public interface CollectionPersister<O,C,E>
 
 	void finishInitialization(Collection collectionBinding, PersisterCreationContext creationContext);
 
-	String getRoleName();
+	NavigableRole getNavigableRole();
+
+	/**
+	 * @deprecated Use {@link #getNavigableRole()} instead.
+	 */
+	@Deprecated
+	default String getRoleName() {
+		return getNavigableRole().getFullPath();
+	}
 
 	CollectionKey getForeignKeyDescriptor();
 	CollectionId getIdDescriptor();
@@ -110,8 +121,9 @@ public interface CollectionPersister<O,C,E>
 	CollectionIndex getIndexReference();
 
 	@Override
-	org.hibernate.type.spi.CollectionType getOrmType();
+	org.hibernate.type.spi.CollectionType<O,C,E> getOrmType();
 
+	Table getSeparateCollectionTable();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// CollectionPersister as TableGroupProducer
@@ -163,7 +175,7 @@ public interface CollectionPersister<O,C,E>
 	/**
 	 * Get the "element" type
 	 */
-	Type getElementType();
+	ExpressableType<E> getElementType();
 	/**
 	 * Return the element class of an array, or null otherwise
 	 */
@@ -387,4 +399,5 @@ public interface CollectionPersister<O,C,E>
 	 * @return the name of the property this collection is mapped by
 	 */
 	String getMappedByProperty();
+
 }

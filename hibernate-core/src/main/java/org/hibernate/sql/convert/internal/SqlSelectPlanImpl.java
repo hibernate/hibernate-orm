@@ -11,16 +11,16 @@ import java.util.List;
 
 import org.hibernate.sql.ast.SelectQuery;
 import org.hibernate.sql.convert.results.spi.Return;
-import org.hibernate.sql.convert.spi.SqmSelectInterpretation;
+import org.hibernate.sql.convert.spi.SqlSelectPlan;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmSelectInterpretationImpl implements SqmSelectInterpretation {
+public class SqlSelectPlanImpl implements SqlSelectPlan {
 	private final SelectQuery selectQuery;
 	private final List<Return> queryReturns;
 
-	public SqmSelectInterpretationImpl(
+	public SqlSelectPlanImpl(
 			SelectQuery selectQuery,
 			List<Return> queryReturns) {
 		this.selectQuery = selectQuery;

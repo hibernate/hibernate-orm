@@ -32,7 +32,7 @@ public class BasicWalkingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testIt() {
 		EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata(Message.class);
-		MetamodelGraphWalker.visitEntity( new LoggingAssociationVisitationStrategy(), ep );
+		MetamodelGraphWalker.visitEntity( new NavigableVisitationStrategyLoggingImpl(), ep );
 	}
 
 	@Entity( name = "Message" )

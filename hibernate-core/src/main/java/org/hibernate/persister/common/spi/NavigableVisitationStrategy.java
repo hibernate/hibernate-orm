@@ -1,14 +1,46 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.persister.walking.spi;
+package org.hibernate.persister.common.spi;
 
 import org.hibernate.loader.plan.spi.FetchSource;
+import org.hibernate.persister.collection.internal.CollectionElementBasicImpl;
+import org.hibernate.persister.collection.internal.CollectionElementEntityImpl;
+import org.hibernate.persister.collection.internal.CollectionIndexBasicImpl;
+import org.hibernate.persister.collection.spi.CollectionElementBasic;
+import org.hibernate.persister.collection.spi.CollectionElementEmbedded;
+import org.hibernate.persister.collection.spi.CollectionElementEntity;
+import org.hibernate.persister.collection.spi.CollectionIndexBasic;
+import org.hibernate.persister.collection.spi.CollectionIndexEmbedded;
+import org.hibernate.persister.collection.spi.CollectionIndexEntity;
+import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.persister.common.internal.SingularPersistentAttributeBasic;
+import org.hibernate.persister.common.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
+import org.hibernate.persister.entity.spi.EntityHierarchy;
+import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.entity.spi.RowIdDescriptor;
+import org.hibernate.persister.entity.spi.VersionDescriptor;
+import org.hibernate.persister.walking.spi.AnyMappingDefinition;
+import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AssociationKey;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
+import org.hibernate.persister.walking.spi.CollectionDefinition;
+import org.hibernate.persister.walking.spi.CollectionElementDefinition;
+import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
+import org.hibernate.persister.walking.spi.CompositionDefinition;
+import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 
 /**
+ * Visitation strategy for walking Hibernate's Navigable graph trees.  Following visitor pattern
+ * this contract would serve the role of visitor which each node accepts.
+ *
+ *
  * Strategy for walking associations as defined by the Hibernate metamodel.  Is essentially a callback listener for
  * interesting events while walking a metamodel graph
  * <p/>
@@ -20,16 +52,87 @@ import org.hibernate.loader.plan.spi.FetchSource;
  *
  * @author Steve Ebersole
  */
-public interface AssociationVisitationStrategy {
+public interface NavigableVisitationStrategy {
+	// todo (6.0) : use listener approach or visitor approach here?
+	//		currently this contract leverages the "listener" approach to graph walking, whereas in all other places we
+	//		leverage visitors.  A listener has certain usefulness here, but considering we so need the capability to
+	//		sometimes skip the processing of children - I think visitor may still be the best choice here
+
+	// todo (6.0) : many methods here deal with internal types - we need to develop API/SPI counterparts to these
+	//		^^ API if we want to allow applications to use this - maybe something like:
+	//		Session#visit(String entityName, NavigableVisitationStrategy visitor)
+	//		Session#visit(Class entityJavaType, NavigableVisitationStrategy visitor)
+
+	@Deprecated
+	default void start() {
+		prepareForVisitation();
+	}
+
 	/**
 	 * Notification we are preparing to start visitation.
 	 */
-	public void start();
+	void prepareForVisitation();
+
+	@Deprecated
+	default void finish() {
+		visitationComplete();
+	}
 
 	/**
 	 * Notification we are finished visitation.
 	 */
-	public void finish();
+	void visitationComplete();
+
+	/**
+	 * Should only happen as a root
+	 */
+	<J> void visitNoInheritanceEntity(EntityPersister<J> persister);
+
+	/**
+	 * Should only happen as a root
+	 */
+	<J> void visitDiscriminatedInheritanceEntity(EntityPersister<J> persister);
+
+	/**
+	 * Should only happen as a root
+	 */
+	<J> void visitJoinedInheritanceEntity(EntityPersister<J> persister);
+
+	/**
+	 * Should only happen as a root
+	 */
+	<J> void visitUnionInheritanceEntity(EntityPersister<J> persister);
+
+	<J> void visitSimpleIdentifier(EntityHierarchy hierarchy, SingularPersistentAttribute<?,J> idAttribute);
+
+	<J> void visitNonAggregatedCompositeIdentifier(EntityHierarchy hierarchy, EmbeddedPersister<J> embeddedPersister);
+
+	<J> void visitAggregatedCompositeIdentifier(EntityHierarchy hierarchy, EmbeddedPersister<J> embeddedPersister);
+
+	<O, J> void visitVersion(VersionDescriptor versionDescriptor);
+
+	<O, J> void visitRowId(RowIdDescriptor<O, J> rowIdDescriptor);
+
+
+	<O,J> void visitSingularAttributeBasic(SingularPersistentAttributeBasic<O,J> attribute);
+	<O,J> void visitSingularAttributeEmbedded(SingularPersistentAttributeEmbedded<O,J> attribute);
+	<O,J> void visitSingularAttributeEntity(SingularPersistentAttributeEntity<O,J> attribute);
+
+	// todo (6.0) : differentiate between many-to-one, one-to-one and element-collection?
+	//		the difficulty with that is that associations are actually relative
+	//		to element and index, not the collection itself, even though JPA and Hibernate (historically)
+	//		represented it that way.
+	<O,C,E> void visitPluralAttribute(CollectionPersister<O,C,E> pluralAttribute);
+
+	<J> void visitCollectionElementBasic(CollectionElementBasic<J> element);
+	<J> void visitCollectionElementEmbedded(CollectionElementEmbedded<J> element);
+	<J> void visitCollectionElementEntity(CollectionElementEntity<J> element);
+
+	<J> void visitCollectionIndexBasic(CollectionIndexBasic<J> index);
+	<J> void visitCollectionIndexEmbedded(CollectionIndexEmbedded<J> index);
+	<J> void visitCollectionIndexEntity(CollectionIndexEntity<J> index);
+
+
 
 	/**
 	 * Notification we are starting to walk an entity.

@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.sql.ast.expression.Expression;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sqm.Helper;
 
 /**
@@ -71,7 +71,7 @@ public class InListPredicate implements Predicate {
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter sqlTreeWalker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter sqlTreeWalker) {
 		sqlTreeWalker.visitInListPredicate( this );
 	}
 }

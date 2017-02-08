@@ -18,6 +18,5 @@ import org.hibernate.type.converter.spi.AttributeConverterDefinition;
  * @author Steve Ebersole
  */
 public interface ConvertibleNavigable<T> extends Navigable<T> {
-	void injectAttributeConverter(AttributeConverterDefinition converter);
 	Optional<AttributeConverterDefinition> getAttributeConverter();
 }

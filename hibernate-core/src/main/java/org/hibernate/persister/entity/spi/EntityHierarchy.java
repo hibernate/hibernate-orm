@@ -24,16 +24,16 @@ public interface EntityHierarchy {
 	 *
 	 * @return The root entity for this hierarchy.
 	 */
-	EntityPersister getRootEntityPersister();
+	<J> EntityPersister<J> getRootEntityPersister();
 
 	InheritanceStrategy getInheritanceStrategy();
 
 	EntityMode getEntityMode();
 
-	IdentifierDescriptor getIdentifierDescriptor();
-	DiscriminatorDescriptor getDiscriminatorDescriptor();
-	VersionDescriptor getVersionDescriptor();
-	RowIdDescriptor getRowIdDescriptor();
+	<O,J> IdentifierDescriptor<O,J> getIdentifierDescriptor();
+	<O,J> DiscriminatorDescriptor<O,J>  getDiscriminatorDescriptor();
+	<O,J> VersionDescriptor<O,J>  getVersionDescriptor();
+	<O,J> RowIdDescriptor<O,J>  getRowIdDescriptor();
 	OptimisticLockStyle getOptimisticLockStyle();
 	TenantDiscrimination getTenantDiscrimination();
 

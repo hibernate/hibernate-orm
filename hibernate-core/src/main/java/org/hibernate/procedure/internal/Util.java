@@ -43,7 +43,7 @@ import org.hibernate.sql.exec.results.process.internal.SqlSelectionImpl;
 import org.hibernate.sql.exec.results.process.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sqm.query.expression.Compatibility;
 import org.hibernate.type.spi.BasicType;
 
@@ -296,7 +296,7 @@ public class Util {
 								}
 
 								@Override
-								public void accept(SqlAstSelectInterpreter interpreter) {
+								public void accept(SqlSelectAstToJdbcSelectConverter interpreter) {
 									throw new HibernateException( "Unexpected call to SqlSelectable#accept as part of procedure/native query Return" );
 								}
 							},

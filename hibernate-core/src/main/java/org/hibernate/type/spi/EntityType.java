@@ -14,11 +14,16 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 /**
  * @author Steve Ebersole
  */
-public interface EntityType extends IdentifiableType, SqmDomainTypeEntity {
-	EntityPersister getEntityPersister();
+public interface EntityType<E> extends IdentifiableType<E>, SqmDomainTypeEntity {
+	EntityPersister<E> getEntityPersister();
 
 	@Override
-	EntityJavaDescriptor getJavaTypeDescriptor();
+	EntityJavaDescriptor<E> getJavaTypeDescriptor();
+
+	@Override
+	default Class<E> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
 
 	default String getEntityName() {
 		return getJavaTypeDescriptor().getEntityName();

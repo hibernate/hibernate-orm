@@ -6,12 +6,14 @@
  */
 package org.hibernate.sql.convert.results.spi;
 
+import org.hibernate.loader.plan.spi.CollectionFetchableIndex;
+
 /**
  * A collection index which is fetchable and is therefore also a {@link FetchParent}.
  *
  * @author Steve Ebersole
  */
-public interface FetchableCollectionIndex extends FetchParent {
+public interface FetchableCollectionIndex extends FetchParent, CollectionFetchableIndex {
 	/**
 	 * Reference back to the collection to which this index belongs
 	 *

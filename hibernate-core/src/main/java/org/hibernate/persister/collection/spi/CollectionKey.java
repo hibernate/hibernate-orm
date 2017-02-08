@@ -4,19 +4,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.persister.collection.spi;
 
 import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.persister.collection.AbstractCollectionPersister;
-import org.hibernate.persister.collection.internal.CollectionElementEntity;
+import org.hibernate.mapping.Collection;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
-import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.persister.common.spi.Table;
+import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.spi.Type;
@@ -31,21 +29,23 @@ public class CollectionKey implements TypeExporter {
 	//		can work with any ImprovedCollectionPersister (interface) impl
 
 	private final AbstractCollectionPersister collectionPersister;
+	private final Type keyType;
 
 	private List<JoinColumnMapping> joinColumnMappings;
 
-	public CollectionKey(AbstractCollectionPersister collectionPersister) {
+	public CollectionKey(AbstractCollectionPersister<?,?,?> collectionPersister, Collection mappingBinding) {
 		this.collectionPersister = collectionPersister;
+		this.keyType = mappingBinding.getKey().getType();
 	}
 
 	@Override
 	public Type getOrmType() {
-		return collectionPersister.getOrmType();
+		return keyType;
 	}
 
 	public List<JoinColumnMapping> getJoinColumnMappings() {
 		if ( joinColumnMappings == null ) {
-			joinColumnMappings = collectionPersister.getAttributeContainer().resolveJoinColumnMappings(
+			joinColumnMappings = collectionPersister.getSource().resolveJoinColumnMappings(
 					collectionPersister );
 		}
 		return joinColumnMappings;
@@ -104,7 +104,7 @@ public class CollectionKey implements TypeExporter {
 		}
 		else {
 			// otherwise we just need to resolve the column names in the element table(s) (as the "collection table")
-			final EntityPersister elementPersister = ( (CollectionElementEntity) collectionPersister.getElementReference() ).getElementPersister();
+			final EntityPersister elementPersister = ( (CollectionElementEntity) collectionPersister.getElementReference() ).getEntityPersister();
 
 			for ( int i = 0; i < columnNames.length; i++ ) {
 				// it is conceivable that the column already exists

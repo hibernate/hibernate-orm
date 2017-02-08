@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.ast.predicate;
 
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 
 /**
  * @author Steve Ebersole
@@ -29,7 +29,7 @@ public class GroupedPredicate implements Predicate {
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter sqlTreeWalker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter sqlTreeWalker) {
 		sqlTreeWalker.visitGroupedPredicate( this );
 	}
 }

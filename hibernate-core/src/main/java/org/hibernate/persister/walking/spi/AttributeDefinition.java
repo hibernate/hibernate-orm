@@ -9,8 +9,13 @@ package org.hibernate.persister.walking.spi;
 import org.hibernate.type.spi.Type;
 
 /**
+ * This should be Navigable / NavigableSource (instead of AttributeDefinition / AttributeSource).
+ *
+ *
+ *
  * @author Steve Ebersole
  */
+@Deprecated
 public interface AttributeDefinition {
 	public AttributeSource getSource();
 	public String getName();

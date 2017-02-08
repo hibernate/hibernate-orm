@@ -37,6 +37,11 @@ public interface Type<T> extends org.hibernate.type.Type<T>, SqmDomainType {
 	@Override
 	JavaTypeDescriptor<T> getJavaTypeDescriptor();
 
+	@Override
+	default Class<T> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
+
 	/**
 	 * Returns the abbreviated name of the Type.  Supported usage is for short-name
 	 * referencing of the Type in {@code hbm.xml} mappings.

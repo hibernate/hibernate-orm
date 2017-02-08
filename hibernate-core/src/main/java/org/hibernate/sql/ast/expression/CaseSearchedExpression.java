@@ -18,7 +18,7 @@ import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sql.exec.results.process.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 
@@ -63,7 +63,7 @@ public class CaseSearchedExpression implements Expression, SqlSelectable, Select
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter walker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
 		walker.visitCaseSearchedExpression( this );
 	}
 

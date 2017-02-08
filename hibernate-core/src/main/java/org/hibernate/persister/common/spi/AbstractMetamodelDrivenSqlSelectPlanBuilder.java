@@ -1,29 +1,29 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.loader.plan.build.internal;
+package org.hibernate.persister.common.spi;
 
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.build.internal.returns.CollectionReturnImpl;
 import org.hibernate.loader.plan.build.internal.returns.EntityReturnImpl;
-import org.hibernate.loader.plan.build.internal.spaces.QuerySpacesImpl;
 import org.hibernate.loader.plan.build.spi.ExpandingEntityIdentifierDescription;
 import org.hibernate.loader.plan.build.spi.ExpandingFetchSource;
 import org.hibernate.loader.plan.build.spi.ExpandingQuerySpaces;
-import org.hibernate.loader.plan.build.spi.LoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan.build.spi.LoadPlanBuildingContext;
 import org.hibernate.loader.plan.spi.AttributeFetch;
 import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
 import org.hibernate.loader.plan.spi.CollectionFetchableElement;
@@ -37,7 +37,11 @@ import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.loader.plan.spi.Return;
+import org.hibernate.persister.collection.spi.CollectionElementBasic;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.entity.spi.IdentifiableTypeImplementor;
+import org.hibernate.persister.entity.spi.IdentifierDescriptor;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
@@ -50,12 +54,26 @@ import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
+import org.hibernate.sql.ast.QuerySpec;
+import org.hibernate.sql.ast.SelectQuery;
+import org.hibernate.sql.ast.from.TableGroup;
+import org.hibernate.sql.ast.from.TableSpace;
+import org.hibernate.sql.convert.internal.FromClauseIndex;
+import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
+import org.hibernate.sql.convert.internal.SqlSelectPlanImpl;
+import org.hibernate.sql.convert.results.spi.FetchParent;
+import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
+import org.hibernate.sql.convert.spi.Callback;
+import org.hibernate.sql.convert.spi.SqlSelectPlan;
+import org.hibernate.sql.convert.spi.Stack;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 import org.jboss.logging.MDC;
 
 /**
+ * Abstract SqlSelectPlanBuilder implementation to help implementors.
+
  * A LoadPlanBuildingAssociationVisitationStrategy is a strategy for building a LoadPlan.
  * LoadPlanBuildingAssociationVisitationStrategy is also a AssociationVisitationStrategy, which is used in
  * conjunction with visiting associations via walking metamodel definitions.
@@ -66,44 +84,207 @@ import org.jboss.logging.MDC;
  *
  * @author Steve Ebersole
  *
- * @see org.hibernate.loader.plan.build.spi.LoadPlanBuildingAssociationVisitationStrategy
- * @see org.hibernate.persister.walking.spi.AssociationVisitationStrategy
+ * @see MetamodelDrivenSqlSelectPlanBuilder
+ * @see NavigableVisitationStrategy
  */
-public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
-		implements LoadPlanBuildingAssociationVisitationStrategy, LoadPlanBuildingContext {
-	private static final Logger log = Logger.getLogger( AbstractLoadPlanBuildingAssociationVisitationStrategy.class );
-	private static final String MDC_KEY = "hibernateLoadPlanWalkPath";
+public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
+		implements MetamodelDrivenSqlSelectPlanBuilder, SqlSelectPlanBuildingContext, ReturnResolutionContext {
+	private static final Logger log = Logger.getLogger( AbstractMetamodelDrivenSqlSelectPlanBuilder.class );
+	private static final String MDC_KEY = "hibernateSqlSelectPlanWalkPath";
 
-	private final SessionFactoryImplementor sessionFactory;
-	private final QuerySpacesImpl querySpaces;
+	private final SqlSelectPlanBuildingContext buildingContext;
+	private final LoadQueryInfluencers loadQueryInfluencers;
+	private final LockOptions lockOptions;
+
+
+	// todo (6.0) : see org.hibernate.sql.convert.spi.SqmSelectToSqlAstConverter.
+	// todo (6.0) : would also be good to share as much as possible with SqmSelectToSqlAstConverter
+
+	// essentially this needs to combine the ideas from SqmSelectToSqlAstConverter and the LoadPlan
+	// 		builders.  May also need ideas from org.hibernate.sqm.parser.hql.internal.SemanticQueryBuilder
+	//		from SQM (QuerySpecProcessingState, stacks, etc)
+
+	// todo (6.0) : do we need a stack of QuerySpecs?
+
+	private final FromClauseIndex fromClauseIndex = new FromClauseIndex();
+	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
+//	private final Stack<Clause> currentClauseStack = new Stack<>();
+//	private final Stack<QuerySpec> querySpecStack = new Stack<>();
+//	private final Stack<NavigableSource<?>> navigableSourceStack = new Stack<>();
+	private QuerySpec querySpec;
+	private TableSpace tableSpace;
+
+	private org.hibernate.sql.convert.results.spi.Return queryReturn;
+
 
 	private final PropertyPathStack propertyPathStack = new PropertyPathStack();
+
+
+	private final Stack<FetchParent> fetchParentStack = new Stack<>();
+	private final Stack<TableGroup> fetchLhsTableGroupStack = new Stack<>();
+
 
 	private final ArrayDeque<ExpandingFetchSource> fetchSourceStack = new ArrayDeque<ExpandingFetchSource>();
 
 	/**
-	 * Constructs an AbstractLoadPlanBuildingAssociationVisitationStrategy.
 	 *
-	 * @param sessionFactory The session factory.
+	 * @param buildingContext Parameter object providing access to information needede
+	 * 		during plan building
+	 * @param loadQueryInfluencers Any options that influence load queries (entity graphs, fetch
+	 * 		profiles, filters, etc)
+	 * @param lockOptions The requested locking profile
 	 */
-	protected AbstractLoadPlanBuildingAssociationVisitationStrategy(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
-		this.querySpaces = new QuerySpacesImpl( sessionFactory );
+	public AbstractMetamodelDrivenSqlSelectPlanBuilder(
+			SqlSelectPlanBuildingContext buildingContext,
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions) {
+		this.buildingContext = buildingContext;
+		this.loadQueryInfluencers = loadQueryInfluencers;
+		this.lockOptions = lockOptions;
+
+		this.querySpec = new QuerySpec();
+		this.tableSpace = querySpec.getFromClause().makeTableSpace();
+	}
+
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return buildingContext.getSessionFactory();
 	}
 
 	/**
-	 * Gets the session factory.
-	 *
-	 * @return The session factory.
+	 * @deprecated Use {@link #getSessionFactory()} instead.
 	 */
+	@Deprecated
 	protected SessionFactoryImplementor sessionFactory() {
-		return sessionFactory;
+		return getSessionFactory();
 	}
+
+	@Override
+	public Callback getCallback() {
+		return buildingContext.getCallback();
+	}
+
+	@Override
+	public SqlSelectPlan buildSqlSelectPlan(NavigableSource rootNavigable) {
+		// rootNavigable should be either
+		// 		1) an IdentifiableTypeImplementor (Entity or MappedSuperclass)
+		// 		2) a CollectionPersister
+		assert rootNavigable instanceof IdentifiableTypeImplementor
+				|| rootNavigable instanceof CollectionPersister;
+
+		prepareForVisitation();
+
+		try {
+			propertyPathStack.push( rootNavigable );
+
+			try {
+				final TableGroup tableGroup = rootNavigable.buildTableGroup(
+						tableSpace,
+						sqlAliasBaseManager,
+						fromClauseIndex
+				);
+
+				// * resolve SqlSelections
+				// * create Return and Fetches
+
+
+				queryReturn = rootNavigable.generateReturn( this, tableGroup );
+
+				// finally visit any potential fetches
+				visitNavigables( rootNavigable, (FetchParent) queryReturn, tableGroup );
+			}
+			finally {
+				propertyPathStack.pop();
+			}
+		}
+		finally {
+			visitationComplete();
+		}
+
+		return new SqlSelectPlanImpl(
+				new SelectQuery( querySpec ),
+				Collections.singletonList( queryReturn )
+		);
+	}
+
+	@Override
+	public void prepareForVisitation() {
+		if ( !fetchParentStack.isEmpty() || !fetchLhsTableGroupStack.isEmpty() ) {
+			throw new IllegalStateException(
+					"MetamodelDrivenSqlSelectPlanBuilder [" + this + "] is not in proper state to begin visitation"
+			);
+		}
+	}
+
+	@Override
+	public void visitationComplete() {
+		propertyPathStack.clear();
+
+		if ( !fetchParentStack.isEmpty() ) {
+			log.debug( "fetchParentStack was not empty upon completion of visitation; un-matched push and pop?" );
+			fetchParentStack.clear();
+		}
+		if ( !fetchLhsTableGroupStack.isEmpty() ) {
+			log.debug( "fetchLhsTableGroupStack was not empty upon completion of visitation; un-matched push and pop?" );
+			fetchLhsTableGroupStack.clear();
+		}
+	}
+
+
+	private void visitNavigables(
+			NavigableSource navigableSource,
+			FetchParent fetchParent,
+			TableGroup tableGroup) {
+		fetchParentStack.push( fetchParent );
+		fetchLhsTableGroupStack.push( tableGroup );
+
+		try {
+			navigableSource.visitNavigables( this );
+		}
+		finally {
+			fetchLhsTableGroupStack.pop();
+			fetchParentStack.pop();
+		}
+	}
+
+	interface CompositeEntityIdentifierVisitor {
+		void visitKeyAttribute();
+		void visitKeyManyToOne();
+	}
+
+	public void visitEntityIdentifier(IdentifierDescriptor entityIdentifier) {
+		propertyPathStack.push( entityIdentifier );
+
+		try {
+			if ( entityIdentifier instanceof NavigableSource ) {
+
+			}
+		}
+		finally {
+			propertyPathStack.pop();
+		}
+	}
+
+	public void visitCollectionElementBasic(CollectionElementBasic collectionElementBasic) {
+
+	}
+
+	protected abstract void addRootReturn(Return rootReturn);
+
+
+
+
+
 
 	@Override
 	public ExpandingQuerySpaces getQuerySpaces() {
 		return querySpaces;
 	}
+
+
+
+
+
 
 
 	// stack management ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -124,29 +305,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	protected ExpandingFetchSource currentSource() {
 		return fetchSourceStack.peekFirst();
 	}
-
-	// top-level AssociationVisitationStrategy hooks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public void start() {
-		if ( ! fetchSourceStack.isEmpty() ) {
-			throw new WalkingException(
-					"Fetch owner stack was not empty on start; " +
-							"be sure to not use LoadPlanBuilderStrategy instances concurrently"
-			);
-		}
-		propertyPathStack.push( new PropertyPath() );
-	}
-
-	@Override
-	public void finish() {
-		propertyPathStack.pop();
-		MDC.remove( MDC_KEY );
-		fetchSourceStack.clear();
-	}
-
-
-	protected abstract void addRootReturn(Return rootReturn);
 
 
 	// Entity-level AssociationVisitationStrategy hooks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -892,34 +1050,51 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		return false;
 	}
 
-	// LoadPlanBuildingContext impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory();
-	}
 
 	/**
-	 * Maintains stack information for the property paths we are processing for logging purposes.  Because of the
-	 * recursive calls it is often useful (while debugging) to be able to see the "property path" as part of the
-	 * logging output.
+	 * Specialized stack implementation which simultaneously manages the stack of
+	 * PropertyPath references as well as the logging MDC value based on the current
+	 * PropertyPath node.
+	 * <p/>
+	 * Due to the recursive calls needed for processing a Navigable graph it is generally
+	 * beneficial to see exactly where we are in the graph walking as part of log messages.
+	 * This MDC hook provides this capability.
 	 */
 	public static class PropertyPathStack {
-		private ArrayDeque<PropertyPath> pathStack = new ArrayDeque<PropertyPath>();
+		private ArrayDeque<PropertyPath> internalStack = new ArrayDeque<>();
 
-		public void push(PropertyPath path) {
-			pathStack.addFirst( path );
-			MDC.put( MDC_KEY, extractFullPath( path ) );
-		}
+		public void push(Navigable navigable) {
+			assert navigable != null;
 
-		private String extractFullPath(PropertyPath path) {
-			return path == null ? "<no-path>" : path.getFullPath();
+			final PropertyPath propertyPath;
+			if ( internalStack.isEmpty() ) {
+				propertyPath = new PropertyPath( navigable.getNavigableName() );
+			}
+			else {
+				propertyPath = internalStack.peekFirst().append( navigable.getNavigableName() );
+			}
+			internalStack.addFirst( propertyPath );
+
+			MDC.put( MDC_KEY, propertyPath.getFullPath() );
 		}
 
 		public void pop() {
-			pathStack.removeFirst();
-			PropertyPath newHead = pathStack.peekFirst();
-			MDC.put( MDC_KEY, extractFullPath( newHead ) );
+			assert !internalStack.isEmpty();
+
+			internalStack.removeFirst();
+
+			final PropertyPath newHead = internalStack.peekFirst();
+			final String mdcRep = newHead == null ? "<no-path>" : newHead.getFullPath();
+			MDC.put( MDC_KEY, mdcRep );
+		}
+
+		public void clear() {
+			MDC.remove( MDC_KEY );
+
+			if ( !internalStack.isEmpty() ) {
+				log.debug( "propertyPathStack not empty upon completion of visitation; mis-matched push/pop?" );
+				internalStack.clear();
+			}
 		}
 	}
 }

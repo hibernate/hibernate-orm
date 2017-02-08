@@ -14,7 +14,7 @@ import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.DomainReferenceImplementor;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.select.Selectable;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 
 /**
  * A TableSpecificationGroup for a collection reference
@@ -44,12 +44,12 @@ public class CollectionTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter walker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
 		throw new NotYetImplementedException(  );
 	}
 
 	@Override
-	public DomainReferenceImplementor getDomainReference() {
+	public DomainReferenceImplementor getNavigable() {
 		// todo : element?
 		return persister.getElementReference();
 	}

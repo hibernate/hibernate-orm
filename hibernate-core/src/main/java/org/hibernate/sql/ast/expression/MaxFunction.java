@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.ast.expression;
 
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -19,7 +19,7 @@ public class MaxFunction extends AbstractAggregateFunction implements AggregateF
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter walker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
 		walker.visitMaxFunction( this );
 	}
 }

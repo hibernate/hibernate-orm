@@ -11,6 +11,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -32,9 +33,9 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
-		extends AbstractLoadPlanBuildingAssociationVisitationStrategy {
-	private static final Logger log = CoreLogging.logger( FetchStyleLoadPlanBuildingAssociationVisitationStrategy.class );
+public class SqlSelectPlanBuilder
+		extends AbstractMetamodelDrivenSqlSelectPlanBuilder {
+	private static final Logger log = CoreLogging.logger( SqlSelectPlanBuilder.class );
 
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final LockMode lockMode;
@@ -51,9 +52,10 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 	 * @param loadQueryInfluencers The options which can influence the SQL query needed to perform the load.
 	 * @param lockMode The lock mode.
 	 */
-	public FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
+	public SqlSelectPlanBuilder(
 			SessionFactoryImplementor sessionFactory,
 			LoadQueryInfluencers loadQueryInfluencers,
+			CascadingAction cascadeActionToMatch,
 			LockMode lockMode) {
 		super( sessionFactory );
 		this.loadQueryInfluencers = loadQueryInfluencers;

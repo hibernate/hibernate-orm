@@ -16,6 +16,9 @@ package org.hibernate.loader.plan.spi;
  * @see CollectionReturn
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link org.hibernate.sql.convert.results.spi.Return}
  */
+@Deprecated
 public interface Return {
 }

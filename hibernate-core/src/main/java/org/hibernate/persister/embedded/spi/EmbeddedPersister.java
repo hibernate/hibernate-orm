@@ -39,7 +39,9 @@ public interface EmbeddedPersister<T>
 			Component embeddableBinding,
 			PersisterCreationContext creationContext);
 
-	String getRoleName();
+	default String getRoleName() {
+		return getNavigableRole().getFullPath();
+	}
 
 	List<Column> collectColumns();
 

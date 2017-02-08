@@ -8,10 +8,10 @@
 package org.hibernate.sql.convert.results.internal;
 
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.expression.domain.NavigablePath;
 import org.hibernate.sql.convert.results.spi.EntityIdentifierReference;
 import org.hibernate.sql.convert.results.spi.FetchEntityAttribute;
 import org.hibernate.sql.convert.results.spi.FetchParent;
@@ -34,11 +34,12 @@ public class FetchEntityAttributeImpl extends AbstractFetchParent implements Fet
 
 	public FetchEntityAttributeImpl(
 			FetchParent fetchParent,
-			PropertyPath propertyPath,
+			NavigablePath navigablePath,
 			String tableGroupUid,
 			SingularPersistentAttributeEntity fetchedAttribute,
-			EntityPersister entityPersister, FetchStrategy fetchStrategy) {
-		super( propertyPath, tableGroupUid );
+			EntityPersister entityPersister,
+			FetchStrategy fetchStrategy) {
+		super( navigablePath, tableGroupUid );
 		this.fetchParent = fetchParent;
 		this.fetchedAttribute = fetchedAttribute;
 		this.entityPersister = entityPersister;

@@ -28,6 +28,6 @@ public class KeyManyToOneWalkingTest extends BaseCoreFunctionalTestCase {
 		// Address has a composite id with a bi-directional key-many to Person
 		final EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata( Address.class );
 
-		MetamodelGraphWalker.visitEntity( new LoggingAssociationVisitationStrategy(), ep );
+		MetamodelGraphWalker.visitEntity( new NavigableVisitationStrategyLoggingImpl(), ep );
 	}
 }

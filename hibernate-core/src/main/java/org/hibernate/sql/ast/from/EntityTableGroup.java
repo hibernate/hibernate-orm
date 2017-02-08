@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.expression.domain.EntityReferenceExpression;
 import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 
 /**
  * A TableSpecificationGroup for an entity reference
@@ -67,7 +67,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter walker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
 		// todo : need a way to resolve ColumnBinding[] to SqlSelectable[]
 		// walking a TableGroup as an Expression is likely wrong
 		//throw new IllegalStateException( "Cannot treat TableGroup as Expression" );
@@ -76,7 +76,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	}
 
 	@Override
-	public DomainReferenceImplementor getDomainReference() {
+	public DomainReferenceImplementor getNavigable() {
 		return persister;
 	}
 
@@ -86,7 +86,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 			selectableExpression = new EntityReferenceExpression(
 					this,
 					persister,
-					getPropertyPath(),
+					getNavigablePath(),
 					// todo : (vv) shallow
 					false
 			);

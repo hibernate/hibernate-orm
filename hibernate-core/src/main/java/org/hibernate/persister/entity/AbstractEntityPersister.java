@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.metamodel.Bindable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
@@ -101,10 +103,13 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.internal.PersisterHelper;
+import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
+import org.hibernate.persister.entity.internal.AbstractIdentifiableType;
 import org.hibernate.persister.entity.internal.EntityHierarchyImpl;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.IdentifiableTypeImplementor;
+import org.hibernate.persister.entity.spi.IdentifierDescriptor;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -118,6 +123,7 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
+import org.hibernate.sqm.domain.type.SqmDomainTypeEntity;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
@@ -127,6 +133,8 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.TypeHelper;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
@@ -139,9 +147,11 @@ import org.hibernate.type.spi.VersionSupport;
  *
  * @author Gavin King
  */
-public abstract class AbstractEntityPersister
-		implements OuterJoinLoadable, Queryable, ClassMetadata, UniqueKeyLoadable,
-				SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable {
+public abstract class AbstractEntityPersister<T>
+		extends AbstractIdentifiableType<T>
+		implements EntityPersister<T>, SqmDomainTypeEntity<T> {
+//		implements OuterJoinLoadable, Queryable, ClassMetadata, UniqueKeyLoadable,
+//				SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
 
@@ -3986,6 +3996,12 @@ public abstract class AbstractEntityPersister
 		return entityHierarchy;
 	}
 
+	@Override
+	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
+		getHierarchy().getIdentifierDescriptor().visitNavigable( visitor );
+		super.visitDeclaredNavigables( visitor );
+	}
+
 	//needed by subclasses to override the createLoader strategy
 	protected Map getLoaders() {
 		return loaders;
@@ -5358,5 +5374,51 @@ public abstract class AbstractEntityPersister
 		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
 			throw new HibernateException( "Illegal attempt to build cache entry for non-cached entity" );
 		}
+	}
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// New contracts
+
+
+	@Override
+	public EntityJavaDescriptor<T> getJavaTypeDescriptor() {
+		return (EntityJavaDescriptor<T>) super.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public Bindable.BindableType getBindableType() {
+		return Bindable.BindableType.ENTITY_TYPE;
+	}
+
+	@Override
+	public Class<T> getBindableJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	@Override
+	public javax.persistence.metamodel.Type.PersistenceType getPersistenceType() {
+		return javax.persistence.metamodel.Type.PersistenceType.ENTITY;
+	}
+
+	@Override
+	public SqmDomainTypeEntity getExportedDomainType() {
+		return this;
+	}
+
+	@Override
+	public String asLoggableText() {
+		return "EntityPersister(`" + getEntityName() + "`)";
+	}
+
+	@Override
+	public IdentifierDescriptor getIdentifierDescriptor() {
+		return null;
+	}
+
+	@Override
+	public BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
+		return null;
 	}
 }

@@ -14,6 +14,7 @@ import org.hibernate.type.CollectionType;
  *
  * @author Steve Ebersole
  */
+@Deprecated
 public interface CollectionAttributeFetch extends AttributeFetch, CollectionReference {
 	/**
 	 * Get the Hibernate Type that describes the fetched attribute as a {@link CollectionType}.

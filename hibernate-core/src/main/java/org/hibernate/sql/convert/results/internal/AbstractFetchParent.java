@@ -10,8 +10,9 @@ package org.hibernate.sql.convert.results.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.hibernate.loader.PropertyPath;
+import org.hibernate.sql.ast.expression.domain.NavigablePath;
 import org.hibernate.sql.convert.results.spi.Fetch;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.exec.results.process.spi.InitializerCollector;
@@ -20,19 +21,19 @@ import org.hibernate.sql.exec.results.process.spi.InitializerCollector;
  * @author Steve Ebersole
  */
 public abstract class AbstractFetchParent implements FetchParent {
-	private final PropertyPath propertyPath;
+	private final NavigablePath navigablePath;
 	private final String tableGroupUid;
 
 	private List<Fetch> fetches;
 
-	public AbstractFetchParent(PropertyPath propertyPath, String tableGroupUid) {
-		this.propertyPath = propertyPath;
+	public AbstractFetchParent(NavigablePath navigablePath, String tableGroupUid) {
+		this.navigablePath = navigablePath;
 		this.tableGroupUid = tableGroupUid;
 	}
 
 	@Override
-	public PropertyPath getPropertyPath() {
-		return propertyPath;
+	public NavigablePath getNavigablePath() {
+		return navigablePath;
 	}
 
 	@Override
@@ -49,9 +50,11 @@ public abstract class AbstractFetchParent implements FetchParent {
 		fetches.add( fetch );
 	}
 
+
 	@Override
 	public List<Fetch> getFetches() {
-		return fetches == null ? Collections.emptyList() : Collections.unmodifiableList( fetches );
+		final List<Fetch> base = fetches == null ? Collections.emptyList() : Collections.unmodifiableList( fetches );
+		return base.stream().collect( Collectors.toList() );
 	}
 
 	protected void addFetchInitializers(InitializerCollector collector) {

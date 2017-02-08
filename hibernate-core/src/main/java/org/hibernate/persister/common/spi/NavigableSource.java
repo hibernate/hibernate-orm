@@ -21,4 +21,8 @@ public interface NavigableSource<T> extends Navigable<T>, SqmNavigableSource {
 	//		but that requires splitting SingularAttributeEntity into interface/impl
 	//		and moving the interface into SPI
 	List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute);
+
+	void visitNavigables(NavigableVisitationStrategy visitor);
+
+	void visitDeclaredNavigables(NavigableVisitationStrategy visitor);
 }

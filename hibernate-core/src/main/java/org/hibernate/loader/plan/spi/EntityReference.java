@@ -13,6 +13,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
  *
  * @author Steve Ebersole
  */
+@Deprecated
 public interface EntityReference extends FetchSource {
 
 	/**

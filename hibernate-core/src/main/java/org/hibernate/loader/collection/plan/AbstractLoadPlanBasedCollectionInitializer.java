@@ -18,15 +18,15 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.collection.CollectionInitializer;
-import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
+import org.hibernate.loader.plan.build.internal.SqlSelectPlanBuilder;
+import org.hibernate.loader.plan.build.spi.MetamodelDrivenSqlSelectPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AbstractLoadPlanBasedLoader;
 import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
-import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.sql.convert.spi.SqlSelectPlan;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -51,14 +51,14 @@ public abstract class AbstractLoadPlanBasedCollectionInitializer
 				? new LockOptions( buildingParameters.getLockMode() )
 				: buildingParameters.getLockOptions();
 
-		final FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy =
-				new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
+		final SqlSelectPlanBuilder strategy =
+				new SqlSelectPlanBuilder(
 						collectionPersister.getFactory(),
 						buildingParameters.getQueryInfluencers(),
 						this.lockOptions.getLockMode()
 		);
 
-		final LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootCollectionLoadPlan( strategy, collectionPersister );
+		final SqlSelectPlan plan = MetamodelDrivenSqlSelectPlanBuilder.buildRootCollectionLoadPlan( strategy, collectionPersister );
 		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeCollectionLoadQueryDetails(
 				collectionPersister,
 				plan,

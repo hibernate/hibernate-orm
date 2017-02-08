@@ -6,9 +6,14 @@
  */
 package org.hibernate.persister.walking.spi;
 
+import java.util.Set;
+import javax.persistence.metamodel.Attribute;
+
 /**
 * @author Steve Ebersole
 */
+@Deprecated
 public interface AttributeSource {
+	Set<Attribute<? super X, ?>> getAttributes()
 	public Iterable<AttributeDefinition> getAttributes();
 }

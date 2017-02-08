@@ -9,24 +9,36 @@ package org.hibernate.persister.common.internal;
 
 import java.util.List;
 
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.sql.ast.from.TableGroup;
+import org.hibernate.sql.ast.from.TableSpace;
+import org.hibernate.sql.convert.internal.FromClauseIndex;
+import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
+import org.hibernate.sql.convert.results.spi.Fetch;
+import org.hibernate.sql.convert.results.spi.FetchParent;
+import org.hibernate.sql.convert.results.spi.Return;
+import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.type.spi.EntityType;
 
 
 /**
  * @author Steve Ebersole
  */
-public class SingularPersistentAttributeEntity extends AbstractSingularPersistentAttribute<EntityType>
-		implements JoinablePersistentAttribute {
+public class SingularPersistentAttributeEntity<O,J> extends AbstractSingularPersistentAttribute<O,J,EntityType<J>>
+		implements JoinablePersistentAttribute<O,J> {
 	private final SingularAttributeClassification classification;
 	private final EntityPersister entityPersister;
 	private final List<Column> columns;
+	private final NavigableRole navigableRole;
 
 	private List<JoinColumnMapping> joinColumnMappings;
 
@@ -42,6 +54,7 @@ public class SingularPersistentAttributeEntity extends AbstractSingularPersisten
 		super( declaringType, name, propertyAccess, ormType, disposition, true );
 		this.classification = classification;
 		this.entityPersister = entityPersister;
+		this.navigableRole = declaringType.getNavigableRole().append( name );
 
 		// columns should be the rhs columns I believe.
 		//		todo : add an assertion based on whatever this should be...
@@ -99,5 +112,38 @@ public class SingularPersistentAttributeEntity extends AbstractSingularPersisten
 			this.joinColumnMappings = getSource().resolveJoinColumnMappings( this );
 		}
 		return joinColumnMappings;
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
+	}
+
+	@Override
+	public void visitNavigable(NavigableVisitationStrategy visitor) {
+		visitor.visitSingularAttributeEntity( this );
+	}
+
+	@Override
+	public TableGroup buildTableGroup(
+			TableSpace tableSpace,
+			SqlAliasBaseManager sqlAliasBaseManager,
+			FromClauseIndex fromClauseIndex) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public Return generateReturn(
+			ReturnResolutionContext returnResolutionContext,
+			TableGroup tableGroup) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public Fetch generateFetch(
+			ReturnResolutionContext returnResolutionContext,
+			TableGroup tableGroup,
+			FetchParent fetchParent) {
+		throw new NotYetImplementedException(  );
 	}
 }

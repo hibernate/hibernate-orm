@@ -16,8 +16,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 
@@ -29,17 +29,19 @@ import org.jboss.logging.Logger;
 public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T>, TypeConfigurationAware {
 	private static final Logger log = Logger.getLogger( AbstractManagedType.class );
 
-	private final JavaTypeDescriptor<T> javaTypeDescriptor;
-	private final MutabilityPlan mutabilityPlan;
-	private final Comparator comparator;
+	// todo (6.0) : I think we can just drop the mutabilityPlan and comparator for managed types
 
-	private ManagedTypeImplementor  superTypeDescriptor;
+	private final ManagedJavaDescriptor<T> javaTypeDescriptor;
+	private final MutabilityPlan<T> mutabilityPlan;
+	private final Comparator<T> comparator;
+
+	private ManagedTypeImplementor<? super T>  superTypeDescriptor;
 
 	private Map<String,PersistentAttribute> declaredAttributesByName;
 
 	private TypeConfiguration typeConfiguration;
 
-	public AbstractManagedType(JavaTypeDescriptor<T> javaTypeDescriptor) {
+	public AbstractManagedType(ManagedJavaDescriptor<T> javaTypeDescriptor) {
 		this(
 				javaTypeDescriptor,
 				javaTypeDescriptor.getMutabilityPlan(),
@@ -48,15 +50,15 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	public AbstractManagedType(
-			JavaTypeDescriptor<T> javaTypeDescriptor,
-			MutabilityPlan mutabilityPlan,
-			Comparator comparator) {
+			ManagedJavaDescriptor<T> javaTypeDescriptor,
+			MutabilityPlan<T> mutabilityPlan,
+			Comparator<T> comparator) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.mutabilityPlan = mutabilityPlan;
 		this.comparator = comparator;
 	}
 
-	protected void injectSuperTypeDescriptor(ManagedTypeImplementor superTypeDescriptor) {
+	protected void injectSuperTypeDescriptor(ManagedTypeImplementor<? super T> superTypeDescriptor) {
 		log.debugf(
 				"Injecting super-type descriptor [%s] for ManagedTypeImplementor [%s]; was [%s]",
 				superTypeDescriptor,
@@ -78,11 +80,11 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	@Override
-	public ManagedTypeImplementor getSuperType() {
+	public ManagedTypeImplementor<? super T> getSuperType() {
 		return superTypeDescriptor;
 	}
 
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+	public ManagedJavaDescriptor<T> getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 
@@ -100,14 +102,14 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	@Override
-	public PersistentAttribute findAttribute(String name) {
-		final PersistentAttribute declaredPersistentAttribute = findDeclaredAttribute( name );
+	public PersistentAttribute<? super T, ?> findAttribute(String name) {
+		final PersistentAttribute<? super T, ?> declaredPersistentAttribute = findDeclaredAttribute( name );
 		if ( declaredPersistentAttribute != null ) {
 			return declaredPersistentAttribute;
 		}
 
 		if ( getSuperType() != null ) {
-			final PersistentAttribute superPersistentAttribute = getSuperType().findAttribute( name );
+			final PersistentAttribute<? super T, ?> superPersistentAttribute = getSuperType().findAttribute( name );
 			if ( superPersistentAttribute != null ) {
 				return superPersistentAttribute;
 			}
@@ -117,7 +119,8 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	@Override
-	public PersistentAttribute findDeclaredAttribute(String name) {
+	@SuppressWarnings("unchecked")
+	public PersistentAttribute<? super T, ?> findDeclaredAttribute(String name) {
 		if ( declaredAttributesByName == null ) {
 			return null;
 		}
@@ -239,12 +242,27 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	@Override
-	public PersistentAttribute getAttribute(String name) {
+	public void visitNavigables(NavigableVisitationStrategy visitor) {
+		visitDeclaredNavigables( visitor );
+		if ( getSuperType() != null ) {
+			getSuperType().visitNavigables( visitor );
+		}
+	}
+
+	@Override
+	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
+		for ( PersistentAttribute persistentAttribute : declaredAttributesByName.values() ) {
+			persistentAttribute.visitNavigable( visitor );
+		}
+	}
+
+	@Override
+	public PersistentAttribute<? super T, ?> getAttribute(String name) {
 		return getAttribute( name, null );
 	}
 
-	protected PersistentAttribute getAttribute(String name, Class resultType) {
-		PersistentAttribute persistentAttribute = findDeclaredAttribute( name, resultType );
+	protected PersistentAttribute<? super T, ?> getAttribute(String name, Class resultType) {
+		PersistentAttribute<? super T, ?> persistentAttribute = findDeclaredAttribute( name, resultType );
 		if ( persistentAttribute == null && getSuperType() != null ) {
 			persistentAttribute = getSuperType().findDeclaredAttribute( name, resultType );
 		}
@@ -257,7 +275,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	@Override
-	public PersistentAttribute findDeclaredAttribute(String name, Class resultType) {
+	public PersistentAttribute<? super T, ?> findDeclaredAttribute(String name, Class resultType) {
 		final PersistentAttribute ormPersistentAttribute = declaredAttributesByName.get( name );
 		if ( ormPersistentAttribute == null ) {
 			return null;

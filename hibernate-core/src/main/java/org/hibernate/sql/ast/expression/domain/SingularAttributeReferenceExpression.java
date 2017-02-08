@@ -13,15 +13,15 @@ import java.util.List;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.DomainReferenceImplementor;
-import org.hibernate.persister.common.spi.SingularOrmAttribute;
+import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.from.ColumnBinding;
 import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.ast.select.SelectableBasicTypeImpl;
 import org.hibernate.sql.ast.select.SelectableEmbeddedTypeImpl;
 import org.hibernate.sql.ast.select.SelectableEntityTypeImpl;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
@@ -29,26 +29,26 @@ import org.hibernate.type.spi.Type;
 /**
  * @author Steve Ebersole
  */
-public class SingularAttributeReferenceExpression implements DomainReferenceExpression {
+public class SingularAttributeReferenceExpression implements NavigableReferenceExpression {
 	private final ColumnBindingSource columnBindingSource;
-	private final SingularOrmAttribute referencedAttribute;
-	private final PropertyPath propertyPath;
+	private final SingularPersistentAttribute referencedAttribute;
+	private final NavigablePath navigablePath;
 
 	private final Selectable selectable;
 	private List<ColumnBinding> columnBindings;
 
 	public SingularAttributeReferenceExpression(
 			ColumnBindingSource columnBindingSource,
-			SingularOrmAttribute referencedAttribute,
-			PropertyPath propertyPath) {
+			SingularPersistentAttribute referencedAttribute,
+			NavigablePath navigablePath) {
 		this.columnBindingSource = columnBindingSource;
 		this.referencedAttribute = referencedAttribute;
-		this.propertyPath = propertyPath;
+		this.navigablePath = navigablePath;
 
 		this.selectable = resolveSelectable( referencedAttribute );
 	}
 
-	private Selectable resolveSelectable(SingularOrmAttribute referencedAttribute) {
+	private Selectable resolveSelectable(SingularPersistentAttribute<?,?> referencedAttribute) {
 		switch ( referencedAttribute.getAttributeTypeClassification() ) {
 			case BASIC: {
 				return new SelectableBasicTypeImpl(
@@ -69,7 +69,7 @@ public class SingularAttributeReferenceExpression implements DomainReferenceExpr
 				final SingularPersistentAttributeEntity entityTypedAttribute = (SingularPersistentAttributeEntity) referencedAttribute;
 				return new SelectableEntityTypeImpl(
 						this,
-						propertyPath,
+						navigablePath,
 						columnBindingSource,
 						entityTypedAttribute.getAssociatedEntityPersister(),
 						// shallow? dunno...
@@ -86,7 +86,7 @@ public class SingularAttributeReferenceExpression implements DomainReferenceExpr
 		}
 	}
 
-	public SingularOrmAttribute getReferencedAttribute() {
+	public SingularPersistentAttribute<?,?> getReferencedAttribute() {
 		return referencedAttribute;
 	}
 
@@ -96,7 +96,7 @@ public class SingularAttributeReferenceExpression implements DomainReferenceExpr
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter walker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
 		walker.visitSingularAttributeReference( this );
 	}
 
@@ -106,7 +106,7 @@ public class SingularAttributeReferenceExpression implements DomainReferenceExpr
 	}
 
 	@Override
-	public DomainReferenceImplementor getDomainReference() {
+	public Navigable getNavigable() {
 		return getReferencedAttribute();
 	}
 
@@ -127,7 +127,7 @@ public class SingularAttributeReferenceExpression implements DomainReferenceExpr
 	}
 
 	@Override
-	public PropertyPath getPropertyPath() {
-		return propertyPath;
+	public NavigablePath getNavigablePath() {
+		return navigablePath;
 	}
 }

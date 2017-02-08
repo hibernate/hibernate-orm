@@ -14,7 +14,7 @@ import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sql.exec.results.process.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -55,7 +55,7 @@ public class UnaryOperationExpression implements Expression, SqlSelectable, Sele
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter walker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
 		walker.visitUnaryOperationExpression( this );
 	}
 

@@ -32,7 +32,7 @@ public class FetchCompositeAttributeImpl extends AbstractFetchParent implements 
 			SingularPersistentAttributeEmbedded fetchedAttribute,
 			FetchStrategy fetchStrategy) {
 		super(
-				fetchParent.getPropertyPath().append( fetchedAttribute.getAttributeName() ),
+				fetchParent.getNavigablePath().append( fetchedAttribute.getAttributeName() ),
 				fetchParent.getTableGroupUniqueIdentifier()
 		);
 		this.fetchParent = fetchParent;
@@ -61,7 +61,7 @@ public class FetchCompositeAttributeImpl extends AbstractFetchParent implements 
 
 	@Override
 	public EmbeddedType getFetchedType() {
-		return fetchedAttribute.getOrmType();
+		return (EmbeddedType) fetchedAttribute.getOrmType();
 	}
 
 	@Override

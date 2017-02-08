@@ -6,21 +6,21 @@
  */
 package org.hibernate.loader.plan.build.spi;
 
-import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
+import org.hibernate.sql.convert.spi.SqlSelectPlan;
 
 /**
- * A metadata-driven builder of LoadPlans.  Coordinates between the {@link MetamodelGraphWalker} and a
- * {@link LoadPlanBuildingAssociationVisitationStrategy}.
+ * A metadata-driven builder of SqmSelectInterpretation.  Coordinates between the
+ * {@link MetamodelGraphWalker} and a {@link org.hibernate.persister.common.spi.MetamodelDrivenSqlSelectPlanBuilder}.
  *
  * @author Steve Ebersole
  *
  * @see org.hibernate.persister.walking.spi.MetamodelGraphWalker
  */
-public final class MetamodelDrivenLoadPlanBuilder {
-	private MetamodelDrivenLoadPlanBuilder() {
+public final class MetamodelDrivenSqlSelectPlanBuilder {
+	private MetamodelDrivenSqlSelectPlanBuilder() {
 	}
 
 	/**
@@ -33,8 +33,8 @@ public final class MetamodelDrivenLoadPlanBuilder {
 	 *
 	 * @return The built load plan.
 	 */
-	public static LoadPlan buildRootEntityLoadPlan(
-			LoadPlanBuildingAssociationVisitationStrategy strategy,
+	public static SqlSelectPlan buildRootEntityLoadPlan(
+			org.hibernate.persister.common.spi.MetamodelDrivenSqlSelectPlanBuilder strategy,
 			EntityPersister persister) {
 		MetamodelGraphWalker.visitEntity( strategy, persister );
 		return strategy.buildLoadPlan();
@@ -48,8 +48,8 @@ public final class MetamodelDrivenLoadPlanBuilder {
 	 *
 	 * @return The built load plan.
 	 */
-	public static LoadPlan buildRootCollectionLoadPlan(
-			LoadPlanBuildingAssociationVisitationStrategy strategy,
+	public static SqlSelectPlan buildRootCollectionLoadPlan(
+			org.hibernate.persister.common.spi.MetamodelDrivenSqlSelectPlanBuilder strategy,
 			CollectionPersister persister) {
 		MetamodelGraphWalker.visitCollection( strategy, persister );
 		return strategy.buildLoadPlan();

@@ -667,8 +667,17 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 
 
 
-		if ( collectionBinding instanceof IndexedCollection ) {
-			final Value indexValueMapping = ( (IndexedCollection) collectionBinding ).getIndex();
+		if ( collectionBinding instanceof IdentifierCollection ) {
+			final IdentifierGenerator identifierGenerator = ( (IdentifierCollection) collectionBinding ).getIdentifier().createIdentifierGenerator(
+
+			);
+			this.idDescriptor = new CollectionId(
+					(BasicType) ( (IdentifierCollection) collectionBinding ).getIdentifier().getType(),
+					identifierGenerator
+			);
+		}
+		else {
+			idDescriptor = null;
 		}
 
 		final Value elementValueMapping = collectionBinding.getElement();
@@ -678,6 +687,10 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 		}
 
 
+		if ( collectionBinding instanceof IdentifierCollection ) {
+
+			this.idDescriptor = ( (IdentifierCollection) collectionBinding ).getIdentifier().
+		}
 
 		if ( getIdentifierType() == null ) {
 			this.idDescriptor = null;
@@ -993,7 +1006,7 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 	}
 
 	@Override
-	public CollectionType getOrmType() {
+	public org.hibernate.type.spi.CollectionType getOrmType() {
 		return getCollectionType();
 	}
 

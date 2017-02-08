@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.util.List;
+
 import org.hibernate.loader.PropertyPath;
 
 /**
@@ -14,6 +16,7 @@ import org.hibernate.loader.PropertyPath;
  *
  * @author Steve Ebersole
  */
+@Deprecated
 public interface FetchSource {
 
 	/**
@@ -35,7 +38,7 @@ public interface FetchSource {
 	 *
 	 * @return The owned fetches.
 	 */
-	public Fetch[] getFetches();
+	List<Fetch> getFetches();
 
 	/**
 	 * Retrieve the bidirectional entity references owned by this fetch source.

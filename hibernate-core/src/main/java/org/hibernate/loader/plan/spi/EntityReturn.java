@@ -13,5 +13,6 @@ package org.hibernate.loader.plan.spi;
  *
  * @author Steve Ebersole
  */
+@Deprecated
 public interface EntityReturn extends EntityReference, Return {
 }

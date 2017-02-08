@@ -12,9 +12,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.collection.internal.CollectionElementEntity;
-import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.collection.spi.CollectionElement;
+import org.hibernate.persister.collection.spi.CollectionElementEntity;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.from.ColumnBinding;
@@ -23,7 +23,7 @@ import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.ast.select.SelectableBasicTypeImpl;
 import org.hibernate.sql.ast.select.SelectableEmbeddedTypeImpl;
 import org.hibernate.sql.ast.select.SelectableEntityTypeImpl;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
@@ -31,7 +31,7 @@ import org.hibernate.type.spi.Type;
 /**
  * @author Steve Ebersole
  */
-public class PluralAttributeElementReferenceExpression implements DomainReferenceExpression {
+public class PluralAttributeElementReferenceExpression implements NavigableReferenceExpression {
 	private final CollectionPersister collectionPersister;
 	private final ColumnBindingSource columnBindingSource;
 	private final PropertyPath propertyPath;
@@ -78,16 +78,16 @@ public class PluralAttributeElementReferenceExpression implements DomainReferenc
 			}
 			case ONE_TO_MANY:
 			case MANY_TO_MANY: {
-				final CollectionElementEntity entityElement = (CollectionElementEntity) collectionPersister.getElementReference();
+				final CollectionElementEntity<?> entityElement = (CollectionElementEntity<?>) collectionPersister.getElementReference();
 				this.columnBindings = new ArrayList<>();
 				for ( Column column : entityElement.getColumns() ) {
 					this.columnBindings.add( columnBindingSource.resolveColumnBinding( column ) );
 				}
 				this.selectable = new SelectableEntityTypeImpl(
 						this,
-						getPropertyPath(),
+						getNavigablePath(),
 						columnBindingSource,
-						( (CollectionElementEntity) collectionPersister.getElementReference() ).getElementPersister(),
+						( (CollectionElementEntity) collectionPersister.getElementReference() ).getEntityPersister(),
 						isShallow
 				);
 				break;
@@ -113,12 +113,12 @@ public class PluralAttributeElementReferenceExpression implements DomainReferenc
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter walker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
 		walker.visitPluralAttributeElement( this );
 	}
 
 	@Override
-	public PropertyPath getPropertyPath() {
+	public PropertyPath getNavigablePath() {
 		return propertyPath;
 	}
 
@@ -128,7 +128,7 @@ public class PluralAttributeElementReferenceExpression implements DomainReferenc
 	}
 
 	@Override
-	public CollectionElement getDomainReference() {
+	public CollectionElement getNavigable() {
 		return collectionPersister.getElementReference();
 	}
 

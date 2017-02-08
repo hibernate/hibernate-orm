@@ -12,14 +12,14 @@ import org.hibernate.type.spi.EmbeddedType;
 /**
  * @author Steve Ebersole
  */
-public interface CollectionElementEmbedded extends CollectionElement<EmbeddedType>, EmbeddedReference {
+public interface CollectionElementEmbedded<J> extends CollectionElement<J,EmbeddedType<J>>, EmbeddedReference<J> {
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
 	}
 
 	@Override
-	EmbeddedType getOrmType();
+	EmbeddedType<J> getOrmType();
 
 	@Override
 	default ElementClassification getClassification() {

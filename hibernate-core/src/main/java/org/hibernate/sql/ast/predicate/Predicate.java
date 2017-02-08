@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.predicate;
 
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 
 /**
  * @author Steve Ebersole
@@ -14,5 +14,5 @@ import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
 public interface Predicate {
 	boolean isEmpty();
 
-	void accept(SqlAstSelectInterpreter sqlTreeWalker);
+	void accept(SqlSelectAstToJdbcSelectConverter sqlTreeWalker);
 }

@@ -20,7 +20,7 @@ public interface EmbeddedContainer<T> extends NavigableSource<T> {
 	/**
 	 * Holy alliteration Bat Man! :)
 	 * <p/>
-	 * Can the composites belonging to this container contain collections?  This
+	 * Can any sub-composites belonging to this container contain collections?  This
 	 * would only be {@code false} in cases where the composite-container path
 	 * is itself rooted in a collection element/index.
 	 *

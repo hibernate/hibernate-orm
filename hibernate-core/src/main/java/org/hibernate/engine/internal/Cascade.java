@@ -25,11 +25,11 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
-import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -345,7 +345,7 @@ public final class Cascade {
 			final Object anything,
 			final CollectionType type) {
 		final CollectionPersister persister = eventSource.getFactory().getCollectionPersister( type.getRole() );
-		final Type elemType = persister.getElementType();
+		final Type elemType = (Type) persister.getElementReference().getExportedDomainType();
 
 		CascadePoint elementsCascadePoint = cascadePoint;
 		if ( cascadePoint == CascadePoint.AFTER_INSERT_BEFORE_DELETE ) {

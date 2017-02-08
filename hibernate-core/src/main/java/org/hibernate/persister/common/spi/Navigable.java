@@ -6,6 +6,15 @@
  */
 package org.hibernate.persister.common.spi;
 
+import org.hibernate.persister.common.NavigableRole;
+import org.hibernate.sql.ast.from.TableGroup;
+import org.hibernate.sql.ast.from.TableSpace;
+import org.hibernate.sql.convert.internal.FromClauseIndex;
+import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
+import org.hibernate.sql.convert.results.spi.Fetch;
+import org.hibernate.sql.convert.results.spi.FetchParent;
+import org.hibernate.sql.convert.results.spi.Return;
+import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sqm.domain.SqmNavigable;
 
 /**
@@ -15,5 +24,16 @@ public interface Navigable<T> extends SqmNavigable, ExpressableType<T> {
 	@Override
 	NavigableSource getSource();
 
-	String getNavigableName();
+	NavigableRole getNavigableRole();
+
+	void visitNavigable(NavigableVisitationStrategy visitor);
+
+	TableGroup buildTableGroup(
+			TableSpace tableSpace,
+			SqlAliasBaseManager sqlAliasBaseManager,
+			FromClauseIndex fromClauseIndex);
+
+	Return generateReturn(ReturnResolutionContext returnResolutionContext, TableGroup tableGroup);
+
+	Fetch generateFetch(ReturnResolutionContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent);
 }

@@ -13,18 +13,21 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
 
 /**
+ *
+ *
  * Implements metamodel graph walking.  In layman terms, we are walking the graph of the users domain model as
  * defined/understood by mapped associations.
  * <p/>
  * Initially grew as a part of the re-implementation of the legacy JoinWalker functionality to instead build LoadPlans.
  * But this is really quite simple walking.  Interesting events are handled by calling out to
- * implementations of {@link AssociationVisitationStrategy} which really provide the real functionality of what we do
+ * implementations of {@link NavigableVisitationStrategy} which really provide the real functionality of what we do
  * as we walk.
  * <p/>
  * The visitor will walk the entire metamodel graph (the parts reachable from the given root)!!!  It is up to the
@@ -34,7 +37,7 @@ import org.jboss.logging.Logger;
  * calls out to the strategy the strategy then decides the semantics (literally, the meaning).
  * <p/>
  * The visitor will, however, stop if it sees a "duplicate" AssociationKey.  In such a case, the walker would call
- * {@link AssociationVisitationStrategy#foundCircularAssociation} and stop walking any further down that graph any
+ * {@link NavigableVisitationStrategy#foundCircularAssociation} and stop walking any further down that graph any
  * further.
  *
  * @author Steve Ebersole
@@ -48,7 +51,7 @@ public class MetamodelGraphWalker {
 	 * @param strategy The semantics strategy
 	 * @param persister The persister describing the entity to start walking from
 	 */
-	public static void visitEntity(AssociationVisitationStrategy strategy, EntityPersister persister) {
+	public static void visitEntity(NavigableVisitationStrategy strategy, EntityPersister persister) {
 		strategy.start();
 		try {
 			new MetamodelGraphWalker( strategy, persister.getFactory() )
@@ -65,7 +68,7 @@ public class MetamodelGraphWalker {
 	 * @param strategy The semantics strategy
 	 * @param persister The persister describing the collection to start walking from
 	 */
-	public static void visitCollection(AssociationVisitationStrategy strategy, CollectionPersister persister) {
+	public static void visitCollection(NavigableVisitationStrategy strategy, CollectionPersister persister) {
 		strategy.start();
 		try {
 			new MetamodelGraphWalker( strategy, persister.getFactory() )
@@ -76,13 +79,13 @@ public class MetamodelGraphWalker {
 		}
 	}
 
-	private final AssociationVisitationStrategy strategy;
+	private final NavigableVisitationStrategy strategy;
 	private final SessionFactoryImplementor factory;
 
 	// todo : add a getDepth() method to PropertyPath
 	private PropertyPath currentPropertyPath = new PropertyPath();
 
-	public MetamodelGraphWalker(AssociationVisitationStrategy strategy, SessionFactoryImplementor factory) {
+	public MetamodelGraphWalker(NavigableVisitationStrategy strategy, SessionFactoryImplementor factory) {
 		this.strategy = strategy;
 		this.factory = factory;
 	}

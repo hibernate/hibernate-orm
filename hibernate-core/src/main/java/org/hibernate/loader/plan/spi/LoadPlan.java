@@ -8,6 +8,8 @@ package org.hibernate.loader.plan.spi;
 
 import java.util.List;
 
+import org.hibernate.sql.ast.SelectQuery;
+
 /**
  * Describes a plan for performing a load of results.
  *
@@ -34,7 +36,10 @@ import java.util.List;
  * </ul>
  *
  * @author Steve Ebersole
+ *
+ * @deprecated In favor of org.hibernate.sql.ast.SelectQuery
  */
+@Deprecated
 public interface LoadPlan {
 
 	/**
@@ -42,7 +47,7 @@ public interface LoadPlan {
 	 *
 	 * @return The LoadPlan's disposition
 	 */
-	public Disposition getDisposition();
+	Disposition getDisposition();
 
 	/**
 	 * Get the returns indicated by this LoadPlan.<ul>

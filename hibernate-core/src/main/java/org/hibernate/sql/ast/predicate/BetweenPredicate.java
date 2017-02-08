@@ -8,7 +8,7 @@
 package org.hibernate.sql.ast.predicate;
 
 import org.hibernate.sql.ast.expression.Expression;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 
 /**
  * @author Steve Ebersole
@@ -52,7 +52,7 @@ public class BetweenPredicate implements Predicate {
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter sqlTreeWalker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter sqlTreeWalker) {
 		sqlTreeWalker.visitBetweenPredicate( this );
 	}
 }

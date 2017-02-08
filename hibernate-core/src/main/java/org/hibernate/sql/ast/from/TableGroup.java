@@ -11,14 +11,14 @@ import java.util.List;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
-import org.hibernate.sql.ast.expression.domain.DomainReferenceExpression;
+import org.hibernate.sql.ast.expression.domain.NavigableReferenceExpression;
 
 /**
  * Group together related {@link TableBinding} references (generally related by EntityPersister or CollectionPersister),
  *
  * @author Steve Ebersole
  */
-public interface TableGroup extends ColumnBindingSource, DomainReferenceExpression {
+public interface TableGroup extends ColumnBindingSource, NavigableReferenceExpression {
 	TableSpace getTableSpace();
 	String getUid();
 	String getAliasBase();

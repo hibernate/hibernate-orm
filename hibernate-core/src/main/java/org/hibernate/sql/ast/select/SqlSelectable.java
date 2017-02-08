@@ -8,7 +8,7 @@
 package org.hibernate.sql.ast.select;
 
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 
 /**
  * Unifying contract for things that are selectable at the SQL level
@@ -18,5 +18,5 @@ import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
 public interface SqlSelectable {
 	SqlSelectionReader getSqlSelectionReader();
 
-	void accept(SqlAstSelectInterpreter interpreter);
+	void accept(SqlSelectAstToJdbcSelectConverter interpreter);
 }

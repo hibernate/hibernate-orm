@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.ast.expression;
 
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -19,7 +19,7 @@ public class MinFunction extends AbstractAggregateFunction implements AggregateF
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter sqlTreeWalker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter sqlTreeWalker) {
 		sqlTreeWalker.visitMinFunction( this );
 	}
 }

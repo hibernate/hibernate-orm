@@ -30,7 +30,7 @@ public class CompositesWalkingTest extends BaseUnitTestCase {
 				.buildSessionFactory();
 		try {
 			final EntityPersister ep = (EntityPersister) sf.getClassMetadata( TestCourse.class );
-			MetamodelGraphWalker.visitEntity( new LoggingAssociationVisitationStrategy(), ep );
+			MetamodelGraphWalker.visitEntity( new NavigableVisitationStrategyLoggingImpl(), ep );
 		}
 		finally {
 			sf.close();

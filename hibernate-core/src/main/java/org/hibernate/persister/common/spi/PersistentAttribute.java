@@ -11,7 +11,8 @@ import org.hibernate.type.spi.Type;
 /**
  * @author Steve Ebersole
  */
-public interface PersistentAttribute<O,T> extends Navigable<T>, TypeExporter<T>, javax.persistence.metamodel.Attribute<O,T> {
+public interface PersistentAttribute<O,T>
+		extends Navigable<T>, TypeExporter<T>, javax.persistence.metamodel.Attribute<O,T> {
 	@Override
 	ManagedTypeImplementor<O> getSource();
 

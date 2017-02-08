@@ -56,7 +56,7 @@ import org.jboss.logging.Logger;
  * @author Brett Meyer
  */
 public abstract class AbstractEntityGraphVisitationStrategy
-		extends AbstractLoadPlanBuildingAssociationVisitationStrategy {
+		extends AbstractMetamodelDrivenSqlSelectPlanBuilder {
 	private static final Logger LOG = CoreLogging.logger( AbstractEntityGraphVisitationStrategy.class );
 	/**
 	 * The JPA 2.1 SPEC's Entity Graph only defines _WHEN_ to load an attribute, it doesn't define _HOW_ to load it

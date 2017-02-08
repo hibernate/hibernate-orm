@@ -13,7 +13,10 @@ import org.hibernate.persister.collection.spi.CollectionPersister;
  * Represents a reference to a persistent collection either as a Return or as a {@link CollectionAttributeFetch}.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link org.hibernate.sql.convert.results.spi.CollectionReference}
  */
+@Deprecated
 public interface CollectionReference {
 	/**
 	 * Obtain the UID of the QuerySpace (specifically a {@link CollectionQuerySpace}) that this CollectionReference

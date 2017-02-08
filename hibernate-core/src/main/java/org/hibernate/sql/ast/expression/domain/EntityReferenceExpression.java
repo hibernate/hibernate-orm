@@ -13,14 +13,14 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.ast.from.ColumnBinding;
 import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.ast.select.SelectableEntityTypeImpl;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.Type;
 
 /**
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-public class EntityReferenceExpression implements DomainReferenceExpression {
+public class EntityReferenceExpression implements NavigableReferenceExpression {
 	private final ColumnBindingSource columnBindingSource;
 	private final EntityPersister entityPersister;
 	private final PropertyPath propertyPath;
@@ -60,12 +60,12 @@ public class EntityReferenceExpression implements DomainReferenceExpression {
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter walker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
 		walker.visitEntityExpression( this );
 	}
 
 	@Override
-	public PropertyPath getPropertyPath() {
+	public PropertyPath getNavigablePath() {
 		return propertyPath;
 	}
 
@@ -75,7 +75,7 @@ public class EntityReferenceExpression implements DomainReferenceExpression {
 	}
 
 	@Override
-	public EntityPersister getDomainReference() {
+	public EntityPersister getNavigable() {
 		return getEntityPersister();
 	}
 }

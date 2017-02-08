@@ -8,6 +8,7 @@ package org.hibernate.persister.collection.spi;
 
 import java.util.List;
 
+import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.sqm.domain.type.SqmDomainType;
 import org.hibernate.type.spi.Type;
@@ -15,10 +16,11 @@ import org.hibernate.type.spi.Type;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractCollectionElement<T extends Type> implements CollectionElement<T> {
+public abstract class AbstractCollectionElement<J,T extends Type<J>> implements CollectionElement<J,T> {
 	private final CollectionPersister persister;
 	private final T ormType;
 	private final List<Column> columns;
+	private final NavigableRole navigableRole;
 
 	public AbstractCollectionElement(
 			CollectionPersister persister,
@@ -27,11 +29,18 @@ public abstract class AbstractCollectionElement<T extends Type> implements Colle
 		this.persister = persister;
 		this.ormType = ormType;
 		this.columns = columns;
+
+		this.navigableRole = persister.getNavigableRole().append( NAVIGABLE_NAME );
 	}
 
 	@Override
 	public CollectionPersister getSource() {
 		return persister;
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
 	}
 
 	@Override
@@ -50,7 +59,7 @@ public abstract class AbstractCollectionElement<T extends Type> implements Colle
 	}
 
 	@Override
-	public Class getJavaType() {
+	public Class<J> getJavaType() {
 		return ormType.getJavaType();
 	}
 

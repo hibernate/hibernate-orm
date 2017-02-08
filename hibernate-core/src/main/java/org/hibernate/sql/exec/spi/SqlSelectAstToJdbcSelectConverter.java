@@ -63,7 +63,7 @@ import org.hibernate.sql.ast.select.SelectClause;
 import org.hibernate.sql.ast.select.SqlSelection;
 import org.hibernate.sql.ast.sort.SortSpecification;
 import org.hibernate.sql.convert.spi.ConversionHelper;
-import org.hibernate.sql.convert.spi.SqmSelectInterpretation;
+import org.hibernate.sql.convert.spi.SqlSelectPlan;
 import org.hibernate.sql.exec.internal.JdbcSelectImpl;
 import org.hibernate.sqm.query.order.SqmSortOrder;
 import org.hibernate.type.spi.Type;
@@ -77,8 +77,8 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class SqlAstSelectInterpreter {
-	private static final Logger log = Logger.getLogger( SqlAstSelectInterpreter.class );
+public class SqlSelectAstToJdbcSelectConverter {
+	private static final Logger log = Logger.getLogger( SqlSelectAstToJdbcSelectConverter.class );
 
 	// todo : rename SqlSelectAstToJdbcSelectConverter
 
@@ -88,21 +88,21 @@ public class SqlAstSelectInterpreter {
 	 * @return The interpretation result
 	 */
 	public static JdbcSelect interpret(
-			SqmSelectInterpretation sqmSelectInterpretation,
+			SqlSelectPlan sqlSelectPlan,
 			boolean shallow,
 			SharedSessionContractImplementor persistenceContext,
 			QueryParameterBindings parameterBindings) {
-		final SqlAstSelectInterpreter walker = new SqlAstSelectInterpreter(
+		final SqlSelectAstToJdbcSelectConverter walker = new SqlSelectAstToJdbcSelectConverter(
 				persistenceContext,
 				parameterBindings,
 				shallow
 		);
-		walker.visitSelectQuery( sqmSelectInterpretation.getSqlSelectAst() );
+		walker.visitSelectQuery( sqlSelectPlan.getSqlSelectAst() );
 		return new JdbcSelectImpl(
 				walker.sqlBuffer.toString(),
 				walker.parameterBinders,
-				sqmSelectInterpretation.getSqlSelectAst().getQuerySpec().getSelectClause().getSqlSelections(),
-				sqmSelectInterpretation.getQueryReturns()
+				sqlSelectPlan.getSqlSelectAst().getQuerySpec().getSelectClause().getSqlSelections(),
+				sqlSelectPlan.getQueryReturns()
 		);
 	}
 
@@ -119,7 +119,7 @@ public class SqlAstSelectInterpreter {
 	private boolean currentlyInPredicate;
 	private boolean currentlyInSelections;
 
-	private SqlAstSelectInterpreter(
+	private SqlSelectAstToJdbcSelectConverter(
 			SharedSessionContractImplementor persistenceContext,
 			QueryParameterBindings parameterBindings,
 			boolean shallow) {

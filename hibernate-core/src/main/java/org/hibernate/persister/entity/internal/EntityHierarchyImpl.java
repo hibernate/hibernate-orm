@@ -40,8 +40,6 @@ import org.hibernate.persister.entity.spi.TenantDiscrimination;
 import org.hibernate.persister.entity.spi.VersionDescriptor;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.EmbeddedType;
-import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
@@ -244,7 +242,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		}
 		return new DiscriminatorDescriptorImpl(
 				hierarchy,
-				rootEntityBinding.getDiscriminator().getType(),
+				(BasicType) rootEntityBinding.getDiscriminator().getType(),
 				columns.get( 0 )
 		);
 
@@ -266,9 +264,10 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 
 		return new VersionDescriptorImpl(
 				hierarchy,
+				rootEntityBinding,
 				columns.get( 0 ),
 				rootEntityBinding.getVersion().getName(),
-				rootEntityBinding.getVersion().getType(),
+				(BasicType) rootEntityBinding.getVersion().getType(),
 				false,
 				( (KeyValue) rootEntityBinding.getVersion().getValue() ).getNullValue()
 		);

@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.expression;
 
 import org.hibernate.sql.ast.select.Selectable;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -23,5 +23,5 @@ public interface Expression {
 
 	Selectable getSelectable();
 
-	void accept(SqlAstSelectInterpreter walker);
+	void accept(SqlSelectAstToJdbcSelectConverter walker);
 }

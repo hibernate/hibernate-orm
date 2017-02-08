@@ -30,9 +30,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.loader.plan.build.internal.FetchGraphLoadPlanBuildingStrategy;
 import org.hibernate.loader.plan.build.internal.LoadGraphLoadPlanBuildingStrategy;
-import org.hibernate.loader.plan.build.internal.AbstractLoadPlanBuildingAssociationVisitationStrategy;
+import org.hibernate.loader.plan.build.internal.AbstractMetamodelDrivenSqlSelectPlanBuilder;
 import org.hibernate.loader.plan.build.spi.LoadPlanTreePrinter;
-import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
+import org.hibernate.loader.plan.build.spi.MetamodelDrivenSqlSelectPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;
 import org.hibernate.loader.plan.spi.Join;
 import org.hibernate.loader.plan.spi.LoadPlan;
@@ -323,10 +323,10 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 			loadQueryInfluencers.setLoadGraph( entityGraph );
 		}
 		EntityPersister ep = (EntityPersister) sfi().getClassMetadata( clazz );
-		AbstractLoadPlanBuildingAssociationVisitationStrategy strategy = Mode.FETCH == mode ? new FetchGraphLoadPlanBuildingStrategy(
+		AbstractMetamodelDrivenSqlSelectPlanBuilder strategy = Mode.FETCH == mode ? new FetchGraphLoadPlanBuildingStrategy(
 				sfi(), loadQueryInfluencers, LockMode.NONE
 		) : new LoadGraphLoadPlanBuildingStrategy( sfi(), loadQueryInfluencers, LockMode.NONE );
-		return MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, ep );
+		return MetamodelDrivenSqlSelectPlanBuilder.buildRootEntityLoadPlan( strategy, ep );
 	}
 
 	public static enum Mode {FETCH, LOAD}

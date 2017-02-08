@@ -20,6 +20,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.sqm.NotYetImplementedException;
 import org.hibernate.type.ForeignKeyDirection;
@@ -35,19 +36,24 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  */
 public class EmbeddedTypeImpl<T> extends AbstractManagedType implements EmbeddedType {
-	private final String roleName;
+	private final NavigableRole navigableRole;
 
 	public EmbeddedTypeImpl(
 			ManagedType superType,
-			String roleName,
+			NavigableRole navigableRole,
 			EmbeddableJavaDescriptor javaTypeDescriptor) {
 		super( superType, javaTypeDescriptor );
-		this.roleName = roleName;
+		this.navigableRole = navigableRole;
 	}
 
 	@Override
-	public String getRoleName() {
-		return roleName;
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
+	}
+
+	@Override
+	public Classification getClassification() {
+		return Classification.COMPOSITE;
 	}
 
 	@Override
@@ -58,7 +64,7 @@ public class EmbeddedTypeImpl<T> extends AbstractManagedType implements Embedded
 
 	@Override
 	public EmbeddedPersister<T> getEmbeddablePersister() {
-		return getTypeConfiguration().findEmbeddablePersister( roleName );
+		return getTypeConfiguration().findEmbeddablePersister( navigableRole.getFullPath() );
 	}
 
 	@Override

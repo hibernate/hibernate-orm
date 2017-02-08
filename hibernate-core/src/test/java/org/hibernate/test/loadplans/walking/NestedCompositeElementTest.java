@@ -27,6 +27,6 @@ public class NestedCompositeElementTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testWalkingKeyManyToOneGraphs() {
 		final EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata( Customer.class );
-		MetamodelGraphWalker.visitEntity( new LoggingAssociationVisitationStrategy(), ep );
+		MetamodelGraphWalker.visitEntity( new NavigableVisitationStrategyLoggingImpl(), ep );
 	}
 }

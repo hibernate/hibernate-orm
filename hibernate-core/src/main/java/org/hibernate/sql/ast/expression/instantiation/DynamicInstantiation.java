@@ -27,7 +27,7 @@ import org.hibernate.sql.exec.results.internal.instantiation.ReturnAssemblerInje
 import org.hibernate.sql.exec.results.internal.instantiation.ReturnAssemblerListImpl;
 import org.hibernate.sql.exec.results.internal.instantiation.ReturnAssemblerMapImpl;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sqm.query.expression.Compatibility;
 import org.hibernate.type.spi.Type;
 
@@ -103,7 +103,7 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter walker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
 		walker.visitDynamicInstantiation( this );
 	}
 

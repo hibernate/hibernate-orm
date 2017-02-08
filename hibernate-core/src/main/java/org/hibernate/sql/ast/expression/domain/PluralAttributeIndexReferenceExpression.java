@@ -22,7 +22,7 @@ import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.ast.select.SelectableBasicTypeImpl;
 import org.hibernate.sql.ast.select.SelectableEmbeddedTypeImpl;
-import org.hibernate.sql.exec.spi.SqlAstSelectInterpreter;
+import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
@@ -30,7 +30,7 @@ import org.hibernate.type.spi.Type;
 /**
  * @author Steve Ebersole
  */
-public class PluralAttributeIndexReferenceExpression implements DomainReferenceExpression {
+public class PluralAttributeIndexReferenceExpression implements NavigableReferenceExpression {
 	private final CollectionPersister collectionPersister;
 	private final ColumnBindingSource columnBindingSource;
 	private final PropertyPath propertyPath;
@@ -95,7 +95,7 @@ public class PluralAttributeIndexReferenceExpression implements DomainReferenceE
 
 
 	@Override
-	public DomainReferenceImplementor getDomainReference() {
+	public DomainReferenceImplementor getNavigable() {
 		return collectionPersister.getIndexReference();
 	}
 
@@ -110,12 +110,12 @@ public class PluralAttributeIndexReferenceExpression implements DomainReferenceE
 	}
 
 	@Override
-	public void accept(SqlAstSelectInterpreter walker) {
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
 		walker.visitPluralAttributeIndex( this );
 	}
 
 	@Override
-	public PropertyPath getPropertyPath() {
+	public PropertyPath getNavigablePath() {
 		return propertyPath;
 	}
 

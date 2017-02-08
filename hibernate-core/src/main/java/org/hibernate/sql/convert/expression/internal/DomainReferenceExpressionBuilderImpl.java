@@ -16,7 +16,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
 import org.hibernate.sql.ast.expression.domain.CompositeColumnBindingSource;
-import org.hibernate.sql.ast.expression.domain.DomainReferenceExpression;
+import org.hibernate.sql.ast.expression.domain.NavigableReferenceExpression;
 import org.hibernate.sql.ast.expression.domain.EntityReferenceExpression;
 import org.hibernate.sql.ast.expression.domain.PluralAttributeElementReferenceExpression;
 import org.hibernate.sql.ast.expression.domain.SingularAttributeReferenceExpression;
@@ -43,7 +43,7 @@ public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpr
 	}
 
 	@Override
-	public DomainReferenceExpression buildEntityExpression(
+	public NavigableReferenceExpression buildEntityExpression(
 			BuildingContext buildingContext,
 			ColumnBindingSource columnBindingSource,
 			EntityPersister entityPersister,
@@ -57,7 +57,7 @@ public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpr
 	}
 
 	@Override
-	public DomainReferenceExpression buildSingularAttributeExpression(
+	public NavigableReferenceExpression buildSingularAttributeExpression(
 			BuildingContext buildingContext,
 			SingularAttributeBinding singularAttributeBinding) {
 		final PropertyPath propertyPath = PersisterHelper.convert( singularAttributeBinding.getPropertyPath() );
@@ -99,7 +99,7 @@ public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpr
 	}
 
 	@Override
-	public DomainReferenceExpression buildPluralAttributeExpression(
+	public NavigableReferenceExpression buildPluralAttributeExpression(
 			BuildingContext buildingContext,
 			PluralAttributeBinding attributeBinding) {
 
@@ -117,7 +117,7 @@ public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpr
 	}
 
 	@Override
-	public DomainReferenceExpression buildPluralAttributeElementReferenceExpression(
+	public NavigableReferenceExpression buildPluralAttributeElementReferenceExpression(
 			PluralAttributeElementBinding binding,
 			TableGroup resolvedTableGroup,
 			PropertyPath propertyPath) {

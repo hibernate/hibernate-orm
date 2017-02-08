@@ -7,17 +7,15 @@
 package org.hibernate.test.loadplans.plans;
 
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.loader.entity.EntityJoinWalker;
-import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
+import org.hibernate.loader.plan.build.internal.SqlSelectPlanBuilder;
+import org.hibernate.loader.plan.build.spi.MetamodelDrivenSqlSelectPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.query.internal.QueryBuildingParametersImpl;
-import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -85,12 +83,12 @@ public class LoadPlanStructureAssertionHelper {
 			OuterJoinLoadable persister,
 			LoadQueryInfluencers influencers,
 			LockMode lockMode) {
-		FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
+		SqlSelectPlanBuilder strategy = new SqlSelectPlanBuilder(
 				sf,
 				influencers,
 				lockMode
 				);
-		return MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, persister );
+		return MetamodelDrivenSqlSelectPlanBuilder.buildRootEntityLoadPlan( strategy, persister );
 	}
 
 	public LoadPlan buildLoadPlan(SessionFactoryImplementor sf, OuterJoinLoadable persister) {

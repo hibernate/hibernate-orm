@@ -12,13 +12,23 @@ import java.util.List;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.spi.AbstractManagedType;
-import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
+import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.sql.ast.from.TableGroup;
+import org.hibernate.sql.ast.from.TableSpace;
+import org.hibernate.sql.convert.internal.FromClauseIndex;
+import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
+import org.hibernate.sql.convert.results.spi.Fetch;
+import org.hibernate.sql.convert.results.spi.FetchParent;
+import org.hibernate.sql.convert.results.spi.Return;
+import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -30,9 +40,7 @@ import org.hibernate.type.spi.EmbeddedType;
  */
 public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements EmbeddedPersister<T> {
 	private final EmbeddedContainer source;
-	private final String localName;
-
-	private final String roleName;
+	private final NavigableRole navigableRole;
 	private final EmbeddedType ormType;
 
 	public EmbeddedPersisterImpl(
@@ -42,10 +50,8 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 			PersisterCreationContext creationContext) {
 		super( resolveJtd( creationContext, componentBinding ) );
 		this.source = source;
-		this.localName = localName;
-
-		this.roleName = source.getRolePrefix() + '.' + localName;
-		this.ormType = new EmbeddedTypeImpl( null, roleName, getJavaTypeDescriptor() );
+		this.navigableRole = source.getNavigableRole().append( localName );
+		this.ormType = new EmbeddedTypeImpl( null, navigableRole, getJavaTypeDescriptor() );
 
 		setTypeConfiguration( creationContext.getTypeConfiguration() );
 	}
@@ -80,17 +86,12 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 
 	@Override
 	public String getNavigableName() {
-		return localName;
-	}
-
-	@Override
-	public String getRoleName() {
-		return roleName;
+		return navigableRole.getNavigableName();
 	}
 
 	@Override
 	public String getRolePrefix() {
-		return roleName;
+		return navigableRole.getFullPath();
 	}
 
 	@Override
@@ -109,8 +110,38 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 	}
 
 	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
+	}
+
+	@Override
 	public EmbeddedType getOrmType() {
-		return null;
+		return ormType;
+	}
+
+	@Override
+	public void visitNavigable(NavigableVisitationStrategy visitor) {
+		throw new UnsupportedOperationException(  );
+	}
+
+	@Override
+	public TableGroup buildTableGroup(
+			TableSpace tableSpace,
+			SqlAliasBaseManager sqlAliasBaseManager,
+			FromClauseIndex fromClauseIndex) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public Return generateReturn(
+			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public Fetch generateFetch(
+			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
+		throw new NotYetImplementedException(  );
 	}
 
 	private void bindAttributes(Component embeddableBinding, PersisterCreationContext creationContext) {

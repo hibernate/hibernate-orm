@@ -16,6 +16,9 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.entities.StrTestEntity;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,6 +34,7 @@ import static org.junit.Assert.assertTrue;
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-11131")
+@RequiresDialectFeature( DialectChecks.SupportsSequences.class )
 public class OrderSequenceGenerationTest extends BaseEnversJPAFunctionalTestCase {
 
 	private File createSchema;

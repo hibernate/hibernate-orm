@@ -84,7 +84,7 @@ public class GroupMemberTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer getCurrentAuditUniqueGroupId() {
 		return TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
 			final Query query = entityManager.createNativeQuery(
-					"SELECT uniqueGroup_id FROM groupmember_aud ORDER BY rev DESC"
+					"SELECT uniqueGroup_id FROM GroupMember_AUD ORDER BY rev DESC"
 			).setMaxResults( 1 );
 			final Object result = query.getSingleResult();
 			assertNotNull( result );

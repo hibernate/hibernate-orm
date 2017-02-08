@@ -17,6 +17,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.MariaDB53Dialect;
 import org.hibernate.dialect.MySQL57InnoDBDialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
@@ -474,7 +475,8 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 				Assert.assertNull( revEnd );
 			}
 			else {
-				if ( getDialect() instanceof MySQL5Dialect && !( getDialect() instanceof MySQL57InnoDBDialect) ) {
+				if ( getDialect() instanceof MySQL5Dialect &&
+						!( getDialect() instanceof MySQL57InnoDBDialect || getDialect() instanceof MariaDB53Dialect) ) {
 					// MySQL5 DATETIME column type does not contain milliseconds.
 					// MySQL 5.7 supports milliseconds and when MySQL57InnoDBDialect is used, it is assumed that
 					// the column is defined as DATETIME(6).

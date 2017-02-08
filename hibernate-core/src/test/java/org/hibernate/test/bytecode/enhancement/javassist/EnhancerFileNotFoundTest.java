@@ -8,6 +8,9 @@ package org.hibernate.test.bytecode.enhancement.javassist;
 
 import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import javassist.CtClass;
 
@@ -17,8 +20,6 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
-
-import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -49,12 +50,20 @@ public class EnhancerFileNotFoundTest extends BaseUnitTestCase {
 
 		Enhancer enhancer = new Enhancer( enhancementContextMock );
 		try {
-			enhancer.loadCtClassFromClass( Mockito.mock( getClass() ).getClass() );
+			Class<?> clazz = Hidden.class;
+			String resourceName =  Hidden.class.getName().replace( '.', '/' ) + ".class";
+			URL url = getClass().getClassLoader().getResource( resourceName );
+			Files.delete( Paths.get(url.toURI()) );
+			enhancer.loadCtClassFromClass( clazz );
 			fail("Should throw FileNotFoundException!");
 		}
 		catch ( Exception expected ) {
 			assertEquals( FileNotFoundException.class, expected.getCause().getClass() );
 		}
+	}
+
+	private static class Hidden {
+
 	}
 
 }

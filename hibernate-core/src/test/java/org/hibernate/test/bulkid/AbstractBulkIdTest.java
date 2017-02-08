@@ -71,7 +71,7 @@ public abstract class AbstractBulkIdTest extends BaseCoreFunctionalTestCase {
 	}
 
 	protected int entityCount() {
-		return 100;
+		return 10;
 	}
 
 	@Test

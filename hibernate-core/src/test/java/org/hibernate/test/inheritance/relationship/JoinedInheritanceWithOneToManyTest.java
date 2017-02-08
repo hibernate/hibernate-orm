@@ -202,6 +202,7 @@ public class JoinedInheritanceWithOneToManyTest extends BaseNonConfigCoreFunctio
 	@Table(name = "TB_BLE_NONLIVING ")
 	public static class BLENonLiving extends BuildingListEntry {
 
+		@Column(name = "is_delayed")
 		protected boolean delayed;
 
 		public boolean isDelayed() {

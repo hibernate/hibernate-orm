@@ -157,7 +157,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 	{
 		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder();
 		builder.setName("namedQuery");
-		builder.setQuery("select count(*) AS c from organization");
+		builder.setQuery("select count(*) AS c from ORGANIZATION");
 		builder.setQueryReturns(new NativeSQLQueryReturn[1]);
 		
 		sessionFactory().registerNamedSQLQueryDefinition("namedQuery", builder.createNamedQueryDefinition());

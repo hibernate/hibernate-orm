@@ -9,15 +9,15 @@ package org.hibernate.envers.test.integration.collection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OrderColumn;
 
-import org.hibernate.annotations.IndexColumn;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
@@ -108,7 +108,7 @@ public class IndexColumnListTest extends BaseEnversJPAFunctionalTestCase {
 		private Integer id;
 
 		@ElementCollection
-		@IndexColumn(name = "index")
+		@OrderColumn(name = "`index`")
 		private List<String> children = new ArrayList<String>();
 
 		Parent() {

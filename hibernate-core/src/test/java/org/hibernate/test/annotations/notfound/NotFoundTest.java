@@ -142,7 +142,7 @@ public class NotFoundTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity(name = "Show")
+	@Entity(name = "T_Show")
 	public static class Show {
 
 		@Id

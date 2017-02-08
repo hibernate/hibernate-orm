@@ -54,7 +54,7 @@ public class PreparedStatementSpyConnectionProvider
 	}
 
 	private Connection spy(Connection connection) {
-		if ( new MockUtil().isMock( connection ) ) {
+		if ( MockUtil.isMock( connection ) ) {
 			return connection;
 		}
 		Connection connectionSpy = Mockito.spy( connection );

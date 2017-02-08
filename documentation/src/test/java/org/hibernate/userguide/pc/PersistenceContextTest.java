@@ -238,7 +238,7 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 
 			session.doWork( connection -> {
 				try(Statement statement = connection.createStatement()) {
-					statement.executeUpdate( "UPDATE person SET name = UPPER(name)" );
+					statement.executeUpdate( "UPDATE Person SET name = UPPER(name)" );
 				}
 			} );
 

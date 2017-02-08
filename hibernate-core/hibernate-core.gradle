@@ -76,6 +76,7 @@ dependencies {
     testCompile( libraries.jandex )
     testCompile( libraries.classmate )
     testCompile( libraries.mockito )
+    testCompile( libraries.mockito_inline )
     testCompile( 'joda-time:joda-time:2.3' )
 //    testCompile( "org.jboss.weld:weld-core:2.3.4.Final" )
 //    testCompile( "org.jboss.arquillian.container:arquillian-weld-ee-embedded-1.1:1.0.0.CR9" )

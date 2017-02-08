@@ -4,6 +4,7 @@ dependencies {
 
     testCompile project( ':hibernate-testing' )
     testCompile( libraries.mockito )
+    testCompile( libraries.mockito_inline )
     testRuntime( libraries.ehcache3 )
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

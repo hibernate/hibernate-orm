@@ -20,6 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertThat;
 
 @SkipForDialect({SQLServerDialect.class, SybaseDialect.class})
@@ -39,43 +40,45 @@ public class SubselectFetchWithFormulaTest extends BaseNonConfigCoreFunctionalTe
 
 	@Before
 	public void before() {
-		Session session = openSession();
-		session.getTransaction().begin();
 
-		Name chris = new Name();
-		chris.setId( 1 );
-		chris.setName( "chris" );
-		Value cat = new Value();
-		cat.setId(1);
-		cat.setName( chris );
-		cat.setValue( "cat" );
-		Value canary = new Value();
-		canary.setId( 2 );
-		canary.setName( chris );
-		canary.setValue( "canary" );
+		doInHibernate( this::sessionFactory, session -> {
+			Name chris = new Name();
+			chris.setId( 1 );
+			chris.setName( "chris" );
 
-		session.persist( chris );
-		session.persist( cat );
-		session.persist( canary );
+			Value cat = new Value();
+			cat.setId(1);
+			cat.setName( chris );
+			cat.setValue( "cat" );
 
-		Name sam = new Name();
-		sam.setId(2);
-		sam.setName( "sam" );
-		Value seal = new Value();
-		seal.setId( 3 );
-		seal.setName( sam );
-		seal.setValue( "seal" );
-		Value snake = new Value();
-		snake.setId( 4 );
-		snake.setName( sam );
-		snake.setValue( "snake" );
+			Value canary = new Value();
+			canary.setId( 2 );
+			canary.setName( chris );
+			canary.setValue( "canary" );
 
-		session.persist( sam );
-		session.persist(seal);
-		session.persist( snake );
+			session.persist( chris );
+			session.persist( cat );
+			session.persist( canary );
 
-		session.getTransaction().commit();
-		session.close();
+			Name sam = new Name();
+			sam.setId(2);
+			sam.setName( "sam" );
+
+			Value seal = new Value();
+			seal.setId( 3 );
+			seal.setName( sam );
+			seal.setValue( "seal" );
+
+			Value snake = new Value();
+			snake.setId( 4 );
+			snake.setName( sam );
+			snake.setValue( "snake" );
+
+			session.persist( sam );
+			session.persist(seal);
+			session.persist( snake );
+
+		} );
 	}
 
 	@After

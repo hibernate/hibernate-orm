@@ -18,7 +18,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.MariaDBDialect;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
@@ -36,6 +38,7 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Vlad Mihalcea
  */
+@SkipForDialect(MariaDBDialect.class)
 public class JdbcTimestampCustomSessionLevelTimeZoneTest
 		extends BaseNonConfigCoreFunctionalTestCase {
 

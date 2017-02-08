@@ -12,6 +12,9 @@ import java.util.concurrent.TimeUnit;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hibernate.dialect.MariaDBDialect;
+
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -23,6 +26,7 @@ import static org.junit.Assert.assertEquals;
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-10465")
+@SkipForDialect(MariaDBDialect.class)
 public class TimeAndTimestampTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override

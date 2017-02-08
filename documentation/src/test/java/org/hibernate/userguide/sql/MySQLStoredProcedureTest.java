@@ -66,8 +66,8 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
                         ") " +
                         "BEGIN " +
                         "    SELECT COUNT(*) INTO phoneCount " +
-                        "    FROM phone  " +
-                        "    WHERE phone.person_id = personId; " +
+                        "    FROM Phone p " +
+                        "    WHERE p.person_id = personId; " +
                         "END"
                     );
                     //end::sql-sp-out-mysql-example[]
@@ -76,7 +76,7 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
                         "CREATE PROCEDURE sp_phones(IN personId INT) " +
                         "BEGIN " +
                         "    SELECT *  " +
-                        "    FROM phone   " +
+                        "    FROM Phone   " +
                         "    WHERE person_id = personId;  " +
                         "END"
                     );
@@ -90,8 +90,8 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
                         "BEGIN " +
                         "    DECLARE phoneCount integer; " +
                         "    SELECT COUNT(*) INTO phoneCount " +
-                        "    FROM phone  " +
-                        "    WHERE phone.person_id = personId; " +
+                        "    FROM Phone p " +
+                        "    WHERE p.person_id = personId; " +
                         "    RETURN phoneCount; " +
                         "END"
                     );

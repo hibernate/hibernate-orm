@@ -9,16 +9,16 @@ package org.hibernate.envers.test.integration.onetomany;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
 
-import org.hibernate.annotations.IndexColumn;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
@@ -122,7 +122,7 @@ public class IndexColumnListTest extends BaseEnversJPAFunctionalTestCase {
 		private Integer id;
 
 		@OneToMany(mappedBy = "parent")
-		@IndexColumn(name = "index")
+		@OrderColumn(name = "`index`")
 		private List<Child> children = new ArrayList<Child>();
 
 		Parent() {

@@ -88,6 +88,10 @@ public class PropertyData {
 		return accessType;
 	}
 
+	 /**
+	 * @deprecated since 5.2, to be removed in 6.0 with no replacement.
+	 */
+	@Deprecated
 	public ModificationStore getStore() {
 		return store;
 	}

@@ -101,10 +101,18 @@ public class PropertyAuditingData {
 		this.beanName = beanName;
 	}
 
+	/**
+	 * @deprecated since 5.2, to be removed in 6.0 with no replacement.
+	 */
+	@Deprecated
 	public ModificationStore getStore() {
 		return store;
 	}
 
+	/**
+	 * @deprecated since 5.2, to be removed in 6.0 with no replacement.
+	 */
+	@Deprecated
 	public void setStore(ModificationStore store) {
 		this.store = store;
 	}

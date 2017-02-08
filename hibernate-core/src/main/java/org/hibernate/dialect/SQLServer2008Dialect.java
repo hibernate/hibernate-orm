@@ -10,7 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.NullPrecedence;
 import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.StandardBasicTypes;
 
 /**
  * A dialect for Microsoft SQL Server 2008 with JDBC Driver 3.0 and above

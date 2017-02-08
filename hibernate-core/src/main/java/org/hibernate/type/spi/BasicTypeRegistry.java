@@ -515,7 +515,8 @@ public class BasicTypeRegistry {
 		register( type, type.getRegistryKey() );
 	}
 
-	public BasicType getBasicTypeForCast(String name) {
+	public BasicType
+	getBasicTypeForCast(String name) {
 		final Key key = castTypeToKeyXref.get( name );
 		if ( key == null ) {
 			throw new IllegalArgumentException( "Could not determine cast type for given name : " + name );

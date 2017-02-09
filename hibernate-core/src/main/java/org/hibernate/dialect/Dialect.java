@@ -1117,7 +1117,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @param zeroBasedFirstResult The user-supplied, zero-based first row offset.
 	 * @return The corresponding db/dialect specific offset.
-	 * @see org.hibernate.Query#setFirstResult
+	 * @see org.hibernate.query.Query#setFirstResult
 	 * @see org.hibernate.Criteria#setFirstResult
 	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */

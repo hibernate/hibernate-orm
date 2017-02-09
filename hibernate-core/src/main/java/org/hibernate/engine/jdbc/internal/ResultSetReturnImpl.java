@@ -55,7 +55,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public ResultSet extract(PreparedStatement statement) {
 		// IMPL NOTE : SQL logged by caller
-		if ( isTypeOf( statement, CallableStatement.class ) ) {
+		if ( isTypeOf( statement, CallableStatement.class ) && statement instanceof CallableStatement ) {
 			// We actually need to extract from Callable statement.  Although
 			// this seems needless, Oracle can return an
 			// OracleCallableStatementWrapper that finds its way to this method,

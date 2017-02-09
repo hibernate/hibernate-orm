@@ -119,7 +119,8 @@ public class JoinProcessor implements SqlTokenTypes {
 					fromElement.getOrigin().getJoinSequence().addJoin( (ImpliedFromElement) fromElement );
 					// This from element will be rendered as part of the origins join sequence
 					fromElement.setText("");
-				} else {
+				}
+				else {
 					fromElements.add( fromElement );
 				}
 			}

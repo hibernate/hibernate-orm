@@ -409,14 +409,13 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	/**
-	 * Get the key value from the owning entity instance, usually the identifier, but might be some
-	 * other unique key, in the case of property-ref
+	 * Get the key value from the owning entity instance, without semi-resolving.
 	 *
 	 * @param owner The collection owner
 	 * @param session The session from which the request is originating.
 	 * @return The collection owner's key
 	 */
-	public Serializable getKeyOfOwnerNoCast(Object owner, SharedSessionContractImplementor session) {
+	public Serializable getKeyOfOwnerNoSemiResolve(Object owner, SharedSessionContractImplementor session) {
 
 		EntityEntry entityEntry = session.getPersistenceContext().getEntry( owner );
 		if ( entityEntry == null ) {

@@ -86,7 +86,7 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 				ResultSetProcessingContext.EntityReferenceProcessingState ownerState = context.getOwnerProcessingState( (Fetch) collectionReference );
 
 				Serializable optionalKey = collectionReference.getCollectionPersister().getCollectionType()
-				.getKeyOfOwnerNoCast(ownerState.getEntityInstance(), context.getSession());
+				.getKeyOfOwnerNoSemiResolve(ownerState.getEntityInstance(), context.getSession());
 
 				if ( optionalKey != null ) {
 					// we did not find a collection element in the result set, so we

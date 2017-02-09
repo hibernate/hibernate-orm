@@ -642,6 +642,8 @@ For JPA cascading, prefer using the http://docs.oracle.com/javaee/7/api/javax/pe
 
 When combining both JPA and Hibernate `CascadeType` strategies, Hibernate will merge both sets of cascades.
 
+See the <<chapters/pc/PersistenceContext.adoc#pc-cascade,Cascading>> chapter for more info.
+
 [[annotations-hibernate-check]]
 ==== `@Check`
 

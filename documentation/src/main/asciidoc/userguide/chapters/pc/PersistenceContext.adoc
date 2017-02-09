@@ -2,6 +2,7 @@
 == Persistence Contexts
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/pc
 :sourcedir-caching: ../../../../../test/java/org/hibernate/userguide/caching
+:extrasdir: extras
 
 Both the `org.hibernate.Session` API and `javax.persistence.EntityManager` API represent a context for dealing with persistent data.
 This concept is called a `persistence context`.
@@ -561,5 +562,126 @@ To verify if an entity instance is currently attached to the running persistence
 [source, JAVA, indent=0]
 ----
 include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-contains-example]
+----
+====
+
+[[pc-cascade]]
+=== Cascading entity state transitions
+
+JPA allows you to propagate the state transition from a parent entity to a child.
+For this purpose, the JPA `javax.persistence.CascadeType` defines various cascade types:
+
+`ALL`:: cascades all entity state transitions
+`PERSIST`:: cascades the entity persist operation.
+`MERGE`:: cascades the entity merge operation.
+`REMOVE`:: cascades the entity remove operation.
+`REFRESH`:: cascades the entity refresh operation.
+`DETACH`:: cascades the entity detach operation.
+
+Additionally, the `CascadeType.ALL` will propagate any Hibernate-specific operation, which is defined by the `org.hibernate.annotations.CascadeType` enum:
+
+`SAVE_UPDATE`:: cascades the entity saveOrUpdate operation.
+`REPLICATE`:: cascades the entity replicate operation.
+`LOCK`:: cascades the entity lock operation.
+
+The following examples will explain some of the aforementioned cascade operations using the following entities:
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/Person.java[tags=pc-cascade-domain-model-example]
+
+include::{sourcedir}/Phone.java[tags=pc-cascade-domain-model-example]
+----
+
+[[pc-cascade-persist]]
+==== `CascadeType.PERSIST`
+
+The `CascadeType.PERSIST` allows us to persist a child entity along with the parent one.
+
+[[pc-cascade-persist-example]]
+.`CascadeType.PERSIST` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadePersistTest.java[tags=pc-cascade-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-cascade-persist-example.sql[]
+----
+====
+
+Even if just the `Person` parent entity was persisted, Hibernate has managed to cascade the persist operation to the associated `Phone` child entity as well.
+
+[[pc-cascade-merge]]
+==== `CascadeType.MERGE`
+
+The `CascadeType.MERGE` allows us to merge a child entity along with the parent one.
+
+.`CascadeType.MERGE` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeMergeTest.java[tags=pc-cascade-merge-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-cascade-merge-example.sql[]
+----
+====
+
+During merge, the current state of the entity is copied onto the entity version that was just fetched from the database.
+That's the reason why Hibernate executed the SELECT statement which fetched both the `Person` entity along with its children.
+
+[[pc-cascade-remove]]
+==== `CascadeType.REMOVE`
+
+The `CascadeType.REMOVE` allows us to remove a child entity along with the parent one.
+Traditionally, Hibernate called this operation delete, that's why the `org.hibernate.annotations.CascadeType` provides a `DELETE` cascade option.
+However, `CascadeType.REMOVE` and `org.hibernate.annotations.CascadeType.DELETE` are identical.
+
+[[pc-cascade-remove-example]]
+.`CascadeType.REMOVE` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeRemoveTest.java[tags=pc-cascade-remove-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-cascade-remove-example.sql[]
+----
+====
+
+[[pc-cascade-detach]]
+==== `CascadeType.DETACH`
+
+`CascadeType.DETACH` is used to propagate the detach operation from a parent entity to a child.
+
+[[pc-cascade-detach-example]]
+.`CascadeType.DETACH` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeDetachTest.java[tags=pc-cascade-detach-example]
+----
+====
+
+[[pc-cascade-lock]]
+==== `CascadeType.LOCK`
+
+Although unintuitively, `CascadeType.LOCK` does not propagate a lock request from a parent entity to its children.
+Such a use case requires the use of the `PessimisticLockScope.EXTENDED` value pf the `javax.persistence.lock.scope` property.
+
+However, `CascadeType.LOCK` allows us to reattach a parent entity along with it s children to the currently running Persistence Context.
+
+.`CascadeType.LOCK` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeLockTest.java[tags=pc-cascade-lock-example]
 ----
 ====

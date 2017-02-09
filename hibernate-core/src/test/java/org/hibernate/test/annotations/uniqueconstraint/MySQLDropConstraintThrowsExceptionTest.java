@@ -21,7 +21,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.MySQL5InnoDBDialect;
+import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.RequiresDialect;
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-11236")
-@RequiresDialect(MySQL5InnoDBDialect.class)
+@RequiresDialect(MySQL5Dialect.class)
 public class MySQLDropConstraintThrowsExceptionTest extends BaseUnitTestCase {
 
 	@After

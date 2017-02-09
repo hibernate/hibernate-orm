@@ -15,7 +15,7 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.MySQL55Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.service.ServiceRegistry;
@@ -34,7 +34,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Karel Maesen
  */
-public class MySQL56SpatialDialect extends MySQL5Dialect implements SpatialDialect {
+public class MySQL56SpatialDialect extends MySQL55Dialect implements SpatialDialect {
 
 
 	private MySQLSpatialDialect dialectDelegate = new MySQLSpatialDialect();

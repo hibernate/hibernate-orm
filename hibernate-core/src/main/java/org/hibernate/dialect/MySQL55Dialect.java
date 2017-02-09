@@ -7,14 +7,14 @@
 package org.hibernate.dialect;
 
 /**
+ * An SQL dialect for MySQL 5.5.x specific features.
+ *
  * @author Vlad Mihalcea
  */
-public class MariaDBDialect extends MySQL5Dialect {
-	public MariaDBDialect() {
-		super();
-	}
+public class MySQL55Dialect extends MySQL5Dialect {
 
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
+	@Override
+	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
+		return InnoDBStorageEngine.INSTANCE;
 	}
 }

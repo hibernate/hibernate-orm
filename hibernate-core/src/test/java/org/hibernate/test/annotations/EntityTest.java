@@ -6,23 +6,25 @@
  */
 package org.hibernate.test.annotations;
 
-import javax.persistence.PersistenceException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.query.Query;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.type.StandardBasicTypes;
@@ -33,6 +35,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -365,36 +368,38 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	@SkipForDialect(value = Oracle10gDialect.class, comment = "oracle12c returns time in getDate.  For now, skip.")
 	public void testTemporalType() throws Exception {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		Flight airFrance = new Flight();
-		airFrance.setId( Long.valueOf( 747 ) );
-		airFrance.setName( "Paris-Amsterdam" );
-		airFrance.setDuration( Long.valueOf( 10 ) );
-		airFrance.setDepartureDate( new Date( 05, 06, 21, 10, 0, 0 ) );
-		airFrance.setAlternativeDepartureDate( new GregorianCalendar( 2006, 02, 03, 10, 00 ) );
-		airFrance.getAlternativeDepartureDate().setTimeZone( TimeZone.getTimeZone( "GMT" ) );
-		airFrance.setBuyDate( new java.sql.Timestamp( 122367443 ) );
-		airFrance.setFactor( 25 );
-		s.persist( airFrance );
-		tx.commit();
-		s.close();
 
-		s = openSession();
-		tx = s.beginTransaction();
-		Query q = s.createQuery( "from Flight f where f.departureDate = :departureDate" );
-		q.setParameter( "departureDate", airFrance.getDepartureDate(), StandardBasicTypes.DATE );
-		Flight copyAirFrance = (Flight) q.uniqueResult();
-		assertNotNull( copyAirFrance );
-		assertEquals(
-				df.format( new Date( 05, 06, 21 ) ).toString(),
-				df.format( copyAirFrance.getDepartureDate() ).toString()
-		);
-		assertEquals( df.format( airFrance.getBuyDate() ), df.format( copyAirFrance.getBuyDate() ) );
 
-		s.delete( copyAirFrance );
-		tx.commit();
-		s.close();
+		Flight airFrance = doInHibernate( this::sessionFactory, session -> {
+			Flight _airFrance = new Flight();
+			_airFrance.setId( Long.valueOf( 747 ) );
+			_airFrance.setName( "Paris-Amsterdam" );
+			_airFrance.setDuration( Long.valueOf( 10 ) );
+			_airFrance.setDepartureDate( Date.from(LocalDate.of( 2005, 06, 21 ).atStartOfDay(
+					ZoneId.systemDefault()).toInstant()) );
+			_airFrance.setAlternativeDepartureDate( new GregorianCalendar( 2006, 02, 03, 10, 00 ) );
+			_airFrance.getAlternativeDepartureDate().setTimeZone( TimeZone.getTimeZone( "GMT" ) );
+			_airFrance.setBuyDate( new java.sql.Timestamp( 122367443 ) );
+			_airFrance.setFactor( 25 );
+			session.persist( _airFrance );
+
+			return _airFrance;
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			Query q = session.createQuery( "from Flight f where f.departureDate = :departureDate" );
+			q.setParameter( "departureDate", airFrance.getDepartureDate(), StandardBasicTypes.DATE );
+			Flight copyAirFrance = (Flight) q.uniqueResult();
+			assertNotNull( copyAirFrance );
+			assertEquals(
+					Date.from(LocalDate.of( 2005, 06, 21 ).atStartOfDay(
+							ZoneId.systemDefault()).toInstant()),
+					copyAirFrance.getDepartureDate()
+			);
+			assertEquals( df.format( airFrance.getBuyDate() ), df.format( copyAirFrance.getBuyDate() ) );
+
+			session.delete( copyAirFrance );
+		} );
 	}
 
 	@Test

@@ -17,7 +17,8 @@ import org.junit.Test;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.MySQL57InnoDBDialect;
+import org.hibernate.dialect.MySQL57Dialect;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -29,7 +30,7 @@ import static org.junit.Assert.assertTrue;
  * @author Gail Badner.
  */
 @TestForIssue( jiraKey = "HHH-8401")
-@RequiresDialect( MySQL57InnoDBDialect.class )
+@RequiresDialect( MySQL57Dialect.class )
 public class MySQL57TimestampFspFunctionTest extends BaseCoreFunctionalTestCase {
 
 	@Test

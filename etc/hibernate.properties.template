@@ -43,8 +43,6 @@ hibernate.connection.url @DB_URL@
 
 
 #hibernate.dialect org.hibernate.dialect.MySQLDialect
-#hibernate.dialect org.hibernate.dialect.MySQLInnoDBDialect
-#hibernate.dialect org.hibernate.dialect.MySQLMyISAMDialect
 #hibernate.connection.driver_class org.gjt.mm.mysql.Driver
 #hibernate.connection.driver_class com.mysql.jdbc.Driver
 #hibernate.connection.url jdbc:mysql:///test

@@ -6,12 +6,12 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.SQLException;
+import java.sql.Types;
+
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-
-import java.sql.SQLException;
-import java.sql.Types;
 
 /**
  * An SQL dialect for MySQL 5.x specific features.
@@ -34,6 +34,10 @@ public class MySQL5Dialect extends MySQLDialect {
 	
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return EXTRACTER;
+	}
+
+	protected String getEngineKeyword() {
+		return "engine";
 	}
 
 	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {

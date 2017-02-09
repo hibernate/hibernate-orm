@@ -137,12 +137,8 @@ There are several dialects for MySQL:
 
 `MySQLSpatialDialect`:::
 	a spatially-extended version of Hibernate `MySQLDialect`
-`MySQLSpatialInnoDBDialect`:::
-	a spatially-extended version of Hibernate `MySQLInnoDBDialect`
 `MySQLSpatial56Dialect`:::
 	a spatially-extended version of Hibernate `MySQL5DBDialect`.
-`MySQLSpatial5InnoDBDialect`:::
-	the same as `MySQLSpatial56Dialect`, but with support for the InnoDB storage engine.
 
 [NOTE]
 ====
@@ -150,7 +146,7 @@ MySQL versions before 5.6.1 had only limited support for spatial operators.
 Most operators only took account of the minimum bounding rectangles (MBR) of the geometries, and not the geometries themselves.
 
 This changed in version 5.6.1 were MySQL introduced `ST_*` spatial operators.
-The dialects `MySQLSpatial56Dialect` and `MySQLSpatial5InnoDBDialect` use these newer, more precise operators.
+The dialect `MySQLSpatial56Dialect` uses these newer, more precise operators.
 
 These dialects may therefore produce results that differ from that of the other spatial dialects.
 

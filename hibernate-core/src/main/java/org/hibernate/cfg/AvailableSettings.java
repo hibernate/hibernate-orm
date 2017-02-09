@@ -380,6 +380,15 @@ public interface AvailableSettings {
 	String DIALECT_RESOLVERS = "hibernate.dialect_resolvers";
 
 	/**
+	 * Defines the default storage engine for the relational databases that support multiple storage engines.
+	 * This property must be set either as an Environment variable or JVM System Property.
+	 * That is because the Dialect is bootstrapped prior to Hibernate property resolution.
+	 *
+	 * @since 5.2.9
+	 */
+	String STORAGE_ENGINE = "hibernate.dialect.storage_engine";
+
+	/**
 	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaManagementTool} to use for performing
 	 * schema management.  The default is to use {@link org.hibernate.tool.schema.internal.HibernateSchemaManagementTool}
 	 *

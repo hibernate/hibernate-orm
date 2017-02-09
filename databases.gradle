@@ -38,7 +38,7 @@ ext {
                         'jdbc.url'   : 'jdbc:postgresql:hibernate_orm_test'
                 ],
                 mysql : [
-                        'db.dialect' : 'org.hibernate.dialect.MySQL57InnoDBDialect',
+                        'db.dialect' : 'org.hibernate.dialect.MySQL57Dialect',
                         'jdbc.driver': 'com.mysql.jdbc.Driver',
                         'jdbc.user'  : 'hibernateormtest',
                         'jdbc.pass'  : 'hibernateormtest',

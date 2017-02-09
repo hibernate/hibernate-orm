@@ -311,11 +311,6 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsCascadeDelete() {
-		return false;
-	}
-
-	@Override
 	public String getTableComment(String comment) {
 		return " comment='" + comment + "'";
 	}
@@ -540,5 +535,52 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public boolean isJdbcLogWarningsEnabledByDefault() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsCascadeDelete() {
+		return getMySQLStorageEngine().supportsCascadeDelete();
+	}
+
+	@Override
+	public String getTableTypeString() {
+		return getMySQLStorageEngine().getTableTypeString(getEngineKeyword());
+	}
+
+	protected String getEngineKeyword() {
+		return "type";
+	}
+
+	@Override
+	public boolean hasSelfReferentialForeignKeyBug() {
+		return getMySQLStorageEngine().hasSelfReferentialForeignKeyBug();
+	}
+
+	@Override
+	public boolean dropConstraints() {
+		return getMySQLStorageEngine().dropConstraints();
+	}
+
+	protected MySQLStorageEngine getMySQLStorageEngine() {
+		String storageEngine = Environment.getProperties().getProperty( Environment.STORAGE_ENGINE );
+		if(storageEngine == null) {
+			storageEngine = System.getProperty( Environment.STORAGE_ENGINE );
+		}
+		if(storageEngine == null) {
+			return getDefaultMySQLStorageEngine();
+		}
+		if( "innodb".equals( storageEngine.toLowerCase() ) ) {
+			return InnoDBStorageEngine.INSTANCE;
+		}
+		else if( "myisam".equals( storageEngine.toLowerCase() ) ) {
+			return MyISAMStorageEngine.INSTANCE;
+		}
+		else {
+			throw new UnsupportedOperationException( "The " + storageEngine + " storage engine is not supported!" );
+		}
+	}
+
+	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
+		return MyISAMStorageEngine.INSTANCE;
 	}
 }

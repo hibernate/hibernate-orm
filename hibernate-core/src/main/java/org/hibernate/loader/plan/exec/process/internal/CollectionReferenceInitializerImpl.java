@@ -14,7 +14,6 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.exec.process.spi.CollectionReferenceInitializer;
-import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
 import org.hibernate.loader.plan.exec.spi.CollectionReferenceAliases;
 import org.hibernate.loader.plan.spi.CollectionReference;
 import org.hibernate.loader.plan.spi.Fetch;
@@ -85,6 +84,7 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 			}
 			else {
 				final Serializable optionalKey = findCollectionOwnerKey( context );
+
 				if ( optionalKey != null ) {
 					// we did not find a collection element in the result set, so we
 					// ensure that a collection is created with the owner's identifier,
@@ -138,12 +138,12 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 	}
 
 	protected Serializable findCollectionOwnerKey(ResultSetProcessingContextImpl context) {
-		ResultSetProcessingContext.EntityReferenceProcessingState ownerState = context.getOwnerProcessingState( (Fetch) collectionReference );
+		Object owner = context.getOwnerProcessingState( (Fetch) collectionReference ).getEntityInstance();
 
-		if(ownerState == null || ownerState.getEntityKey()==null){
-			return null;
-		}
-		return ownerState.getEntityKey().getIdentifier();
+		return collectionReference.getCollectionPersister().getCollectionType().getKeyOfOwner(
+				owner,
+				context.getSession()
+		);
 	}
 
 	@Override

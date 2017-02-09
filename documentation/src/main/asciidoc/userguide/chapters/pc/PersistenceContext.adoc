@@ -563,3 +563,29 @@ To verify if an entity instance is currently attached to the running persistence
 include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-contains-example]
 ----
 ====
+
+[[cascade]]
+=== `@Cascade`
+
+When interested in cascading the operation in an association between entities, we can use the `@Cascade`. To do that, all that's need to be done is
+defining the `CascadeType`.
+
+[[cascade-persist]]
+==== `@CascadeType.PERSIST`
+
+Hibernate's `org.hibernate.annotations.CascadeType.PERSIST` is equivalent to JPA's `javax.persistence.CascadeType.PERSIST`. Both annotations are used
+when we are interested in propagating the persist operation.
+
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir-caching}/CascadeTest.java[tags=cascade-persist-example]
+----
+====
+
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/cascade-persist-example.sql[]
+----
+====

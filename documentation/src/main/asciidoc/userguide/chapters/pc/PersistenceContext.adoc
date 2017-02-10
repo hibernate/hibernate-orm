@@ -634,12 +634,29 @@ include::{extrasdir}/cascade-lock-example.sql[]
 ----
 ====
 
+[[cascade-merge]]
+==== `CascadeType.MERGE`
+
+Used to cascade the merge operation, corresponds to JPA's `CascadeType.MERGE`.
+
+.`@Cascade(CascadeType.MERGE)` usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeMergeTest.java[tags=cascade-merge-entities-example]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeMergeTest.java[tags=cascade-merge-test-example]
+----
+====
 
 [[cascade-persist]]
 ==== `CascadeType.PERSIST`
 
-Hibernate's `org.hibernate.annotations.CascadeType.PERSIST` is equivalent to JPA's `javax.persistence.CascadeType.PERSIST`. Both annotations are used
-when we are interested in propagating the persist operation.
+`org.hibernate.annotations.CascadeType.PERSIST` is equivalent to `javax.persistence.CascadeType.PERSIST`.
+Both annotations are used when we are interested in propagating the persist operation.
 
 .`@Cascade(CascadeType.PERSIST)` usage
 ====

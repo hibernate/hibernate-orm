@@ -611,6 +611,30 @@ include::{sourcedir}/CascadeDetachTest.java[tags=cascade-detach-test-example]
 ----
 ====
 
+[[cascade-lock]]
+==== `CascadeType.LOCK`
+
+The `CascadeType.LOCK` is useful when reattaching a detached entity is the goal. It locks the parent side of the association but only propagates the reattachment.
+
+.`@Cascade(CascadeType.LOCK)` usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeLockTest.java[tags=cascade-lock-entities-example]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeLockTest.java[tags=cascade-lock-test-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/cascade-lock-example.sql[]
+----
+====
+
+
 [[cascade-persist]]
 ==== `CascadeType.PERSIST`
 

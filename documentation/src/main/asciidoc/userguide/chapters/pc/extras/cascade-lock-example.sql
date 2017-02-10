@@ -1,0 +1,1 @@
+SELECT id FROM phone WHERE id = 1 FOR UPDATE

@@ -27,7 +27,7 @@ public class CascadeDeleteTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void persistTest() {
+	public void deleteTest() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Person person = new Person();
 			person.setId( 1L );

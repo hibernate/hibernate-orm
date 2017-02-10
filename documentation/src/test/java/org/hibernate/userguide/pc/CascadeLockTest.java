@@ -4,7 +4,11 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Version;
 
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.Session;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -16,7 +20,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Fábio Takeo Ueno
  */
-public class CascadeDetachTest extends BaseEntityManagerFunctionalTestCase {
+public class CascadeLockTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -27,7 +31,7 @@ public class CascadeDetachTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void detachTest() {
+	public void lockTest() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Person person = new Person();
 			person.setId( 1L );
@@ -41,25 +45,24 @@ public class CascadeDetachTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist( person );
 			entityManager.persist( phone );
 
-			//tag::cascade-detach-test-example[]
+			//tag::cascade-lock-test-example[]
 			phone = entityManager.find( Phone.class, 1L );
-			//end::cascade-detach-test-example[]
-
 			person = phone.getOwner();
 
-			System.out.println( entityManager.contains( phone ));
-			System.out.println( entityManager.contains( person ));
-
-			//tag::cascade-detach-test-example[]
 			entityManager.detach( phone );
-			//end::cascade-detach-test-example[]
+			entityManager.detach( person );
+
+			entityManager.unwrap( Session.class )
+					.buildLockRequest( new LockOptions( LockMode.NONE ) )
+					.lock( phone );
+			//end::cascade-lock-test-example[]
 
 			System.out.println( entityManager.contains( phone ));
 			System.out.println( entityManager.contains( person ));
 		} );
 	}
 
-	//tag::cascade-detach-entities-example[]
+	//tag::cascade-lock-entities-example[]
 	@Entity
 	public static class Person {
 
@@ -95,7 +98,7 @@ public class CascadeDetachTest extends BaseEntityManagerFunctionalTestCase {
 		private String number;
 
 		@ManyToOne
-		@Cascade( CascadeType.DETACH )
+		@Cascade( CascadeType.LOCK )
 		private Person owner;
 
 		public Long getId() {
@@ -122,5 +125,5 @@ public class CascadeDetachTest extends BaseEntityManagerFunctionalTestCase {
 			this.owner = owner;
 		}
 	}
-	//end::cascade-detach-entities-example[]
+	//end::cascade-lock-entities-example[]
 }

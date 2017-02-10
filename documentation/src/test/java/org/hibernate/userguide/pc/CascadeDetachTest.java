@@ -16,7 +16,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Fábio Takeo Ueno
  */
-public class CascadeDeleteTest extends BaseEntityManagerFunctionalTestCase {
+public class CascadeDetachTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -41,15 +41,25 @@ public class CascadeDeleteTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist( person );
 			entityManager.persist( phone );
 
-			//tag::cascade-delete-test-example[]
+			//tag::cascade-detach-test-example[]
 			phone = entityManager.find( Phone.class, 1L );
+			//end::cascade-detach-test-example[]
 
-			entityManager.remove( phone );
-			//end::cascade-delete-test-example[]
+			person = phone.getOwner();
+
+			System.out.println( entityManager.contains( phone ));
+			System.out.println( entityManager.contains( person ));
+
+			//tag::cascade-detach-test-example[]
+			entityManager.detach( phone );
+			//end::cascade-detach-test-example[]
+
+			System.out.println( entityManager.contains( phone ));
+			System.out.println( entityManager.contains( person ));
 		} );
 	}
 
-	//tag::cascade-delete-entities-example[]
+	//tag::cascade-detach-entities-example[]
 	@Entity
 	public static class Person {
 
@@ -85,7 +95,7 @@ public class CascadeDeleteTest extends BaseEntityManagerFunctionalTestCase {
 		private String number;
 
 		@ManyToOne
-		@Cascade( CascadeType.DELETE )
+		@Cascade( CascadeType.DETACH )
 		private Person owner;
 
 		public Long getId() {
@@ -112,5 +122,5 @@ public class CascadeDeleteTest extends BaseEntityManagerFunctionalTestCase {
 			this.owner = owner;
 		}
 	}
-	//end::cascade-delete-entities-example[]
+	//end::cascade-detach-entities-example[]
 }

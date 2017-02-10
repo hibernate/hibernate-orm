@@ -573,7 +573,7 @@ defining the `CascadeType`.
 [[cascade-delete]]
 ==== `CascadeType.DELETE`
 
-When performing the remove operation in an entity, we're able to cascade this to all the child entities with `CascadeType.DELETE`.
+When performing the delete operation in an entity, we're able to cascade this to all children entities with `CascadeType.DELETE`.
 
 .`@Cascade(CascadeType.DELETE)` usage
 ====
@@ -590,6 +590,24 @@ include::{sourcedir}/CascadeDeleteTest.java[tags=cascade-delete-test-example]
 [source, SQL, indent=0]
 ----
 include::{extrasdir}/cascade-delete-example.sql[]
+----
+====
+
+[[cascade-detach]]
+==== `CascadeType.DETACH`
+
+Just like the `CascadeType.DELETE`, the `CascadeType.DETACH` is used in order to propagate the detach operation to the child entity.
+
+.`@Cascade(CascadeType.DETACH)` usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeDetachTest.java[tags=cascade-detach-entities-example]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeDetachTest.java[tags=cascade-detach-test-example]
 ----
 ====
 

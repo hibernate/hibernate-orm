@@ -37,7 +37,6 @@ import static org.junit.Assert.assertThat;
 @TestForIssue(jiraKey = "HHH-10364")
 @SkipForDialect(value = DB2Dialect.class, comment = "DB2 jdbc driver doesn't support getNClob")
 @SkipForDialect(value = MySQLDialect.class, comment = "MySQL/MariadB doesn't support nclob")
-@SkipForDialect(value = PostgreSQL81Dialect.class, comment = "PostgreSQL doesn't support nclob")
 @SkipForDialect(value = SybaseDialect.class, comment = "Sybase doesn't support nclob")
 public class NationalizedLobFieldTest extends BaseCoreFunctionalTestCase {
 

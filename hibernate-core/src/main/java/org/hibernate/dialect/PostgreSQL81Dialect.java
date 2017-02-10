@@ -188,7 +188,7 @@ public class PostgreSQL81Dialect extends Dialect {
 				break;
 			}
 			case Types.CLOB: {
-				descriptor = ClobTypeDescriptor.CLOB_BINDING;
+				descriptor = ClobTypeDescriptor.POSTGRESQL_CLOB_BINDING;
 				break;
 			}
 			default: {

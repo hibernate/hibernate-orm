@@ -29,7 +29,7 @@ public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void persistTest() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::cascade-persist-example[]
+			//tag::cascade-persist-test-example[]
 			Person person = new Person();
 			person.setId( 1L );
 			person.setName( "John Doe" );
@@ -40,11 +40,11 @@ public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
 			phone.setOwner( person );
 
 			entityManager.persist( phone );
-			//end::cascade-persist-example[]
+			//end::cascade-persist-test-example[]
 		} );
 	}
 
-	//tag::cascade-persist-example[]
+	//tag::cascade-persist-entities-example[]
 	@Entity
 	public static class Person {
 
@@ -107,5 +107,5 @@ public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
 			this.owner = owner;
 		}
 	}
-	//end::cascade-persist-example[]
+	//end::cascade-persist-entities-example[]
 }

@@ -16,20 +16,19 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Fábio Takeo Ueno
  */
-public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
+public class CascadeDeleteTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-			Person.class,
-			Phone.class
+				Person.class,
+				Phone.class
 		};
 	}
 
 	@Test
 	public void persistTest() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::cascade-persist-test-example[]
 			Person person = new Person();
 			person.setId( 1L );
 			person.setName( "John Doe" );
@@ -40,11 +39,16 @@ public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
 			phone.setOwner( person );
 
 			entityManager.persist( phone );
-			//end::cascade-persist-test-example[]
+
+			//tag::cascade-delete-test-example[]
+			phone = entityManager.find( Phone.class, 1L );
+
+			entityManager.remove( phone );
+			//end::cascade-delete-test-example[]
 		} );
 	}
 
-	//tag::cascade-persist-entities-example[]
+	//tag::cascade-delete-entities-example[]
 	@Entity
 	public static class Person {
 
@@ -80,7 +84,7 @@ public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
 		private String number;
 
 		@ManyToOne
-		@Cascade( CascadeType.PERSIST )
+		@Cascade( CascadeType.DELETE )
 		private Person owner;
 
 		public Long getId() {
@@ -107,5 +111,5 @@ public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
 			this.owner = owner;
 		}
 	}
-	//end::cascade-persist-entities-example[]
+	//end::cascade-delete-entities-example[]
 }

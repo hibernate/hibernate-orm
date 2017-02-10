@@ -570,6 +570,29 @@ include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-co
 When interested in cascading an operation in an association between entities, we can use the `@Cascade`. To do that, all that's need to be done is
 defining the `CascadeType`.
 
+[[cascade-delete]]
+==== `CascadeType.DELETE`
+
+When performing the remove operation in an entity, we're able to cascade this to all the child entities with `CascadeType.DELETE`.
+
+.`@Cascade(CascadeType.DELETE)` usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeDeleteTest.java[tags=cascade-delete-entities-example]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeDeleteTest.java[tags=cascade-delete-test-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/cascade-delete-example.sql[]
+----
+====
+
 [[cascade-persist]]
 ==== `CascadeType.PERSIST`
 
@@ -580,12 +603,12 @@ when we are interested in propagating the persist operation.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeTest.java[tags=cascade-persist-entities-example]
+include::{sourcedir}/CascadePersistTest.java[tags=cascade-persist-entities-example]
 ----
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeTest.java[tags=cascade-persist-test-example]
+include::{sourcedir}/CascadePersistTest.java[tags=cascade-persist-test-example]
 ----
 
 [source, SQL, indent=0]

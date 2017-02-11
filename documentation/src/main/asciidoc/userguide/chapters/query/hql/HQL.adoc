@@ -1128,7 +1128,8 @@ include::{sourcedir}/HQLTest.java[tags=hql-concat-function-example]
 
 SUBSTRING::
 	  Extracts a portion of a string value.
-	  The second argument denotes the starting position. The third (optional) argument denotes the length.
+	  The second argument denotes the starting position, where 1 is the first character of the string.
+	  The third (optional) argument denotes the length.
 
 ====
 [source, JAVA, indent=0]

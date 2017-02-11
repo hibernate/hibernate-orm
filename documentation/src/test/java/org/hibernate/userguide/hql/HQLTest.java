@@ -1145,7 +1145,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-substring-function-example[]
 			List<String> prefixes = entityManager.createQuery(
-				"select substring( p.number, 0, 2 ) " +
+				"select substring( p.number, 1, 2 ) " +
 				"from Call c " +
 				"join c.phone p", String.class )
 			.getResultList();

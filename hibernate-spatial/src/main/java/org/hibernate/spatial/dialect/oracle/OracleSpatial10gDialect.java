@@ -285,7 +285,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 			aggregateFunction.append( "SDOAGGRTYPE(" );
 		}
 		aggregateFunction.append( arg1 );
-		// TODO tolerance must by configurable
+
 		if ( sa.isAggregateType() ) {
 			aggregateFunction.append( ", " ).append( .001 ).append( ")" );
 		}

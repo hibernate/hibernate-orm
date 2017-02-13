@@ -18,6 +18,12 @@ dependencies {
     testRuntime( libraries.expression_language_api )
     testRuntime( libraries.expression_language_impl )
 
+    if (db.equalsIgnoreCase("oracle")) {
+        dependencies {
+            testRuntime( libraries.oracle )
+        }
+    }
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Java 9 ftw!
     if ( JavaVersion.current().isJava9Compatible() ) {

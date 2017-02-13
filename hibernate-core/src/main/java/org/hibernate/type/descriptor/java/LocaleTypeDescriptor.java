@@ -13,7 +13,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * Descriptor for {@link Locale} handling.
- * 
+ *
  * @author Steve Ebersole
  */
 public class LocaleTypeDescriptor extends AbstractTypeDescriptor<Locale> {
@@ -43,8 +43,12 @@ public class LocaleTypeDescriptor extends AbstractTypeDescriptor<Locale> {
 	public Locale fromString(String string) {
 		// TODO : Ultimately switch to Locale.Builder for this. However, Locale.Builder is Java 7
 
-		if ( string == null || string.isEmpty() ) {
+		if ( string == null ) {
 			return null;
+		}
+
+		if( string.isEmpty() ) {
+			return Locale.ROOT;
 		}
 
 		boolean separatorFound = false;

@@ -16,6 +16,7 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.junit.Test;
 
@@ -61,7 +62,7 @@ public abstract class AbstractStoredProcedureTest extends BaseEntityManagerFunct
 		memento = list.get( 0 );
 		assertEquals( Integer.valueOf( 1 ), memento.getPosition() );
 		assertEquals( javax.persistence.ParameterMode.INOUT, memento.getMode() );
-		assertEquals( StringType.INSTANCE, memento.getHibernateType() );
+		assertEquals( StandardSpiBasicTypes.STRING, memento.getHibernateType() );
 		assertEquals( String.class, memento.getType() );
 
 		memento = list.get( 1 );

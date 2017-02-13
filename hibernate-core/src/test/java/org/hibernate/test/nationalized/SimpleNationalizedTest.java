@@ -28,6 +28,7 @@ import org.hibernate.type.NTextType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringNVarcharType;
 import org.hibernate.type.StringType;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -82,7 +83,7 @@ public class SimpleNationalizedTest extends BaseUnitTestCase {
 			Property prop = pc.getProperty( "nvarcharAtt" );
 			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ){
 				// See issue HHH-10693
-				assertSame( StringType.INSTANCE, prop.getType() );
+				assertSame( StandardSpiBasicTypes.STRING, prop.getType() );
 			}else{
 				assertSame( StringNVarcharType.INSTANCE, prop.getType() );
 			}

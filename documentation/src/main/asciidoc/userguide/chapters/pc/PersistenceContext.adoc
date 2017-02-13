@@ -674,14 +674,27 @@ include::{sourcedir}/CascadeDetachTest.java[tags=pc-cascade-detach-example]
 ==== `CascadeType.LOCK`
 
 Although unintuitively, `CascadeType.LOCK` does not propagate a lock request from a parent entity to its children.
-Such a use case requires the use of the `PessimisticLockScope.EXTENDED` value pf the `javax.persistence.lock.scope` property.
+Such a use case requires the use of the `PessimisticLockScope.EXTENDED` value of the `javax.persistence.lock.scope` property.
 
-However, `CascadeType.LOCK` allows us to reattach a parent entity along with it s children to the currently running Persistence Context.
+However, `CascadeType.LOCK` allows us to reattach a parent entity along with its children to the currently running Persistence Context.
 
 .`CascadeType.LOCK` example
 ====
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/CascadeLockTest.java[tags=pc-cascade-lock-example]
+----
+====
+
+[[pc-cascade-refresh]]
+==== `CascadeType.REFRESH`
+
+The `CascadeType.REFRESH` is used to propagate the the refresh operation from a parent entity to a child.
+
+.`CascadeType.REFRESH` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeRefreshTest.java[tags=pc-cascade-refresh-example]
 ----
 ====

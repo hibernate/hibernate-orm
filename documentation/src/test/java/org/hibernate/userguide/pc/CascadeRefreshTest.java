@@ -9,7 +9,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Fábio Takeo Ueno
  */
-public class CascadeRemoveTest extends BaseEntityManagerFunctionalTestCase {
+public class CascadeRefreshTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -20,7 +20,7 @@ public class CascadeRemoveTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void removeTest() {
+	public void refreshTest() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Person person = new Person();
 			person.setId( 1L );
@@ -35,11 +35,17 @@ public class CascadeRemoveTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::pc-cascade-remove-example[]
-			Person person = entityManager.find( Person.class, 1L );
 
-			entityManager.remove( person );
-			//end::pc-cascade-remove-example[]
+			//tag::pc-cascade-refresh-example[]
+			Person person = entityManager.find( Person.class, 1L );
+			Phone phone = person.getPhones().get( 0 );
+
+			person.setName( "John Doe Jr." );
+			phone.setNumber( "987-654-3210" );
+
+			entityManager.refresh( person );
+
+			//end::pc-cascade-refresh-example[]
 		} );
 	}
 }

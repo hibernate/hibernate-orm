@@ -7,11 +7,13 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Fábio Takeo Ueno
  */
-public class CascadeRefreshTest extends BaseEntityManagerFunctionalTestCase {
+public class CascadeReplicateTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -38,16 +40,24 @@ public class CascadeRefreshTest extends BaseEntityManagerFunctionalTestCase {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 
-			//tag::pc-cascade-refresh-example[]
+			//tag::pc-cascade-replicate-example[]
 			Person person = entityManager.find( Person.class, 1L );
 			Phone phone = person.getPhones().get( 0 );
 
-			person.setName( "John Doe Jr." );
-			phone.setNumber( "987-654-3210" );
+			assertTrue( entityManager.contains( person ) );
+			assertTrue( entityManager.contains( phone ) );
 
-			entityManager.unwrap( Session.class ).replicate( person, ReplicationMode.LATEST_VERSION );
-			entityManager.refresh( person );
-			//end::pc-cascade-refresh-example[]
+			entityManager.unwrap( Session.class ).evict( person );
+
+			assertFalse( entityManager.contains( person ) );
+			assertFalse( entityManager.contains( phone ) );
+
+			entityManager.unwrap( Session.class )
+					.replicate( person, ReplicationMode.LATEST_VERSION );
+
+			assertTrue( entityManager.contains( person ) );
+			assertTrue( entityManager.contains( phone ) );
+			//end::pc-cascade-replicate-example[]
 		} );
 	}
 }

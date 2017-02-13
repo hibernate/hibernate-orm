@@ -36,6 +36,7 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -415,7 +416,11 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				);
 
 				final Object nextVersion = isVersionIncrementRequired ?
-						Versioning.increment( entry.getVersion(), persister.getVersionSupport(), event.getSession() ) :
+						Versioning.increment(
+								entry.getVersion(),
+								( (BasicType) persister.getVersionType() ).getVersionSupport(),
+								event.getSession()
+						) :
 						entry.getVersion(); //use the current version
 
 				Versioning.setVersion( values, nextVersion, persister );

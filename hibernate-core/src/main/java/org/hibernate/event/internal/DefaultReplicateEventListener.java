@@ -26,6 +26,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -101,7 +102,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 					entity,
 					realOldVersion,
 					persister.getVersion( entity ),
-					persister.getVersionSupport()
+					persister.getVersionType()
 			);
 
 			// if can replicate, will result in a SQL UPDATE

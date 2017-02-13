@@ -32,6 +32,7 @@ import org.hibernate.event.spi.MergeEvent;
 import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -361,7 +362,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		// an entity to be merged during the same transaction
 		// (though during a seperate operation) in which it was
 		// originally persisted/saved
-		boolean changed = !persister.getVersionSupport().isSame(
+		boolean changed = !EqualsHelper.equals(
 				persister.getVersion( target ),
 				persister.getVersion( entity )
 		);

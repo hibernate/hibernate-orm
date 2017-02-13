@@ -35,6 +35,7 @@ import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -401,7 +402,7 @@ public abstract class AbstractSaveEventListener
 			substitute = Versioning.seedVersion(
 					values,
 					persister.getVersionProperty(),
-					persister.getVersionSupport(),
+					((BasicType)persister.getVersionType()).getVersionSupport(),
 					source
 			) || substitute;
 		}

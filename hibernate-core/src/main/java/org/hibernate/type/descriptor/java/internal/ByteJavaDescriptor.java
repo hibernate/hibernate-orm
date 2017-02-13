@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java.internal;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.spi.AbstractNumericJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -19,7 +20,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class ByteJavaDescriptor extends AbstractNumericJavaDescriptor<Byte> {
+public class ByteJavaDescriptor extends AbstractNumericJavaDescriptor<Byte> implements Primitive<Byte> {
 	public static final ByteJavaDescriptor INSTANCE = new ByteJavaDescriptor();
 	public static final Byte ZERO = (byte) 0;
 

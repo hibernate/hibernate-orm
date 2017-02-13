@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java.internal;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.spi.AbstractNumericJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -18,8 +19,10 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class ShortJavaDescriptor extends AbstractNumericJavaDescriptor<Short> {
+public class ShortJavaDescriptor extends AbstractNumericJavaDescriptor<Short> implements Primitive<Short> {
 	public static final ShortJavaDescriptor INSTANCE = new ShortJavaDescriptor();
+
+	private static final Short ZERO = (short) 0;
 
 	public ShortJavaDescriptor() {
 		super( Short.class );
@@ -83,5 +86,15 @@ public class ShortJavaDescriptor extends AbstractNumericJavaDescriptor<Short> {
 			return Short.valueOf( ( (String) value ) );
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public Class getPrimitiveClass() {
+		return short.class;
+	}
+
+	@Override
+	public Short getDefaultValue() {
+		return ZERO;
 	}
 }

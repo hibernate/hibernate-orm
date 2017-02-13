@@ -11,7 +11,7 @@ import java.io.Serializable;
 /**
  * @author Steve Ebersole
  */
-public interface NumericJavaDescriptor<T extends Serializable> extends BasicJavaDescriptor<T>, Primitive<T> {
+public interface NumericJavaDescriptor<T extends Serializable> extends BasicJavaDescriptor<T> {
 	// todo (6.0) : ? - implement these?
 //	Byte toByte(Boolean value);
 //	Short toShort(Boolean value);

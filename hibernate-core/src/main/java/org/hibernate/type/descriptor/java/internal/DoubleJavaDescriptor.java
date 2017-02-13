@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.spi.AbstractNumericJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -20,8 +21,10 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class DoubleJavaDescriptor extends AbstractNumericJavaDescriptor<Double> {
+public class DoubleJavaDescriptor extends AbstractNumericJavaDescriptor<Double> implements Primitive<Double> {
 	public static final DoubleJavaDescriptor INSTANCE = new DoubleJavaDescriptor();
+
+	public static final Double ZERO = 0.0;
 
 	public DoubleJavaDescriptor() {
 		super( Double.class );
@@ -93,5 +96,15 @@ public class DoubleJavaDescriptor extends AbstractNumericJavaDescriptor<Double> 
 			return Double.valueOf( ( (String) value ) );
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public Class getPrimitiveClass() {
+		return double.class;
+	}
+
+	@Override
+	public Double getDefaultValue() {
+		return ZERO;
 	}
 }

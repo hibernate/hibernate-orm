@@ -403,7 +403,6 @@ and is a far more efficient alternative to bulk eviction of the region via `Sess
 ----
 include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-native-evict-example]
 ----
-
 ====
 
 [[caching-management]]
@@ -710,6 +709,7 @@ Clustering the Infinispan second-level cache provider is as simple as adding the
 <!-- Use Infinispan second level cache provider -->
 <property name="hibernate.cache.region.factory_class"
           value="org.hibernate.cache.infinispan.InfinispanRegionFactory"/>
+----
 ====
 
 As with the standalone local mode, at the bare minimum the region factory has to be configured to point to an Infinispan region factory implementation.
@@ -879,13 +879,13 @@ See examples below on how entity/collection specific configurations can be appli
 <property
     name="hibernate.cache.infinispan.cfg"
     value="my-infinispan-configuration.xml" />
+----
 ====
 
 [NOTE]
 ====
 If the cache is configured as transactional, InfinispanRegionFactory automatically sets transaction manager so that the TM used by Infinispan is the same as TM used by Hibernate.
 ====
-
 
 Cache configuration can differ for each type of data stored in the cache. In order to override the cache configuration template, use property `hibernate.cache.infinispan._data-type_.cfg` where `_data-type_` can be one of:
 
@@ -916,10 +916,12 @@ For specifying cache template for specific region, use region name instead of th
 <property
     name="hibernate.cache.infinispan.com.example.MyEntity.someCollection.cfg"
     value="my-entities-some-collection" />
+----
 ====
 
 .Use custom cache template in Wildfly
 When applying entity/collection level changes inside JPA applications deployed in Wildfly, it is necessary to specify deployment name and persistence unit name:
+
 ====
 [source, XML, indent=0]
 ----
@@ -929,6 +931,7 @@ When applying entity/collection level changes inside JPA applications deployed i
 <property
     name="hibernate.cache.infinispan._war_or_ear_name_._unit_name_.com.example.MyEntity.someCollection.cfg"
     value="my-entities-some-collection" />
+----
 ====
 
 [IMPORTANT]
@@ -959,6 +962,7 @@ Example:
    value= "60000"/>
 <property name="hibernate.cache.infinispan.entity.expiration.max_idle"
    value= "30000"/>
+----
 ====
 
 With the above configuration, you're overriding whatever eviction/expiration settings were defined for the default entity cache name in the Infinispan cache configuration used, regardless of whether it's the default one or user defined.
@@ -978,6 +982,7 @@ Example:
 <property name="hibernate.cache.infinispan.com.acme.Person.eviction.strategy"
    value= "LIRS"/>
 ----
+====
 
 Inside of Wildfly, same as with the entity/collection configuration override, eviction/expiration settings would also require deployment name and persistence unit information:
 
@@ -988,6 +993,7 @@ Inside of Wildfly, same as with the entity/collection configuration override, ev
 <property name="hibernate.cache.infinispan._war_or_ear_name_._unit_name_.com.acme.Person.expiration.lifespan"
    value= "65000"/>
 ----
+====
 
 [NOTE]
 ====
@@ -1003,13 +1009,13 @@ Property `hibernate.cache.infinispan.use_synchronization` that allowed to regist
 
 [[caching-provider-infinispan-remote]]
 ==== Remote Infinispan Caching
+
 Lately, several questions ( link:http://community.jboss.org/message/575814#575814[here] and link:http://community.jboss.org/message/585841#585841[here] ) have appeared in the Infinispan user forums asking whether it'd be possible to have an Infinispan second level cache that instead of living in the same JVM as the Hibernate code, it resides in a remote server, i.e. an Infinispan Hot Rod server.
 It's important to understand that trying to set up second level cache in this way is generally not a good idea for the following reasons:
 
 * The purpose of a JPA/Hibernate second level cache is to store entities/collections recently retrieved from database or to maintain results of recent queries.
 So, part of the aim of the second level cache is to have data accessible locally rather than having to go to the database to retrieve it everytime this is needed.
 Hence, if you decide to set the second level cache to be remote as well, you're losing one of the key advantages of the second level cache: the fact that the cache is local to the code that requires it.
-
 * Setting a remote second level cache can have a negative impact in the overall performance of your application because it means that cache misses require accessing a remote location to verify whether a particular entity/collection/query is cached.
 With a local second level cache however, these misses are resolved locally and so they are much faster to execute than with a remote second level cache.
 
@@ -1017,16 +1023,15 @@ There are however some edge cases where it might make sense to have a remote sec
 
 * You are having memory issues in the JVM where JPA/Hibernate code and the second level cache is running.
 Off loading the second level cache to remote Hot Rod servers could be an interesting way to separate systems and allow you find the culprit of the memory issues more easily.
-
 * Your application layer cannot be clustered but you still want to run multiple application layer nodes.
 In this case, you can't have multiple local second level cache instances running because they won't be able to invalidate each other for example when data in the second level cache is updated.
 In this case, having a remote second level cache could be a way out to make sure your second level cache is always in a consistent state, will all nodes in the application layer pointing to it.
-
 * Rather than having the second level cache in a remote server, you want to simply keep the cache in a separate VM still within the same machine.
 In this case you would still have the additional overhead of talking across to another JVM, but it wouldn't have the latency of across a network.
++
 The benefit of doing this is that:
-
++
 ** Size the cache separate from the application, since the cache and the application server have very different memory profiles.
 One has lots of short lived objects, and the other could have lots of long lived objects.
+** To pin the cache and the application server onto different CPU cores (using _numactl_ ), and even pin them to different physically memory based on the NUMA nodes.
 
-**  To pin the cache and the application server onto different CPU cores (using _numactl_ ), and even pin them to different physically memory based on the NUMA nodes.

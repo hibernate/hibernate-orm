@@ -674,9 +674,9 @@ include::{sourcedir}/CascadeDetachTest.java[tags=pc-cascade-detach-example]
 ==== `CascadeType.LOCK`
 
 Although unintuitively, `CascadeType.LOCK` does not propagate a lock request from a parent entity to its children.
-Such a use case requires the use of the `PessimisticLockScope.EXTENDED` value pf the `javax.persistence.lock.scope` property.
+Such a use case requires the use of the `PessimisticLockScope.EXTENDED` value of the `javax.persistence.lock.scope` property.
 
-However, `CascadeType.LOCK` allows us to reattach a parent entity along with it s children to the currently running Persistence Context.
+However, `CascadeType.LOCK` allows us to reattach a parent entity along with its children to the currently running Persistence Context.
 
 .`CascadeType.LOCK` example
 ====
@@ -685,3 +685,46 @@ However, `CascadeType.LOCK` allows us to reattach a parent entity along with it 
 include::{sourcedir}/CascadeLockTest.java[tags=pc-cascade-lock-example]
 ----
 ====
+
+[[pc-cascade-refresh]]
+==== `CascadeType.REFRESH`
+
+The `CascadeType.REFRESH` is used to propagate the refresh operation from a parent entity to a child.
+The refresh operation will discard the current entity state, and it will override it using the one loaded from the database.
+
+.`CascadeType.REFRESH` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeRefreshTest.java[tags=pc-cascade-refresh-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-cascade-refresh-example.sql[]
+----
+====
+
+In the aforementioned example, you can see that both the `Person` and `Phone` entities are refreshed even if we only called this operation on the parent entity only.
+
+[[pc-cascade-replicate]]
+==== `CascadeType.REPLICATE`
+
+The `CascadeType.REPLICATE` is to replicate both the parent and the child entities.
+The replicate operation allows you to synchronize entities coming from different sources of data.
+
+.`CascadeType.REPLICATE` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeReplicateTest.java[tags=pc-cascade-replicate-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-cascade-replicate-example.sql[]
+----
+====
+
+As illustrated by the SQL statements being generated, both the `Person` and `Phone` entities are replicated to the underlying database rows.
+

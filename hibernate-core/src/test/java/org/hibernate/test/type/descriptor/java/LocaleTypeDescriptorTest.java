@@ -32,6 +32,8 @@ public class LocaleTypeDescriptorTest extends BaseUnitTestCase {
 		assertEquals( toLocale( null, "DE", "ch123" ), LocaleTypeDescriptor.INSTANCE.fromString( "_DE_ch123" ) );
 		assertEquals( toLocale( "de", null, "ch123" ), LocaleTypeDescriptor.INSTANCE.fromString( "de__ch123" ) );
 		assertEquals( toLocale( "de", "DE", "ch123" ), LocaleTypeDescriptor.INSTANCE.fromString( "de_DE_ch123" ) );
+		assertEquals( toLocale( "", "", "" ), LocaleTypeDescriptor.INSTANCE.fromString( "" ) );
+		assertEquals( Locale.ROOT, LocaleTypeDescriptor.INSTANCE.fromString( "" ) );
 	}
 
 	public Locale toLocale(String lang, String region, String variant) {

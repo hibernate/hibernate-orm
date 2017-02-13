@@ -563,3 +563,115 @@ To verify if an entity instance is currently attached to the running persistence
 include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-contains-example]
 ----
 ====
+
+[[cascade]]
+=== `@Cascade`
+
+When interested in cascading an operation in an association between entities, we can use the `@Cascade`. To do that, all that's need to be done is
+defining the `CascadeType`.
+
+[[cascade-delete]]
+==== `CascadeType.DELETE`
+
+When performing the delete operation in an entity, we're able to cascade this to all children entities with `CascadeType.DELETE`.
+
+.`@Cascade(CascadeType.DELETE)` usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeDeleteTest.java[tags=cascade-delete-entities-example]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeDeleteTest.java[tags=cascade-delete-test-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/cascade-delete-example.sql[]
+----
+====
+
+[[cascade-detach]]
+==== `CascadeType.DETACH`
+
+Just like the `CascadeType.DELETE`, the `CascadeType.DETACH` is used in order to propagate the detach operation to the child entity.
+
+.`@Cascade(CascadeType.DETACH)` usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeDetachTest.java[tags=cascade-detach-entities-example]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeDetachTest.java[tags=cascade-detach-test-example]
+----
+====
+
+[[cascade-lock]]
+==== `CascadeType.LOCK`
+
+The `CascadeType.LOCK` is useful when reattaching a detached entity is the goal. It locks the parent side of the association but only propagates the reattachment.
+
+.`@Cascade(CascadeType.LOCK)` usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeLockTest.java[tags=cascade-lock-entities-example]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeLockTest.java[tags=cascade-lock-test-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/cascade-lock-example.sql[]
+----
+====
+
+[[cascade-merge]]
+==== `CascadeType.MERGE`
+
+Used to cascade the merge operation, corresponds to JPA's `CascadeType.MERGE`.
+
+.`@Cascade(CascadeType.MERGE)` usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeMergeTest.java[tags=cascade-merge-entities-example]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeMergeTest.java[tags=cascade-merge-test-example]
+----
+====
+
+[[cascade-persist]]
+==== `CascadeType.PERSIST`
+
+`org.hibernate.annotations.CascadeType.PERSIST` is equivalent to `javax.persistence.CascadeType.PERSIST`.
+Both annotations are used when we are interested in propagating the persist operation.
+
+.`@Cascade(CascadeType.PERSIST)` usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadePersistTest.java[tags=cascade-persist-entities-example]
+----
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadePersistTest.java[tags=cascade-persist-test-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/cascade-persist-example.sql[]
+----
+====

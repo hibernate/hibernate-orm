@@ -1,0 +1,3 @@
+DELETE FROM Phone WHERE id = 1
+
+DELETE FROM Person WHERE id = 1

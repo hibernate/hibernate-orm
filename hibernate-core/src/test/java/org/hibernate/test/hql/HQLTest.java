@@ -49,7 +49,6 @@ import org.hibernate.hql.internal.ast.tree.SelectClause;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
-import org.hibernate.type.DoubleType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.Type;
 
@@ -241,7 +240,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	public void testDateTimeArithmeticReturnTypesAndParameterGuessing() {
 		QueryTranslatorImpl translator = createNewQueryTranslator( "select o.orderDate - o.orderDate from Order o" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", DoubleType.INSTANCE, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", StandardBasicTypes.DOUBLE, translator.getReturnTypes()[0] );
 		translator = createNewQueryTranslator( "select o.orderDate + 2 from Order o" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
 		assertEquals( "incorrect return type", StandardBasicTypes.CALENDAR_DATE, translator.getReturnTypes()[0] );

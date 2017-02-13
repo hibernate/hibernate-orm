@@ -14,6 +14,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.NoResultException;
 import javax.persistence.OneToMany;
 
 import org.hibernate.Session;
@@ -29,6 +30,8 @@ import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Vlad Mihalcea
@@ -87,6 +90,44 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 		//end::mapping-filter-persistence-example[]
 
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			log.infof( "Activate filter [%s]", "activeAccount");
+
+			entityManager
+					.unwrap( Session.class )
+					.enableFilter( "activeAccount" )
+					.setParameter( "active", true);
+
+			Account account1 = entityManager.find( Account.class, 1L );
+			Account account2 = entityManager.find( Account.class, 2L );
+
+			assertNotNull( account1 );
+			assertNotNull( account2 );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			log.infof( "Activate filter [%s]", "activeAccount");
+
+			entityManager
+					.unwrap( Session.class )
+					.enableFilter( "activeAccount" )
+					.setParameter( "active", true);
+
+			Account account1 = entityManager.createQuery(
+					"select a from Account a where a.id = :id", Account.class)
+					.setParameter( "id", 1L )
+					.getSingleResult();
+			assertNotNull( account1 );
+			try {
+				Account account2 = entityManager.createQuery(
+						"select a from Account a where a.id = :id", Account.class)
+						.setParameter( "id", 2L )
+						.getSingleResult();
+			}
+			catch (NoResultException expected) {
+				expected.fillInStackTrace();
+			}
+		} );
 
 		//tag::mapping-filter-entity-query-example[]
 		doInJPA( this::entityManagerFactory, entityManager -> {

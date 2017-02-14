@@ -11,7 +11,6 @@ import java.util.Iterator;
 import org.junit.Test;
 
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
@@ -20,9 +19,9 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.TextType;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
+import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -36,20 +35,13 @@ import static org.junit.Assert.fail;
  * @author Gavin King
  */
 public class ImmutableTest extends BaseCoreFunctionalTestCase {
-	private static class TextAsMaterializedClobType extends AbstractSingleColumnStandardBasicType<String> {
-		public final static TextAsMaterializedClobType INSTANCE = new TextAsMaterializedClobType();
-		public TextAsMaterializedClobType() {
-			super(  ClobTypeDescriptor.DEFAULT, TextType.INSTANCE.getJavaTypeDescriptor() );
-		}
-		public String getName() {
-			return TextType.INSTANCE.getName();
-		}
-	}
+	private static BasicTypeImpl<String> TextAsMaterializedClobType =
+			new BasicTypeImpl( StandardSpiBasicTypes.TEXT.getJavaTypeDescriptor(), ClobSqlDescriptor.DEFAULT );
 
 	@Override
 	public void configure(Configuration cfg) {
 		if ( Oracle8iDialect.class.isInstance( getDialect() ) ) {
-			cfg.registerTypeOverride( TextAsMaterializedClobType.INSTANCE );
+			cfg.registerTypeOverride( TextAsMaterializedClobType );
 		}
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true");
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );

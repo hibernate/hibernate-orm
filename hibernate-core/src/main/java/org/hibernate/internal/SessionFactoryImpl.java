@@ -129,7 +129,7 @@ import org.hibernate.sqm.domain.SqmDomainMetamodel;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
-import org.hibernate.type.SerializableType;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -1054,7 +1054,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	public Type resolveParameterBindType(Class clazz){
 		String typename = clazz.getName();
 		Type type = getMetamodel().getTypeConfiguration().heuristicType( typename );
-		boolean serializable = type != null && type instanceof SerializableType;
+		boolean serializable = type != null && type.equals( StandardSpiBasicTypes.SERIALIZABLE );
 		if ( type == null || serializable ) {
 			try {
 				getMetamodel().entityPersister( clazz.getName() );

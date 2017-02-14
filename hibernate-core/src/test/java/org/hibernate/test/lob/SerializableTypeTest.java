@@ -17,7 +17,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 /**
- * Tests of {@link org.hibernate.type.SerializableType}
+ * Tests of {@link org.hibernate.type.StandardBasicTypes#SERIALIZABLE}
  * 
  * @author Steve Ebersole
  */

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 /**
- * This is basically a test to assert the expectations of {@link org.hibernate.type.SerializableType}
+ * This is basically a test to assert the expectations of {@link org.hibernate.type.StandardBasicTypes#SERIALIZABLE}
  * in regards to deserializing bytes from second level caches.
  *
  * @author Steve Ebersole

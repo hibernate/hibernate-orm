@@ -22,7 +22,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
-import org.hibernate.type.PrimitiveType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.spi.Type;
 
 import antlr.SemanticException;
@@ -187,9 +188,10 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 	private String formatMissingContructorExceptionMessage(String className) {
 		String[] params = new String[constructorArgumentTypes.length];
 		for ( int j = 0; j < constructorArgumentTypes.length; j++ ) {
-			params[j] = constructorArgumentTypes[j] instanceof PrimitiveType
-					? ( (PrimitiveType) constructorArgumentTypes[j] ).getPrimitiveClass().getName()
-					: constructorArgumentTypes[j].getJavaTypeDescriptor().getJavaType().getName();
+			final JavaTypeDescriptor javaTypeDescriptor = constructorArgumentTypes[j].getJavaTypeDescriptor();
+			params[j] = javaTypeDescriptor instanceof Primitive
+					? ( (Primitive) javaTypeDescriptor ).getPrimitiveClass().getName()
+					: javaTypeDescriptor.getJavaType().getName();
 		}
 		String formattedList = params.length == 0 ? "no arguments constructor" : StringHelper.join( ", ", params );
 		return String.format(

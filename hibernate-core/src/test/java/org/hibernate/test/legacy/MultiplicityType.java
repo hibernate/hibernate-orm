@@ -17,9 +17,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.IntegerType;
 import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
@@ -36,7 +35,7 @@ public class MultiplicityType implements CompositeUserType {
 			VarcharSqlDescriptor.INSTANCE.getSqlType()
 	};
 	private static final Type[] TYPES = new Type[] {
-			IntegerType.INSTANCE,
+			StandardSpiBasicTypes.INTEGER,
 			new ManyToOneType( new TypeConfiguration(), Glarch.class.getName() )
 	};
 
@@ -97,7 +96,7 @@ public class MultiplicityType implements CompositeUserType {
 	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException {
 
-		Integer c = IntegerType.INSTANCE.nullSafeGet( rs, names[0], session );
+		Integer c = StandardSpiBasicTypes.INTEGER.nullSafeGet( rs, names[0], session );
 		GlarchProxy g = (GlarchProxy) ( (Session) session ).getTypeHelper().entity( Glarch.class ).nullSafeGet(
 				rs,
 				names[1],
@@ -124,7 +123,7 @@ public class MultiplicityType implements CompositeUserType {
 			g = o.glarch;
 			c = new Integer( o.count );
 		}
-		StandardBasicTypes.INTEGER.nullSafeSet( st, c, index, session );
+		StandardSpiBasicTypes.INTEGER.nullSafeSet( st, c, index, session );
 		( (Session) session ).getTypeHelper().entity( Glarch.class ).nullSafeSet( st, g, index + 1, session );
 
 	}

@@ -19,7 +19,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.StringNVarcharType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.hibernate.testing.TestForIssue;
@@ -53,7 +52,7 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 				// See issue HHH-10693
 				assertSame( StandardSpiBasicTypes.STRING, nameAttribute.getType() );
 			}else {
-				assertSame( StringNVarcharType.INSTANCE, nameAttribute.getType() );
+				assertSame( StandardSpiBasicTypes.NSTRING, nameAttribute.getType() );
 			}
 
 		}

@@ -13,13 +13,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Locale;
 
 import javax.persistence.TemporalType;
 
-import org.hibernate.type.LocalDateType;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
@@ -41,6 +42,8 @@ public class LocalDateJavaDescriptor
 	 */
 	public static final LocalDateJavaDescriptor INSTANCE = new LocalDateJavaDescriptor();
 
+	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd", Locale.ENGLISH );
+
 	@SuppressWarnings("unchecked")
 	public LocalDateJavaDescriptor() {
 		super( LocalDate.class, ImmutableMutabilityPlan.INSTANCE );
@@ -53,12 +56,12 @@ public class LocalDateJavaDescriptor
 
 	@Override
 	public String toString(LocalDate value) {
-		return LocalDateType.FORMATTER.format( value );
+		return FORMATTER.format( value );
 	}
 
 	@Override
 	public LocalDate fromString(String string) {
-		return LocalDate.from( LocalDateType.FORMATTER.parse( string ) );
+		return LocalDate.from( FORMATTER.parse( string ) );
 	}
 
 	@Override

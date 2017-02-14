@@ -10,7 +10,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.LiteralType;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.spi.Type;
 
 /**
  * An SQL <tt>INSERT</tt> statement
@@ -18,13 +19,16 @@ import org.hibernate.type.LiteralType;
  * @author Gavin King
  */
 public class Insert {
-	private Dialect dialect;
+	final private Dialect dialect;
+	final private SharedSessionContractImplementor session;
+
 	private String tableName;
 	private String comment;
 	private Map columns = new LinkedHashMap();
 
-	public Insert(Dialect dialect) {
+	public Insert(Dialect dialect, SharedSessionContractImplementor session) {
 		this.dialect = dialect;
+		this.session = session;
 	}
 
 	protected Dialect getDialect() {
@@ -70,8 +74,8 @@ public class Insert {
 		return this;
 	}
 
-	public Insert addColumn(String columnName, Object value, LiteralType type) throws Exception {
-		return addColumn( columnName, type.objectToSQLString(value, dialect) );
+	public Insert addColumn(String columnName, Object value, Type type) throws Exception {
+		return addColumn( columnName, type.getJdbcLiteralFormatter().toJdbcLiteral( value, dialect, session ) );
 	}
 
 	public Insert addIdentityColumn(String columnName) {

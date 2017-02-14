@@ -20,14 +20,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.CharacterArrayType;
-import org.hibernate.type.MaterializedClobType;
-import org.hibernate.type.MaterializedNClobType;
-import org.hibernate.type.NClobType;
-import org.hibernate.type.NTextType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.StringNVarcharType;
-import org.hibernate.type.StringType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -85,28 +78,28 @@ public class SimpleNationalizedTest extends BaseUnitTestCase {
 				// See issue HHH-10693
 				assertSame( StandardSpiBasicTypes.STRING, prop.getType() );
 			}else{
-				assertSame( StringNVarcharType.INSTANCE, prop.getType() );
+				assertSame( StandardSpiBasicTypes.CHARACTER_NCHAR, prop.getType() );
 			}
 
 			prop = pc.getProperty( "materializedNclobAtt" );
 			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ){
 				// See issue HHH-10693
-				assertSame( MaterializedClobType.INSTANCE, prop.getType() );
+				assertSame( StandardSpiBasicTypes.MATERIALIZED_CLOB, prop.getType() );
 			}else {
-				assertSame( MaterializedNClobType.INSTANCE, prop.getType() );
+				assertSame( StandardSpiBasicTypes.MATERIALIZED_NCLOB, prop.getType() );
 			}
 			prop = pc.getProperty( "nclobAtt" );
-			assertSame( NClobType.INSTANCE, prop.getType() );
+			assertSame( StandardSpiBasicTypes.NCLOB, prop.getType() );
 
 			prop = pc.getProperty( "nlongvarcharcharAtt" );
-			assertSame( NTextType.INSTANCE, prop.getType() );
+			assertSame( StandardSpiBasicTypes.NTEXT, prop.getType() );
 
 			prop = pc.getProperty( "ncharArrAtt" );
 			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ){
 				// See issue HHH-10693
-				assertSame( CharacterArrayType.INSTANCE, prop.getType() );
+				assertSame( StandardSpiBasicTypes.CHAR_ARRAY, prop.getType() );
 			}else {
-				assertSame( StringNVarcharType.INSTANCE, prop.getType() );
+				assertSame( StandardSpiBasicTypes.NTEXT, prop.getType() );
 			}
 
 			prop = pc.getProperty( "ncharacterAtt" );

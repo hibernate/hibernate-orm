@@ -11,7 +11,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.PrimitiveType;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -30,7 +30,7 @@ public class Array extends List {
 		if ( elementClassName == null ) {
 			Type elementType = getElement().getType();
 			return isPrimitiveArray()
-					? ( (PrimitiveType) elementType ).getPrimitiveClass()
+					? ( (Primitive) elementType.getJavaTypeDescriptor() ).getPrimitiveClass()
 					: elementType.getJavaTypeDescriptor().getJavaType();
 		}
 		else {

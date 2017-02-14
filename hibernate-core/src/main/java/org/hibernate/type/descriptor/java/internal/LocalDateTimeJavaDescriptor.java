@@ -12,12 +12,13 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Locale;
 import javax.persistence.TemporalType;
 
-import org.hibernate.type.LocalDateTimeType;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
@@ -38,6 +39,8 @@ public class LocalDateTimeJavaDescriptor
 		implements TemporalJavaDescriptor<LocalDateTime > {
 	private static final Logger log = Logger.getLogger( LocalDateTimeJavaDescriptor.class );
 
+	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss.S", Locale.ENGLISH );
+
 	/**
 	 * Singleton access
 	 */
@@ -55,12 +58,12 @@ public class LocalDateTimeJavaDescriptor
 
 	@Override
 	public String toString(LocalDateTime value) {
-		return LocalDateTimeType.FORMATTER.format( value );
+		return FORMATTER.format( value );
 	}
 
 	@Override
 	public LocalDateTime fromString(String string) {
-		return LocalDateTime.from( LocalDateTimeType.FORMATTER.parse( string ) );
+		return LocalDateTime.from( FORMATTER.parse( string ) );
 	}
 
 	@Override

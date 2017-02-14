@@ -26,13 +26,7 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.type.DateType;
-import org.hibernate.type.IntegerType;
-import org.hibernate.type.LongType;
-import org.hibernate.type.ShortType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.TimeType;
-import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.BasicType;
 
@@ -203,7 +197,7 @@ public class TypeTest extends BaseUnitTestCase {
 		cal.add( Calendar.YEAR, 1 );
 		final java.sql.Date different = new java.sql.Date( cal.getTime().getTime() );
 
-		runBasicTests( DateType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.DATE, original, copy, different );
 	}
 
 	@Test
@@ -230,7 +224,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Integer copy = new Integer( 100 );
 		final Integer different = 999;
 
-		runBasicTests( IntegerType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.INTEGER, original, copy, different );
 	}
 
 	@Test
@@ -248,7 +242,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Long copy = new Long( 100L );
 		final Long different = 999L;
 
-		runBasicTests( LongType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.LONG, original, copy, different );
 	}
 
 	private static class SerializableImpl implements Serializable {
@@ -278,7 +272,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Short copy = new Short( (short) 100 );
 		final Short different = 999;
 
-		runBasicTests( ShortType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.SHORT, original, copy, different );
 	}
 
 	@Test
@@ -299,7 +293,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Timestamp copy = new Timestamp( now );
 		final Timestamp different = new Timestamp( now + 9999 );
 
-		runBasicTests( TimestampType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.TIMESTAMP, original, copy, different );
 	}
 
 	@Test
@@ -309,7 +303,7 @@ public class TypeTest extends BaseUnitTestCase {
 		final Time copy = new Time( now );
 		final Time different = new Time( now + 9999 );
 
-		runBasicTests( TimeType.INSTANCE, original, copy, different );
+		runBasicTests( StandardBasicTypes.TIME, original, copy, different );
 	}
 
 	@Test
@@ -320,9 +314,9 @@ public class TypeTest extends BaseUnitTestCase {
 		final java.util.Date different = new java.util.Date( now + 9999 );
 		final java.util.Date different2 = new java.util.Date( now + ( 1000L * 60L * 60L * 24L * 365L ) );
 
-		runBasicTests( TimeType.INSTANCE, original, copy, different );
-		runBasicTests( TimestampType.INSTANCE, original, copy, different );
-		runBasicTests( DateType.INSTANCE, original, copy, different2 );
+		runBasicTests( StandardBasicTypes.TIME, original, copy, different );
+		runBasicTests( StandardBasicTypes.TIMESTAMP, original, copy, different );
+		runBasicTests( StandardBasicTypes.DATE, original, copy, different2 );
 	}
 
 	@Test

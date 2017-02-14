@@ -14,7 +14,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.property.access.spi.Getter;
-import org.hibernate.type.PrimitiveType;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.VersionSupport;
 
@@ -67,8 +67,8 @@ public class UnsavedValueFactory {
 				final Serializable defaultValue = (Serializable) identifierGetter.get( instantiate( constructor ) );
 				return new IdentifierValue( defaultValue );
 			}
-			else if ( identifierGetter != null && (identifierType instanceof PrimitiveType) ) {
-				final Serializable defaultValue = ( (PrimitiveType) identifierType ).getDefaultValue();
+			else if ( identifierGetter != null && ( identifierType.getJavaTypeDescriptor() instanceof Primitive ) ) {
+				final Serializable defaultValue = ( (Primitive) identifierType.getJavaTypeDescriptor() ).getDefaultValue();
 				return new IdentifierValue( defaultValue );
 			}
 			else {

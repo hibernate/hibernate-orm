@@ -10,7 +10,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.LiteralType;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.spi.Type;
 
 /**
  * An SQL <tt>UPDATE</tt> statement
@@ -29,10 +30,12 @@ public class Update {
 	private Map columns = new LinkedHashMap();
 	private Map whereColumns = new LinkedHashMap();
 	
-	private Dialect dialect;
-	
-	public Update(Dialect dialect) {
+	final private Dialect dialect;
+	final private SharedSessionContractImplementor session;
+
+	public Update(Dialect dialect, SharedSessionContractImplementor session) {
 		this.dialect = dialect;
+		this.session = session;
 	}
 
 	public String getTableName() {
@@ -131,8 +134,8 @@ public class Update {
 		return this;
 	}
 
-	public Update addColumn(String columnName, Object value, LiteralType type) throws Exception {
-		return addColumn( columnName, type.objectToSQLString(value, dialect) );
+	public Update addColumn(String columnName, Object value, Type type) throws Exception {
+		return addColumn( columnName, type.getJdbcLiteralFormatter().toJdbcLiteral( value, dialect, session ) );
 	}
 
 	public Update addWhereColumns(String[] columnNames) {

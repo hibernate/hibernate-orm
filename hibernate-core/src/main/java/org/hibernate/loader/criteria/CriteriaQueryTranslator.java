@@ -42,7 +42,6 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.StringRepresentableType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -599,8 +598,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 
 				// Convert the string value into the proper type.
 				if ( type instanceof StringRepresentableType ) {
-					final StringRepresentableType nullableType = (StringRepresentableType) type;
-					value = nullableType.fromStringValue( stringValue );
+					value = type.getJavaTypeDescriptor().fromString( stringValue );
 				}
 				else {
 					throw new QueryException( "Unsupported discriminator type " + type );

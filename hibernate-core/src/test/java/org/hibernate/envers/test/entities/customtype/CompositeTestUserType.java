@@ -13,8 +13,7 @@ import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.IntegerType;
-import org.hibernate.type.StringType;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -28,7 +27,7 @@ public class CompositeTestUserType implements CompositeUserType {
 	}
 
 	public Type[] getPropertyTypes() {
-		return new Type[] {StringType.INSTANCE, IntegerType.INSTANCE};
+		return new Type[] {StandardSpiBasicTypes.STRING, StandardSpiBasicTypes.INTEGER};
 	}
 
 	public Object getPropertyValue(final Object component, final int property) throws HibernateException {

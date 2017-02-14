@@ -13,6 +13,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -27,6 +28,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -165,6 +167,11 @@ public final class StandardBasicTypes {
 	public static final Type<String> STRING = StandardSpiBasicTypes.STRING;
 
 	/**
+	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#NVARCHAR NVARCHAR}.
+	 */
+	public static final BasicType<String> NSTRING = StandardSpiBasicTypes.NSTRING;
+
+	/**
 	 * The standard Hibernate type for mapping {@code char[]} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 */
 	public static final Type<char[]> CHAR_ARRAY = StandardSpiBasicTypes.CHAR_ARRAY;
@@ -211,6 +218,14 @@ public final class StandardBasicTypes {
 	public static final Type<String> MATERIALIZED_CLOB = StandardSpiBasicTypes.MATERIALIZED_CLOB;
 
 	/**
+	 * The standard Hibernate type for mapping {@link Character Character[]} to JDBC {@link java.sql.Types#NCLOB NCLOB} and
+	 *
+	 * @see #NCLOB
+	 * @see #CHAR_ARRAY
+	 */
+	public static final BasicType<Character[]> MATERIALIZED_NCLOB_CHARACTER_ARRAY = StandardSpiBasicTypes.MATERIALIZED_NCLOB_CHARACTER_ARRAY;
+
+	/**
 	 * The standard Hibernate type for mapping {@code char[]} to JDBC {@link java.sql.Types#CLOB CLOB}.
 	 *
 	 * @see #MATERIALIZED_CLOB
@@ -225,6 +240,15 @@ public final class StandardBasicTypes {
 	 * @see #TEXT
 	 */
 	public static final Type<String> MATERIALIZED_CLOB_CHARACTER_ARRAY = StandardSpiBasicTypes.MATERIALIZED_CLOB_CHARACTER_ARRAY;
+
+	/**
+	 * The standard Hibernate type for mapping {@code char[]} to JDBC {@link java.sql.Types#NCLOB NCLOB}.
+	 *
+	 * @see #MATERIALIZED_NCLOB
+	 * @see #TEXT
+	 */
+	public static final BasicType<String> MATERIALIZED_NCLOB_CHAR_ARRAY = StandardSpiBasicTypes.MATERIALIZED_NCLOB_CHAR_ARRAY;
+
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#NCLOB NCLOB}.
 	 *
@@ -304,6 +328,12 @@ public final class StandardBasicTypes {
 	 * {@link java.sql.Types#TIME TIME}.
 	 */
 	public static final Type<Calendar> CALENDAR_TIME = StandardSpiBasicTypes.CALENDAR_TIME;
+
+	/**
+	 * The standard Hibernate type for mapping {@link Instant} to JDBC
+	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
+	 */
+	public static final BasicType<Instant> INSTANT = StandardSpiBasicTypes.INSTANT;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

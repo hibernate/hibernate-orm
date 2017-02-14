@@ -10,11 +10,12 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import org.hibernate.Session;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.MaterializedBlobType;
+import org.hibernate.testing.transaction.TransactionUtil;
+
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.Type;
 
 import static org.junit.Assert.assertEquals;
@@ -34,26 +35,22 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 	public void testTypeSelection() {
 		int index = sessionFactory().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getPropertyIndex( "theBytes" );
 		Type  type = sessionFactory().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getProperties()[index].getType();
-		assertEquals( MaterializedBlobType.INSTANCE, type );
+		assertEquals( StandardBasicTypes.MATERIALIZED_BLOB, type );
 	}
 
 	@Test
 	public void testSaving() {
 		byte[] testData = "test data".getBytes();
+		final Long entityId = TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			MaterializedBlobEntity entity = new MaterializedBlobEntity( "test", testData );
+			session.save( entity );
+			return entity.getId();
+		} );
 
-		Session session = openSession();
-		session.beginTransaction();
-		MaterializedBlobEntity entity = new MaterializedBlobEntity( "test", testData );
-		session.save( entity );
-		session.getTransaction().commit();
-		session.close();
-
-		session = openSession();
-		session.beginTransaction();
-		entity = ( MaterializedBlobEntity ) session.get( MaterializedBlobEntity.class, entity.getId() );
-		assertTrue( Arrays.equals( testData, entity.getTheBytes() ) );
-		session.delete( entity );
-		session.getTransaction().commit();
-		session.close();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			MaterializedBlobEntity entity = session.get( MaterializedBlobEntity.class, entityId );
+			assertTrue( Arrays.equals( testData, entity.getTheBytes() ) );
+			session.delete( entity );
+		} );
 	}
 }

@@ -12,7 +12,7 @@ import java.io.Serializable;
 
 /**
  * An entity containing serializable data which is
- * mapped via the {@link org.hibernate.type.SerializableType}.
+ * mapped via the {@link org.hibernate.type.StandardBasicTypes#SERIALIZABLE}.
  *
  * @author Steve Ebersole
  */

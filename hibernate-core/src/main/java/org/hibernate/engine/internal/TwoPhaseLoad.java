@@ -34,6 +34,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -149,6 +150,11 @@ public final class TwoPhaseLoad {
 			final Object value = hydratedState[i];
 			if ( value!=LazyPropertyInitializer.UNFETCHED_PROPERTY && value!= PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				hydratedState[i] = types[i].resolve( value, session, entity );
+			}
+			else if ( types[i].isCollectionType() ) {
+				// HHH-10989 Even if not fetched, resolve a collection so that a CollectionReference is added to StatefulPersistentContext
+				// No assignment to the hydratedState, that would trigger the load of the collection (below, on setPropertyValues)
+				types[i].resolve( value, session, entity );
 			}
 		}
 

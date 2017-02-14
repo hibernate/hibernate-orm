@@ -8,6 +8,7 @@ package org.hibernate.test.bytecode.enhancement;
 
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 
+import org.hibernate.test.bytecode.enhancement.cascade.CascadeWithFkConstraintTestTask;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
@@ -133,6 +134,12 @@ public class EnhancerTest extends BaseUnitTestCase {
 		EnhancerTestUtils.runEnhancerTestTask( CascadeDeleteTestTask.class );
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-10252" )
+	public void testCascadeFkDelete() {
+		EnhancerTestUtils.runEnhancerTestTask( CascadeWithFkConstraintTestTask.class );
+	}
+	
 	@Test
 	@TestForIssue( jiraKey = "HHH-10055" )
 	public void testLazyCollectionHandling() {

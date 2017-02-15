@@ -28,6 +28,9 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
+import org.hibernate.type.descriptor.java.internal.ByteArrayJavaDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BlobSqlDescriptor;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -216,6 +219,13 @@ public final class StandardBasicTypes {
 	 * @see #TEXT
 	 */
 	public static final Type<String> MATERIALIZED_CLOB = StandardSpiBasicTypes.MATERIALIZED_CLOB;
+
+	/**
+	 * The standard Hibernate type for mapping {@code Byte[]} to JDBC {@link java.sql.Types#BLOB BLOB}.
+	 *
+	 * @see #MATERIALIZED_BLOB
+	 */
+	public static final BasicType<byte[]> WRAPPED_MATERIALIZED_BLOB = StandardSpiBasicTypes.WRAPPED_MATERIALIZED_BLOB;
 
 	/**
 	 * The standard Hibernate type for mapping {@link Character Character[]} to JDBC {@link java.sql.Types#NCLOB NCLOB} and

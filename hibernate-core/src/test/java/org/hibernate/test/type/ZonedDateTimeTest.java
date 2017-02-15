@@ -14,12 +14,13 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-import org.hibernate.type.ZonedDateTimeType;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
@@ -89,40 +90,29 @@ public class ZonedDateTimeTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		saveZoneDateTimeEventWithStartDate( startDate );
 
-		final Session s = openSession();
-		try {
+		try (Session s = openSession()) {
 			Query query = s.createQuery( "from ZonedDateTimeEvent o where o.startDate = :date" );
-			query.setParameter( "date", startDate, ZonedDateTimeType.INSTANCE );
+			query.setParameter( "date", startDate, StandardSpiBasicTypes.ZONED_DATE_TIME );
 			List<ZonedDateTimeEvent> list = query.list();
 			assertThat( list.size(), is( 1 ) );
-		}
-		finally {
-			s.close();
 		}
 	}
 
 	private void checkSavedZonedDateTimeIsEqual(ZonedDateTime startdate) {
-		final Session s = openSession();
-		try {
+		try (Session s = openSession()) {
 			final ZonedDateTimeEvent zonedDateTimeEvent = s.get( ZonedDateTimeEvent.class, 1L );
 			assertThat( zonedDateTimeEvent.startDate.isEqual( startdate ), is( true ) );
-		}
-		finally {
-			s.close();
 		}
 	}
 
 	private void compareSavedZonedDateTimeWith(ZonedDateTime startdate) {
-		final Session s = openSession();
-		try {
+		try (Session s = openSession()) {
 			final ZonedDateTimeEvent zonedDateTimeEvent = s.get( ZonedDateTimeEvent.class, 1L );
 			assertThat(
-					ZonedDateTimeType.INSTANCE.getComparator().compare( zonedDateTimeEvent.startDate, startdate ),
+					StandardSpiBasicTypes.ZONED_DATE_TIME.getComparator()
+							.compare( zonedDateTimeEvent.startDate, startdate ),
 					is( 0 )
 			);
-		}
-		finally {
-			s.close();
 		}
 	}
 
@@ -131,21 +121,9 @@ public class ZonedDateTimeTest extends BaseNonConfigCoreFunctionalTestCase {
 		event.id = 1L;
 		event.startDate = startdate;
 
-		final Session s = openSession();
-		s.getTransaction().begin();
-		try {
-			s.save( event );
-			s.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( s.getTransaction() != null && s.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
-				s.getTransaction().rollback();
-			}
-			fail( e.getMessage() );
-		}
-		finally {
-			s.close();
-		}
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			session.save( event );
+		} );
 	}
 
 	@Entity(name = "ZonedDateTimeEvent")

@@ -17,7 +17,6 @@ import javax.persistence.TemporalType;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.ZonedDateTimeType;
 
 /**
  * @author Steve Ebersole
@@ -93,7 +92,7 @@ public class BindingTypeHelper {
 		}
 
 		if ( Instant.class.isAssignableFrom( javaType ) ) {
-			return StandardSpiBasicTypes.InstantType.INSTANCE;
+			return StandardSpiBasicTypes.INSTANT;
 		}
 
 		if ( OffsetDateTime.class.isAssignableFrom( javaType ) ) {

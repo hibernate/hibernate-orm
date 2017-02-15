@@ -26,8 +26,8 @@ import org.hibernate.dialect.PostgreSQL94Dialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.type.PostgresUUIDType;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.UUIDBinaryType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -47,7 +47,7 @@ public class UUIDBasedIdInterpretationTest extends BaseUnitTestCase {
 	public void testH2() {
 		StandardServiceRegistry ssr = buildStandardServiceRegistry( H2Dialect.class );
 		try {
-			checkUuidTypeUsed( ssr, UUIDBinaryType.class );
+			checkUuidTypeUsed( ssr, StandardSpiBasicTypes.UUID_BINARY.getClass() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -81,7 +81,7 @@ public class UUIDBasedIdInterpretationTest extends BaseUnitTestCase {
 	public void testMySQL() {
 		StandardServiceRegistry ssr = buildStandardServiceRegistry( MySQL5Dialect.class );
 		try {
-			checkUuidTypeUsed( ssr, UUIDBinaryType.class );
+			checkUuidTypeUsed( ssr, StandardSpiBasicTypes.UUID_BINARY.getClass() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

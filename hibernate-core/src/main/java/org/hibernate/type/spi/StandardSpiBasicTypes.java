@@ -205,10 +205,20 @@ public final class StandardSpiBasicTypes {
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#BLOB BLOB}.
 	 *
 	 * @see #MATERIALIZED_BLOB
-	 * @see #IMAGE
 	 */
 	public static final BasicType<byte[]> MATERIALIZED_BLOB = new BasicTypeImpl(
 			PrimitiveByteArrayJavaDescriptor.INSTANCE,
+			BlobSqlDescriptor.DEFAULT
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@code Byte[]} to JDBC {@link java.sql.Types#BLOB BLOB}.
+	 *
+	 * @see #MATERIALIZED_BLOB
+	 * @see #IMAGE
+	 */
+	public static final BasicType<byte[]> WRAPPED_MATERIALIZED_BLOB = new BasicTypeImpl(
+			ByteArrayJavaDescriptor.INSTANCE,
 			BlobSqlDescriptor.DEFAULT
 	);
 
@@ -714,6 +724,14 @@ public final class StandardSpiBasicTypes {
 				typeConfiguration,
 				basicTypeProducerRegistry,
 				"materialized_blob"
+		);
+
+		handle(
+				WRAPPED_MATERIALIZED_BLOB,
+				"org.hibernate.type.MaterializedBlobType",
+				typeConfiguration,
+				basicTypeProducerRegistry,
+				"wrapped_materialized_blob"
 		);
 
 

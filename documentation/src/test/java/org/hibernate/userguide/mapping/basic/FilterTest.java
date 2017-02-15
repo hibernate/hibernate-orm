@@ -30,6 +30,7 @@ import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -129,7 +130,21 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 			}
 		} );
 
-		//tag::mapping-filter-entity-query-example[]
+		//tag::mapping-filter-entity-example[]
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			log.infof( "Activate filter [%s]", "activeAccount");
+
+			entityManager
+				.unwrap( Session.class )
+				.enableFilter( "activeAccount" )
+				.setParameter( "active", true);
+
+			Account account = entityManager.find( Account.class, 2L );
+			assertFalse( account.isActive() );
+		} );
+		//end::mapping-filter-entity-example[]
+
+		// tag::mapping-filter-entity-query-example[]
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			List<Account> accounts = entityManager.createQuery(
 				"select a from Account a", Account.class)

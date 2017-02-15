@@ -1638,7 +1638,27 @@ include::{extrasdir}/basic/mapping-filter-entity-query-example.sql[]
 ----
 ====
 
-Just like with entities, collections can be filtered as well, but only if the filter is explicitly enabled on the currently running Hibernate `Session`.
+[IMPORTANT]
+====
+Filters apply to entity queries, but not to direct fetching.
+Therefore, in the following example, the filter is not taken into consideration when fetching an entity from the Persistence Context.
+
+[[mapping-filter-entity-example]]
+.Fetching entities mapped with `@Filter`
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/FilterTest.java[tags=mapping-filter-entity-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-filter-entity-example.sql[]
+----
+
+As you can see from the example above, contrary to an entity query, the filter does not prevent the entity from being loaded.
+====
+
+Just like with entity queries, collections can be filtered as well, but only if the filter is explicitly enabled on the currently running Hibernate `Session`.
 This way, when fetching the `accounts` collections, Hibernate is going to apply the `@Filter` clause filtering criteria to the associated collection entries.
 
 [[mapping-filter-collection-query-example]]

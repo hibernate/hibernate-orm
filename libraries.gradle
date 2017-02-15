@@ -98,7 +98,6 @@ ext {
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:1.5.7',
             oracle:          'com.oracle.jdbc:ojdbc7:12.1.0.2',
 
-            mariadb:         'org.mariadb.jdbc:mariadb-java-client:1.5.7',
             oracle:          'com.oracle.ojdbc:ojdbc7:12.1.0.2.0',
             mssql:             'com.microsoft.sqlserver:mssql-jdbc:6.1.0.jre8',
 

@@ -29,20 +29,31 @@ public class StringifiedCollectionTypeContributor implements TypeContributor {
 	}
 
 	public static class LongList extends java.util.ArrayList<Long> {
+
 		private static final long serialVersionUID = 6621718915733197817L;
+
 		public LongList() {
 			super();
 		}
+
 		public LongList(int initialCapacity) {
 			super( initialCapacity );
 		}
+
 		public LongList(Collection<Long> initalContents) {
 			super( initalContents );
 		}
+
+		public LongList(Long... longs) {
+			super( longs.length );
+			for ( Long l : longs ) {
+				this.add( l );
+			}
+		}
 	}
 
-	private static class StringifiedCollectionType 
-		extends AbstractSingleColumnStandardBasicType<LongList>  {
+	private static class StringifiedCollectionType
+			extends AbstractSingleColumnStandardBasicType<LongList> {
 
 		private static final long serialVersionUID = -5209685045343388046L;
 		private final String[] regKeys;
@@ -53,9 +64,7 @@ public class StringifiedCollectionTypeContributor implements TypeContributor {
 		public StringifiedCollectionType() {
 			super( org.hibernate.type.descriptor.sql.LongVarcharTypeDescriptor.INSTANCE,
 					StringifiedCollectionJavaTypeDescriptor.INSTANCE );
-			regKeys = new String[] {
-				LongList.class.getName(),
-			};
+			regKeys = new String[]{ LongList.class.getName() };
 			name = "StringifiedCollection";
 		}
 
@@ -76,6 +85,7 @@ public class StringifiedCollectionTypeContributor implements TypeContributor {
 	}
 
 	private static class StringifiedCollectionJavaTypeDescriptor extends AbstractTypeDescriptor<LongList> {
+
 		public static StringifiedCollectionJavaTypeDescriptor INSTANCE = new StringifiedCollectionJavaTypeDescriptor();
 		private static final long serialVersionUID = 1112405740480736262L;
 
@@ -89,7 +99,7 @@ public class StringifiedCollectionTypeContributor implements TypeContributor {
 				return "null";
 			}
 			StringBuilder sb = new StringBuilder();
-			sb.append('[');
+			sb.append( '[' );
 			String glue = "";
 			for ( Long v : value ) {
 				sb.append( glue ).append( v );

@@ -100,7 +100,7 @@ public class CascadeWithFkConstraintTestTask extends AbstractEnhancerTestTask {
 
     // --- //
 
-    @Entity
+    @Entity(name="Garage")
     public static class Garage {
 
         @Id
@@ -120,7 +120,7 @@ public class CascadeWithFkConstraintTestTask extends AbstractEnhancerTestTask {
 
     }
 
-    @Entity
+    @Entity(name="Car")
     public static class Car {
 
         @Id

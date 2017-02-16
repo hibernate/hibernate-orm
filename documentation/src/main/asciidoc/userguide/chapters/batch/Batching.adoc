@@ -1,6 +1,8 @@
 [[batch]]
 == Batching
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/batch
+:bulkid-sourcedir: ../../../../../../../hibernate-core/src/test/java/org/hibernate/test/bulkid
+:extrasdir: extras
 
 [[batch-jdbcbatch]]
 === JDBC batching
@@ -294,3 +296,205 @@ include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-insert-example]
 ====
 
 This section is only a brief overview of HQL. For more information, see <<chapters/query/hql/HQL.adoc#hql,HQL>>.
+
+[[batch-bulk-hql-strategies]]
+==== Bulk-id strategies
+
+This article is about the https://hibernate.atlassian.net/browse/HHH-11262[HHH-11262] JIRA issue which now allows the bulk-id
+strategies to work even when you cannot create temporary tables.
+
+[[batch-bulk-hql-strategies-class-diagram]]
+===== Class diagram
+
+Considering we have the following entities:
+
+image:images/domain/bulkid/temp_table_class_diagram.png[Entity class diagram]
+
+The `Person` entity is the base class of this entity inheritance model, and is mapped as follows:
+
+[[batch-bulk-hql-temp-table-base-class-example]]
+.Bulk-id base class entity
+====
+[source, JAVA, indent=0]
+----
+include::{bulkid-sourcedir}/AbstractBulkIdTest.java[tags=batch-bulk-hql-temp-table-base-class-example]
+----
+====
+
+Both the `Doctor` and `Engineer` entity classes extend the `Person` base class:
+
+[[batch-bulk-hql-temp-table-sub-classes-example]]
+.Bulk-id subclass entities
+====
+[source, JAVA, indent=0]
+----
+include::{bulkid-sourcedir}/AbstractBulkIdTest.java[tags=batch-bulk-hql-temp-table-sub-classes-example]
+----
+====
+
+[[batch-bulk-hql-strategies-inheritance-tree]]
+===== Inheritance tree bulk processing
+
+Now, when you try to execute a bulk entity delete query:
+
+[[batch-bulk-hql-temp-table-delete-query-example]]
+.Bulk-id delete query example
+====
+[source, JAVA, indent=0]
+----
+include::{bulkid-sourcedir}/AbstractBulkIdTest.java[tags=batch-bulk-hql-temp-table-delete-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/batch-bulk-hql-temp-table-delete-query-example.sql[]
+----
+====
+
+`HT_Person` is a temporary table that Hibernate creates to hold all the entity identifiers that are to be updated or deleted by the bulk id operation.
+The temporary table can be either global or local, depending on the underlying database capabilities.
+
+[[batch-bulk-hql-strategies-non-temporary-table]]
+===== Non-temporary table bulk-id strategies
+
+As the https://hibernate.atlassian.net/browse/HHH-11262[HHH-11262] issue describes, there are use cases when the application developer cannot use temporary tables because
+the database user lacks this privilege.
+
+In this case, we defined several options which you can choose depending on your database capabilities:
+
+- `InlineIdsInClauseBulkIdStrategy`
+- `InlineIdsSubSelectValueListBulkIdStrategy`
+- `InlineIdsOrClauseBulkIdStrategy`
+- `CteValuesListBulkIdStrategy`
+
+[[batch-bulk-hql-strategies-InlineIdsInClauseBulkIdStrategy]]
+====== `InlineIdsInClauseBulkIdStrategy`
+
+To use this strategy, you need to configure the following configuration property:
+
+[source,xml]
+----
+<property name="hibernate.hql.bulk_id_strategy"
+          value="org.hibernate.hql.spi.id.inline.InlineIdsInClauseBulkIdStrategy"
+/>
+----
+
+Now, when running the previous test case, Hibernate generates the following SQL statements:
+
+[[batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query-example]]
+.`InlineIdsInClauseBulkIdStrategy` delete entity query example
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query-example.sql[]
+----
+====
+
+So, the entity identifiers are selected first and used for each particular update or delete statement.
+
+[TIP]
+====
+The IN clause row value expression has long been supported by Oracle, PostgreSQL, and nowadays by MySQL 5.7.
+However, SQL Server 2014 does not support this syntax, so you'll have to use a different strategy.
+====
+
+[[batch-bulk-hql-strategies-InlineIdsSubSelectValueListBulkIdStrategy]]
+====== `InlineIdsSubSelectValueListBulkIdStrategy`
+
+To use this strategy, you need to configure the following configuration property:
+
+[source,xml]
+----
+<property name="hibernate.hql.bulk_id_strategy"
+          value="org.hibernate.hql.spi.id.inline.InlineIdsSubSelectValueListBulkIdStrategy"
+/>
+----
+
+Now, when running the previous test case, Hibernate generates the following SQL statements:
+
+[[batch-bulk-hql-InlineIdsSubSelectValueListBulkIdStrategy-delete-query-example]]
+.`InlineIdsSubSelectValueListBulkIdStrategy` delete entity query example
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/batch-bulk-hql-InlineIdsSubSelectValueListBulkIdStrategy-delete-query-example.sql[]
+----
+====
+
+[TIP]
+====
+The underlying database must support the VALUES list clause, like PostgreSQL or SQL Server 2008.
+However, this strategy requires the IN-clause row value expression for composite identifiers so you can use this strategy only with PostgreSQL.
+====
+
+[[batch-bulk-hql-strategies-InlineIdsOrClauseBulkIdStrategy]]
+====== `InlineIdsOrClauseBulkIdStrategy`
+
+To use this strategy, you need to configure the following configuration property:
+
+[source,xml]
+----
+<property name="hibernate.hql.bulk_id_strategy"
+          value="org.hibernate.hql.spi.id.inline.InlineIdsOrClauseBulkIdStrategy"
+/>
+----
+
+Now, when running the previous test case, Hibernate generates the following SQL statements:
+
+[[batch-bulk-hql-InlineIdsOrClauseBulkIdStrategy-delete-query-example]]
+.`InlineIdsOrClauseBulkIdStrategy` delete entity query example
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/batch-bulk-hql-InlineIdsOrClauseBulkIdStrategy-delete-query-example.sql[]
+----
+====
+
+[TIP]
+====
+This strategy has the advantage of being supported by all the major relational database systems (e.g. Oracle, SQL Server, MySQL, and PostgreSQL).
+====
+
+[[batch-bulk-hql-strategies-CteValuesListBulkIdStrategy]]
+====== `CteValuesListBulkIdStrategy`
+
+To use this strategy, you need to configure the following configuration property:
+
+[source,xml]
+----
+<property name="hibernate.hql.bulk_id_strategy"
+          value="org.hibernate.hql.spi.id.inline.CteValuesListBulkIdStrategy"
+/>
+----
+
+Now, when running the previous test case, Hibernate generates the following SQL statements:
+
+[[batch-bulk-hql-CteValuesListBulkIdStrategy-delete-query-example]]
+.`CteValuesListBulkIdStrategy` delete entity query example
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/batch-bulk-hql-CteValuesListBulkIdStrategy-delete-query-example.sql[]
+----
+====
+
+[TIP]
+====
+The underlying database must support the CTE (Common Table Expressions) that can be referenced from non-query statements as well, like PostgreSQL since 9.1 or SQL Server since 2005.
+The underlying database must also support the VALUES list clause, like PostgreSQL or SQL Server 2008.
+
+However, this strategy requires the IN-clause row value expression for composite identifiers, so you can only use this strategy only with PostgreSQL.
+====
+
+If you can use temporary tables, that's probably the best choice.
+However, if you are not allowed to create temporary tables, you must pick one of these four strategies that works with your underlying database.
+Before making your mind, you should benchmark which one works best for your current workload.
+For instance, http://blog.2ndquadrant.com/postgresql-ctes-are-optimization-fences/[CTE are optimization fences in PostgreSQL], so make sure you measure before taking a decision.
+
+If you're using Oracle or MySQL 5.7, you can choose either `InlineIdsOrClauseBulkIdStrategy` or `InlineIdsInClauseBulkIdStrategy`.
+For older version of MySQL, then you can only use `InlineIdsOrClauseBulkIdStrategy`.
+
+If you're using SQL Server, `InlineIdsOrClauseBulkIdStrategy` is the only option for you.
+
+If you're using PostgreSQL, then you  have the luxury of choosing any of these four strategies.
+

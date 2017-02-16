@@ -89,9 +89,12 @@ public abstract class AbstractBulkIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDeleteFromPerson() {
 		doInHibernate( this::sessionFactory, session -> {
-			int updateCount = session.createQuery( "delete from Person where employed = :employed" )
-					.setParameter( "employed", false )
-					.executeUpdate();
+			//tag::batch-bulk-hql-temp-table-delete-query-example[]
+			int updateCount = session.createQuery(
+				"delete from Person where employed = :employed" )
+			.setParameter( "employed", false )
+			.executeUpdate();
+			//end::batch-bulk-hql-temp-table-delete-query-example[]
 			assertEquals( entityCount(), updateCount );
 		});
 	}
@@ -106,6 +109,7 @@ public abstract class AbstractBulkIdTest extends BaseCoreFunctionalTestCase {
 		});
 	}
 
+	//tag::batch-bulk-hql-temp-table-base-class-example[]
 	@Entity(name = "Person")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static class Person {
@@ -142,7 +146,9 @@ public abstract class AbstractBulkIdTest extends BaseCoreFunctionalTestCase {
 			this.employed = employed;
 		}
 	}
+	//end::batch-bulk-hql-temp-table-base-class-example[]
 
+	//tag::batch-bulk-hql-temp-table-sub-classes-example[]
 	@Entity(name = "Doctor")
 	public static class Doctor extends Person {
 	}
@@ -160,4 +166,6 @@ public abstract class AbstractBulkIdTest extends BaseCoreFunctionalTestCase {
 			this.fellow = fellow;
 		}
 	}
+	//end::batch-bulk-hql-temp-table-sub-classes-example[]
+
 }

@@ -4,6 +4,67 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.2.8.Final (February 17, 2017)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/27000
+
+** Sub-task
+    * [HHH-7132] - Split Oracle spatial dialect into OGC Strict/non-strict dialects
+    * [HHH-11475] - Deprecate ModificationStore
+
+** Bug
+    * [HHH-10256] - ClassCastException in ResultSetReturnImpl.java:75
+    * [HHH-10537] - Usage of JPQL KEY() with entity key generates inner join
+    * [HHH-10577] - Allow dereferencing of KEY() path
+    * [HHH-10930] - Need to add jta dependency for the plugin to work
+    * [HHH-10938] - Substantial native memory leak when bootstrapping EntityManagerFactory
+    * [HHH-10989] - Unidirectional one-to-many doesn't take care of many side during removal if bytecode enhancement is on
+    * [HHH-11161] - @LazyCollection(LazyCollectionOption.EXTRA) is not extra lazy for bytecode enhanced classes
+    * [HHH-11180] - JPA @ForeignKey still not consistently applied from annotation binding
+    * [HHH-11237] - Incorrect update occurs when updating a detached object with empty component and @SelectBeforeUpdate
+    * [HHH-11262] - Bulk Operations attempt to create temporary tables, but user does not have permission to create table
+    * [HHH-11299] - Uninitialized ManyToMany Entry is not removed when bytecode-enhanced Entity is deleted
+    * [HHH-11301] - Oracle Spatial Dialect non-string mode is unavailable
+    * [HHH-11410] - ManyToMany with Filter generates incorrect load SQL
+    * [HHH-11412] - EntityManager/Session setProperty should permit custom properties
+    * [HHH-11416] - Envers query API: cannot traverse relation if target entity is mapped with JOINED subclass mapping/Unrelated property joins do not work when target entity is Mapped with JOINED subclass mapping
+    * [HHH-11418] - SynonymValidationTest failure
+    * [HHH-11419] - QueryAndSQLTest failing on MS SQL Server
+    * [HHH-11425] - Karaf feature misses byte buddy dependency
+    * [HHH-11426] - NullPointerException in getPersistenceUnitUtil().getIdentifier() on detached enhanced entity
+    * [HHH-11434] - Failure in some tests causes TS to hang infinitely
+    * [HHH-11436] - SQLTest failure
+    * [HHH-11437] - Entity joins are not polymorphic
+    * [HHH-11438] - Inconsistencies in the documentation for bytecode enhancement
+    * [HHH-11455] - When "schema" attribute is set explicitly, tables are identified by schema name even when underlying database doesn't support schemas
+    * [HHH-11456] - SequenceHiLoGeneratorTest fails due to wrong select string on SQL Server
+    * [HHH-11467] - Form-feed (\f 0x0C) in generated SQL triggers exceptions in Firebird
+    * [HHH-11484] - Conversion from String to Locale.ROOT is not working
+
+** Task
+    * [HHH-11431] - Remove unintended deprecations on Query
+    * [HHH-11439] - Switch from Geronimo JTA to Narayana JTA
+    * [HHH-11445] - Improve Infinispan second-level cache documentation
+    * [HHH-11461] - Remove reference to tools class EnversSchemaGenerator
+    * [HHH-11468] - Update CreationTimestamp and UpdateTimestamp Javadoc
+
+** Improvement
+    * [HHH-8768] - Add support for OFFSET/FETCH pagination for SQL Server 2012
+    * [HHH-11417] - Upgrade Byte Buddy to 1.6.4
+    * [HHH-11420] - Update Byte Buddy to 1.6.6. and use more granular locks on type caches
+    * [HHH-11428] - When multiple @RequiresDialect annotation is applied the test is ignored
+    * [HHH-11442] - Update documentation for HHH-10858
+    * [HHH-11448] - Fix tests failing on PostgreSQL
+    * [HHH-11450] - The testWithClause from WithClauseTest class fails on PostgreSQL
+    * [HHH-11453] - Documentation: explain/state find() and Query on a single entity can behave differently
+    * [HHH-11457] - Add MariaDB specific Dialects
+    * [HHH-11458] - Optimize the SQL formatter call when iterating through multiple targets
+    * [HHH-11482] - SUBSTRING example code suggests start position is 0-based
+    * [HHH-11485] - Document that the @Filter annotation only applies to query
+    * [HHH-11489] - Improve the documentation about upgrading WidFly with latest Hibernate ORM modules
+    * [HHH-11491] - Add documentation to non-temporary tables bulk-id strategies
+
+
 Changes in 5.2.7.Final (January 19, 2017)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/26401

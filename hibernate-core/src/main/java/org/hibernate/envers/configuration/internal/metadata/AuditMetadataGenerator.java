@@ -13,7 +13,6 @@ import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.boot.spi.AuditMetadataBuildingOptions;
 import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
@@ -43,10 +42,10 @@ import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.LongType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
-import org.hibernate.type.TimestampType;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -185,13 +184,10 @@ public final class AuditMetadataGenerator {
 
 			if ( options.isRevisionEndTimestampEnabled() ) {
 				// add a column for the timestamp of the end revision
-				final String revisionInfoTimestampSqlType = options.isNumericRevisionEndTimestampEnabled()
-						? LongType.INSTANCE.getName()
-						: TimestampType.INSTANCE.getName();
 				final Element timestampProperty = MetadataTools.addProperty(
 						anyMapping,
 						options.getRevisionEndTimestampFieldName(),
-						revisionInfoTimestampSqlType,
+						getRevisionInfoTimestampSqlType(),
 						true,
 						true,
 						false
@@ -802,5 +798,17 @@ public final class AuditMetadataGenerator {
 	 */
 	public Map<String, EntityConfiguration> getNotAuditedEntitiesConfigurations() {
 		return notAuditedEntitiesConfigurations;
+	}
+
+	private String getRevisionInfoTimestampSqlType() {
+		if ( options.isNumericRevisionEndTimestampEnabled() ) {
+			return getBasicTypeSqlType( StandardSpiBasicTypes.LONG );
+		}
+		return getBasicTypeSqlType( StandardSpiBasicTypes.TIMESTAMP );
+	}
+
+	private String getBasicTypeSqlType(BasicType basicType) {
+		final int sqlType = basicType.getColumnMapping().getSqlTypeDescriptor().getSqlType();
+		return metadata.getDatabase().getDialect().getTypeName( sqlType );
 	}
 }

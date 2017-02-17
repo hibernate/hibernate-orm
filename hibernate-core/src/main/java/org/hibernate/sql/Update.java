@@ -31,11 +31,9 @@ public class Update {
 	private Map whereColumns = new LinkedHashMap();
 	
 	final private Dialect dialect;
-	final private SharedSessionContractImplementor session;
 
-	public Update(Dialect dialect, SharedSessionContractImplementor session) {
+	public Update(Dialect dialect) {
 		this.dialect = dialect;
-		this.session = session;
 	}
 
 	public String getTableName() {
@@ -134,7 +132,7 @@ public class Update {
 		return this;
 	}
 
-	public Update addColumn(String columnName, Object value, Type type) throws Exception {
+	public Update addColumn(String columnName, Object value, Type type, SharedSessionContractImplementor session) throws Exception {
 		return addColumn( columnName, type.getJdbcLiteralFormatter().toJdbcLiteral( value, dialect, session ) );
 	}
 

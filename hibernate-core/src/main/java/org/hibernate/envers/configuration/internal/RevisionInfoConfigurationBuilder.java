@@ -51,6 +51,8 @@ import org.jboss.logging.Logger;
 
 import org.dom4j.Document;
 import org.dom4j.Element;
+
+import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -75,8 +77,8 @@ public class RevisionInfoConfigurationBuilder {
 	private RevisionTimestampData revisionInfoTimestampData;
 	private PropertyData modifiedEntityNamesData;
 
-	private String revisionPropType;
-	private String revisionPropSqlType;
+	private BasicType revisionPropType;
+	private String revisionPropColumnDefinition;
 
 	public RevisionInfoConfigurationBuilder(
 			InFlightMetadataCollector metadata,
@@ -97,7 +99,7 @@ public class RevisionInfoConfigurationBuilder {
 		revisionInfoIdData = new PropertyData( "id", "id", "field", null );
 		revisionInfoTimestampData = new RevisionTimestampData( "timestamp", "timestamp", "field", null, StandardSpiBasicTypes.LONG );
 		modifiedEntityNamesData = new PropertyData( "modifiedEntityNames", "modifiedEntityNames", "field", null );
-		revisionPropType = "integer";
+		revisionPropType = StandardSpiBasicTypes.INTEGER;
 	}
 
 	public RevisionInfoConfiguration build() {
@@ -304,7 +306,7 @@ public class RevisionInfoConfigurationBuilder {
 					revisionNumberFound.set();
 
 					// The default is integer
-					revisionPropType = "long";
+					revisionPropType = StandardSpiBasicTypes.LONG;
 				}
 				else {
 					throw new MappingException(
@@ -318,7 +320,7 @@ public class RevisionInfoConfigurationBuilder {
 				// revision entity revision number.
 				final Column revisionPropColumn = property.getAnnotation( Column.class );
 				if ( revisionPropColumn != null ) {
-					revisionPropSqlType = revisionPropColumn.columnDefinition();
+					revisionPropColumnDefinition = revisionPropColumn.columnDefinition();
 				}
 			}
 
@@ -445,7 +447,7 @@ public class RevisionInfoConfigurationBuilder {
 		final Element idProperty = MetadataTools.addNativelyGeneratedId(
 				classMapping,
 				revisionInfoIdData.getName(),
-				revisionPropType,
+				getBasicTypeSqlType( revisionPropType ),
 				options.isUseRevisionEntityWithNativeIdEnabled()
 		);
 		MetadataTools.addColumn( idProperty, "REV", null, null, null, null, null, null, false );
@@ -515,15 +517,19 @@ public class RevisionInfoConfigurationBuilder {
 	private Element generateRevisionInfoRelationMapping() {
 		final Document document = xmlHelper.getDocumentFactory().createDocument();
 		final Element revRelMapping = document.addElement( "key-many-to-one" );
-		revRelMapping.addAttribute( "type", revisionPropType );
+		revRelMapping.addAttribute( "type", getBasicTypeSqlType( revisionPropType ) );
 		revRelMapping.addAttribute( "class", revisionInfoEntityName );
 
-		if ( revisionPropSqlType != null ) {
+		if ( revisionPropColumnDefinition != null ) {
 			// Putting a fake name to make Hibernate happy. It will be replaced later anyway.
-			MetadataTools.addColumn( revRelMapping, "*", null, null, null, revisionPropSqlType, null, null, false );
+			MetadataTools.addColumn( revRelMapping, "*", null, null, null, revisionPropColumnDefinition, null, null, false );
 		}
 
 		return revRelMapping;
 	}
 
+	private String getBasicTypeSqlType(BasicType basicType) {
+		final int sqlType = basicType.getColumnMapping().getSqlTypeDescriptor().getSqlType();
+		return metadata.getDatabase().getDialect().getTypeName( sqlType );
+	}
 }

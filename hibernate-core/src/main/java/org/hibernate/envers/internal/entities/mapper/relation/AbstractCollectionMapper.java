@@ -354,7 +354,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 			for ( Object object : oldCollection ) {
 				for ( Iterator addedIt = added.iterator(); addedIt.hasNext(); ) {
 					Object object2 = addedIt.next();
-					if ( collectionPersister.getElementType().isSame( object, object2 ) ) {
+					if ( collectionPersister.getElementReference().getOrmType().isSame( object, object ) ) {
 						addedIt.remove();
 						break;
 					}
@@ -373,7 +373,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 			for ( Object object : newCollection ) {
 				for ( Iterator deletedIt = deleted.iterator(); deletedIt.hasNext(); ) {
 					Object object2 = deletedIt.next();
-					if ( collectionPersister.getElementType().isSame( object, object2 ) ) {
+					if ( collectionPersister.getElementReference().getOrmType().isSame( object, object2 ) ) {
 						deletedIt.remove();
 						break;
 					}

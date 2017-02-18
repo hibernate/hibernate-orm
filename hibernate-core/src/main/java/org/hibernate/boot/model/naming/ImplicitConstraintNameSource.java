@@ -16,4 +16,5 @@ import java.util.List;
 public interface ImplicitConstraintNameSource extends ImplicitNameSource {
 	public Identifier getTableName();
 	public List<Identifier> getColumnNames();
+	public Identifier getUserProvidedIdentifier();
 }

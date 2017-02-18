@@ -4345,6 +4345,11 @@ public class ModelBinder {
 						public MetadataBuildingContext getBuildingContext() {
 							return mappingDocument;
 						}
+
+						@Override
+						public Identifier getUserProvidedIdentifier() {
+							return uk.getName() != null ? Identifier.toIdentifier( uk.getName() ) : null;
+						}
 					}
 			);
 			uk.setName( ukName.render( mappingDocument.getMetadataCollector().getDatabase().getDialect() ) );

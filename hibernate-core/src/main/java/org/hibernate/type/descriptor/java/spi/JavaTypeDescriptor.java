@@ -10,6 +10,7 @@ import org.hibernate.type.descriptor.java.internal.NoWrapperOptions;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.VersionSupport;
 
 /**
  * Descriptor for the Java side of a value mapping.
@@ -74,4 +75,5 @@ public interface JavaTypeDescriptor<T> extends org.hibernate.type.descriptor.jav
 	default T fromString(String value) {
 		return wrap( value, NoWrapperOptions.INSTANCE );
 	}
+
 }

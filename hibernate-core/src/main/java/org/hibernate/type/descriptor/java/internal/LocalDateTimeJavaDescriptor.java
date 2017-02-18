@@ -25,7 +25,9 @@ import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.LocalDateTimeVersionSupport;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.VersionSupport;
 
 import org.jboss.logging.Logger;
 
@@ -163,5 +165,10 @@ public class LocalDateTimeJavaDescriptor
 		}
 
 		throw new IllegalArgumentException( "Unrecognized JPA TemporalType precision [" + precision + "]" );
+	}
+
+	@Override
+	public VersionSupport<LocalDateTime> getVersionSupport() {
+		return LocalDateTimeVersionSupport.INSTANCE;
 	}
 }

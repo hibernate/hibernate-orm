@@ -6,9 +6,19 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+import org.hibernate.type.spi.VersionSupport;
+
 /**
  * @author Steve Ebersole
  */
 public interface BasicJavaDescriptor<T> extends JavaTypeDescriptor<T> {
-
+	/**
+	 * Obtain the {@link VersionSupport} for this Java type.
+	 * <p/>
+	 *
+	 * @return The {@link VersionSupport} or null if this Java type does not support version
+	 */
+	default VersionSupport<T> getVersionSupport() {
+		return null;
+	}
 }

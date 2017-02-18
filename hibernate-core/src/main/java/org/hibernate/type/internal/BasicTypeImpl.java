@@ -34,6 +34,7 @@ public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T
 	private final ColumnMapping columnMapping;
 	private final BasicTypeRegistry.Key registryKey;
 	private final JdbcLiteralFormatter jdbcLiteralFormatter;
+	private VersionSupport versionSupport;
 
 	@SuppressWarnings("unchecked")
 	public BasicTypeImpl(BasicJavaDescriptor javaDescriptor, ColumnMapping columnMapping) {
@@ -64,6 +65,11 @@ public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T
 		this.columnMapping = columnMapping;
 		this.registryKey = BasicTypeRegistry.Key.from( javaDescriptor, columnMapping.getSqlTypeDescriptor() );
 		this.jdbcLiteralFormatter = columnMapping.getSqlTypeDescriptor().getJdbcLiteralFormatter( getJavaTypeDescriptor() );
+	}
+
+	public BasicTypeImpl setVersionSupport(VersionSupport versionSupport){
+		this.versionSupport = versionSupport;
+		return this;
 	}
 
 	@Override
@@ -100,7 +106,12 @@ public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T
 
 	@Override
 	public VersionSupport<T> getVersionSupport() {
-		return null;
+		if ( versionSupport != null ) {
+			return versionSupport;
+		}
+		else {
+			return getJavaTypeDescriptor().getVersionSupport();
+		}
 	}
 
 	@Override

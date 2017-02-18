@@ -46,4 +46,17 @@ public interface VersionSupport<T> {
 	 */
 	String toLoggableString(Object value, SessionFactoryImplementor factory);
 
+	/**
+	 * Compare two version generated values
+	 * <p/>
+	 *
+	 * @param x The first value
+	 * @param y The second value
+	 *
+	 * @return True if there are considered equal
+	 *
+	 * @throws HibernateException A problem occurred performing the comparison
+	 */
+	boolean isEqual(T x, T y) throws HibernateException;
+
 }

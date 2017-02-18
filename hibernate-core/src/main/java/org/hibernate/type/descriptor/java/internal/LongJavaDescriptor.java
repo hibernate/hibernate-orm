@@ -15,6 +15,8 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.LongVersionSupport;
+import org.hibernate.type.spi.VersionSupport;
 
 /**
  * Descriptor for {@link Integer} handling.
@@ -106,5 +108,10 @@ public class LongJavaDescriptor extends AbstractNumericJavaDescriptor<Long> impl
 	@Override
 	public Long getDefaultValue() {
 		return ZERO;
+	}
+
+	@Override
+	public VersionSupport<Long> getVersionSupport() {
+		return LongVersionSupport.INSTANCE;
 	}
 }

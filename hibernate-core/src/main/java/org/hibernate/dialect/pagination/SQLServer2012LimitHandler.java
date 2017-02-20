@@ -6,6 +6,9 @@
  */
 package org.hibernate.dialect.pagination;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
 import org.hibernate.engine.spi.RowSelection;
 
 /**
@@ -14,9 +17,10 @@ import org.hibernate.engine.spi.RowSelection;
  * @author Chris Cranford
  */
 public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
-	public static final SQLServer2012LimitHandler INSTANCE = new SQLServer2012LimitHandler();
+	// determines whether the limit handler used offset/fetch or 2005 behavior.
+	private boolean usedOffsetFetch;
 
-	private SQLServer2012LimitHandler() {
+	public SQLServer2012LimitHandler() {
 
 	}
 
@@ -27,7 +31,7 @@ public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
 
 	@Override
 	public boolean supportsVariableLimit() {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -40,10 +44,68 @@ public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
 			if ( !LimitHelper.useLimit( this, selection ) ) {
 				return sql;
 			}
-			int firstRow = LimitHelper.hasFirstRow( selection ) ? selection.getFirstRow() : 0;
-			return sql + String.format( " offset %d rows fetch next %d rows only", firstRow, selection.getMaxRows() );
+			return applyOffsetFetch( selection, sql, getInsertPosition( sql ) );
 		}
 		return super.processSql( sql, selection );
+	}
+
+	@Override
+	public boolean useMaxForLimit() {
+		// when using the offset fetch clause, the max value is passed as-is.
+		// SQLServer2005LimitHandler uses start + max values.
+		return usedOffsetFetch ? false : super.useMaxForLimit();
+	}
+
+	@Override
+	public int convertToFirstRowValue(int zeroBasedFirstResult) {
+		// When using the offset/fetch clause, the first row is passed as-is
+		// SQLServer2005LimitHandler uses zeroBasedFirstResult + 1
+		if ( usedOffsetFetch ) {
+			return zeroBasedFirstResult;
+		}
+		return super.convertToFirstRowValue( zeroBasedFirstResult );
+	}
+
+	@Override
+	public int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index)
+	throws SQLException {
+		if ( usedOffsetFetch && !LimitHelper.hasFirstRow( selection ) ) {
+			// apply just the max value when offset fetch applied
+			statement.setInt( index, getMaxOrLimit( selection ) );
+			return 1;
+		}
+		return super.bindLimitParametersAtEndOfQuery( selection, statement, index );
+	}
+
+	private String getOffsetFetch(RowSelection selection) {
+		if ( !LimitHelper.hasFirstRow( selection ) ) {
+			return " offset 0 rows fetch next ? rows only";
+		}
+		return " offset ? rows fetch next ? rows only";
+	}
+
+	private int getInsertPosition(String sql) {
+		int position = sql.length() - 1;
+		for ( ; position > 0; --position ) {
+			char ch = sql.charAt( position );
+			if ( ch != ';' && ch != ' ' && ch != '\r' && ch != '\n' ) {
+				break;
+			}
+		}
+		return position + 1;
+	}
+
+	private String applyOffsetFetch(RowSelection selection, String sql, int position) {
+		usedOffsetFetch = true;
+
+		StringBuilder sb = new StringBuilder();
+		sb.append( sql.substring( 0, position ) );
+		sb.append( getOffsetFetch( selection ) );
+		if ( position > sql.length() ) {
+			sb.append( sql.substring( position - 1 ) );
+		}
+
+		return sb.toString();
 	}
 
 	private boolean hasOrderBy(String sql) {

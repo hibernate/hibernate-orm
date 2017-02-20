@@ -89,6 +89,6 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 
 	@Override
 	protected LimitHandler getDefaultLimitHandler() {
-		return SQLServer2012LimitHandler.INSTANCE;
+		return new SQLServer2012LimitHandler();
 	}
 }

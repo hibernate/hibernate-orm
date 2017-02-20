@@ -41,7 +41,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 	public void testGetLimitStringMaxRowsOnly() {
 		final String input = "select distinct f1 as f53245 from table846752 order by f234, f67 desc";
 		assertEquals(
-				input + " offset 0 rows fetch next 10 rows only",
+				input + " offset 0 rows fetch next ? rows only",
 				dialect.getLimitHandler().processSql( input, toRowSelection( 0, 10 ) ).toLowerCase( Locale.ROOT )
 		);
 	}
@@ -51,7 +51,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 	public void testGetLimitStringWithOffsetAndMaxRows() {
 		final String input = "select distinct f1 as f53245 from table846752 order by f234, f67 desc";
 		assertEquals(
-				input + " offset 5 rows fetch next 25 rows only",
+				input + " offset ? rows fetch next ? rows only",
 				dialect.getLimitHandler().processSql( input, toRowSelection( 5, 25 ) ).toLowerCase( Locale.ROOT )
 		);
 	}

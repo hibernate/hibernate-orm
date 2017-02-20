@@ -1006,6 +1006,8 @@ The `NotFoundAction` defines with two possibilities:
 `EXCEPTION`:: An exception is thrown when an element is not found (default and recommended).
 `IGNORE`:: Ignore the element when not found in the database.
 
+See the <<chapters/domain/associations.adoc#associations-not-found,`@NotFound` mapping>> section for more info.
+
 [[annotations-hibernate-ondelete]]
 ==== `@OnDelete`
 

@@ -388,3 +388,23 @@ include::{extrasdir}/associations-many-to-many-bidirectional-with-link-entity-li
 ====
 
 There is only one delete statement executed because, this time, the association is controlled by the `@ManyToOne` side which only has to monitor the state of the underlying foreign key relationship to trigger the right DML statement.
+
+[[associations-not-found]]
+==== Ignoring exception when association not found
+
+When dealing with associations it's possible to have to deal with database inconsistencies involving foreign key constraints and an Exception can be thrown. if desired, this Exception can be ignored and a `null` object referenced instead.
+To ignore it, even though not recommended, it's possible to use the annotation `org.hibernate.annotation.NotFound`, passing an `org.hibernate.annotations.NotFoundAction`. The `NotFoundAction` is an ENUM that can be `EXCEPTION` or `IGNORE`, being the first by default.
+
+[[associations-not-found-example]]
+.`@NotFound` example
+====
+[source,java]
+----
+include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-domain-model-example,indent=0]
+----
+[source,java]
+----
+include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-example,indent=0]
+====
+
+Dropping the foreign key `FK_OWNER` and removing the person with id = 1, an Exception is thrown when performing a `SELECT` for the `Phone` with id = 1. But with the use of `NotFoundAction.IGNORE`, the Exception is ignored and the `Person` associated is `null`.

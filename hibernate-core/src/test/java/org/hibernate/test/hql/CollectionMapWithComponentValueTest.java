@@ -20,8 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Query;
 import org.hibernate.Session;
-import org.hibernate.query.Query;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.junit.After;
@@ -32,7 +32,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -51,7 +50,9 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 
 	@Override
 	protected void prepareTest() throws Exception {
-		doInHibernate( this::sessionFactory, s -> {
+		Session s = openSession();
+		s.getTransaction().begin();
+		{
 			s.save( keyValue );
 
 			TestEntity testEntity = new TestEntity();
@@ -71,12 +72,16 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 			map.put( keyValue2, embeddableValue2 );
 			testEntity2.values = map2;
 			s.save( testEntity2 );
-		} );
+		}
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test
 	public void testMapKeyExpressionInWhere() {
-		doInHibernate( this::sessionFactory, s -> {
+		Session s = openSession();
+		s.getTransaction().begin();
+		{
 			// JPA form
 			Query query = s.createQuery(
 					"select te from TestEntity te join te.values v where ? in (key(v)) " );
@@ -89,12 +94,16 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 			query.setParameter( 0, keyValue );
 
 			assertThat( query.list().size(), is( 1 ) );
-		} );
+		}
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test
 	public void testMapKeyExpressionInSelect() {
-		doInHibernate( this::sessionFactory, s -> {
+		Session s = openSession();
+		s.getTransaction().begin();
+		{
 			// JPA form
 			List results = s.createQuery( "select key(v) from TestEntity te join te.values v" ).list();
 			assertEquals( 2, results.size() );
@@ -104,12 +113,16 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 			results = s.createQuery( "select key(te.values) from TestEntity te" ).list();
 			assertEquals( 2, results.size() );
 			assertTyping( KeyValue.class, results.get( 0 ) );
-		} );
+		}
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test
 	public void testMapValueExpressionInSelect() {
-		doInHibernate( this::sessionFactory, s -> {
+		Session s = openSession();
+		s.getTransaction().begin();
+		{
 			List addresses = s.createQuery( "select value(v) from TestEntity te join te.values v" ).list();
 			assertEquals( 2, addresses.size() );
 			assertTyping( EmbeddableValue.class, addresses.get( 0 ) );
@@ -117,12 +130,16 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 			addresses = s.createQuery( "select value(te.values) from TestEntity te" ).list();
 			assertEquals( 2, addresses.size() );
 			assertTyping( EmbeddableValue.class, addresses.get( 0 ) );
-		} );
+		}
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test
 	public void testMapEntryExpressionInSelect() {
-		doInHibernate( this::sessionFactory, s -> {
+		Session s = openSession();
+		s.getTransaction().begin();
+		{
 			List addresses = s.createQuery( "select entry(v) from TestEntity te join te.values v" ).list();
 			assertEquals( 2, addresses.size() );
 			assertTyping( Map.Entry.class, addresses.get( 0 ) );
@@ -130,7 +147,9 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 			addresses = s.createQuery( "select entry(te.values) from TestEntity te" ).list();
 			assertEquals( 2, addresses.size() );
 			assertTyping( Map.Entry.class, addresses.get( 0 ) );
-		} );
+		}
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Override
@@ -139,11 +158,15 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 	}
 
 	protected void cleanupTestData() {
-		doInHibernate( this::sessionFactory, s -> {
+		Session s = openSession();
+		s.getTransaction().begin();
+		{
 			s.createQuery( "from TestEntity" )
 				.list()
 				.forEach( te -> s.delete( te ) );
-		} );
+		}
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Entity(name = "TestEntity")

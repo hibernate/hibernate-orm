@@ -75,6 +75,11 @@ public class DB2390Dialect extends DB2Dialect {
 	}
 
 	@Override
+	public String getQuerySequencesString() {
+		return null;
+	}
+
+	@Override
 	public boolean supportsLimit() {
 		return true;
 	}

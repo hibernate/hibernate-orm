@@ -14,18 +14,9 @@ package org.hibernate.dialect;
  */
 @SuppressWarnings("deprecation")
 public class MySQLInnoDBDialect extends MySQLDialect {
+	
 	@Override
-	public boolean supportsCascadeDelete() {
-		return true;
-	}
-
-	@Override
-	public String getTableTypeString() {
-		return " type=InnoDB";
-	}
-
-	@Override
-	public boolean hasSelfReferentialForeignKeyBug() {
-		return true;
+	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
+		return InnoDBStorageEngine.INSTANCE;
 	}
 }

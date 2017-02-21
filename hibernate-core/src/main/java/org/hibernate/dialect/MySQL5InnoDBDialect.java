@@ -14,18 +14,9 @@ package org.hibernate.dialect;
  */
 @SuppressWarnings("deprecation")
 public class MySQL5InnoDBDialect extends MySQL5Dialect {
-	@Override
-	public boolean supportsCascadeDelete() {
-		return true;
-	}
 
 	@Override
-	public String getTableTypeString() {
-		return " ENGINE=InnoDB";
-	}
-
-	@Override
-	public boolean hasSelfReferentialForeignKeyBug() {
-		return true;
+	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
+		return InnoDBStorageEngine.INSTANCE;
 	}
 }

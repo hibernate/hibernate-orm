@@ -59,7 +59,7 @@ allprojects {
 
 ext {
 	hibernateTargetVersion = '5.2.9-SNAPSHOT'
-	expectedGradleVersion = '3.2.1'
+	expectedGradleVersion = '3.4'
 	baselineJavaVersion = '1.8'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )
@@ -172,8 +172,7 @@ subprojects { subProject ->
 				testRuntime( libraries.oracle )
 			}
 		}
-		// 6.6 gave me some NPE problems from within checkstyle...
-		checkstyle 'com.puppycrawl.tools:checkstyle:6.5'
+		checkstyle 'com.puppycrawl.tools:checkstyle:7.5.1'
 	}
 
 	// mac-specific stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

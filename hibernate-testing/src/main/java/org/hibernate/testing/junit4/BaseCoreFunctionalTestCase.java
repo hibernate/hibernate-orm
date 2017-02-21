@@ -392,6 +392,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 					s.delete( o );
 				}
 			}
+			transaction.commit();
 		}
 		catch (Exception e) {
 			if ( transaction.getStatus().canRollback() ) {

@@ -7,9 +7,6 @@
 
 package org.hibernate.spatial.dialect.mysql;
 
-import org.hibernate.dialect.InnoDBStorageEngine;
-import org.hibernate.dialect.MySQLStorageEngine;
-
 /**
  * Spatial Dialect for MySQL 5.6 with InnoDB engine.
  *
@@ -19,10 +16,5 @@ import org.hibernate.dialect.MySQLStorageEngine;
  */
 @SuppressWarnings("deprecation")
 public class MySQL56InnoDBSpatialDialect extends MySQL56SpatialDialect {
-
-	@Override
-	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
-		return InnoDBStorageEngine.INSTANCE;
-	}
 
 }

@@ -15,7 +15,9 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.InnoDBStorageEngine;
 import org.hibernate.dialect.MySQL55Dialect;
+import org.hibernate.dialect.MySQLStorageEngine;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.service.ServiceRegistry;
@@ -148,5 +150,14 @@ public class MySQL56SpatialDialect extends MySQL55Dialect implements SpatialDial
 	@Override
 	public boolean supports(SpatialFunction function) {
 		return dialectDelegate.supports( function );
+	}
+
+	/**
+	 * MySQL 5.6 uses InnoDB by default.
+	 * @return Default MySQL Storage Engine.
+	 */
+	@Override
+	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
+		return InnoDBStorageEngine.INSTANCE;
 	}
 }

@@ -12,7 +12,7 @@ package org.hibernate.dialect;
  * @author Scott Marlow
  * @deprecated Use "hibernate.dialect.storage_engine=innodb" environment variable or JVM system property instead.
  */
-@SuppressWarnings("deprecation")
+@Deprecated
 public class MySQL5InnoDBDialect extends MySQL5Dialect {
 
 	@Override

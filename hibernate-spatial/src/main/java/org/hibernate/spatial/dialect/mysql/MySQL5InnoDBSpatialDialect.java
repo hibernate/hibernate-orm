@@ -15,7 +15,7 @@ import org.hibernate.dialect.MySQLStorageEngine;
  * @author Karel Maesen, Geovise BVBA
  * @deprecated Use "hibernate.dialect.storage_engine=innodb" environment variable or JVM system property instead.
  */
-@SuppressWarnings("deprecation")
+@Deprecated
 public class MySQL5InnoDBSpatialDialect extends MySQL5SpatialDialect {
 
 	@Override

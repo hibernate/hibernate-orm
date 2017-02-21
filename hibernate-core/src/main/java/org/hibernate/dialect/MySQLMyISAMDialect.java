@@ -12,7 +12,7 @@ package org.hibernate.dialect;
  * @author Gavin King
  * @deprecated Use "hibernate.dialect.storage_engine=myisam" environment variable or JVM system property instead.
  */
-@SuppressWarnings("deprecation")
+@Deprecated
 public class MySQLMyISAMDialect extends MySQLDialect {
 	@Override
 	public String getTableTypeString() {

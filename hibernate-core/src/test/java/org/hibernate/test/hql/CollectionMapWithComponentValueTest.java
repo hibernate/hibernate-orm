@@ -216,11 +216,15 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 	@Test
 	@TestForIssue(jiraKey = "HHH-10537")
 	public void testLeftJoinMapAndUseKeyExpression() {
-		doInHibernate( this::sessionFactory, s -> {
+		Session s = openSession();
+		s.getTransaction().begin();
+		{
 			// Assert that a left join is used for joining the map key entity table
 			List keyValues= s.createQuery( "select key(v) from BaseTestEntity bte left join bte.entities te left join te.values v" ).list();
 			assertEquals( 2, keyValues.size() );
-		} );
+		}
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Override

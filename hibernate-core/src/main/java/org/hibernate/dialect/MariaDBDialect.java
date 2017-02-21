@@ -17,4 +17,9 @@ public class MariaDBDialect extends MySQL5Dialect {
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return true;
 	}
+
+	@Override
+	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
+		return InnoDBStorageEngine.INSTANCE;
+	}
 }

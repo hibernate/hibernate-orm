@@ -133,7 +133,7 @@ public class DerbyDialect extends DB2Dialect {
 			return "select SEQUENCENAME from SYS.SYSSEQUENCES";
 		}
 		else {
-			throw new MappingException( "Derby does not support sequence prior to release 10.6.1.0" );
+			return null;
 		}
 	}
 

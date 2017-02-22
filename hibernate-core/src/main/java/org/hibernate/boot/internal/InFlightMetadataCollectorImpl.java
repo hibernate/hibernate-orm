@@ -1811,45 +1811,86 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 				fk.setReferencedTable( referencedClass.getTable() );
 
-				// todo : should we apply a physical naming too?
+				Identifier nameIdentifier;
+
+				ImplicitForeignKeyNameSource foreignKeyNameSource;
 				if ( fk.getName() == null ) {
-					final Identifier nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineForeignKeyName(
-							new ImplicitForeignKeyNameSource() {
-								final List<Identifier> columnNames = extractColumnNames( fk.getColumns() );
-								List<Identifier> referencedColumnNames = null;
+					foreignKeyNameSource = new ImplicitForeignKeyNameSource() {
+						final List<Identifier> columnNames = extractColumnNames( fk.getColumns() );
+						List<Identifier> referencedColumnNames = null;
 
-								@Override
-								public Identifier getTableName() {
-									return table.getNameIdentifier();
-								}
+						@Override
+						public Identifier getTableName() {
+							return table.getNameIdentifier();
+						}
 
-								@Override
-								public List<Identifier> getColumnNames() {
-									return columnNames;
-								}
+						@Override
+						public List<Identifier> getColumnNames() {
+							return columnNames;
+						}
 
-								@Override
-								public Identifier getReferencedTableName() {
-									return fk.getReferencedTable().getNameIdentifier();
-								}
+						@Override
+						public Identifier getReferencedTableName() {
+							return fk.getReferencedTable().getNameIdentifier();
+						}
 
-								@Override
-								public List<Identifier> getReferencedColumnNames() {
-									if ( referencedColumnNames == null ) {
-										referencedColumnNames = extractColumnNames( fk.getReferencedColumns() );
-									}
-									return referencedColumnNames;
-								}
-
-								@Override
-								public MetadataBuildingContext getBuildingContext() {
-									return buildingContext;
-								}
+						@Override
+						public List<Identifier> getReferencedColumnNames() {
+							if ( referencedColumnNames == null ) {
+								referencedColumnNames = extractColumnNames( fk.getReferencedColumns() );
 							}
-					);
+							return referencedColumnNames;
+						}
 
-					fk.setName( nameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() ) );
+						@Override
+						public Identifier getUserProvidedIdentifier() {
+							return null;
+						}
+
+						@Override
+						public MetadataBuildingContext getBuildingContext() {
+							return buildingContext;
+						}
+					};
 				}
+				else {
+					foreignKeyNameSource = new ImplicitForeignKeyNameSource() {
+
+						@Override
+						public MetadataBuildingContext getBuildingContext() {
+							return null;
+						}
+
+						@Override
+						public Identifier getTableName() {
+							return null;
+						}
+
+						@Override
+						public List<Identifier> getColumnNames() {
+							return null;
+						}
+
+						@Override
+						public Identifier getReferencedTableName() {
+							return null;
+						}
+
+						@Override
+						public List<Identifier> getReferencedColumnNames() {
+							return null;
+						}
+
+						@Override
+						public Identifier getUserProvidedIdentifier() {
+							return Identifier.toIdentifier( fk.getName() );
+						}
+					};
+				}
+
+				nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineForeignKeyName(foreignKeyNameSource);
+
+				fk.setName( nameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() ) );
 
 				fk.alignColumns();
 			}
@@ -1960,8 +2001,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		if ( unique ) {
+			Identifier keyNameIdentifier;
+
 			if ( StringHelper.isEmpty( keyName ) ) {
-				final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineUniqueKeyName(
+				keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineUniqueKeyName(
 						new ImplicitUniqueKeyNameSource() {
 							@Override
 							public MetadataBuildingContext getBuildingContext() {
@@ -1985,8 +2028,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 							}
 						}
 				);
-				keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
+			} else {
+				keyNameIdentifier = Identifier.toIdentifier( keyName );
 			}
+
+			keyName = getMetadataBuildingOptions().getPhysicalNamingStrategy().toPhysicalSequenceName( keyNameIdentifier, getDatabase().getJdbcEnvironment() ).render( getDatabase().getJdbcEnvironment().getDialect() );
 
 			UniqueKey uk = table.getOrCreateUniqueKey( keyName );
 			for ( int i = 0; i < columns.length; i++ ) {

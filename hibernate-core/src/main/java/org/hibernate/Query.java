@@ -369,7 +369,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Return the query results as an <tt>Iterator</tt>. If the query
-	 * contains multiple results pre row, the results are returned in
+	 * contains multiple results per row, the results are returned in
 	 * an instance of <tt>Object[]</tt>.<br>
 	 * <br>
 	 * Entities returned as results are initialized on demand. The first

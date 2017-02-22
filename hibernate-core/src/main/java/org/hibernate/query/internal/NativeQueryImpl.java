@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.FlushModeType;
@@ -237,6 +238,11 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		if ( shouldFlush() ) {
 			getProducer().flush();
 		}
+	}
+
+	@Override
+	public Iterator<T> iterate() {
+		throw new UnsupportedOperationException( "SQL queries do not currently support iteration" );
 	}
 
 	private boolean shouldFlush() {

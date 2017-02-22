@@ -6,14 +6,14 @@
  */
 package org.hibernate.test.bytecode.enhancement.cascade;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
 import org.junit.Assert;
 
 import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
@@ -39,8 +39,8 @@ public class CascadeWithFkConstraintTestTask extends AbstractEnhancerTestTask {
         super.prepare( cfg );
 
         // Create garage, add 2 cars to garage
-        EntityManager em = getFactory().createEntityManager();
-        EntityTransaction tx = em.getTransaction();
+        Session s = getFactory().openSession();
+        Transaction tx = s.getTransaction();
         tx.begin();
 
         Garage garage = new Garage();
@@ -49,12 +49,12 @@ public class CascadeWithFkConstraintTestTask extends AbstractEnhancerTestTask {
         garage.insert( car1 );
         garage.insert( car2 );
 
-        em.persist( garage );
-        em.persist( car1 );
-        em.persist( car2 );
+        s.persist( garage );
+        s.persist( car1 );
+        s.persist( car2 );
 
         tx.commit();
-        em.close();
+        s.close();
 
         garageId = garage.id;
         car1Id = car1.id;
@@ -65,33 +65,33 @@ public class CascadeWithFkConstraintTestTask extends AbstractEnhancerTestTask {
 
         // Remove garage
 
-        EntityManager em = getFactory().createEntityManager();
-        EntityTransaction tx = em.getTransaction();
+        Session s = getFactory().openSession();
+        Transaction tx = s.getTransaction();
         tx.begin();
 
-        Garage toRemoveGarage = em.find( Garage.class, garageId );
-        em.remove( toRemoveGarage );
+        Garage toRemoveGarage = s.get( Garage.class, garageId );
+        s.delete( toRemoveGarage );
 
         tx.commit();
-        em.close();
+        s.close();
 
         // Check if there is no garage but cars are still present
 
-        EntityManager testEm = getFactory().createEntityManager();
-        tx = testEm.getTransaction();
+        Session testSession = getFactory().openSession();
+        tx = testSession.getTransaction();
         tx.begin();
 
-        Garage foundGarage = testEm.find( Garage.class, garageId );
+        Garage foundGarage = testSession.get( Garage.class, garageId );
         Assert.assertNull( foundGarage );
 
-        Car foundCar1 = testEm.find( Car.class, car1Id );
+        Car foundCar1 = testSession.get( Car.class, car1Id );
         Assert.assertEquals( car1Id, foundCar1.id );
 
-        Car foundCar2 = testEm.find( Car.class, car2Id );
+        Car foundCar2 = testSession.get( Car.class, car2Id );
         Assert.assertEquals( car2Id, foundCar2.id );
 
         tx.commit();
-        testEm.close();
+        testSession.close();
 
     }
 

@@ -124,8 +124,21 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 				);
 			}
 
-			final boolean regenerate = persister.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
-			final EntityKey key = regenerate ? null : source.generateEntityKey( id, persister );
+			// We should only regenerate when the id is not there
+			// otherwise we must try to use the id of the provided entity otherwise we don't overwrite
+			final boolean regenerate = persister.isIdentifierAssignedByInsert();
+			final EntityKey key;
+			if(regenerate){
+				// We should use the provided id even with regenerate when overwrite specified and
+				// we have an id
+				if(id!=null && replicationMode==ReplicationMode.OVERWRITE){ 
+					key = source.generateEntityKey( id, persister );
+				}else{
+					key = null;
+				}
+			}else{
+				key = source.generateEntityKey( id, persister );
+			}
 
 			performSaveOrReplicate(
 					entity,

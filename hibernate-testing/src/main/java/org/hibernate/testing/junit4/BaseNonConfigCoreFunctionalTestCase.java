@@ -487,7 +487,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 			s.createQuery( "delete from java.lang.Object" ).executeUpdate();
 			s.getTransaction().commit();
 		}
-		catch ( Throwable e ) {
+		catch ( Exception e ) {
 			if ( s.getTransaction().getStatus().canRollback() ) {
 				s.getTransaction().rollback();
 			}

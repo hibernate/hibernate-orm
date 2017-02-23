@@ -28,7 +28,10 @@ public class PooledConnections {
 	private final boolean autoCommit;
 	private final int minSize;
 	private final int maxSize;
+	private final int initialSize;
 
+	// whether the CP has been filled up with initial connections to reach minSize
+	// we want to do that lazily
 	private boolean primed;
 
 	private PooledConnections(
@@ -38,8 +41,8 @@ public class PooledConnections {
 		autoCommit = builder.autoCommit;
 		maxSize = builder.maxSize;
 		minSize = builder.minSize;
+		initialSize = builder.initialSize;
 		log.hibernateConnectionPoolSize( maxSize, minSize );
-		addConnections( builder.initialSize );
 	}
 
 	public void validate() {
@@ -74,9 +77,18 @@ public class PooledConnections {
 		Connection conn = availableConnections.poll();
 		if ( conn == null ) {
 			synchronized (allConnections) {
-				if(allConnections.size() < maxSize) {
-					addConnections( 1 );
+				if ( !primed ) {
+					// protected by the allConnection synchronization
+					// if the DB is not present, the call with throw an exception but the pool will remain in a valid state
+					addConnections( initialSize );
+					validate();
 					return poll();
+				}
+				else {
+					if ( allConnections.size() < maxSize ) {
+						addConnections( 1 );
+						return poll();
+					}
 				}
 			}
 			throw new HibernateException( "The internal connection pool has reached its maximum size and no connection is currently available!" );

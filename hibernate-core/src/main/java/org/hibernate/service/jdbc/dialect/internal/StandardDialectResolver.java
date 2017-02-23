@@ -43,11 +43,13 @@ import org.hibernate.dialect.Ingres9Dialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
+import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
@@ -63,48 +65,48 @@ public class StandardDialectResolver extends AbstractDialectResolver {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        StandardDialectResolver.class.getName());
 
-	@Override
+    @Override
     protected Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException {
-		String databaseName = metaData.getDatabaseProductName();
-		int databaseMajorVersion = metaData.getDatabaseMajorVersion();
+        String databaseName = metaData.getDatabaseProductName();
+        int databaseMajorVersion = metaData.getDatabaseMajorVersion();
 
-		if ( "CUBRID".equalsIgnoreCase( databaseName ) ) {
-			return new CUBRIDDialect();
-		}
+        if ( "CUBRID".equalsIgnoreCase( databaseName ) ) {
+            return new CUBRIDDialect();
+        }
 
-		if ( "HSQL Database Engine".equals( databaseName ) ) {
-			return new HSQLDialect();
-		}
+        if ( "HSQL Database Engine".equals( databaseName ) ) {
+            return new HSQLDialect();
+        }
 
-		if ( "H2".equals( databaseName ) ) {
-			return new H2Dialect();
-		}
+        if ( "H2".equals( databaseName ) ) {
+            return new H2Dialect();
+        }
 
-		if ( "MySQL".equals( databaseName ) ) {
-			return new MySQLDialect();
-		}
+        if ( "MySQL".equals( databaseName ) ) {
+            return new MySQLDialect();
+        }
 
-		if ( "PostgreSQL".equals( databaseName ) ) {
-			return new PostgreSQLDialect();
-		}
+        if ( "PostgreSQL".equals( databaseName ) ) {
+            return new PostgreSQLDialect();
+        }
 
-		if ( "Apache Derby".equals( databaseName ) ) {
-			final int databaseMinorVersion = metaData.getDatabaseMinorVersion();
+        if ( "Apache Derby".equals( databaseName ) ) {
+            final int databaseMinorVersion = metaData.getDatabaseMinorVersion();
             if ( databaseMajorVersion > 10 || ( databaseMajorVersion == 10 && databaseMinorVersion >= 7 ) ) {
-				return new DerbyTenSevenDialect();
-			}
-			else if ( databaseMajorVersion == 10 && databaseMinorVersion == 6 ) {
-				return new DerbyTenSixDialect();
-			}
-			else if ( databaseMajorVersion == 10 && databaseMinorVersion == 5 ) {
-				return new DerbyTenFiveDialect();
-			}
-			else {
-				return new DerbyDialect();
-			}
-		}
+                return new DerbyTenSevenDialect();
+            }
+            else if ( databaseMajorVersion == 10 && databaseMinorVersion == 6 ) {
+                return new DerbyTenSixDialect();
+            }
+            else if ( databaseMajorVersion == 10 && databaseMinorVersion == 5 ) {
+                return new DerbyTenFiveDialect();
+            }
+            else {
+                return new DerbyDialect();
+            }
+        }
 
-		if ( "ingres".equalsIgnoreCase( databaseName ) ) {
+        if ( "ingres".equalsIgnoreCase( databaseName ) ) {
             switch( databaseMajorVersion ) {
                 case 9:
                     int databaseMinorVersion = metaData.getDatabaseMinorVersion();
@@ -117,54 +119,74 @@ public class StandardDialectResolver extends AbstractDialectResolver {
                 default:
                     LOG.unknownIngresVersion(databaseMajorVersion);
             }
-			return new IngresDialect();
-		}
+            return new IngresDialect();
+        }
 
-		if ( databaseName.startsWith( "Microsoft SQL Server" ) ) {
-			switch ( databaseMajorVersion ) {
+        if ( databaseName.startsWith( "Microsoft SQL Server" ) ) {
+            switch ( databaseMajorVersion ) {
                 case 8:
                     return new SQLServerDialect();
                 case 9:
                     return new SQLServer2005Dialect();
                 case 10:
                     return new SQLServer2008Dialect();
-                default:
-                    LOG.unknownSqlServerVersion(databaseMajorVersion);
-			}
-			return new SQLServerDialect();
-		}
+                case 11:
+                case 12:
+                case 13:
+                    return new SQLServer2012Dialect();
+                default: {
+                    if (databaseMajorVersion < 8 ) {
+                        LOG.unknownSqlServerVersion(databaseMajorVersion);
+                        return new SQLServerDialect();
+                    }
+                    else {
+                        // assume `majorVersion > 13`
+                        LOG.unknownSqlServerVersion(databaseMajorVersion);
+                        return new SQLServer2012Dialect();
+                    }
+                }
+            }
+        }
 
-		if ( "Sybase SQL Server".equals( databaseName ) || "Adaptive Server Enterprise".equals( databaseName ) ) {
-			return new SybaseASE15Dialect();
-		}
+        if ( "Sybase SQL Server".equals( databaseName ) || "Adaptive Server Enterprise".equals( databaseName ) ) {
+            return new SybaseASE15Dialect();
+        }
 
-		if ( databaseName.startsWith( "Adaptive Server Anywhere" ) ) {
-			return new SybaseAnywhereDialect();
-		}
+        if ( databaseName.startsWith( "Adaptive Server Anywhere" ) ) {
+            return new SybaseAnywhereDialect();
+        }
 
-		if ( "Informix Dynamic Server".equals( databaseName ) ) {
-			return new InformixDialect();
-		}
+        if ( "Informix Dynamic Server".equals( databaseName ) ) {
+            return new InformixDialect();
+        }
 
-		if ( databaseName.startsWith( "DB2/" ) ) {
-			return new DB2Dialect();
-		}
+        if ( databaseName.startsWith( "DB2/" ) ) {
+            return new DB2Dialect();
+        }
 
-		if ( "Oracle".equals( databaseName ) ) {
-			switch ( databaseMajorVersion ) {
-				case 11:
-					return new Oracle10gDialect();
-				case 10:
-					return new Oracle10gDialect();
-				case 9:
-					return new Oracle9iDialect();
-				case 8:
-					return new Oracle8iDialect();
-				default:
+        if ( "Oracle".equals( databaseName ) ) {
+            switch ( databaseMajorVersion ) {
+                case 12:
+                    return new Oracle12cDialect();
+                case 11:
+                    // fall through
+                case 10:
+                    return new Oracle10gDialect();
+                case 9:
+                    return new Oracle9iDialect();
+                case 8:
+                    return new Oracle8iDialect();
+                default: {
                     LOG.unknownOracleVersion(databaseMajorVersion);
-			}
-		}
+                    if ( databaseMajorVersion > 12 )
+                    {
+                        return new Oracle12cDialect();
+                    }
+                }
+            }
+            return new Oracle8iDialect();
+        }
 
-		return null;
-	}
+        return null;
+    }
 }

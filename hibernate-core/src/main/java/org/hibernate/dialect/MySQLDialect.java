@@ -46,6 +46,7 @@ import org.hibernate.type.StandardBasicTypes;
 public class MySQLDialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
+	private MySQLStorageEngine mySQLStorageEngine;
 
 	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -65,6 +66,23 @@ public class MySQLDialect extends Dialect {
 	 */
 	public MySQLDialect() {
 		super();
+
+		String storageEngine = Environment.getProperties().getProperty( Environment.STORAGE_ENGINE );
+		if(storageEngine == null) {
+			storageEngine = System.getProperty( Environment.STORAGE_ENGINE );
+		}
+		if(storageEngine == null) {
+			mySQLStorageEngine = getDefaultMySQLStorageEngine();
+		}else if( "innodb".equals( storageEngine.toLowerCase() ) ) {
+			mySQLStorageEngine = InnoDBStorageEngine.INSTANCE;
+		}
+		else if( "myisam".equals( storageEngine.toLowerCase() ) ) {
+			mySQLStorageEngine = MyISAMStorageEngine.INSTANCE;
+		}
+		else {
+			throw new UnsupportedOperationException( "The " + storageEngine + " storage engine is not supported!" );
+		}
+
 		registerColumnType( Types.BIT, "bit" );
 		registerColumnType( Types.BIGINT, "bigint" );
 		registerColumnType( Types.SMALLINT, "smallint" );
@@ -539,12 +557,12 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsCascadeDelete() {
-		return getMySQLStorageEngine().supportsCascadeDelete();
+		return mySQLStorageEngine.supportsCascadeDelete();
 	}
 
 	@Override
 	public String getTableTypeString() {
-		return getMySQLStorageEngine().getTableTypeString(getEngineKeyword());
+		return mySQLStorageEngine.getTableTypeString(getEngineKeyword());
 	}
 
 	protected String getEngineKeyword() {
@@ -553,31 +571,12 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public boolean hasSelfReferentialForeignKeyBug() {
-		return getMySQLStorageEngine().hasSelfReferentialForeignKeyBug();
+		return mySQLStorageEngine.hasSelfReferentialForeignKeyBug();
 	}
 
 	@Override
 	public boolean dropConstraints() {
-		return getMySQLStorageEngine().dropConstraints();
-	}
-
-	protected MySQLStorageEngine getMySQLStorageEngine() {
-		String storageEngine = Environment.getProperties().getProperty( Environment.STORAGE_ENGINE );
-		if(storageEngine == null) {
-			storageEngine = System.getProperty( Environment.STORAGE_ENGINE );
-		}
-		if(storageEngine == null) {
-			return getDefaultMySQLStorageEngine();
-		}
-		if( "innodb".equals( storageEngine.toLowerCase() ) ) {
-			return InnoDBStorageEngine.INSTANCE;
-		}
-		else if( "myisam".equals( storageEngine.toLowerCase() ) ) {
-			return MyISAMStorageEngine.INSTANCE;
-		}
-		else {
-			throw new UnsupportedOperationException( "The " + storageEngine + " storage engine is not supported!" );
-		}
+		return mySQLStorageEngine.dropConstraints();
 	}
 
 	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {

@@ -53,7 +53,7 @@ public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 			s.getTransaction().commit();
 		}
 		catch (Exception e) {
-			if ( s.getTransaction().isActive() ) {
+			if ( s.getTransaction().getStatus().canRollback() ) {
 				s.getTransaction().rollback();
 			}
 		}
@@ -71,7 +71,7 @@ public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 			s.getTransaction().commit();
 		}
 		catch (Exception e) {
-			if ( s.getTransaction().isActive() ) {
+			if ( s.getTransaction().getStatus().canRollback() ) {
 				s.getTransaction().rollback();
 			}
 		}

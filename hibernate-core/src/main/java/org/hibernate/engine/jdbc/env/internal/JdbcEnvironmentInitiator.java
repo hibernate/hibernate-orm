@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.dialect.Dialect;
@@ -63,7 +64,18 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		);
 
 		if ( useJdbcMetadata ) {
-			final JdbcConnectionAccess jdbcConnectionAccess = buildJdbcConnectionAccess( configurationValues, registry );
+			final JdbcConnectionAccess jdbcConnectionAccess;
+			try {
+				jdbcConnectionAccess = buildJdbcConnectionAccess( configurationValues, registry );
+			}
+			catch (JDBCException e) {
+				// error from a connection pool eagerly accessing the database (e.g. the built-in pool)
+				// we want the other exceptions to propagate
+				log.unableToObtainConnectionMetadata( e.getMessage() );
+				// can't do anything, let's fall back to the connection less approach
+				return buildJdbcEnvironmentWithoutConnection( configurationValues, registry, dialectFactory );
+			}
+
 			try {
 				final Connection connection = jdbcConnectionAccess.obtainConnection();
 				try {
@@ -134,6 +146,10 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 
 		// if we get here, either we were asked to not use JDBC metadata or accessing the JDBC metadata failed.
+		return buildJdbcEnvironmentWithoutConnection( configurationValues, registry, dialectFactory );
+	}
+
+	private JdbcEnvironmentImpl buildJdbcEnvironmentWithoutConnection(Map configurationValues, ServiceRegistryImplementor registry, DialectFactory dialectFactory) {
 		return new JdbcEnvironmentImpl( registry, dialectFactory.buildDialect( configurationValues, null ) );
 	}
 

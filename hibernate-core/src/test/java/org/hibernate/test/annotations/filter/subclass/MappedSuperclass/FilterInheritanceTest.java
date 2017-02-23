@@ -8,6 +8,7 @@ package org.hibernate.test.annotations.filter.subclass.MappedSuperclass;
 
 import java.util.List;
 
+import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import org.junit.Test;
@@ -16,7 +17,6 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -33,7 +33,9 @@ public class FilterInheritanceTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void prepareTest() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 			Mammal mammal = new Mammal();
 			mammal.setName( "unimportant" );
 			session.persist( mammal );
@@ -45,7 +47,9 @@ public class FilterInheritanceTest extends BaseCoreFunctionalTestCase {
 			Human human1 = new Human();
 			human1.setName( "unimportant_1" );
 			session.persist( human1 );
-		} );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Override
@@ -56,7 +60,9 @@ public class FilterInheritanceTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8895")
 	public void testSelectFromHuman() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.beginTransaction();
+		{
 			session.enableFilter( "nameFilter" ).setParameter( "name", "unimportant" );
 
 			List humans = session.createQuery( "SELECT h FROM Human h" ).list();
@@ -64,6 +70,8 @@ public class FilterInheritanceTest extends BaseCoreFunctionalTestCase {
 			assertThat( humans.size(), is( 1 ) );
 			Human human = (Human) humans.get( 0 );
 			assertThat( human.getName(), is( "unimportant" ) );
-		} );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 }

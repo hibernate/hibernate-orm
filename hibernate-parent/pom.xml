@@ -362,6 +362,32 @@
                         </execution>
                     </executions>
                 </plugin>
+                	<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on 
+					the Maven build itself. -->
+                <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.codehaus.mojo</groupId>
+                                        <artifactId>antlr-maven-plugin</artifactId>
+                                        <versionRange>[2.0,)</versionRange>
+                                        <goals>
+                                            <goal>generate</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <execute></execute>
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -1008,7 +1034,7 @@
                 <jdbc.isolation/>
             </properties>
         </profile>
-        <!-- The SQLServer2005 (MS JDBC) test envionment -->
+        <!-- The SQLServer2005 (MS JDBC) test environment -->
         <profile>
             <id>mssql2005</id>
             <dependencies>
@@ -1029,7 +1055,7 @@
             </properties>
         </profile>
 
-        <!-- The SQLServer2005 (MS JDBC) test envionment -->
+        <!-- The SQLServer2008 (MS JDBC) test environment -->
         <profile>
             <id>mssql2008</id>
             <dependencies>
@@ -1050,6 +1076,25 @@
             </properties>
         </profile>
 
+		<profile>
+            <id>mssql2008jtds</id>
+            <dependencies>
+                <dependency>
+                    <groupId>net.sourceforge.jtds</groupId>
+                    <artifactId>jtds</artifactId>
+                     <version>1.2.4</version>
+                </dependency>
+            </dependencies>
+            <properties>
+                <!-- db.dialect>org.hibernate.dialect.SQLServer2005Dialect</db.dialect -->
+                <db.dialect>org.hibernate.dialect.SQLServerDialect</db.dialect>
+                <jdbc.driver>net.sourceforge.jtds.jdbc.Driver</jdbc.driver>
+                <jdbc.url>jdbc:jtds:sqlserver://localhost:1433/test</jdbc.url>
+                <jdbc.user>tester</jdbc.user>
+                <jdbc.pass>tester</jdbc.pass>
+                <jdbc.isolation>4096</jdbc.isolation>
+            </properties>
+        </profile>
     </profiles>
 
     <properties>

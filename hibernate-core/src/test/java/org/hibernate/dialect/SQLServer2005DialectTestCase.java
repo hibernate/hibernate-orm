@@ -1,3 +1,27 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ *
+ */
 package org.hibernate.dialect;
 
 import junit.framework.TestCase;
@@ -25,17 +49,43 @@ public class SQLServer2005DialectTestCase extends TestCase {
 	
 	
 	public void testReplaceDistinctWithGroupBy() {
-		StringBuilder input = new StringBuilder( "select distinct f1, f2 as ff, f3 from table where f1 = 5" );
-		SQLServer2005Dialect.replaceDistinctWithGroupBy( input );
+		assertReplaceDistinctWithGroupBy( "select distinct f1, f2 as ff, f3 from table where f1 = 5", "select f1, f2 as ff, f3 from table where f1 = 5 group by f1, f2, f3 " );
 		
-		assertEquals( "select f1, f2 as ff, f3 from table where f1 = 5 group by f1, f2, f3 ", input.toString() );
+		//http://opensource.atlassian.com/projects/hibernate/browse/HHH-5715 distinct in an aggragate function
+		assertReplaceDistinctWithGroupBy( "select count(distinct f1) from table", "select count(distinct f1) from table" );
 	}
 	
-	
-	public void testGetLimitString() {
-		String input = "select distinct f1 as f53245 from table849752 order by f234, f67 desc"; 
+	private static final void assertReplaceDistinctWithGroupBy(String input, String expectedOutput) {
+		StringBuilder partialQuery = new StringBuilder( input );
+		SQLServer2005Dialect.replaceDistinctWithGroupBy( partialQuery );
 		
+		assertEquals( expectedOutput, partialQuery.toString() );
+	}
+	
+	public void testGetLimitString() { 
 		Dialect sqlDialect = new SQLServer2005Dialect();
-		assertEquals( "with query as (select row_number() over (order by f234, f67 desc) as __hibernate_row_nr__, f1 as f53245 from table849752  group by f1) select * from query where __hibernate_row_nr__ between ? and ?", sqlDialect.getLimitString(input, 10, 15).toLowerCase() );
+
+		// Example of using the test:
+		// assertGetLimitString( sqlDialect, 
+		//		"sql",
+		//		"expected output sql" );
+		
+		assertGetLimitString( sqlDialect, 
+				"select distinct f1 as f53245 from table849752 order by f234, f67 desc",
+				"with query as (select row_number() over (order by f234, f67 desc) as __hibernate_row_nr__, f1 as f53245 from table849752  group by f1) select * from query where __hibernate_row_nr__ between ? and ?" );
+		
+		// http://opensource.atlassian.com/projects/hibernate/browse/HHH-5715, 
+		// http://opensource.atlassian.com/projects/hibernate/browse/HHH-6310
+		// distinct in an aggragate function this case should not happen! 
+		// Is there a way to get paginated data with an aggregate function?
+		 assertGetLimitString( sqlDialect,
+				"select aggregate_function(distinct p.n) as f1, f2 from table849752 p order by f2",
+				"with query as (select row_number() over (order by f2) as __hibernate_row_nr__, aggregate_function(distinct p.n) as f1, f2 from table849752 p ) select * from query where __hibernate_row_nr__ between ? and ?" );
+		
+	}
+	
+	private static final void assertGetLimitString(Dialect dialect, String input, String expected) {
+		String limitString = dialect.getLimitString( input, 10, 15 ).toLowerCase();
+		assertEquals( expected, limitString );
 	}
 }

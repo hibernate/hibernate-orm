@@ -30,7 +30,7 @@ public interface Wrapped {
 	 *
 	 * @return The unwrapped reference
 	 *
-	 * @throws UnknownUnwrapTypeException if the servicebe unwrapped as the indicated type
+	 * @throws UnknownUnwrapTypeException if the service cannot be unwrapped as the indicated type
 	 */
 	public <T> T unwrap(Class<T> unwrapType);
 }

@@ -64,6 +64,8 @@ import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.connections.internal.DelayerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
@@ -225,8 +227,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
+		ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 		this.properties = new HashMap<>();
-		this.properties.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+		this.properties.putAll( configService.getSettings() );
 		if ( !properties.containsKey( AvailableSettings.JPA_VALIDATION_FACTORY ) ) {
 			if ( getSessionFactoryOptions().getValidatorFactoryReference() != null ) {
 				properties.put(
@@ -306,17 +309,23 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 					sessionFactoryOptions
 			);
 
-			SchemaManagementToolCoordinator.process(
-					metadata,
-					serviceRegistry,
-					properties,
-					action -> SessionFactoryImpl.this.delayedDropAction = action
-			);
+			boolean tolerateDbAbsence = configService.getSetting( AvailableSettings.TOLERATE_DATABASE_NOT_PRESENT,
+					StandardConverters.BOOLEAN, Boolean.FALSE );
+
+			if ( tolerateDbAbsence ) {
+				ConnectionProvider cp = serviceRegistry.getService( ConnectionProvider.class );
+				assert cp.isUnwrappableAs( DelayerConnectionProvider.class );
+				DelayerConnectionProvider dcp = cp.unwrap( DelayerConnectionProvider.class );
+				dcp.addOperation( () -> executeSchemaManagementTool( metadata ) );
+			}
+			else {
+				executeSchemaManagementTool( metadata );
+			}
 
 			currentSessionContext = buildCurrentSessionContext();
 
 			//checking for named queries
-			if ( settings.isNamedQueryStartupCheckingEnabled() ) {
+			if ( this.settings.isNamedQueryStartupCheckingEnabled() ) {
 				final Map<String, HibernateException> errors = checkNamedQueries();
 				if ( !errors.isEmpty() ) {
 					StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
@@ -381,6 +390,15 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			serviceRegistry.destroy();
 			throw e;
 		}
+	}
+
+	private void executeSchemaManagementTool(MetadataImplementor metadata) {
+		SchemaManagementToolCoordinator.process(
+				metadata,
+				serviceRegistry,
+				properties,
+				action -> SessionFactoryImpl.this.delayedDropAction = action
+		);
 	}
 
 	private void applyCfgXmlValues(LoadedConfig aggregatedConfig, SessionFactoryServiceRegistry serviceRegistry) {

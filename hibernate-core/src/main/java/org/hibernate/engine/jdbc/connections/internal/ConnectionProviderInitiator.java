@@ -28,6 +28,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -36,6 +37,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Gavin King
  * @author Steve Ebersole
  * @author Brett Meyer
+ * @author Emmanuel Bernard
  */
 public class ConnectionProviderInitiator implements StandardServiceInitiator<ConnectionProvider> {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ConnectionProviderInitiator.class );
@@ -99,17 +101,22 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return null;
 		}
 
+		boolean tolerateAbsentDB = ConfigurationHelper.getBoolean(
+				AvailableSettings.TOLERATE_DATABASE_NOT_PRESENT,
+				configurationValues,
+				false
+		);
 		final StrategySelector strategySelector = registry.getService( StrategySelector.class );
 		final Object explicitSetting = configurationValues.get( AvailableSettings.CONNECTION_PROVIDER );
 		if ( explicitSetting != null ) {
 			// if we are explicitly supplied a ConnectionProvider to use (in some form) -> use it..
 			if ( explicitSetting instanceof ConnectionProvider ) {
-				return (ConnectionProvider) explicitSetting;
+				return wrapWithDelayer( (ConnectionProvider) explicitSetting, tolerateAbsentDB );
 			}
 			else if ( explicitSetting instanceof Class ) {
 				final Class providerClass = (Class) explicitSetting;
 				LOG.instantiatingExplicitConnectionProvider( providerClass.getName() );
-				return instantiateExplicitConnectionProvider( providerClass );
+				return wrapWithDelayer( instantiateExplicitConnectionProvider( providerClass ), tolerateAbsentDB );
 			}
 			else {
 				String providerName = explicitSetting.toString();
@@ -122,7 +129,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				LOG.instantiatingExplicitConnectionProvider( providerName );
 				final Class providerClass = strategySelector.selectStrategyImplementor( ConnectionProvider.class, providerName );
 				try {
-					return instantiateExplicitConnectionProvider( providerClass );
+					return wrapWithDelayer( instantiateExplicitConnectionProvider( providerClass ), tolerateAbsentDB );
 				}
 				catch (Exception e) {
 					throw new HibernateException( "Could not instantiate connection provider [" + providerName + "]", e );
@@ -131,7 +138,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 
 		if ( configurationValues.get( AvailableSettings.DATASOURCE ) != null ) {
-			return new DatasourceConnectionProviderImpl();
+			return wrapWithDelayer( new DatasourceConnectionProviderImpl(), tolerateAbsentDB );
 		}
 
 		ConnectionProvider connectionProvider = null;
@@ -189,8 +196,13 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			);
 		}
 
-		return connectionProvider;
+		return wrapWithDelayer( connectionProvider, tolerateAbsentDB );
 	}
+
+	private ConnectionProvider wrapWithDelayer(ConnectionProvider connectionProvider, boolean tolerateDatabaseNotPresent) {
+		return tolerateDatabaseNotPresent ? new DelayerConnectionProvider( connectionProvider ) : connectionProvider;
+	}
+
 
 	private ConnectionProvider instantiateExplicitConnectionProvider(Class providerClass) {
 			try {

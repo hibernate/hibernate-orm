@@ -1646,4 +1646,20 @@ public interface AvailableSettings {
 	 * @since 5.2.5
 	 */
 	String USE_LEGACY_LIMIT_HANDLERS = "hibernate.legacy_limit_handler";
+
+	/**
+	 * Start Hibernate ORM even if the database is not (yet) present.
+	 * <p>
+	 * Useful in cloud environment where the database bootstrap might be out of order with the application.
+	 *
+	 * There are a few things con consider:
+	 * <ul>
+	 *     <li>schema generation will be delayed until the first successful connection</li>
+	 *     <li>you must set {@link AvailableSettings#DIALECT} explicitly as we cannot guess the database if it's not there</li>
+	 *     <li>some JDBC specific settings set based on the JDBC metadata will not be set and best effort defaults will apply
+	 *     if the database is not present at Hibernate boot time</li>
+	 * </ul>
+	 * @since 6.0
+	 */
+	String TOLERATE_DATABASE_NOT_PRESENT = "hibernate.tolerate_database_not_present";
 }

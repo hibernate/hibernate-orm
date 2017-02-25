@@ -98,7 +98,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	protected QueryParameterBinding makeBinding(Type bindType) {
-		return new QueryParameterBindingImpl( bindType, sessionFactory );
+		return new QueryParameterBindingImpl( bindType, sessionFactory, shouldValidateBindingValue() );
 	}
 
 	public boolean isBound(QueryParameter parameter) {
@@ -431,10 +431,17 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			);
 		}
 
-		final QueryParameterListBinding<T> convertedBinding = new QueryParameterListBindingImpl<>( binding.getBindType() );
+		final QueryParameterListBinding<T> convertedBinding = new QueryParameterListBindingImpl<>(
+				binding.getBindType(),
+				shouldValidateBindingValue()
+		);
 		parameterListBindingMap.put( queryParameter, convertedBinding );
 
 		return convertedBinding;
+	}
+
+	private boolean shouldValidateBindingValue() {
+		return sessionFactory.getSessionFactoryOptions().isJpaBootstrap();
 	}
 
 	/**

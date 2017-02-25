@@ -93,6 +93,17 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 		assertFalse( getResourceRegistry( jdbcCoord ).hasRegisteredResources() );
 	}
 
+	@Override
+	protected void cleanupTest() throws Exception {
+		try (Session session = openSession()) {
+			session.doWork( connection -> {
+				final Statement stmnt = connection.createStatement();
+
+				stmnt.execute( getDialect().getDropTableString( "SANDBOX_JDBC_TST" ) );
+			} );
+		}
+	}
+
 	private ResourceRegistry getResourceRegistry(JdbcCoordinator jdbcCoord) {
 		return jdbcCoord.getResourceRegistry();
 	}

@@ -16,6 +16,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -29,6 +30,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -40,14 +42,32 @@ import static org.junit.Assert.assertTrue;
 @RequiresDialect(MySQL5Dialect.class)
 public class MySQLDropConstraintThrowsExceptionTest extends BaseUnitTestCase {
 
-	@After
-	public void releaseResources() {
+	@Before
+	public void setUp() {
+		final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+				.enableAutoClose()
+				.applySetting( AvailableSettings.HBM2DDL_AUTO, "drop" )
+				.build();
 
+		SessionFactoryImplementor sessionFactory = null;
+
+		try {
+			final Metadata metadata = new MetadataSources( serviceRegistry )
+					.addAnnotatedClass( Customer.class )
+					.buildMetadata();
+			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+		}
+		finally {
+			if ( sessionFactory != null ) {
+				sessionFactory.close();
+			}
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		}
 	}
 
-	@Test
-	public void testEnumTypeInterpretation() {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+	@After
+	public void tearDown() {
+		final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.enableAutoClose()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "drop" )
 				.build();
@@ -67,9 +87,13 @@ public class MySQLDropConstraintThrowsExceptionTest extends BaseUnitTestCase {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 
-		PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+	}
 
-		serviceRegistry = new StandardServiceRegistryBuilder()
+	@Test
+	public void testEnumTypeInterpretation() {
+		final PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
+
+		final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.enableAutoClose()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "update" )
 				.applySetting(
@@ -78,17 +102,19 @@ public class MySQLDropConstraintThrowsExceptionTest extends BaseUnitTestCase {
 				)
 				.build();
 
+		SessionFactory sessionFactory = null;
 		try {
 			final Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( Customer.class )
 					.buildMetadata();
-			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+			sessionFactory = metadata.buildSessionFactory();
 			List<String> alterStatements = connectionProvider.getExecuteStatements().stream()
-			.filter(
-				sql -> sql.toLowerCase().contains( "alter " )
-			).map( String::trim ).collect( Collectors.toList() );
-			assertTrue(alterStatements.get(0).matches( "alter table CUSTOMER\\s+drop index .*?" ));
-			assertTrue(alterStatements.get(1).matches( "alter table CUSTOMER\\s+add constraint .*? unique \\(CUSTOMER_ID\\)" ));
+					.filter(
+							sql -> sql.toLowerCase().contains( "alter " )
+					).map( String::trim ).collect( Collectors.toList() );
+			assertTrue( alterStatements.get( 0 ).matches( "alter table CUSTOMER\\s+drop index .*?" ) );
+			assertTrue( alterStatements.get( 1 )
+								.matches( "alter table CUSTOMER\\s+add constraint .*? unique \\(CUSTOMER_ID\\)" ) );
 		}
 		finally {
 			if ( sessionFactory != null ) {

@@ -4116,7 +4116,7 @@ public class ModelBinder {
 				// implicit naming.  If we get here, we assume that there is only a single
 				// column making up the FK
 
-				final String referencedEntityAttributeName = manyToOneSource.getReferencedEntityAttributeName();
+//				final String referencedEntityAttributeName = manyToOneSource.getReferencedEntityAttributeName();
 
 				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector()
 						.getEntityBinding( referencedEntityName );
@@ -4128,35 +4128,35 @@ public class ModelBinder {
 					);
 				}
 
-				final EntityNaming entityNaming = new EntityNamingSourceImpl( referencedEntityBinding );
-
-				final Identifier referencedTableName;
-				final Identifier referencedColumnName;
-
-				if ( referencedEntityAttributeName == null ) {
-					referencedTableName = referencedEntityBinding.getTable().getNameIdentifier();
-					final Column referencedColumn = referencedEntityBinding.getTable()
-							.getPrimaryKey()
-							.getColumn( 0 );
-					referencedColumnName = mappingDocument.getMetadataCollector()
-							.getDatabase()
-							.getJdbcEnvironment()
-							.getIdentifierHelper()
-							.toIdentifier( referencedColumn.getQuotedName() );
-				}
-				else {
-					final Property referencedProperty = referencedEntityBinding.getReferencedProperty(
-							referencedEntityAttributeName
-					);
-					final SimpleValue value = (SimpleValue) referencedProperty.getValue();
-					referencedTableName = value.getTable().getNameIdentifier();
-					final Column referencedColumn = (Column) value.getColumnIterator().next();
-					referencedColumnName = mappingDocument.getMetadataCollector()
-							.getDatabase()
-							.getJdbcEnvironment()
-							.getIdentifierHelper()
-							.toIdentifier( referencedColumn.getQuotedName() );
-				}
+//				final EntityNaming entityNaming = new EntityNamingSourceImpl( referencedEntityBinding );
+//
+//				final Identifier referencedTableName;
+//				final Identifier referencedColumnName;
+//
+//				if ( referencedEntityAttributeName == null ) {
+//					referencedTableName = referencedEntityBinding.getTable().getNameIdentifier();
+//					final Column referencedColumn = referencedEntityBinding.getTable()
+//							.getPrimaryKey()
+//							.getColumn( 0 );
+//					referencedColumnName = mappingDocument.getMetadataCollector()
+//							.getDatabase()
+//							.getJdbcEnvironment()
+//							.getIdentifierHelper()
+//							.toIdentifier( referencedColumn.getQuotedName() );
+//				}
+//				else {
+//					final Property referencedProperty = referencedEntityBinding.getReferencedProperty(
+//							referencedEntityAttributeName
+//					);
+//					final SimpleValue value = (SimpleValue) referencedProperty.getValue();
+//					referencedTableName = value.getTable().getNameIdentifier();
+//					final Column referencedColumn = (Column) value.getColumnIterator().next();
+//					referencedColumnName = mappingDocument.getMetadataCollector()
+//							.getDatabase()
+//							.getJdbcEnvironment()
+//							.getIdentifierHelper()
+//							.toIdentifier( referencedColumn.getQuotedName() );
+//				}
 
 				relationalObjectBinder.bindColumnsAndFormulas(
 						mappingDocument,

@@ -271,7 +271,7 @@ public class ScanningCoordinator {
 			log.debugf(
 					"Unable to resolve class [%s] named in persistence unit [%s]",
 					unresolvedListedClassName,
-					scanEnvironment.getRootUrl().toExternalForm()
+					scanEnvironment.getRootUrl()
 			);
 		}
 	}

@@ -66,7 +66,7 @@ public class SchemaValidatorImpl implements SchemaValidator {
 			throw new SchemaManagementException(
 					String.format(
 							"Schema-validation: missing table [%s]",
-							table.getName()
+							table.getQualifiedTableName().toString()
 					)
 			);
 		}

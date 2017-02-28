@@ -6,7 +6,11 @@
  */
 package org.hibernate.spatial;
 
+import org.geolatte.geom.codec.db.oracle.ConnectionFinder;
+
 import java.io.Serializable;
+
+import org.jboss.logging.Logger;
 
 /**
  * Hibernate Spatial specific configuration settings.
@@ -16,9 +20,6 @@ import java.io.Serializable;
  */
 public class HibernateSpatialConfigurationSettings implements Serializable {
 
-	private HibernateSpatialConfigurationSettings() {
-		//prevent this object from being instantiated
-	}
 	/**
 	 * The canonical class name to use as Oracle ConnectionFinder implementation.
 	 */

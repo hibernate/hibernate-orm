@@ -122,7 +122,6 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 			case geomunion:
 			case dwithin:
 			case transform:
-			case extent:
 				return false;
 			default:
 				return true;

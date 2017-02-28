@@ -159,18 +159,8 @@ public enum SpatialFunction {
 	 * <p>The semantics are those of the Postgis function ST_Transform(geometry, srid) : geometry. It returns new geometry
 	 * with its coordinates transformed to the spatial reference system referenced by the srid parameter.
 	 */
-	transform( "common" ),
-
-	/**
-	 * the extents function
-	 */
-	extent( "common" );
-
-
+	transform( "common" );
 	private final String description;
-
-
-
 
 	SpatialFunction(String specification) {
 		this.description = specification;

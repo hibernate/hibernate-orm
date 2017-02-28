@@ -183,8 +183,12 @@ class MetadataContext {
 		return entityTypesByEntityName.get( entityName );
 	}
 
-	@SuppressWarnings({ "unchecked" })
-	public void wrapUp() {
+    public Map<String, EntityTypeImpl<?>> getEntityTypesByEntityName() {
+        return Collections.unmodifiableMap( entityTypesByEntityName );
+    }
+
+    @SuppressWarnings({ "unchecked" })
+    public void wrapUp() {
         LOG.trace("Wrapping up metadata context...");
 		//we need to process types from superclasses to subclasses
 		for (Object mapping : orderedMappings) {
@@ -344,14 +348,16 @@ class MetadataContext {
 
 	private <X> void populateStaticMetamodel(AbstractManagedType<X> managedType) {
 		final Class<X> managedTypeClass = managedType.getJavaType();
-		final String metamodelClassName = managedTypeClass.getName() + "_";
-		try {
-			final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
-			// we found the class; so populate it...
-			registerAttributes( metamodelClass, managedType );
-		}
-		catch ( ClassNotFoundException ignore ) {
-			// nothing to do...
+		final String metamodelClassName = managedType.getTypeName() + "_";
+		if ( managedTypeClass != null ) {
+			try {
+				final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
+				// we found the class; so populate it...
+				registerAttributes( metamodelClass, managedType );
+			}
+			catch ( ClassNotFoundException ignore ) {
+				// nothing to do...
+			}
 		}
 
 		// todo : this does not account for @MappeSuperclass, mainly because this is not being tracked in our

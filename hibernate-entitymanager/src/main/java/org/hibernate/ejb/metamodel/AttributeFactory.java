@@ -61,6 +61,7 @@ import org.hibernate.type.EntityType;
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
+ * @author Brad Koehn - uses AbstractType.getTypeName() to support non-class-based models.
  */
 public class AttributeFactory {
 
@@ -88,7 +89,7 @@ public class AttributeFactory {
 			// hide synthetic/virtual properties (fabricated by Hibernate) from the JPA metamodel.
             LOG.tracef(
 					"Skipping synthetic property %s(%s)",
-					ownerType.getJavaType().getName(),
+                    ownerType.getTypeName(),
 					property.getName()
 			);
 			return null;
@@ -141,7 +142,7 @@ public class AttributeFactory {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public <X, Y> SingularAttributeImpl<X, Y> buildIdAttribute(AbstractIdentifiableType<X> ownerType, Property property) {
-        LOG.trace("Building identifier attribute [" + ownerType.getJavaType().getName() + "." + property.getName() + "]");
+        LOG.trace("Building identifier attribute [" + ownerType.getTypeName() + "." + property.getName() + "]");
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
 		final SingularAttributeMetadata<X,Y> attributeMetadata =
 				(SingularAttributeMetadata<X, Y>) determineAttributeMetadata( attributeContext, IDENTIFIER_MEMBER_RESOLVER );
@@ -167,7 +168,7 @@ public class AttributeFactory {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public <X, Y> SingularAttributeImpl<X, Y> buildVersionAttribute(AbstractIdentifiableType<X> ownerType, Property property) {
-        LOG.trace("Building version attribute [ownerType.getJavaType().getName()" + "." + "property.getName()]");
+        LOG.trace("Building version attribute [" + ownerType.getTypeName() + "." + "property.getName()]");
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
 		final SingularAttributeMetadata<X,Y> attributeMetadata =
 				(SingularAttributeMetadata<X, Y>) determineAttributeMetadata( attributeContext, VERSION_MEMBER_RESOLVER );
@@ -234,11 +235,11 @@ public class AttributeFactory {
 		}
 	}
 
-	private EntityMetamodel getDeclarerEntityMetamodel(IdentifiableType<?> ownerType) {
+    private EntityMetamodel getDeclarerEntityMetamodel(AbstractIdentifiableType<?> ownerType) {
 		final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
 		if ( persistenceType == Type.PersistenceType.ENTITY) {
 			return context.getSessionFactory()
-					.getEntityPersister( ownerType.getJavaType().getName() )
+                    .getEntityPersister( ownerType.getTypeName() )
 					.getEntityMetamodel();
 		}
 		else if ( persistenceType == Type.PersistenceType.MAPPED_SUPERCLASS) {
@@ -553,6 +554,9 @@ public class AttributeFactory {
 					? Attribute.PersistentAttributeType.ONE_TO_ONE
 					: Attribute.PersistentAttributeType.MANY_TO_ONE;
 		}
+		else if (MapMember.class.isInstance( member ))  {
+            return  Attribute.PersistentAttributeType.MANY_TO_ONE; // curious to see how this works for non-annotated methods
+        }
 		else {
 			return ( (Method) member ).getAnnotation( OneToOne.class ) != null
 					? Attribute.PersistentAttributeType.ONE_TO_ONE
@@ -584,6 +588,9 @@ public class AttributeFactory {
 			}
 			else if ( Method.class.isInstance( member ) ) {
 				declaredType = ( (Method) member ).getReturnType();
+			}
+            else if ( MapMember.class.isInstance( member ) ) {
+                declaredType = ((MapMember) member).getType();
 			}
 			else {
 				throw new IllegalArgumentException( "Cannot determine java-type from given member [" + member + "]" );
@@ -845,9 +852,16 @@ public class AttributeFactory {
 	}
 
 	public static ParameterizedType getSignatureType(Member member) {
-		final java.lang.reflect.Type type = Field.class.isInstance( member )
-				? ( ( Field ) member ).getGenericType()
-				: ( ( Method ) member ).getGenericReturnType();
+		final java.lang.reflect.Type type;
+		if (Field.class.isInstance( member )) {
+			type =  ( ( Field ) member ).getGenericType();
+		}
+		else if ( Method.class.isInstance( member ) ) {
+			type = ( ( Method ) member ).getGenericReturnType();
+		}
+		else {
+			type = ( (MapMember) member ).getType();
+		}
 		//this is a raw type
 		if ( type instanceof Class ) return null;
 		return (ParameterizedType) type;
@@ -872,9 +886,14 @@ public class AttributeFactory {
 	}
 
 	public static boolean isManyToMany(Member member) {
-		return Field.class.isInstance( member )
-				? ( (Field) member ).getAnnotation( ManyToMany.class ) != null
-				: ( (Method) member ).getAnnotation( ManyToMany.class ) != null;
+		if ( Field.class.isInstance( member ) ) {
+			return ( (Field) member ).getAnnotation( ManyToMany.class ) != null;
+        }
+		else if ( Method.class.isInstance( member ) ) {
+			return ( (Method) member ).getAnnotation( ManyToMany.class ) != null;
+		}
+
+		return false;
 	}
 
 	private final MemberResolver EMBEDDED_MEMBER_RESOLVER = new MemberResolver() {
@@ -897,7 +916,7 @@ public class AttributeFactory {
 		 * {@inheritDoc}
 		 */
 		public Member resolveMember(AttributeContext attributeContext) {
-			final IdentifiableType identifiableType = (IdentifiableType) attributeContext.getOwnerType();
+			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
 			if ( ! entityMetamodel.getIdentifierProperty().isVirtual() ) {
 				throw new IllegalArgumentException( "expecting IdClass mapping" );
@@ -931,7 +950,7 @@ public class AttributeFactory {
 			}
 			else if ( Type.PersistenceType.ENTITY == persistenceType
 					|| Type.PersistenceType.MAPPED_SUPERCLASS == persistenceType ) {
-				final IdentifiableType identifiableType = (IdentifiableType) ownerType;
+				final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) ownerType;
 				final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
 				final String propertyName = property.getName();
 				final Integer index = entityMetamodel.getPropertyIndexOrNull( propertyName );
@@ -953,7 +972,7 @@ public class AttributeFactory {
 
 	private final MemberResolver IDENTIFIER_MEMBER_RESOLVER = new MemberResolver() {
 		public Member resolveMember(AttributeContext attributeContext) {
-			final IdentifiableType identifiableType = (IdentifiableType) attributeContext.getOwnerType();
+			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
 			if ( ! attributeContext.getPropertyMapping().getName()
 					.equals( entityMetamodel.getIdentifierProperty().getName() ) ) {
@@ -966,7 +985,7 @@ public class AttributeFactory {
 
 	private final MemberResolver VERSION_MEMBER_RESOLVER = new MemberResolver() {
 		public Member resolveMember(AttributeContext attributeContext) {
-			final IdentifiableType identifiableType = (IdentifiableType) attributeContext.getOwnerType();
+			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
 			final String versionPropertyName = attributeContext.getPropertyMapping().getName();
 			if ( ! versionPropertyName.equals( entityMetamodel.getVersionProperty().getName() ) ) {

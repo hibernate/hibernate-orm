@@ -136,6 +136,30 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-2735")
+	public void testQueryLockModeNoneWithAlias() {
+		doInHibernate( this::sessionFactory, session -> {
+			// shouldn't throw an exception
+			session.createQuery( "SELECT a.value FROM A a where a.id = :id" )
+					.setLockMode( "a", LockMode.NONE )
+					.setParameter( "id", 1L )
+					.list();
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-2735")
+	public void testQueryLockModePessimisticWriteWithAlias() {
+		doInHibernate( this::sessionFactory, session -> {
+			// shouldn't throw an exception
+			session.createQuery( "SELECT MAX(a.id)+1 FROM A a where a.value = :value" )
+					.setLockMode( "a", LockMode.PESSIMISTIC_WRITE )
+					.setParameter( "value", "it" )
+					.list();
+		} );
+	}
+
 	private void nowAttemptToUpdateRow() {
 		// here we just need to open a new connection (database session and transaction) and make sure that
 		// we are not allowed to acquire exclusive locks to that row and/or write to that row.  That may take

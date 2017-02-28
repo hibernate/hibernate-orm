@@ -63,11 +63,13 @@ import org.junit.Test;
 import antlr.RecognitionException;
 import antlr.collections.AST;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests cases where the AST based query translator and the 'classic' query translator generate identical SQL.
@@ -108,6 +110,18 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-2187")
+	public void testBogusQuery() {
+		try {
+			QueryTranslatorImpl translator = createNewQueryTranslator( "bogus" );
+			fail( "This should have failed with a QueryException" );
+		}
+		catch ( Throwable t ) {
+			assertTyping( QueryException.class, t );
+		}
+	}
+
+	@Test
 	public void testModulo() {
 		assertTranslation( "from Animal a where a.bodyWeight % 2 = 0" );
 	}
@@ -133,6 +147,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		PostgreSQL81Dialect.class,
 		MySQLDialect.class
 	} )
+
     public void testRowValueConstructorSyntaxInInListBeingTranslated() {
 		QueryTranslatorImpl translator = createNewQueryTranslator("from LineItem l where l.id in (?)");
 		assertInExist("'in' should be translated to 'and'", false, translator);

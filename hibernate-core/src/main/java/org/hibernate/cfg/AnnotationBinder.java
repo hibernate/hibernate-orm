@@ -2627,10 +2627,15 @@ public final class AnnotationBinder {
 			baseClassElements = new ArrayList<PropertyData>();
 			baseReturnedClassOrElement = baseInferredData.getClassOrElement();
 			bindTypeDefs( baseReturnedClassOrElement, buildingContext );
-			PropertyContainer propContainer = new PropertyContainer( baseReturnedClassOrElement, xClassProcessed, propertyAccessor );
-			addElementsOfClass( baseClassElements,  propContainer, buildingContext );
-			for ( PropertyData element : baseClassElements ) {
-				orderedBaseClassElements.put( element.getPropertyName(), element );
+			// iterate from base returned class up hierarchy to handle cases where the @Id attributes
+			// might be spread across the subclasses and super classes.
+			while ( !Object.class.getName().equals( baseReturnedClassOrElement.getName() ) ) {
+				PropertyContainer propContainer = new PropertyContainer( baseReturnedClassOrElement, xClassProcessed, propertyAccessor );
+				addElementsOfClass( baseClassElements,  propContainer, buildingContext );
+				for ( PropertyData element : baseClassElements ) {
+					orderedBaseClassElements.put( element.getPropertyName(), element );
+				}
+				baseReturnedClassOrElement = baseReturnedClassOrElement.getSuperclass();
 			}
 		}
 

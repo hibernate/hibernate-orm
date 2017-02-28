@@ -232,6 +232,11 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			LOG.trace( "Converted antlr.ANTLRException", e );
 			throw new QueryException( e.getMessage(), hql );
 		}
+		catch ( IllegalArgumentException e ) {
+			// translate this into QueryException
+			LOG.trace( "Converted IllegalArgumentException", e );
+			throw new QueryException( e.getMessage(), hql );
+		}
 
 		//only needed during compilation phase...
 		this.enabledFilters = null;

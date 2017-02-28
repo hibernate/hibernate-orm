@@ -301,4 +301,3 @@ public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialec
 		return ( getFunctions().get( function.toString() ) != null );
 	}
 }
-

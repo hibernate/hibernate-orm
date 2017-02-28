@@ -22,6 +22,9 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
+
+//TODO -- requires cleanup and must be made package local
+
 /**
  * ValueExtractor for SDO_GEOMETRY
  *

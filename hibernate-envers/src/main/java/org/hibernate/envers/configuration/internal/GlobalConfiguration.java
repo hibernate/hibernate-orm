@@ -54,6 +54,9 @@ public class GlobalConfiguration {
 	// Indicates that user defined global behavior for modified flags feature
 	private boolean hasGlobalSettingForWithModifiedFlag;
 
+	// Indicates that RelationTargetNotFoundAction behavior uses new behavior (the default) when true
+	private boolean globalLegacyRelationTargetNotFound;
+
 	// Suffix to be used for modified flags columns
 	private String modifiedFlagSuffix;
 
@@ -134,6 +137,12 @@ public class GlobalConfiguration {
 				"_MOD"
 		);
 
+		globalLegacyRelationTargetNotFound = ConfigurationHelper.getBoolean(
+				EnversSettings.GLOBAL_RELATION_NOT_FOUND_LEGACY_FLAG,
+				properties,
+				true
+		);
+
 		final String revisionListenerClassName = (String) properties.get( EnversSettings.REVISION_LISTENER );
 		if ( revisionListenerClassName != null ) {
 			try {
@@ -204,6 +213,10 @@ public class GlobalConfiguration {
 
 	public boolean isGlobalWithModifiedFlag() {
 		return globalWithModifiedFlag;
+	}
+
+	public boolean isGlobalLegacyRelationTargetNotFoundEnabled() {
+		return globalLegacyRelationTargetNotFound;
 	}
 
 	public String getModifiedFlagSuffix() {

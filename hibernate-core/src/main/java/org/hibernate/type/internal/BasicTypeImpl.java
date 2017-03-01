@@ -65,6 +65,7 @@ public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T
 		this.columnMapping = columnMapping;
 		this.registryKey = BasicTypeRegistry.Key.from( javaDescriptor, columnMapping.getSqlTypeDescriptor() );
 		this.jdbcLiteralFormatter = columnMapping.getSqlTypeDescriptor().getJdbcLiteralFormatter( getJavaTypeDescriptor() );
+		this.versionSupport = javaDescriptor.getVersionSupport();
 	}
 
 	public BasicTypeImpl setVersionSupport(VersionSupport versionSupport){
@@ -106,12 +107,7 @@ public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T
 
 	@Override
 	public VersionSupport<T> getVersionSupport() {
-		if ( versionSupport != null ) {
-			return versionSupport;
-		}
-		else {
-			return getJavaTypeDescriptor().getVersionSupport();
-		}
+		return versionSupport;
 	}
 
 	@Override

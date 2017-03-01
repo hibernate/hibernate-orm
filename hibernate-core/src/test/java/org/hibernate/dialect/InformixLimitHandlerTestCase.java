@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -19,25 +18,25 @@ public class InformixLimitHandlerTestCase extends
 		BaseNonConfigCoreFunctionalTestCase {
 
 	private InformixLimitHandler informixLimitHandler;
-			
+
 	private final String TEST_SQL = "SELECT field FROM table";
 
 	@Before
 	public void setup() {
 		informixLimitHandler = new InformixLimitHandler();
 	}
-			
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-11509")
 	public void testCorrectLimit() {
-		assertLimitHandlerEquals( "SELECT FIRST 10 field FROM table", 0, 10);
-		assertLimitHandlerEquals( "SELECT SKIP 3 FIRST 5 field FROM table", 3, 5);
-		assertLimitHandlerEquals( "SELECT SKIP 10 FIRST 5 field FROM table", 10, 5);
-		assertLimitHandlerEquals( "SELECT SKIP 55 FIRST 12 field FROM table", 55, 12);
+		assertLimitHandlerEquals( "SELECT FIRST 10 field FROM table", 0, 10 );
+		assertLimitHandlerEquals( "SELECT SKIP 3 FIRST 5 field FROM table", 3, 5 );
+		assertLimitHandlerEquals( "SELECT SKIP 10 FIRST 5 field FROM table", 10, 5 );
+		assertLimitHandlerEquals( "SELECT SKIP 55 FIRST 12 field FROM table", 55, 12 );
 	}
-	
+
 	private void assertLimitHandlerEquals(String sql, int firstRow, int maxRows) {
-		assertEquals( sql, informixLimitHandler.processSql( TEST_SQL, toRowSelection(firstRow, maxRows) ) );
+		assertEquals( sql, informixLimitHandler.processSql( TEST_SQL, toRowSelection( firstRow, maxRows ) ) );
 	}
 
 	private RowSelection toRowSelection(int firstRow, int maxRows) {

@@ -52,7 +52,7 @@ public class DetachedGetIdentifierTestTask extends AbstractExecutable {
     protected void cleanup() {
     }
 
-    @Entity
+    @Entity(name = "SimpleEntity")
     public static class SimpleEntity {
 
         @Id

@@ -15,7 +15,6 @@ import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.*;
 import org.jboss.logging.Logger;
 import org.junit.Test;
 
@@ -27,6 +26,14 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipForDialects;
+import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.*;
 
@@ -66,7 +73,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	
 	@Test(timeout = 5 * 60 * 1000) //5 minutes
 	@TestForIssue( jiraKey = "HHH-7252" )
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class, 
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 		                    comment = "Test verifies proper exception throwing when a lock timeout is specified.",
                               jiraKey = "HHH-7252" )
 	public void testFindWithPessimisticWriteLockTimeoutException() {
@@ -98,9 +105,12 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			fail( "Find with immediate timeout should have thrown LockTimeoutException." );
 		}
 		catch (PersistenceException pe) {
-			log.info("EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
-				      "This is likely a consequence of " + getDialect().getClass().getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
-				      "See HHH-7251 for an example of one such situation.", pe);
+			log.info(
+					"EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
+							"This is likely a consequence of " + getDialect().getClass()
+							.getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
+							"See HHH-7251 for an example of one such situation.", pe
+			);
 			fail( "EntityManager should be throwing LockTimeoutException." );
 		}
 		finally {

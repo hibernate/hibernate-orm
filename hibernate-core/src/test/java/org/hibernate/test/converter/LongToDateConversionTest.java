@@ -7,6 +7,7 @@
 package org.hibernate.test.converter;
 
 import javax.persistence.AttributeConverter;
+import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -103,6 +104,7 @@ public class LongToDateConversionTest extends BaseCoreFunctionalTestCase {
 		private long id;
 
 		@Convert(converter = DateAttributeConverter.class)
+		@Column(name = "attribute_date")
 		private DateAttribute date;
 
 		public DateAttribute getDate() {

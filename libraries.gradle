@@ -96,7 +96,6 @@ ext {
             postgresql:      'org.postgresql:postgresql:9.4-1202-jdbc41',
             mysql:             'mysql:mysql-connector-java:6.0.5',
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:1.5.7',
-            oracle:          'com.oracle.jdbc:ojdbc7:12.1.0.2',
 
             oracle:          'com.oracle.ojdbc:ojdbc7:12.1.0.2.0',
             mssql:             'com.microsoft.sqlserver:mssql-jdbc:6.1.0.jre8',

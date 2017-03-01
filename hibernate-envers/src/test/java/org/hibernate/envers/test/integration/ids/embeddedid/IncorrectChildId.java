@@ -8,6 +8,7 @@ package org.hibernate.envers.test.integration.ids.embeddedid;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
@@ -22,6 +23,7 @@ public class IncorrectChildId implements Serializable {
 	@JoinColumns({ @JoinColumn(name = "parent_id", referencedColumnName = "id") })
 	private Parent parent;
 
+	@Column(name = "child_number")
 	private Integer number;
 
 	IncorrectChildId() {

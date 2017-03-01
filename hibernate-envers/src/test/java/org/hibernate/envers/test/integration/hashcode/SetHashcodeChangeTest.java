@@ -19,6 +19,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
@@ -161,7 +162,7 @@ public class SetHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 		return book;
 	}
 
-	@Entity
+	@Entity(name = "Author")
 	@Audited
 	public static class Author {
 		@Id
@@ -172,8 +173,7 @@ public class SetHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 
 		private String lastName;
 
-		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-		@JoinColumn(name = "author_id", referencedColumnName = "id", nullable = false)
+		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "author")
 		private Set<Book> books;
 
 		public Integer getId() {
@@ -245,7 +245,7 @@ public class SetHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Book")
 	@Audited
 	public static class Book {
 		@Id
@@ -255,7 +255,8 @@ public class SetHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 		private String title;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumn(name = "author_id", nullable = false, insertable = false, updatable = false)
+		@JoinTable(name = "author_book",
+				joinColumns = @JoinColumn(name = "book_id"), inverseJoinColumns = @JoinColumn(name="author_id",nullable = false))
 		@NotAudited
 		private Author author;
 

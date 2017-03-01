@@ -10,9 +10,11 @@ import java.util.List;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.query.Query;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
@@ -97,6 +99,7 @@ public abstract class LongStringTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(Oracle8iDialect.class)
 	@TestForIssue( jiraKey = "HHH-11477")
 	public void testUsingLobPropertyInHqlQuery() {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
@@ -116,6 +119,7 @@ public abstract class LongStringTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(Oracle8iDialect.class)
 	@TestForIssue( jiraKey = "HHH-11477")
 	public void testSelectLobPropertyInHqlQuery() {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {

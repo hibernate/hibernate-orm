@@ -66,7 +66,7 @@ public class LazyInCacheTestTask extends AbstractEnhancerTestTask {
 	protected void cleanup() {
 	}
 
-	@Entity
+	@Entity(name = "Order")
 	@Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE )
 	public static class Order {
 
@@ -87,7 +87,7 @@ public class LazyInCacheTestTask extends AbstractEnhancerTestTask {
 
 	}
 
-	@Entity
+	@Entity(name = "Product")
 	public static class Product {
 
 		@Id
@@ -98,7 +98,7 @@ public class LazyInCacheTestTask extends AbstractEnhancerTestTask {
 
 	}
 
-	@Entity
+	@Entity(name = "Tag")
 	public class Tag {
 
 		@Id

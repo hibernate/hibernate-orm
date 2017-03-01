@@ -87,21 +87,19 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 			fail( "incorrect exception type : sqlexception" );
 		}
 		finally {
-			session.close();
+			try {
+				session.doWork( connection -> {
+					final Statement stmnt = connection.createStatement();
+
+					stmnt.execute( getDialect().getDropTableString( "SANDBOX_JDBC_TST" ) );
+				} );
+			}
+			finally {
+				session.close();
+			}
 		}
 
 		assertFalse( getResourceRegistry( jdbcCoord ).hasRegisteredResources() );
-	}
-
-	@Override
-	protected void cleanupTest() throws Exception {
-		try (Session session = openSession()) {
-			session.doWork( connection -> {
-				final Statement stmnt = connection.createStatement();
-
-				stmnt.execute( getDialect().getDropTableString( "SANDBOX_JDBC_TST" ) );
-			} );
-		}
 	}
 
 	private ResourceRegistry getResourceRegistry(JdbcCoordinator jdbcCoord) {

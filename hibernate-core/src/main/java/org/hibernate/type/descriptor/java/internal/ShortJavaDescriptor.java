@@ -13,6 +13,8 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.ShortVersionSupport;
+import org.hibernate.type.spi.VersionSupport;
 
 /**
  * Descriptor for {@link Short} handling.
@@ -96,5 +98,10 @@ public class ShortJavaDescriptor extends AbstractNumericJavaDescriptor<Short> im
 	@Override
 	public Short getDefaultValue() {
 		return ZERO;
+	}
+
+	@Override
+	public VersionSupport<Short> getVersionSupport() {
+		return ShortVersionSupport.INSTANCE;
 	}
 }

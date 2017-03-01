@@ -109,15 +109,15 @@ public class UnsavedValueFactory {
 	 *
 	 * @param versionUnsavedValue The mapping defined unsaved value
 	 * @param versionGetter The version attribute getter
-	 * @param versionType The mapping type for the version
+	 * @param versionSupport The VersionSupport
 	 * @param constructor The constructor for the entity
 	 *
 	 * @return The appropriate VersionValue
 	 */
 	public static VersionValue getUnsavedVersionValue(
-			String versionUnsavedValue, 
+			String versionUnsavedValue,
 			Getter versionGetter,
-			Type versionType,
+			VersionSupport versionSupport,
 			Constructor constructor) {
 		
 		if ( versionUnsavedValue == null ) {
@@ -125,7 +125,7 @@ public class UnsavedValueFactory {
 				final Object defaultValue = versionGetter.get( instantiate( constructor ) );
 				// if the version of a newly instantiated object is not the same
 				// as the version seed value, use that as the unsaved-value
-				return versionType.isEqual( ( (VersionSupport) versionType ).seed( null ), defaultValue )
+				return versionSupport.isEqual( versionSupport.seed( null ), defaultValue )
 						? VersionValue.UNDEFINED
 						: new VersionValue( defaultValue );
 			}

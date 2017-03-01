@@ -13,6 +13,8 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.spi.ByteVersionSupport;
+import org.hibernate.type.spi.VersionSupport;
 
 /**
  * Descriptor for {@link Byte} handling.
@@ -97,5 +99,10 @@ public class ByteJavaDescriptor extends AbstractNumericJavaDescriptor<Byte> impl
 	@Override
 	public Byte getDefaultValue() {
 		return ZERO;
+	}
+
+	@Override
+	public VersionSupport<Byte> getVersionSupport() {
+		return ByteVersionSupport.INSTANCE ;
 	}
 }

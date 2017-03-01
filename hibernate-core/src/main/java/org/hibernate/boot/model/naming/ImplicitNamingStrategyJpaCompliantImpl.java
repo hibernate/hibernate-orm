@@ -198,7 +198,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 
 	@Override
 	public Identifier determineForeignKeyName(ImplicitForeignKeyNameSource source) {
-		return toIdentifier(
+		return source.getUserProvidedIdentifier() != null ? source.getUserProvidedIdentifier() : toIdentifier(
 				NamingHelper.INSTANCE.generateHashedFkName(
 						"FK",
 						source.getTableName(),

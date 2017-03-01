@@ -14,4 +14,5 @@ import java.util.List;
 public interface ImplicitForeignKeyNameSource extends ImplicitConstraintNameSource {
 	public Identifier getReferencedTableName();
 	public List<Identifier> getReferencedColumnNames();
+	public Identifier getUserProvidedIdentifier();
 }

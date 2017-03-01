@@ -35,7 +35,7 @@ public class InformixLimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public boolean useMaxForLimit() {
-		return true;
+		return false;
 	}
 
 	@Override

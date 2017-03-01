@@ -10,7 +10,9 @@ import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 
 import org.hibernate.test.bytecode.enhancement.detached.DetachedGetIdentifierTestTask;
 import org.hibernate.test.bytecode.enhancement.cascade.CascadeWithFkConstraintTestTask;
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
@@ -131,6 +133,7 @@ public class EnhancerTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11173" )
+	@RequiresDialectFeature( value = DialectChecks.SupportsIdentityColumns.class)
 	public void testLazyCache() {
 		EnhancerTestUtils.runEnhancerTestTask( LazyInCacheTestTask.class );
 	}

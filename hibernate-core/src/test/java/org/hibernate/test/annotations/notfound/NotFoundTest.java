@@ -19,6 +19,8 @@ import javax.persistence.OneToOne;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,6 +30,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Emmanuel Bernard
  */
+@RequiresDialectFeature( value = DialectChecks.SupportsIdentityColumns.class)
 public class NotFoundTest extends BaseCoreFunctionalTestCase {
 
 	@Test

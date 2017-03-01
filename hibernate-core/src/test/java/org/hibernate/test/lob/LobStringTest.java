@@ -16,9 +16,11 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.jdbc.ClobProxy;
 import org.hibernate.query.Query;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
@@ -32,6 +34,7 @@ import static org.junit.Assert.fail;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11477")
+@SkipForDialect(Oracle8iDialect.class)
 public class LobStringTest extends BaseCoreFunctionalTestCase {
 	private static final int LONG_STRING_SIZE = 10000;
 

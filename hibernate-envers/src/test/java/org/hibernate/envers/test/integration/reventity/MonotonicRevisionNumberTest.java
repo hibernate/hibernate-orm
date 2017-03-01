@@ -38,7 +38,7 @@ public class MonotonicRevisionNumberTest extends BaseEnversFunctionalTestCase {
 		OrderedSequenceGenerator seqGenerator = (OrderedSequenceGenerator) generator;
 		Assert.assertTrue(
 				"Oracle sequence needs to be ordered in RAC environment.",
-				seqGenerator.sqlCreateStrings( getDialect() )[0].endsWith( " order" )
+				seqGenerator.sqlCreateStrings( getDialect() )[0].toLowerCase().endsWith( " order" )
 		);
 	}
 }

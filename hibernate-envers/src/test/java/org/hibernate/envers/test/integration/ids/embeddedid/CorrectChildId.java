@@ -19,6 +19,7 @@ public class CorrectChildId implements Serializable {
 	@Column(name = "parent_id")
 	private String id;
 
+	@Column(name = "child_number")
 	private Integer number;
 
 	CorrectChildId() {

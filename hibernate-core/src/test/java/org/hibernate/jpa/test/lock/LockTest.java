@@ -31,6 +31,7 @@ import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
@@ -719,6 +720,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@RequiresDialect( Oracle10gDialect.class )
 	@RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
+	@FailureExpected( jiraKey = "HHH-8001" )
 	public void testQueryTimeout() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
@@ -812,6 +814,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@RequiresDialect( Oracle10gDialect.class )
 	@RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
+	@FailureExpected( jiraKey = "HHH-8001" )
 	public void testQueryTimeoutEMProps() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		Map<String, Object> queryTimeoutProps = new HashMap<String, Object>();

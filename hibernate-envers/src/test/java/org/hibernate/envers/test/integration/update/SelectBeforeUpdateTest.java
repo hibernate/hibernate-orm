@@ -187,7 +187,7 @@ public class SelectBeforeUpdateTest extends BaseEnversFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Author")
 	@Audited
 	public static class Author {
 		@Id

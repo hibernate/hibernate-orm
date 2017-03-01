@@ -7,6 +7,7 @@
 package org.hibernate.jpa.test.criteria.components;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -304,6 +305,7 @@ public class ComponentInWhereClauseTest extends BaseEntityManagerFunctionalTestC
 
 	@Embeddable
 	public static class Phone {
+		@Column(name = "phone_number")
 		private String number;
 
 		public Phone() {

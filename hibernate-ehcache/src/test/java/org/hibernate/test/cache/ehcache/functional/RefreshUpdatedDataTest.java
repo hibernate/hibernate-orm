@@ -13,6 +13,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.persistence.Version;
 
 import org.hibernate.Session;
@@ -173,6 +174,7 @@ public class RefreshUpdatedDataTest extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Entity(name = "ReadWriteCacheableItem")
+	@Table(name = "RW_ITEM")
 	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "item")
 	public static class ReadWriteCacheableItem {
 
@@ -215,6 +217,7 @@ public class RefreshUpdatedDataTest extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Entity(name = "ReadWriteVersionedCacheableItem")
+	@Table(name = "RW_VERSIONED_ITEM")
 	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "item")
 	public static class ReadWriteVersionedCacheableItem {
 
@@ -260,6 +263,7 @@ public class RefreshUpdatedDataTest extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Entity(name = "NonStrictReadWriteCacheableItem")
+	@Table(name = "RW_NOSTRICT_ITEM")
 	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region = "item")
 	public static class NonStrictReadWriteCacheableItem {
 
@@ -302,6 +306,7 @@ public class RefreshUpdatedDataTest extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	@Entity(name = "NonStrictReadWriteVersionedCacheableItem")
+	@Table(name = "RW_NOSTRICT_VER_ITEM")
 	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region = "item")
 	public static class NonStrictReadWriteVersionedCacheableItem {
 

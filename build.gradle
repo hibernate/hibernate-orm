@@ -106,12 +106,12 @@ libraries = [
 
 subprojects { subProject ->
     apply plugin: 'idea'
-	apply plugin: 'eclipse'
+    apply plugin: 'eclipse'
 
     defaultTasks 'build'
 
     group = 'com.seeburger.fork'
-    version = '4.0.1.SEE3'
+    version = '4.0.1.SEE4'
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
@@ -141,7 +141,7 @@ subprojects { subProject ->
 
         // appropriately inject the common dependencies into each sub-project
         dependencies {
-	        compile( libraries.logging )
+            compile( libraries.logging )
             testCompile( libraries.junit )
             testRuntime( libraries.slf4j_api )
             testRuntime( libraries.slf4j_log4j12 )
@@ -194,9 +194,9 @@ subprojects { subProject ->
         // for the time being eat the annoying output from running the annotation processors
         generateMainLoggingClasses.logging.captureStandardError(LogLevel.INFO)
 
-		compileJava.dependsOn generateMainLoggingClasses
+        compileJava.dependsOn generateMainLoggingClasses
         compileJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
-	compileTestJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
+    compileTestJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 
         manifest.mainAttributes(
                 provider: 'gradle',
@@ -247,9 +247,9 @@ subprojects { subProject ->
             ] as Set
         }
 
-		eclipseClasspath {
-			plusConfigurations.add( configurations.provided )
-		}
+        eclipseClasspath {
+            plusConfigurations.add( configurations.provided )
+        }
 
         // elements used to customize the generated POM used during upload
         def pomConfig = {

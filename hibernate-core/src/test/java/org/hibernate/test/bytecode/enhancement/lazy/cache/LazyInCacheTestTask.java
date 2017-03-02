@@ -66,7 +66,7 @@ public class LazyInCacheTestTask extends AbstractEnhancerTestTask {
 	protected void cleanup() {
 	}
 
-	@Entity(name = "Order")
+	@Entity(name = "Orders")
 	@Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE )
 	public static class Order {
 
@@ -81,7 +81,6 @@ public class LazyInCacheTestTask extends AbstractEnhancerTestTask {
 		List<Tag> tags = new ArrayList<>();
 
 		@Basic( fetch = FetchType.LAZY )
-		@Column
 		@Type( type = "org.hibernate.type.BinaryType" )
 		private byte[] data;
 

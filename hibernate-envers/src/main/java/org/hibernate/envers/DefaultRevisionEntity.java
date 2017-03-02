@@ -24,16 +24,16 @@ public class DefaultRevisionEntity implements Serializable {
 	@Id
 	@GeneratedValue
 	@RevisionNumber
-	private int id;
+	private long id;
 
 	@RevisionTimestamp
 	private long timestamp;
 
-	public int getId() {
+	public long getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 
@@ -67,7 +67,7 @@ public class DefaultRevisionEntity implements Serializable {
 	@Override
 	public int hashCode() {
 		int result;
-		result = id;
+		result = Long.hashCode( id );
 		result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
 		return result;
 	}

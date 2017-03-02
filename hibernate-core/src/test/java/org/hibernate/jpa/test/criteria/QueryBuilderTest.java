@@ -6,15 +6,21 @@
  */
 package org.hibernate.jpa.test.criteria;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.metamodel.Address;
 import org.hibernate.jpa.test.metamodel.Alias;
@@ -32,12 +38,9 @@ import org.hibernate.jpa.test.metamodel.Spouse;
 import org.hibernate.metamodel.internal.MetamodelImpl;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.predicate.ComparisonPredicate;
-
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
@@ -51,6 +54,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 				Country.class,
 				CreditCard.class,
 				Customer.class,
+				Human.class,
 				Info.class,
 				LineItem.class,
 				Order.class,
@@ -269,6 +273,43 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		);
 		em.createQuery( criteria ).getResultList();
 		em.getTransaction().commit();
+		em.close();
+	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-10737")
+	public void testMissingDialectFunction() {
+		EntityManager em = getOrCreateEntityManager();
+		
+		em.getTransaction().begin();
+		
+		Human human = new Human();
+		human.setId(200L);
+		human.setName("2");
+		human.setBorn(new Date());
+		em.persist(human);
+		
+		em.getTransaction().commit();
+		
+		CriteriaBuilder cb =  em.getCriteriaBuilder();
+		CriteriaQuery<HumanPojo> criteria = cb.createQuery( HumanPojo.class );
+		Root<Human> root = criteria.from( Human.class );
+		
+		criteria.select( 
+					cb.construct( 
+							HumanPojo.class, 
+							root.get(Human_.id), 
+							root.get(Human_.name), 
+							cb.function(
+									"sebersole", 
+									String.class, 
+									root.get(Human_.born), 
+									cb.literal(110))
+					) 
+				);
+		
+		em.createQuery( criteria ).getResultList();
+		
 		em.close();
 	}
 }

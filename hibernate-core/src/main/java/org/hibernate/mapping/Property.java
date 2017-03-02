@@ -18,6 +18,8 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.boot.model.domain.ManagedTypeMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
@@ -32,7 +34,7 @@ import org.hibernate.type.spi.Type;
  *
  * @author Gavin King
  */
-public class Property implements Serializable, MetaAttributable {
+public class Property implements Serializable, PersistentAttributeMapping {
 	private String name;
 	private Value value;
 	private String cascade;
@@ -83,6 +85,11 @@ public class Property implements Serializable, MetaAttributable {
 	
 	public boolean isComposite() {
 		return value instanceof Component;
+	}
+
+	@Override
+	public ManagedTypeMapping<?> getDeclaringType() {
+		return persistentClass;
 	}
 
 	public Value getValue() {
@@ -294,7 +301,12 @@ public class Property implements Serializable, MetaAttributable {
 	public boolean isSelectable() {
 		return selectable;
 	}
-	
+
+	@Override
+	public boolean isIncludedInOptimisticLocking() {
+		return optimisticLocked;
+	}
+
 	public void setSelectable(boolean selectable) {
 		this.selectable = selectable;
 	}

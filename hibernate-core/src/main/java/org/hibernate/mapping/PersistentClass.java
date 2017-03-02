@@ -23,6 +23,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 
@@ -31,7 +32,7 @@ import org.hibernate.sql.Alias;
  *
  * @author Gavin King
  */
-public abstract class PersistentClass implements AttributeContainer, PropertyContainer, Serializable, Filterable, MetaAttributable {
+public abstract class PersistentClass implements EntityMapping, AttributeContainer, PropertyContainer, Serializable, Filterable, MetaAttributable {
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
 	public static final String NULL_DISCRIMINATOR_MAPPING = "null";

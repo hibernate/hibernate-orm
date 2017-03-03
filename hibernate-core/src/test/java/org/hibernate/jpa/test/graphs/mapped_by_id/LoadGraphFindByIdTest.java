@@ -111,7 +111,7 @@ public class LoadGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
 		private Integer commentCount;
 	}
 
-	@Entity(name = "User")
+	@Entity(name = "Users")
 	public static class User {
 
 		@Id

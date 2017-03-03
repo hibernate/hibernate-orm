@@ -38,6 +38,7 @@ import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -257,14 +258,35 @@ public class LoadQueryJoinAndFetchProcessor {
 				getJoinedAssociationTypeOrNull( join )
 		);
 
-		joinFragment.addJoin(
-				joinable.getTableName(),
-				rhsTableAlias,
-				join.resolveAliasedLeftHandSideJoinConditionColumns( lhsTableAlias ),
-				join.resolveNonAliasedRightHandSideJoinConditionColumns(),
-				join.isRightHandSideRequired() ? JoinType.INNER_JOIN : JoinType.LEFT_OUTER_JOIN,
-				additionalJoinConditions
-		);
+		String[] joinColumns = join.resolveAliasedLeftHandSideJoinConditionColumns( lhsTableAlias );
+		if ( joinColumns.length == 0 ) {
+			// When no columns are available, this is a special join that involves multiple subtypes
+			AbstractEntityPersister persister = (AbstractEntityPersister) ( (EntityQuerySpace) join.getLeftHandSide() ).getEntityPersister();
+
+			String[][] polyJoinColumns = persister.getPolymorphicJoinColumns(
+					lhsTableAlias,
+					( (JoinDefinedByMetadata) join ).getJoinedPropertyName()
+			);
+
+			joinFragment.addJoin(
+					joinable.getTableName(),
+					rhsTableAlias,
+					polyJoinColumns,
+					join.resolveNonAliasedRightHandSideJoinConditionColumns(),
+					join.isRightHandSideRequired() ? JoinType.INNER_JOIN : JoinType.LEFT_OUTER_JOIN,
+					additionalJoinConditions
+			);
+		}
+		else {
+			joinFragment.addJoin(
+					joinable.getTableName(),
+					rhsTableAlias,
+					joinColumns,
+					join.resolveNonAliasedRightHandSideJoinConditionColumns(),
+					join.isRightHandSideRequired() ? JoinType.INNER_JOIN : JoinType.LEFT_OUTER_JOIN,
+					additionalJoinConditions
+			);
+		}
 		joinFragment.addJoins(
 				joinable.fromJoinFragment( rhsTableAlias, false, true ),
 				joinable.whereJoinFragment( rhsTableAlias, false, true )

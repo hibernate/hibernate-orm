@@ -111,6 +111,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
 	}
 
+	protected EntityType(EntityType original, String superTypeEntityName) {
+		this.scope = original.scope;
+		this.associatedEntityName = superTypeEntityName;
+		this.uniqueKeyPropertyName = original.uniqueKeyPropertyName;
+		this.eager = original.eager;
+		this.unwrapProxy = original.unwrapProxy;
+		this.referenceToPrimaryKey = original.referenceToPrimaryKey;
+	}
+
 	protected TypeFactory.TypeScope scope() {
 		return scope;
 	}

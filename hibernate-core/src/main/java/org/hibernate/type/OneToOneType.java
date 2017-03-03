@@ -63,6 +63,13 @@ public class OneToOneType extends EntityType {
 		this.entityName = entityName;
 	}
 
+	public OneToOneType(OneToOneType original, String superTypeEntityName) {
+		super( original, superTypeEntityName );
+		this.foreignKeyType = original.foreignKeyType;
+		this.propertyName = original.propertyName;
+		this.entityName = original.entityName;
+	}
+
 	@Override
 	public String getPropertyName() {
 		return propertyName;

@@ -102,7 +102,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		setText( text );
 	}
 	
-	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent) {
+	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent, AST parentPredicate) {
 		if (!isResolved()) {
 			if ( getWalker().getCurrentFromClause().isFromElementAlias( getText() ) ) {
 				FromElement fromElement = getWalker().getCurrentFromClause().getFromElement( getText() );

@@ -194,7 +194,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		dereferenceCollection( (CollectionType) propertyType, true, true, null, parent );
 	}
 
-	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent)
+	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent, AST parentPredicate)
 			throws SemanticException {
 		// If this dot has already been resolved, stop now.
 		if ( isResolved() ) {
@@ -227,7 +227,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		else if ( propertyType.isEntityType() ) {
 			// The property is another class..
 			checkLhsIsNotCollection();
-			dereferenceEntity( (EntityType) propertyType, implicitJoin, classAlias, generateJoin, parent );
+			dereferenceEntity( (EntityType) propertyType, implicitJoin, classAlias, generateJoin, parent, parentPredicate );
 			initText();
 		}
 		else if ( propertyType.isCollectionType() ) {
@@ -361,7 +361,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			boolean implicitJoin,
 			String classAlias,
 			boolean generateJoin,
-			AST parent) throws SemanticException {
+			AST parent,
+			AST parentPredicate) throws SemanticException {
 		checkForCorrelatedSubquery( "dereferenceEntity" );
 		// three general cases we check here as to whether to render a physical SQL join:
 		// 1) is our parent a DotNode as well?  If so, our property reference is
@@ -402,6 +403,10 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		else if ( regressionStyleJoinSuppression ) {
 			// this is the regression style determination which matches the logic of the classic translator
 			joinIsNeeded = generateJoin && ( !getWalker().isInSelect() || !getWalker().isShallowQuery() );
+		}
+		else if ( parentPredicate != null ) {
+			// Never generate a join when we compare entities directly
+			joinIsNeeded = generateJoin;
 		}
 		else {
 			joinIsNeeded = generateJoin || ( getWalker().isInSelect() || getWalker().isInFrom() );

@@ -109,6 +109,11 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 		resolve( generateJoin, implicitJoin, classAlias, null );
 	}
 
+	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent)
+			throws SemanticException {
+		resolve( generateJoin, implicitJoin, classAlias, parent, null );
+	}
+
 	public void prepareForDot(String propertyName) throws SemanticException {
 	}
 

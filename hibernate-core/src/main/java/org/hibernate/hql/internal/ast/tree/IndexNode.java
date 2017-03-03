@@ -65,7 +65,7 @@ public class IndexNode extends FromReferenceNode {
 	}
 
 	@Override
-	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent)
+	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent, AST parentPredicate)
 			throws SemanticException {
 		if ( isResolved() ) {
 			return;

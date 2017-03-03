@@ -17,15 +17,19 @@ public interface ResolvableNode {
 	/**
 	 * Does the work of resolving an identifier or a dot
 	 */
+	void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent, AST parentPredicate) throws SemanticException;
+	/**
+	 * Does the work of resolving an identifier or a dot, but without a parent predicate node
+	 */
 	void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent) throws SemanticException;
 
 	/**
-	 * Does the work of resolving an identifier or a dot, but without a parent node
+	 * Does the work of resolving an identifier or a dot, but without a parent predicate node or parent node
 	 */
 	void resolve(boolean generateJoin, boolean implicitJoin, String classAlias) throws SemanticException;
 
 	/**
-	 * Does the work of resolving an identifier or a dot, but without a parent node or alias
+	 * Does the work of resolving an identifier or a dot, but without a parent predicate node or parent node or alias
 	 */
 	void resolve(boolean generateJoin, boolean implicitJoin) throws SemanticException;
 

@@ -124,6 +124,8 @@ public interface SessionFactoryOptionsState {
 
 	boolean isCollectionJoinSubqueryRewriteEnabled();
 
+	boolean isCheckSecondLevelCacheForPolymorphicProxiesEnabled();
+
 	boolean isSecondLevelCacheEnabled();
 
 	boolean isQueryCacheEnabled();

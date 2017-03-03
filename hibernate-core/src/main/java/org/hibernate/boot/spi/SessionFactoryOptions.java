@@ -215,6 +215,8 @@ public interface SessionFactoryOptions {
 
 	boolean isCollectionJoinSubqueryRewriteEnabled();
 
+	boolean isCheckSecondLevelCacheForPolymorphicProxiesEnabled();
+
 	boolean isAllowOutOfTransactionUpdateOperations();
 
 	boolean isReleaseResourcesOnCloseEnabled();

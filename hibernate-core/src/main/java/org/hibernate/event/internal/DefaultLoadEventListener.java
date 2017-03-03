@@ -352,6 +352,19 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			}
 			return existing;
 		}
+
+		if ( persistenceContext.getSession().getFactory().getSessionFactoryOptions().isCheckSecondLevelCacheForPolymorphicProxiesEnabled()
+				&& persister.getClassMetadata().hasSubclasses() ) {
+			// only consult the 2L cache before creating a proxy if the entity has subclasses
+			existing = loadFromSecondLevelCache( event, persister, keyToLoad );
+			if ( existing != null ) {
+				if ( traceEnabled ) {
+					LOG.trace( "Entity found in second level cache" );
+				}
+				return existing;
+			}
+		}
+
 		if ( traceEnabled ) {
 			LOG.trace( "Creating new proxy for entity" );
 		}

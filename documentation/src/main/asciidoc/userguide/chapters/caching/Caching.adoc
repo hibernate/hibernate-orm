@@ -75,6 +75,9 @@ Besides specific provider configuration, there are a number of configurations op
 * `default` (wraps identitifers in the tuple)
 * `simple` (uses identifiers as keys without any wrapping)
 * fully qualified class name that implements `org.hibernate.cache.spi.CacheKeysFactory`
+`hibernate.cache.check_second_level_cache_polymorphic_proxies`::
+    If `true`, forces Hibernate to check the second-level cache for polymorphic entities prior to creating a proxy.
+    This is enabled by default, but can be disable as it has a performance impact to check the second-level cache.
 
 [[caching-mappings]]
 === Configuring second-level cache mappings

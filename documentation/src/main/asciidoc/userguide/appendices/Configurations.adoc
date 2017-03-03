@@ -580,6 +580,9 @@ Sets the associated entity class cache concurrency strategy for the designated r
 `*hibernate.ejb.collectioncache*` (e.g. `hibernate.ejb.collectioncache.org.hibernate.ejb.test.Item.distributors` = `read-write, RegionName`)::
 Sets the associated collection cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role>` usage[, region] where usage is the cache strategy used and region the cache region name
 
+`hibernate.cache.check_second_level_cache_polymorphic_proxies` (e.g. `true` (default value) of `false`)::
+Forces Hibernate to check the second-level cache for polymorphic entities prior to creating a proxy.
+
 [[configurations-infinispan]]
 === Infinispan properties
 

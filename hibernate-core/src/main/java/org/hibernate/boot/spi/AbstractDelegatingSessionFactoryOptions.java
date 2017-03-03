@@ -235,6 +235,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isCheckSecondLevelCacheForPolymorphicProxiesEnabled() {
+		return delegate.isCheckSecondLevelCacheForPolymorphicProxiesEnabled();
+	}
+
+	@Override
 	public boolean isAllowOutOfTransactionUpdateOperations() {
 		return delegate.isAllowOutOfTransactionUpdateOperations();
 	}

@@ -1040,7 +1040,11 @@ public interface AvailableSettings {
 	 */
 	String USE_DIRECT_REFERENCE_CACHE_ENTRIES = "hibernate.cache.use_reference_entries";
 
-
+	/**
+	 * Consults the second level cache for polymorphic entities prior to creating a proxy for a possibly wrong type.
+	 * Default is to consult the second level cache.
+	 */
+	String CHECK_SECOND_LEVEL_CACHE_FOR_POLYMORPHIC_PROXIES_ENABLED = "hibernate.cache.check_second_level_cache_polymorphic_proxies";
 
 
 

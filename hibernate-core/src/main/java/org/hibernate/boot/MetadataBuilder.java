@@ -225,6 +225,24 @@ public interface MetadataBuilder {
 	MetadataBuilder enableNewIdentifierGeneratorSupport(boolean enable);
 
 	/**
+	 * Should we enable support for the "new" type conflict resolving.
+	 *
+	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#USE_NEW_TYPE_CONFLICT_RESOLVER}
+	 * setting if using property-based configuration.
+	 *
+	 *
+	 * @param enable {@code true} to enable; {@code false} to disable;don't call for
+	 * default.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#USE_NEW_TYPE_CONFLICT_RESOLVER
+	 */
+	default MetadataBuilder enableNewTypeConflictResolverSupport(boolean enable) {
+		return this;
+	}
+
+	/**
 	 * Should we process or ignore explicitly defined discriminators in the case
 	 * of joined-subclasses.  The legacy behavior of Hibernate was to ignore the
 	 * discriminator annotations because Hibernate (unlike some providers) does

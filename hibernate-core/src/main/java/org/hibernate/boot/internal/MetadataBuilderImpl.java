@@ -388,6 +388,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
+	public MetadataBuilder enableNewTypeConflictResolverSupport(boolean enabled) {
+		this.options.useNewTypeConflictResolver = enabled;
+		return this;
+	}
+
+	@Override
 	public MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter) {
 		this.options.idGenerationTypeInterpreter.addInterpreterDelegate( interpreter );
 		return this;
@@ -560,6 +566,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean implicitlyForceDiscriminatorInSelect;
 		private boolean useNationalizedCharacterData;
 		private boolean specjProprietarySyntaxEnabled;
+		private boolean useNewTypeConflictResolver;
 		private ArrayList<MetadataSourceType> sourceProcessOrdering;
 
 		private HashMap<String,SQLFunction> sqlFunctionMap;
@@ -710,6 +717,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA,
 					StandardConverters.BOOLEAN,
 					false
+			);
+			this.useNewTypeConflictResolver = configService.getSetting(
+					AvailableSettings.USE_NEW_TYPE_CONFLICT_RESOLVER,
+					StandardConverters.BOOLEAN,
+					true
 			);
 
 			this.reflectionManager = generateDefaultReflectionManager();
@@ -871,6 +883,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public boolean isSpecjProprietarySyntaxEnabled() {
 			return specjProprietarySyntaxEnabled;
+		}
+
+		@Override
+		public boolean useNewTypeConflictResolver() {
+			return useNewTypeConflictResolver;
 		}
 
 		@Override

@@ -14,6 +14,8 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
@@ -360,6 +362,295 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setLob(boolean lob) {
 		this.lob = lob;
+	}
+
+	public Property resolveConflict(PersistentClass owner, Property other) {
+		if ( name.equals( other.getName() ) ) {
+			if ( getValue() instanceof Component ) {
+				// resolve conflicts in the components' properties that might happen due to usage of type variables
+				return resolveComponentConflicts( (Component) getValue(), owner, (Component) other.getValue() );
+			}
+
+			// If we encounter that there are different types, then the property has it's type from a type variable
+			if ( getValue() instanceof ToOne ) {
+				ToOne value = (ToOne) getValue();
+				ToOne otherValue = (ToOne) other.getValue();
+
+				// If it's of the same type, everything is ok
+				if ( value.getReferencedEntityName().equals( otherValue.getReferencedEntityName() ) ) {
+					return this;
+				}
+
+				Object persistentOrMappedSuperclass = getCommonPersistentOrMappedSuperclass( other );
+				String referencedEntityName = null;
+				String typeName;
+
+				if ( persistentOrMappedSuperclass instanceof PersistentClass ) {
+					PersistentClass commonPersistentClass = (PersistentClass) persistentOrMappedSuperclass;
+
+					// Update this property and ToOne to that common type
+					// This property is the one of the super type, it has to have the common super type of all subtype properties
+					value.setTypeName( commonPersistentClass.getEntityName() );
+					value.setReferencedEntityName( commonPersistentClass.getEntityName() );
+
+					if ( !isMappedSuperclassDeclaredProperty( owner, other ) ) {
+						return this;
+					}
+					referencedEntityName = commonPersistentClass.getEntityName();
+					typeName = referencedEntityName;
+				} else {
+					typeName = ((MappedSuperclass) persistentOrMappedSuperclass).getMappedClass().getName();
+				}
+
+				MetadataImplementor metadata = otherValue.getMetadata();
+
+				// Since there is no entity available we have to construct a virtual property
+				Property resolvedProperty = new Property();
+
+				ToOne resolvedValue;
+
+				if ( otherValue instanceof ManyToOne ) {
+					ManyToOne manyToOne = (ManyToOne) otherValue;
+					ManyToOne newManyToOne = new ManyToOne( metadata, otherValue.getTable() );
+					newManyToOne.setIgnoreNotFound( manyToOne.isIgnoreNotFound() );
+					if ( manyToOne.isLogicalOneToOne() ) {
+						newManyToOne.markAsLogicalOneToOne();
+					}
+					resolvedValue = newManyToOne;
+				} else if ( otherValue instanceof OneToOne ) {
+					OneToOne oneToOne = (OneToOne) otherValue;
+					Class<?> ownerClass = metadata.getTypeResolver().heuristicType( oneToOne.getEntityName() ).getReturnedClass();
+					PersistentClass oneToOneOwner = findPersistentClass( metadata, ownerClass );
+					OneToOne newOneToOne = new OneToOne( metadata, otherValue.getTable(), oneToOneOwner );
+					newOneToOne.setReferencedPropertyName( oneToOne.getReferencedPropertyName());
+					newOneToOne.setForeignKeyType( oneToOne.getForeignKeyType() );
+					newOneToOne.setConstrained( oneToOne.isConstrained() );
+					resolvedValue = newOneToOne;
+				} else {
+					throw new UnsupportedOperationException( "No type conflict resolution implemented for ToOne type: " + otherValue );
+				}
+
+				// Copy ToOne state
+				resolvedValue.setFetchMode( otherValue.getFetchMode() );
+				resolvedValue.setReferencedPropertyName( otherValue.getReferencedPropertyName() );
+				resolvedValue.setReferencedEntityName( referencedEntityName );
+				resolvedValue.setLazy( otherValue.isLazy() );
+				resolvedValue.setUnwrapProxy( otherValue.isUnwrapProxy() );
+				resolvedValue.setReferenceToPrimaryKey( otherValue.isReferenceToPrimaryKey() );
+
+				// Create fake columns to by-pass mapping check
+				KeyValue referencedValue = otherValue.getTable().getIdentifierValue();
+				boolean[] insertability = referencedValue.getColumnInsertability();
+				boolean[] updateability = referencedValue.getColumnUpdateability();
+				Iterator<Selectable> iter = referencedValue.getColumnIterator();
+				int index = 0;
+
+				while ( iter.hasNext() ) {
+					Selectable selectable = iter.next();
+					if ( selectable instanceof Formula ) {
+						resolvedValue.addFormula( (Formula) selectable );
+					} else {
+						resolvedValue.addColumn( (Column) selectable, insertability[index], updateability[index] );
+					}
+
+					index++;
+				}
+
+				// Copy SimpleValue state
+				resolvedValue.setTypeName( typeName );
+				resolvedValue.setTypeParameters( otherValue.getTypeParameters() );
+
+				if ( otherValue.isVersion() ) {
+					resolvedValue.makeVersion();
+				}
+				if ( otherValue.isNationalized() ) {
+					resolvedValue.makeNationalized();
+				}
+				if ( otherValue.isLob() ) {
+					resolvedValue.makeLob();
+				}
+
+				resolvedValue.setIdentifierGeneratorProperties( otherValue.getIdentifierGeneratorProperties() );
+				resolvedValue.setIdentifierGeneratorStrategy( otherValue.getIdentifierGeneratorStrategy() );
+				resolvedValue.setNullValue( otherValue.getNullValue() );
+				// This might be wrong?
+				resolvedValue.setTable( otherValue.getTable() );
+				resolvedValue.setForeignKeyName( otherValue.getForeignKeyName() );
+				resolvedValue.setForeignKeyDefinition( otherValue.getForeignKeyDefinition() );
+				resolvedValue.setAlternateUniqueKey( otherValue.isAlternateUniqueKey() );
+				resolvedValue.setCascadeDeleteEnabled( otherValue.isCascadeDeleteEnabled() );
+				resolvedValue.copyTypeFrom( otherValue );
+
+				resolvedProperty.name = name;
+				resolvedProperty.value = resolvedValue;
+				resolvedProperty.cascade = other.cascade;
+				resolvedProperty.updateable = other.updateable;
+				resolvedProperty.insertable = other.insertable;
+				resolvedProperty.selectable = other.selectable;
+				resolvedProperty.optimisticLocked = other.optimisticLocked;
+				resolvedProperty.valueGenerationStrategy = other.valueGenerationStrategy;
+				resolvedProperty.propertyAccessorName = other.propertyAccessorName;
+				resolvedProperty.lazy = other.lazy;
+				resolvedProperty.lazyGroup = other.lazyGroup;
+				resolvedProperty.optional = other.optional;
+				resolvedProperty.metaAttributes = other.metaAttributes;
+				resolvedProperty.persistentClass = other.persistentClass;
+				resolvedProperty.naturalIdentifier = other.naturalIdentifier;
+				resolvedProperty.lob = other.lob;
+
+				return resolvedProperty;
+			}
+
+			if ( getValue() instanceof SimpleValue ) {
+				String typeName = ( (SimpleValue) getValue() ).getTypeName();
+				String otherTypeName = ( (SimpleValue) other.getValue() ).getTypeName();
+				// For some simple property values the types might not be set yet
+				if ( typeName == null || otherTypeName == null || typeName.equals( otherTypeName ) ) {
+					return this;
+				}
+			}
+
+			if ( getValue() instanceof Collection ) {
+				return this;
+			}
+
+			// If it's of the same type, everything is ok
+			if ( getType().equals( other.getType() ) ) {
+				return this;
+			}
+		}
+
+		return null;
+	}
+
+	private static boolean isMappedSuperclassDeclaredProperty(PersistentClass persistentClass, Property property) {
+		MappedSuperclass mappedSuperclass = persistentClass.getSuperMappedSuperclass();
+
+		// Go up the mapped super class hierarchy and check if the property is declared there
+		while ( mappedSuperclass != null ) {
+			Iterator<Property> declaredPropertiesIter = mappedSuperclass.getDeclaredPropertyIterator();
+			while ( declaredPropertiesIter.hasNext() ) {
+				if ( declaredPropertiesIter.next() == property ) {
+					return true;
+				}
+			}
+
+			mappedSuperclass = mappedSuperclass.getSuperMappedSuperclass();
+		}
+
+		return false;
+	}
+
+	private PersistentClass resolveReferencedPersistentClass() {
+		ToOne value = (ToOne) getValue();
+		MetadataImplementor metadata = value.getMetadata();
+		PersistentClass candidate = metadata.getEntityBinding( value.getReferencedEntityName() );
+		if ( candidate != null ) {
+			return candidate;
+		}
+		return null;
+	}
+
+	private Property resolveComponentConflicts(Component comp1, PersistentClass comp2Owner, Component comp2) {
+		Iterator it1 = comp1.getPropertyIterator();
+		while ( it1.hasNext() ) {
+			final Property prop = (Property) it1.next();
+			String name = prop.getName();
+			Iterator it2 = comp2.getPropertyIterator();
+			while ( it2.hasNext() ) {
+				final Property other = (Property) it2.next();
+				if ( name.equals( other.getName() ) ) {
+					if ( prop.resolveConflict( comp2Owner, other ) != null ) {
+						break;
+					}
+
+					return null;
+				}
+			}
+		}
+
+		return this;
+	}
+
+	private Object getCommonPersistentOrMappedSuperclass(Property property) {
+		PersistentClass persistentClass1 = resolveReferencedPersistentClass();
+		PersistentClass persistentClass2 = property.resolveReferencedPersistentClass();
+
+		if ( persistentClass1 != null && persistentClass2 != null ) {
+			return getCommonPersistentClass( persistentClass1, persistentClass2 );
+		}
+
+		Class<?> class1 = resolveType( (ToOne) getValue() ).getReturnedClass();
+		Class<?> class2 = resolveType( (ToOne) property.getValue() ).getReturnedClass();
+		Class<?> commonClass = getCommonPersistentClass( class1, class2 );
+
+		MetadataImplementor metadata = ( (ToOne) getValue() ).getMetadata();
+		PersistentClass candidate = findPersistentClass( metadata, commonClass );
+		if ( candidate != null ) {
+			return candidate;
+		}
+
+		MappedSuperclass mappedSuperclass = null;
+
+		if ( metadata instanceof InFlightMetadataCollector ) {
+			mappedSuperclass = ( (InFlightMetadataCollector) metadata ).getMappedSuperclass( commonClass );
+		}
+
+		if ( metadata == null ) {
+			for ( MappedSuperclass clazz : metadata.getMappedSuperclassMappingsCopy() ) {
+				if ( clazz.getMappedClass() == commonClass ) {
+					mappedSuperclass = clazz;
+					break;
+				}
+			}
+		}
+
+		if ( mappedSuperclass != null ) {
+			return mappedSuperclass;
+		}
+
+		throw new IllegalStateException( "Could not find the PersistentClass for: " + commonClass.getName() );
+	}
+
+	private Type resolveType(ToOne value) {
+		if ( value.getType() != null ) {
+			return value.getType();
+		}
+		MetadataImplementor metadata = value.getMetadata();
+		return metadata.getTypeResolver().heuristicType( value.getTypeName() );
+	}
+
+	private PersistentClass getCommonPersistentClass(PersistentClass clazz1, PersistentClass clazz2) {
+		while ( !clazz2.getMappedClass().isAssignableFrom( clazz1.getMappedClass() ) ) {
+			clazz2 = clazz2.getSuperclass();
+		}
+		return clazz2;
+	}
+
+	private Class<?> getCommonPersistentClass(Class<?> clazz1, Class<?> clazz2) {
+		while ( !clazz2.isAssignableFrom( clazz1 ) ) {
+			clazz2 = clazz2.getSuperclass();
+		}
+		return clazz2;
+	}
+
+	private PersistentClass findPersistentClass(MetadataImplementor metadata, Class<?> clazz) {
+		PersistentClass newClass = null;
+
+		// Go up the class hierarchy
+		while ( newClass == null && clazz != Object.class ) {
+			// Iterate through entity bindings and match by class objects
+			for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
+				// Stop when we found a class that has a matching class object
+				if ( clazz == persistentClass.getMappedClass() ) {
+					return persistentClass;
+				}
+			}
+
+			clazz = clazz.getSuperclass();
+		}
+
+		return null;
 	}
 
 }

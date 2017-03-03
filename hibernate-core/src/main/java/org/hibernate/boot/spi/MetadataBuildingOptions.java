@@ -197,6 +197,18 @@ public interface MetadataBuildingOptions {
 	boolean isSpecjProprietarySyntaxEnabled();
 
 	/**
+	 * Should we use the new type conflict resolver?
+	 *
+	 * @see org.hibernate.boot.MetadataBuilder#enableNewTypeConflictResolverSupport
+	 * @see org.hibernate.cfg.AvailableSettings#USE_NEW_TYPE_CONFLICT_RESOLVER
+	 *
+	 * @return {@code true} if the new type conflict resolver should be used; {@code false} otherwise.
+	 */
+	default boolean useNewTypeConflictResolver() {
+		return true;
+	}
+
+	/**
 	 * Retrieve the ordering in which sources should be processed.
 	 *
 	 * @return The order in which sources should be processed.

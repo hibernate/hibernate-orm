@@ -11,22 +11,26 @@ import org.hibernate.WrongClassException;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
  * @author Guillaume Smet
  * @author Brett Meyer
+ * @author Christian Beikov
  */
 @TestForIssue(jiraKey = "HHH-9028")
 public class PolymorphicCacheTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { AbstractCachedItem.class, CachedItem1.class, CachedItem2.class };
+		return new Class[] { CacheHolder.class, AbstractCachedItem.class, CachedItem1.class, CachedItem2.class };
 	}
 
 	@Test
@@ -91,6 +95,34 @@ public class PolymorphicCacheTest extends BaseCoreFunctionalTestCase {
 		s.createQuery( "DELETE FROM AbstractCachedItem" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10162")
+	public void testPolymorphismAndCacheWithHolder() throws Exception {
+		final CachedItem1 item1 = new CachedItem1( "name 1" );
+		final CachedItem2 item2 = new CachedItem2( "name 2" );
+		final CacheHolder holder = new CacheHolder( "holder", item1 );
+
+		// create the 2 items and the holder
+		doInHibernate(this::sessionFactory, s -> {
+			s.save( item1 );
+			s.save( item2 );
+			s.save( holder );
+		});
+
+		try {
+			doInHibernate(this::sessionFactory, s -> {
+				CacheHolder cacheHolder = s.get(CacheHolder.class, "holder");
+				assertTrue("Relation was not fetched from L2 cache", cacheHolder.getItem() instanceof CachedItem1);
+			});
+		} finally {
+			// cleanup
+			doInHibernate(this::sessionFactory, s -> {
+				s.createQuery("DELETE FROM CacheHolder").executeUpdate();
+				s.createQuery("DELETE FROM AbstractCachedItem").executeUpdate();
+			});
+		}
 	}
 
 }

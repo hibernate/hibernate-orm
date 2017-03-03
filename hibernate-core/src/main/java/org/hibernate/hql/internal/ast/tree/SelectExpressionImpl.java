@@ -24,7 +24,7 @@ public class SelectExpressionImpl extends FromReferenceNode implements SelectExp
 		setText( text );
 	}
 
-	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent) throws SemanticException {
+	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent, AST parentPredicate) throws SemanticException {
 		// Generated select expressions are already resolved, nothing to do.
 		return;
 	}

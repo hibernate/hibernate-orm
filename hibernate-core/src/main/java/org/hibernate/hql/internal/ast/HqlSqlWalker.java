@@ -1023,6 +1023,11 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	@Override
 	protected void resolve(AST node) throws SemanticException {
+		resolve(node, null);
+	}
+
+	@Override
+	protected void resolve(AST node, AST predicateNode) throws SemanticException {
 		if ( node != null ) {
 			// This is called when it's time to fully resolve a path expression.
 			ResolvableNode r = (ResolvableNode) node;
@@ -1030,7 +1035,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				r.resolveInFunctionCall( false, true );
 			}
 			else {
-				r.resolve( false, true );    // Generate implicit joins, only if necessary.
+				r.resolve( false, true, null, null, predicateNode );    // Generate implicit joins, only if necessary.
 			}
 		}
 	}

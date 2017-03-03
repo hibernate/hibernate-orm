@@ -212,8 +212,15 @@ public class AttributeFactory {
 			}
 			case EMBEDDABLE: {
 				final Component component = (Component) typeContext.getValue();
+				Class javaType;
+				if ( component.getComponentClassName() == null ) {
+					javaType = typeContext.getBindableType();
+				}
+				else {
+					javaType = component.getComponentClass();
+				}
 				final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<Y>(
-						typeContext.getBindableType(),
+						javaType,
 						typeContext.getAttributeMetadata().getOwnerType(),
 						(ComponentType) typeContext.getValue().getType()
 				);

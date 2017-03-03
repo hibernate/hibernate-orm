@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.hql;
 
+import java.util.Collections;
 import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -15,6 +16,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
+import org.hibernate.hql.spi.QueryTranslator;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -23,11 +27,14 @@ import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 /**
  * @author Steve Ebersole, Jan Martiska
+ * @author Christian Beikov
  */
 public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
     @Override
@@ -140,6 +147,29 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
             Object[] noOnesRecord = result.get( 1 );
             assertNull( noOnesRecord[0] );
             assertNull( noOnesRecord[1] );
+        } );
+    }
+
+    @Test
+    @TestForIssue(jiraKey = "HHH-11538")
+    public void testNoImpliedJoinGeneratedForEqualityComparison() {
+        doInHibernate( this::sessionFactory, session -> {
+            final HQLQueryPlan plan = sessionFactory().getQueryPlanCache().getHQLQueryPlan(
+                    "select r.id, cust.name " +
+                            "from FinancialRecord r " +
+                            "	join Customer cust on r.customer = cust" +
+                            "   order by r.id",
+                    false,
+                    Collections.EMPTY_MAP
+            );
+            assertEquals( 1, plan.getTranslators().length );
+            final QueryTranslator translator = plan.getTranslators()[0];
+            final String generatedSql = translator.getSQLString();
+
+            int tableReferenceIndex = generatedSql.indexOf( " customer " );
+            assertNotEquals("Generated SQL doesn't contain a table reference for customer", -1, tableReferenceIndex );
+            int nextTableReferenceIndex = generatedSql.indexOf( " customer ", tableReferenceIndex + 1 );
+            assertEquals("Generated SQL wrongly joined customer twice", -1, nextTableReferenceIndex );
         } );
     }
 

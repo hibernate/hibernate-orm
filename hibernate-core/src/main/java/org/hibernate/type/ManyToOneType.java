@@ -83,6 +83,12 @@ public class ManyToOneType extends EntityType {
 		this.isLogicalOneToOne = isLogicalOneToOne;
 	}
 
+	public ManyToOneType(ManyToOneType original, String superTypeEntityName) {
+		super( original, superTypeEntityName );
+		this.ignoreNotFound = original.ignoreNotFound;
+		this.isLogicalOneToOne = original.isLogicalOneToOne;
+	}
+
 	@Override
 	protected boolean isNullable() {
 		return ignoreNotFound;

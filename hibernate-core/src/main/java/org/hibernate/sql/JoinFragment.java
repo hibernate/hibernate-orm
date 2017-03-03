@@ -77,6 +77,23 @@ public abstract class JoinFragment {
 	public abstract void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on);
 
 	/**
+	 * Adds a join, with an additional ON clause fragment
+	 *
+	 * @param tableName The name of the table to be joined
+	 * @param alias The alias to apply to the joined table
+	 * @param fkColumns The names of the columns which reference the joined table
+	 * @param pkColumns The columns in the joined table being referenced
+	 * @param joinType The type of join
+	 * @param on The additional ON fragment
+	 */
+	public void addJoin(String tableName, String alias, String[][] fkColumns, String[] pkColumns, JoinType joinType, String on) {
+		if ( fkColumns.length > 1 ) {
+			throw new UnsupportedOperationException( "The join fragment does not support multiple foreign key columns: " + getClass() );
+		}
+		addJoin( tableName, alias, fkColumns[0], pkColumns, joinType, on );
+	}
+
+	/**
 	 * Adds a cross join to the specified table.
 	 *
 	 * @param tableName The name of the table to be joined

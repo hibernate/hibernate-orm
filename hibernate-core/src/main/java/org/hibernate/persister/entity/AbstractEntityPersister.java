@@ -5492,6 +5492,37 @@ public abstract class AbstractEntityPersister
 		return attributeDefinitions;
 	}
 
+	public String[][] getPolymorphicJoinColumns(String lhsTableAlias, String propertyPath) {
+		Set<String> subclassEntityNames = (Set<String>) getEntityMetamodel()
+				.getSubclassEntityNames();
+		// We will collect all the join columns from the LHS subtypes here
+		List<String[]> polymorphicJoinColumns = new ArrayList<>( subclassEntityNames.size() );
+
+		String[] joinColumns = null;
+
+		OUTER:
+		for ( String subclassEntityName : subclassEntityNames ) {
+			AbstractEntityPersister subclassPersister = (AbstractEntityPersister) getFactory()
+					.getMetamodel()
+					.entityPersister( subclassEntityName );
+			joinColumns = subclassPersister.toColumns( lhsTableAlias, propertyPath );
+
+			if ( joinColumns.length == 0 ) {
+				// The subtype does not have a "concrete" mapping for the property path
+				continue;
+			}
+
+			// Check for duplicates like this since we will mostly have just a few candidates
+			for ( String[] existingColumns : polymorphicJoinColumns ) {
+				if ( Arrays.deepEquals( existingColumns, joinColumns ) ) {
+					continue OUTER;
+				}
+			}
+			polymorphicJoinColumns.add( joinColumns );
+		}
+
+		return ArrayHelper.to2DStringArray( polymorphicJoinColumns );
+	}
 
 	private void prepareEntityIdentifierDefinition() {
 		if ( entityIdentifierDefinition != null ) {

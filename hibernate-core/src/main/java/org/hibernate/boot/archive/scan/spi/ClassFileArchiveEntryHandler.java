@@ -61,7 +61,7 @@ public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 			return new ClassFile( dataInputStream );
 		}
 		catch (IOException e) {
-			throw new ArchiveException( "Could not build ClassFile" );
+			throw new ArchiveException( "Could not build ClassFile", e );
 		}
 		finally {
 			try {

@@ -1809,7 +1809,18 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 					secondPassCompileForeignKeys( referencedClass.getSuperclass().getTable(), done, buildingContext );
 				}
 
-				fk.setReferencedTable( referencedClass.getTable() );
+				// When an association refers to an abstract class where there is only one possible subclass, use the first physical table existing in the hierarchy
+				if ( referencedClass.isAbstract() != null && referencedClass.isAbstract() && referencedClass.getSubclassSpan() == 1 ) {
+					Iterator<PersistentClass> iter = referencedClass.getSubclassClosureIterator();
+					PersistentClass subclass = iter.next();
+					while ( iter.hasNext() && !subclass.getTable().isPhysicalTable() ) {
+						subclass = iter.next();
+					}
+					fk.setReferencedTable( subclass.getTable() );
+				}
+				else {
+					fk.setReferencedTable( referencedClass.getTable() );
+				}
 
 				Identifier nameIdentifier;
 

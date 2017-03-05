@@ -3,7 +3,7 @@
 
 Bootstrapping Hibernate as a JPA provider can be done in a JPA-spec compliant manner or using a proprietary
 bootstrapping approach.  The standardized approach has some limitations in certain environments.  But aside from
-those limitations, it is *highly* recommended that you use JPA-standardized boostrapping.
+those limitations, it is *highly* recommended that you use JPA-standardized bootstrapping.
 
 NOTE: Under the covers, all of Hibernate's JPA bootstrapping makes use of its core bootstrapping.  Be sure to see
 the _Native Bootstrapping_ guide as well.

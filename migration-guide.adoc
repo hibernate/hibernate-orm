@@ -64,7 +64,7 @@ implement JPA methods now in core I decided to implement more of a composition a
 
 In Hibernate 4.3, dialect implementations that did not support a limit offset would fetch all rows for a query and
 perform pagination in-memory.  This solution, while functional, could have severe performance penalties.  In 5.x,
-we prefered to favor performance optimizations which meant dialect implementations would throw an exception if a
+we preferred to favor performance optimizations which meant dialect implementations would throw an exception if a
 limit offset was specified but the dialect didn't support such syntax.
 
 As of 5.2.5.Final, we have introduced a new setting, `hibernate.legacy_limit_handler`, that is designed to allow
@@ -91,7 +91,7 @@ dialects remain unchanged, e.g. SQLServer2005Dialect.
 * todo : merge AvailableSettings together
 * org.hibernate.Transaction now extends JPA's EntityTransaction and follows its pre- and post- assertions.
 	e.g. begin() now throws an exception if transaction is already active.
-* (todo) following the above one, JPA also says that only PersistenceUnitTransactionType#JTA EntiytManagers
+* (todo) following the above one, JPA also says that only PersistenceUnitTransactionType#JTA EntityManagers
 	are allowed to access EntityTransactions.  Need a strategy to handle this
 * Session#getFlushMode and Query#getFlushMode clash in terms of Hibernate (FlushMode) and JPA (FlushModeType)
 	returns.  #getFlushMode has been altered to return JPA's FlushModeType.  The Hibernate FlushMode

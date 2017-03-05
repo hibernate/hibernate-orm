@@ -77,6 +77,7 @@ import org.hibernate.engine.transaction.jta.platform.internal.JRun4JtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.OC4JJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.OrionJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.SapNetWeaverJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
@@ -312,6 +313,13 @@ public class StrategySelectorBuilder {
 				ResinJtaPlatform.class,
 				"Resin",
 				"org.hibernate.service.jta.platform.internal.ResinJtaPlatform"
+		);
+
+		addJtaPlatforms(
+				strategySelector,
+				SapNetWeaverJtaPlatform.class,
+				"SapNetWeaver",
+				"org.hibernate.service.jta.platform.internal.SapNetWeaverJtaPlatform"
 		);
 
 		addJtaPlatforms(

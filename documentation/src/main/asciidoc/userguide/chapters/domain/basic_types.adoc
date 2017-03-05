@@ -46,7 +46,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |BlobType |BLOB |java.sql.Blob |blob, java.sql.Blob
 |ClobType |CLOB |java.sql.Clob |clob, java.sql.Clob
 |BinaryType |VARBINARY |byte[] |binary, byte[]
-|MaterializedBlobType |BLOB |byte[] |materized_blob
+|MaterializedBlobType |BLOB |byte[] |materialized_blob
 |ImageType |LONGVARBINARY |byte[] |image
 |WrapperBinaryType |VARBINARY |java.lang.Byte[] |wrapper-binary, Byte[], java.lang.Byte[]
 |CharArrayType |VARCHAR |char[] |characters, char[]

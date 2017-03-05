@@ -1811,7 +1811,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-order-by-example]
 === Read-only entities
 
 As explained in <<chapters/domain/immutability.adoc#entity-immutability,entity immutability>> section, fetching entities in read-only mode is much more efficient than fetching read-write entities.
-Even if the entities are mutable, you can still fetch them in read-only mode, and benefit from reducing the memory footprint and sepeding up the flushing process.
+Even if the entities are mutable, you can still fetch them in read-only mode, and benefit from reducing the memory footprint and speeding up the flushing process.
 
 Read-only entities are skipped by the dirty checking mechanism as illustrated by the following example:
 

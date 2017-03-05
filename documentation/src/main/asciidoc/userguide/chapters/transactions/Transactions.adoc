@@ -81,6 +81,7 @@ Hibernate provides many implementations of the `JtaPlatform` contract, all with 
 `OC4J`:: `JtaPlatform` for Oracle's OC4J container.
 `Orion`:: `JtaPlatform` for the Orion Application Server.
 `Resin`:: `JtaPlatform` for the Resin Application Server.
+`SapNetWeaver`:: `JtaPlatform` for the SAP NetWeaver Application Server.
 `SunOne`:: `JtaPlatform` for the SunOne Application Server.
 `Weblogic`:: `JtaPlatform` for the Weblogic Application Server.
 `WebSphere`:: `JtaPlatform` for older versions of the WebSphere Application Server.

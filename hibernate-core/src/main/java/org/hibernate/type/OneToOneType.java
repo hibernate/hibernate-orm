@@ -114,11 +114,6 @@ public class OneToOneType extends EntityType {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) {
-		//nothing to do
-	}
-
-	@Override
 	public boolean isOneToOne() {
 		return true;
 	}

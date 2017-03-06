@@ -28,6 +28,9 @@ import org.hibernate.test.annotations.Passport;
 import org.hibernate.test.annotations.Ticket;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -368,6 +371,38 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 
 			s.flush();
 			s.clear();
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-5757")
+	public void testHqlQuery() throws Exception {
+		//test a default one to one and a mappedBy in the other side
+		final Passport passport = TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Customer c = new Customer();
+			c.setName( "Hibernatus" );
+			Passport p = new Passport();
+			p.setNumber( "123456789" );
+			session.persist( c ); //we need the id to assigned it to passport
+			c.setPassport( p );
+			p.setOwner( c );
+			p.setId( c.getId() );
+			return p;
+		} );
+
+		final Customer customer = TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			final Customer c = (Customer) session.createQuery( "from Customer c where c.passport = :passport " )
+					.setParameter( "passport", passport ).getSingleResult();
+
+			assertThat( c, is( notNullValue() ) );
+			return c;
+		} );
+
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			final Passport p = (Passport) session.createQuery( "from Passport p where p.owner = :owner " )
+					.setParameter( "owner", customer ).getSingleResult();
+
+			assertThat( p, is( notNullValue() ) );
 		} );
 	}
 	

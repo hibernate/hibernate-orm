@@ -6,11 +6,13 @@
  */
 package org.hibernate.test.annotations.onetoone;
 
+import java.util.concurrent.atomic.AtomicReference;
 import javax.persistence.PersistenceException;
 
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.id.IdentifierGenerationException;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -105,6 +107,55 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 					_personAddress.getId()
 			);
 			assertNull( personAddress.getPerson() );
+
+			session.delete( personAddress );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-5757")
+	public void testBidirQueryEntityProperty() throws Exception {
+
+		AtomicReference<Person> personHolder = new AtomicReference<>();
+
+		PersonAddress _personAddress = doInHibernate(
+				this::sessionFactory,
+				session -> {
+					PersonAddress personAddress = new PersonAddress();
+					Person person = new Person();
+					personAddress.setPerson( person );
+					person.setPersonAddress( personAddress );
+
+					session.persist( person );
+					session.persist( personAddress );
+
+					personHolder.set( person );
+
+					return personAddress;
+				}
+		);
+
+		doInHibernate( this::sessionFactory, session -> {
+			PersonAddress personAddress = (PersonAddress) session.createCriteria(
+					PersonAddress.class )
+					.add( Restrictions.idEq( _personAddress.getId() ) )
+					.uniqueResult();
+			assertNotNull( personAddress );
+			assertNotNull( personAddress.getPerson() );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			Person person = personHolder.get();
+			// this call throws GenericJDBCException
+			PersonAddress personAddress = (PersonAddress) session.createQuery(
+					"select pa from PersonAddress pa where pa.person = :person", PersonAddress.class )
+					.setParameter( "person", person )
+					.getSingleResult();
+
+			// the other way should also work
+			person = (Person) session.createCriteria( Person.class )
+					.add( Restrictions.eq( "personAddress", personAddress ) )
+					.uniqueResult();
 
 			session.delete( personAddress );
 		} );

@@ -10,20 +10,20 @@ import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
-import org.hibernate.dialect.pagination.InformixLimitHandler;
+import org.hibernate.dialect.pagination.Informix10LimitHandler;
 import org.junit.Before;
 import static org.junit.Assert.assertEquals;
 
 public class InformixLimitHandlerTestCase extends
 		BaseNonConfigCoreFunctionalTestCase {
 
-	private InformixLimitHandler informixLimitHandler;
+	private Informix10LimitHandler informixLimitHandler;
 
 	private final String TEST_SQL = "SELECT field FROM table";
 
 	@Before
 	public void setup() {
-		informixLimitHandler = new InformixLimitHandler();
+		informixLimitHandler = Informix10LimitHandler.INSTANCE;
 	}
 
 	@Test

@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.dialect.pagination.InformixLimitHandler;
+import org.hibernate.dialect.pagination.Informix10LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 
 /**
@@ -16,7 +16,7 @@ public class Informix10Dialect extends InformixDialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return new InformixLimitHandler();
+		return Informix10LimitHandler.INSTANCE;
 	}
 	
 }

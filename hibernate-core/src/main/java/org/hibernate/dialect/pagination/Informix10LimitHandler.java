@@ -10,7 +10,13 @@ import java.util.Locale;
 
 import org.hibernate.engine.spi.RowSelection;
 
-public class InformixLimitHandler extends AbstractLimitHandler {
+public class Informix10LimitHandler extends AbstractLimitHandler {
+
+	public static Informix10LimitHandler INSTANCE = new Informix10LimitHandler();
+
+	private Informix10LimitHandler() {
+		// Disallow instantiation
+	}
 
 	@Override
 	public String processSql(String sql, RowSelection selection) {

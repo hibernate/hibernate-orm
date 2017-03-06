@@ -23,13 +23,6 @@
  */
 package org.hibernate.mapping;
 
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
-import javax.persistence.AttributeConverter;
-
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -53,8 +46,14 @@ import org.hibernate.type.descriptor.sql.NationalizedTypeMappings;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorRegistry;
 import org.hibernate.usertype.DynamicParameterizedType;
-
 import org.jboss.logging.Logger;
+
+import javax.persistence.AttributeConverter;
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * Any value that maps to columns.
@@ -104,17 +103,17 @@ public class SimpleValue implements KeyValue {
 	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
 		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
 	}
-	
+
 	public void addColumn(Column column) {
 		if ( !columns.contains(column) ) columns.add(column);
 		column.setValue(this);
 		column.setTypeIndex( columns.size()-1 );
 	}
-	
+
 	public void addFormula(Formula formula) {
 		columns.add(formula);
 	}
-	
+
 	public boolean hasFormula() {
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {
@@ -163,13 +162,13 @@ public class SimpleValue implements KeyValue {
 
 	public IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect, 
-			String defaultCatalog, 
-			String defaultSchema, 
+			Dialect dialect,
+			String defaultCatalog,
+			String defaultSchema,
 			RootClass rootClass) throws MappingException {
-		
+
 		Properties params = new Properties();
-		
+
 		//if the hibernate-mapping did not specify a schema/catalog, use the defaults
 		//specified by properties - but note that if the schema/catalog were specified
 		//in hibernate-mapping, or as params, they will already be initialized and
@@ -180,23 +179,23 @@ public class SimpleValue implements KeyValue {
 		if ( defaultCatalog!=null ) {
 			params.setProperty(PersistentIdentifierGenerator.CATALOG, defaultCatalog);
 		}
-		
+
 		//pass the entity-name, if not a collection-id
 		if (rootClass!=null) {
 			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );
 			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, rootClass.getJpaEntityName() );
 		}
-		
+
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
 		//      splitting it up into schema/catalog/table names
 		String tableName = getTable().getQuotedName(dialect);
 		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
-		
+
 		//pass the column name (a generated id almost always has a single column)
 		String columnName = ( (Column) getColumnIterator().next() ).getQuotedName(dialect);
 		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
-		
+
 		if (rootClass!=null) {
 			StringBuilder tables = new StringBuilder();
 			Iterator iter = rootClass.getIdentityTables().iterator();
@@ -223,14 +222,14 @@ public class SimpleValue implements KeyValue {
 
 		identifierGeneratorFactory.setDialect( dialect );
 		return identifierGeneratorFactory.createIdentifierGenerator( identifierGeneratorStrategy, getType(), params );
-		
+
 	}
 
 	public boolean isUpdateable() {
 		//needed to satisfy KeyValue
 		return true;
 	}
-	
+
 	public FetchMode getFetchMode() {
 		return FetchMode.SELECT;
 	}
@@ -254,7 +253,7 @@ public class SimpleValue implements KeyValue {
 	public String getIdentifierGeneratorStrategy() {
 		return identifierGeneratorStrategy;
 	}
-	
+
 	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect) {
 		identifierGeneratorFactory.setDialect( dialect );
 		return identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy )
@@ -384,6 +383,13 @@ public class SimpleValue implements KeyValue {
 		type = buildAttributeConverterTypeAdapter();
 	}
 
+	public void setupConverter () {
+		if ( this.typeName != null && this.attributeConverterDefinition != null ) {
+			type = buildAttributeConverterTypeAdapter();
+		}
+	}
+
+
 	/**
 	 * Build a Hibernate Type that incorporates the JPA AttributeConverter.  AttributeConverter works totally in
 	 * memory, meaning it converts between one Java representation (the entity attribute representation) and another
@@ -477,20 +483,20 @@ public class SimpleValue implements KeyValue {
 	public void setTypeParameters(Properties parameterMap) {
 		this.typeParameters = parameterMap;
 	}
-	
+
 	public Properties getTypeParameters() {
 		return typeParameters;
 	}
 
 	@Override
-    public String toString() {
+	public String toString() {
 		return getClass().getName() + '(' + columns.toString() + ')';
 	}
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
-	
+
 	public boolean[] getColumnInsertability() {
 		boolean[] result = new boolean[ getColumnSpan() ];
 		int i = 0;
@@ -501,7 +507,7 @@ public class SimpleValue implements KeyValue {
 		}
 		return result;
 	}
-	
+
 	public boolean[] getColumnUpdateability() {
 		return getColumnInsertability();
 	}
@@ -557,7 +563,7 @@ public class SimpleValue implements KeyValue {
 		private final String[] columns;
 
 		private ParameterTypeImpl(Class returnedClass, Annotation[] annotationsMethod, String catalog, String schema,
-				String table, boolean primaryKey, String[] columns) {
+								  String table, boolean primaryKey, String[] columns) {
 			this.returnedClass = returnedClass;
 			this.annotationsMethod = annotationsMethod;
 			this.catalog = catalog;

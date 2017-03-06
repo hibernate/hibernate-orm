@@ -23,8 +23,7 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.Properties;
-
+import org.dom4j.Element;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.mapping.SimpleValue;
@@ -34,9 +33,10 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.usertype.DynamicParameterizedType;
 
-import org.dom4j.Element;
+import java.util.Properties;
 
 /**
  * Generates metadata for basic properties: immutable types (including enums).
@@ -57,9 +57,16 @@ public final class BasicMetadataGenerator {
 				final boolean addNestedType = (value instanceof SimpleValue)
 						&& ((SimpleValue) value).getTypeParameters() != null;
 
-				String typeName = type.getName();
-				if ( typeName == null ) {
-					typeName = type.getClass().getName();
+				String typeName = null;
+				if ( type instanceof AttributeConverterTypeAdapter) {
+					typeName = String.format(":%s[%s]",
+							( (AttributeConverterTypeAdapter<?>) type ).getAttributeConverter().getClass().getName(),
+							( (AttributeConverterTypeAdapter<?>) type ).getModelType().getName());
+				} else {
+					typeName = type.getName();
+					if ( typeName == null ) {
+						typeName = type.getClass().getName();
+					}
 				}
 
 				final Element propMapping = MetadataTools.addProperty(

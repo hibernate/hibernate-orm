@@ -8,15 +8,14 @@ package org.hibernate.test.annotations.onetoone;
 
 import javax.persistence.PersistenceException;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.id.IdentifierGenerationException;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -31,84 +30,84 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 	// @OneToOne(mappedBy="address") with foreign generator
 	@Test
 	public void testBidirForeignIdGenerator() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		OwnerAddress address = new OwnerAddress();
-		address.setOwner( null );
 		try {
-			s.persist( address );
-			s.flush();
-			fail( "should have failed with IdentifierGenerationException" );
+			doInHibernate( this::sessionFactory, session -> {
+				OwnerAddress address = new OwnerAddress();
+				address.setOwner( null );
+
+				session.persist( address );
+				session.flush();
+				fail( "should have failed with IdentifierGenerationException" );
+			} );
 		}
 		catch (PersistenceException ex) {
-			assertTyping(IdentifierGenerationException.class, ex.getCause());
+			assertTyping( IdentifierGenerationException.class, ex.getCause() );
 			// expected
 		}
-		finally {
-			tx.rollback();
-		}
-		s.close();
 	}
 
 	@Test
 	public void testBidirAssignedId() throws Exception {
-		Session s = openSession();
-		s.getTransaction().begin();
-		PartyAffiliate affiliate = new PartyAffiliate();
-		affiliate.partyId = "id";
+		doInHibernate( this::sessionFactory, session -> {
+			PartyAffiliate affiliate = new PartyAffiliate();
+			affiliate.partyId = "id";
 
-		s.persist( affiliate );
-		s.getTransaction().commit();
+			session.persist( affiliate );
+		} );
 
-		s.clear();
+		doInHibernate( this::sessionFactory, session -> {
+			PartyAffiliate affiliate = (PartyAffiliate) session.createCriteria(
+					PartyAffiliate.class )
+					.add( Restrictions.idEq( "id" ) )
+					.uniqueResult();
+			assertNotNull( affiliate );
+			assertEquals( "id", affiliate.partyId );
+			assertNull( affiliate.party );
+		} );
 
-		Transaction tx = s.beginTransaction();
+		doInHibernate( this::sessionFactory, session -> {
+			PartyAffiliate affiliate = session.get(
+					PartyAffiliate.class,
+					"id"
+			);
+			assertNull( affiliate.party );
 
-		affiliate = ( PartyAffiliate ) s.createCriteria(PartyAffiliate.class)
-				.add( Restrictions.idEq( "id" ) )
-				.uniqueResult();
-		assertNotNull( affiliate );
-		assertEquals( "id", affiliate.partyId );
-		assertNull( affiliate.party );
-
-		s.clear();
-
-		affiliate = ( PartyAffiliate ) s.get( PartyAffiliate.class, "id" );
-		assertNull( affiliate.party );
-
-		s.delete( affiliate );
-		tx.commit();
-		s.close();
+			session.delete( affiliate );
+		} );
 	}
 
 	@Test
 	public void testBidirDefaultIdGenerator() throws Exception {
-		Session s = openSession();
-		s.getTransaction().begin();
-		PersonAddress personAddress = new PersonAddress();
-		personAddress.setPerson( null );
+		PersonAddress _personAddress = doInHibernate(
+				this::sessionFactory,
+				session -> {
+					PersonAddress personAddress = new PersonAddress();
+					personAddress.setPerson( null );
 
-		s.persist( personAddress );
-		s.getTransaction().commit();
+					session.persist( personAddress );
 
-		s.clear();
+					return personAddress;
+				}
+		);
 
-		Transaction tx = s.beginTransaction();
+		doInHibernate( this::sessionFactory, session -> {
+			PersonAddress personAddress = (PersonAddress) session.createCriteria(
+					PersonAddress.class )
+					.add( Restrictions.idEq( _personAddress.getId() ) )
+					.uniqueResult();
+			assertNotNull( personAddress );
+			assertNull( personAddress.getPerson() );
+		} );
 
-		personAddress = ( PersonAddress ) s.createCriteria(PersonAddress.class)
-				.add( Restrictions.idEq( personAddress.getId() ) )
-				.uniqueResult();
-		assertNotNull( personAddress );
-		assertNull( personAddress.getPerson() );
+		doInHibernate( this::sessionFactory, session -> {
+			PersonAddress personAddress = session.get(
+					PersonAddress.class,
+					_personAddress.getId()
+			);
+			assertNull( personAddress.getPerson() );
 
-		s.clear();
-
-		personAddress = ( PersonAddress ) s.get( PersonAddress.class, personAddress.getId() );
-		assertNull( personAddress.getPerson() );
-
-		s.delete( personAddress );
-		tx.commit();
-		s.close();
+			session.delete( personAddress );
+		} );
 	}
 
 	@Override

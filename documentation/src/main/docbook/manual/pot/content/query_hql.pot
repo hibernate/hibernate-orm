@@ -339,7 +339,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "would result in a query that would require four table joins in SQL."
+msgid "would result in a query that would require four table joins in SQL (assuming the tables are foo, bar, baz, customer and address)."
 msgstr ""
 
 #. Tag: para

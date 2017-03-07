@@ -1043,6 +1043,7 @@ public class ModelBinder {
 		}
 
 		rootEntityDescriptor.setVersion( prop );
+		rootEntityDescriptor.setDeclaredVersion( prop );
 		rootEntityDescriptor.addProperty( prop );
 	}
 

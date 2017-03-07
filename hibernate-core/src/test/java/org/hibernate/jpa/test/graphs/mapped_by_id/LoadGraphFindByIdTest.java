@@ -15,6 +15,7 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -111,7 +112,8 @@ public class LoadGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
 		private Integer commentCount;
 	}
 
-	@Entity(name = "Users")
+	@Entity(name = "User")
+	@Table(name = "USERS")
 	public static class User {
 
 		@Id

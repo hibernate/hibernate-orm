@@ -11,6 +11,8 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -54,6 +56,14 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 		s.createQuery("delete from Person").executeUpdate();
 		t.commit();
 		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11549")
+	public void testMetamodelContainsHbmVersion() {
+		try (Session session = openSession()) {
+			session.getMetamodel().entity( Person.class ).getAttribute( "version" );
+		}
 	}
 	
 	@Test

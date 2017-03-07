@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -37,6 +38,47 @@ public class ReflectHelperTest {
 		ON,
 		OFF
 	}
+
+	interface A {
+		Integer getId();
+		void setId(Integer id);
+	}
+
+	interface B extends A {
+		String getName();
+	}
+
+	interface C extends B {
+		String getData();
+	}
+
+	class D implements C {
+
+		@Override
+		public Integer getId() {
+			return null;
+		}
+
+		@Override
+		public void setId(Integer id) {
+
+		}
+
+		@Override
+		public String getName() {
+			return null;
+		}
+
+		@Override
+		public String getData() {
+			return null;
+		}
+	}
+
+	class E extends D {
+
+	}
+
 
 	private SessionFactoryImplementor sessionFactoryImplementorMock;
 
@@ -133,5 +175,20 @@ public class ReflectHelperTest {
 		Object value = ReflectHelper.getConstantValue( "org.hibernate.internal.util.hib3rnat3.C0nst4nts३.ABC_DEF", sessionFactoryImplementorMock);
 		assertEquals( C0nst4nts३.ABC_DEF, value );
 		verify(classLoaderServiceMock, times(1)).classForName( eq("org.hibernate.internal.util.hib3rnat3.C0nst4nts३") );
+	}
+
+	@Test
+	public void test_getMethod_nestedInterfaces() {
+		assertNotNull( ReflectHelper.findGetterMethod( C.class, "id" ) );
+	}
+
+	@Test
+	public void test_getMethod_superclass() {
+		assertNotNull( ReflectHelper.findGetterMethod( E.class, "id" ) );
+	}
+
+	@Test
+	public void test_setMethod_nestedInterfaces() {
+		assertNotNull( ReflectHelper.findSetterMethod( C.class, "id", Integer.class ) );
 	}
 }

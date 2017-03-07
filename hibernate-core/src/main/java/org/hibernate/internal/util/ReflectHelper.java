@@ -31,6 +31,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 @SuppressWarnings("unchecked")
 public final class ReflectHelper {
@@ -407,12 +408,7 @@ public final class ReflectHelper {
 
 		// if no getter found yet, check all implemented interfaces
 		if ( getter == null ) {
-			for ( Class theInterface : containerClass.getInterfaces() ) {
-				getter = getGetterOrNull( theInterface, propertyName );
-				if ( getter != null ) {
-					break;
-				}
-			}
+			getter = getGetterOrNull( containerClass.getInterfaces(), propertyName );
 		}
 
 		if ( getter == null ) {
@@ -427,6 +423,19 @@ public final class ReflectHelper {
 		}
 
 		getter.setAccessible( true );
+		return getter;
+	}
+
+	private static Method getGetterOrNull(Class[] interfaces, String propertyName) {
+		Method getter = null;
+		for ( int i = 0; getter == null && i < interfaces.length; ++i ) {
+			final Class anInterface = interfaces[i];
+			getter = getGetterOrNull( anInterface, propertyName );
+			if ( getter == null ) {
+				// if no getter found yet, check all implemented interfaces of interface
+				getter = getGetterOrNull( anInterface.getInterfaces(), propertyName );
+			}
+		}
 		return getter;
 	}
 
@@ -539,12 +548,13 @@ public final class ReflectHelper {
 
 		// if no setter found yet, check all implemented interfaces
 		if ( setter == null ) {
-			for ( Class theInterface : containerClass.getInterfaces() ) {
-				setter = setterOrNull( theInterface, propertyName, propertyType );
-				if ( setter != null ) {
-					break;
-				}
-			}
+			setter = setterOrNull( containerClass.getInterfaces(), propertyName, propertyType );
+//			for ( Class theInterface : containerClass.getInterfaces() ) {
+//				setter = setterOrNull( theInterface, propertyName, propertyType );
+//				if ( setter != null ) {
+//					break;
+//				}
+//			}
 		}
 
 		if ( setter == null ) {
@@ -559,6 +569,19 @@ public final class ReflectHelper {
 		}
 
 		setter.setAccessible( true );
+		return setter;
+	}
+
+	private static Method setterOrNull(Class[] interfaces, String propertyName, Class propertyType) {
+		Method setter = null;
+		for ( int i = 0; setter == null && i < interfaces.length; ++i ) {
+			final Class anInterface = interfaces[i];
+			setter = setterOrNull( anInterface, propertyName, propertyType );
+			if ( setter == null ) {
+				// if no setter found yet, check all implemented interfaces of interface
+				setter = setterOrNull( anInterface.getInterfaces(), propertyName, propertyType );
+			}
+		}
 		return setter;
 	}
 

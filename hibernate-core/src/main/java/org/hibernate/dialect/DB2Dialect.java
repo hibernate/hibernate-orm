@@ -6,12 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Locale;
-
 import org.hibernate.JDBCException;
 import org.hibernate.MappingException;
 import org.hibernate.NullPrecedence;
@@ -41,6 +35,12 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Locale;
 
 /**
  * An SQL dialect for DB2.
@@ -348,7 +348,7 @@ public class DB2Dialect extends Dialect {
 			default:
 				literal = "0";
 		}
-		return "nullif(" + literal + ',' + literal + ')';
+		return "nullif(" + literal + ", " + literal + ')';
 	}
 
 	@Override

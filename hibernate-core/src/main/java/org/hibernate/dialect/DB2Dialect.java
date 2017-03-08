@@ -348,7 +348,7 @@ public class DB2Dialect extends Dialect {
 			default:
 				literal = "0";
 		}
-		return "nullif(" + literal + ',' + literal + ')';
+		return "nullif(" + literal + ", " + literal + ')';
 	}
 
 	@Override

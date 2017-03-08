@@ -140,7 +140,7 @@ public class EnhancerTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11173" )
-	@RequiresDialectFeature( value = DialectChecks.SupportsIdentityColumns.class)
+	@RequiresDialectFeature( DialectChecks.SupportsIdentityColumns.class)
 	public void testLazyCache() {
 		EnhancerTestUtils.runEnhancerTestTask( LazyInCacheTestTask.class );
 	}
@@ -179,6 +179,17 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@TestForIssue( jiraKey = "HHH-11155" )
 	public void testLazyGroupsUpdateSimple() {
 		EnhancerTestUtils.runEnhancerTestTask( SimpleLazyGroupUpdateTestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11506" )
+	public void testLazyGroupsUpdateWithoutDirtyChecking() {
+		EnhancerTestUtils.runEnhancerTestTask( SimpleLazyGroupUpdateTestTask.class , new EnhancerTestContext() {
+			@Override
+			public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
+				return false;
+			}
+		} );
 	}
 
 	@Test

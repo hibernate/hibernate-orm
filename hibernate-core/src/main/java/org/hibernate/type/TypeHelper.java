@@ -287,7 +287,6 @@ public class TypeHelper {
 			final Object[] currentState,
 			final Object[] previousState,
 			final boolean[][] includeColumns,
-			final boolean anyUninitializedProperties,
 			final SharedSessionContractImplementor session) {
 		int[] results = null;
 		int count = 0;
@@ -295,7 +294,7 @@ public class TypeHelper {
 
 		for ( int i = 0; i < span; i++ ) {
 			final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-					&& properties[i].isDirtyCheckable( anyUninitializedProperties )
+					&& properties[i].isDirtyCheckable()
 					&& properties[i].getType().isDirty( previousState[i], currentState[i], includeColumns[i], session );
 			if ( dirty ) {
 				if ( results == null ) {
@@ -337,7 +336,6 @@ public class TypeHelper {
 			final Object[] previousState,
 			final boolean[][] includeColumns,
 			final boolean[] includeProperties,
-			final boolean anyUninitializedProperties,
 			final SharedSessionContractImplementor session) {
 		int[] results = null;
 		int count = 0;
@@ -346,7 +344,7 @@ public class TypeHelper {
 		for ( int i = 0; i < span; i++ ) {
 			final boolean modified = currentState[ i ] != LazyPropertyInitializer.UNFETCHED_PROPERTY
 					&& includeProperties[ i ]
-					&& properties[ i ].isDirtyCheckable( anyUninitializedProperties )
+					&& properties[ i ].isDirtyCheckable()
 					&& properties[ i ].getType().isModified( previousState[ i ], currentState[ i ], includeColumns[ i ], session );
 			if ( modified ) {
 				if ( results == null ) {

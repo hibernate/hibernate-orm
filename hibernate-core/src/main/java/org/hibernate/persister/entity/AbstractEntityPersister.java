@@ -4206,7 +4206,6 @@ public abstract class AbstractEntityPersister
 				currentState,
 				previousState,
 				propertyColumnUpdateable,
-				hasUninitializedLazyProperties( entity ),
 				session
 		);
 		if ( props == null ) {
@@ -4237,7 +4236,6 @@ public abstract class AbstractEntityPersister
 				current,
 				old,
 				propertyColumnUpdateable,
-				hasUninitializedLazyProperties( entity ),
 				session
 		);
 		if ( props == null ) {

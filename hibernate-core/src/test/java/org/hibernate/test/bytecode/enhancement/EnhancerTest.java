@@ -14,7 +14,9 @@ import org.hibernate.test.bytecode.enhancement.lazy.group.SimpleLazyGroupUpdateT
 import org.hibernate.test.bytecode.enhancement.association.InheritedAttributeAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.otherentityentrycontext.OtherEntityEntryContextTestTask;
 import org.hibernate.test.bytecode.enhancement.cascade.CascadeWithFkConstraintTestTask;
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
@@ -122,6 +124,7 @@ public class EnhancerTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11173" )
+	@RequiresDialectFeature( DialectChecks.SupportsIdentityColumns.class)
 	public void testLazyCache() {
 		EnhancerTestUtils.runEnhancerTestTask( LazyInCacheTestTask.class );
 	}
@@ -160,6 +163,17 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@TestForIssue( jiraKey = "HHH-11155" )
 	public void testLazyGroupsUpdateSimple() {
 		EnhancerTestUtils.runEnhancerTestTask( SimpleLazyGroupUpdateTestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11506" )
+	public void testLazyGroupsUpdateWithoutDirtyChecking() {
+		EnhancerTestUtils.runEnhancerTestTask( SimpleLazyGroupUpdateTestTask.class , new EnhancerTestContext() {
+			@Override
+			public boolean doDirtyCheckingInline(CtClass classDescriptor) {
+				return false;
+			}
+		} );
 	}
 
 	@Test

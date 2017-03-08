@@ -39,6 +39,7 @@ import static org.hibernate.envers.internal.tools.EntityTools.getTargetClassIfPr
  * @author Adam Warski (adam at warski dot org)
  * @author Hern&aacute;n Chanfreau
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class AuditReaderImpl implements AuditReaderImplementor {
 	private final EnversService enversService;
@@ -109,10 +110,6 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 		checkPositive( revision, "Entity revision" );
 		checkSession();
 
-		if ( !enversService.getEntitiesConfigurations().isVersioned( entityName ) ) {
-			throw new NotAuditedException( entityName, entityName + " is not versioned!" );
-		}
-
 		if ( firstLevelCache.contains( entityName, revision, primaryKey ) ) {
 			return (T) firstLevelCache.get( entityName, revision, primaryKey );
 		}
@@ -156,10 +153,6 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 		checkNotNull( entityName, "Entity name" );
 		checkNotNull( primaryKey, "Primary key" );
 		checkSession();
-
-		if ( !enversService.getEntitiesConfigurations().isVersioned( entityName ) ) {
-			throw new NotAuditedException( entityName, entityName + " is not versioned!" );
-		}
 
 		return createQuery().forRevisionsOfEntity( cls, entityName, false, true )
 				.addProjection( AuditEntity.revisionNumber() )

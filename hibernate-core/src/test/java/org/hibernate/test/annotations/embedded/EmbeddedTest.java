@@ -22,6 +22,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.test.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.test.annotations.embedded.Leg.Frequency;
 import org.hibernate.test.util.SchemaUtil;
@@ -40,9 +41,7 @@ import static org.junit.Assert.assertTrue;
 public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testSimple() throws Exception {
-		Session s;
-		Transaction tx;
-		Person p = new Person();
+		Person person = new Person();
 		Address a = new Address();
 		Country c = new Country();
 		Country bornCountry = new Country();
@@ -54,28 +53,16 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		a.address1 = "colorado street";
 		a.city = "Springfield";
 		a.country = c;
-		p.address = a;
-		p.bornIn = bornCountry;
-		p.name = "Homer";
-		s = openSession();
-		tx = s.beginTransaction();
-		try {
-			s.persist( p );
-			tx.commit();
-		}
-		catch (Exception e) {
-			if ( tx != null && tx.isActive() ) {
-				tx.rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		person.address = a;
+		person.bornIn = bornCountry;
+		person.name = "Homer";
 
-		s = openSession();
-		tx = s.beginTransaction();
-		try {
-			p = (Person) s.get( Person.class, p.id );
+		TransactionUtil.doInHibernate( this::sessionFactory, session ->{
+			session.persist( person );
+		} );
+
+		TransactionUtil.doInHibernate( this::sessionFactory, session ->{
+			Person p = session.get( Person.class, person.id );
 			assertNotNull( p );
 			assertNotNull( p.address );
 			assertEquals( "Springfield", p.address.city );
@@ -83,24 +70,13 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals( "DM", p.address.country.getIso2() );
 			assertNotNull( p.bornIn );
 			assertEquals( "US", p.bornIn.getIso2() );
-			tx.commit();
-		}
-		catch (Exception e) {
-			if ( tx != null && tx.isActive() ) {
-				tx.rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		} );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8172")
 	public void testQueryWithEmbeddedIsNull() throws Exception {
-		Session s;
-		Transaction tx;
-		Person p = new Person();
+		Person person = new Person();
 		Address a = new Address();
 		Country c = new Country();
 		Country bornCountry = new Country();
@@ -112,44 +88,22 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		a.address1 = "colorado street";
 		a.city = "Springfield";
 		a.country = c;
-		p.address = a;
-		p.bornIn = bornCountry;
-		p.name = "Homer";
-		s = openSession();
-		tx = s.beginTransaction();
-		try {
-			s.persist( p );
-			tx.commit();
-		}
-		catch (Exception e) {
-			if ( tx != null && tx.isActive() ) {
-				tx.rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		person.address = a;
+		person.bornIn = bornCountry;
+		person.name = "Homer";
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			session.persist( person );
+		} );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		try {
-			p = (Person) s.createQuery( "from Person p where p.bornIn is null" ).uniqueResult();
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Person p = (Person) session.createQuery( "from Person p where p.bornIn is null" ).uniqueResult();
 			assertNotNull( p );
 			assertNotNull( p.address );
 			assertEquals( "Springfield", p.address.city );
 			assertNotNull( p.address.country );
 			assertEquals( "DM", p.address.country.getIso2() );
 			assertNull( p.bornIn );
-			tx.commit();
-		}
-		catch (Exception e) {
-			if ( tx != null && tx.isActive() ) {
-				tx.rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		} );
 	}
 
 	@Test
@@ -158,7 +112,7 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testQueryWithEmbeddedParameterAllNull() throws Exception {
 		Session s;
 		Transaction tx;
-		Person p = new Person();
+		Person person = new Person();
 		Address a = new Address();
 		Country c = new Country();
 		Country bornCountry = new Country();
@@ -168,29 +122,17 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		a.address1 = "colorado street";
 		a.city = "Springfield";
 		a.country = c;
-		p.address = a;
-		p.bornIn = bornCountry;
-		p.name = "Homer";
-		s = openSession();
-		tx = s.beginTransaction();
-		try {
-			s.persist( p );
-			tx.commit();
-		}
-		catch (Exception e) {
-			if ( tx != null && tx.isActive() ) {
-				tx.rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		person.address = a;
+		person.bornIn = bornCountry;
+		person.name = "Homer";
 
-		s = openSession();
-		tx = s.beginTransaction();
-		try {
-			p = (Person) s.createQuery( "from Person p where p.bornIn = :b" )
-					.setParameter( "b", p.bornIn )
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			session.persist( person );
+		} );
+
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Person p = (Person) session.createQuery( "from Person p where p.bornIn = :b" )
+					.setParameter( "b", person.bornIn )
 					.uniqueResult();
 			assertNotNull( p );
 			assertNotNull( p.address );
@@ -198,25 +140,14 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertNotNull( p.address.country );
 			assertEquals( "DM", p.address.country.getIso2() );
 			assertNull( p.bornIn );
-			tx.commit();
-		}
-		catch (Exception e) {
-			if ( tx != null && tx.isActive() ) {
-				tx.rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		} );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8172")
 	@FailureExpected(jiraKey = "HHH-8172")
 	public void testQueryWithEmbeddedParameterOneNull() throws Exception {
-		Session s;
-		Transaction tx;
-		Person p = new Person();
+		Person person = new Person();
 		Address a = new Address();
 		Country c = new Country();
 		Country bornCountry = new Country();
@@ -228,29 +159,17 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		a.address1 = "colorado street";
 		a.city = "Springfield";
 		a.country = c;
-		p.address = a;
-		p.bornIn = bornCountry;
-		p.name = "Homer";
-		s = openSession();
-		tx = s.beginTransaction();
-		try {
-			s.persist( p );
-			tx.commit();
-		}
-		catch (Exception e) {
-			if ( tx != null && tx.isActive() ) {
-				tx.rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		person.address = a;
+		person.bornIn = bornCountry;
+		person.name = "Homer";
 
-		s = openSession();
-		tx = s.beginTransaction();
-		try {
-			p = (Person) s.createQuery( "from Person p where p.bornIn = :b" )
-					.setParameter( "b", p.bornIn )
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			session.persist( person );
+		} );
+
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Person p = (Person) session.createQuery( "from Person p where p.bornIn = :b" )
+					.setParameter( "b", person.bornIn )
 					.uniqueResult();
 			assertNotNull( p );
 			assertNotNull( p.address );
@@ -259,24 +178,13 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals( "DM", p.address.country.getIso2() );
 			assertEquals( "US", p.bornIn.getIso2() );
 			assertNull( p.bornIn.getName() );
-			tx.commit();
-		}
-		catch (Exception e) {
-			if ( tx != null && tx.isActive() ) {
-				tx.rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		} );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8172")
 	public void testQueryWithEmbeddedWithNullUsingSubAttributes() throws Exception {
-		Session s;
-		Transaction tx;
-		Person p = new Person();
+		Person person = new Person();
 		Address a = new Address();
 		Country c = new Country();
 		Country bornCountry = new Country();
@@ -288,32 +196,19 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		a.address1 = "colorado street";
 		a.city = "Springfield";
 		a.country = c;
-		p.address = a;
-		p.bornIn = bornCountry;
-		p.name = "Homer";
-		s = openSession();
-		tx = s.beginTransaction();
-		try {
-			s.persist( p );
-			tx.commit();
-		}
-		catch (Exception e) {
-			if ( tx != null && tx.isActive() ) {
-				tx.rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		person.address = a;
+		person.bornIn = bornCountry;
+		person.name = "Homer";
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			session.persist( person );
+		} );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		try {
-			p = (Person) s.createQuery( "from Person p " +
-												"where ( p.bornIn.iso2 is null or p.bornIn.iso2 = :i ) and " +
-												"( p.bornIn.name is null or p.bornIn.name = :n )"
-			).setParameter( "i", p.bornIn.getIso2() )
-					.setParameter( "n", p.bornIn.getName() )
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Person p = (Person) session.createQuery( "from Person p " +
+															 "where ( p.bornIn.iso2 is null or p.bornIn.iso2 = :i ) and " +
+															 "( p.bornIn.name is null or p.bornIn.name = :n )"
+			).setParameter( "i", person.bornIn.getIso2() )
+					.setParameter( "n", person.bornIn.getName() )
 					.uniqueResult();
 			assertNotNull( p );
 			assertNotNull( p.address );
@@ -322,16 +217,7 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals( "DM", p.address.country.getIso2() );
 			assertEquals( "US", p.bornIn.getIso2() );
 			assertNull( p.bornIn.getName() );
-			tx.commit();
-		}
-		catch (Exception e) {
-			if ( tx != null && tx.isActive() ) {
-				tx.rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		} );
 	}
 
 	@Test

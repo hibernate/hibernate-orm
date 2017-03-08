@@ -4053,6 +4053,7 @@ public class FooBarTest extends LegacyTestCase {
 		}
 		catch (Exception e) {
 			s.getTransaction().rollback();
+			throw e;
 		}
 		finally {
 			s.close();

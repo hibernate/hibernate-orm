@@ -12,7 +12,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.Session;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -25,6 +24,7 @@ import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialects;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,38 +46,16 @@ public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 
 	@Before
 	public void setUp() {
-		Session s = openSession();
-		try {
-			s.getTransaction().begin();
-			s.createSQLQuery( "CREATE VIEW test_synonym AS SELECT * FROM test_entity" ).executeUpdate();
-			s.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( s.getTransaction().isActive() ) {
-				s.getTransaction().rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			session.createSQLQuery( "CREATE VIEW test_synonym AS SELECT * FROM test_entity" ).executeUpdate();
+		} );
 	}
 
 	@After
 	public void tearDown() {
-		Session s = openSession();
-		try {
-			s.getTransaction().begin();
-			s.createSQLQuery( "DROP VIEW test_synonym CASCADE" ).executeUpdate();
-			s.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( s.getTransaction().isActive() ) {
-				s.getTransaction().rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			session.createSQLQuery( "DROP VIEW test_synonym CASCADE" ).executeUpdate();
+		} );
 	}
 
 	@Test

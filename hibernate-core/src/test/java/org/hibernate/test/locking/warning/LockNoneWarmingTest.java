@@ -24,7 +24,6 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.LockMode;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.Loader;
 import org.hibernate.query.Query;
@@ -39,6 +38,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.transaction.TransactionUtil;
 
 import static org.junit.Assert.assertFalse;
 
@@ -61,27 +61,17 @@ public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Before
-	public void setUp(){
+	public void setUp() {
 		buildSessionFactory();
-		final Set messagesPrefixes = new HashSet<>(  );
+		final Set messagesPrefixes = new HashSet<>();
 		messagesPrefixes.add( "HHH000444" );
 		messagesPrefixes.add( "HHH000445" );
 		triggerable = logInspection.watchForLogMessages( messagesPrefixes );
-		try (Session s = openSession();) {
-			Transaction tx = s.beginTransaction();
-			try {
-				Item item = new Item();
-				item.name = "ZZZZ";
-				s.persist( item );
-
-				tx.commit();
-			}
-			catch (Exception e) {
-				if ( tx.isActive() ) {
-					tx.rollback();
-				}
-			}
-		}
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Item item = new Item();
+			item.name = "ZZZZ";
+			session.persist( item );
+		} );
 	}
 
 	@After

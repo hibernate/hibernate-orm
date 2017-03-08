@@ -86,12 +86,12 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 
 			Investor inv = (Investor) sess.get( Investor.class, 2L );
 			assertEquals( new BigDecimal( "100" ), inv.getInvestments().get( 0 ).getAmount().getAmount() );
-
-			sess.close();
 		}catch (Exception e){
 			sess.getTransaction().rollback();
+			throw e;
 		}
 		finally {
+			sess.close();
 			sf.close();
 		}
 	}

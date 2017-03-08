@@ -1451,11 +1451,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.createQuery( "from Human h where ('John', 'X', 'Doe') = h.name" ).list();
 		s.createQuery( "from Human h where ('John', 'X', 'Doe') <> h.name" ).list();
 
-		// HANA only allows '=' and '<>'/'!='
-		if ( ! ( getDialect() instanceof AbstractHANADialect ) ) {
-			s.createQuery( "from Human h where ('John', 'X', 'Doe') >= h.name" ).list();
-		}
-
 		s.createQuery( "from Human h order by h.name" ).list();
 
 		s.getTransaction().commit();

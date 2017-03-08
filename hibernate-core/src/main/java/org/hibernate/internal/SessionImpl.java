@@ -230,8 +230,8 @@ public final class SessionImpl
 	// todo : (5.2) HEM always initialized this.  Is that really needed?
 	private LockOptions lockOptions = new LockOptions();
 
-	private transient boolean autoClear;
-	private transient boolean autoClose;
+	private boolean autoClear;
+	private boolean autoClose;
 
 	private transient int dontFlushFromFind;
 	private transient boolean disallowOutOfTransactionUpdateOperations;
@@ -3888,5 +3888,10 @@ public final class SessionImpl
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
 			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) ).afterDeserialize( getFactory() );
 		}
+
+		initializeFromSessionOwner( null );
+
+		this.disallowOutOfTransactionUpdateOperations = !getFactory().getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
+		this.discardOnClose = getFactory().getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
 	}
 }

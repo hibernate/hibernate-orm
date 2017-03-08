@@ -131,7 +131,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private transient Boolean useStreamForLobBinding;
 	private transient long timestamp;
 
-	private transient Integer jdbcBatchSize;
+	private Integer jdbcBatchSize;
 
 	protected transient ExceptionConverter exceptionConverter;
 
@@ -1063,5 +1063,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				.buildTransactionCoordinator( jdbcCoordinator, this );
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
+		exceptionConverter = new ExceptionConverterImpl( this );
 	}
 }

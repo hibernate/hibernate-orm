@@ -9,20 +9,6 @@
 
 package org.hibernate.cfg;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import javax.persistence.Access;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Transient;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.ManyToAny;
@@ -35,8 +21,10 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.cfg.annotations.HCANNHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-
 import org.jboss.logging.Logger;
+
+import javax.persistence.*;
+import java.util.*;
 
 /**
  * A helper class to keep the {@code XProperty}s of a class ordered by access type.
@@ -63,7 +51,7 @@ class PropertyContainer {
 	 */
 	private final AccessType classLevelAccessType;
 
-	private final TreeMap<String, XProperty> persistentAttributeMap;
+	private final Map<String, XProperty> persistentAttributeMap = new LinkedHashMap<>();
 
 	PropertyContainer(XClass clazz, XClass entityAtStake, AccessType defaultClassLevelAccessType) {
 		this.xClass = clazz;
@@ -83,8 +71,6 @@ class PropertyContainer {
 				: defaultClassLevelAccessType;
 		assert classLevelAccessType == AccessType.FIELD || classLevelAccessType == AccessType.PROPERTY;
 
-		this.persistentAttributeMap = new TreeMap<String, XProperty>();
-
 		final List<XProperty> fields = xClass.getDeclaredProperties( AccessType.FIELD.getType() );
 		final List<XProperty> getters = xClass.getDeclaredProperties( AccessType.PROPERTY.getType() );
 
@@ -93,13 +79,11 @@ class PropertyContainer {
 		final Map<String,XProperty> persistentAttributesFromGetters = new HashMap<String, XProperty>();
 
 		collectPersistentAttributesUsingLocalAccessType(
-				persistentAttributeMap,
 				persistentAttributesFromGetters,
 				fields,
 				getters
 		);
 		collectPersistentAttributesUsingClassLevelAccessType(
-				persistentAttributeMap,
 				persistentAttributesFromGetters,
 				fields,
 				getters
@@ -125,8 +109,7 @@ class PropertyContainer {
 	}
 
 	private void collectPersistentAttributesUsingLocalAccessType(
-			TreeMap<String, XProperty> persistentAttributeMap,
-			Map<String,XProperty> persistentAttributesFromGetters,
+			Map<String, XProperty> persistentAttributesFromGetters,
 			List<XProperty> fields,
 			List<XProperty> getters) {
 
@@ -177,8 +160,7 @@ class PropertyContainer {
 	}
 
 	private void collectPersistentAttributesUsingClassLevelAccessType(
-			TreeMap<String, XProperty> persistentAttributeMap,
-			Map<String,XProperty> persistentAttributesFromGetters,
+			Map<String, XProperty> persistentAttributesFromGetters,
 			List<XProperty> fields,
 			List<XProperty> getters) {
 		if ( classLevelAccessType == AccessType.FIELD ) {

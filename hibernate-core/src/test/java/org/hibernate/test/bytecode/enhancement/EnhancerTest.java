@@ -8,6 +8,9 @@ package org.hibernate.test.bytecode.enhancement;
 
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 
+import org.hibernate.bytecode.enhance.spi.UnloadedField;
+import org.hibernate.test.bytecode.enhancement.merge.MergeEnhancedEntityTestTask;
+import org.hibernate.test.bytecode.enhancement.merge.RefreshEnhancedEntityTestTask;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -92,6 +95,13 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@TestForIssue( jiraKey = "HHH-11426" )
 	public void testDetached() {
 		EnhancerTestUtils.runEnhancerTestTask( DetachedGetIdentifierTestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11459" )
+	public void testMergeRefresh() {
+		EnhancerTestUtils.runEnhancerTestTask( MergeEnhancedEntityTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( RefreshEnhancedEntityTestTask.class );
 	}
 
 	@Test

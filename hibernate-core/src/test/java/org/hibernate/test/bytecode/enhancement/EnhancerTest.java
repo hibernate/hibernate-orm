@@ -11,6 +11,8 @@ import javassist.CtClass;
 import org.hibernate.test.bytecode.enhancement.association.inherited.InheritedAttributeAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.otherentityentrycontext.OtherEntityEntryContextTestTask;
 import org.hibernate.test.bytecode.enhancement.cascade.CascadeWithFkConstraintTestTask;
+import org.hibernate.test.bytecode.enhancement.merge.MergeEnhancedEntityTestTask;
+import org.hibernate.test.bytecode.enhancement.merge.RefreshEnhancedEntityTestTask;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -74,6 +76,13 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@Test
 	public void testDirty() {
 		EnhancerTestUtils.runEnhancerTestTask( DirtyTrackingTestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11459" )
+	public void testMergeRefresh() {
+		EnhancerTestUtils.runEnhancerTestTask( MergeEnhancedEntityTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( RefreshEnhancedEntityTestTask.class );
 	}
 
 	@Test

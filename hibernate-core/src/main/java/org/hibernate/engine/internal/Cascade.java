@@ -11,13 +11,17 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
@@ -92,10 +96,30 @@ public final class Cascade {
 				if ( style.doCascade( action ) ) {
 					Object child;
 
-					// For bytecode enhanced entities, need to fetch the attribute
-					if ( hasUninitializedLazyProperties && persister.getPropertyLaziness()[i] && action.performOnLazyProperty() ) {
-						LazyAttributeLoadingInterceptor interceptor = persister.getInstrumentationMetadata().extractInterceptor( parent );
-						child = interceptor.fetchAttribute( parent, propertyName );
+					if ( hasUninitializedLazyProperties &&
+							!Hibernate.isPropertyInitialized( parent, propertyName ) ) {
+						// parent is a bytecode enhanced entity.
+						// cascading to an uninitialized, lazy value.
+						if ( types[i].isCollectionType() ) {
+							// The collection does not need to be loaded from the DB.
+							// CollectionType#resolve will return an uninitialized PersistentCollection.
+							// The action will initialize the collection later, if necessary.
+							child = types[i].resolve( LazyPropertyInitializer.UNFETCHED_PROPERTY, eventSource, parent );
+							// TODO: it would be nice to be able to set the attribute in parent using
+							// persister.setPropertyValue( parent, i, child ).
+							// Unfortunately, that would cause the uninitialized collection to be
+							// loaded from the DB.
+						}
+						else if ( action.performOnLazyProperty() ) {
+							// The (non-collection) attribute needs to be initialized so that
+							// the action can be performed on the initialized attribute.
+							LazyAttributeLoadingInterceptor interceptor = persister.getInstrumentationMetadata().extractInterceptor( parent );
+							child = interceptor.fetchAttribute( parent, propertyName );
+						}
+						else {
+							// Nothing to do, so just skip cascading to this lazy (non-collection) attribute.
+							continue;
+						}
 					}
 					else {
 						child = persister.getPropertyValue( parent, i );

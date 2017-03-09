@@ -14,6 +14,8 @@ import org.hibernate.test.bytecode.enhancement.lazy.group.SimpleLazyGroupUpdateT
 import org.hibernate.test.bytecode.enhancement.association.InheritedAttributeAssociationTestTask;
 import org.hibernate.test.bytecode.enhancement.otherentityentrycontext.OtherEntityEntryContextTestTask;
 import org.hibernate.test.bytecode.enhancement.cascade.CascadeWithFkConstraintTestTask;
+import org.hibernate.test.bytecode.enhancement.merge.MergeEnhancedEntityTestTask;
+import org.hibernate.test.bytecode.enhancement.merge.RefreshEnhancedEntityTestTask;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -83,6 +85,13 @@ public class EnhancerTest extends BaseUnitTestCase {
 	@Test
 	public void testDirty() {
 		EnhancerTestUtils.runEnhancerTestTask( DirtyTrackingTestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11459" )
+	public void testMergeRefresh() {
+		EnhancerTestUtils.runEnhancerTestTask( MergeEnhancedEntityTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( RefreshEnhancedEntityTestTask.class );
 	}
 
 	@Test

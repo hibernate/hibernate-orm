@@ -512,12 +512,12 @@ public class AuditedPropertiesReader {
 			}
 		}
 
-		validateLobMappingSupport( property );
-
 		final String propertyName = propertyNamePrefix + property.getName();
 		if ( !this.checkAudited( property, propertyData,propertyName, allClassAudited, globalCfg.getModifiedFlagSuffix() ) ) {
 			return false;
 		}
+
+		validateLobMappingSupport( property );
 
 		propertyData.setName( propertyName );
 		propertyData.setBeanName( property.getName() );

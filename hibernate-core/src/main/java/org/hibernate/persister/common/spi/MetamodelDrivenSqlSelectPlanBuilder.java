@@ -17,14 +17,12 @@ import org.hibernate.sql.convert.spi.SqlSelectPlan;
  */
 public interface MetamodelDrivenSqlSelectPlanBuilder extends NavigableVisitationStrategy {
 	/**
-	 * Build the SqlSelectPlan, driven by mapping model, with the given NavigableSource as query root
-	 * leveraging the NavigableVisitationStrategy visitor contract.  The mapping model along with the
-	 * passed parameters indicate the shape of the SelectQuery AST as well as the shape of the results
-	 * as indicated by the query Return graphs
+	 * Build the SqlSelectPlan, driven by mapping model, with the given
+	 * NavigableSource as query root..  The mapping model indicates the shape
+	 * of the SelectQuery AST ({@link SqlSelectPlan#getSqlSelectAst}) as well as the shape of the results
+	 * as indicated by the query Return graphs ({@link SqlSelectPlan#getQueryReturns}).
 	 *
 	 * @param rootNavigable The NavigableSource which is the root of the query.
-	 *
-	 * @return The SqlSelectPlan
 	 */
 	SqlSelectPlan buildSqlSelectPlan(NavigableSource rootNavigable);
 }

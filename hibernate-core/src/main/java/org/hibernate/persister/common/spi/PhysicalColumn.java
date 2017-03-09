@@ -7,9 +7,6 @@
 
 package org.hibernate.persister.common.spi;
 
-import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.Table;
-
 /**
  * @author Steve Ebersole
  */

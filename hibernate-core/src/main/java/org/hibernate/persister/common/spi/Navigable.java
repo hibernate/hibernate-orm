@@ -18,6 +18,9 @@ import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sqm.domain.SqmNavigable;
 
 /**
+ * Models a "piece" of the application's domain model that can be navigated
+ * as part of a query or the NavigableVisitationStrategy contract.
+ *
  * @author Steve Ebersole
  */
 public interface Navigable<T> extends SqmNavigable, ExpressableType<T> {

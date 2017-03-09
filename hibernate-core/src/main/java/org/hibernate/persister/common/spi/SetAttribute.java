@@ -7,11 +7,10 @@
 package org.hibernate.persister.common.spi;
 
 import java.util.Set;
-import javax.persistence.metamodel.SetAttribute;
 
 /**
  * @author Steve Ebersole
  */
-public interface SetAttribute<O,E> extends OrmPluralAttribute<O,Set<E>,E>,
+public interface SetAttribute<O,E> extends PluralPersistentAttribute<O,Set<E>,E>,
 		javax.persistence.metamodel.SetAttribute<O,E> {
 }

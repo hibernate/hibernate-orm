@@ -32,7 +32,6 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.NavigableSource;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;

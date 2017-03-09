@@ -7,9 +7,6 @@
 
 package org.hibernate.persister.common.spi;
 
-import org.hibernate.persister.common.spi.AbstractTable;
-import org.hibernate.persister.common.spi.Table;
-
 /**
  * Represents a TableSpecification naming a physical table (or view)m, as opposed to a DerivedTableSpecification
  *

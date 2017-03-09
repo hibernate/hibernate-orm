@@ -10,6 +10,8 @@ import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.sqm.domain.SqmExpressableTypeEntity;
 
 /**
+ * Common contract for any navigable whose type is an entity.
+ *
  * @author Steve Ebersole
  */
 public interface EntityReference<T> extends Navigable<T>, SqmExpressableTypeEntity {

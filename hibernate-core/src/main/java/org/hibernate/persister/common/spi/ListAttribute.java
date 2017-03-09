@@ -7,11 +7,10 @@
 package org.hibernate.persister.common.spi;
 
 import java.util.List;
-import javax.persistence.metamodel.ListAttribute;
 
 /**
  * @author Steve Ebersole
  */
-public interface ListAttribute<O,E> extends OrmPluralAttribute<O,List<E>,E>,
+public interface ListAttribute<O,E> extends PluralPersistentAttribute<O,List<E>,E>,
 		javax.persistence.metamodel.ListAttribute<O,E> {
 }

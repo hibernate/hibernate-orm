@@ -7,11 +7,10 @@
 package org.hibernate.persister.common.spi;
 
 import java.util.Collection;
-import javax.persistence.metamodel.CollectionAttribute;
 
 /**
  * @author Steve Ebersole
  */
-public interface CollectionAttribute<O,E> extends OrmPluralAttribute<O,Collection<E>,E>,
+public interface CollectionAttribute<O,E> extends PluralPersistentAttribute<O,Collection<E>,E>,
 		javax.persistence.metamodel.CollectionAttribute<O,E> {
 }

@@ -17,12 +17,12 @@ public interface NavigableSource<T> extends Navigable<T>, SqmNavigableSource {
 	@Override
 	Navigable findNavigable(String navigableName);
 
+	void visitNavigables(NavigableVisitationStrategy visitor);
+
+	void visitDeclaredNavigables(NavigableVisitationStrategy visitor);
+
 	// todo : overload this for entity- and collection-valued attributes
 	//		but that requires splitting SingularAttributeEntity into interface/impl
 	//		and moving the interface into SPI
 	List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute);
-
-	void visitNavigables(NavigableVisitationStrategy visitor);
-
-	void visitDeclaredNavigables(NavigableVisitationStrategy visitor);
 }

@@ -7,11 +7,10 @@
 package org.hibernate.persister.common.spi;
 
 import java.util.Map;
-import javax.persistence.metamodel.MapAttribute;
 
 /**
  * @author Steve Ebersole
  */
-public interface MapAttribute<O,K,E> extends OrmPluralAttribute<O,Map<K,E>,E>,
+public interface MapAttribute<O,K,E> extends PluralPersistentAttribute<O,Map<K,E>,E>,
 		javax.persistence.metamodel.MapAttribute<O,K,E> {
 }

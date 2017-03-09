@@ -41,7 +41,7 @@ public class OneToManyAssociationTestTask extends AbstractEnhancerTestTask {
 		Assert.assertTrue( anotherCustomer.getInventories().size() == 1 );
 		Assert.assertTrue( anotherCustomer.getInventories().get( 0 ) == customerInventory );
 
-		customer.addInventory( customerInventory );
+		customer.getInventories().add( customerInventory );
 
 		Assert.assertTrue( customerInventory.getCustomer() == customer );
 		Assert.assertTrue( anotherCustomer.getInventories().isEmpty() );

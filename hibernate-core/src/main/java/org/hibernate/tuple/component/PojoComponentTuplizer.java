@@ -22,7 +22,6 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.PojoInstantiator;
 
@@ -33,15 +32,13 @@ import org.hibernate.tuple.PojoInstantiator;
  * @author Steve Ebersole
  */
 public class PojoComponentTuplizer extends AbstractComponentTuplizer {
-	private final Class componentClass;
+	private Class componentClass;
 	private ReflectionOptimizer optimizer;
 	private final Getter parentGetter;
 	private final Setter parentSetter;
 
 	public PojoComponentTuplizer(Component component) {
 		super( component );
-
-		this.componentClass = component.getComponentClass();
 
 		String[] getterNames = new String[propertySpan];
 		String[] setterNames = new String[propertySpan];
@@ -58,8 +55,6 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			parentGetter = null;
 		}
 		else {
-			final ServiceRegistry serviceRegistry =
-					component.getMetadata().getMetadataBuildingOptions().getServiceRegistry();
 			final PropertyAccess propertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
 					componentClass,
 					parentPropertyName
@@ -128,31 +123,36 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 	}
 
 	protected Instantiator buildInstantiator(Component component) {
-		if ( component.isEmbedded() && ReflectHelper.isAbstractClass( component.getComponentClass() ) ) {
-			return new ProxiedInstantiator( component );
+		if ( component.isEmbedded() && ReflectHelper.isAbstractClass( this.componentClass ) ) {
+			return new ProxiedInstantiator( this.componentClass );
 		}
 		if ( optimizer == null ) {
-			return new PojoInstantiator( component, null );
+			return new PojoInstantiator( this.componentClass, null );
 		}
 		else {
-			return new PojoInstantiator( component, optimizer.getInstantiationOptimizer() );
+			return new PojoInstantiator( this.componentClass, optimizer.getInstantiationOptimizer() );
 		}
 	}
 
 	protected Getter buildGetter(Component component, Property prop) {
-		return prop.getGetter( component.getComponentClass() );
+		return prop.getGetter( this.componentClass );
 	}
 
 	protected Setter buildSetter(Component component, Property prop) {
-		return prop.getSetter( component.getComponentClass() );
+		return prop.getSetter( this.componentClass );
+	}
+
+	@Override
+	protected void setComponentClass(Component component) {
+		this.componentClass = component.getComponentClass();
 	}
 
 	private static class ProxiedInstantiator implements Instantiator {
 		private final Class proxiedClass;
 		private final BasicProxyFactory factory;
 
-		public ProxiedInstantiator(Component component) {
-			proxiedClass = component.getComponentClass();
+		public ProxiedInstantiator(Class componentClass) {
+			proxiedClass = componentClass;
 			if ( proxiedClass.isInterface() ) {
 				factory = Environment.getBytecodeProvider()
 						.getProxyFactoryFactory()

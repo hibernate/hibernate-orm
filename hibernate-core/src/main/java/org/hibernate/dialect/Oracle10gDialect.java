@@ -22,8 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+import java.sql.Types;
+
+import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.type.StandardBasicTypes;
 
 
 /**
@@ -31,7 +36,7 @@ import org.hibernate.sql.JoinFragment;
  * <p/>
  * The main difference between this dialect and {@link Oracle9iDialect}
  * is the use of "ANSI join syntax".  This dialect also retires the use
- * of the <tt>oracle.jdbc.driver</tt> package in favor of 
+ * of the <tt>oracle.jdbc.driver</tt> package in favor of
  * <tt>oracle.jdbc</tt>.
  *
  * @author Steve Ebersole
@@ -39,8 +44,27 @@ import org.hibernate.sql.JoinFragment;
 public class Oracle10gDialect extends Oracle9iDialect {
 
 	public Oracle10gDialect() {
-		super();
+	    super();
+        // register additional hibernate types for unicode
+        // see https://hibernate.atlassian.net/browse/HHH-9750
+        registerHibernateType( Types.NCHAR, StandardBasicTypes.CHARACTER.getName() );
+        registerHibernateType( Types.NCHAR, 1, StandardBasicTypes.CHARACTER.getName() );
+        registerHibernateType( Types.NCHAR, 255, StandardBasicTypes.STRING.getName() );
+        registerHibernateType( Types.NVARCHAR, StandardBasicTypes.STRING.getName() );
+        registerHibernateType( Types.NCLOB, StandardBasicTypes.CLOB.getName() );
 	}
+
+	@Override
+	protected void registerFunctions() {
+        super.registerFunctions();
+        registerFunction( "bitand", new StandardSQLFunction("bitand") );
+    }
+
+	@Override
+	protected void registerDefaultProperties()    {
+        super.registerDefaultProperties();
+        getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, "false" );
+    }
 
 	public JoinFragment createOuterJoinFragment() {
 		return new ANSIJoinFragment();

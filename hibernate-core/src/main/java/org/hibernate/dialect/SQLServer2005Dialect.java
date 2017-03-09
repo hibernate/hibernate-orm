@@ -37,9 +37,12 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class SQLServer2005Dialect extends SQLServerDialect {
 	private static final String SELECT = "select";
-	private static final String FROM = "from";
+	private static final String FROM_WITH_BLANCS = " from ";
+	private static final String FROM_WITH_NL = "\nfrom\n";
 	private static final String DISTINCT = "distinct";
 	private static final int MAX_LENGTH = 8000;
+
+	private static final String[] AGGREGATE_FUNCTION_NAMES = new String[]{"avg", "count", "min", "sum", "max"};
 
 	/**
 	 * Regular expression for stripping alias
@@ -149,11 +152,22 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 * @param sql an sql query
 	 */
 	protected static void replaceDistinctWithGroupBy(StringBuilder sql) {
-		int distinctIndex = sql.indexOf( DISTINCT );
-		if ( distinctIndex > 0 ) {
-			sql.delete( distinctIndex, distinctIndex + DISTINCT.length() + 1 );
-			sql.append( " group by" ).append( getSelectFieldsWithoutAliases( sql ) );
-		}
+	    int distinctIndex = sql.indexOf(DISTINCT);
+        if (distinctIndex > 0) {
+
+            String selectFieldsWithoutAlias = getSelectFieldsWithoutAliases(sql).toString();
+            boolean aggregateFunctionAvailable = false;
+            for (String functionName : AGGREGATE_FUNCTION_NAMES) {
+                if (selectFieldsWithoutAlias.indexOf(functionName) > 0) {
+                    aggregateFunctionAvailable = true;
+                    break;
+                }
+            }
+            if (!aggregateFunctionAvailable) {
+                sql.delete(distinctIndex, distinctIndex + DISTINCT.length() + 1);
+                sql.append(" group by").append(getSelectFieldsWithoutAliases(sql));
+            }
+        }
 	}
 
 	/**
@@ -164,12 +178,19 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 *
 	 * @return the fields of the select statement without their alias
 	 */
-	protected static CharSequence getSelectFieldsWithoutAliases(StringBuilder sql) {
-		String select = sql.substring( sql.indexOf( SELECT ) + SELECT.length(), sql.indexOf( FROM ) );
+	protected static CharSequence getSelectFieldsWithoutAliases(StringBuilder sql)
+    {
+        int selectEndIndex = sql.indexOf(FROM_WITH_BLANCS);
+        if (selectEndIndex < 0)
+        {
+            selectEndIndex = sql.indexOf(FROM_WITH_NL);
+        }
 
-		// Strip the as clauses
-		return stripAliases( select );
-	}
+        String select = sql.substring(sql.indexOf(SELECT) + SELECT.length(), selectEndIndex + 1);
+
+        // Strip the as clauses
+        return stripAliases(select);
+    }
 
 	/**
 	 * Utility method that strips the aliases. See {@link SQLServer2005DialectTestCase#testStripAliases()}
@@ -190,10 +211,12 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 * @param orderby the order by clause of the query
 	 */
 	protected static void insertRowNumberFunction(StringBuilder sql, CharSequence orderby) {
-		// Find the end of the select statement
-		int selectEndIndex = sql.indexOf( FROM );
-
-		// Insert after the select statement the row_number() function:
-		sql.insert( selectEndIndex - 1, ", ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__" );
+	    // Find the end of the select statement
+        int selectEndIndex = sql.indexOf(FROM_WITH_BLANCS);
+        if (selectEndIndex < 0) {
+            selectEndIndex = sql.indexOf(FROM_WITH_NL);
+        }
+        // Insert after the select statement the row_number() function:
+        sql.insert(selectEndIndex, ", ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__");
 	}
 }

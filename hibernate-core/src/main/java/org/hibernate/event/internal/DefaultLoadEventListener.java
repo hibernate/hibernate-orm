@@ -769,33 +769,33 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				entity, entityId, subclassPersister, session.getInterceptor(), session
 		);
 
-		LoadQueryInfluencers queryInfluencers = session.getLoadQueryInfluencers();
+		final LoadQueryInfluencers queryInfluencers = session.getLoadQueryInfluencers();
 		EntityGraphImpl<?> graph = null;
-		Set<String> attributeList = new HashSet<>();
-		
-		if(queryInfluencers.getFetchGraph() != null) {
+
+		if ( queryInfluencers.getFetchGraph() != null ) {
 			graph = (EntityGraphImpl<?>) queryInfluencers.getFetchGraph();
 		}
-		else if(queryInfluencers.getLoadGraph() != null) {
+		else if ( queryInfluencers.getLoadGraph() != null ) {
 			graph = (EntityGraphImpl<?>) queryInfluencers.getLoadGraph();
 		}
-		
-		if(graph != null) {
-			String entityJavaType = graph.getEntityType().getJavaType().getName();
-			for(AttributeNode<?> attribute : graph.getAttributeNodes()) {
-				attributeList.add(entityJavaType + "." + attribute.getAttributeName());
-				if(attribute.getSubgraphs().size() > 0) {
-					throw new NotYetImplementedException("SubGraphs are not supported ATM!!!");
+
+		if ( graph != null ) {
+			final Set<String> attributeList = new HashSet<>();
+			final String entityJavaType = graph.getEntityType().getJavaType().getName();
+			for ( AttributeNode<?> attribute : graph.getAttributeNodes() ) {
+				attributeList.add( entityJavaType + "." + attribute.getAttributeName() );
+				if ( attribute.getSubgraphs().size() > 0 ) {
+					throw new NotYetImplementedException( "SubGraphs are not supported ATM!!!" );
+				}
+			}
+			for ( Object value : values ) {
+				if ( value instanceof AbstractPersistentCollection
+						&& attributeList.contains( ( (AbstractPersistentCollection) value ).getRole() ) ) {
+					persistenceContext.addNonLazyCollection( (AbstractPersistentCollection) value );
 				}
 			}
 		}
-		for(Object value : values) {
-			if(value instanceof AbstractPersistentCollection 
-					&& attributeList.contains(((AbstractPersistentCollection) value).getRole())) {
-				persistenceContext.addNonLazyCollection((AbstractPersistentCollection) value);
-			}
-		}
-		
+
 		if ( ( (StandardCacheEntryImpl) entry ).isDeepCopyNeeded() ) {
 			TypeHelper.deepCopy(
 					values,
@@ -830,7 +830,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				subclassPersister,
 				false
 		);
-		subclassPersister.afterInitialize( entity, session );		
+		subclassPersister.afterInitialize( entity, session );
 		persistenceContext.initializeNonLazyCollections();
 
 		//PostLoad is needed for EJB3

@@ -38,6 +38,40 @@ public class OracleJoinFragment extends JoinFragment {
 		}
 	}
 
+	public void addJoin(String tableName, String alias, String[][] fkColumns, String[] pkColumns, JoinType joinType) {
+		addCrossJoin( tableName, alias );
+
+		if ( fkColumns.length > 1 ) {
+			afterWhere.append( "(" );
+		}
+		for ( int i = 0; i < fkColumns.length; i++ ) {
+			afterWhere.append( " and " );
+			for ( int j = 0; j < fkColumns[i].length; j++ ) {
+				setHasThetaJoins( true );
+				afterWhere.append( fkColumns[i][j] );
+				if ( joinType == JoinType.RIGHT_OUTER_JOIN || joinType == JoinType.FULL_JOIN ) {
+					afterWhere.append( "(+)" );
+				}
+				afterWhere.append( '=' )
+						.append( alias )
+						.append( '.' )
+						.append( pkColumns[j] );
+				if ( joinType == JoinType.LEFT_OUTER_JOIN || joinType == JoinType.FULL_JOIN ) {
+					afterWhere.append( "(+)" );
+				}
+				if ( j < fkColumns[i].length - 1 ) {
+					afterWhere.append( " and " );
+				}
+			}
+			if ( i < fkColumns.length - 1 ) {
+				afterWhere.append( " or " );
+			}
+		}
+		if ( fkColumns.length > 1 ) {
+			afterWhere.append( ")" );
+		}
+	}
+
 	public String toFromFragmentString() {
 		return afterFrom.toString();
 	}
@@ -88,6 +122,20 @@ public class OracleJoinFragment extends JoinFragment {
 	}
 
 	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on) {
+		//arbitrary on clause ignored!!
+		addJoin( tableName, alias, fkColumns, pkColumns, joinType );
+		if ( joinType == JoinType.INNER_JOIN ) {
+			addCondition( on );
+		}
+		else if ( joinType == JoinType.LEFT_OUTER_JOIN ) {
+			addLeftOuterJoinCondition( on );
+		}
+		else {
+			throw new UnsupportedOperationException( "join type not supported by OracleJoinFragment (use Oracle9iDialect/Oracle10gDialect)" );
+		}
+	}
+
+	public void addJoin(String tableName, String alias, String[][] fkColumns, String[] pkColumns, JoinType joinType, String on) {
 		//arbitrary on clause ignored!!
 		addJoin( tableName, alias, fkColumns, pkColumns, joinType );
 		if ( joinType == JoinType.INNER_JOIN ) {

@@ -64,6 +64,10 @@ public class SpecialOneToOneType extends OneToOneType {
 				propertyName
 			);
 	}
+
+	public SpecialOneToOneType(SpecialOneToOneType original, String superTypeEntityName) {
+		super( original, superTypeEntityName );
+	}
 	
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		return super.getIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );

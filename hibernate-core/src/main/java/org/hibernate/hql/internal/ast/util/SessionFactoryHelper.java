@@ -274,6 +274,24 @@ public class SessionFactoryHelper {
 	}
 
 	/**
+	 * Generate a join sequence representing the given association type.
+	 *
+	 * @param implicit Should implicit joins (theta-style) or explicit joins (ANSI-style) be rendered
+	 * @param associationType The type representing the thing to be joined into.
+	 * @param tableAlias The table alias to use in qualifying the join conditions
+	 * @param joinType The type of join to render (inner, outer, etc);  see {@link org.hibernate.sql.JoinFragment}
+	 * @param columns The columns making up the condition of the join.
+	 *
+	 * @return The generated join sequence.
+	 */
+	public JoinSequence createJoinSequence(boolean implicit, AssociationType associationType, String tableAlias, JoinType joinType, String[][] columns) {
+		JoinSequence joinSequence = createJoinSequence();
+		joinSequence.setUseThetaStyle( implicit );    // Implicit joins use theta style (WHERE pk = fk), explicit joins use JOIN (afterQuery from)
+		joinSequence.addJoin( associationType, tableAlias, joinType, columns );
+		return joinSequence;
+	}
+
+	/**
 	 * Create a join sequence rooted at the given collection.
 	 *
 	 * @param collPersister The persister for the collection at which the join should be rooted.

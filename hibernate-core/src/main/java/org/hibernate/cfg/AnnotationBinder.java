@@ -1139,39 +1139,11 @@ public final class AnnotationBinder {
 		return new LocalCacheAnnotationImpl( region, determineCacheConcurrencyStrategy( mappings ) );
 	}
 
-	private static CacheConcurrencyStrategy DEFAULT_CACHE_CONCURRENCY_STRATEGY;
-
-	static void prepareDefaultCacheConcurrencyStrategy(Properties properties) {
-		if ( DEFAULT_CACHE_CONCURRENCY_STRATEGY != null ) {
-			LOG.trace( "Default cache concurrency strategy already defined" );
-			return;
-		}
-
-		if ( !properties.containsKey( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY ) ) {
-			LOG.trace( "Given properties did not contain any default cache concurrency strategy setting" );
-			return;
-		}
-
-		final String strategyName = properties.getProperty( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY );
-		LOG.tracev( "Discovered default cache concurrency strategy via config [{0}]", strategyName );
-		CacheConcurrencyStrategy strategy = CacheConcurrencyStrategy.parse( strategyName );
-		if ( strategy == null ) {
-			LOG.trace( "Discovered default cache concurrency strategy specified nothing" );
-			return;
-		}
-
-		LOG.debugf( "Setting default cache concurrency strategy via config [%s]", strategy.name() );
-		DEFAULT_CACHE_CONCURRENCY_STRATEGY = strategy;
-	}
-
 	private static CacheConcurrencyStrategy determineCacheConcurrencyStrategy(Mappings mappings) {
-		if ( DEFAULT_CACHE_CONCURRENCY_STRATEGY == null ) {
-			final RegionFactory cacheRegionFactory = SettingsFactory.createRegionFactory(
-					mappings.getConfigurationProperties(), true
-			);
-			DEFAULT_CACHE_CONCURRENCY_STRATEGY = CacheConcurrencyStrategy.fromAccessType( cacheRegionFactory.getDefaultAccessType() );
-		}
-		return DEFAULT_CACHE_CONCURRENCY_STRATEGY;
+		final RegionFactory cacheRegionFactory = SettingsFactory.createRegionFactory(
+				mappings.getConfigurationProperties(), true
+		);
+		return CacheConcurrencyStrategy.fromAccessType( cacheRegionFactory.getDefaultAccessType() );
 	}
 
 	@SuppressWarnings({ "ClassExplicitlyAnnotation" })

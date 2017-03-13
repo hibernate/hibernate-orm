@@ -279,6 +279,56 @@ public class TypeHelper {
 	 * @param includeColumns Columns to be included in the dirty checking, per property
 	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
 	 * @param session The session from which the dirty check request originated.
+	 *
+	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
+	 *
+	 * @deprecated Use {org.hibernate.type.TypeHelper{@link #findDirty(NonIdentifierAttribute[], Object[], Object[], boolean[][], SharedSessionContractImplementor)} indtead
+	 */
+	@Deprecated
+	public static int[] findDirty(
+			final NonIdentifierAttribute[] properties,
+			final Object[] currentState,
+			final Object[] previousState,
+			final boolean[][] includeColumns,
+			final boolean anyUninitializedProperties,
+			final SharedSessionContractImplementor session) {
+		int[] results = null;
+		int count = 0;
+		int span = properties.length;
+
+		for ( int i = 0; i < span; i++ ) {
+			final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
+					&& properties[i].isDirtyCheckable( anyUninitializedProperties )
+					&& properties[i].getType().isDirty( previousState[i], currentState[i], includeColumns[i], session );
+			if ( dirty ) {
+				if ( results == null ) {
+					results = new int[span];
+				}
+				results[count++] = i;
+			}
+		}
+
+		if ( count == 0 ) {
+			return null;
+		}
+		else {
+			int[] trimmed = new int[count];
+			System.arraycopy( results, 0, trimmed, 0, count );
+			return trimmed;
+		}
+	}
+
+	/**
+	 * Determine if any of the given field values are dirty, returning an array containing
+	 * indices of the dirty fields.
+	 * <p/>
+	 * If it is determined that no fields are dirty, null is returned.
+	 *
+	 * @param properties The property definitions
+	 * @param currentState The current state of the entity
+	 * @param previousState The baseline state of the entity
+	 * @param includeColumns Columns to be included in the dirty checking, per property
+	 * @param session The session from which the dirty check request originated.
 	 * 
 	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
 	 */

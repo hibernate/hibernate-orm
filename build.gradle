@@ -59,7 +59,7 @@ allprojects {
 
 ext {
 	hibernateTargetVersion = '5.2.9-SNAPSHOT'
-	expectedGradleVersion = '3.4'
+	expectedGradleVersion = '3.4.1'
 	baselineJavaVersion = '1.8'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )
@@ -172,7 +172,7 @@ subprojects { subProject ->
 				testRuntime( libraries.oracle )
 			}
 		}
-		checkstyle 'com.puppycrawl.tools:checkstyle:7.5.1'
+		checkstyle 'com.puppycrawl.tools:checkstyle:7.6'
 	}
 
 	// mac-specific stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

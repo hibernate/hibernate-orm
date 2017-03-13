@@ -1156,15 +1156,10 @@ public final class AnnotationBinder {
 		return new LocalCacheAnnotationImpl( region, determineCacheConcurrencyStrategy( context ) );
 	}
 
-	private static CacheConcurrencyStrategy DEFAULT_CACHE_CONCURRENCY_STRATEGY;
-
 	private static CacheConcurrencyStrategy determineCacheConcurrencyStrategy(MetadataBuildingContext context) {
-		if ( DEFAULT_CACHE_CONCURRENCY_STRATEGY == null ) {
-			DEFAULT_CACHE_CONCURRENCY_STRATEGY = CacheConcurrencyStrategy.fromAccessType(
-					context.getBuildingOptions().getImplicitCacheAccessType()
-			);
-		}
-		return DEFAULT_CACHE_CONCURRENCY_STRATEGY;
+		return CacheConcurrencyStrategy.fromAccessType(
+				context.getBuildingOptions().getImplicitCacheAccessType()
+		);
 	}
 
 	@SuppressWarnings({ "ClassExplicitlyAnnotation" })

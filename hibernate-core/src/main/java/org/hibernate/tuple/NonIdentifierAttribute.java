@@ -24,8 +24,6 @@ public interface NonIdentifierAttribute extends Attribute, AttributeDefinition {
 
 	public boolean isNullable();
 
-	public boolean isDirtyCheckable(boolean hasUninitializedProperties);
-
 	public boolean isDirtyCheckable();
 
 	public boolean isVersionable();

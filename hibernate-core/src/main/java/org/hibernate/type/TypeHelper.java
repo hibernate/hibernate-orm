@@ -383,7 +383,6 @@ public class TypeHelper {
 	 * @param previousState The baseline state of the entity
 	 * @param includeColumns Columns to be included in the mod checking, per property
 	 * @param includeProperties Array of property indices that identify which properties participate in check
-	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
 	 * @param session The session from which the dirty check request originated.
 	 *
 	 * @return Array containing indices of the modified properties, or null if no properties considered modified.

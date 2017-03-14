@@ -358,7 +358,11 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 		final QueryNode query = (QueryNode) sqlAst;
 		final boolean hasLimit = queryParameters.getRowSelection() != null && queryParameters.getRowSelection().definesLimits();
-		final boolean needsDistincting = ( query.getSelectClause().isDistinct() || hasLimit ) && containsCollectionFetches();
+		final boolean needsDistincting = (
+				query.getSelectClause().isDistinct() ||
+				getEntityGraphQueryHint() != null ||
+				hasLimit )
+		&& containsCollectionFetches();
 
 		QueryParameters queryParametersToUse;
 		if ( hasLimit && containsCollectionFetches() ) {

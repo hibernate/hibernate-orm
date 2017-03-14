@@ -6,8 +6,11 @@
  */
 package org.hibernate.jpa.test.graphs.queryhint;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -17,15 +20,18 @@ import org.hibernate.Hibernate;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.graphs.Company;
+import org.hibernate.jpa.test.graphs.Course;
 import org.hibernate.jpa.test.graphs.Employee;
 import org.hibernate.jpa.test.graphs.Location;
 import org.hibernate.jpa.test.graphs.Manager;
 import org.hibernate.jpa.test.graphs.Market;
+import org.hibernate.jpa.test.graphs.Student;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -133,11 +139,9 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		query.setHint( QueryHints.HINT_LOADGRAPH, entityGraph );
 		List results = query.getResultList();
 
-		// we expect 3 results:
 		// - 1st will be the Company with location.zip == 11234 with an empty markets collection
-		// - 2nd and 3rd should be the Company with location.zip == 12345
-		//   (2nd and 3rd are duplicated because that entity has 2 elements in markets collection
-		assertEquals( 3, results.size() );
+		// - 2nd should be the Company with location.zip == 12345
+		assertEquals( 2, results.size() );
 
 		Company companyResult = (Company) results.get( 0 );
 		assertFalse( Hibernate.isInitialized( companyResult.employees ) );
@@ -166,8 +170,6 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		// @ElementCollection(fetch = FetchType.EAGER) should cause the follow-on selects to happen.
 		assertTrue( Hibernate.isInitialized( companyResult.phoneNumbers ) );
 		assertEquals( 2, companyResult.phoneNumbers.size() );
-
-		assertSame( companyResult, results.get( 2 ) );
 
 		entityManager.getTransaction().commit();
 		entityManager.close();
@@ -310,6 +312,48 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		entityManager.close();
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-11569")
+	public void testCollectionSizeLoadedWithGraph() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+
+			 Student student1 = new Student();
+			 student1.setId( 1 );
+			 student1.setName( "Student 1" );
+			 Student student2 = new Student();
+			 student2.setId( 2 );
+			 student2.setName( "Student 2" );
+
+			 Course course1 = new Course();
+			 course1.setName( "Full Time" );
+			 Course course2 = new Course();
+			 course2.setName( "Part Time" );
+
+			 Set<Course> std1Courses = new HashSet<Course>();
+			 std1Courses.add( course1 );
+			 std1Courses.add( course2 );
+			 student1.setCourses( std1Courses );
+
+			 Set<Course> std2Courses = new HashSet<Course>();
+			 std2Courses.add( course2 );
+			 student2.setCourses( std2Courses );
+
+			 entityManager.persist( student1 );
+			 entityManager.persist( student2 );
+
+		});
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			EntityGraph<?> graph = entityManager.getEntityGraph( "Student.Full" );
+
+			List<Student> students = entityManager.createNamedQuery( "LIST_OF_STD", Student.class )
+					.setHint( QueryHints.HINT_FETCHGRAPH, graph )
+					.getResultList();
+
+			assertEquals( 2, students.size() );
+		});
+	}
+
 	@Before
 	public void createData() {
 		EntityManager entityManager = getOrCreateEntityManager();
@@ -348,6 +392,6 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Company.class, Employee.class, Manager.class, Location.class };
+		return new Class<?>[] { Company.class, Employee.class, Manager.class, Location.class, Course.class, Student.class };
 	}
 }

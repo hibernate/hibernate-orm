@@ -31,7 +31,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  *
  * @since 6.0
  */
-public interface BasicType<T> extends Type<T>, SqmDomainTypeBasic, ExpressableType<T>, javax.persistence.metamodel.BasicType<T> {
+public interface BasicType<T> extends Type<T>, SqmDomainTypeBasic, ExpressableType<T>, ParameterizedType, javax.persistence.metamodel.BasicType<T> {
 	BasicTypeRegistry.Key getRegistryKey();
 
 	@Override

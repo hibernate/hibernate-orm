@@ -6,7 +6,9 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.type.spi.TypeDefinitionRegistry;
 
 /**
  * Describes the context in which the process of building Metadata out of MetadataSources occurs.
@@ -20,6 +22,9 @@ import org.hibernate.boot.model.naming.ObjectNameNormalizer;
  */
 public interface MetadataBuildingContext {
 	BootstrapContext getBootstrapContext();
+
+	TypeDefinition resolveTypeDefinition(String typeName);
+	void addTypeDefinition(TypeDefinition typeDefinition);
 
 	/**
 	 * Access to the options specified by the {@link org.hibernate.boot.MetadataBuilder}

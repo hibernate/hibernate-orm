@@ -124,7 +124,6 @@ import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
@@ -143,7 +142,6 @@ import org.hibernate.cfg.annotations.MapKeyJoinColumnDelegator;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.cfg.annotations.QueryBinder;
-import org.hibernate.cfg.annotations.SimpleValueBinder;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -1403,12 +1401,13 @@ public final class AnnotationBinder {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( typeBindMessageF, defAnn.name() );
 			}
-			context.getMetadataCollector().addTypeDefinition(
+			context.addTypeDefinition(
 					new TypeDefinition(
 							defAnn.name(),
 							defAnn.typeClass(),
 							null,
-							params
+							params,
+							context.getBootstrapContext().getTypeConfiguration()
 					)
 			);
 		}
@@ -1417,12 +1416,13 @@ public final class AnnotationBinder {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( typeBindMessageF, defAnn.defaultForType().getName() );
 			}
-			context.getMetadataCollector().addTypeDefinition(
+			context.addTypeDefinition(
 					new TypeDefinition(
 							defAnn.defaultForType().getName(),
 							defAnn.typeClass(),
 							new String[]{ defAnn.defaultForType().getName() },
-							params
+							params,
+							context.getBootstrapContext().getTypeConfiguration()
 					)
 			);
 		}

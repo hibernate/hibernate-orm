@@ -180,15 +180,6 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addNamedEntityGraph(NamedEntityGraphDefinition namedEntityGraphDefinition);
 
 	/**
-	 * Adds a type definition to this metadata repository.
-	 *
-	 * @param typeDefinition The named type definition to add.
-	 *
-	 * @throws DuplicateMappingException If a TypeDefinition already exists with that name.
-	 */
-	void addTypeDefinition(TypeDefinition typeDefinition);
-
-	/**
 	 * Adds a filter definition to this repository.
 	 *
 	 * @param definition The filter definition to add.

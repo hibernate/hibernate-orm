@@ -6,15 +6,15 @@
  */
 package org.hibernate.boot.internal;
 
+import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.type.internal.TypeDefinitionRegistryImpl;
+import org.hibernate.boot.model.type.spi.TypeDefinitionRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
@@ -26,6 +26,7 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 	private final MappingDefaults mappingDefaults;
 	private final InFlightMetadataCollector metadataCollector;
 	private final ObjectNameNormalizer objectNameNormalizer;
+	private final TypeDefinitionRegistryImpl typeDefinitionRegistry;
 
 	public MetadataBuildingContextRootImpl(
 			BootstrapContext bootstrapContext,
@@ -41,11 +42,22 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 				return MetadataBuildingContextRootImpl.this;
 			}
 		};
+		this.typeDefinitionRegistry = new TypeDefinitionRegistryImpl( bootstrapContext.getTypeConfiguration() );
 	}
 
 	@Override
 	public BootstrapContext getBootstrapContext() {
 		return bootstrapContext;
+	}
+
+	@Override
+	public TypeDefinition resolveTypeDefinition(String typeName) {
+		return typeDefinitionRegistry.resolve( typeName );
+	}
+
+	@Override
+	public void addTypeDefinition(TypeDefinition typeDefinition) {
+		typeDefinitionRegistry.register( typeDefinition );
 	}
 
 	@Override

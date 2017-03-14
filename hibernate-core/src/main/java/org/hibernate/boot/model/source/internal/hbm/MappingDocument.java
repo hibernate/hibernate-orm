@@ -20,12 +20,14 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingBindingDefinition;
+import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.source.internal.OverriddenMappingDefaults;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
+import org.hibernate.boot.model.type.internal.TypeDefinitionRegistryImpl;
+import org.hibernate.boot.model.type.spi.TypeDefinitionRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -48,6 +50,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	private final Origin origin;
 	private final MetadataBuildingContext rootBuildingContext;
 	private final MappingDefaults mappingDefaults;
+	private final TypeDefinitionRegistryImpl typeDefinitionRegistry;
 
 	private final ToolingHintContext toolingHintContext;
 
@@ -59,6 +62,10 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 		this.documentRoot = documentRoot;
 		this.origin = origin;
 		this.rootBuildingContext = rootBuildingContext;
+
+		this.typeDefinitionRegistry = new TypeDefinitionRegistryImpl(
+				rootBuildingContext.getBootstrapContext().getTypeConfiguration()
+		);
 
 		// todo : allow for a split in default-lazy for singular/plural
 
@@ -243,4 +250,17 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 		// nothing to do
 	}
 
+	@Override
+	public TypeDefinition resolveTypeDefinition(String typeName) {
+		final TypeDefinition typeDefinition = typeDefinitionRegistry.resolve( typeName );
+		if ( typeDefinition != null ) {
+			return typeDefinition;
+		}
+		return rootBuildingContext.resolveTypeDefinition( typeName );
+	}
+
+	@Override
+	public void addTypeDefinition(TypeDefinition typeDefinition) {
+		typeDefinitionRegistry.register( typeDefinition );
+	}
 }

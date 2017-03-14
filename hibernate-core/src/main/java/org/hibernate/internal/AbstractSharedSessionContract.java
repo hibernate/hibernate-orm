@@ -326,7 +326,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public void checkOpen(boolean markForRollbackIfClosed) {
 		if ( isClosed() ) {
-			if ( markForRollbackIfClosed ) {
+			if ( markForRollbackIfClosed && transactionCoordinator.isTransactionActive() ) {
 				markForRollbackOnly();
 			}
 			throw new IllegalStateException( "Session/EntityManager is closed" );
@@ -336,10 +336,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	protected void checkOpenOrWaitingForAutoClose() {
 		if ( !waitingForAutoClose ) {
 			checkOpen();
-		}
-		else if ( factory.isClosed() ) {
-			markForRollbackOnly();
-			throw new IllegalStateException( "SessionFactory is closed" );
 		}
 	}
 

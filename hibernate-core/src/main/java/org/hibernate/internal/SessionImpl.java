@@ -510,7 +510,7 @@ public final class SessionImpl
 
 	@Override
 	public Connection connection() throws HibernateException {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		return getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
 	}
 
@@ -531,7 +531,7 @@ public final class SessionImpl
 
 	@Override
 	public void setAutoClear(boolean enabled) {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		autoClear = enabled;
 	}
 
@@ -1462,7 +1462,7 @@ public final class SessionImpl
 
 	@Override
 	public List list(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 		queryParameters.validateParameters();
 
@@ -1491,7 +1491,7 @@ public final class SessionImpl
 
 	@Override
 	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 		queryParameters.validateParameters();
 		HQLQueryPlan plan = getQueryPlan( query, false );
@@ -1514,7 +1514,7 @@ public final class SessionImpl
 	public int executeNativeUpdate(
 			NativeSQLQuerySpecification nativeQuerySpecification,
 			QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 		queryParameters.validateParameters();
 		NativeSQLQueryPlan plan = getNativeQueryPlan( nativeQuerySpecification );
@@ -1537,7 +1537,7 @@ public final class SessionImpl
 
 	@Override
 	public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 		queryParameters.validateParameters();
 
@@ -1560,7 +1560,7 @@ public final class SessionImpl
 
 	@Override
 	public ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 		
 		HQLQueryPlan plan = queryParameters.getQueryPlan();
@@ -1754,7 +1754,7 @@ public final class SessionImpl
 
 	@Override
 	public List listFilter(Object collection, String filter, QueryParameters queryParameters) {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 		FilterQueryPlan plan = getFilterQueryPlan( collection, filter, queryParameters, false );
 		List results = Collections.EMPTY_LIST;
@@ -1775,7 +1775,7 @@ public final class SessionImpl
 
 	@Override
 	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters) {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 		FilterQueryPlan plan = getFilterQueryPlan( collection, filter, queryParameters, true );
 		Iterator itr = plan.performIterate( queryParameters, this );
@@ -1820,7 +1820,7 @@ public final class SessionImpl
 		// TODO: Is this guaranteed to always be CriteriaImpl?
 		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
 
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 
 		String entityName = criteriaImpl.getEntityOrClassName();
@@ -1857,7 +1857,7 @@ public final class SessionImpl
 		}
 
 
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();
 
 		String[] implementors = getFactory().getMetamodel().getImplementors( criteriaImpl.getEntityOrClassName() );
@@ -2112,7 +2112,7 @@ public final class SessionImpl
 
 	@Override
 	public ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();
 
 		if ( log.isTraceEnabled() ) {
@@ -2136,7 +2136,7 @@ public final class SessionImpl
 	// basically just an adapted copy of find(CriteriaImpl)
 	@Override
 	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();
 
 		if ( log.isTraceEnabled() ) {
@@ -2225,7 +2225,7 @@ public final class SessionImpl
 
 	@Override
 	public String guessEntityName(Object object) throws HibernateException {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		return getEntityNameResolver().resolveEntityName( object );
 	}
 

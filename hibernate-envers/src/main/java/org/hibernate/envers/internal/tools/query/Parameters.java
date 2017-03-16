@@ -11,8 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.tools.MutableBoolean;
 import org.hibernate.envers.internal.tools.MutableInteger;
+import org.hibernate.envers.query.criteria.AuditFunction;
 
 /**
  * Parameters of a query, built using {@link QueryBuilder}.
@@ -304,6 +306,62 @@ public class Parameters {
 		final Parameters sub2 = sub1.addSubParameters( "and" );
 		sub2.addNullRestriction( left, false );
 		sub2.addNullRestriction( right, false );
+	}
+
+	public void addWhereWithFunction(EnversService enversService, AuditFunction function, String op, Object value) {
+		final StringBuilder expression = new StringBuilder();
+
+		QueryBuilder.appendFunctionArgument( enversService, queryParamCounter, localQueryParamValues, alias, expression, function );
+
+		expression.append( ' ' ).append( op );
+
+		String queryParam = generateQueryParam();
+		localQueryParamValues.put( queryParam, value );
+		expression.append( ' ' ).append( ':' ).append( queryParam );
+
+		expressions.add( expression.toString() );
+	}
+
+	public void addWhereWithFunction(EnversService enversService, AuditFunction function, String op, String aliasRight, String right) {
+		final StringBuilder expression = new StringBuilder();
+
+		QueryBuilder.appendFunctionArgument( enversService, queryParamCounter, localQueryParamValues, alias, expression, function );
+
+		expression.append( ' ' ).append( op ).append( ' ' );
+
+		if ( aliasRight != null ) {
+			expression.append( aliasRight ).append( '.' );
+		}
+		expression.append( right );
+
+		expressions.add( expression.toString() );
+	}
+
+	public void addWhereWithFunction(EnversService enversService, String aliasLeft, String left, String op, AuditFunction function) {
+		final StringBuilder expression = new StringBuilder();
+
+		if ( aliasLeft != null ) {
+			expression.append( aliasLeft ).append( '.' );
+		}
+		expression.append( left );
+
+		expression.append( ' ' ).append( op ).append( ' ' );
+
+		QueryBuilder.appendFunctionArgument( enversService, queryParamCounter, localQueryParamValues, alias, expression, function );
+
+		expressions.add( expression.toString() );
+	}
+
+	public void addWhereWithFunction(EnversService enversService, AuditFunction left, String op, AuditFunction right) {
+		final StringBuilder expression = new StringBuilder();
+
+		QueryBuilder.appendFunctionArgument( enversService, queryParamCounter, localQueryParamValues, alias, expression, left );
+
+		expression.append( ' ' ).append( op ).append( ' ' );
+
+		QueryBuilder.appendFunctionArgument( enversService, queryParamCounter, localQueryParamValues, alias, expression, right );
+
+		expressions.add( expression.toString() );
 	}
 
 	private void append(StringBuilder sb, String toAppend, MutableBoolean isFirst) {

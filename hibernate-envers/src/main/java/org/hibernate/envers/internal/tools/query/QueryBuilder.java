@@ -16,10 +16,13 @@ import javax.persistence.criteria.JoinType;
 
 import org.hibernate.Session;
 import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.RevisionTypeType;
 import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Triple;
+import org.hibernate.envers.query.criteria.AuditFunction;
+import org.hibernate.envers.query.criteria.AuditProperty;
 import org.hibernate.query.Query;
 import org.hibernate.type.CustomType;
 
@@ -58,6 +61,10 @@ public class QueryBuilder {
 	 * A list of complete projection definitions: either a sole property name, or a function(property name).
 	 */
 	private final List<String> projections;
+	/**
+	 * Values of parameters used in projections.
+	 */
+	private final Map<String, Object> projectionQueryParamValues;
 
 	/**
 	 * @param entityName Main entity which should be selected.
@@ -79,6 +86,7 @@ public class QueryBuilder {
 		froms = new ArrayList<>();
 		orders = new ArrayList<>();
 		projections = new ArrayList<>();
+		projectionQueryParamValues = new HashMap<>();
 
 		addFrom( entityName, alias, true );
 	}
@@ -96,6 +104,7 @@ public class QueryBuilder {
 		froms = new ArrayList<>( other.froms );
 		orders = new ArrayList<>( other.orders );
 		projections = new ArrayList<>( other.projections );
+		projectionQueryParamValues = new HashMap<>( other.projectionQueryParamValues );
 	}
 
 	public QueryBuilder deepCopy() {
@@ -170,6 +179,43 @@ public class QueryBuilder {
 		}
 	}
 
+	public void addProjection(EnversService enversService, AuditFunction function) {
+		final StringBuilder expression = new StringBuilder();
+		appendFunctionArgument( enversService, paramCounter, projectionQueryParamValues, alias, expression, function );
+		projections.add( expression.toString() );
+	}
+
+	protected static void appendFunctionArgument(EnversService enversService, MutableInteger paramCounter, Map<String, Object> queryParamValues, String alias,
+			StringBuilder expression, Object argument) {
+		if ( argument instanceof AuditFunction ) {
+			AuditFunction function = (AuditFunction) argument;
+			expression.append( function.getFunction() ).append( '(' );
+			boolean first = true;
+			for ( final Object innerArg : function.getArguments() ) {
+				if ( !first ) {
+					expression.append( ',' );
+				}
+				appendFunctionArgument( enversService, paramCounter, queryParamValues, alias, expression, innerArg );
+				first = false;
+			}
+			expression.append( ')' );
+		}
+		else if ( argument instanceof AuditProperty ) {
+			AuditProperty<?> property = (AuditProperty<?>) argument;
+			String propertyAlias = property.getAlias( alias );
+			if ( propertyAlias != null ) {
+				expression.append( propertyAlias ).append( '.' );
+			}
+			String propertyName = property.getPropertyNameGetter().get( enversService );
+			expression.append( propertyName );
+		}
+		else {
+			String queryParam = "_p" + paramCounter.getAndIncrease();
+			queryParamValues.put( queryParam, argument );
+			expression.append( ':' ).append( queryParam );
+		}
+	}
+
 	/**
 	 * Builds the given query, appending results to the given string buffer, and adding all query parameter values
 	 * that are used to the map provided.
@@ -187,6 +233,7 @@ public class QueryBuilder {
 			// all aliases separated with commas
 			StringTools.append( sb, getSelectAliasList().iterator(), ", " );
 		}
+		queryParamValues.putAll( projectionQueryParamValues );
 		sb.append( " from " );
 		// all from entities with aliases
 		boolean first = true;

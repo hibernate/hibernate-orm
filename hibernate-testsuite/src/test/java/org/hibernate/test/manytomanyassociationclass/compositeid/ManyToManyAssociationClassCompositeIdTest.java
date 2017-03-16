@@ -27,7 +27,9 @@ package org.hibernate.test.manytomanyassociationclass.compositeid;
 import junit.framework.Test;
 
 import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
+import org.hibernate.test.manytomanyassociationclass.Group;
 import org.hibernate.test.manytomanyassociationclass.Membership;
+import org.hibernate.test.manytomanyassociationclass.User;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
@@ -52,4 +54,15 @@ public class ManyToManyAssociationClassCompositeIdTest extends AbstractManyToMan
 	public Membership createMembership( String name ) {
 		return new MembershipWithCompositeId( name );
 	}
+	
+	@Override
+	public void deleteMembership(User u, Group g, Membership ug) {
+		if ( u == null || g == null ) {
+			throw new IllegalArgumentException();
+		}
+		u.getMemberships().remove( ug );
+		g.getMemberships().remove( ug );
+		ug.setId(null);
+	}
+
 }

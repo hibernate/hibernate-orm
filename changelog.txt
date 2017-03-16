@@ -4,6 +4,51 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.2.9.Final (March 16, 2017)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/27600
+
+** Bug
+    * [HHH-9114] - @IdClass with @MappedSuperclass results in "property not found"
+    * [HHH-11372] - Do not send RemoveExpiredCommands in repl/dist caches
+    * [HHH-11373] - Silence lock acquisition failures on remote nodes
+    * [HHH-11381] - In nonstrict mode, putFromLoad after evict can behave incorrectly
+    * [HHH-11397] - Query parameter binding validation issue
+    * [HHH-11470] - Schema update should not try to query sequences for Dialects not supporting them (DB2400Dialect, DerbyDialect, DB2390Dialect)
+    * [HHH-11477] - HQL query against field marked with @Lob fails on PostgreSQL
+    * [HHH-11502] - XML Mapped Entity with a ManyToOne association to a Annotation Mapped Entity -> NullPointerException
+    * [HHH-11503] - LimitHandler parameter binding fails on SQL Server 2012
+    * [HHH-11506] - Lazy properties are not updated on bytecode-enhanced entity if not all lazy properties (e.g. collections) are initialized
+    * [HHH-11510] - NativeQuery#iterate throws QuerySyntaxException instead of UnsupportedOperationException
+    * [HHH-11511] - QuerySyntaxException when sorting by a column using a JPQL reserved keyword
+    * [HHH-11516] - Level two cache may not be enabled when using @Cacheable without/instead of @Cache
+    * [HHH-11529] - Getting NullPointerException from ScanningCoordinator debug log
+    * [HHH-11536] - Fix unit tests failing on Oracle
+    * [HHH-11538] - Redundant left outer joins in generated SQL
+    * [HHH-11540] - Metamodel does not include embeddable type used in type variables
+    * [HHH-11545] - ForeignKey definition of @CollectionTable isn't properly used
+    * [HHH-11547] - Misspelling in documentation
+    * [HHH-11549] - Unable to locate MappedSuperclass version attribute when mixing annotations with hibernate mapping files
+    * [HHH-11554] - Inherited interfaces are not considered when creating EntityMetamodel
+    * [HHH-11555] - AbstractSharedSessionContract doesn't restore ExceptionConverter after de-serialization
+    * [HHH-11559] - Fix tests catching exceptions without re-throwing them
+    * [HHH-11560] - Envers throws a MappingException for Lob + ElementCollection for non-audited properties.
+    * [HHH-11570] - Hibernate Envers listeners fail because EntityManager is closed when using JPA/JTA/Hibernate 5.2.8/Envers
+
+** Improvement
+    * [HHH-11089] - Naming Strategy Does not affect the user-specified index/foreign-key names
+    * [HHH-11143] - Log a warning if @Cache / @Cacheable specified on non-root entities
+    * [HHH-11473] - Refactor MySQL Dialects
+    * [HHH-11509] - Infomix limit handler support for offset
+    * [HHH-11518] - Log4DelegatingLogger slows down testsuite execution by formatting messages too eagerly
+    * [HHH-11530] - IdentityGeneratorExtendsTest.testIdentifierGeneratorExtendsIdentityGenerator failing on Oracle DBs
+    * [HHH-11551] - Forward IOException in ClassFileArchiveEntryHandler::toClassFile
+    * [HHH-11558] - Envers Query API throws NullPointerException when providing a non-audited entity class.
+    * [HHH-11563] - Avoid calling multiple times org.hibernate.mapping.Component#getComponentClass() during the PojoComponentTuplizer creation
+    * [HHH-11564] - ThreadLocal access in ManagedSessionContext does not need synchronization
+    * [HHH-11568] - Throw QueryException rather than antlr-specific exceptions when query parsing fails.
+
+
 Changes in 5.2.8.Final (February 17, 2017)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/27000

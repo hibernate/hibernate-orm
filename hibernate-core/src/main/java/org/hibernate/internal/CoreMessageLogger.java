@@ -1766,4 +1766,8 @@ public interface CoreMessageLogger extends BasicLogger {
 					"implementing equals/hashCode."
 	)
 	void unknownJavaTypeNoEqualsHashCode(Class javaType);
+
+	@LogMessage(level = WARN)
+	@Message(value = "@javax.persistence.Cacheable or @org.hibernate.annotations.Cache used on a non-root entity: ignored for %s", id = 482)
+	void cacheOrCacheableAnnotationOnNonRoot(String className);
 }

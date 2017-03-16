@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import javax.persistence.Access;
+import javax.persistence.Cacheable;
 import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
 import javax.persistence.InheritanceType;
@@ -301,6 +302,10 @@ public class EntityBinder {
 			}
 			if (annotatedClass.isAnnotationPresent(Immutable.class)) {
 				LOG.immutableAnnotationOnNonRoot(annotatedClass.getName());
+			}
+			if ( annotatedClass.isAnnotationPresent( Cacheable.class ) ||
+					annotatedClass.isAnnotationPresent( Cache.class ) ) {
+				LOG.cacheOrCacheableAnnotationOnNonRoot( annotatedClass.getName() );
 			}
 		}
 		persistentClass.setOptimisticLockStyle( getVersioning( optimisticLockType ) );

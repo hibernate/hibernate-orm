@@ -11,8 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.tools.MutableBoolean;
 import org.hibernate.envers.internal.tools.MutableInteger;
+import org.hibernate.envers.query.criteria.AuditFunction;
 
 /**
  * Parameters of a query, built using {@link QueryBuilder}.
@@ -309,6 +311,96 @@ public class Parameters {
 			sub2.addNullRestriction( left, false );
 			sub2.addNullRestriction( right, false );
 		}
+	}
+
+	/**
+	 * Add where clause with a function call on the left and a scalar value on the right.
+	 *
+	 * @param configuration the configuration.
+	 * @param function the function.
+	 * @param op the operator.
+	 * @param value the scalar value.
+	 */
+	public void addWhereWithFunction(Configuration configuration, AuditFunction function, String op, Object value) {
+		final StringBuilder expression = new StringBuilder();
+
+		QueryBuilder.appendFunctionArgument( configuration, queryParamCounter, localQueryParamValues, alias, expression, function );
+
+		expression.append( ' ' ).append( op );
+
+		String queryParam = generateQueryParam();
+		localQueryParamValues.put( queryParam, value );
+		expression.append( ' ' ).append( ':' ).append( queryParam );
+
+		expressions.add( expression.toString() );
+	}
+
+	/**
+	 * Add a where clause with a function call on the left and an optionally aliased property on the right.
+	 *
+	 * @param configuration the configuration.
+	 * @param function the function.
+	 * @param op the operator.
+	 * @param aliasRight the optional alias of the right property, may be {@literal null}
+	 * @param right the property.
+	 */
+	public void addWhereWithFunction(Configuration configuration, AuditFunction function, String op, String aliasRight, String right) {
+		final StringBuilder expression = new StringBuilder();
+
+		QueryBuilder.appendFunctionArgument( configuration, queryParamCounter, localQueryParamValues, alias, expression, function );
+
+		expression.append( ' ' ).append( op ).append( ' ' );
+
+		if ( aliasRight != null ) {
+			expression.append( aliasRight ).append( '.' );
+		}
+		expression.append( right );
+
+		expressions.add( expression.toString() );
+	}
+
+	/**
+	 * Adds a where clause with a left (optionally aliased) property and a function call on the right side.
+	 *
+	 * @param configuration the configuration.
+	 * @param aliasLeft the optional alias of the left property, may be {@literal null}
+	 * @param left the property.
+	 * @param op the operator.
+	 * @param function the function.
+	 */
+	public void addWhereWithFunction(Configuration configuration, String aliasLeft, String left, String op, AuditFunction function) {
+		final StringBuilder expression = new StringBuilder();
+
+		if ( aliasLeft != null ) {
+			expression.append( aliasLeft ).append( '.' );
+		}
+		expression.append( left );
+
+		expression.append( ' ' ).append( op ).append( ' ' );
+
+		QueryBuilder.appendFunctionArgument( configuration, queryParamCounter, localQueryParamValues, alias, expression, function );
+
+		expressions.add( expression.toString() );
+	}
+
+	/**
+	 * Adds a where clause with a function call on both the left and right of the predicate.
+	 *
+	 * @param configuration the configuration.
+	 * @param left the left-side function.
+	 * @param op the operator.
+	 * @param right the right-side function.
+	 */
+	public void addWhereWithFunction(Configuration configuration, AuditFunction left, String op, AuditFunction right) {
+		final StringBuilder expression = new StringBuilder();
+
+		QueryBuilder.appendFunctionArgument( configuration, queryParamCounter, localQueryParamValues, alias, expression, left );
+
+		expression.append( ' ' ).append( op ).append( ' ' );
+
+		QueryBuilder.appendFunctionArgument( configuration, queryParamCounter, localQueryParamValues, alias, expression, right );
+
+		expressions.add( expression.toString() );
 	}
 
 	private void append(StringBuilder sb, String toAppend, MutableBoolean isFirst) {

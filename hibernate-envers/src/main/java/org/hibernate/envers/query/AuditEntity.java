@@ -7,12 +7,14 @@
 package org.hibernate.envers.query;
 
 import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.envers.query.criteria.AuditConjunction;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.criteria.AuditDisjunction;
 import org.hibernate.envers.query.criteria.AuditId;
 import org.hibernate.envers.query.criteria.AuditProperty;
 import org.hibernate.envers.query.criteria.AuditRelatedId;
+import org.hibernate.envers.query.criteria.internal.EntityTypeAuditExpression;
 import org.hibernate.envers.query.criteria.internal.LogicalAuditExpression;
 import org.hibernate.envers.query.criteria.internal.NotAuditExpression;
 import org.hibernate.envers.query.internal.property.EntityPropertyName;
@@ -175,5 +177,45 @@ public class AuditEntity {
 	 */
 	public static AuditProjection selectEntity(boolean distinct) {
 		return new EntityAuditProjection( null, distinct );
+	}
+
+	/**
+	 * Adds a restriction for the type of the current entity.
+	 * 
+	 * @param the entity type to restrict the current alias to
+	 */
+	public static AuditCriterion entityType(final Class<?> type) {
+		return entityType( null, type );
+	}
+
+	/**
+	 * Adds a restriction for the type of the current entity.
+	 * 
+	 * @param entityName the entity name to restrict the current alias to
+	 */
+	public static AuditCriterion entityType(final String entityName) {
+		return entityType( null, entityName );
+	}
+
+	/**
+	 * Adds a restriction for the type of the entity of the specified alias.
+	 * 
+	 * @param alias the alias to restrict. If null is specified, the current alias is used
+	 * @param type the entity type to restrict the alias to
+	 */
+	public static AuditCriterion entityType(final String alias, final Class<?> type) {
+		Class<?> unproxiedType = EntityTools.getTargetClassIfProxied( type );
+		return entityType( alias, unproxiedType.getName() );
+	}
+
+	/**
+	 * Adds a restriction for the type of the entity of the specified alias.
+	 * 
+	 * @param alias the alias to restrict. If null is specified, the current alias is used
+	 * @param entityName the entity name to restrict the alias to
+	 * @return
+	 */
+	public static AuditCriterion entityType(final String alias, final String entityName) {
+		return new EntityTypeAuditExpression( alias, entityName );
 	}
 }

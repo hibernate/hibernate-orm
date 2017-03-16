@@ -482,6 +482,11 @@ public class Parameters {
 		expressions.add( expression.toString() );
 	}
 
+	public void addEntityTypeRestriction(String alias, String entityName) {
+		String expression = String.format( "type(%s) = %s", alias, entityName );
+		expressions.add( expression );
+	}
+
 	private void append(StringBuilder sb, String toAppend, MutableBoolean isFirst) {
 		if ( !isFirst.isSet() ) {
 			sb.append( " " ).append( connective ).append( " " );

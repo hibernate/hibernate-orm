@@ -150,22 +150,10 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 
 	@Override
 	public AuditAssociationQueryImpl<Q> addProjection(AuditProjection projection) {
-		AuditProjection.ProjectionData projectionData = projection.getData( enversService );
-		String projectionEntityAlias = projectionData.getAlias( alias );
+		String projectionEntityAlias = projection.getAlias( alias );
 		String projectionEntityName = aliasToEntityNameMap.get( projectionEntityAlias );
-		String propertyName = CriteriaTools.determinePropertyName(
-				enversService,
-				auditReader,
-				projectionEntityName,
-				projectionData.getPropertyName()
-		);
-		queryBuilder.addProjection(
-				projectionData.getFunction(),
-				projectionEntityAlias,
-				propertyName,
-				projectionData.isDistinct()
-		);
 		registerProjection( projectionEntityName, projection );
+		projection.addProjectionToQuery( enversService, auditReader, aliasToEntityNameMap, alias, queryBuilder );
 		return this;
 	}
 

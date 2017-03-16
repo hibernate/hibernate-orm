@@ -7,10 +7,15 @@
 package org.hibernate.envers.query.criteria;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
+import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.query.criteria.internal.BetweenAuditExpression;
+import org.hibernate.envers.query.criteria.internal.CriteriaTools;
+import org.hibernate.envers.query.criteria.internal.FunctionPropertyAuditExpression;
 import org.hibernate.envers.query.criteria.internal.IlikeAuditExpression;
 import org.hibernate.envers.query.criteria.internal.InAuditExpression;
 import org.hibernate.envers.query.criteria.internal.NotNullAuditExpression;
@@ -38,6 +43,15 @@ public class AuditProperty<T> implements AuditProjection {
 	public AuditProperty(String alias, PropertyNameGetter propertyNameGetter) {
 		this.alias = alias;
 		this.propertyNameGetter = propertyNameGetter;
+	}
+
+	@Override
+	public String getAlias(String baseAlias) {
+		return alias == null ? baseAlias : alias;
+	}
+
+	public PropertyNameGetter getPropertyNameGetter() {
+		return propertyNameGetter;
 	}
 
 	public AuditCriterion hasChanged() {
@@ -299,6 +313,48 @@ public class AuditProperty<T> implements AuditProjection {
 	}
 
 	/**
+	 * Apply an "equal" constraint to a function
+	 */
+	public AuditCriterion eqFunction(AuditFunction otherFunction) {
+		return new FunctionPropertyAuditExpression( alias, propertyNameGetter, otherFunction, "=" );
+	}
+
+	/**
+	 * Apply a "not equal" constraint to a function
+	 */
+	public AuditCriterion neFunction(AuditFunction otherFunction) {
+		return new FunctionPropertyAuditExpression( alias, propertyNameGetter, otherFunction, "<>" );
+	}
+
+	/**
+	 * Apply a "less than" constraint to a function
+	 */
+	public AuditCriterion ltFunction(AuditFunction otherFunction) {
+		return new FunctionPropertyAuditExpression( alias, propertyNameGetter, otherFunction, "<" );
+	}
+
+	/**
+	 * Apply a "less than or equal" constraint to a function
+	 */
+	public AuditCriterion leFunction(AuditFunction otherFunction) {
+		return new FunctionPropertyAuditExpression( alias, propertyNameGetter, otherFunction, "<=" );
+	}
+
+	/**
+	 * Apply a "greater than" constraint to a function
+	 */
+	public AuditCriterion gtFunction(AuditFunction otherFunction) {
+		return new FunctionPropertyAuditExpression( alias, propertyNameGetter, otherFunction, ">" );
+	}
+
+	/**
+	 * Apply a "greater than or equal" constraint to a function
+	 */
+	public AuditCriterion geFunction(AuditFunction otherFunction) {
+		return new FunctionPropertyAuditExpression( alias, propertyNameGetter, otherFunction, ">=" );
+	}
+
+	/**
 	 * Apply an "is not null" constraint to the another property
 	 */
 	public AuditCriterion isNotNull() {
@@ -367,8 +423,21 @@ public class AuditProperty<T> implements AuditProjection {
 
 	// Projection on this property
 
-	public ProjectionData getData(EnversService enversService) {
-		return new ProjectionData( null, alias, propertyNameGetter.get( enversService ), false );
+	@Override
+	public void addProjectionToQuery(EnversService enversService, AuditReaderImplementor auditReader,
+			Map<String, String> aliasToEntityNameMap, String baseAlias, QueryBuilder queryBuilder) {
+		String projectionEntityAlias = getAlias( baseAlias );
+		String projectionEntityName = aliasToEntityNameMap.get( projectionEntityAlias );
+		String propertyName = CriteriaTools.determinePropertyName(
+				enversService,
+				auditReader,
+				projectionEntityName,
+				propertyNameGetter );
+		queryBuilder.addProjection(
+				null,
+				projectionEntityAlias,
+				propertyName,
+				false );
 	}
 
 	// Order

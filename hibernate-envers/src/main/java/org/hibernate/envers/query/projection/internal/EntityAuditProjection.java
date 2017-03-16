@@ -10,6 +10,8 @@ import java.util.Map;
 
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
+import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.query.projection.AuditProjection;
 
 /**
@@ -26,9 +28,19 @@ public class EntityAuditProjection implements AuditProjection {
 	}
 
 	@Override
-	public ProjectionData getData(final EnversService enversService) {
-		// no property is selected, instead the whole entity (alias) is selected
-		return new ProjectionData( null, alias, null, distinct );
+	public String getAlias(String baseAlias) {
+		return alias == null ? baseAlias : alias;
+	}
+
+	@Override
+	public void addProjectionToQuery(EnversService enversService, AuditReaderImplementor auditReader,
+			Map<String, String> aliasToEntityNameMap, String baseAlias, QueryBuilder queryBuilder) {
+		String projectionEntityAlias = getAlias( baseAlias );
+		queryBuilder.addProjection(
+				null,
+				projectionEntityAlias,
+				null,
+				distinct );
 	}
 
 	@Override

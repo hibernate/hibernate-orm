@@ -20,6 +20,8 @@ repositories {
 
 apply plugin: "groovy"
 
+buildDir = "target"
+
 dependencies {
 	compile gradleApi()
 	compile localGroovy()

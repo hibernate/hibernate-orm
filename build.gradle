@@ -87,6 +87,8 @@ def osgiDescription() {
 	return "A module of the Hibernate O/RM project"
 }
 
+buildDir = "target"
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 subprojects { subProject ->

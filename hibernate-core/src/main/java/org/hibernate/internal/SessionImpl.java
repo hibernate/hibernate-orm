@@ -232,12 +232,14 @@ public final class SessionImpl
 
 	private boolean autoClear;
 	private boolean autoClose;
+	private boolean queryParametersValidationEnabled;
 
 	private transient int dontFlushFromFind;
-	private transient boolean disallowOutOfTransactionUpdateOperations;
 
+	private transient boolean disallowOutOfTransactionUpdateOperations;
 	private transient ExceptionMapper exceptionMapper;
 	private transient ManagedFlushChecker managedFlushChecker;
+
 	private transient AfterCompletionAction afterCompletionAction;
 
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
@@ -255,6 +257,7 @@ public final class SessionImpl
 
 		this.autoClear = options.shouldAutoClear();
 		this.autoClose = options.shouldAutoClose();
+		this.queryParametersValidationEnabled = options.isQueryParametersValidationEnabled();
 		this.disallowOutOfTransactionUpdateOperations = !factory.getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations();
 		this.discardOnClose = getFactory().getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
 
@@ -449,6 +452,11 @@ public final class SessionImpl
 	@Override
 	public boolean isAutoCloseSessionEnabled() {
 		return autoClose;
+	}
+
+	@Override
+	public boolean isQueryParametersValidationEnabled() {
+		return queryParametersValidationEnabled;
 	}
 
 	@Override
@@ -2577,6 +2585,10 @@ public final class SessionImpl
 					null;
 		}
 
+		@Override
+		public boolean isQueryParametersValidationEnabled() {
+			return session.isQueryParametersValidationEnabled();
+		}
 	}
 
 	private class LockRequestImpl implements LockRequest {

@@ -369,4 +369,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public TimeZone getJdbcTimeZone() {
 		return delegate.getJdbcTimeZone();
 	}
+
+	@Override
+	public boolean isQueryParametersValidationEnabled() {
+		return delegate.isQueryParametersValidationEnabled();
+	}
 }

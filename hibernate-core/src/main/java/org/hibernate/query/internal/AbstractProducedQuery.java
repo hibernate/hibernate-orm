@@ -136,7 +136,11 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			ParameterMetadata parameterMetadata) {
 		this.producer = producer;
 		this.parameterMetadata = parameterMetadata;
-		this.queryParameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
+		this.queryParameterBindings = QueryParameterBindingsImpl.from(
+				parameterMetadata,
+				producer.getFactory(),
+				producer.isQueryParametersValidationEnabled()
+		);
 	}
 
 	@Override

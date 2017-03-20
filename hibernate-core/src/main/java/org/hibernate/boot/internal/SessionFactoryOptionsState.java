@@ -174,4 +174,6 @@ public interface SessionFactoryOptionsState {
 	boolean isPreferUserTransaction();
 
 	TimeZone getJdbcTimeZone();
+
+	boolean isQueryParametersValidationEnabled();
 }

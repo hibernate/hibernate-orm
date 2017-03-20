@@ -555,6 +555,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private PhysicalConnectionHandlingMode connectionHandlingMode;
 		private boolean wrapResultSetsEnabled;
 		private TimeZone jdbcTimeZone;
+		private boolean queryParametersValidationEnabled;
 
 		private Map<String, SQLFunction> sqlFunctions;
 
@@ -756,6 +757,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			else if ( jdbcTimeZoneValue != null ) {
 				throw new IllegalArgumentException( "Configuration property " + JDBC_TIME_ZONE + " value [" + jdbcTimeZoneValue + "] is not supported!" );
 			}
+
+			this.queryParametersValidationEnabled = ConfigurationHelper.getBoolean(
+					VALIDATE_QUERY_PARAMETERS,
+					configurationSettings,
+					true
+			);
 		}
 
 		private static Interceptor determineInterceptor(Map configurationSettings, StrategySelector strategySelector) {
@@ -1187,6 +1194,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		public TimeZone getJdbcTimeZone() {
 			return this.jdbcTimeZone;
 		}
+
+		@Override
+		public boolean isQueryParametersValidationEnabled() {
+			return this.queryParametersValidationEnabled;
+		}
 	}
 
 	@Override
@@ -1504,5 +1516,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return options.getJdbcTimeZone();
+	}
+
+	@Override
+	public boolean isQueryParametersValidationEnabled() {
+		return options.isQueryParametersValidationEnabled();
 	}
 }

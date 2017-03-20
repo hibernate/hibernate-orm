@@ -1646,4 +1646,19 @@ public interface AvailableSettings {
 	 * @since 5.2.5
 	 */
 	String USE_LEGACY_LIMIT_HANDLERS = "hibernate.legacy_limit_handler";
+
+
+	/**
+	 * Setting which indicates if {@link org.hibernate.query.Query#setParameter} should not perform parameters validation
+	 *
+	 * This setting is applied only when the Session is bootstrapped via JPA {@link javax.persistence.EntityManagerFactory}
+	 *
+	 * </p>
+	 * Values are: {@code true} indicates the validation should be performed, {@code false} otherwise
+	 * <p>
+	 * The default value is {@code true} when the Session is bootstrapped via JPA {@link javax.persistence.EntityManagerFactory},
+	 * otherwise is {@code false}
+	 *
+	 */
+	String VALIDATE_QUERY_PARAMETERS = "hibernate.query.validate_parameters";
 }

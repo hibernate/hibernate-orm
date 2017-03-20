@@ -106,4 +106,10 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 		delegate.jdbcTimeZone(timeZone);
 		return this;
 	}
+
+	@Override
+	public SessionBuilder setQueryParameterValidation(boolean enabled) {
+		delegate.setQueryParameterValidation( enabled );
+		return this;
+	}
 }

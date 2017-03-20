@@ -215,4 +215,8 @@ public interface SessionFactoryOptions {
 	boolean isReleaseResourcesOnCloseEnabled();
 
 	TimeZone getJdbcTimeZone();
+
+	default boolean isQueryParametersValidationEnabled(){
+		return isJpaBootstrap();
+	}
 }

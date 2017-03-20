@@ -30,7 +30,7 @@ public class QueryParametersValidationTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void setParameterWithWrongTypeShouldNotThrowIllegalArgumentException() {
-		try (Session session = openSession();) {
+		try (Session session = openSession()) {
 			session.createQuery( "select e from TestEntity e where e.id = :id" ).setParameter( "id", 1 );
 		}
 	}

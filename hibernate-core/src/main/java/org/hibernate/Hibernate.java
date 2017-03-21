@@ -195,4 +195,23 @@ public final class Hibernate {
 		return true;
 	}
 
+    /**
+     * Unproxies a {@link HibernateProxy}. If the proxy is uninitialized, it automatically triggers an initialization.
+     * In case null object was supplied, the return value will be null.
+     *
+     * @param proxy the {@link HibernateProxy} to be unproxied
+     * @return if proxy is not null then the proxy's underlying implementation object, null otherwise
+     */
+    public static Object unproxy(Object proxy) {
+        if (proxy == null) {
+            return null;
+        }
+        if (proxy instanceof HibernateProxy) {
+            HibernateProxy hProxy = (HibernateProxy) proxy;
+            LazyInitializer initializer = hProxy.getHibernateLazyInitializer();
+            return initializer.getImplementation();
+        } else {
+            throw new IllegalArgumentException("The proxy should be a HibernateProxy");
+        }
+    }
 }

@@ -324,6 +324,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
+	public boolean isOpenOrWaitingForAutoClose() {
+		return !isClosed() || waitingForAutoClose;
+	}
+
+	@Override
 	public void checkOpen(boolean markForRollbackIfClosed) {
 		if ( isClosed() ) {
 			if ( markForRollbackIfClosed && transactionCoordinator.isTransactionActive() ) {

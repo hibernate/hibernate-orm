@@ -62,11 +62,9 @@ public class OneToManyJtaSessionClosedBeforeCommitTest extends BaseEnversJPAFunc
 			entityManager.persist( ingEntity );
 
 			entityId = ingEntity.getId();
-			// simulates spring JtaTransactionManager.triggerBeforeCompletion()
-			// this closes the entity manager prior to the JTA transaction.
-			entityManager.close();
 		}
 		finally {
+			entityManager.close();
 			TestingJtaPlatformImpl.tryCommit();
 		}
 	}

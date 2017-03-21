@@ -201,7 +201,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				throwLazyInitializationException( "could not initialize proxy - no Session" );
 			}
 		}
-		else if ( !session.isOpen() ) {
+		else if ( !session.isOpenOrWaitingForAutoClose() ) {
 			if ( allowLoadOutsideTransaction ) {
 				tempSession = openTemporarySessionForLoading();
 			}

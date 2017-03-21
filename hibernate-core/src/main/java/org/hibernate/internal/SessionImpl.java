@@ -1224,7 +1224,7 @@ public final class SessionImpl
 	}
 
 	private void fireLoad(LoadEvent event, LoadType loadType) {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 		for ( LoadEventListener listener : listeners( EventType.LOAD ) ) {
 			listener.onLoad( event, loadType );
@@ -1233,7 +1233,7 @@ public final class SessionImpl
 	}
 
 	private void fireResolveNaturalId(ResolveNaturalIdEvent event) {
-		checkOpen();
+		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 		for ( ResolveNaturalIdEventListener listener : listeners( EventType.RESOLVE_NATURAL_ID ) ) {
 			listener.onResolveNaturalId( event );

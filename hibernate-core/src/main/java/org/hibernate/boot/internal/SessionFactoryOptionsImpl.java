@@ -125,6 +125,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final TimeZone jdbcTimeZone;
 
 	private final Map<String, SQLFunction> sqlFunctions;
+	private boolean queryParametersValidationEnabled;
 
 	public SessionFactoryOptionsImpl(SessionFactoryOptionsState state) {
 		this.serviceRegistry = state.getServiceRegistry();
@@ -202,6 +203,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.sqlFunctions = state.getCustomSqlFunctionMap();
 
 		this.jdbcTimeZone = state.getJdbcTimeZone();
+
+		this.queryParametersValidationEnabled = state.isQueryParametersValidationEnabled();
 	}
 
 	@Override
@@ -526,5 +529,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return jdbcTimeZone;
+	}
+
+	@Override
+	public boolean isQueryParametersValidationEnabled() {
+		return queryParametersValidationEnabled;
 	}
 }

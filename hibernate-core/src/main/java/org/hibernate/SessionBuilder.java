@@ -176,4 +176,18 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T clearEventListeners();
 
 	T jdbcTimeZone(TimeZone timeZone);
+
+	/**
+	 * Should {@link org.hibernate.query.Query#setParameter} perform parameter validation
+	 * when the Session is bootstrapped via JPA {@link javax.persistence.EntityManagerFactory}
+	 *
+	 * @param enabled {@code true} indicates the validation should be performed, {@code false} otherwise
+	 * <p>
+	 * The default value is {@code true}
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	default T setQueryParameterValidation(boolean enabled) {
+		return (T) this;
+	}
 }

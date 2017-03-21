@@ -414,6 +414,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public boolean isQueryParametersValidationEnabled() {
+		return delegate.isQueryParametersValidationEnabled();
+	}
+
+	@Override
 	public boolean shouldAutoJoinTransaction() {
 		return delegate.shouldAutoJoinTransaction();
 	}

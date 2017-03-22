@@ -9,11 +9,7 @@ package org.hibernate.test.legacy;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
@@ -21,6 +17,8 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.HSQLDialect;
@@ -52,6 +50,15 @@ public class MasterDetailTest extends LegacyTestCase {
 			"legacy/UpDown.hbm.xml",
 			"legacy/Eye.hbm.xml"
 		};
+	}
+
+	@Override
+	public void configure(Configuration cfg) {
+		super.configure(cfg);
+		Properties props = new Properties();
+		props.put( Environment.ORDER_INSERTS, "true" );
+		props.put( Environment.STATEMENT_BATCH_SIZE, "10" );
+		cfg.addProperties( props );
 	}
 
 	@Test

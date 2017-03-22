@@ -307,6 +307,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	public boolean remove(Object o) {
 		initialize( true );
 		if ( bag.remove( o ) ) {
+			elementRemoved = true;
 			dirty();
 			return true;
 		}
@@ -346,6 +347,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		if ( c.size()>0 ) {
 			initialize( true );
 			if ( bag.removeAll( c ) ) {
+				elementRemoved = true;
 				dirty();
 				return true;
 			}

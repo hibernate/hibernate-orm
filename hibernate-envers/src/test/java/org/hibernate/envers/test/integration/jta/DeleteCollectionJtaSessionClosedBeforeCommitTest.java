@@ -15,6 +15,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.Audited;
@@ -99,6 +100,7 @@ public class DeleteCollectionJtaSessionClosedBeforeCommitTest extends BaseEnvers
 
 	@Audited
 	@Entity
+	@Table(name = "ENTITY")
 	public static class TestEntity {
 		@Id
 		private Integer id;
@@ -151,6 +153,7 @@ public class DeleteCollectionJtaSessionClosedBeforeCommitTest extends BaseEnvers
 
 	@Audited
 	@Entity
+	@Table(name = "O_ENTITY")
 	public static class OtherTestEntity {
 
 		@Id

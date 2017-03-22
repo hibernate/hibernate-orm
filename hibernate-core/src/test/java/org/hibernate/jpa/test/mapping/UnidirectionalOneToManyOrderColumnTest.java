@@ -14,25 +14,26 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
+import javax.persistence.Table;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
+@TestForIssue(jiraKey = "HHH-11587")
 public class UnidirectionalOneToManyOrderColumnTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-11587" )
-	public void testQuote() {
+	public void testRemovingAnElement() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 
 			ParentData parent = new ParentData();
 			entityManager.persist( parent );
 
-			String[] childrenStr = new String[] { "One", "Two", "Three", "Four", "Five" };
+			String[] childrenStr = new String[] {"One", "Two", "Three"};
 			for ( String str : childrenStr ) {
 				ChildData child = new ChildData( str );
 				entityManager.persist( child );
@@ -46,6 +47,26 @@ public class UnidirectionalOneToManyOrderColumnTest extends BaseEntityManagerFun
 		} );
 	}
 
+	@Test
+	public void testAddingAnElement() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+
+			ParentData parent = new ParentData();
+			entityManager.persist( parent );
+
+			String[] childrenStr = new String[] {"One", "Two", "Three"};
+			for ( String str : childrenStr ) {
+				ChildData child = new ChildData( str );
+				entityManager.persist( child );
+				parent.getChildren().add( child );
+			}
+
+			entityManager.flush();
+
+			List<ChildData> children = parent.getChildren();
+			children.add( 1, new ChildData( "Another" ) );
+		} );
+	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -55,7 +76,8 @@ public class UnidirectionalOneToManyOrderColumnTest extends BaseEntityManagerFun
 		};
 	}
 
-	@Entity
+	@Entity(name = "ParentData")
+	@Table(name = "PARENT")
 	public static class ParentData {
 		@Id
 		@GeneratedValue
@@ -70,7 +92,8 @@ public class UnidirectionalOneToManyOrderColumnTest extends BaseEntityManagerFun
 		}
 	}
 
-	@Entity
+	@Entity(name = "ChildData")
+	@Table(name = "CHILD")
 	public static class ChildData {
 		@Id
 		@GeneratedValue

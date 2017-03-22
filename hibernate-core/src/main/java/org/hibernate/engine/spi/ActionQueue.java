@@ -44,10 +44,13 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
 /**
@@ -1134,22 +1137,33 @@ public class ActionQueue {
 		 */
 		private void addParentChildEntityNames(AbstractEntityInsertAction action, BatchIdentifier batchIdentifier) {
 			Object[] propertyValues = action.getState();
-			Type[] propertyTypes = action.getPersister().getClassMetadata().getPropertyTypes();
 
-			for ( int i = 0; i < propertyValues.length; i++ ) {
-				Object value = propertyValues[i];
-				Type type = propertyTypes[i];
-				if ( type.isEntityType() && value != null ) {
-					EntityType entityType = (EntityType) type;
-					String entityName = entityType.getName();
-					batchIdentifier.getParentEntityNames().add( entityName );
-				}
-				else if ( type.isCollectionType() && value != null ) {
-					CollectionType collectionType = (CollectionType) type;
-					final SessionFactoryImplementor sessionFactory = action.getSession().getFactory();
-					if ( collectionType.getElementType( sessionFactory ).isEntityType() ) {
-						String entityName = collectionType.getAssociatedEntityName( sessionFactory );
-						batchIdentifier.getChildEntityNames().add( entityName );
+			ClassMetadata classMetadata = action.getPersister().getClassMetadata();
+			if ( classMetadata != null ) {
+				Type[] propertyTypes = classMetadata.getPropertyTypes();
+
+				for ( int i = 0; i < propertyValues.length; i++ ) {
+					Object value = propertyValues[i];
+					Type type = propertyTypes[i];
+					if ( type.isEntityType() && value != null ) {
+						EntityType entityType = (EntityType) type;
+						String entityName = entityType.getName();
+
+						if ( entityType.isOneToOne() &&
+								OneToOneType.class.cast( entityType ).getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
+							batchIdentifier.getChildEntityNames().add( entityName );
+						}
+						else {
+							batchIdentifier.getParentEntityNames().add( entityName );
+						}
+					}
+					else if ( type.isCollectionType() && value != null ) {
+						CollectionType collectionType = (CollectionType) type;
+						final SessionFactoryImplementor sessionFactory = action.getSession().getFactory();
+						if ( collectionType.getElementType( sessionFactory ).isEntityType() ) {
+							String entityName = collectionType.getAssociatedEntityName( sessionFactory );
+							batchIdentifier.getChildEntityNames().add( entityName );
+						}
 					}
 				}
 			}

@@ -96,6 +96,12 @@ public final class Cascade {
 					if ( hasUninitializedLazyProperties && persister.getPropertyLaziness()[i] && action.performOnLazyProperty() ) {
 						LazyAttributeLoadingInterceptor interceptor = persister.getInstrumentationMetadata().extractInterceptor( parent );
 						child = interceptor.fetchAttribute( parent, propertyName );
+						// set the child attribute in the parent
+						persister.setPropertyValue(
+								parent,
+								persister.getEntityMetamodel().getPropertyIndexOrNull( propertyName ),
+								child
+						);
 					}
 					else {
 						child = persister.getPropertyValue( parent, i );

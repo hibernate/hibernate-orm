@@ -14,6 +14,7 @@ import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -38,6 +39,7 @@ import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.internal.util.collections.LazyIterator;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
@@ -135,10 +137,37 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
-			EntityEntry entry = (EntityEntry) me.getValue();
-			Status status = entry.getStatus();
+			final Object entity = me.getKey();
+			final EntityEntry entry = me.getValue();
+			final Status status = entry.getStatus();
+			final EntityPersister persister = entry.getPersister();
 			if ( status == Status.MANAGED || status == Status.SAVING || status == Status.READ_ONLY ) {
-				cascadeOnFlush( session, entry.getPersister(), me.getKey(), anything );
+				cascadeOnFlush( session, persister, entity, anything );
+			}
+			else if ( ( status == Status.DELETED || status == Status.GONE ) &&
+					persister.hasCollections() &&
+					persister.hasUninitializedLazyProperties( entity ) ) {
+				// IMPLEMENTATION NOTE:
+				// When a bytecode-enhanced entity is deleted, we need to make sure
+				// that each lazy collection is resolved in the PersistenceContext.
+				// If a lazy collection is not in the PersistenceContext, it will
+				// not be detected as an unreferenced collection, and it will not be
+				// deleted (and can cause a constraint violation).
+				final LazyAttributeLoadingInterceptor interceptor =
+						persister.getInstrumentationMetadata().extractInterceptor( entity );
+				final Type[] propertyTypes = persister.getPropertyTypes();
+				final String[] propertyNames = persister.getPropertyNames();
+				for ( int i = 0 ; i < propertyTypes.length; i++ ) {
+					// If LazyAttributeLoadingInterceptor#isAttributeLoaded( collection )
+					// returns true, then the collection is in the PersistenceContext.
+					if ( propertyTypes[i].isCollectionType() && !interceptor.isAttributeLoaded( propertyNames[i] ) ) {
+						// Resolving the PersistentCollection will add it to the PersistenceContext,
+						// if it is not there already.
+						// No need to set the resolved (uninitialized PersistentCollection) value back
+						// in the entity, as it can force initialization of the collection elements.
+						propertyTypes[i].resolve( entry.getDeletedState()[i], session, entity );
+					}
+				}
 			}
 		}
 	}

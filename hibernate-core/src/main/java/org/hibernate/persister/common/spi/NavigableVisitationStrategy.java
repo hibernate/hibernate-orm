@@ -60,8 +60,8 @@ public interface NavigableVisitationStrategy {
 
 	// todo (6.0) : many methods here deal with internal types - we need to develop API/SPI counterparts to these
 	//		^^ API if we want to allow applications to use this - maybe something like:
-	//		Session#visit(String entityName, NavigableVisitationStrategy visitor)
-	//		Session#visit(Class entityJavaType, NavigableVisitationStrategy visitor)
+	//		Session/SessionFactory#visit(String entityName, NavigableVisitationStrategy visitor)
+	//		Session/SessionFactory#visit(Class entityJavaType, NavigableVisitationStrategy visitor)
 
 	@Deprecated
 	default void start() {

@@ -105,24 +105,6 @@ public interface EntityPersister<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Redesigned contract
 
-	 // todo : ultimately this needs to allow for MappedSuperclass supers
-
-	/**
-	 * Called after all EntityPersister instance have been created;
-	 *
-	 * @param superType The entity's super's EntityPersister
-	 * @param entityBinding Should be  the same PersistentClass instance originally passed to the
-	 * 		ctor, but we want to not have to stoire that around as EntityPersister instance state -
-	 * 		so we pass it in again
-	 * @param creationContext Access to the database model
-	 */
-	void finishInitialization(IdentifiableTypeImplementor<? super T> superType, PersistentClass entityBinding, PersisterCreationContext creationContext);
-
-	/**
-	 * Called after {@link #finishInitialization} has been called on all persisters.
-	 */
-	void postInstantiate();
-
 	/**
 	 * The entity name which this persister maps.
 	 */

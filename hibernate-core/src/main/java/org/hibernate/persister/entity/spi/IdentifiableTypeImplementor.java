@@ -8,9 +8,9 @@ package org.hibernate.persister.entity.spi;
 
 import javax.persistence.metamodel.IdentifiableType;
 
+import org.hibernate.mapping.IdentifiableTypeMapping;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
-import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.spi.PersisterCreationContext;
 
 /**
@@ -23,11 +23,10 @@ import org.hibernate.persister.spi.PersisterCreationContext;
 public interface IdentifiableTypeImplementor<T> extends ManagedTypeImplementor<T>, IdentifiableType<T> {
 	@Override
 	default IdentifiableTypeImplementor<? super T> getSupertype() {
-		return getSuperType();
+		return getSuperclassType();
 	}
 
-	@Override
-	IdentifiableTypeImplementor<? super T> getSuperType();
+	IdentifiableTypeImplementor<? super T> getSuperclassType();
 
 	EntityHierarchy getHierarchy();
 
@@ -43,6 +42,6 @@ public interface IdentifiableTypeImplementor<T> extends ManagedTypeImplementor<T
 	void finishInitialization(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeImplementor<? super T> superType,
-			PersistentClass mappingDescriptor,
+			IdentifiableTypeMapping mappingDescriptor,
 			PersisterCreationContext creationContext);
 }

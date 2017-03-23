@@ -8,6 +8,7 @@
 * HHH-11356 - Adjust the 2nd-Cache SPIs to better reflect supported uses
 * HHH-11391	- Improved metadata about a basic-typed value
 * HHH-11358 - Changes to persister contracts
+* HHH-11478 - General package restructuring
 
 == TODO items for persister / load-plan work:
 
@@ -44,9 +45,12 @@
 
 == TODO items
 
+* Consider a common "model walker" useable for `org.hibernate.mapping` model as well as `org.hibernate.persister` via
+	visitation contracts implemented in the tree + an external visitor.  This would also fit with users being able to
+	do walk model using a custom visitor.
 * Consider splitting AST visitors/listeners into smaller pieces.  Good article on the subject -> http://jakubdziworski.github.io/java/2016/04/01/antlr_visitor_vs_listener.html
-* Consider a unified and generalized initialization series for `MappedSuperclassImplementor` and `EntityPersister`,
-and maybe `EmbeddedPersister` as well to cover all `ManagedTypeImplementor` types.
+* Consider a unified and generalized initialization series for `MappedSuperclassImplementor` (specifically `EntityPersister`),
+	and maybe `EmbeddedPersister` as well to cover all `ManagedTypeImplementor` types.
 * Migrate LoadPlan to SQM/SQL AST
 * related (^^) - drop Loader?  Or retrofit it to leverage JdbcSelectExecutor.
 * Drop old QueryTranslator and both impls
@@ -65,8 +69,8 @@ and maybe `EmbeddedPersister` as well to cover all `ManagedTypeImplementor` type
 * Finish removing `#fromString` and `#toString` impls from various `BasicJavaDescriptor` impls and
 	(use the default impl) move handling of String-based conversions into `#wrap` and `#unwrap`.
 	Tedious task, so adding a todo note here - bu partially done.
-* Move `org.hibernate.secure` to `org.hibernate.resource.jacc`?
-* Move `org.hibernate.jmx` to `org.hibernate.resource.jmx`?
+* Move `org.hibernate.secure` to `org.hibernate.resource.jacc`? - https://hibernate.atlassian.net/browse/HHH-11478
+* Move `org.hibernate.jmx` to `org.hibernate.resource.jmx`? - https://hibernate.atlassian.net/browse/HHH-11478
 * Parameterized ScrollableResults signature - change signature of row access methods or add new row access methods?
 * Remove `org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport`.  Since we already baseline on Java 8there is
 	no need for the reflection anymore

@@ -225,7 +225,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			return interpretMappedSuperclass( entityBinding.getSuperMappedSuperclass() );
 		}
 		else if ( entityBinding.getSuperclass() != null ) {
-			// else, if entityBinding#getSuperclass() is not null, that is the direct super type
+			// else, if entityBinding#getSuperclassMapping() is not null, that is the direct super type
 			// 		in this case we want to create the TypeHierarchyNode (if not already there), but not the persisters...
 			// 		that will happen on later call to
 			final String superTypeName = entityBinding.getSuperclass().getEntityName();

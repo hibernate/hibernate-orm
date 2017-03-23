@@ -9,7 +9,7 @@ package org.hibernate.persister.entity.internal;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.IdentifiableTypeMapping;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.spi.AbstractManagedType;
@@ -17,7 +17,6 @@ import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
-import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.IdentifiableTypeImplementor;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
@@ -27,8 +26,7 @@ import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
  */
 public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T> implements IdentifiableTypeImplementor<T> {
 	private EntityHierarchy entityHierarchy;
-	private IdentifiableTypeImplementor<? super T> superType;
-	private List<EntityPersister> subclassEntityPersisters;
+	private IdentifiableTypeImplementor<? super T> superclassType;
 
 	public AbstractIdentifiableType(IdentifiableJavaDescriptor<T> javaTypeDescriptor) {
 		super( javaTypeDescriptor );
@@ -39,15 +37,9 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 		return (IdentifiableJavaDescriptor<T>) super.getJavaTypeDescriptor();
 	}
 
-	@Override
 	@SuppressWarnings("unchecked")
-	public IdentifiableTypeImplementor<? super T> getSuperType() {
-		return superType;
-	}
-
-	@Override
-	public IdentifiableTypeImplementor<? super T> getSupertype() {
-		return superType;
+	public IdentifiableTypeImplementor<? super T> getSuperclassType() {
+		return superclassType;
 	}
 
 	@Override
@@ -65,10 +57,10 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 	public void finishInitialization(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeImplementor<? super T> superType,
-			PersistentClass mappingDescriptor,
+			IdentifiableTypeMapping mappingDescriptor,
 			PersisterCreationContext creationContext) {
 		this.entityHierarchy = entityHierarchy;
-		this.superType = superType;
+		this.superclassType = superType;
 
 		for ( Property property : mappingDescriptor.getDeclaredProperties() ) {
 

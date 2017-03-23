@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.expression.domain;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * A representation of a "Navigable" path as part of a query relative to a "query root".
+ * A representation of a "Navigable" path as part of a query relative to a "navigable root".
  *
  * @see org.hibernate.persister.common.NavigableRole
  *

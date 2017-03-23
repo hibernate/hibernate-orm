@@ -7,16 +7,14 @@
 package org.hibernate.mapping;
 
 /**
- * Compliment to {@link AttributeContainer}, but unrelated to allow these to
- * grow separately.  Also it is generally well-known whether you need an accessor or a mutator.
+ * The common mapping model definition for any "managed type" (entity, mapped-superclass,
+ * embeddable/embedded).
  *
  * @author Steve Ebersole
- *
- * @deprecated (6.0) Use {@link ManagedTypeMapping} instead
  */
-@Deprecated
-public interface PropertyContainer {
-	PropertyContainer getSuperPropertyContainer();
+public interface ManagedTypeMapping {
+	ManagedTypeMapping getSuperclassMapping();
+	java.util.List<ManagedTypeMapping> getSubclassMappings();
 
 	java.util.List<Property> getDeclaredProperties();
 }

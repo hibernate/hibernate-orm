@@ -10,12 +10,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.hibernate.persister.entity.spi.IdentifiableTypeImplementor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -26,7 +28,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T>, TypeConfigurationAware {
+public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T>, TypeConfigurationAware, SubclassTypesAware<T> {
 	private static final Logger log = Logger.getLogger( AbstractManagedType.class );
 
 	// todo (6.0) : I think we can just drop the mutabilityPlan and comparator for managed types
@@ -36,6 +38,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	private final Comparator<T> comparator;
 
 	private ManagedTypeImplementor<? super T>  superTypeDescriptor;
+	private List<IdentifiableTypeImplementor<? extends T>> subclassTypes;
 
 	private Map<String,PersistentAttribute> declaredAttributesByName;
 
@@ -58,6 +61,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 		this.comparator = comparator;
 	}
 
+
 	protected void injectSuperTypeDescriptor(ManagedTypeImplementor<? super T> superTypeDescriptor) {
 		log.debugf(
 				"Injecting super-type descriptor [%s] for ManagedTypeImplementor [%s]; was [%s]",
@@ -79,8 +83,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 
 	}
 
-	@Override
-	public ManagedTypeImplementor<? super T> getSuperType() {
+	public ManagedTypeImplementor<? super T> getSuperclassType() {
 		return superTypeDescriptor;
 	}
 
@@ -108,8 +111,8 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 			return declaredPersistentAttribute;
 		}
 
-		if ( getSuperType() != null ) {
-			final PersistentAttribute<? super T, ?> superPersistentAttribute = getSuperType().findAttribute( name );
+		if ( getSuperclassType() != null ) {
+			final PersistentAttribute<? super T, ?> superPersistentAttribute = getSuperclassType().findAttribute( name );
 			if ( superPersistentAttribute != null ) {
 				return superPersistentAttribute;
 			}
@@ -156,8 +159,8 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	public void collectAttributes(Consumer collector, Class restrictionType) {
 		collectDeclaredAttributes( collector, restrictionType );
 
-		if ( getSuperType() != null  ) {
-			getSuperType().collectAttributes( collector, restrictionType );
+		if ( getSuperclassType() != null  ) {
+			getSuperclassType().collectAttributes( collector, restrictionType );
 		}
 	}
 
@@ -235,8 +238,8 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	@Override
 	public Navigable findNavigable(String navigableName) {
 		Navigable attribute = findDeclaredAttribute( navigableName );
-		if ( attribute == null && getSuperType() != null ) {
-			attribute = getSuperType().findNavigable( navigableName );
+		if ( attribute == null && getSuperclassType() != null ) {
+			attribute = getSuperclassType().findNavigable( navigableName );
 		}
 		return attribute;
 	}
@@ -244,8 +247,8 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
 		visitDeclaredNavigables( visitor );
-		if ( getSuperType() != null ) {
-			getSuperType().visitNavigables( visitor );
+		if ( getSuperclassType() != null ) {
+			getSuperclassType().visitNavigables( visitor );
 		}
 	}
 
@@ -263,8 +266,8 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 
 	protected PersistentAttribute<? super T, ?> getAttribute(String name, Class resultType) {
 		PersistentAttribute<? super T, ?> persistentAttribute = findDeclaredAttribute( name, resultType );
-		if ( persistentAttribute == null && getSuperType() != null ) {
-			persistentAttribute = getSuperType().findDeclaredAttribute( name, resultType );
+		if ( persistentAttribute == null && getSuperclassType() != null ) {
+			persistentAttribute = getSuperclassType().findDeclaredAttribute( name, resultType );
 		}
 
 		if ( persistentAttribute == null ) {

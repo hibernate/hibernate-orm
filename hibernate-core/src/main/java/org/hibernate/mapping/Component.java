@@ -36,7 +36,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements PropertyContainer, MetaAttributable {
+public class Component extends SimpleValue implements PropertyContainer, MetaAttributable, ManagedTypeMapping {
 	private ArrayList<Property> properties = new ArrayList<>();
 	private String componentClassName;
 	private boolean embedded;
@@ -427,13 +427,26 @@ public class Component extends SimpleValue implements PropertyContainer, MetaAtt
 	}
 
 	@Override
+	public List<Property> getDeclaredProperties() {
+		return properties;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// atm components/embeddables are not (yet) hierarchical
+
+	@Override
 	public PropertyContainer getSuperPropertyContainer() {
-		// atm components/embeddables are not (yet) hierarchical
 		return null;
 	}
 
 	@Override
-	public List<Property> getDeclaredProperties() {
-		return properties;
+	public ManagedTypeMapping getSuperclassMapping() {
+		return null;
+	}
+
+	@Override
+	public List<ManagedTypeMapping> getSubclassMappings() {
+		return Collections.emptyList();
 	}
 }

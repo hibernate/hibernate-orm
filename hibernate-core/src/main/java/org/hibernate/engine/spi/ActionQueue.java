@@ -49,6 +49,8 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
 /**
@@ -1146,7 +1148,8 @@ public class ActionQueue {
 						EntityType entityType = (EntityType) type;
 						String entityName = entityType.getName();
 
-						if ( entityType.isOneToOne() ) {
+						if ( entityType.isOneToOne() &&
+								OneToOneType.class.cast( entityType ).getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
 							batchIdentifier.getChildEntityNames().add( entityName );
 						}
 						else {

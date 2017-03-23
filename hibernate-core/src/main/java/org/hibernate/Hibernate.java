@@ -202,13 +202,14 @@ public final class Hibernate {
      * @param proxy the {@link HibernateProxy} to be unproxied
      * @return the proxy's underlying implementation object, or the supplied object otherwise
      */
-    public static Object unproxy(Object proxy) {
-        if (proxy instanceof HibernateProxy) {
-            HibernateProxy hibernateProxy = (HibernateProxy) proxy;
-            LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
-            return initializer.getImplementation();
-        } else {
-            return proxy;
-        }
-    }
+	public static Object unproxy(Object proxy) {
+		if ( proxy instanceof HibernateProxy ) {
+			HibernateProxy hibernateProxy = (HibernateProxy) proxy;
+			LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
+			return initializer.getImplementation();
+		}
+		else {
+			return proxy;
+		}
+	}
 }

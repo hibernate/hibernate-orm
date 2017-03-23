@@ -91,7 +91,7 @@ public abstract class BaseUnitTestCase {
 			Thread.currentThread().interrupt();
 		}
 		catch (ExecutionException e) {
-			e.printStackTrace();
+			throw new RuntimeException( e );
 		}
 	}
 }

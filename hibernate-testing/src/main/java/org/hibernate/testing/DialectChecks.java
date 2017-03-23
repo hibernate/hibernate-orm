@@ -223,4 +223,10 @@ abstract public class DialectChecks {
 			return dialect.supportsRowValueConstructorSyntaxInInList();
 		}
 	}
+
+	public static class SupportSkipLocked implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsSkipLocked();
+		}
+	}
 }

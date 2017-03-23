@@ -8,13 +8,10 @@ package org.hibernate.test.locking;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeoutException;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
-import org.hibernate.Session;
-import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.exception.GenericJDBCException;
@@ -22,8 +19,6 @@ import org.hibernate.exception.LockAcquisitionException;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.async.Executable;
-import org.hibernate.testing.async.TimedExecutor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -174,7 +169,9 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 				_session.doWork( connection -> {
 					try {
 						connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), 1000);
-					} catch (Throwable ignore) {}
+					} catch (Throwable ignore) {
+						ignore.fillInStackTrace();
+					}
 				} );
 				try {
 					// load with write lock to deal with databases that block (wait indefinitely) direct attempts
@@ -184,8 +181,10 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 							id,
 							new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeOut( LockOptions.NO_WAIT )
 					);
-					it.setValue( "changed" );
-					_session.flush();
+					_session.createNativeQuery( updateStatement() )
+							.setParameter( "value", "changed" )
+							.setParameter( "id", it.getId() )
+							.executeUpdate();
 					fail( "Pessimistic lock not obtained/held" );
 				}
 				catch ( Exception e ) {
@@ -202,5 +201,12 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 				}
 			} );
 		} );
+	}
+
+	protected String updateStatement() {
+		if( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() ) ) {
+			return "UPDATE T_LOCK_A WITH(NOWAIT) SET a_value = :value where id = :id";
+		}
+		return "UPDATE T_LOCK_A SET a_value = :value where id = :id";
 	}
 }

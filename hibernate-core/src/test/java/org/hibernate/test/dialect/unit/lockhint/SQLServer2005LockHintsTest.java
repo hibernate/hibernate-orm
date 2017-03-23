@@ -18,7 +18,7 @@ public class SQLServer2005LockHintsTest extends AbstractLockHintTest {
 	public static final Dialect DIALECT = new SQLServer2005Dialect();
 
 	protected String getLockHintUsed() {
-		return "with (updlock, rowlock, nowait)";
+		return "with (updlock, holdlock, rowlock, nowait)";
 	}
 
 	protected Dialect getDialectUnderTest() {

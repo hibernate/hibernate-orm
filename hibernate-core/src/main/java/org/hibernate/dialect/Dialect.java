@@ -2882,6 +2882,15 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
+	/**
+	 * Does this dialect/database support SKIP_LOCKED timeout.
+	 *
+	 * @return {@code true} if SKIP_LOCKED is supported
+	 */
+	public boolean supportsSkipLocked() {
+		return false;
+	}
+
 	public boolean isLegacyLimitHandlerBehaviorEnabled() {
 		return legacyLimitHandlerBehavior;
 	}

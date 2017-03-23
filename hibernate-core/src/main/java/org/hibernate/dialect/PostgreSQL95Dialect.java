@@ -62,4 +62,9 @@ public class PostgreSQL95Dialect extends PostgreSQL94Dialect {
 	public String getForUpdateSkipLockedString(String aliases) {
 		return getForUpdateString() + " of " + aliases + " skip locked";
 	}
+
+	@Override
+	public boolean supportsSkipLocked() {
+		return true;
+	}
 }

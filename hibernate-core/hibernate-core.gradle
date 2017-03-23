@@ -258,4 +258,7 @@ test.dependsOn ":hibernate-orm-modules:prepareWildFlyForTests"
 
 test {
     systemProperty "file.encoding", "utf-8"
+    beforeTest { descriptor ->
+        //println "Starting test: " + descriptor
+    }
 }

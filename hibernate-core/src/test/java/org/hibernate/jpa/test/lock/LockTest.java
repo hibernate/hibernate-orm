@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.LockTimeoutException;
@@ -22,9 +23,12 @@ import javax.persistence.PessimisticLockException;
 import javax.persistence.Query;
 import javax.persistence.QueryTimeoutException;
 
+import org.hibernate.Session;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
@@ -40,6 +44,7 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -108,6 +113,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		}
 		catch (LockTimeoutException lte) {
 			// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
+			lte.getCause();
 		}
 		catch (PessimisticLockException pe) {
 			fail( "Find with immediate timeout should have thrown LockTimeoutException." );
@@ -133,6 +139,100 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		em2.remove( lock2 );
 		em2.getTransaction().commit();
 		em2.close();
+	}
+
+	@Test
+	@RequiresDialectFeature( value = DialectChecks.SupportSkipLocked.class )
+	public void testUpdateWithPessimisticReadLockSkipLocked() {
+		Lock lock = new Lock();
+		lock.setName( "name" );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist( lock );
+		} );
+
+		EntityManager em2 = createIsolatedEntityManager();
+		em2.getTransaction().begin();
+
+		try {
+			Map<String, Object> properties = new HashMap<>();
+			properties.put( org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT, -2L );
+			em2.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_READ, properties );
+
+			try {
+				doInJPA( this::entityManagerFactory, entityManager -> {
+					entityManager.createNativeQuery( updateStatement() )
+							.setParameter( "name", "changed" )
+							.setParameter( "id", lock.getId() )
+							.executeUpdate();
+				} );
+				fail("Should throw LockTimeoutException");
+			}
+			catch (LockTimeoutException expected) {
+			}
+		}
+		finally {
+			em2.getTransaction().commit();
+		}
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Lock _lock = entityManager.merge( lock );
+			entityManager.remove( _lock );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(value = DialectChecks.SupportsLockTimeouts.class)
+	public void testUpdateWithPessimisticReadLockWithoutNoWait() {
+		Lock lock = new Lock();
+		lock.setName( "name" );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist( lock );
+		} );
+
+		EntityManager em2 = createIsolatedEntityManager();
+		em2.getTransaction().begin();
+
+		try {
+			em2.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_READ );
+
+			AtomicBoolean failureExpected = new AtomicBoolean();
+
+			try {
+				doInJPA( this::entityManagerFactory, entityManager -> {
+					try {
+						entityManager.createNativeQuery( updateStatement() )
+								.setParameter( "name", "changed" )
+								.setParameter( "id", lock.getId() )
+								.executeUpdate();
+					}
+					catch (LockTimeoutException | PessimisticLockException expected) {
+						failureExpected.set( true );
+					}
+				} );
+			}
+			catch (Exception e) {
+				if ( !failureExpected.get() ) {
+					fail( "Should throw LockTimeoutException or PessimisticLockException" );
+				}
+			}
+		}
+		finally {
+			em2.getTransaction().commit();
+		}
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Lock _lock = entityManager.merge( lock );
+			entityManager.remove( _lock );
+		} );
+	}
+
+	protected String updateStatement() {
+		if( SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() ) ) {
+			return "UPDATE Lock_ WITH(NOWAIT) SET name = :name where id = :id";
+		}
+		return "UPDATE Lock_ SET name = :name where id = :id";
 	}
 	
 	@Test

@@ -446,7 +446,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9635")
 	public void testAppendLockHintWrite() {
-		final String expectedLockHint = "tab1 with (updlock, rowlock)";
+		final String expectedLockHint = "tab1 with (updlock, holdlock, rowlock)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.WRITE );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
@@ -457,7 +457,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9635")
 	public void testAppendLockHintWriteWithNoTimeOut() {
-		final String expectedLockHint = "tab1 with (updlock, rowlock, nowait)";
+		final String expectedLockHint = "tab1 with (updlock, holdlock, rowlock, nowait)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.WRITE );
 		lockOptions.setTimeOut( LockOptions.NO_WAIT );
@@ -470,7 +470,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9635")
 	public void testAppendLockHintUpgradeNoWait() {
-		final String expectedLockHint = "tab1 with (updlock, rowlock, nowait)";
+		final String expectedLockHint = "tab1 with (updlock, holdlock, rowlock, nowait)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_NOWAIT );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
@@ -481,7 +481,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9635")
 	public void testAppendLockHintUpgradeNoWaitNoTimeout() {
-		final String expectedLockHint = "tab1 with (updlock, rowlock, nowait)";
+		final String expectedLockHint = "tab1 with (updlock, holdlock, rowlock, nowait)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_NOWAIT );
 		lockOptions.setTimeOut( LockOptions.NO_WAIT );
@@ -493,7 +493,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9635")
 	public void testAppendLockHintUpgrade() {
-		final String expectedLockHint = "tab1 with (updlock, rowlock)";
+		final String expectedLockHint = "tab1 with (updlock, holdlock, rowlock)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
@@ -504,7 +504,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9635")
 	public void testAppendLockHintUpgradeNoTimeout() {
-		final String expectedLockHint = "tab1 with (updlock, rowlock, nowait)";
+		final String expectedLockHint = "tab1 with (updlock, holdlock, rowlock, nowait)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE );
 		lockOptions.setTimeOut( LockOptions.NO_WAIT );
@@ -516,7 +516,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9635")
 	public void testAppendLockHintPessimisticWrite() {
-		final String expectedLockHint = "tab1 with (updlock, rowlock)";
+		final String expectedLockHint = "tab1 with (updlock, holdlock, rowlock)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
@@ -527,7 +527,7 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9635")
 	public void testAppendLockHintPessimisticWriteNoTimeOut() {
-		final String expectedLockHint = "tab1 with (updlock, rowlock, nowait)";
+		final String expectedLockHint = "tab1 with (updlock, holdlock, rowlock, nowait)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE );
 		lockOptions.setTimeOut( LockOptions.NO_WAIT );

@@ -6,14 +6,11 @@
  */
 package org.hibernate.envers.test.integration.query;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.Entity;
-import javax.persistence.EntityManager;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
@@ -25,12 +22,18 @@ import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.junit.Test;
 
+import org.hibernate.testing.TestForIssue;
+
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
+@TestForIssue(jiraKey = "HHH-11573")
 public class EntityTypeQueryTest extends BaseEnversJPAFunctionalTestCase {
 
-	@Entity
+	@Entity(name = "EntityA")
 	@Audited
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static class EntityA {
@@ -58,7 +61,7 @@ public class EntityTypeQueryTest extends BaseEnversJPAFunctionalTestCase {
 
 	}
 
-	@Entity
+	@Entity(name = "EntityB")
 	@Audited
 	public static class EntityB extends EntityA {
 
@@ -77,34 +80,40 @@ public class EntityTypeQueryTest extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	@Priority(10)
 	public void initData() {
-		EntityManager em = getEntityManager();
-		em.getTransaction().begin();
-		a1 = new EntityA();
-		a1.setName( "a1" );
-		em.persist( a1 );
-		a2 = new EntityA();
-		a2.setName( "a2" );
-		em.persist( a2 );
-		b1 = new EntityB();
-		b1.setName( "b1" );
-		em.persist( b1 );
-		b2 = new EntityB();
-		b2.setName( "b2" );
-		em.persist( b2 );
-		em.getTransaction().commit();
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			a1 = new EntityA();
+			a1.setName( "a1" );
+			entityManager.persist( a1 );
+
+			a2 = new EntityA();
+			a2.setName( "a2" );
+			entityManager.persist( a2 );
+
+			b1 = new EntityB();
+			b1.setName( "b1" );
+			entityManager.persist( b1 );
+
+			b2 = new EntityB();
+			b2.setName( "b2" );
+			entityManager.persist( b2 );
+		} );
 	}
 
 	@Test
 	public void testRestrictToSubType() {
 		List<?> list = getAuditReader().createQuery().forEntitiesAtRevision( EntityA.class, 1 )
-				.add( AuditEntity.entityType( EntityB.class ) ).addProjection( AuditEntity.property( "name" ) ).getResultList();
+				.add( AuditEntity.entityType( EntityB.class ) )
+				.addProjection( AuditEntity.property( "name" ) )
+				.getResultList();
 		assertEquals( "Expected only entities of type EntityB to be selected", list( "b1", "b2" ), list );
 	}
 
 	@Test
 	public void testRestrictToSuperType() {
 		List<?> list = getAuditReader().createQuery().forEntitiesAtRevision( EntityA.class, 1 )
-				.add( AuditEntity.entityType( EntityA.class ) ).addProjection( AuditEntity.property( "name" ) ).getResultList();
+				.add( AuditEntity.entityType( EntityA.class ) )
+				.addProjection( AuditEntity.property( "name" ) )
+				.getResultList();
 		assertEquals( "Expected only entities of type EntityA to be selected", list( "a1", "a2" ), list );
 	}
 

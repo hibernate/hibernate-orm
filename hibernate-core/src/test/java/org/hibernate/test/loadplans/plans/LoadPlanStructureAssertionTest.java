@@ -131,34 +131,14 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 			final EntityReturn cardFieldReturn = assertTyping( EntityReturn.class, loadPlan.getReturns().get( 0 ) );
 			assertEquals( 0, cardFieldReturn.getFetches().length );
 
-			// CardField defines a composite pk with 2 fetches : Card and Key (the id description acts as the composite)
-			assertTrue( cardFieldReturn.getIdentifierDescription().hasFetches() );
-			final FetchSource cardFieldIdAsFetchSource = assertTyping( FetchSource.class, cardFieldReturn.getIdentifierDescription() );
-			assertEquals( 2, cardFieldIdAsFetchSource.getFetches().length );
-
-			// First the key-many-to-one to Card...
-			final EntityFetch cardFieldIdCardFetch = assertTyping(
-					EntityFetch.class,
-					cardFieldIdAsFetchSource.getFetches()[0]
-			);
-			assertFalse( cardFieldIdCardFetch.getIdentifierDescription().hasFetches() );
-			// i think this one might be a mistake; i think the collection reader still needs to be registered.  Its zero
-			// because the inverse of the key-many-to-one already had a registered AssociationKey and so saw the
-			// CollectionFetch as a circularity (I think)
-			assertEquals( 0, cardFieldIdCardFetch.getFetches().length );
-
-			// then the Key..
-			final EntityFetch cardFieldIdKeyFetch = assertTyping(
-					EntityFetch.class,
-					cardFieldIdAsFetchSource.getFetches()[1]
-			);
-			assertFalse( cardFieldIdKeyFetch.getIdentifierDescription().hasFetches() );
-			assertEquals( 0, cardFieldIdKeyFetch.getFetches().length );
-
+			// CardField defines a composite pk with 2 many-to-ones : Card and Key (the id description acts as the composite);
+			// because it is an @EmbeddedId, the ID provided by the application is used "as is"
+			// and fetches are not included in the load plan.
+			assertFalse( cardFieldReturn.getIdentifierDescription().hasFetches() );
 
 			// we need the readers ordered in a certain manner.  Here specifically: Fetch(Card), Fetch(Key), Return(CardField)
 			//
-			// additionally, we need Fetch(Card) and Fetch(Key) to be hydrated/semi-resolved before attempting to
+			// additionally, we need Fetch(Card) and Fetch(Key) to be hydrated/semi-resolved beforeQuery attempting to
 			// resolve the EntityKey for Return(CardField)
 			//
 			// together those sound like argument enough to continue keeping readers for "identifier fetches" as part of

@@ -8,6 +8,9 @@ package org.hibernate.bytecode.internal.javassist;
 
 import java.lang.reflect.Modifier;
 
+import org.hibernate.bytecode.enhance.internal.javassist.EnhancerImpl;
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
@@ -92,4 +95,8 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		return null;
 	}
 
+	@Override
+	public Enhancer getEnhancer(EnhancementContext enhancementContext) {
+		return new EnhancerImpl( enhancementContext );
+	}
 }

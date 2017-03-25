@@ -10,7 +10,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Strategy for how dialects need {@code LOB} values to be merged.
@@ -27,7 +27,7 @@ public interface LobMergeStrategy {
 	 *
 	 * @return The merged {@code BLOB} state
 	 */
-	public Blob mergeBlob(Blob original, Blob target, SessionImplementor session);
+	Blob mergeBlob(Blob original, Blob target, SharedSessionContractImplementor session);
 
 	/**
 	 * Perform merge on {@link Clob} values.
@@ -38,7 +38,7 @@ public interface LobMergeStrategy {
 	 *
 	 * @return The merged {@code CLOB} state
 	 */
-	public Clob mergeClob(Clob original, Clob target, SessionImplementor session);
+	Clob mergeClob(Clob original, Clob target, SharedSessionContractImplementor session);
 
 	/**
 	 * Perform merge on {@link NClob} values.
@@ -49,5 +49,5 @@ public interface LobMergeStrategy {
 	 *
 	 * @return The merged {@code NCLOB} state
 	 */
-	public NClob mergeNClob(NClob original, NClob target, SessionImplementor session);
+	NClob mergeNClob(NClob original, NClob target, SharedSessionContractImplementor session);
 }

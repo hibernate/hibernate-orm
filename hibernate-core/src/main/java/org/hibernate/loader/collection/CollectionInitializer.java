@@ -5,10 +5,11 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.loader.collection;
+
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * An interface for collection loaders
@@ -20,5 +21,5 @@ public interface CollectionInitializer {
 	/**
 	 * Initialize the given collection
 	 */
-	public void initialize(Serializable id, SessionImplementor session) throws HibernateException;
+	void initialize(Serializable id, SharedSessionContractImplementor session) throws HibernateException;
 }

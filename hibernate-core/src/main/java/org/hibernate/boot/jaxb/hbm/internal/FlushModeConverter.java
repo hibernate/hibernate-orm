@@ -15,8 +15,8 @@ import org.hibernate.HibernateException;
  * JAXB marshalling for the FlushMode enum
  * <p/>
  * NOTE : The XML schemas define the use of {@code "never"}, which corresponds
- * to the deprecated {@link FlushMode#NEVER}.  Here we will also handle mapping
- * {@link FlushMode#NEVER} and {@link FlushMode#MANUAL} as equivalent
+ * to the removed FlushMode#NEVER.  Here we will also handle mapping
+ * FlushMode#NEVER to FlushMode#MANUAL
  *
  * @author Steve Ebersole
  */
@@ -52,7 +52,7 @@ public class FlushModeConverter {
 
 		// conversely, we want to map MANUAL -> "never" here
 		if ( mode == FlushMode.MANUAL ) {
-			mode = FlushMode.NEVER;
+			return "never";
 		}
 
 		// todo : what to do if the incoming value does not conform to allowed values?

@@ -8,9 +8,15 @@ package org.hibernate;
 
 import java.io.Serializable;
 import java.sql.Connection;
+import javax.persistence.EntityManager;
+import javax.persistence.FlushModeType;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
+import org.hibernate.jpa.HibernateEntityManager;
 import org.hibernate.stat.SessionStatistics;
 
 /**
@@ -67,12 +73,14 @@ import org.hibernate.stat.SessionStatistics;
  * <br>
  * If the <tt>Session</tt> throws an exception, the transaction must be rolled back
  * and the session discarded. The internal state of the <tt>Session</tt> might not
- * be consistent with the database after the exception occurs.
+ * be consistent with the database afterQuery the exception occurs.
  *
  * @see SessionFactory
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public interface Session extends SharedSessionContract, java.io.Closeable {
+public interface Session extends SharedSessionContract, EntityManager, HibernateEntityManager, AutoCloseable {
 	/**
 	 * Obtain a {@link Session} builder with the ability to grab certain information from this session.
 	 *
@@ -82,7 +90,7 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 
 	/**
 	 * Force this session to flush. Must be called at the end of a
-	 * unit of work, before committing the transaction and closing the
+	 * unit of work, beforeQuery committing the transaction and closing the
 	 * session (depending on {@link #setFlushMode(FlushMode)},
 	 * {@link Transaction#commit()} calls this method).
 	 * <p/>
@@ -106,16 +114,46 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 * order to achieve some extra performance).
 	 *
 	 * @param flushMode the new flush mode
-	 * @see FlushMode
+	 *
+	 * @deprecated (since 5.2) use {@link #setHibernateFlushMode(FlushMode)} instead
 	 */
+	@Deprecated
 	void setFlushMode(FlushMode flushMode);
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * For users of the Hibernate native APIs, we've had to rename this method
+	 * as defined by Hibernate historically because the JPA contract defines a method of the same
+	 * name, but returning the JPA {@link FlushModeType} rather than Hibernate's {@link FlushMode}.  For
+	 * the former behavior, use {@link Session#getHibernateFlushMode()} instead.
+	 *
+	 * @return The FlushModeType in effect for this Session.
+	 */
+	@Override
+	FlushModeType getFlushMode();
+
+	/**
+	 * Set the flush mode for this session.
+	 * <p/>
+	 * The flush mode determines the points at which the session is flushed.
+	 * <i>Flushing</i> is the process of synchronizing the underlying persistent
+	 * store with persistable state held in memory.
+	 * <p/>
+	 * For a logically "read only" session, it is reasonable to set the session's
+	 * flush mode to {@link FlushMode#MANUAL} at the start of the session (in
+	 * order to achieve some extra performance).
+	 *
+	 * @param flushMode the new flush mode
+	 */
+	void setHibernateFlushMode(FlushMode flushMode);
 
 	/**
 	 * Get the current flush mode for this session.
 	 *
 	 * @return The flush mode
 	 */
-	FlushMode getFlushMode();
+	FlushMode getHibernateFlushMode();
 
 	/**
 	 * Set the cache mode.
@@ -143,15 +181,6 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	SessionFactory getSessionFactory();
 
 	/**
-	 * End the session by releasing the JDBC connection and cleaning up.  It is
-	 * not strictly necessary to close the session but you must at least
-	 * {@link #disconnect()} it.
-	 *
-	 * @throws HibernateException Indicates problems cleaning up.
-	 */
-	void close() throws HibernateException;
-
-	/**
 	 * Cancel the execution of the current query.
 	 * <p/>
 	 * This is the sole method on session which may be safely called from
@@ -160,20 +189,6 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 * @throws HibernateException There was a problem canceling the query
 	 */
 	void cancelQuery() throws HibernateException;
-
-	/**
-	 * Check if the session is still open.
-	 *
-	 * @return boolean
-	 */
-	boolean isOpen();
-
-	/**
-	 * Check if the session is currently connected.
-	 *
-	 * @return boolean
-	 */
-	boolean isConnected();
 
 	/**
 	 * Does this session contain any changes which must be synchronized with
@@ -236,12 +251,15 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	Serializable getIdentifier(Object object);
 
 	/**
-	 * Check if this instance is associated with this <tt>Session</tt>.
+	 * Check if this entity is associated with this Session.  This form caters to
+	 * non-POJO entities, by allowing the entity-name to be passed in
 	 *
+	 * @param entityName The entity name
 	 * @param object an instance of a persistent class
+	 *
 	 * @return true if the given instance is associated with this <tt>Session</tt>
 	 */
-	boolean contains(Object object);
+	boolean contains(String entityName, Object object);
 
 	/**
 	 * Remove this instance from the session cache. Changes to the instance will
@@ -583,8 +601,8 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 * For example
 	 * <ul>
 	 * <li>where a database trigger alters the object state upon insert or update
-	 * <li>after executing direct SQL (eg. a mass update) in the same session
-	 * <li>after inserting a <tt>Blob</tt> or <tt>Clob</tt>
+	 * <li>afterQuery executing direct SQL (eg. a mass update) in the same session
+	 * <li>afterQuery inserting a <tt>Blob</tt> or <tt>Clob</tt>
 	 * </ul>
 	 *
 	 * @param object a persistent or detached instance
@@ -598,8 +616,8 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 * For example
 	 * <ul>
 	 * <li>where a database trigger alters the object state upon insert or update
-	 * <li>after executing direct SQL (eg. a mass update) in the same session
-	 * <li>after inserting a <tt>Blob</tt> or <tt>Clob</tt>
+	 * <li>afterQuery executing direct SQL (eg. a mass update) in the same session
+	 * <li>afterQuery inserting a <tt>Blob</tt> or <tt>Clob</tt>
 	 * </ul>
 	 *
 	 * @param entityName a persistent class
@@ -664,7 +682,7 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 *
 	 * @return The query instance for manipulation and execution
 	 */
-	Query createFilter(Object collection, String queryString);
+	org.hibernate.query.Query createFilter(Object collection, String queryString);
 
 	/**
 	 * Completely clear the session. Evict all loaded instances and cancel all pending
@@ -1119,4 +1137,21 @@ public interface Session extends SharedSessionContract, java.io.Closeable {
 	 * @param listeners The listener(s) to add
 	 */
 	void addEventListeners(SessionEventListener... listeners);
+
+	@Override
+	org.hibernate.query.Query createQuery(String queryString);
+
+	@Override
+	<T> org.hibernate.query.Query<T> createQuery(String queryString, Class<T> resultType);
+
+	@Override
+	<T> org.hibernate.query.Query<T> createQuery(CriteriaQuery<T> criteriaQuery);
+
+	@Override
+	org.hibernate.query.Query createQuery(CriteriaUpdate updateQuery);
+
+	@Override
+	org.hibernate.query.Query createQuery(CriteriaDelete deleteQuery);
+
+	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
 }

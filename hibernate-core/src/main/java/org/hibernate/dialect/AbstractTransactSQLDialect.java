@@ -146,7 +146,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		// TODO:  merge additional lockoptions support in Dialect.applyLocksToSql
 		final Iterator itr = aliasedLockOptions.getAliasLockIterator();
 		final StringBuilder buffer = new StringBuilder( sql );
-		int correction = 0;
+
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = (Map.Entry) itr.next();
 			final LockMode lockMode = (LockMode) entry.getValue();
@@ -155,24 +155,23 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				int start = -1;
 				int end = -1;
 				if ( sql.endsWith( " " + alias ) ) {
-					start = ( sql.length() - alias.length() ) + correction;
+					start = ( buffer.length() - alias.length() );
 					end = start + alias.length();
 				}
 				else {
-					int position = sql.indexOf( " " + alias + " " );
+					int position = buffer.indexOf( " " + alias + " " );
 					if ( position <= -1 ) {
-						position = sql.indexOf( " " + alias + "," );
+						position = buffer.indexOf( " " + alias + "," );
 					}
 					if ( position > -1 ) {
-						start = position + correction + 1;
+						start = position + 1;
 						end = start + alias.length();
 					}
 				}
 
 				if ( start > -1 ) {
-					final String lockHint = appendLockHint( lockMode, alias );
+					final String lockHint = appendLockHint( aliasedLockOptions, alias );
 					buffer.replace( start, end, lockHint );
-					correction += ( lockHint.length() - alias.length() );
 				}
 			}
 		}
@@ -222,7 +221,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 						return "#" + baseName;
 					}
 				},
-				// sql-server, at least needed this dropped after use; strange!
+				// sql-server, at least needed this dropped afterQuery use; strange!
 				AfterUseAction.DROP,
 				TempTableDdlTransactionHandling.NONE
 		);
@@ -275,4 +274,8 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		return new AbstractTransactSQLIdentityColumnSupport();
 	}
 
+	@Override
+	public boolean supportsPartitionBy() {
+		return true;
+	}
 }

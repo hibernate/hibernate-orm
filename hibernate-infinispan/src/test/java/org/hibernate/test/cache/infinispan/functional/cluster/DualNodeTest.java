@@ -18,12 +18,11 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
 import org.hibernate.test.cache.infinispan.functional.AbstractFunctionalTest;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
-
 import org.hibernate.test.cache.infinispan.util.TxUtil;
 import org.junit.ClassRule;
 
@@ -114,15 +113,6 @@ public abstract class DualNodeTest extends AbstractFunctionalTest {
 
 	protected Class<? extends TransactionCoordinatorBuilder> getTransactionCoordinatorBuilder() {
 		return JtaTransactionCoordinatorBuilderImpl.class;
-	}
-
-	protected void sleep(long ms) {
-		try {
-			Thread.sleep( ms );
-		}
-		catch (InterruptedException e) {
-			log.warn( "Interrupted during sleep", e );
-		}
 	}
 
 	protected void configureSecondNode(StandardServiceRegistryBuilder ssrb) {

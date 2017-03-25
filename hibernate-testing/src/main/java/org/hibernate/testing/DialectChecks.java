@@ -189,4 +189,38 @@ abstract public class DialectChecks {
 			return dialect.supportsRowValueConstructorSyntax() == false;
 		}
 	}
+
+	public static class DoesNotSupportFollowOnLocking implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return !dialect.useFollowOnLocking( null );
+		}
+	}
+
+	public static class SupportPartitionBy implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsPartitionBy();
+		}
+	}
+
+	public static class SupportNonQueryValuesListWithCTE implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsValuesList() &&
+					dialect.supportsNonQueryWithCTE() &&
+					dialect.supportsRowValueConstructorSyntaxInInList();
+		}
+	}
+
+	public static class SupportValuesListAndRowValueConstructorSyntaxInInList
+			implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsValuesList() &&
+					dialect.supportsRowValueConstructorSyntaxInInList();
+		}
+	}
+
+	public static class SupportRowValueConstructorSyntaxInInList implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsRowValueConstructorSyntaxInInList();
+		}
+	}
 }

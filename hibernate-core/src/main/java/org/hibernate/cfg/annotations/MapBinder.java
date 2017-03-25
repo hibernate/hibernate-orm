@@ -12,7 +12,11 @@ import java.util.Map;
 import java.util.Random;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
+import javax.persistence.ConstraintMode;
+import javax.persistence.InheritanceType;
 import javax.persistence.MapKeyClass;
+import javax.persistence.MapKeyJoinColumn;
+import javax.persistence.MapKeyJoinColumns;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -30,6 +34,7 @@ import org.hibernate.cfg.CollectionPropertyHolder;
 import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.Ejb3JoinColumn;
+import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyPreloadedData;
@@ -46,6 +51,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
@@ -121,8 +127,13 @@ public class MapBinder extends CollectionBinder {
 				);
 			}
 			org.hibernate.mapping.Map map = (org.hibernate.mapping.Map) this.collection;
+			// HHH-11005 - if InheritanceType.JOINED then need to find class defining the column
+			InheritanceState inheritanceState = inheritanceStatePerClass.get( collType );
+			PersistentClass targetPropertyPersistentClass = InheritanceType.JOINED.equals( inheritanceState.getType() ) ?
+					mapProperty.getPersistentClass() :
+					associatedClass;
 			Value indexValue = createFormulatedValue(
-					mapProperty.getValue(), map, targetPropertyName, associatedClass, buildingContext
+					mapProperty.getValue(), map, targetPropertyName, associatedClass, targetPropertyPersistentClass, buildingContext
 			);
 			map.setIndex( indexValue );
 		}
@@ -174,10 +185,8 @@ public class MapBinder extends CollectionBinder {
 						throw new AnnotationException( "Unable to find class: " + mapKeyType, e );
 					}
 					classType = buildingContext.getMetadataCollector().getClassType( keyXClass );
-					//force in case of attribute override
-					boolean attributeOverride = property.isAnnotationPresent( AttributeOverride.class )
-							|| property.isAnnotationPresent( AttributeOverrides.class );
-					if ( isEmbedded || attributeOverride ) {
+					// force in case of attribute override naming the key
+					if ( isEmbedded || mappingDefinedAttributeOverrideOnMapKey( property ) ) {
 						classType = AnnotatedClassType.EMBEDDABLE;
 					}
 				}
@@ -288,6 +297,20 @@ public class MapBinder extends CollectionBinder {
 					col.forceNotNull();
 				}
 			}
+
+			if ( element != null ) {
+				final javax.persistence.ForeignKey foreignKey = getMapKeyForeignKey( property );
+				if ( foreignKey != null ) {
+					if ( foreignKey.value() == ConstraintMode.NO_CONSTRAINT ) {
+						element.setForeignKeyName( "none" );
+					}
+					else {
+						element.setForeignKeyName( StringHelper.nullIfEmpty( foreignKey.name() ) );
+						element.setForeignKeyDefinition( StringHelper.nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+					}
+				}
+			}
+
 			if ( isIndexOfEntities ) {
 				bindManytoManyInverseFk(
 						collectionEntity,
@@ -300,11 +323,47 @@ public class MapBinder extends CollectionBinder {
 		}
 	}
 
+	private javax.persistence.ForeignKey getMapKeyForeignKey(XProperty property) {
+		final MapKeyJoinColumns mapKeyJoinColumns = property.getAnnotation( MapKeyJoinColumns.class );
+		if ( mapKeyJoinColumns != null ) {
+			return mapKeyJoinColumns.foreignKey();
+		}
+		else {
+			final MapKeyJoinColumn mapKeyJoinColumn = property.getAnnotation( MapKeyJoinColumn.class );
+			if ( mapKeyJoinColumn != null ) {
+				return mapKeyJoinColumn.foreignKey();
+			}
+		}
+		return null;
+	}
+
+	private boolean mappingDefinedAttributeOverrideOnMapKey(XProperty property) {
+		if ( property.isAnnotationPresent( AttributeOverride.class ) ) {
+			return namedMapKey( property.getAnnotation( AttributeOverride.class ) );
+		}
+
+		if ( property.isAnnotationPresent( AttributeOverrides.class ) ) {
+			final AttributeOverrides annotations = property.getAnnotation( AttributeOverrides.class );
+			for ( AttributeOverride attributeOverride : annotations.value() ) {
+				if ( namedMapKey( attributeOverride ) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private boolean namedMapKey(AttributeOverride annotation) {
+		return annotation.name().startsWith( "key." );
+	}
+
 	protected Value createFormulatedValue(
 			Value value,
 			Collection collection,
 			String targetPropertyName,
 			PersistentClass associatedClass,
+			PersistentClass targetPropertyPersistentClass,
 			MetadataBuildingContext buildingContext) {
 		Value element = collection.getElement();
 		String fromAndWhere = null;
@@ -322,7 +381,7 @@ public class MapBinder extends CollectionBinder {
 					throw new AnnotationException( "SecondaryTable JoinColumn cannot reference a non primary key" );
 				}
 			}
-			Iterator referencedEntityColumns;
+			Iterator<Selectable> referencedEntityColumns;
 			if ( referencedPropertyName == null ) {
 				referencedEntityColumns = associatedClass.getIdentifier().getColumnIterator();
 			}
@@ -330,20 +389,23 @@ public class MapBinder extends CollectionBinder {
 				Property referencedProperty = associatedClass.getRecursiveProperty( referencedPropertyName );
 				referencedEntityColumns = referencedProperty.getColumnIterator();
 			}
-			String alias = "$alias$";
-			StringBuilder fromAndWhereSb = new StringBuilder( " from " )
-					.append( associatedClass.getTable().getName() )
-							//.append(" as ") //Oracle doesn't support it in subqueries
-					.append( " " )
-					.append( alias ).append( " where " );
-			Iterator collectionTableColumns = element.getColumnIterator();
-			while ( collectionTableColumns.hasNext() ) {
-				Column colColumn = (Column) collectionTableColumns.next();
-				Column refColumn = (Column) referencedEntityColumns.next();
-				fromAndWhereSb.append( alias ).append( '.' ).append( refColumn.getQuotedName() )
-						.append( '=' ).append( colColumn.getQuotedName() ).append( " and " );
+			fromAndWhere = getFromAndWhereFormula(
+					associatedClass.getTable().getName(),
+					element.getColumnIterator(),
+					referencedEntityColumns
+			);
+		}
+		else {
+			// HHH-11005 - only if we are OneToMany and location of map key property is at a different level, need to add a select
+			if ( !associatedClass.equals( targetPropertyPersistentClass ) ) {
+				fromAndWhere = getFromAndWhereFormula(
+						targetPropertyPersistentClass.getTable()
+								.getQualifiedTableName()
+								.toString(),
+						element.getColumnIterator(),
+						associatedClass.getIdentifier().getColumnIterator()
+				);
 			}
-			fromAndWhere = fromAndWhereSb.substring( 0, fromAndWhereSb.length() - 5 );
 		}
 
 		if ( value instanceof Component ) {
@@ -368,7 +430,7 @@ public class MapBinder extends CollectionBinder {
 				newProperty.setSelectable( current.isSelectable() );
 				newProperty.setValue(
 						createFormulatedValue(
-								current.getValue(), collection, targetPropertyName, associatedClass, buildingContext
+								current.getValue(), collection, targetPropertyName, associatedClass, associatedClass, buildingContext
 						)
 				);
 				indexComponent.addProperty( newProperty );
@@ -424,5 +486,28 @@ public class MapBinder extends CollectionBinder {
 		else {
 			throw new AssertionFailure( "Unknown type encounters for map key: " + value.getClass() );
 		}
+	}
+
+	private String getFromAndWhereFormula(
+			String tableName,
+			Iterator<Selectable> collectionTableColumns,
+			Iterator<Selectable> referencedEntityColumns) {
+		String alias = "$alias$";
+		StringBuilder fromAndWhereSb = new StringBuilder( " from " )
+				.append( tableName )
+				//.append(" as ") //Oracle doesn't support it in subqueries
+				.append( " " )
+				.append( alias ).append( " where " );
+		while ( collectionTableColumns.hasNext() ) {
+			Column colColumn = (Column) collectionTableColumns.next();
+			Column refColumn = (Column) referencedEntityColumns.next();
+			fromAndWhereSb.append( alias )
+					.append( '.' )
+					.append( refColumn.getQuotedName() )
+					.append( '=' )
+					.append( colColumn.getQuotedName() )
+					.append( " and " );
+		}
+		return fromAndWhereSb.substring( 0, fromAndWhereSb.length() - 5 );
 	}
 }

@@ -10,16 +10,24 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
-import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
+@SkipForDialect(
+		value = {
+				PostgreSQL81Dialect.class
+		},
+		comment = "@see https://hibernate.atlassian.net/browse/HHH-10693"
+)
 public class NationalizedTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

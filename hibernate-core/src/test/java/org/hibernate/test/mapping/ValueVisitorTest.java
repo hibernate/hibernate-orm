@@ -29,8 +29,8 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ValueVisitor;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,7 +56,9 @@ public class ValueVisitorTest extends BaseUnitTestCase {
 
 	@Test
 	public void testProperCallbacks() {
-		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources().buildMetadata();
+		final MetadataImplementor metadata =
+				(MetadataImplementor) new MetadataSources( serviceRegistry )
+		.buildMetadata();
 		final Table tbl = new Table();
 		final RootClass rootClass = new RootClass( metadataBuildingContext );
 

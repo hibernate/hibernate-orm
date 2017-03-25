@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
@@ -26,7 +26,7 @@ public class ResultSetProcessorHelper {
 	 */
 	public static final ResultSetProcessorHelper INSTANCE = new ResultSetProcessorHelper();
 
-	public static EntityKey getOptionalObjectKey(QueryParameters queryParameters, SessionImplementor session) {
+	public static EntityKey getOptionalObjectKey(QueryParameters queryParameters, SharedSessionContractImplementor session) {
 		final Object optionalObject = queryParameters.getOptionalObject();
 		final Serializable optionalId = queryParameters.getOptionalId();
 		final String optionalEntityName = queryParameters.getOptionalEntityName();
@@ -35,7 +35,7 @@ public class ResultSetProcessorHelper {
 	}
 
 	public EntityKey interpretEntityKey(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			String optionalEntityName,
 			Serializable optionalId,
 			Object optionalObject) {
@@ -45,11 +45,11 @@ public class ResultSetProcessorHelper {
 				entityPersister = session.getEntityPersister( optionalEntityName, optionalObject );
 			}
 			else {
-				entityPersister = session.getFactory().getEntityPersister( optionalEntityName );
+				entityPersister = session.getFactory().getMetamodel().entityPersister( optionalEntityName );
 			}
-			if ( entityPersister.isInstance( optionalId ) &&
-					!entityPersister.getEntityMetamodel().getIdentifierProperty().isVirtual() &&
-					entityPersister.getEntityMetamodel().getIdentifierProperty().isEmbedded() ) {
+			if ( entityPersister.isInstance( optionalId )
+					&& !entityPersister.getEntityMetamodel().getIdentifierProperty().isVirtual()
+					&& entityPersister.getEntityMetamodel().getIdentifierProperty().isEmbedded() ) {
 				// non-encapsulated composite identifier
 				final Serializable identifierState = ((CompositeType) entityPersister.getIdentifierType()).getPropertyValues(
 						optionalId,
@@ -73,7 +73,7 @@ public class ResultSetProcessorHelper {
 			return null;
 		}
 
-		final Map<String, int[]> namedParameterLocMap = new HashMap<String, int[]>();
+		final Map<String, int[]> namedParameterLocMap = new HashMap<>();
 		for ( String name : queryParameters.getNamedParameters().keySet() ) {
 			namedParameterLocMap.put(
 					name,

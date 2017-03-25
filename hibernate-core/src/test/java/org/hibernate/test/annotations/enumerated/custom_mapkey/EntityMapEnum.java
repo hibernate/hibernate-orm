@@ -6,24 +6,20 @@
  */
 package org.hibernate.test.annotations.enumerated.custom_mapkey;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.CollectionTable;
-import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
-import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.MapKeyEnumerated;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
 
 import org.hibernate.test.annotations.enumerated.custom_types.LastNumberType;
 import org.hibernate.test.annotations.enumerated.enums.Common;
@@ -34,7 +30,7 @@ import org.hibernate.test.annotations.enumerated.enums.LastNumber;
  * @author Janario Oliveira
  */
 @Entity
-@TypeDefs({@TypeDef(typeClass = LastNumberType.class, defaultForType = LastNumber.class)})
+@TypeDef(typeClass = LastNumberType.class, defaultForType = LastNumber.class)
 public class EntityMapEnum {
 	@Id
 	@GeneratedValue

@@ -9,7 +9,7 @@ package org.hibernate.dialect.lock;
 import java.io.Serializable;
 
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * A strategy abstraction for how locks are obtained in the underlying database.
@@ -39,6 +39,6 @@ public interface LockingStrategy {
 	 * the requested lock.
 	 * @throws LockingStrategyException Indicates a failure in the lock attempt
 	 */
-	public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session)
+	void lock(Serializable id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
 			throws StaleObjectStateException, LockingStrategyException;
 }

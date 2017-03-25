@@ -7,10 +7,14 @@
 package org.hibernate.userguide.multitenancy;
 
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.dialect.H2Dialect;
+
+import org.hibernate.testing.RequiresDialect;
 
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialect(H2Dialect.class)
 public class DatabaseMultiTenancyTest extends AbstractMultiTenancyTest {
 
 	@Override

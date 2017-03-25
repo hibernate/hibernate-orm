@@ -17,6 +17,7 @@ import java.util.TreeMap;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
 /**
@@ -41,7 +42,7 @@ public class PersistentSortedMap extends PersistentMap implements SortedMap {
 	 *
 	 * @param session The session
 	 */
-	public PersistentSortedMap(SessionImplementor session) {
+	public PersistentSortedMap(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
@@ -51,7 +52,7 @@ public class PersistentSortedMap extends PersistentMap implements SortedMap {
 	 * @param session The session
 	 * @param map The underlying map data
 	 */
-	public PersistentSortedMap(SessionImplementor session, SortedMap map) {
+	public PersistentSortedMap(SharedSessionContractImplementor session, SortedMap map) {
 		super( session, map );
 		comparator = map.comparator();
 	}

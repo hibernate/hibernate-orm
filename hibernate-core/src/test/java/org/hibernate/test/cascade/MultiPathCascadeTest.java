@@ -176,9 +176,9 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 			s.merge( a );
 			s.merge( h );
 			s.getTransaction().commit();
-			fail( "should have thrown TransientObjectException" );
+			fail( "should have thrown IllegalStateException" );
 		}
-		catch (TransientObjectException expected) {
+		catch (IllegalStateException expected) {
 			// expected
 		}
 		finally {
@@ -225,9 +225,9 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 			s.merge( a );
 			s.merge( g );
 			s.getTransaction().commit();
-			fail( "should have thrown TransientObjectException" );
+			fail( "should have thrown IllegalStateException" );
 		}
-		catch (TransientObjectException expected) {
+		catch (IllegalStateException expected) {
 			// expected
 		}
 		finally {
@@ -274,9 +274,9 @@ public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
 			s.merge( a );
 			s.merge( h );
 			s.getTransaction().commit();
-			fail( "should have thrown TransientObjectException" );
+			fail( "should have thrown IllegalStateException" );
 		}
-		catch (TransientObjectException expected) {
+		catch (IllegalStateException expected) {
 			// expected
 		}
 		finally {

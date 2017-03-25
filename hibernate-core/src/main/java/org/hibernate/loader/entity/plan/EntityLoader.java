@@ -12,6 +12,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.loader.plan.exec.query.internal.QueryBuildingParametersImpl;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.Type;
@@ -77,32 +78,18 @@ public class EntityLoader extends AbstractLoadPlanBasedEntityLoader  {
 		}
 
 		public EntityLoader byUniqueKey(String[] keyColumnNames, Type keyType) {
+			// capture current values in a new instance of QueryBuildingParametersImpl
 			return new EntityLoader(
 					persister.getFactory(),
 					persister,
 					keyColumnNames,
 					keyType,
-					new QueryBuildingParameters() {
-						@Override
-						public LoadQueryInfluencers getQueryInfluencers() {
-							return influencers;
-						}
-
-						@Override
-						public int getBatchSize() {
-							return batchSize;
-						}
-
-						@Override
-						public LockMode getLockMode() {
-							return lockMode;
-						}
-
-						@Override
-						public LockOptions getLockOptions() {
-							return lockOptions;
-						}
-					}
+					new QueryBuildingParametersImpl(
+							influencers,
+							batchSize,
+							lockMode,
+							lockOptions
+					)
 			);
 		}
 	}

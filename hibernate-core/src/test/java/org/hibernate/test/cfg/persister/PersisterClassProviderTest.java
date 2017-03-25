@@ -34,9 +34,14 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 				.applySettings( cfg.getProperties() )
 				.build();
 		//no exception as the GoofyPersisterClassProvider is not set
-		SessionFactory sessionFactory = cfg.buildSessionFactory( serviceRegistry );
-		sessionFactory.close();
-		StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		SessionFactory sessionFactory;
+		try {
+			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
+			sessionFactory.close();
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		}
 
 		serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() )

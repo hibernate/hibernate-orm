@@ -125,7 +125,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 
 	@Override
 	public List<QueryParameterData> mapToQueryParametersFromId(Object obj) {
-		final List<QueryParameterData> ret = new ArrayList<QueryParameterData>();
+		final List<QueryParameterData> ret = new ArrayList<>();
 
 		ret.add( new QueryParameterData( propertyData.getName(), obj ) );
 

@@ -38,7 +38,7 @@ import org.jboss.logging.Logger;
 
 /**
  * The Hibernate-specific {@link org.junit.runner.Runner} implementation which layers {@link ExtendedFrameworkMethod}
- * support on top of the standard JUnit {@link FrameworkMethod} for extra information after checking to make sure the
+ * support on top of the standard JUnit {@link FrameworkMethod} for extra information afterQuery checking to make sure the
  * test should be run.
  *
  * @author Steve Ebersole
@@ -261,22 +261,14 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 			}
 		}
 
+
 		// @RequiresDialects & @RequiresDialect
-		for ( RequiresDialect requiresDialectAnn : Helper.collectAnnotations(
+		final List<RequiresDialect> requiresDialects = Helper.collectAnnotations(
 				RequiresDialect.class, RequiresDialects.class, frameworkMethod, getTestClass()
-		) ) {
-			boolean foundMatch = false;
-			for ( Class<? extends Dialect> dialectClass : requiresDialectAnn.value() ) {
-				foundMatch = requiresDialectAnn.strictMatching()
-						? dialectClass.equals( dialect.getClass() )
-						: dialectClass.isInstance( dialect );
-				if ( foundMatch ) {
-					break;
-				}
-			}
-			if ( !foundMatch ) {
-				return buildIgnore( requiresDialectAnn );
-			}
+		);
+
+		if ( !requiresDialects.isEmpty() && !isDialectMatchingRequired( requiresDialects ) ) {
+			return buildIgnore( requiresDialects );
 		}
 
 		// @RequiresDialectFeature
@@ -287,10 +279,8 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		);
 		if ( requiresDialectFeatureAnn != null ) {
 			try {
-				boolean foundMatch = false;
 				for ( Class<? extends DialectCheck> checkClass : requiresDialectFeatureAnn.value() ) {
-					foundMatch = checkClass.newInstance().isMatch( dialect );
-					if ( !foundMatch ) {
+					if ( !checkClass.newInstance().isMatch( dialect ) ) {
 						return buildIgnore( requiresDialectFeatureAnn );
 					}
 				}
@@ -306,6 +296,24 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		return null;
 	}
 
+	private boolean isDialectMatchingRequired(List<RequiresDialect> requiresDialects) {
+		boolean foundMatch = false;
+		for ( RequiresDialect requiresDialectAnn : requiresDialects ) {
+			for ( Class<? extends Dialect> dialectClass : requiresDialectAnn.value() ) {
+				foundMatch = requiresDialectAnn.strictMatching()
+						? dialectClass.equals( dialect.getClass() )
+						: dialectClass.isInstance( dialect );
+				if ( foundMatch ) {
+					break;
+				}
+			}
+			if ( foundMatch ) {
+				break;
+			}
+		}
+		return foundMatch;
+	}
+
 	private Ignore buildIgnore(Skip skip) {
 		return new IgnoreImpl( "@Skip : " + skip.message() );
 	}
@@ -315,6 +323,10 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	}
 
 	private Ignore buildIgnore(String reason, String comment, String jiraKey) {
+		return new IgnoreImpl( getIgnoreMessage( reason, comment, jiraKey ) );
+	}
+
+	private String getIgnoreMessage(String reason, String comment, String jiraKey) {
 		StringBuilder buffer = new StringBuilder( reason );
 		if ( StringHelper.isNotEmpty( comment ) ) {
 			buffer.append( "; " ).append( comment );
@@ -324,11 +336,24 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 			buffer.append( " (" ).append( jiraKey ).append( ')' );
 		}
 
-		return new IgnoreImpl( buffer.toString() );
+		return buffer.toString();
 	}
 
 	private Ignore buildIgnore(RequiresDialect requiresDialect) {
 		return buildIgnore( "@RequiresDialect non-match", requiresDialect.comment(), requiresDialect.jiraKey() );
+	}
+
+	private Ignore buildIgnore(List<RequiresDialect> requiresDialects) {
+		String ignoreMessage = "";
+		for ( RequiresDialect requiresDialect : requiresDialects ) {
+			ignoreMessage += getIgnoreMessage(
+					"@RequiresDialect non-match",
+					requiresDialect.comment(),
+					requiresDialect.jiraKey()
+			);
+			ignoreMessage += System.lineSeparator();
+		}
+		return new IgnoreImpl( ignoreMessage );
 	}
 
 	private Ignore buildIgnore(RequiresDialectFeature requiresDialectFeature) {

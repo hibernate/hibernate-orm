@@ -19,5 +19,5 @@ public interface ServiceContributor {
 	 *
 	 * @param serviceRegistryBuilder The builder to which services (or initiators) should be contributed.
 	 */
-	public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder);
+	void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder);
 }

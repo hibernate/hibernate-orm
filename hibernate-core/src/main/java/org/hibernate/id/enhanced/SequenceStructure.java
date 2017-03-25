@@ -18,7 +18,7 @@ import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.internal.CoreMessageLogger;
@@ -41,11 +41,10 @@ public class SequenceStructure implements DatabaseStructure {
 	private final int incrementSize;
 	private final Class numberType;
 
-
-	private String sequenceName;
 	private String sql;
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
+	protected String sequenceName;
 
 	public SequenceStructure(
 			JdbcEnvironment jdbcEnvironment,
@@ -81,7 +80,7 @@ public class SequenceStructure implements DatabaseStructure {
 	}
 
 	@Override
-	public AccessCallback buildCallback(final SessionImplementor session) {
+	public AccessCallback buildCallback(final SharedSessionContractImplementor session) {
 		if ( sql == null ) {
 			throw new AssertionFailure( "SequenceStyleGenerator's SequenceStructure was not properly initialized" );
 		}
@@ -105,7 +104,7 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 						finally {
 							try {
-								session.getJdbcCoordinator().getResourceRegistry().release( rs, st );
+								session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
 							}
 							catch( Throwable ignore ) {
 								// intentionally empty
@@ -113,13 +112,13 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 					}
 					finally {
-						session.getJdbcCoordinator().getResourceRegistry().release( st );
+						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 						session.getJdbcCoordinator().afterStatementExecution();
 					}
 
 				}
 				catch ( SQLException sqle) {
-					throw session.getFactory().getSQLExceptionHelper().convert(
+					throw session.getJdbcServices().getSqlExceptionHelper().convert(
 							sqle,
 							"could not get next sequence value",
 							sql
@@ -141,8 +140,35 @@ public class SequenceStructure implements DatabaseStructure {
 
 	@Override
 	public void registerExportables(Database database) {
-		final int sourceIncrementSize = applyIncrementSizeToSourceValues ? incrementSize : 1;
+		buildSequence( database );
+		this.sql = database.getJdbcEnvironment().getDialect().getSequenceNextValString( sequenceName );
+	}
 
+	@Override
+	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
+		return dialect.getCreateSequenceStrings( sequenceName, initialValue, getSourceIncrementSize() );
+	}
+
+	@Override
+	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
+		return dialect.getDropSequenceStrings( sequenceName );
+	}
+
+	@Override
+	public boolean isPhysicalSequence() {
+		return true;
+	}
+
+	protected final int getSourceIncrementSize() {
+		return applyIncrementSizeToSourceValues ? incrementSize : 1;
+	}
+
+	protected QualifiedName getQualifiedName() {
+		return logicalQualifiedSequenceName;
+	}
+
+	protected void buildSequence(Database database) {
+		final int sourceIncrementSize = getSourceIncrementSize();
 
 		final Namespace namespace = database.locateNamespace(
 				logicalQualifiedSequenceName.getCatalogName(),
@@ -156,29 +182,9 @@ public class SequenceStructure implements DatabaseStructure {
 			sequence = namespace.createSequence( logicalQualifiedSequenceName.getObjectName(), initialValue, sourceIncrementSize );
 		}
 
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
-
-		this.sequenceName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+		this.sequenceName = database.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
 				sequence.getName(),
-				dialect
+				database.getJdbcEnvironment().getDialect()
 		);
-		this.sql = jdbcEnvironment.getDialect().getSequenceNextValString( sequenceName );
-	}
-
-	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		final int sourceIncrementSize = applyIncrementSizeToSourceValues ? incrementSize : 1;
-		return dialect.getCreateSequenceStrings( sequenceName, initialValue, sourceIncrementSize );
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return dialect.getDropSequenceStrings( sequenceName );
-	}
-
-	@Override
-	public boolean isPhysicalSequence() {
-		return true;
 	}
 }

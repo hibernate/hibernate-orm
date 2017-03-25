@@ -6,10 +6,10 @@
  */
 package org.hibernate.test.resource.transaction.jta;
 
-import org.hibernate.resource.transaction.TransactionCoordinator;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaPlatformInaccessibleException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import org.junit.Test;
 

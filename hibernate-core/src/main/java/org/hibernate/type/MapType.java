@@ -14,7 +14,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.internal.PersistentMap;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 
@@ -24,38 +24,44 @@ public class MapType extends CollectionType {
 		super( typeScope, role, propertyRef );
 	}
 
+	@Override
 	public PersistentCollection instantiate(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			CollectionPersister persister,
 			Serializable key) {
 		return new PersistentMap( session );
 	}
 
+	@Override
 	public Class getReturnedClass() {
 		return Map.class;
 	}
 
+	@Override
 	public Iterator getElementsIterator(Object collection) {
 		return ( (java.util.Map) collection ).values().iterator();
 	}
 
-	public PersistentCollection wrap(SessionImplementor session, Object collection) {
+	@Override
+	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
 		return new PersistentMap( session, (java.util.Map) collection );
 	}
 
+	@Override
 	public Object instantiate(int anticipatedSize) {
 		return anticipatedSize <= 0
 				? new HashMap()
 				: new HashMap( anticipatedSize + (int) ( anticipatedSize * .75f ), .75f );
 	}
 
+	@Override
 	public Object replaceElements(
 			final Object original,
 			final Object target,
 			final Object owner,
 			final java.util.Map copyCache,
-			final SessionImplementor session) throws HibernateException {
-		CollectionPersister cp = session.getFactory().getCollectionPersister( getRole() );
+			final SharedSessionContractImplementor session) throws HibernateException {
+		CollectionPersister cp = session.getFactory().getMetamodel().collectionPersister( getRole() );
 
 		java.util.Map result = (java.util.Map) target;
 		result.clear();
@@ -71,10 +77,10 @@ public class MapType extends CollectionType {
 
 	}
 
+	@Override
 	public Object indexOf(Object collection, Object element) {
-		Iterator iter = ( (Map) collection ).entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
+		for ( Object o : ( (Map) collection ).entrySet() ) {
+			Map.Entry me = (Map.Entry) o;
 			//TODO: proxies!
 			if ( me.getValue() == element ) {
 				return me.getKey();

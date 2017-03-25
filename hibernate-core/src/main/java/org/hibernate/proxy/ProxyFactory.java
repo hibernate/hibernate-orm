@@ -5,12 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.proxy;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.CompositeType;
 
 /**
@@ -21,7 +22,7 @@ import org.hibernate.type.CompositeType;
 public interface ProxyFactory {
 
 	/**
-	 * Called immediately after instantiation of this factory.
+	 * Called immediately afterQuery instantiation of this factory.
 	 * <p/>
 	 * Essentially equivalent to constructor injection, but contracted
 	 * here via interface.
@@ -44,7 +45,7 @@ public interface ProxyFactory {
 	 * @throws HibernateException Indicates a problem completing post
 	 * instantiation initialization.
 	 */
-	public void postInstantiate(
+	void postInstantiate(
 			String entityName,
 			Class persistentClass,
 			Set<Class> interfaces,
@@ -62,6 +63,6 @@ public interface ProxyFactory {
 	 * @throws HibernateException Indicates problems generating the requested
 	 * proxy.
 	 */
-	public HibernateProxy getProxy(Serializable id,SessionImplementor session) throws HibernateException;
+	HibernateProxy getProxy(Serializable id, SharedSessionContractImplementor session) throws HibernateException;
 
 }

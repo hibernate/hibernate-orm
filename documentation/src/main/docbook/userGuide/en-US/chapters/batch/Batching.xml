@@ -63,7 +63,7 @@
             </listitem>
             <listitem>
                 <para>
-                    <literal>hibernate.order_update</literal> - Forces Hibernate to order SQL updates by the
+                    <literal>hibernate.order_updates</literal> - Forces Hibernate to order SQL updates by the
                     entity type and the primary key value of the items being updated. This allows for more batching
                     to be used.  It will also result in fewer transaction deadlocks in highly concurrent systems.
                     Comes with a performance hit, so benchmark before and after to see if this actually helps or

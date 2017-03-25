@@ -14,6 +14,7 @@ import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public interface IdMapper {
 	ServiceRegistry getServiceRegistry();
@@ -80,10 +81,11 @@ public interface IdMapper {
 	 *
 	 * @param parameters Parameters, to which to add the statements.
 	 * @param id Value of id.
+	 * @param alias the alias to use in the specified parameters (may be null).
 	 * @param prefix Prefix to add to the properties (may be null).
 	 * @param equals Should this query express the "=" relation or the "<>" relation.
 	 */
-	void addIdEqualsToQuery(Parameters parameters, Object id, String prefix, boolean equals);
+	void addIdEqualsToQuery(Parameters parameters, Object id, String alias, String prefix, boolean equals);
 
 	/**
 	 * Adds query statements, which contains named parameters, which express the property that the id of the entity
@@ -95,4 +97,17 @@ public interface IdMapper {
 	 * @param equals Should this query express the "=" relation or the "<>" relation.
 	 */
 	void addNamedIdEqualsToQuery(Parameters parameters, String prefix, boolean equals);
+
+	/**
+	 * Adds query statements, which contains named parameters that express the property that the id of the entity
+	 * with alias prefix is equal to the given object using the specified mapper.
+	 *
+	 * @param parameters Parameters, to which to add the statements.
+	 * @param prefix Prefix to add to the properties (may be null).
+	 * @param mapper The identifier mapper to use
+	 * @param equals Should this query express the "=" relation or the "<>" relation.
+	 *
+	 * @since 5.2.2
+	 */
+	void addNamedIdEqualsToQuery(Parameters parameters, String prefix, IdMapper mapper, boolean equals);
 }

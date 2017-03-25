@@ -15,7 +15,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
@@ -69,7 +69,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 			Object version,
 			Object object,
 			int timeout,
-			SessionImplementor session) throws StaleObjectStateException, JDBCException {
+			SharedSessionContractImplementor session) throws StaleObjectStateException, JDBCException {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
@@ -92,20 +92,20 @@ public class UpdateLockingStrategy implements LockingStrategy {
 				final int affected = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
 				if ( affected < 0 ) {
 					if (factory.getStatistics().isStatisticsEnabled()) {
-						factory.getStatisticsImplementor().optimisticFailure( lockable.getEntityName() );
+						factory.getStatistics().optimisticFailure( lockable.getEntityName() );
 					}
 					throw new StaleObjectStateException( lockable.getEntityName(), id );
 				}
 
 			}
 			finally {
-				session.getJdbcCoordinator().getResourceRegistry().release( st );
+				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 				session.getJdbcCoordinator().afterStatementExecution();
 			}
 
 		}
 		catch ( SQLException sqle ) {
-			throw session.getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not lock: " + MessageHelper.infoString( lockable, id, session.getFactory() ),
 					sql
@@ -120,7 +120,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 		update.addPrimaryKeyColumns( lockable.getRootTableIdentifierColumnNames() );
 		update.setVersionColumnName( lockable.getVersionColumnName() );
 		update.addColumn( lockable.getVersionColumnName() );
-		if ( factory.getSettings().isCommentsEnabled() ) {
+		if ( factory.getSessionFactoryOptions().isCommentsEnabled() ) {
 			update.setComment( lockMode + " lock " + lockable.getEntityName() );
 		}
 		return update.toStatementString();

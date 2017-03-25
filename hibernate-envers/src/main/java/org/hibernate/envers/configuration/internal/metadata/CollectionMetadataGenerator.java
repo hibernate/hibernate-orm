@@ -15,8 +15,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
 import javax.persistence.JoinColumn;
 
+import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.envers.ModificationStore;
@@ -45,6 +47,7 @@ import org.hibernate.envers.internal.entities.mapper.relation.SortedSetCollectio
 import org.hibernate.envers.internal.entities.mapper.relation.ToOneIdMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleDummyComponentMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleEmbeddableComponentMapper;
+import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleMapElementNotKeyComponentMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleMapKeyIdComponentMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleMapKeyPropertyComponentMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleRelatedComponentMapper;
@@ -68,6 +71,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.BagType;
@@ -75,20 +79,20 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.MapType;
+import org.hibernate.type.MaterializedClobType;
+import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SortedMapType;
 import org.hibernate.type.SortedSetType;
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
-
-import org.dom4j.Element;
 
 /**
  * Generates metadata for a collection-valued property.
  *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
+ * @author Chris Cranford
  */
 public final class CollectionMetadataGenerator {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
@@ -123,8 +127,10 @@ public final class CollectionMetadataGenerator {
 	 */
 	public CollectionMetadataGenerator(
 			AuditMetadataGenerator mainGenerator,
-			Collection propertyValue, CompositeMapperBuilder currentMapper,
-			String referencingEntityName, EntityXmlMappingData xmlMappingData,
+			Collection propertyValue,
+			CompositeMapperBuilder currentMapper,
+			String referencingEntityName,
+			EntityXmlMappingData xmlMappingData,
 			PropertyAuditingData propertyAuditingData) {
 		this.mainGenerator = mainGenerator;
 		this.propertyValue = propertyValue;
@@ -154,7 +160,7 @@ public final class CollectionMetadataGenerator {
 
 		if ( oneToManyAttachedType && (inverseOneToMany || fakeOneToManyBidirectional || owningManyToOneWithJoinTableBidirectional) ) {
 			// A one-to-many relation mapped using @ManyToOne and @OneToMany(mappedBy="...")
-			addOneToManyAttached( fakeOneToManyBidirectional );
+			addOneToManyAttached( fakeOneToManyBidirectional  );
 		}
 		else {
 			// All other kinds of relations require a middle (join) table.
@@ -164,7 +170,10 @@ public final class CollectionMetadataGenerator {
 
 	private MiddleIdData createMiddleIdData(IdMappingData idMappingData, String prefix, String entityName) {
 		return new MiddleIdData(
-				mainGenerator.getVerEntCfg(), idMappingData, prefix, entityName,
+				mainGenerator.getVerEntCfg(),
+				idMappingData,
+				prefix,
+				entityName,
 				mainGenerator.getEntitiesConfigurations().containsKey( entityName )
 		);
 	}
@@ -176,6 +185,10 @@ public final class CollectionMetadataGenerator {
 				referencingEntityName,
 				propertyName
 		);
+
+		// check whether the property has an @IndexColumn or @OrderColumn because its part of an
+		// IndexedCollection mapping type.
+		final boolean indexed = ( propertyValue instanceof IndexedCollection ) && ( (IndexedCollection) propertyValue ).getIndex() != null;
 
 		final String mappedBy = getMappedBy( propertyValue );
 
@@ -219,7 +232,9 @@ public final class CollectionMetadataGenerator {
 				referencingIdData,
 				referencedEntityName,
 				referencedIdData,
-				isEmbeddableElementType()
+				isEmbeddableElementType(),
+				mappedBy,
+				isMappedByKey( propertyValue, mappedBy )
 		);
 
 		// Creating common mapper data.
@@ -231,10 +246,16 @@ public final class CollectionMetadataGenerator {
 
 		PropertyMapper fakeBidirectionalRelationMapper;
 		PropertyMapper fakeBidirectionalRelationIndexMapper;
-		if ( fakeOneToManyBidirectional ) {
+		if ( fakeOneToManyBidirectional || indexed ) {
 			// In case of a fake many-to-one bidirectional relation, we have to generate a mapper which maps
 			// the mapped-by property name to the id of the related entity (which is the owner of the collection).
-			final String auditMappedBy = propertyAuditingData.getAuditMappedBy();
+			final String auditMappedBy;
+			if ( fakeOneToManyBidirectional ) {
+				auditMappedBy = propertyAuditingData.getAuditMappedBy();
+			}
+			else {
+				auditMappedBy = propertyValue.getMappedByProperty();
+			}
 
 			// Creating a prefixed relation mapper.
 			final IdMapper relMapper = referencingIdMapping.getIdMapper().prefixMappedProperties(
@@ -249,9 +270,20 @@ public final class CollectionMetadataGenerator {
 					referencingEntityName, false
 			);
 
+			final String positionMappedBy;
+			if ( fakeOneToManyBidirectional ) {
+				positionMappedBy = propertyAuditingData.getPositionMappedBy();
+			}
+			else if ( indexed ) {
+				final Value indexValue = ( (IndexedCollection) propertyValue ).getIndex();
+				positionMappedBy = indexValue.getColumnIterator().next().getText();
+			}
+			else {
+				positionMappedBy = null;
+			}
+
 			// Checking if there's an index defined. If so, adding a mapper for it.
-			if ( propertyAuditingData.getPositionMappedBy() != null ) {
-				final String positionMappedBy = propertyAuditingData.getPositionMappedBy();
+			if ( positionMappedBy != null ) {
 				fakeBidirectionalRelationIndexMapper = new SinglePropertyMapper(
 						new PropertyData(
 								positionMappedBy,
@@ -286,7 +318,8 @@ public final class CollectionMetadataGenerator {
 				referencedEntityName,
 				referencingIdData.getPrefixedMapper(),
 				fakeBidirectionalRelationMapper,
-				fakeBidirectionalRelationIndexMapper
+				fakeBidirectionalRelationIndexMapper,
+				indexed
 		);
 	}
 
@@ -300,7 +333,8 @@ public final class CollectionMetadataGenerator {
 	 */
 	@SuppressWarnings({"unchecked"})
 	private void addRelatedToXmlMapping(
-			Element xmlMapping, String prefix,
+			Element xmlMapping,
+			String prefix,
 			MetadataTools.ColumnNameIterator columnNameIterator,
 			IdMappingData relatedIdMapping) {
 		final Element properties = (Element) relatedIdMapping.getXmlRelationMapping().clone();
@@ -415,7 +449,7 @@ public final class CollectionMetadataGenerator {
 				mainGenerator.getAuditStrategy(),
 				referencingIdData,
 				auditMiddleEntityName,
-				isEmbeddableElementType()
+				isRevisionTypeInId()
 		);
 
 		// Adding the XML mapping for the referencing entity, if the relation isn't inverse.
@@ -436,7 +470,8 @@ public final class CollectionMetadataGenerator {
 				middleEntityXml,
 				queryGeneratorBuilder,
 				referencedPrefix,
-				propertyAuditingData.getJoinTable().inverseJoinColumns()
+				propertyAuditingData.getJoinTable().inverseJoinColumns(),
+				!isLobMapElementType()
 		);
 
 		// ******
@@ -479,7 +514,8 @@ public final class CollectionMetadataGenerator {
 						middleEntityXml,
 						queryGeneratorBuilder,
 						"mapkey",
-						null
+						null,
+						true
 				);
 			}
 			else {
@@ -531,7 +567,8 @@ public final class CollectionMetadataGenerator {
 			Element xmlMapping,
 			QueryGeneratorBuilder queryGeneratorBuilder,
 			String prefix,
-			JoinColumn[] joinColumns) {
+			JoinColumn[] joinColumns,
+			boolean key) {
 		final Type type = value.getType();
 		if ( type instanceof ManyToOneType ) {
 			final String prefixRelated = prefix + "_";
@@ -642,7 +679,7 @@ public final class CollectionMetadataGenerator {
 		else {
 			// Last but one parameter: collection components are always insertable
 			final boolean mapped = mainGenerator.getBasicMetadataGenerator().addBasic(
-					xmlMapping,
+					key ? xmlMapping : xmlMapping.getParent(),
 					new PropertyAuditingData(
 							prefix,
 							"field",
@@ -655,13 +692,20 @@ public final class CollectionMetadataGenerator {
 					value,
 					null,
 					true,
-					true
+					key
 			);
 
-			if ( mapped ) {
+			if ( mapped && key ) {
 				// Simple values are always stored in the first item of the array returned by the query generator.
 				return new MiddleComponentData(
 						new MiddleSimpleComponentMapper( mainGenerator.getVerEntCfg(), prefix ),
+						0
+				);
+			}
+			else if ( mapped && !key ) {
+				// when mapped but not part of the key, its stored as a dummy mapper??
+				return new MiddleComponentData(
+						new MiddleMapElementNotKeyComponentMapper( mainGenerator.getVerEntCfg(), prefix ),
 						0
 				);
 			}
@@ -679,6 +723,7 @@ public final class CollectionMetadataGenerator {
 			MiddleComponentData indexComponentData) {
 		final Type type = propertyValue.getType();
 		final boolean embeddableElementType = isEmbeddableElementType();
+		final boolean lobMapElementType = isLobMapElementType();
 		if ( type instanceof SortedSetType ) {
 			currentMapper.addComposite(
 					propertyAuditingData.getPropertyData(),
@@ -717,7 +762,7 @@ public final class CollectionMetadataGenerator {
 							elementComponentData,
 							indexComponentData,
 							propertyValue.getComparator(),
-							embeddableElementType
+							embeddableElementType || lobMapElementType
 					)
 			);
 		}
@@ -731,7 +776,7 @@ public final class CollectionMetadataGenerator {
 							MapProxy.class,
 							elementComponentData,
 							indexComponentData,
-							embeddableElementType
+							embeddableElementType || lobMapElementType
 					)
 			);
 		}
@@ -810,9 +855,9 @@ public final class CollectionMetadataGenerator {
 
 		// Adding the revision type property to the entity xml.
 		mainGenerator.addRevisionType(
-				isEmbeddableElementType() ? middleEntityXmlId : middleEntityXml,
+				isRevisionTypeInId() ? middleEntityXmlId : middleEntityXml,
 				middleEntityXml,
-				isEmbeddableElementType()
+				isRevisionTypeInId()
 		);
 
 		// All other properties should also be part of the primary key of the middle entity.
@@ -827,17 +872,16 @@ public final class CollectionMetadataGenerator {
 	}
 
 	private String getMappedBy(Collection collectionValue) {
-		PersistentClass referencedClass = null;
-		if ( collectionValue.getElement() instanceof OneToMany ) {
-			final OneToMany oneToManyValue = (OneToMany) collectionValue.getElement();
-			referencedClass = oneToManyValue.getAssociatedClass();
-		}
-		else if ( collectionValue.getElement() instanceof ManyToOne ) {
-			// Case for bi-directional relation with @JoinTable on the owning @ManyToOne side.
-			final ManyToOne manyToOneValue = (ManyToOne) collectionValue.getElement();
-			referencedClass = manyToOneValue.getMetadata().getEntityBinding( manyToOneValue.getReferencedEntityName() );
-		}
+		final PersistentClass referencedClass = getReferenceCollectionClass( collectionValue );
+		final ValueHolder valueHolder = new ValueHolder( collectionValue );
+		return getMappedBy( referencedClass, valueHolder );
+	}
 
+	private String getMappedBy(Table collectionTable, PersistentClass referencedClass) {
+		return getMappedBy( referencedClass, new ValueHolder( collectionTable ) );
+	}
+
+	private String getMappedBy(PersistentClass referencedClass, ValueHolder valueHolder) {
 		// If there's an @AuditMappedBy specified, returning it directly.
 		final String auditMappedBy = propertyAuditingData.getAuditMappedBy();
 		if ( auditMappedBy != null ) {
@@ -845,7 +889,7 @@ public final class CollectionMetadataGenerator {
 		}
 
 		// searching in referenced class
-		String mappedBy = this.searchMappedBy( referencedClass, collectionValue );
+		String mappedBy = this.searchMappedBy( referencedClass, valueHolder );
 
 		if ( mappedBy == null ) {
 			LOG.debugf(
@@ -855,9 +899,9 @@ public final class CollectionMetadataGenerator {
 			);
 
 			PersistentClass tempClass = referencedClass;
-			while ( (mappedBy == null) && (tempClass.getSuperclass() != null) ) {
+			while ( mappedBy == null && tempClass.getSuperclass() != null ) {
 				LOG.debugf( "Searching in superclass: %s", tempClass.getSuperclass().getClassName() );
-				mappedBy = this.searchMappedBy( tempClass.getSuperclass(), collectionValue );
+				mappedBy = this.searchMappedBy( tempClass.getSuperclass(), valueHolder );
 				tempClass = tempClass.getSuperclass();
 			}
 		}
@@ -870,6 +914,13 @@ public final class CollectionMetadataGenerator {
 		}
 
 		return mappedBy;
+	}
+
+	private String searchMappedBy(PersistentClass persistentClass, ValueHolder valueHolder) {
+		if ( valueHolder.getCollection() != null ) {
+			return searchMappedBy( persistentClass, valueHolder.getCollection() );
+		}
+		return searchMappedBy( persistentClass, valueHolder.getTable() );
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -885,43 +936,9 @@ public final class CollectionMetadataGenerator {
 				return property.getName();
 			}
 		}
-		return null;
-	}
-
-	private String getMappedBy(Table collectionTable, PersistentClass referencedClass) {
-		// If there's an @AuditMappedBy specified, returning it directly.
-		final String auditMappedBy = propertyAuditingData.getAuditMappedBy();
-		if ( auditMappedBy != null ) {
-			return auditMappedBy;
-		}
-
-		// searching in referenced class
-		String mappedBy = this.searchMappedBy( referencedClass, collectionTable );
-
-		// not found on referenced class, searching on superclasses
-		if ( mappedBy == null ) {
-			LOG.debugf(
-					"Going to search the mapped by attribute for %s in superclasses of entity: %s",
-					propertyName,
-					referencedClass.getClassName()
-			);
-
-			PersistentClass tempClass = referencedClass;
-			while ( (mappedBy == null) && (tempClass.getSuperclass() != null) ) {
-				LOG.debugf( "Searching in superclass: %s", tempClass.getSuperclass().getClassName() );
-				mappedBy = this.searchMappedBy( tempClass.getSuperclass(), collectionTable );
-				tempClass = tempClass.getSuperclass();
-			}
-		}
-
-		if ( mappedBy == null ) {
-			throw new MappingException(
-					"Unable to read the mapped by attribute for " + propertyName + " in "
-							+ referencedClass.getClassName() + "!"
-			);
-		}
-
-		return mappedBy;
+		// HHH-7625
+		// Support ToOne relations with mappedBy that point to an @IdClass key property.
+		return searchMappedByKey( referencedClass, collectionValue );
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -932,7 +949,7 @@ public final class CollectionMetadataGenerator {
 			if ( property.getValue() instanceof Collection ) {
 				// The equality is intentional. We want to find a collection property with the same collection table.
 				//noinspection ObjectEquality
-				if ( ((Collection) property.getValue()).getCollectionTable() == collectionTable ) {
+				if ( ( (Collection) property.getValue() ).getCollectionTable() == collectionTable ) {
 					return property.getName();
 				}
 			}
@@ -940,4 +957,94 @@ public final class CollectionMetadataGenerator {
 		return null;
 	}
 
+	@SuppressWarnings({"unchecked"})
+	private String searchMappedByKey(PersistentClass referencedClass, Collection collectionValue) {
+		final Iterator<Value> assocIdClassProps = referencedClass.getKeyClosureIterator();
+		while ( assocIdClassProps.hasNext() ) {
+			final Value value = assocIdClassProps.next();
+			// make sure its a 'Component' because IdClass is registered as this type.
+			if ( value instanceof Component ) {
+				final Component component = (Component) value;
+				final Iterator<Property> componentPropertyIterator = component.getPropertyIterator();
+				while ( componentPropertyIterator.hasNext() ) {
+					final Property property = componentPropertyIterator.next();
+					final Iterator<Selectable> propertySelectables = property.getValue().getColumnIterator();
+					final Iterator<Selectable> collectionSelectables = collectionValue.getKey().getColumnIterator();
+					if ( Tools.iteratorsContentEqual( propertySelectables, collectionSelectables ) ) {
+						return property.getName();
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	private PersistentClass getReferenceCollectionClass(Collection collectionValue) {
+		PersistentClass referencedClass = null;
+		if ( collectionValue.getElement() instanceof OneToMany ) {
+			final OneToMany oneToManyValue = (OneToMany) collectionValue.getElement();
+			referencedClass = oneToManyValue.getAssociatedClass();
+		}
+		else if ( collectionValue.getElement() instanceof ManyToOne ) {
+			// Case for bi-directional relation with @JoinTable on the owning @ManyToOne side.
+			final ManyToOne manyToOneValue = (ManyToOne) collectionValue.getElement();
+			referencedClass = manyToOneValue.getMetadata().getEntityBinding( manyToOneValue.getReferencedEntityName() );
+		}
+		return referencedClass;
+	}
+
+	private boolean isMappedByKey(Collection collectionValue, String mappedBy) {
+		final PersistentClass referencedClass = getReferenceCollectionClass( collectionValue );
+		if ( referencedClass != null ) {
+			final String keyMappedBy = searchMappedByKey( referencedClass, collectionValue );
+			return mappedBy.equals( keyMappedBy );
+		}
+		return false;
+	}
+
+	private class ValueHolder {
+		private Collection collection;
+		private Table table;
+
+		public ValueHolder(Collection collection) {
+			this.collection = collection;
+		}
+
+		public ValueHolder(Table table) {
+			this.table = table;
+		}
+
+		public Collection getCollection() {
+			return collection;
+		}
+
+		public Table getTable() {
+			return table;
+		}
+	}
+
+	/**
+	 * Returns whether the revision type column part of the collection table's primary key.
+	 *
+	 * @return {@code true} if the revision type should be part of the primary key, otherwise {@code false}.
+	 */
+	private boolean isRevisionTypeInId() {
+		return isEmbeddableElementType() || isLobMapElementType();
+	}
+
+	/**
+	 * Returns whether the collection is a map-type and that the map element is defined as a Clob/NClob type.
+	 *
+	 * @return {@code true} if the element is a Clob/NClob type, otherwise {@code false}.
+	 */
+	private boolean isLobMapElementType() {
+		if ( propertyValue instanceof org.hibernate.mapping.Map ) {
+			final Type type = propertyValue.getElement().getType();
+			// we're only interested in basic types
+			if ( !type.isComponentType() && !type.isAssociationType() ) {
+				return ( type instanceof MaterializedClobType ) || ( type instanceof MaterializedNClobType );
+			}
+		}
+		return false;
+	}
 }

@@ -6,22 +6,26 @@
  */
 package org.hibernate.test.hql;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
+import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.hql.internal.ast.InvalidWithClauseException;
+import org.hibernate.cfg.AvailableSettings;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Implementation of WithClauseTest.
@@ -47,6 +51,9 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 			        .list();
 			fail( "ad-hoc on clause allowed with fetched association" );
 		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
+		}
 		catch ( HibernateException e ) {
 			// the expected response...
 		}
@@ -55,37 +62,6 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		data.cleanup();
-	}
-
-	@Test
-	public void testInvalidWithSemantics() {
-		Session s = openSession();
-		Transaction txn = s.beginTransaction();
-
-		try {
-			// PROBLEM : f.bodyWeight is a reference to a column on the Animal table; however, the 'f'
-			// alias relates to the Human.friends collection which the aonther Human entity.  The issue
-			// here is the way JoinSequence and Joinable (the persister) interact to generate the
-			// joins relating to the sublcass/superclass tables
-			s.createQuery( "from Human h inner join h.friends as f with f.bodyWeight < :someLimit" )
-					.setDouble( "someLimit", 1 )
-					.list();
-			fail( "failure expected" );
-		}
-		catch( InvalidWithClauseException expected ) {
-		}
-
-		try {
-			s.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin" )
-					.setEntity( "cousin", s.load( Human.class, new Long(123) ) )
-					.list();
-			fail( "failure expected" );
-		}
-		catch( InvalidWithClauseException expected ) {
-		}
-
-		txn.commit();
-		s.close();
 	}
 
 	@Test
@@ -108,6 +84,11 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 				.list();
 		assertTrue( "ad-hoc on did not take effect", list.isEmpty() );
 
+		list = s.createQuery( "from Human h inner join h.friends f with f.bodyWeight < :someLimit" )
+				.setDouble( "someLimit", 25 )
+				.list();
+		assertTrue( "ad-hoc on did take effect", !list.isEmpty() );
+
 		// many-to-many
 		list = s.createQuery( "from Human h inner join h.friends as f with f.nickName like 'bubba'" )
 				.list();
@@ -117,6 +98,11 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 		list = s.createQuery( "from Human h inner join h.nickNames as nicknames with nicknames = 'abc'" )
 				.list();
 		assertTrue( "ad-hoc on did not take effect", list.isEmpty() );
+
+		list = s.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin" )
+				.setEntity( "cousin", s.load( Human.class, Long.valueOf( "123" ) ) )
+				.list();
+		assertTrue( "ad-hoc did take effect", list.isEmpty() );
 
 		txn.commit();
 		s.close();
@@ -165,6 +151,116 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-9329")
+	public void testWithClauseAsSubquery() {
+		TestData data = new TestData();
+		data.prepare();
+
+		Session s = openSession();
+		Transaction txn = s.beginTransaction();
+
+		// Since friends has a join table, we will first left join all friends and then do the WITH clause on the target entity table join
+		// Normally this produces 2 results which is wrong and can only be circumvented by converting the join table and target entity table join to a subquery
+		List list = s.createQuery( "from Human h left join h.friends as f with f.nickName like 'bubba' where h.description = 'father'" )
+				.list();
+		assertEquals( "subquery rewriting of join table did not take effect", 1, list.size() );
+
+		txn.commit();
+		s.close();
+
+		data.cleanup();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11230")
+	public void testWithClauseAsSubqueryWithEqualOperator() {
+		TestData data = new TestData();
+		data.prepare();
+
+		Session s = openSession();
+		Transaction txn = s.beginTransaction();
+
+		// Like testWithClauseAsSubquery but uses equal operator since it render differently in SQL
+		List list = s.createQuery( "from Human h left join h.friends as f with f.nickName = 'bubba' where h.description = 'father'" )
+				.list();
+		assertEquals( "subquery rewriting of join table did not take effect", 1, list.size() );
+
+		txn.commit();
+		s.close();
+
+		data.cleanup();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9329")
+	public void testWithClauseAsSubqueryWithKey() {
+		TestData data = new TestData();
+		data.prepare();
+
+		Session s = openSession();
+		Transaction txn = s.beginTransaction();
+
+		// Since family has a join table, we will first left join all family members and then do the WITH clause on the target entity table join
+		// Normally this produces 2 results which is wrong and can only be circumvented by converting the join table and target entity table join to a subquery
+		List list = s.createQuery( "from Human h left join h.family as f with key(f) like 'son1' where h.description = 'father'" )
+				.list();
+		assertEquals( "subquery rewriting of join table did not take effect", 1, list.size() );
+
+		txn.commit();
+		s.close();
+
+		data.cleanup();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11157")
+	public void testWithClauseAsNonSubqueryWithKey() {
+		rebuildSessionFactory( c -> c.setProperty( AvailableSettings.COLLECTION_JOIN_SUBQUERY, "false" ) );
+
+		try {
+			TestData data = new TestData();
+			data.prepare();
+
+			Session s = openSession();
+			Transaction txn = s.beginTransaction();
+
+			// Since family has a join table, we will first left join all family members and then do the WITH clause on the target entity table join
+			// Normally this produces 2 results which is wrong and can only be circumvented by converting the join table and target entity table join to a subquery
+			List list = s.createQuery( "from Human h left join h.family as f with key(f) like 'son1' where h.description = 'father'" )
+					.list();
+			assertEquals( "subquery rewriting of join table was not disabled", 2, list.size() );
+
+			txn.commit();
+			s.close();
+
+			data.cleanup();
+		} finally {
+			// Rebuild to reset the properties
+			rebuildSessionFactory();
+		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11401")
+	public void testWithClauseAsSubqueryWithKeyAndOtherJoinReference() {
+		TestData data = new TestData();
+		data.prepare();
+
+		Session s = openSession();
+		Transaction txn = s.beginTransaction();
+
+		// Just a stupid example that makes use of a column that isn't from the collection table or the target entity table
+		List list = s.createQuery( "from Human h join h.friends as friend left join h.family as f with key(f) = concat('son', friend.intValue) where h.description = 'father'" )
+				.list();
+		assertEquals( "subquery rewriting of join table did not take effect", 2, list.size() );
+
+		txn.commit();
+		s.close();
+
+		data.cleanup();
+	}
+
 	private class TestData {
 		public void prepare() {
 			Session session = openSession();
@@ -189,6 +285,12 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 			Human friend = new Human();
 			friend.setBodyWeight( 20 );
 			friend.setDescription( "friend" );
+			friend.setIntValue( 1 );
+
+			Human friend2 = new Human();
+			friend2.setBodyWeight( 20 );
+			friend2.setDescription( "friend2" );
+			friend.setIntValue( 2 );
 
 			child1.setMother( mother );
 			child1.setFather( father );
@@ -202,12 +304,18 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 
 			father.setFriends( new ArrayList() );
 			father.getFriends().add( friend );
+			father.getFriends().add( friend2 );
 
 			session.save( mother );
 			session.save( father );
 			session.save( child1 );
 			session.save( child2 );
 			session.save( friend );
+			session.save( friend2 );
+
+			father.setFamily( new HashMap() );
+			father.getFamily().put( "son1", child1 );
+			father.getFamily().put( "son2", child2 );
 
 			txn.commit();
 			session.close();
@@ -218,7 +326,9 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 			Transaction txn = session.beginTransaction();
 			Human father = (Human) session.createQuery( "from Human where description = 'father'" ).uniqueResult();
 			father.getFriends().clear();
+			father.getFamily().clear();
 			session.flush();
+			session.delete( session.createQuery( "from Human where description = 'friend2'" ).uniqueResult() );
 			session.delete( session.createQuery( "from Human where description = 'friend'" ).uniqueResult() );
 			session.delete( session.createQuery( "from Human where description = 'child1'" ).uniqueResult() );
 			session.delete( session.createQuery( "from Human where description = 'child2'" ).uniqueResult() );

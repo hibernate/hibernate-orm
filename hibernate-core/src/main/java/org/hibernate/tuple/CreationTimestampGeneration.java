@@ -6,12 +6,6 @@
  */
 package org.hibernate.tuple;
 
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Date;
-
-import org.hibernate.HibernateException;
 import org.hibernate.annotations.CreationTimestamp;
 
 /**
@@ -25,24 +19,7 @@ public class CreationTimestampGeneration implements AnnotationValueGeneration<Cr
 
 	@Override
 	public void initialize(CreationTimestamp annotation, Class<?> propertyType) {
-		if ( java.sql.Date.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentSqlDateGenerator();
-		}
-		else if ( Time.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentSqlTimeGenerator();
-		}
-		else if ( Timestamp.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentSqlTimestampGenerator();
-		}
-		else if ( Date.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentDateGenerator();
-		}
-		else if ( Calendar.class.isAssignableFrom( propertyType ) ) {
-			generator = new TimestampGenerators.CurrentCalendarGenerator();
-		}
-		else {
-			throw new HibernateException( "Unsupported property type for generator annotation @CreationTimestamp" );
-		}
+		generator = TimestampGenerators.get(propertyType);
 	}
 
 	@Override

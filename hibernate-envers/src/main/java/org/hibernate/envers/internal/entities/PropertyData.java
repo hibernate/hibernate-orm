@@ -13,6 +13,7 @@ import org.hibernate.internal.util.compare.EqualsHelper;
  * Holds information on a property that is audited.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class PropertyData {
 	private final String name;
@@ -24,6 +25,9 @@ public class PropertyData {
 	private final ModificationStore store;
 	private boolean usingModifiedFlag;
 	private String modifiedFlagName;
+	// Synthetic properties are ones which are not part of the actual java model.
+	// They're properties used for bookkeeping by Hibernate
+	private boolean synthetic;
 
 	/**
 	 * Copies the given property data, except the name.
@@ -64,10 +68,12 @@ public class PropertyData {
 			String accessType,
 			ModificationStore store,
 			boolean usingModifiedFlag,
-			String modifiedFlagName) {
+			String modifiedFlagName,
+			boolean synthetic) {
 		this( name, beanName, accessType, store );
 		this.usingModifiedFlag = usingModifiedFlag;
 		this.modifiedFlagName = modifiedFlagName;
+		this.synthetic = synthetic;
 	}
 
 	public String getName() {
@@ -82,6 +88,10 @@ public class PropertyData {
 		return accessType;
 	}
 
+	 /**
+	 * @deprecated since 5.2, to be removed in 6.0 with no replacement.
+	 */
+	@Deprecated
 	public ModificationStore getStore() {
 		return store;
 	}
@@ -92,6 +102,10 @@ public class PropertyData {
 
 	public String getModifiedFlagPropertyName() {
 		return modifiedFlagName;
+	}
+
+	public boolean isSynthetic() {
+		return synthetic;
 	}
 
 	@Override
@@ -108,7 +122,8 @@ public class PropertyData {
 				&& store == that.store
 				&& EqualsHelper.equals( accessType, that.accessType )
 				&& EqualsHelper.equals( beanName, that.beanName )
-				&& EqualsHelper.equals( name, that.name );
+				&& EqualsHelper.equals( name, that.name )
+				&& EqualsHelper.equals( synthetic, that.synthetic );
 	}
 
 	@Override
@@ -118,6 +133,7 @@ public class PropertyData {
 		result = 31 * result + (accessType != null ? accessType.hashCode() : 0);
 		result = 31 * result + (store != null ? store.hashCode() : 0);
 		result = 31 * result + (usingModifiedFlag ? 1 : 0);
+		result = 31 * result + (synthetic ? 1 : 0);
 		return result;
 	}
 }

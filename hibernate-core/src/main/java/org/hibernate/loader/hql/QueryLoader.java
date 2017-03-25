@@ -21,11 +21,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
-import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.hql.internal.ast.QueryTranslatorImpl;
@@ -43,6 +42,7 @@ import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -72,7 +72,7 @@ public class QueryLoader extends BasicLoader {
 	//private Type[] sqlResultTypes;
 	private Type[] queryReturnTypes;
 
-	private final Map<String, String> sqlAliasByEntityAlias = new HashMap<String, String>( 8 );
+	private final Map<String, String> sqlAliasByEntityAlias = new HashMap<>( 8 );
 
 	private EntityType[] ownerAssociationTypes;
 	private int[] owners;
@@ -166,6 +166,7 @@ public class QueryLoader extends BasicLoader {
 
 			owners[i] = -1; //by default
 			if ( element.isFetch() ) {
+				//noinspection StatementWithEmptyBody
 				if ( element.isCollectionJoin() || element.getQueryableCollection() != null ) {
 					// This is now handled earlier in this method.
 				}
@@ -332,15 +333,15 @@ public class QueryLoader extends BasicLoader {
 		}
 
 		//		there are other conditions we might want to add here, such as checking the result types etc
-		//		but those are better served after we have redone the SQL generation to use ASTs.
+		//		but those are better served afterQuery we have redone the SQL generation to use ASTs.
 
 
 		// we need both the set of locks and the columns to reference in locks
 		// as the ultimate output of this section...
 		final LockOptions locks = new LockOptions( lockOptions.getLockMode() );
-		final Map<String, String[]> keyColumnNames = dialect.forUpdateOfColumns() ?
-				new HashMap<String, String[]>() :
-				null;
+		final Map<String, String[]> keyColumnNames = dialect.forUpdateOfColumns()
+				? new HashMap<>()
+				: null;
 
 		locks.setScope( lockOptions.getScope() );
 		locks.setTimeOut( lockOptions.getTimeOut() );
@@ -376,7 +377,7 @@ public class QueryLoader extends BasicLoader {
 	}
 
 	@Override
-	protected void applyPostLoadLocks(Object[] row, LockMode[] lockModesArray, SessionImplementor session) {
+	protected void applyPostLoadLocks(Object[] row, LockMode[] lockModesArray, SharedSessionContractImplementor session) {
 		// todo : scalars???
 //		if ( row.length != lockModesArray.length ) {
 //			return;
@@ -429,7 +430,7 @@ public class QueryLoader extends BasicLoader {
 			Object[] row,
 			ResultTransformer transformer,
 			ResultSet rs,
-			SessionImplementor session)
+			SharedSessionContractImplementor session)
 			throws SQLException, HibernateException {
 
 		Object[] resultRow = getResultRow( row, rs, session );
@@ -441,7 +442,7 @@ public class QueryLoader extends BasicLoader {
 	}
 
 	@Override
-	protected Object[] getResultRow(Object[] row, ResultSet rs, SessionImplementor session)
+	protected Object[] getResultRow(Object[] row, ResultSet rs, SharedSessionContractImplementor session)
 			throws SQLException, HibernateException {
 		Object[] resultRow;
 		if ( hasScalars ) {
@@ -495,7 +496,7 @@ public class QueryLoader extends BasicLoader {
 	// --- Query translator methods ---
 
 	public List list(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			QueryParameters queryParameters) throws HibernateException {
 		checkQuery( queryParameters );
 		return list( session, queryParameters, queryTranslator.getQuerySpaces(), queryReturnTypes );
@@ -524,7 +525,7 @@ public class QueryLoader extends BasicLoader {
 			final SqlStatementWrapper wrapper = executeQueryStatement(
 					queryParameters,
 					false,
-					Collections.<AfterLoadAction>emptyList(),
+					Collections.emptyList(),
 					session
 			);
 			final ResultSet rs = wrapper.getResultSet();
@@ -542,7 +543,7 @@ public class QueryLoader extends BasicLoader {
 			if ( stats ) {
 				final long endTime = System.nanoTime();
 				final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-				session.getFactory().getStatisticsImplementor().queryExecuted(
+				session.getFactory().getStatistics().queryExecuted(
 //						"HQL: " + queryTranslator.getQueryString(),
 						getQueryIdentifier(),
 						0,
@@ -554,7 +555,7 @@ public class QueryLoader extends BasicLoader {
 
 		}
 		catch (SQLException sqle) {
-			throw getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not execute query using iterate",
 					getSQLString()
@@ -563,9 +564,9 @@ public class QueryLoader extends BasicLoader {
 
 	}
 
-	public ScrollableResults scroll(
+	public ScrollableResultsImplementor scroll(
 			final QueryParameters queryParameters,
-			final SessionImplementor session) throws HibernateException {
+			final SharedSessionContractImplementor session) throws HibernateException {
 		checkQuery( queryParameters );
 		return scroll(
 				queryParameters,
@@ -620,7 +621,7 @@ public class QueryLoader extends BasicLoader {
 			final PreparedStatement statement,
 			final QueryParameters queryParameters,
 			final int startIndex,
-			final SessionImplementor session) throws SQLException {
+			final SharedSessionContractImplementor session) throws SQLException {
 		int position = startIndex;
 		List<ParameterSpecification> parameterSpecs = queryTranslator.getCollectedParameterSpecifications();
 		for ( ParameterSpecification spec : parameterSpecs ) {

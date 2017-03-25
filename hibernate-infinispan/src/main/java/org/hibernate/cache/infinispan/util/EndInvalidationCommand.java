@@ -6,11 +6,16 @@
  */
 package org.hibernate.cache.infinispan.util;
 
-import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
-import org.infinispan.commands.remote.BaseRpcCommand;
-import org.infinispan.context.InvocationContext;
-
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Arrays;
+
+import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
+
+import org.infinispan.commands.remote.BaseRpcCommand;
+import org.infinispan.commons.marshall.MarshallUtil;
+import org.infinispan.context.InvocationContext;
 
 /**
  * Sent in commit phase (after DB commit) to remote nodes in order to stop invalidating
@@ -20,7 +25,7 @@ import java.util.Arrays;
  */
 public class EndInvalidationCommand extends BaseRpcCommand {
 	private Object[] keys;
-	private Object sessionTransactionId;
+	private Object lockOwner;
 	private PutFromLoadValidator putFromLoadValidator;
 
 	public EndInvalidationCommand(String cacheName) {
@@ -30,16 +35,16 @@ public class EndInvalidationCommand extends BaseRpcCommand {
 	/**
 	 * @param cacheName name of the cache to evict
 	 */
-	public EndInvalidationCommand(String cacheName, Object[] keys, Object sessionTransactionId) {
+	public EndInvalidationCommand(String cacheName, Object[] keys, Object lockOwner) {
 		super(cacheName);
 		this.keys = keys;
-		this.sessionTransactionId = sessionTransactionId;
+		this.lockOwner = lockOwner;
 	}
 
 	@Override
 	public Object perform(InvocationContext ctx) throws Throwable {
 		for (Object key : keys) {
-			putFromLoadValidator.endInvalidatingKey(sessionTransactionId, key);
+			putFromLoadValidator.endInvalidatingKey(lockOwner, key);
 		}
 		return null;
 	}
@@ -50,14 +55,15 @@ public class EndInvalidationCommand extends BaseRpcCommand {
 	}
 
 	@Override
-	public Object[] getParameters() {
-		return new Object[] { keys, sessionTransactionId};
+	public void writeTo(ObjectOutput output) throws IOException {
+		MarshallUtil.marshallArray(keys, output);
+		output.writeObject(lockOwner);
 	}
 
 	@Override
-	public void setParameters(int commandId, Object[] parameters) {
-		keys = (Object[]) parameters[0];
-		sessionTransactionId = parameters[1];
+	public void readFrom(ObjectInput input) throws IOException, ClassNotFoundException {
+		keys = MarshallUtil.unmarshallArray(input, Object[]::new);
+		lockOwner = input.readObject();
 	}
 
 	@Override
@@ -91,7 +97,7 @@ public class EndInvalidationCommand extends BaseRpcCommand {
 		if (!Arrays.equals(keys, that.keys)) {
 			return false;
 		}
-		return !(sessionTransactionId != null ? !sessionTransactionId.equals(that.sessionTransactionId) : that.sessionTransactionId != null);
+		return !(lockOwner != null ? !lockOwner.equals(that.lockOwner) : that.lockOwner != null);
 
 	}
 
@@ -99,7 +105,7 @@ public class EndInvalidationCommand extends BaseRpcCommand {
 	public int hashCode() {
 		int result = cacheName != null ? cacheName.hashCode() : 0;
 		result = 31 * result + (keys != null ? Arrays.hashCode(keys) : 0);
-		result = 31 * result + (sessionTransactionId != null ? sessionTransactionId.hashCode() : 0);
+		result = 31 * result + (lockOwner != null ? lockOwner.hashCode() : 0);
 		return result;
 	}
 
@@ -108,7 +114,7 @@ public class EndInvalidationCommand extends BaseRpcCommand {
 		final StringBuilder sb = new StringBuilder("EndInvalidationCommand{");
 		sb.append("cacheName=").append(cacheName);
 		sb.append(", keys=").append(Arrays.toString(keys));
-		sb.append(", sessionTransactionId=").append(sessionTransactionId);
+		sb.append(", sessionTransactionId=").append(lockOwner);
 		sb.append('}');
 		return sb.toString();
 	}

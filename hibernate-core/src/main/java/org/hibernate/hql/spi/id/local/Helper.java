@@ -12,10 +12,12 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractWork;
@@ -38,7 +40,7 @@ public class Helper {
 	public void createTempTable(
 			IdTableInfoImpl idTableInfo,
 			TempTableDdlTransactionHandling ddlTransactionHandling,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		// Don't really know all the codes required to adequately decipher returned jdbc exceptions here.
 		// simply allow the failure to be eaten and the subsequent insert-selects/deletes should fail
 		TemporaryTableCreationWork work = new TemporaryTableCreationWork( idTableInfo, session.getFactory() );
@@ -73,7 +75,7 @@ public class Helper {
 			try {
 				Statement statement = connection.createStatement();
 				try {
-					statement.executeUpdate( idTableInfo.getIdTableCreationStatement() );
+					statement.executeUpdate( logStatement(factory, idTableInfo.getIdTableCreationStatement()) );
 					factory.getServiceRegistry()
 							.getService( JdbcServices.class )
 							.getSqlExceptionHelper()
@@ -114,7 +116,7 @@ public class Helper {
 			IdTableInfoImpl idTableInfo,
 			AfterUseAction afterUseAction,
 			TempTableDdlTransactionHandling ddlTransactionHandling,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		if ( afterUseAction == AfterUseAction.NONE ) {
 			return;
 		}
@@ -150,7 +152,7 @@ public class Helper {
 			finally {
 				if ( ps != null ) {
 					try {
-						session.getJdbcCoordinator().getResourceRegistry().release( ps );
+						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 					}
 					catch( Throwable ignore ) {
 						// ignore
@@ -174,7 +176,7 @@ public class Helper {
 			try {
 				Statement statement = connection.createStatement();
 				try {
-					statement.executeUpdate( idTableInfo.getIdTableDropStatement() );
+					statement.executeUpdate( logStatement( factory, idTableInfo.getIdTableDropStatement() ) );
 					factory.getServiceRegistry()
 							.getService( JdbcServices.class )
 							.getSqlExceptionHelper()
@@ -190,8 +192,17 @@ public class Helper {
 				}
 			}
 			catch( Exception e ) {
-				log.warn( "unable to drop temporary id table after use [" + e.getMessage() + "]" );
+				log.warn( "unable to drop temporary id table afterQuery use [" + e.getMessage() + "]" );
 			}
 		}
+	}
+
+	private static String logStatement(SessionFactoryImplementor factory, String sql) {
+		final SqlStatementLogger statementLogger = factory.getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getSqlStatementLogger();
+
+		statementLogger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
+		return sql;
 	}
 }

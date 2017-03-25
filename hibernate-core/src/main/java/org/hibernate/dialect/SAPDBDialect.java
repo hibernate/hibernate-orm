@@ -161,6 +161,12 @@ public class SAPDBDialect extends Dialect {
 		return res.toString();
 	}
 
+	public String getAddForeignKeyConstraintString(
+			String constraintName,
+			String foreignKeyDefinition) {
+		return foreignKeyDefinition;
+	}
+
 	@Override
 	public String getAddPrimaryKeyConstraintString(String constraintName) {
 		return " primary key ";

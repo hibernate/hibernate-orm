@@ -5,17 +5,18 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.cid;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -377,7 +378,7 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		// show that the persistent object was changed only after the session flush
+		// show that the persistent object was changed only afterQuery the session flush
 		assertEquals( timestamp2, persistent.getTimestamp() );
 		
 		// show that the persistent store was updated - not just the in-memory object

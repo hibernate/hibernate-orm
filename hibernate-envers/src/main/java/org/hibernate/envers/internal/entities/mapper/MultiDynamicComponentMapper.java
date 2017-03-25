@@ -35,14 +35,16 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 			Object newObj,
 			Object oldObj) {
 		boolean ret = false;
-		for ( PropertyData propertyData : properties.keySet() ) {
+		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+			final PropertyData propertyData = entry.getKey();
+			final PropertyMapper propertyMapper = entry.getValue();
 			if ( newObj == null && oldObj == null ) {
 				return false;
 			}
 			Object newValue = newObj == null ? null : getValue( newObj, propertyData );
 			Object oldValue = oldObj == null ? null : getValue( oldObj, propertyData );
 
-			ret |= properties.get( propertyData ).mapToMapFromEntity( session, data, newValue, oldValue );
+			ret |= propertyMapper.mapToMapFromEntity( session, data, newValue, oldValue );
 		}
 
 		return ret;
@@ -81,13 +83,15 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
-		for ( PropertyData propertyData : properties.keySet() ) {
+		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+			final PropertyData propertyData = entry.getKey();
+			final PropertyMapper propertyMapper = entry.getValue();
 			if ( newObj == null && oldObj == null ) {
 				return;
 			}
 			Object newValue = newObj == null ? null : getValue( newObj, propertyData );
 			Object oldValue = oldObj == null ? null : getValue( oldObj, propertyData );
-			properties.get( propertyData ).mapModifiedFlagsToMapFromEntity( session, data, newValue, oldValue );
+			propertyMapper.mapModifiedFlagsToMapFromEntity( session, data, newValue, oldValue );
 		}
 	}
 
@@ -106,8 +110,7 @@ public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 				properties.keySet(),
 				enversService.getClassLoaderService()
 		);
-		for ( PropertyData propertyData : properties.keySet() ) {
-			PropertyMapper mapper = properties.get( propertyData );
+		for ( PropertyMapper mapper : properties.values() ) {
 			mapper.mapToEntityFromMap( enversService, mapProxy, data, primaryKey, versionsReader, revision );
 		}
 	}

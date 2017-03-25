@@ -9,11 +9,15 @@ package org.hibernate.test.naturalid.inheritance;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.tuple.entity.EntityMetamodel;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -22,6 +26,15 @@ public class InheritedNaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Principal.class, User.class };
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10360")
+	public void testNaturalIdNullability() {
+		final EntityPersister persister = sessionFactory().getEntityPersister( User.class.getName() );
+		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
+		// nullability is not specified, so it should be nullable by annotations-specific default
+		assertTrue( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "uid" )] );
 	}
 
 	@Test

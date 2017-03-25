@@ -7,12 +7,14 @@
 package org.hibernate.envers.test.integration.data;
 
 import java.util.Arrays;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -34,6 +36,9 @@ public class LobTestEntity {
 	@Lob
 	@Audited
 	private char[] charLob;
+
+	@NotAudited
+	private String data;
 
 	public LobTestEntity() {
 	}
@@ -83,6 +88,14 @@ public class LobTestEntity {
 		this.charLob = charLob;
 	}
 
+	public String getData() {
+		return data;
+	}
+
+	public void setData(String data) {
+		this.data = data;
+	}
+
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -105,6 +118,9 @@ public class LobTestEntity {
 		if ( stringLob != null ? !stringLob.equals( that.stringLob ) : that.stringLob != null ) {
 			return false;
 		}
+		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+			return false;
+		}
 
 		return true;
 	}
@@ -115,6 +131,7 @@ public class LobTestEntity {
 		result = 31 * result + (stringLob != null ? stringLob.hashCode() : 0);
 		result = 31 * result + (byteLob != null ? Arrays.hashCode( byteLob ) : 0);
 		result = 31 * result + (charLob != null ? Arrays.hashCode( charLob ) : 0);
+		result = 31 * result + (data != null ? data.hashCode() : 0);
 		return result;
 	}
 }

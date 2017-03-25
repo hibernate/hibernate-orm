@@ -5,12 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.loader.entity;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.Type;
 
@@ -139,7 +140,7 @@ public class EntityLoader extends AbstractEntityLoader {
 		}
 	}
 
-	public Object loadByUniqueKey(SessionImplementor session,Object key) {
+	public Object loadByUniqueKey(SharedSessionContractImplementor session, Object key) {
 		return load( session, key, null, null, LockOptions.NONE );
 	}
 

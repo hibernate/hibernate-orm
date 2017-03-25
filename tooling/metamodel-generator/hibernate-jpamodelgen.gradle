@@ -10,9 +10,7 @@ apply plugin: 'org.hibernate.build.gradle.xjc'
 dependencies {
 	testCompile libraries.junit
     testCompile libraries.jpa
-    testCompile project( ':hibernate-core' ) 
-	testCompile libraries.slf4j_api
-	testCompile libraries.slf4j_log4j
+    testCompile project( ':hibernate-core' )
 }
 
 mavenPom {
@@ -20,8 +18,25 @@ mavenPom {
     description = 'Annotation Processor to generate JPA 2 static metamodel classes'
 }
 
-versionInjection {
-    into( 'org.hibernate.jpamodelgen.Version', 'getVersionString' )
+dependencies {
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Java 9 ftw!
+	if ( JavaVersion.current().isJava9Compatible() ) {
+		// The JDK used to run Gradle is Java 9+, and we assume that that is the same
+		//		JDK for executing tasks
+		xjc( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+		xjc( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+		xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+		xjc( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+		xjc( 'javax:javaee-api:7.0' )
+
+		testRuntime( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+		testRuntime( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+		testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+		testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+		testRuntime( 'javax:javaee-api:7.0' )
+	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
 ext {

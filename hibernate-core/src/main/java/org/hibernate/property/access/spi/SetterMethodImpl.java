@@ -145,7 +145,9 @@ public class SetterMethodImpl implements Setter {
 		@SuppressWarnings("unchecked")
 		private Method resolveMethod() {
 			try {
-				return declaringClass.getDeclaredMethod( methodName, argumentType );
+				final Method method = declaringClass.getDeclaredMethod( methodName, argumentType );
+				method.setAccessible( true );
+				return method;
 			}
 			catch (NoSuchMethodException e) {
 				throw new PropertyAccessSerializationException(

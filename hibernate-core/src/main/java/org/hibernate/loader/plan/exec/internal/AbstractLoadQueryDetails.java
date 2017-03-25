@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.loader.plan.build.spi.LoadPlanTreePrinter;
 import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl;
 import org.hibernate.loader.plan.exec.process.spi.CollectionReferenceInitializer;
@@ -20,6 +21,7 @@ import org.hibernate.loader.plan.exec.query.internal.SelectStatementBuilder;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
+import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.loader.plan.spi.LoadPlan;
@@ -168,16 +170,35 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 			// TODO: what about index???
 		}
 
+		if ( fetchStats != null && fetchStats.getJoinedBagAttributeFetches().size() > 1 ) {
+			final List<String> bagRoles = new ArrayList<>();
+			for ( CollectionAttributeFetch bagFetch : fetchStats.getJoinedBagAttributeFetches() ) {
+				bagRoles.add( bagFetch.getCollectionPersister().getRole() );
+			}
+			throw new MultipleBagFetchException( bagRoles );
+		}
+
 		LoadPlanTreePrinter.INSTANCE.logTree( loadPlan, queryProcessor.getAliasResolutionContext() );
 
 		this.sqlStatement = select.toStatementString();
 		this.resultSetProcessor = new ResultSetProcessorImpl(
 				loadPlan,
+				queryProcessor.getAliasResolutionContext(),
 				getReaderCollector().buildRowReader(),
-				fetchStats != null && fetchStats.hasSubselectFetches()
+				shouldUseOptionalEntityInstance(),
+				isSubselectLoadingEnabled( fetchStats )
 		);
 	}
 
+	/**
+	 * Is subselect loading enabled?
+	 *
+	 * @param fetchStats the fetch stats; may be null
+	 * @return {@code true} if subselect loading is enabled; {@code false} otherwise.
+	 */
+	protected abstract boolean isSubselectLoadingEnabled(FetchStats fetchStats);
+
+	protected abstract boolean shouldUseOptionalEntityInstance();
 	protected abstract ReaderCollector getReaderCollector();
 	protected abstract QuerySpace getRootQuerySpace();
 	protected abstract String getRootTableAlias();

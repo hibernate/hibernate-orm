@@ -7,7 +7,7 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -18,7 +18,7 @@ class TransactionalCollectionRegionAccessStrategy extends BaseCollectionRegionAc
 	}
 
 	@Override
-	public void remove(SessionImplementor session, Object key) throws CacheException {
+	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
 		evict( key );
 	}
 

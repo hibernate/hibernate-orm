@@ -51,6 +51,16 @@ public class Oracle10gDialect extends Oracle9iDialect {
 	}
 
 	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		if ( timeout == LockOptions.SKIP_LOCKED ) {
+			return getForUpdateSkipLockedString( aliases );
+		}
+		else {
+			return super.getWriteLockString( aliases, timeout );
+		}
+	}
+
+	@Override
 	public String getForUpdateSkipLockedString() {
 		return " for update skip locked";
 	}

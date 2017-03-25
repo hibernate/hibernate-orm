@@ -39,6 +39,12 @@ public class IdentifierGeneratorDefinition implements Serializable {
 		}
 	}
 
+	public IdentifierGeneratorDefinition(
+			final String name,
+			final Map<String, String> parameters) {
+		this( name, name, parameters );
+	}
+
 	public IdentifierGeneratorDefinition(String name) {
 		this( name, name );
 	}

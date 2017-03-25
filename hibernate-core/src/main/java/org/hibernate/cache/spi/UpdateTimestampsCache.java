@@ -7,13 +7,11 @@
 package org.hibernate.cache.spi;
 
 import java.io.Serializable;
-import java.util.Properties;
 import java.util.Set;
 
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
@@ -31,11 +29,11 @@ import org.jboss.logging.Logger;
 public class UpdateTimestampsCache {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, UpdateTimestampsCache.class.getName() );
 	private static final boolean DEBUG_ENABLED = LOG.isDebugEnabled();
+
 	/**
 	 * The region name of the update-timestamps cache.
 	 */
 	public static final String REGION_NAME = UpdateTimestampsCache.class.getName();
-
 
 	private final SessionFactoryImplementor factory;
 	private final TimestampsRegion region;
@@ -43,29 +41,13 @@ public class UpdateTimestampsCache {
 	/**
 	 * Constructs an UpdateTimestampsCache.
 	 *
-	 * @param settings The SessionFactory settings
-	 * @param props Any properties
-	 * @param factory The SessionFactory
+	 * @param sessionFactory The SessionFactory
+	 * @param region The underlying second level cache region to use.
 	 */
-	public UpdateTimestampsCache(SessionFactoryOptions settings, Properties props, final SessionFactoryImplementor factory) {
-		this.factory = factory;
-		final String prefix = settings.getCacheRegionPrefix();
-		final String regionName = prefix == null ? REGION_NAME : prefix + '.' + REGION_NAME;
-
-		LOG.startingUpdateTimestampsCache( regionName );
-
-		this.region = settings.getServiceRegistry().getService( RegionFactory.class ).buildTimestampsRegion( regionName, props );
-	}
-
-	/**
-	 * Constructs an UpdateTimestampsCache.
-	 *
-	 * @param settings The SessionFactory settings
-	 * @param props Any properties
-	 */
-	@SuppressWarnings({"UnusedDeclaration"})
-	public UpdateTimestampsCache(SessionFactoryOptions settings, Properties props) {
-		this( settings, props, null );
+	public UpdateTimestampsCache(SessionFactoryImplementor sessionFactory, TimestampsRegion region) {
+		LOG.startingUpdateTimestampsCache( region.getName() );
+		this.factory = sessionFactory;
+		this.region = region;
 	}
 
 	/**
@@ -77,7 +59,7 @@ public class UpdateTimestampsCache {
 	 * @param session
 	 * @throws CacheException Indicated problem delegating to underlying region.
 	 */
-	public void preInvalidate(Serializable[] spaces, SessionImplementor session) throws CacheException {
+	public void preInvalidate(Serializable[] spaces, SharedSessionContractImplementor session) throws CacheException {
 		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 
 		final Long ts = region.nextTimestamp() + region.getTimeout();
@@ -99,7 +81,7 @@ public class UpdateTimestampsCache {
 			}
 
 			if ( stats ) {
-				factory.getStatisticsImplementor().updateTimestampsCachePut();
+				factory.getStatistics().updateTimestampsCachePut();
 			}
 		}
 	}
@@ -113,7 +95,7 @@ public class UpdateTimestampsCache {
 	 * @param session
 	 * @throws CacheException Indicated problem delegating to underlying region.
 	 */
-	public void invalidate(Serializable[] spaces, SessionImplementor session) throws CacheException {
+	public void invalidate(Serializable[] spaces, SharedSessionContractImplementor session) throws CacheException {
 		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 
 		final Long ts = region.nextTimestamp();
@@ -135,7 +117,7 @@ public class UpdateTimestampsCache {
 			}
 
 			if ( stats ) {
-				factory.getStatisticsImplementor().updateTimestampsCachePut();
+				factory.getStatistics().updateTimestampsCachePut();
 			}
 		}
 	}
@@ -152,14 +134,14 @@ public class UpdateTimestampsCache {
 	 *
 	 * @throws CacheException Indicated problem delegating to underlying region.
 	 */
-	public boolean isUpToDate(Set<Serializable> spaces, Long timestamp, SessionImplementor session) throws CacheException {
+	public boolean isUpToDate(Set<Serializable> spaces, Long timestamp, SharedSessionContractImplementor session) throws CacheException {
 		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 
 		for ( Serializable space : spaces ) {
 			final Long lastUpdate = getLastUpdateTimestampForSpace( space, session );
 			if ( lastUpdate == null ) {
 				if ( stats ) {
-					factory.getStatisticsImplementor().updateTimestampsCacheMiss();
+					factory.getStatistics().updateTimestampsCacheMiss();
 				}
 				//the last update timestamp was lost from the cache
 				//(or there were no updates since startup!)
@@ -175,7 +157,7 @@ public class UpdateTimestampsCache {
 					);
 				}
 				if ( stats ) {
-					factory.getStatisticsImplementor().updateTimestampsCacheHit();
+					factory.getStatistics().updateTimestampsCacheHit();
 				}
 				if ( lastUpdate >= timestamp ) {
 					return false;
@@ -185,7 +167,7 @@ public class UpdateTimestampsCache {
 		return true;
 	}
 
-	private Long getLastUpdateTimestampForSpace(Serializable space, SessionImplementor session) {
+	private Long getLastUpdateTimestampForSpace(Serializable space, SharedSessionContractImplementor session) {
 		Long ts = null;
 		try {
 			session.getEventListenerManager().cacheGetStart();

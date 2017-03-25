@@ -74,6 +74,7 @@ public class ManyToOne extends ToOne {
 							getForeignKeyName(), 
 							getConstraintColumns(), 
 							( (EntityType) getType() ).getAssociatedEntityName(), 
+							getForeignKeyDefinition(), 
 							refColumns
 					);
 					fk.setCascadeDeleteEnabled(isCascadeDeleteEnabled() );

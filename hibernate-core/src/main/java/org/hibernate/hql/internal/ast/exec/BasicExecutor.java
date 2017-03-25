@@ -15,8 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
@@ -32,16 +31,14 @@ import antlr.RecognitionException;
  * @author Steve Ebersole
  */
 public class BasicExecutor implements StatementExecutor {
-	private final SessionFactoryImplementor factory;
 	private final Queryable persister;
 	private final String sql;
 	private final List parameterSpecifications;
 
 	public BasicExecutor(HqlSqlWalker walker, Queryable persister) {
-		this.factory = walker.getSessionFactoryHelper().getFactory();
 		this.persister = persister;
 		try {
-			SqlGenerator gen = new SqlGenerator( factory );
+			SqlGenerator gen = new SqlGenerator( walker.getSessionFactoryHelper().getFactory() );
 			gen.statement( walker.getAST() );
 			sql = gen.getSQL();
 			gen.getParseErrorHandler().throwQueryException();
@@ -52,15 +49,17 @@ public class BasicExecutor implements StatementExecutor {
 		}
 	}
 
+	@Override
 	public String[] getSqlStatements() {
 		return new String[] { sql };
 	}
 
-	public int execute(QueryParameters parameters, SessionImplementor session) throws HibernateException {
+	@Override
+	public int execute(QueryParameters parameters, SharedSessionContractImplementor session) throws HibernateException {
 		return doExecute( parameters, session, sql, parameterSpecifications );
 	}
 	
-	protected int doExecute(QueryParameters parameters, SessionImplementor session, String sql,
+	protected int doExecute(QueryParameters parameters, SharedSessionContractImplementor session, String sql,
 			List parameterSpecifications) throws HibernateException {
 		BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, persister );
 		if ( session.isEventSource() ) {
@@ -92,13 +91,13 @@ public class BasicExecutor implements StatementExecutor {
 			}
 			finally {
 				if ( st != null ) {
-					session.getJdbcCoordinator().getResourceRegistry().release( st );
+					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 					session.getJdbcCoordinator().afterStatementExecution();
 				}
 			}
 		}
 		catch( SQLException sqle ) {
-			throw factory.getSQLExceptionHelper().convert( sqle, "could not execute update query", sql );
+			throw session.getJdbcServices().getSqlExceptionHelper().convert( sqle, "could not execute update query", sql );
 		}
 	}
 }

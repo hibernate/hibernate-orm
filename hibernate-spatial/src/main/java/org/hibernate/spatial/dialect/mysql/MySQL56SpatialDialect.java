@@ -8,14 +8,17 @@ package org.hibernate.spatial.dialect.mysql;
 
 /**
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 10/9/13
+ * creation-date: 10/9/13
  */
 
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.MySQL55Dialect;
+import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
@@ -31,7 +34,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Karel Maesen
  */
-public class MySQL56SpatialDialect extends MySQL5Dialect implements SpatialDialect {
+public class MySQL56SpatialDialect extends MySQL55Dialect implements SpatialDialect {
 
 
 	private MySQLSpatialDialect dialectDelegate = new MySQLSpatialDialect();
@@ -46,7 +49,7 @@ public class MySQL56SpatialDialect extends MySQL5Dialect implements SpatialDiale
 				"GEOMETRY"
 		);
 		final MySQLSpatialFunctions functionsToRegister = overrideObjectShapeFunctions( new MySQLSpatialFunctions() );
-		for ( Map.Entry<String, StandardSQLFunction> entry : functionsToRegister ) {
+		for ( Map.Entry<String, SQLFunction> entry : functionsToRegister ) {
 			registerFunction( entry.getKey(), entry.getValue() );
 		}
 	}
@@ -71,6 +74,19 @@ public class MySQL56SpatialDialect extends MySQL5Dialect implements SpatialDiale
 	@Override
 	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
 		return dialectDelegate.getTypeName( code, length, precision, scale );
+	}
+
+	/**
+	 * Allows the Dialect to contribute additional types
+	 *
+	 * @param typeContributions Callback to contribute the types
+	 * @param serviceRegistry The service registry
+	 */
+	@Override
+	public void contributeTypes(
+			TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+		dialectDelegate.contributeTypes( typeContributions, serviceRegistry );
 	}
 
 	@Override

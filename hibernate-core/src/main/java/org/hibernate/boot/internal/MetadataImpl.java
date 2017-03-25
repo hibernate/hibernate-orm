@@ -37,7 +37,6 @@ import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
-import org.hibernate.internal.NamedQueryRepository;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
@@ -47,6 +46,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.ProcedureCallMemento;
+import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.TypeResolver;
 
 /**
@@ -144,7 +144,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			final SessionFactoryBuilder returnedBuilder = discoveredBuilderFactory.getSessionFactoryBuilder( this, defaultBuilder );
 			if ( returnedBuilder != null ) {
 				if ( activeFactoryNames == null ) {
-					activeFactoryNames = new ArrayList<String>();
+					activeFactoryNames = new ArrayList<>();
 				}
 				activeFactoryNames.add( discoveredBuilderFactory.getClass().getName() );
 				builder = returnedBuilder;
@@ -292,7 +292,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public java.util.Collection<Table> collectTableMappings() {
-		ArrayList<Table> tables = new ArrayList<Table>();
+		ArrayList<Table> tables = new ArrayList<>();
 		for ( Namespace namespace : database.getNamespaces() ) {
 			tables.addAll( namespace.getTables() );
 		}
@@ -311,7 +311,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	public Map<String, ProcedureCallMemento> buildProcedureCallMementos(SessionFactoryImpl sessionFactory) {
-		final Map<String, ProcedureCallMemento> rtn = new HashMap<String, ProcedureCallMemento>();
+		final Map<String, ProcedureCallMemento> rtn = new HashMap<>();
 		if ( namedProcedureCallMap != null ) {
 			for ( NamedProcedureCallDefinition procedureCallDefinition : namedProcedureCallMap.values() ) {
 				rtn.put(
@@ -337,8 +337,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Set<MappedSuperclass> getMappedSuperclassMappingsCopy() {
 		return mappedSuperclassMap == null
-				? Collections.<MappedSuperclass>emptySet()
-				: new HashSet<MappedSuperclass>( mappedSuperclassMap.values() );
+				? Collections.emptySet()
+				: new HashSet<>( mappedSuperclassMap.values() );
 	}
 
 	@Override

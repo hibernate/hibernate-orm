@@ -24,7 +24,9 @@ import org.hibernate.testing.RequiresDialect;
 public class BasicConnectionProviderTest extends ConnectionManagementTestCase {
 	@Override
 	protected Session getSessionUnderTest() {
-		return openSession();
+		Session session = openSession();
+		session.beginTransaction();
+		return session;
 	}
 
 	@Override

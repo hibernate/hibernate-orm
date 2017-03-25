@@ -11,9 +11,9 @@
 
 <hibernate-mapping>
 
-  <class name="org.hibernate.test.subselectfetch.Value" table="Value">
+  <class name="org.hibernate.test.subselectfetch.Value" table="T_Value">
     <id name="id" column="id"/>
-    <property  name="value" column="value"/>
+    <property  name="value" column="c_value"/>
     <many-to-one name="name" column="name_id" insert="false" update="false" />
   </class>
 

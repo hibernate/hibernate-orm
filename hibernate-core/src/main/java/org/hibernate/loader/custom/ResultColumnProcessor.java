@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
 /** Processor for each "column" in a custom query result.  May map to more than one physical column in the JDBC ResultSert.
@@ -30,7 +30,7 @@ interface ResultColumnProcessor {
 	 * @throws SQLException Indicates a problem accessing the JDBC objects
 	 * @throws HibernateException Indicates a higher-level problem already categorized by Hibernate
 	 */
-	public void performDiscovery(JdbcResultMetadata metadata, List<Type> types, List<String> aliases)
+	void performDiscovery(JdbcResultMetadata metadata, List<Type> types, List<String> aliases)
 			throws SQLException, HibernateException;
 
 	/**
@@ -45,6 +45,6 @@ interface ResultColumnProcessor {
 	 * @throws SQLException Indicates a problem accessing the JDBC objects
 	 * @throws HibernateException Indicates a higher-level problem already categorized by Hibernate
 	 */
-	public Object extract(Object[] data, ResultSet resultSet, SessionImplementor session)
+	Object extract(Object[] data, ResultSet resultSet, SharedSessionContractImplementor session)
 			throws SQLException, HibernateException;
 }

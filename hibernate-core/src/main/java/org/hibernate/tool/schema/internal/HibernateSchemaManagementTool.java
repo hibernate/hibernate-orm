@@ -15,22 +15,23 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToScript;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
 import org.hibernate.tool.schema.internal.exec.JdbcConnectionAccessProvidedConnectionImpl;
-import org.hibernate.tool.schema.internal.exec.JdbcConnectionContext;
-import org.hibernate.tool.schema.internal.exec.JdbcConnectionContextNonSharedImpl;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaDropper;
@@ -73,12 +74,22 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 	@Override
 	public SchemaMigrator getSchemaMigrator(Map options) {
-		return new SchemaMigratorImpl( this, getSchemaFilterProvider( options ).getMigrateFilter() );
+		if ( determineJdbcMetadaAccessStrategy( options ) == JdbcMetadaAccessStrategy.GROUPED ) {
+			return new GroupedSchemaMigratorImpl( this, getSchemaFilterProvider( options ).getMigrateFilter() );
+		}
+		else {
+			return new IndividuallySchemaMigratorImpl( this, getSchemaFilterProvider( options ).getMigrateFilter() );
+		}
 	}
 
 	@Override
 	public SchemaValidator getSchemaValidator(Map options) {
-		return new SchemaValidatorImpl( this, getSchemaFilterProvider( options ).getValidateFilter() );
+		if ( determineJdbcMetadaAccessStrategy( options ) == JdbcMetadaAccessStrategy.GROUPED ) {
+			return new GroupedSchemaValidatorImpl( this, getSchemaFilterProvider( options ).getValidateFilter() );
+		}
+		else {
+			return new IndividuallySchemaValidatorImpl( this, getSchemaFilterProvider( options ).getValidateFilter() );
+		}
 	}
 	
 	private SchemaFilterProvider getSchemaFilterProvider(Map options) {
@@ -90,6 +101,13 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 				configuredOption,
 				DefaultSchemaFilterProvider.INSTANCE
 		);
+	}
+
+	private JdbcMetadaAccessStrategy determineJdbcMetadaAccessStrategy(Map options) {
+		if ( options == null ) {
+			return JdbcMetadaAccessStrategy.interpretHbm2ddlSetting( null );
+		}
+		return JdbcMetadaAccessStrategy.interpretHbm2ddlSetting( options.get( AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY ) );
 	}
 
 	GenerationTarget[] buildGenerationTargets(
@@ -117,15 +135,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		}
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.DATABASE ) ) {
-			targets[index] = new GenerationTargetToDatabase(
-					new JdbcConnectionContextNonSharedImpl(
-							jdbcContext.getJdbcConnectionAccess(),
-							jdbcContext.getSqlStatementLogger(),
-							needsAutoCommit
-					)
-					, serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper()
-			);
-
+			targets[index] = new GenerationTargetToDatabase( getDdlTransactionIsolator( jdbcContext ), true );
 		}
 
 		return targets;
@@ -133,7 +143,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 
 	GenerationTarget[] buildGenerationTargets(
 			TargetDescriptor targetDescriptor,
-			JdbcConnectionContext connectionContext,
+			DdlTransactionIsolator ddlTransactionIsolator,
 			Map options) {
 		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options );
 
@@ -155,11 +165,17 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		}
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.DATABASE ) ) {
-			targets[index] = new GenerationTargetToDatabase( connectionContext
-					, serviceRegistry.getService( JdbcEnvironment.class ).getSqlExceptionHelper() );
+			targets[index] = new GenerationTargetToDatabase( ddlTransactionIsolator, false );
 		}
 
 		return targets;
+	}
+
+	public DdlTransactionIsolator getDdlTransactionIsolator(JdbcContext jdbcContext) {
+		if ( jdbcContext.getJdbcConnectionAccess() instanceof JdbcConnectionAccessProvidedConnectionImpl ) {
+			return new DdlTransactionIsolatorProvidedConnectionImpl( jdbcContext );
+		}
+		return serviceRegistry.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator( jdbcContext );
 	}
 
 	public JdbcContext resolveJdbcContext(Map configurationValues) {
@@ -236,19 +252,25 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	}
 
 	private static class JdbcContextBuilder {
+		private final ServiceRegistry serviceRegistry;
 		private final SqlStatementLogger sqlStatementLogger;
+		private final SqlExceptionHelper sqlExceptionHelper;
+
 		private JdbcConnectionAccess jdbcConnectionAccess;
 		private Dialect dialect;
 
 		public JdbcContextBuilder(ServiceRegistry serviceRegistry) {
+			this.serviceRegistry = serviceRegistry;
 			final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 			this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
+			this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
+
 			this.dialect = jdbcServices.getJdbcEnvironment().getDialect();
 			this.jdbcConnectionAccess = jdbcServices.getBootstrapJdbcConnectionAccess();
 		}
 
 		public JdbcContext buildJdbcContext() {
-			return new JdbcContextImpl( jdbcConnectionAccess, dialect, sqlStatementLogger );
+			return new JdbcContextImpl( jdbcConnectionAccess, dialect, sqlStatementLogger, sqlExceptionHelper, serviceRegistry );
 		}
 	}
 
@@ -256,14 +278,20 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		private final JdbcConnectionAccess jdbcConnectionAccess;
 		private final Dialect dialect;
 		private final SqlStatementLogger sqlStatementLogger;
+		private final SqlExceptionHelper sqlExceptionHelper;
+		private final ServiceRegistry serviceRegistry;
 
 		private JdbcContextImpl(
 				JdbcConnectionAccess jdbcConnectionAccess,
 				Dialect dialect,
-				SqlStatementLogger sqlStatementLogger) {
+				SqlStatementLogger sqlStatementLogger,
+				SqlExceptionHelper sqlExceptionHelper,
+				ServiceRegistry serviceRegistry) {
 			this.jdbcConnectionAccess = jdbcConnectionAccess;
 			this.dialect = dialect;
 			this.sqlStatementLogger = sqlStatementLogger;
+			this.sqlExceptionHelper = sqlExceptionHelper;
+			this.serviceRegistry = serviceRegistry;
 		}
 
 		@Override
@@ -280,5 +308,16 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		public SqlStatementLogger getSqlStatementLogger() {
 			return sqlStatementLogger;
 		}
+
+		@Override
+		public SqlExceptionHelper getSqlExceptionHelper() {
+			return sqlExceptionHelper;
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return serviceRegistry;
+		}
 	}
+
 }

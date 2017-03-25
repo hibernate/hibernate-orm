@@ -16,7 +16,6 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.JoinColumnOrFormula;
-import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
 
 /**
@@ -28,10 +27,8 @@ public class AnnotatedMaster {
 	private Integer id;
 	private String name;
 	@ManyToOne(fetch= FetchType.EAGER, optional=false)
-	@JoinColumnsOrFormulas({
-			@JoinColumnOrFormula(formula=@JoinFormula(value="my_domain_key'", referencedColumnName="detail_domain")),
-			@JoinColumnOrFormula(column=@JoinColumn(name="detail", referencedColumnName="id"))
-	})
+	@JoinColumnOrFormula(formula=@JoinFormula(value="my_domain_key'", referencedColumnName="detail_domain"))
+	@JoinColumnOrFormula(column=@JoinColumn(name="detail", referencedColumnName="id"))
 	@Fetch(FetchMode.JOIN)
 	@NotNull
 	private AnnotatedDetail detail;

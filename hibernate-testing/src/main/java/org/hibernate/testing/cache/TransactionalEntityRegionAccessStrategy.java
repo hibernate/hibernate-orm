@@ -8,7 +8,7 @@ package org.hibernate.testing.cache;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -19,23 +19,23 @@ class TransactionalEntityRegionAccessStrategy extends BaseEntityRegionAccessStra
 	}
 
 	@Override
-	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) {
+	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
 		return false;
 	}
 
 	@Override
-	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
+	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
 		return false;
 	}
 
 	@Override
-	public void remove(SessionImplementor session, Object key) throws CacheException {
+	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
 		evict( key );
 	}
 
 	@Override
 	public boolean update(
-			SessionImplementor session, Object key, Object value, Object currentVersion,
+			SharedSessionContractImplementor session, Object key, Object value, Object currentVersion,
 			Object previousVersion) throws CacheException {
 		return insert(session, key, value, currentVersion);
 	}

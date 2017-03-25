@@ -25,6 +25,7 @@ import org.hibernate.property.access.spi.Getter;
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Lukasz Zuchowski (author at zuchos dot com)
+ * @author Chris Cranford
  */
 public class MultiPropertyMapper implements ExtendedPropertyMapper {
 	protected final Map<PropertyData, PropertyMapper> properties;
@@ -99,7 +100,15 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 			Object newObj,
 			Object oldObj) {
 		boolean ret = false;
-		for ( PropertyData propertyData : properties.keySet() ) {
+		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+			final PropertyData propertyData = entry.getKey();
+			final PropertyMapper propertyMapper = entry.getValue();
+
+			// synthetic properties are not part of the entity model; therefore they should be ignored.
+			if ( propertyData.isSynthetic() ) {
+				continue;
+			}
+
 			Getter getter;
 			if ( newObj != null ) {
 				getter = ReflectionTools.getGetter( newObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );
@@ -110,8 +119,7 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 			else {
 				return false;
 			}
-
-			ret |= properties.get( propertyData ).mapToMapFromEntity(
+			ret |= propertyMapper.mapToMapFromEntity(
 					session, data,
 					newObj == null ? null : getter.get( newObj ),
 					oldObj == null ? null : getter.get( oldObj )
@@ -127,7 +135,15 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
-		for ( PropertyData propertyData : properties.keySet() ) {
+		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+			final PropertyData propertyData = entry.getKey();
+			final PropertyMapper propertyMapper = entry.getValue();
+
+			// synthetic properties are not part of the entity model; therefore they should be ignored.
+			if ( propertyData.isSynthetic() ) {
+				continue;
+			}
+
 			Getter getter;
 			if ( newObj != null ) {
 				getter = ReflectionTools.getGetter( newObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );
@@ -138,8 +154,7 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 			else {
 				return;
 			}
-
-			properties.get( propertyData ).mapModifiedFlagsToMapFromEntity(
+			propertyMapper.mapModifiedFlagsToMapFromEntity(
 					session, data,
 					newObj == null ? null : getter.get( newObj ),
 					oldObj == null ? null : getter.get( oldObj )
@@ -217,5 +232,15 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 
 	public Map<String, PropertyData> getPropertyDatas() {
 		return propertyDatas;
+	}
+
+	@Override
+	public boolean hasPropertiesWithModifiedFlag() {
+		for ( PropertyData property : getProperties().keySet() ) {
+			if ( property.isUsingModifiedFlag() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

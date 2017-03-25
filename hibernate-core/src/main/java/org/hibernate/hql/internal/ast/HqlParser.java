@@ -366,6 +366,45 @@ public final class HqlParser extends HqlBaseParser {
 	}
 
 	@Override
+	public void matchOptionalFrom() throws RecognitionException, TokenStreamException {
+		returnAST = null;
+		ASTPair currentAST = new ASTPair();
+		AST optionalFrom_AST = null;
+
+		if ( LA( 1 ) == FROM ) {
+			if ( LA( 2 ) != DOT ) {
+				match( FROM );
+				optionalFrom_AST = (AST) currentAST.root;
+				returnAST = optionalFrom_AST;
+			}
+		}
+	}
+
+	@Override
+	public void firstPathTokenWeakKeywords() throws TokenStreamException {
+		int t = LA( 1 );
+		switch ( t ){
+			case DOT:
+				LT(0).setType( IDENT );
+		}
+	}
+
+	@Override
+	public void handlePrimaryExpressionDotIdent() throws TokenStreamException {
+		if ( LA( 2 ) == DOT && LA( 3 ) != IDENT ) {
+			// See if the second lookahead token can be an identifier.
+			HqlToken t = (HqlToken) LT( 3 );
+			if ( t.isPossibleID() ) {
+				// Set it!
+				t.setType( IDENT );
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debugf( "handleDotIdent() : new LT(3) token - %s", LT( 1 ) );
+				}
+			}
+		}
+	}
+
+	@Override
 	public void weakKeywords() throws TokenStreamException {
 
 		int t = LA( 1 );
@@ -382,7 +421,7 @@ public final class HqlParser extends HqlBaseParser {
 				}
 				break;
 			default:
-				// Case 2: The current token is after FROM and before '.'.
+				// Case 2: The current token is afterQuery FROM and beforeQuery '.'.
 				if ( LA( 0 ) == FROM && t != IDENT && LA( 2 ) == DOT ) {
 					HqlToken hqlToken = (HqlToken) LT( 1 );
 					if ( hqlToken.isPossibleID() ) {

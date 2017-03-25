@@ -14,7 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.loader.Loader;
 import org.hibernate.type.Type;
@@ -41,7 +41,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 	public ScrollableResultsImpl(
 			ResultSet rs,
 			PreparedStatement ps,
-			SessionImplementor sess,
+			SharedSessionContractImplementor sess,
 			Loader loader,
 			QueryParameters queryParameters,
 			Type[] types, HolderInstantiator holderInstantiator) {
@@ -193,7 +193,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 				getResultSet(),
 				getSession(),
 				getQueryParameters(),
-				false
+				true
 		);
 		if ( result != null && result.getClass().isArray() ) {
 			currentRow = (Object[]) result;

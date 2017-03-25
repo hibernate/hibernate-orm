@@ -12,7 +12,7 @@ import java.util.TreeSet;
 
 import org.hibernate.collection.internal.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 public class SortedSetType extends SetType {
@@ -23,7 +23,8 @@ public class SortedSetType extends SetType {
 		this.comparator = comparator;
 	}
 
-	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key) {
+	@Override
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
 		PersistentSortedSet set = new PersistentSortedSet(session);
 		set.setComparator(comparator);
 		return set;
@@ -37,8 +38,9 @@ public class SortedSetType extends SetType {
 	public Object instantiate(int anticipatedSize) {
 		return new TreeSet(comparator);
 	}
-	
-	public PersistentCollection wrap(SessionImplementor session, Object collection) {
+
+	@Override
+	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
 		return new PersistentSortedSet( session, (java.util.SortedSet) collection );
 	}
 }

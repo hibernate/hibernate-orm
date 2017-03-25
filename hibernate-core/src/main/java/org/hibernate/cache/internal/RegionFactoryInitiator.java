@@ -9,16 +9,15 @@ package org.hibernate.cache.internal;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
-import org.jboss.logging.Logger;
 
 /**
  * Initiator for the {@link RegionFactory} service.
@@ -27,9 +26,7 @@ import org.jboss.logging.Logger;
  * @author Brett Meyer
  */
 public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFactory> {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class,
-			RegionFactoryInitiator.class.getName() );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( RegionFactoryInitiator.class );
 
 	/**
 	 * Singleton access
@@ -63,26 +60,16 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 
 		// The cache provider is needed when we either have second-level cache enabled
 		// or query cache enabled.  Note that useSecondLevelCache is enabled by default
-		final String setting = ConfigurationHelper.getString( AvailableSettings.CACHE_REGION_FACTORY,
-				configurationValues, null );
-		if ( ( useSecondLevelCache || useQueryCache ) && setting != null ) {
-			try {
-				final Class<? extends RegionFactory> regionFactoryClass = registry.getService( StrategySelector.class )
-						.selectStrategyImplementor( RegionFactory.class, setting );
-				try {
-					regionFactory = regionFactoryClass.getConstructor( Properties.class ).newInstance( p );
-				}
-				catch ( NoSuchMethodException e ) {
-					// no constructor accepting Properties found, try no arg constructor
-					LOG.debugf(
-							"%s did not provide constructor accepting java.util.Properties; attempting no-arg constructor.",
-							regionFactoryClass.getSimpleName() );
-					regionFactory = regionFactoryClass.getConstructor().newInstance();
-				}
-			}
-			catch ( Exception e ) {
-				throw new HibernateException( "could not instantiate RegionFactory [" + setting + "]", e );
-			}
+		if ( useSecondLevelCache || useQueryCache ) {
+			final Object setting = configurationValues != null
+					? configurationValues.get( AvailableSettings.CACHE_REGION_FACTORY )
+					: null;
+			regionFactory = registry.getService( StrategySelector.class ).resolveStrategy(
+					RegionFactory.class,
+					setting,
+					NoCachingRegionFactory.INSTANCE,
+					new StrategyCreatorRegionFactoryImpl( p )
+			);
 		}
 
 		LOG.debugf( "Cache region factory : %s", regionFactory.getClass().getName() );

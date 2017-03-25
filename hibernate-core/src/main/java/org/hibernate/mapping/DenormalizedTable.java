@@ -64,6 +64,7 @@ public class DenormalizedTable extends Table {
 					),
 					fk.getColumns(),
 					fk.getReferencedEntityName(),
+					fk.getKeyDefinition(),
 					fk.getReferencedColumns()
 			);
 		}

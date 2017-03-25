@@ -96,7 +96,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	// changed from the standard ones. The HANA JDBC driver currently closes any
 	// stream passed in via
 	// PreparedStatement.setCharacterStream(int,Reader,long)
-	// after the stream has been processed. this causes problems later if we are
+	// afterQuery the stream has been processed. this causes problems later if we are
 	// using non-contexual lob creation and HANA then closes our StringReader.
 	// see test case LobLocatorTest
 
@@ -490,7 +490,30 @@ public abstract class AbstractHANADialect extends Dialect {
 			return getForUpdateString( lockMode );
 		}
 
-		return getForUpdateString( lockMode ) + " of " + aliases;
+		String clause = getForUpdateString( lockMode ) + " of " + aliases;
+		if(lockOptions.getTimeOut() == LockOptions.NO_WAIT) {
+			clause += " nowait";
+		}
+		return clause;
+	}
+
+	public String getForUpdateNowaitString() {
+		return getForUpdateString() + " nowait";
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		if ( timeout == LockOptions.NO_WAIT ) {
+			return getForUpdateNowaitString();
+		}
+		else {
+			return getForUpdateString();
+		}
 	}
 
 	@Override
@@ -545,7 +568,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		registerKeyword( "all" );
 		registerKeyword( "alter" );
 		registerKeyword( "as" );
-		registerKeyword( "before" );
+		registerKeyword( "beforeQuery" );
 		registerKeyword( "begin" );
 		registerKeyword( "both" );
 		registerKeyword( "case" );

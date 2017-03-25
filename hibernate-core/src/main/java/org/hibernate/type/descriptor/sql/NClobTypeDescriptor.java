@@ -126,7 +126,7 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 							CharacterStream.class,
 							options
 					);
-					st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
+					st.setNCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
 				}
 
 				@Override
@@ -137,7 +137,7 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 							CharacterStream.class,
 							options
 					);
-					st.setCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
+					st.setNCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
 				}
 			};
 		}

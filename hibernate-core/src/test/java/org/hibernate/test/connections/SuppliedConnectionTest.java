@@ -18,18 +18,16 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
-import org.hibernate.tool.schema.internal.exec.JdbcConnectionAccessProvidedConnectionImpl;
-import org.hibernate.tool.schema.internal.exec.JdbcConnectionContextNonSharedImpl;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
+import org.hibernate.test.util.DdlTransactionIsolatorTestingImpl;
 
 /**
  * Implementation of SuppliedConnectionTest.
@@ -38,7 +36,7 @@ import org.hibernate.testing.env.ConnectionProviderBuilder;
  */
 @RequiresDialect(H2Dialect.class)
 public class SuppliedConnectionTest extends ConnectionManagementTestCase {
-	private ConnectionProvider cp = ConnectionProviderBuilder.buildConnectionProvider();
+	private ConnectionProvider cp;
 	private Connection connectionUnderTest;
 
 	@BeforeClassOnce
@@ -63,7 +61,9 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 	@Override
 	protected Session getSessionUnderTest() throws Throwable {
 		connectionUnderTest = cp.getConnection();
-		return sessionFactory().withOptions().connection( connectionUnderTest ).openSession();
+		Session session = sessionFactory().withOptions().connection( connectionUnderTest ).openSession();
+		session.beginTransaction();
+		return session;
 	}
 
 	@Override
@@ -118,11 +118,8 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 
 			try {
 				final GenerationTargetToDatabase target = new GenerationTargetToDatabase(
-						new JdbcConnectionContextNonSharedImpl(
-								new JdbcConnectionAccessProvidedConnectionImpl( conn ),
-								new SqlStatementLogger( false, true ),
-								true
-						)
+						new DdlTransactionIsolatorTestingImpl( serviceRegistry(), conn ),
+						true
 				);
 				new SchemaCreatorImpl( serviceRegistry() ).doCreation(
 						metadata(),
@@ -146,11 +143,11 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 
 			try {
 				final GenerationTargetToDatabase target = new GenerationTargetToDatabase(
-						new JdbcConnectionContextNonSharedImpl(
-								new JdbcConnectionAccessProvidedConnectionImpl( conn ),
-								new SqlStatementLogger( false, true ),
-								true
-						)
+						new DdlTransactionIsolatorTestingImpl(
+								serviceRegistry(),
+								conn
+						),
+						true
 				);
 				new SchemaDropperImpl( serviceRegistry() ).doDrop( metadata(), false, target );
 			}

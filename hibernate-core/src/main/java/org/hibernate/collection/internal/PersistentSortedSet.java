@@ -14,6 +14,7 @@ import java.util.TreeMap;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
 /**
@@ -38,7 +39,7 @@ public class PersistentSortedSet extends PersistentSet implements SortedSet {
 	 *
 	 * @param session The session
 	 */
-	public PersistentSortedSet(SessionImplementor session) {
+	public PersistentSortedSet(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
@@ -48,7 +49,7 @@ public class PersistentSortedSet extends PersistentSet implements SortedSet {
 	 * @param session The session
 	 * @param set The underlying set data
 	 */
-	public PersistentSortedSet(SessionImplementor session, SortedSet set) {
+	public PersistentSortedSet(SharedSessionContractImplementor session, SortedSet set) {
 		super( session, set );
 		comparator = set.comparator();
 	}

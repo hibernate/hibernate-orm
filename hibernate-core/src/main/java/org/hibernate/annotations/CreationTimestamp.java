@@ -6,10 +6,10 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.tuple.CreationTimestampGeneration;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-
-import org.hibernate.tuple.CreationTimestampGeneration;
 
 /**
  * Marks a property as the creation timestamp of the containing entity. The property value will be set to the current
@@ -22,6 +22,16 @@ import org.hibernate.tuple.CreationTimestampGeneration;
  * <li>{@link java.sql.Date}</li>
  * <li>{@link java.sql.Time}</li>
  * <li>{@link java.sql.Timestamp}</li>
+ * <li>{@link java.time.Instant}</li>
+ * <li>{@link java.time.LocalDate}</li>
+ * <li>{@link java.time.LocalDateTime}</li>
+ * <li>{@link java.time.LocalTime}</li>
+ * <li>{@link java.time.MonthDay}</li>
+ * <li>{@link java.time.OffsetDateTime}</li>
+ * <li>{@link java.time.OffsetTime}</li>
+ * <li>{@link java.time.Year}</li>
+ * <li>{@link java.time.YearMonth}</li>
+ * <li>{@link java.time.ZonedDateTime}</li>
  * </ul>
  *
  * @author Gunnar Morling

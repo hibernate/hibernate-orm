@@ -16,18 +16,22 @@ import org.hibernate.resource.transaction.backend.jta.internal.synchronization.M
  * @author Gail Badner
  *
  * @see SessionBuilderImplementor#owner
+ *
+ * @deprecated (since 5.2) since consolidating hibernate-entitymanager into hibernate-core
+ * I believe this is no longer needed.
  */
+@Deprecated
 public interface SessionOwner {
 	/**
-	 * Should session automatically be closed after transaction completion?
+	 * Should session automatically be closed afterQuery transaction completion?
 	 *
 	 * @return {@literal true}/{@literal false} appropriately.
 	 */
-	public boolean shouldAutoCloseSession();
+	boolean shouldAutoCloseSession();
 
-	public ExceptionMapper getExceptionMapper();
+	ExceptionMapper getExceptionMapper();
 
-	public AfterCompletionAction getAfterCompletionAction();
+	AfterCompletionAction getAfterCompletionAction();
 
-	public ManagedFlushChecker getManagedFlushChecker();
+	ManagedFlushChecker getManagedFlushChecker();
 }

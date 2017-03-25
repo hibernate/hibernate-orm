@@ -8,6 +8,7 @@ package org.hibernate.engine.query.spi;
 
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.service.Service;
 
 /**
@@ -26,7 +27,7 @@ public interface NativeQueryInterpreter extends Service {
 	 * @return a meta-data object describing the parameters of the given query.
 	 *         Must not be {@code null}.
 	 */
-	ParameterMetadata getParameterMetadata(String nativeQuery);
+	ParameterMetadataImpl getParameterMetadata(String nativeQuery);
 
 	/**
 	 * Creates a new query plan for the specified native query.

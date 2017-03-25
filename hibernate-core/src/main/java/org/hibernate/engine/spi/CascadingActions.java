@@ -96,6 +96,7 @@ public class CascadingActions {
 				LockOptions lockOptions = (LockOptions) anything;
 				lr.setTimeOut( lockOptions.getTimeOut() );
 				lr.setScope( lockOptions.getScope() );
+				lr.setFollowOnLocking( lockOptions.getFollowOnLocking() );
 				if ( lockOptions.getScope() ) {
 					lockMode = lockOptions.getLockMode();
 				}
@@ -377,7 +378,7 @@ public class CascadingActions {
 					String parentEntiytName = persister.getEntityName();
 					String propertyName = persister.getPropertyNames()[propertyIndex];
 					throw new TransientPropertyValueException(
-							"object references an unsaved transient instance - save the transient instance before flushing",
+							"object references an unsaved transient instance - save the transient instance beforeQuery flushing",
 							childEntityName,
 							parentEntiytName,
 							propertyName
@@ -482,7 +483,7 @@ public class CascadingActions {
 	 * any new elements from the database.
 	 */
 	public static Iterator getLoadedElementsIterator(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			CollectionType collectionType,
 			Object collection) {
 		if ( collectionIsInitialized( collection ) ) {

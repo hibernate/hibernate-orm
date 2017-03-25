@@ -136,7 +136,7 @@ enableLazyInitialization:: Whether enhancement for lazy attribute loading should
 enableDirtyTracking:: Whether enhancement for self-dirty tracking should be done.
 enableAssociationManagement:: Whether enhancement for bi-directional association management should be done.
 
-The default value for all 3 configuration settings is `true`
+The default value for all 3 configuration settings is `false`
 
 The `enhance { }` block is required in order for enhancement to occur.
 Enhancement is disabled by default in preparation for additions capabilities (hbm2ddl, etc) in the plugin.
@@ -145,7 +145,7 @@ Enhancement is disabled by default in preparation for additions capabilities (hb
 ===== Maven plugin
 
 Hibernate provides a Maven plugin capable of providing build-time enhancement of the domain model as they are compiled as part of a Maven build.
-See the section on the <<BytecodeEnhancement-enhancement-gradle>> for details on the configuration settings. Again, the default for those 3 is `true`.
+See the section on the <<BytecodeEnhancement-enhancement-gradle>> for details on the configuration settings. Again, the default for those 3 is `false`.
 
 The Maven plugin supports one additional configuration settings: failOnError, which controls what happens in case of error.
 Default behavior is to fail the build, but it can be set so that only a warning is issued.

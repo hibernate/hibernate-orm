@@ -50,7 +50,7 @@ public final class QueryGeneratorBuilder {
 		this.auditMiddleEntityName = auditMiddleEntityName;
 		this.revisionTypeInId = revisionTypeInId;
 
-		idDatas = new ArrayList<MiddleIdData>();
+		idDatas = new ArrayList<>();
 	}
 
 	void addRelation(MiddleIdData idData) {

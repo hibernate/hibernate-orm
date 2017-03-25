@@ -20,7 +20,7 @@ import javax.persistence.MapKeyEnumerated;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -156,7 +156,7 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 				return new OrdinalEnumValueMapper();
 			}
 			else if ( isCharacterType( type ) ) {
-				return new OrdinalEnumValueMapper();
+				return new NamedEnumValueMapper();
 			}
 			else {
 				throw new HibernateException(
@@ -224,7 +224,7 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws SQLException {
+	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		if ( enumValueMapper == null ) {
 			throw new AssertionFailure( "EnumType (" + enumClass.getName() + ") not properly, fully configured" );
 		}
@@ -232,7 +232,7 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		if ( enumValueMapper == null ) {
 			throw new AssertionFailure( "EnumType (" + enumClass.getName() + ") not properly, fully configured" );
 		}

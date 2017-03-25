@@ -116,7 +116,7 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 		return sessionMap( false );
 	}
 
-	private static synchronized Map<SessionFactory,Session> sessionMap(boolean createMap) {
+	private static Map<SessionFactory,Session> sessionMap(boolean createMap) {
 		Map<SessionFactory,Session> sessionMap = CONTEXT_TL.get();
 		if ( sessionMap == null && createMap ) {
 			sessionMap = new HashMap<SessionFactory,Session>();
@@ -125,7 +125,7 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 		return sessionMap;
 	}
 
-	private static synchronized void doCleanup() {
+	private static void doCleanup() {
 		final Map<SessionFactory,Session> sessionMap = sessionMap( false );
 		if ( sessionMap != null ) {
 			if ( sessionMap.isEmpty() ) {

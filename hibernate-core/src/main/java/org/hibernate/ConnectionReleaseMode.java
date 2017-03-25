@@ -8,6 +8,8 @@ package org.hibernate;
 
 import java.util.Locale;
 
+import org.hibernate.internal.util.StringHelper;
+
 /**
  * Defines the various policies by which Hibernate might release its underlying
  * JDBC connection.  Inverse of {@link ConnectionAcquisitionMode}.
@@ -16,7 +18,7 @@ import java.util.Locale;
  */
 public enum ConnectionReleaseMode{
 	/**
-	 * Indicates that JDBC connection should be aggressively released after each 
+	 * Indicates that JDBC connection should be aggressively released afterQuery each
 	 * SQL statement is executed. In this mode, the application <em>must</em>
 	 * explicitly close all iterators and scrollable results. This mode may
 	 * only be used with a JTA datasource.
@@ -24,7 +26,7 @@ public enum ConnectionReleaseMode{
 	AFTER_STATEMENT,
 
 	/**
-	 * Indicates that JDBC connections should be released after each transaction 
+	 * Indicates that JDBC connections should be released afterQuery each transaction
 	 * ends (works with both JTA-registered synch and HibernateTransaction API).
 	 * This mode may not be used with an application server JTA datasource.
 	 * <p/>
@@ -47,5 +49,27 @@ public enum ConnectionReleaseMode{
 	 */
 	public static ConnectionReleaseMode parse(final String name) {
 		return ConnectionReleaseMode.valueOf( name.toUpperCase(Locale.ROOT) );
+	}
+
+	public static ConnectionReleaseMode interpret(Object setting) {
+		if ( setting == null ) {
+			return null;
+		}
+
+		if ( setting instanceof ConnectionReleaseMode ) {
+			return (ConnectionReleaseMode) setting;
+		}
+
+		final String value = setting.toString();
+		if ( StringHelper.isEmpty( value ) ) {
+			return null;
+		}
+
+		// here we disregard "auto"
+		if ( value.equalsIgnoreCase( "auto" ) ) {
+			return null;
+		}
+
+		return parse( value );
 	}
 }

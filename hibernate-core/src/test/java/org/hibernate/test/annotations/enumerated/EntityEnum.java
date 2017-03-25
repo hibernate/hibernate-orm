@@ -19,7 +19,9 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
 
 import org.hibernate.test.annotations.enumerated.custom_types.LastNumberType;
 import org.hibernate.test.annotations.enumerated.enums.Common;
@@ -32,7 +34,7 @@ import org.hibernate.test.annotations.enumerated.enums.Trimmed;
  * @author Brett Meyer
  */
 @Entity
-@TypeDefs({ @TypeDef(typeClass = LastNumberType.class, defaultForType = LastNumber.class) })
+@TypeDef(typeClass = LastNumberType.class, defaultForType = LastNumber.class)
 public class EntityEnum {
 
 	@Id

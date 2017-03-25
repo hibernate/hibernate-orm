@@ -83,12 +83,13 @@ public class MapKeyEntityFromElement extends FromElement {
 				// todo : ever a time when INNER is appropriate?
 				//JoinType.LEFT_OUTER_JOIN,
 				// needs to be an inner join because of how JoinSequence/JoinFragment work - ugh
-				JoinType.INNER_JOIN,
+//				JoinType.INNER_JOIN,
+				collectionFromElement.getJoinSequence().getFirstJoin().getJoinType(),
 				joinColumns
 		);
 		join.setJoinSequence( joinSequence );
 
-		join.setOrigin( collectionFromElement, collectionPersister.isManyToMany() );
+		join.setOrigin( collectionFromElement, true );
 		join.setColumns( joinColumns );
 
 		join.setUseFromFragment( collectionFromElement.useFromFragment() );

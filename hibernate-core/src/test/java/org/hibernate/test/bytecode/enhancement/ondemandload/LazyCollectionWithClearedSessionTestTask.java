@@ -30,19 +30,27 @@ public class LazyCollectionWithClearedSessionTestTask extends AbstractEnhancerTe
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
 		super.prepare( cfg );
 
-		Session s = getFactory().openSession();
-		s.beginTransaction();
+		try (Session s = getFactory().openSession()) {
+			s.beginTransaction();
+			try {
 
-		Store store = new Store( 1 ).setName( "Acme Super Outlet" );
-		s.persist( store );
+				Store store = new Store( 1 ).setName( "Acme Super Outlet" );
+				s.persist( store );
 
-		Product product = new Product( "007" ).setName( "widget" ).setDescription( "FooBar" );
-		s.persist( product );
+				Product product = new Product( "007" ).setName( "widget" ).setDescription( "FooBar" );
+				s.persist( product );
 
-		store.addInventoryProduct( product ).setQuantity( 10L ).setStorePrice( new BigDecimal( 500 ) );
+				store.addInventoryProduct( product ).setQuantity( 10L ).setStorePrice( new BigDecimal( 500 ) );
 
-		s.getTransaction().commit();
-		s.close();
+				s.getTransaction().commit();
+			}
+			catch (Exception e) {
+				if ( s.getTransaction().isActive() ) {
+					s.getTransaction().rollback();
+				}
+				throw e;
+			}
+		}
 	}
 
 	public void cleanup() {
@@ -51,57 +59,64 @@ public class LazyCollectionWithClearedSessionTestTask extends AbstractEnhancerTe
 	public void execute() {
 		getFactory().getStatistics().clear();
 
-		Session s = getFactory().openSession();
-		s.beginTransaction();
+		try (Session s = getFactory().openSession()) {
+			s.beginTransaction();
+			try {
+				// first load the store, making sure collection is not initialized
+				Store store = s.get( Store.class, 1 );
+				assertNotNull( store );
+				assertFalse( Hibernate.isPropertyInitialized( store, "inventories" ) );
+				assertEquals( 1, getFactory().getStatistics().getSessionOpenCount() );
+				assertEquals( 0, getFactory().getStatistics().getSessionCloseCount() );
 
-		// first load the store, making sure collection is not initialized
-		Store store =  s.get( Store.class, 1 );
-		assertNotNull( store );
-		assertFalse( Hibernate.isPropertyInitialized( store, "inventories" ) );
-		assertEquals( 1, getFactory().getStatistics().getSessionOpenCount() );
-		assertEquals( 0, getFactory().getStatistics().getSessionCloseCount() );
+				// then clear session and try to initialize collection
+				s.clear();
+				assertNotNull( store );
+				assertFalse( Hibernate.isPropertyInitialized( store, "inventories" ) );
+				store.getInventories().size();
+				assertTrue( Hibernate.isPropertyInitialized( store, "inventories" ) );
+				// the extra Session is the temp Session needed to perform the init
+				assertEquals( 2, getFactory().getStatistics().getSessionOpenCount() );
+				assertEquals( 1, getFactory().getStatistics().getSessionCloseCount() );
 
-		// then clear session and try to initialize collection
-		s.clear();
-		assertNotNull( store );
-		assertFalse( Hibernate.isPropertyInitialized( store, "inventories" ) );
-		store.getInventories().size();
-		assertTrue( Hibernate.isPropertyInitialized( store, "inventories" ) );
-		// the extra Session is the temp Session needed to perform the init
-		assertEquals( 2, getFactory().getStatistics().getSessionOpenCount() );
-		assertEquals( 1, getFactory().getStatistics().getSessionCloseCount() );
+				// clear Session again.  The collection should still be recognized as initialized from above
+				s.clear();
+				assertNotNull( store );
+				assertTrue( Hibernate.isPropertyInitialized( store, "inventories" ) );
+				assertEquals( 2, getFactory().getStatistics().getSessionOpenCount() );
+				assertEquals( 1, getFactory().getStatistics().getSessionCloseCount() );
 
-		// clear Session again.  The collection should still be recognized as initialized from above
-		s.clear();
-		assertNotNull( store );
-		assertTrue( Hibernate.isPropertyInitialized( store, "inventories" ) );
-		assertEquals( 2, getFactory().getStatistics().getSessionOpenCount() );
-		assertEquals( 1, getFactory().getStatistics().getSessionCloseCount() );
+				// lets clear the Session again and this time reload the Store
+				s.clear();
+				store = s.get( Store.class, 1 );
+				s.clear();
+				assertNotNull( store );
+				// collection should be back to uninitialized since we have a new entity instance
+				assertFalse( Hibernate.isPropertyInitialized( store, "inventories" ) );
+				assertEquals( 2, getFactory().getStatistics().getSessionOpenCount() );
+				assertEquals( 1, getFactory().getStatistics().getSessionCloseCount() );
+				store.getInventories().size();
+				assertTrue( Hibernate.isPropertyInitialized( store, "inventories" ) );
+				// the extra Session is the temp Session needed to perform the init
+				assertEquals( 3, getFactory().getStatistics().getSessionOpenCount() );
+				assertEquals( 2, getFactory().getStatistics().getSessionCloseCount() );
 
-		// lets clear the Session again and this time reload the Store
-		s.clear();
-		store = s.get( Store.class, 1 );
-		s.clear();
-		assertNotNull( store );
-		// collection should be back to uninitialized since we have a new entity instance
-		assertFalse( Hibernate.isPropertyInitialized( store, "inventories" ) );
-		assertEquals( 2, getFactory().getStatistics().getSessionOpenCount() );
-		assertEquals( 1, getFactory().getStatistics().getSessionCloseCount() );
-		store.getInventories().size();
-		assertTrue( Hibernate.isPropertyInitialized( store, "inventories" ) );
-		// the extra Session is the temp Session needed to perform the init
-		assertEquals( 3, getFactory().getStatistics().getSessionOpenCount() );
-		assertEquals( 2, getFactory().getStatistics().getSessionCloseCount() );
+				// clear Session again.  The collection should still be recognized as initialized from above
+				s.clear();
+				assertNotNull( store );
+				assertTrue( Hibernate.isPropertyInitialized( store, "inventories" ) );
+				assertEquals( 3, getFactory().getStatistics().getSessionOpenCount() );
+				assertEquals( 2, getFactory().getStatistics().getSessionCloseCount() );
 
-		// clear Session again.  The collection should still be recognized as initialized from above
-		s.clear();
-		assertNotNull( store );
-		assertTrue( Hibernate.isPropertyInitialized( store, "inventories" ) );
-		assertEquals( 3, getFactory().getStatistics().getSessionOpenCount() );
-		assertEquals( 2, getFactory().getStatistics().getSessionCloseCount() );
-
-		s.getTransaction().commit();
-		s.close();
+				s.getTransaction().commit();
+			}
+			catch (Exception e) {
+				if ( s.getTransaction().isActive() ) {
+					s.getTransaction().rollback();
+				}
+				throw e;
+			}
+		}
 	}
 
 	protected void configure(Configuration cfg) {

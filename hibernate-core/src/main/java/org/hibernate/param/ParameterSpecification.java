@@ -5,11 +5,12 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.param;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -30,7 +31,7 @@ public interface ParameterSpecification {
 	 * @return The number of sql bind positions "eaten" by this bind operation.
 	 * @throws java.sql.SQLException Indicates problems performing the JDBC biind operation.
 	 */
-	public int bind(PreparedStatement statement, QueryParameters qp, SessionImplementor session, int position) throws SQLException;
+	int bind(PreparedStatement statement, QueryParameters qp, SharedSessionContractImplementor session, int position) throws SQLException;
 
 	/**
 	 * Get the type which we are expeting for a bind into this parameter based
@@ -38,19 +39,19 @@ public interface ParameterSpecification {
 	 *
 	 * @return The expected type.
 	 */
-	public Type getExpectedType();
+	Type getExpectedType();
 
 	/**
 	 * Injects the expected type.  Called during translation.
 	 *
 	 * @param expectedType The type to expect.
 	 */
-	public void setExpectedType(Type expectedType);
+	void setExpectedType(Type expectedType);
 
 	/**
 	 * Render this parameter into displayable info (for logging, etc).
 	 *
 	 * @return The displayable info.
 	 */
-	public String renderDisplayInfo();
+	String renderDisplayInfo();
 }

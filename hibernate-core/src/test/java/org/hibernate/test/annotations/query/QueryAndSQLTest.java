@@ -22,26 +22,23 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.MySQL57InnoDBDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQL92Dialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.stat.Statistics;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.A320;
 import org.hibernate.test.annotations.A320b;
 import org.hibernate.test.annotations.Plane;
-import org.hibernate.type.StandardBasicTypes;
-
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -56,10 +53,17 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
+
 	@Override
 	protected boolean isCleanupTestDataRequired() {
 		return true;
 	}
+
+	@Override
+	protected boolean isCleanupTestDataUsingBulkDelete() {
+		return true;
+	}
+
 	@Test
 	public void testNativeQueryWithFormulaAttribute() {
 		SQLFunction dateFunction = getDialect().getFunctions().get( "current_date" );
@@ -70,11 +74,11 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		);
 
 		String sql = String.format(
-				"select t.table_name as {t.tableName}, %s as {t.daysOld} from ALL_TABLES t  where t.table_name = 'AUDIT_ACTIONS' ",
+				"select t.TABLE_NAME as {t.tableName}, %s as {t.daysOld} from ALL_TABLES t  where t.TABLE_NAME = 'AUDIT_ACTIONS' ",
 				dateFunctionRendered
 		);
 		String sql2 = String.format(
-				"select table_name as t_name, %s as t_time from ALL_TABLES   where table_name = 'AUDIT_ACTIONS' ",
+				"select TABLE_NAME as t_name, %s as t_time from ALL_TABLES   where TABLE_NAME = 'AUDIT_ACTIONS' ",
 				dateFunctionRendered
 		);
 
@@ -93,7 +97,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@FailureExpected(jiraKey = "HHH-2225")
 	public void testNativeQueryWithFormulaAttributeWithoutAlias() {
-		String sql = "select table_name , sysdate() from all_tables  where table_name = 'AUDIT_ACTIONS' ";
+		String sql = "select TABLE_NAME , sysdate() from all_tables  where TABLE_NAME = 'AUDIT_ACTIONS' ";
 		Session s = openSession();
 		s.beginTransaction();
 		s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();
@@ -103,13 +107,10 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10161")
-	@SkipForDialects(
-			value = {
-					@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER"),
-					@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
-					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
-			}
-	)
+	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
+	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testQueryWithNullParameter(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -150,6 +151,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10161")
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testQueryWithNullParameterTyped(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -190,13 +192,10 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10161")
-	@SkipForDialects(
-			value = {
-					@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER"),
-					@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint"),
-					@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
-			}
-	)
+	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
+	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testNativeQueryWithNullParameter(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -220,12 +219,12 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		List chaoses = s.createSQLQuery( "select * from Chaos where chaos_size is null or chaos_size = :chaos_size" )
+		List chaoses = s.createSQLQuery( "select * from CHAOS where chaos_size is null or chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null )
 				.list();
 		assertEquals( 1, chaoses.size() );
 
-		chaoses = s.createSQLQuery( "select * from Chaos where chaos_size = :chaos_size" )
+		chaoses = s.createSQLQuery( "select * from CHAOS where chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null )
 				.list();
 		// should be no results because null != null
@@ -237,6 +236,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10161")
+	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	public void testNativeQueryWithNullParameterTyped(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -260,12 +260,12 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		List chaoses = s.createSQLQuery( "select * from Chaos where chaos_size is null or chaos_size = :chaos_size" )
+		List chaoses = s.createSQLQuery( "select * from CHAOS where chaos_size is null or chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
 				.list();
 		assertEquals( 1, chaoses.size() );
 
-		chaoses = s.createSQLQuery( "select * from Chaos where chaos_size = :chaos_size" )
+		chaoses = s.createSQLQuery( "select * from CHAOS where chaos_size = :chaos_size" )
 				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
 				.list();
 		// should be no results because null != null

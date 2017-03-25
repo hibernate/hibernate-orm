@@ -14,7 +14,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * CollectionAliases which handles the logic of selecting user provided aliases (via return-property),
- * before using the default aliases.
+ * beforeQuery using the default aliases.
  *
  * @author Steve Ebersole
  * @author Max Rydahl Andersen

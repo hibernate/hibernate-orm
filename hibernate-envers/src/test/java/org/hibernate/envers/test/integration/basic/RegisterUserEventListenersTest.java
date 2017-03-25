@@ -10,6 +10,7 @@ import org.hibernate.Session;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -18,7 +19,6 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
@@ -48,7 +48,7 @@ public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase
 		session.getTransaction().commit();
 		session.close();
 
-		// Post insert listener invoked three times - before/after insertion of original data,
+		// Post insert listener invoked three times - beforeQuery/afterQuery insertion of original data,
 		// revision entity and audit row.
 		Assert.assertEquals( 3, listener.getBeforeCount() );
 		Assert.assertEquals( 3, listener.getAfterCount() );
@@ -71,7 +71,7 @@ public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase
 			event.getSession().getActionQueue().registerProcess(
 					new AfterTransactionCompletionProcess() {
 						@Override
-						public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+						public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 							afterCounter.increase();
 						}
 					}

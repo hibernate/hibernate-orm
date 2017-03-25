@@ -55,15 +55,16 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	 * @param classLoader The ClassLoader to use
 	 */
 	public ClassLoaderServiceImpl(ClassLoader classLoader) {
-		this( Collections.singletonList( classLoader ) );
+		this( Collections.singletonList( classLoader ),TcclLookupPrecedence.AFTER );
 	}
 
 	/**
 	 * Constructs a ClassLoaderServiceImpl with the given ClassLoader instances
 	 *
 	 * @param providedClassLoaders The ClassLoader instances to use
+	 * @param lookupPrecedence The lookup precedence of the thread context {@code ClassLoader}
 	 */
-	public ClassLoaderServiceImpl(Collection<ClassLoader> providedClassLoaders) {
+	public ClassLoaderServiceImpl(Collection<ClassLoader> providedClassLoaders, TcclLookupPrecedence lookupPrecedence) {
 		final LinkedHashSet<ClassLoader> orderedClassLoaderSet = new LinkedHashSet<ClassLoader>();
 
 		// first, add all provided class loaders, if any
@@ -79,19 +80,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		// then the Hibernate class loader
 		orderedClassLoaderSet.add( ClassLoaderServiceImpl.class.getClassLoader() );
 
-		// then the TCCL, if one...
-		final ClassLoader tccl = locateTCCL();
-		if ( tccl != null ) {
-			orderedClassLoaderSet.add( tccl );
-		}
-		// finally the system classloader
-		final ClassLoader sysClassLoader = locateSystemClassLoader();
-		if ( sysClassLoader != null ) {
-			orderedClassLoaderSet.add( sysClassLoader );
-		}
-
 		// now build the aggregated class loader...
-		this.aggregatedClassLoader = new AggregatedClassLoader( orderedClassLoaderSet );
+		this.aggregatedClassLoader = new AggregatedClassLoader( orderedClassLoaderSet,lookupPrecedence );
 	}
 
 	/**
@@ -120,16 +110,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		addIfSet( providedClassLoaders, AvailableSettings.HIBERNATE_CLASSLOADER, configValues );
 		addIfSet( providedClassLoaders, AvailableSettings.ENVIRONMENT_CLASSLOADER, configValues );
 
-		if ( providedClassLoaders.isEmpty() ) {
-			log.debugf( "Incoming config yielded no classloaders; adding standard SE ones" );
-			final ClassLoader tccl = locateTCCL();
-			if ( tccl != null ) {
-				providedClassLoaders.add( tccl );
-			}
-			providedClassLoaders.add( ClassLoaderServiceImpl.class.getClassLoader() );
-		}
-
-		return new ClassLoaderServiceImpl( providedClassLoaders );
+		return new ClassLoaderServiceImpl( providedClassLoaders,TcclLookupPrecedence.AFTER );
 	}
 
 	private static void addIfSet(List<ClassLoader> providedClassLoaders, String name, Map configVales) {
@@ -159,17 +140,151 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	private static class AggregatedClassLoader extends ClassLoader {
 		private final ClassLoader[] individualClassLoaders;
+		private final TcclLookupPrecedence tcclLookupPrecedence;
 
-		private AggregatedClassLoader(final LinkedHashSet<ClassLoader> orderedClassLoaderSet) {
+		private AggregatedClassLoader(final LinkedHashSet<ClassLoader> orderedClassLoaderSet, TcclLookupPrecedence precedence) {
 			super( null );
 			individualClassLoaders = orderedClassLoaderSet.toArray( new ClassLoader[orderedClassLoaderSet.size()] );
+			tcclLookupPrecedence = precedence;
 		}
 
+		private Iterator<ClassLoader> newClassLoaderIterator() {
+			final ClassLoader threadClassLoader = locateTCCL();
+			if ( tcclLookupPrecedence == TcclLookupPrecedence.NEVER || threadClassLoader == null ) {
+				return newTcclNeverIterator();
+			}
+			else if ( tcclLookupPrecedence == TcclLookupPrecedence.AFTER ) {
+				return newTcclAfterIterator(threadClassLoader);
+			}
+			else if ( tcclLookupPrecedence == TcclLookupPrecedence.BEFORE ) {
+				return newTcclBeforeIterator(threadClassLoader);
+			}
+			else {
+				throw new RuntimeException( "Unknown precedence: "+tcclLookupPrecedence );
+			}
+		}
+		
+		private Iterator<ClassLoader> newTcclBeforeIterator(final ClassLoader threadContextClassLoader) {
+			final ClassLoader systemClassLoader = locateSystemClassLoader();
+			return new Iterator<ClassLoader>() {
+				private int currentIndex = 0;
+				private boolean tcCLReturned = false;
+				private boolean sysCLReturned = false;
+			    
+				@Override
+				public boolean hasNext() {
+					if ( !tcCLReturned ) {
+						return true;
+					}
+					else if ( currentIndex < individualClassLoaders.length ) {
+						return true;
+					}
+					else if ( !sysCLReturned && systemClassLoader != null ) {
+						return true;
+					}
+					
+					return false;
+				}
+
+				@Override
+				public ClassLoader next() {
+					if ( !tcCLReturned ) {
+						tcCLReturned = true;
+						return threadContextClassLoader;
+					}
+					else if ( currentIndex < individualClassLoaders.length ) {
+						currentIndex += 1;
+						return individualClassLoaders[ currentIndex - 1 ];
+					}
+					else if ( !sysCLReturned && systemClassLoader != null ) {
+						sysCLReturned = true;
+						return systemClassLoader;
+					}
+					throw new IllegalStateException( "No more item" );
+				}
+			};
+		}
+		
+		private Iterator<ClassLoader> newTcclAfterIterator(final ClassLoader threadContextClassLoader) {
+			final ClassLoader systemClassLoader = locateSystemClassLoader();
+			return new Iterator<ClassLoader>() {
+				private int currentIndex = 0;
+				private boolean tcCLReturned = false;
+				private boolean sysCLReturned = false;
+			    
+				@Override
+				public boolean hasNext() {
+					if ( currentIndex < individualClassLoaders.length ) {
+						return true;
+					}
+					else if ( !tcCLReturned ) {
+						return true;
+					}
+					else if ( !sysCLReturned && systemClassLoader != null ) {
+						return true;
+					}
+					
+					return false;
+				}
+
+				@Override
+				public ClassLoader next() {
+					if ( currentIndex < individualClassLoaders.length ) {
+						currentIndex += 1;
+						return individualClassLoaders[ currentIndex - 1 ];
+					}
+					else if ( !tcCLReturned ) {
+						tcCLReturned = true;
+						return threadContextClassLoader;
+					}
+					else if ( !sysCLReturned && systemClassLoader != null ) {
+						sysCLReturned = true;
+						return systemClassLoader;
+					}
+					throw new IllegalStateException( "No more item" );
+				}
+			};
+		}
+                
+		private Iterator<ClassLoader> newTcclNeverIterator() {
+			final ClassLoader systemClassLoader = locateSystemClassLoader();
+			return new Iterator<ClassLoader>() {
+				private int currentIndex = 0;
+				private boolean sysCLReturned = false;
+			    
+				@Override
+				public boolean hasNext() {
+					if ( currentIndex < individualClassLoaders.length ) {
+						return true;
+					}
+					else if ( !sysCLReturned && systemClassLoader != null ) {
+						return true;
+					}
+					
+					return false;
+				}
+
+				@Override
+				public ClassLoader next() {
+					if ( currentIndex < individualClassLoaders.length ) {
+						currentIndex += 1;
+						return individualClassLoaders[ currentIndex - 1 ];
+					}
+					else if ( !sysCLReturned && systemClassLoader != null ) {
+						sysCLReturned = true;
+						return systemClassLoader;
+					}
+					throw new IllegalStateException( "No more item" );
+				}
+			};
+		}
+		
 		@Override
 		public Enumeration<URL> getResources(String name) throws IOException {
 			final LinkedHashSet<URL> resourceUrls = new LinkedHashSet<URL>();
-
-			for ( ClassLoader classLoader : individualClassLoaders ) {
+			final Iterator<ClassLoader> clIterator = newClassLoaderIterator();
+			while ( clIterator.hasNext() ) {
+				final ClassLoader classLoader = clIterator.next();
 				final Enumeration<URL> urls = classLoader.getResources( name );
 				while ( urls.hasMoreElements() ) {
 					resourceUrls.add( urls.nextElement() );
@@ -193,7 +308,9 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 		@Override
 		protected URL findResource(String name) {
-			for ( ClassLoader classLoader : individualClassLoaders ) {
+			final Iterator<ClassLoader> clIterator = newClassLoaderIterator();
+			while ( clIterator.hasNext() ) {
+				final ClassLoader classLoader = clIterator.next();
 				final URL resource = classLoader.getResource( name );
 				if ( resource != null ) {
 					return resource;
@@ -204,7 +321,9 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 		@Override
 		protected Class<?> findClass(String name) throws ClassNotFoundException {
-			for ( ClassLoader classLoader : individualClassLoaders ) {
+			final Iterator<ClassLoader> clIterator = newClassLoaderIterator();
+			while ( clIterator.hasNext() ) {
+				final ClassLoader classLoader = clIterator.next();
 				try {
 					return classLoader.loadClass( name );
 				}
@@ -359,7 +478,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	}
 
 	private ClassLoader getAggregatedClassLoader() {
-		final ClassLoader aggregated = this.aggregatedClassLoader;
+		final AggregatedClassLoader aggregated = this.aggregatedClassLoader;
 		if ( aggregated == null ) {
 			throw log.usingStoppedClassLoaderService();
 		}

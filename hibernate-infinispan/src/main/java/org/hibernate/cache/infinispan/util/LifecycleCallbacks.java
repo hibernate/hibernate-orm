@@ -23,7 +23,6 @@ public class LifecycleCallbacks extends AbstractModuleLifecycle {
 		externalizerMap.put( Externalizers.EXCLUDE_TOMBSTONES_FILTER, new Tombstone.ExcludeTombstonesFilterExternalizer() );
 		externalizerMap.put( Externalizers.TOMBSTONE_UPDATE, new TombstoneUpdate.Externalizer() );
 		externalizerMap.put( Externalizers.FUTURE_UPDATE, new FutureUpdate.Externalizer() );
-		externalizerMap.put( Externalizers.VALUE_EXTRACTOR, new FutureUpdate.ValueExtractorExternalizer() );
 		externalizerMap.put( Externalizers.VERSIONED_ENTRY, new VersionedEntry.Externalizer() );
 		externalizerMap.put( Externalizers.EXCLUDE_EMPTY_EXTRACT_VALUE, new VersionedEntry.ExcludeEmptyExtractValueExternalizer() );
 	}

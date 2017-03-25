@@ -12,6 +12,9 @@ import javax.persistence.Id;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -24,13 +27,19 @@ import static org.junit.Assert.fail;
 public class InvalidEnumeratedJavaTypeTest extends BaseUnitTestCase {
 	@Test
 	public void testInvalidMapping() {
+		MetadataSources metadataSources = new MetadataSources( )
+			.addAnnotatedClass( TheEntity.class );
 		try {
-			new MetadataSources( )
-					.addAnnotatedClass( TheEntity.class )
-					.buildMetadata();
+			metadataSources.buildMetadata();
 			fail( "Was expecting failure" );
 		}
 		catch (AnnotationException ignore) {
+		}
+		finally {
+			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
+			if(metaServiceRegistry instanceof BootstrapServiceRegistry ) {
+				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
+			}
 		}
 	}
 

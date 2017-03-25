@@ -55,6 +55,11 @@ public class NClobTypeDescriptor extends AbstractTypeDescriptor<NClob> {
 		super( NClob.class, NClobMutabilityPlan.INSTANCE );
 	}
 
+	@Override
+	public String extractLoggableRepresentation(NClob value) {
+		return value == null ? "null" : "{nclob}";
+	}
+
 	public String toString(NClob value) {
 		return DataHelper.extractString( value );
 	}

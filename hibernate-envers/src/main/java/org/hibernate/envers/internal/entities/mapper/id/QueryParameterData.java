@@ -6,8 +6,8 @@
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
-import org.hibernate.Query;
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.query.Query;
 
 /**
  * @author Adam Warski (adam at warski dot org)

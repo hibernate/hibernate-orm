@@ -23,7 +23,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -47,7 +47,7 @@ public class CollectionLoadContext {
 
 	private final LoadContexts loadContexts;
 	private final ResultSet resultSet;
-	private Set<CollectionKey> localLoadingCollectionKeys = new HashSet<CollectionKey>();
+	private Set<CollectionKey> localLoadingCollectionKeys = new HashSet<>();
 
 	/**
 	 * Creates a collection load context for the given result set.
@@ -148,7 +148,7 @@ public class CollectionLoadContext {
 	 * @param persister The persister for which to complete loading.
 	 */
 	public void endLoadingCollections(CollectionPersister persister) {
-		final SessionImplementor session = getLoadContext().getPersistenceContext().getSession();
+		final SharedSessionContractImplementor session = getLoadContext().getPersistenceContext().getSession();
 		if ( !loadContexts.hasLoadingCollectionEntries()
 				&& localLoadingCollectionKeys.isEmpty() ) {
 			return;
@@ -170,7 +170,7 @@ public class CollectionLoadContext {
 			}
 			else if ( lce.getResultSet() == resultSet && lce.getPersister() == persister ) {
 				if ( matches == null ) {
-					matches = new ArrayList<LoadingCollectionEntry>();
+					matches = new ArrayList<>();
 				}
 				matches.add( lce );
 				if ( lce.getCollection().getOwner() == null ) {
@@ -228,7 +228,7 @@ public class CollectionLoadContext {
 
 	private void endLoadingCollection(LoadingCollectionEntry lce, CollectionPersister persister) {
 		LOG.tracev( "Ending loading collection [{0}]", lce );
-		final SessionImplementor session = getLoadContext().getPersistenceContext().getSession();
+		final SharedSessionContractImplementor session = getLoadContext().getPersistenceContext().getSession();
 
 		// warning: can cause a recursive calls! (proxy initialization)
 		final boolean hasNoQueuedAdds = lce.getCollection().endRead();
@@ -268,7 +268,7 @@ public class CollectionLoadContext {
 			);
 		}
 		if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
-			session.getFactory().getStatisticsImplementor().loadCollection( persister.getRole() );
+			session.getFactory().getStatistics().loadCollection( persister.getRole() );
 		}
 	}
 
@@ -279,7 +279,7 @@ public class CollectionLoadContext {
 	 * @param persister The persister
 	 */
 	private void addCollectionToCache(LoadingCollectionEntry lce, CollectionPersister persister) {
-		final SessionImplementor session = getLoadContext().getPersistenceContext().getSession();
+		final SharedSessionContractImplementor session = getLoadContext().getPersistenceContext().getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 
 		final boolean debugEnabled = LOG.isDebugEnabled();
@@ -359,11 +359,11 @@ public class CollectionLoadContext {
 						persister.getCacheEntryStructure().structure( entry ),
 						session.getTimestamp(),
 						version,
-						factory.getSettings().isMinimalPutsEnabled() && session.getCacheMode()!= CacheMode.REFRESH
+						factory.getSessionFactoryOptions().isMinimalPutsEnabled() && session.getCacheMode()!= CacheMode.REFRESH
 				);
 
 				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-					factory.getStatisticsImplementor().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
+					factory.getStatistics().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
 				}
 			}
 			finally {

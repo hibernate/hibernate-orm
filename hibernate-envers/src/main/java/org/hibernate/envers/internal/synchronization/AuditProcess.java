@@ -11,19 +11,20 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.tools.Pair;
-
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.jboss.logging.Logger;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class AuditProcess implements BeforeTransactionCompletionProcess {
 	private static final Logger log = Logger.getLogger( AuditProcess.class );
@@ -34,18 +35,36 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 	private final LinkedList<AuditWorkUnit> workUnits;
 	private final Queue<AuditWorkUnit> undoQueue;
 	private final Map<Pair<String, Object>, AuditWorkUnit> usedIds;
+	private final Map<Pair<String, Object>, Object[]> entityStateCache;
 	private final EntityChangeNotifier entityChangeNotifier;
-
 	private Object revisionData;
 
 	public AuditProcess(RevisionInfoGenerator revisionInfoGenerator, SessionImplementor session) {
 		this.revisionInfoGenerator = revisionInfoGenerator;
 		this.session = session;
 
-		workUnits = new LinkedList<AuditWorkUnit>();
-		undoQueue = new LinkedList<AuditWorkUnit>();
-		usedIds = new HashMap<Pair<String, Object>, AuditWorkUnit>();
+		workUnits = new LinkedList<>();
+		undoQueue = new LinkedList<>();
+		usedIds = new HashMap<>();
+		entityStateCache = new HashMap<>();
 		entityChangeNotifier = new EntityChangeNotifier( revisionInfoGenerator, session );
+	}
+
+	public void cacheEntityState(Object id, String entityName, Object[] snapshot) {
+		final Pair<String, Object> key = new Pair<>( entityName, id );
+		if ( entityStateCache.containsKey( key ) ) {
+			throw new AuditException( "The entity [" + entityName + "] with id [" + id + "] is already cached." );
+		}
+		entityStateCache.put( key, snapshot );
+	}
+
+	public Object[] getCachedEntityState(Object id, String entityName) {
+		final Pair<String, Object> key = new Pair<>( entityName, id );
+		final Object[] entityState = entityStateCache.get( key );
+		if ( entityState != null ) {
+			entityStateCache.remove( key );
+		}
+		return entityState;
 	}
 
 	private void removeWorkUnit(AuditWorkUnit vwu) {
@@ -134,11 +153,13 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 		}
 
 		// see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
-		if ( FlushMode.isManualFlushMode( session.getFlushMode() ) ) {
+		if ( FlushMode.MANUAL.equals( session.getHibernateFlushMode() ) || session.isClosed() ) {
 			Session temporarySession = null;
 			try {
-				temporarySession = ((Session) session).sessionWithOptions().transactionContext().autoClose( false )
-						.connectionReleaseMode( ConnectionReleaseMode.AFTER_TRANSACTION )
+				temporarySession = session.sessionWithOptions()
+						.connection()
+						.autoClose( false )
+						.connectionHandlingMode( PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION )
 						.openSession();
 				executeInSession( temporarySession );
 				temporarySession.flush();
@@ -150,7 +171,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 			}
 		}
 		else {
-			executeInSession( (Session) session );
+			executeInSession( session );
 
 			// Explicitly flushing the session, as the auto-flush may have already happened.
 			session.flush();

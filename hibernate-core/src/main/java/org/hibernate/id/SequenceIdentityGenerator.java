@@ -14,16 +14,15 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.insert.AbstractReturningDelegate;
 import org.hibernate.id.insert.IdentifierGeneratingInsert;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Insert;
 import org.hibernate.type.Type;
-
-import org.jboss.logging.Logger;
 
 /**
  * A generator which combines sequence generation with immediate retrieval
@@ -44,13 +43,10 @@ public class SequenceIdentityGenerator
 		extends SequenceGenerator
 		implements PostInsertIdentifierGenerator {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			SequenceIdentityGenerator.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SequenceIdentityGenerator.class );
 
 	@Override
-	public Serializable generate(SessionImplementor s, Object obj) {
+	public Serializable generate(SharedSessionContractImplementor s, Object obj) {
 		return IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 	}
 
@@ -89,19 +85,19 @@ public class SequenceIdentityGenerator
 		}
 
 		@Override
-		protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
+		protected PreparedStatement prepare(String insertSQL, SharedSessionContractImplementor session) throws SQLException {
 			return session.getJdbcCoordinator().getStatementPreparer().prepareStatement( insertSQL, keyColumns );
 		}
 
 		@Override
-		protected Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session)
+		protected Serializable executeAndExtract(PreparedStatement insert, SharedSessionContractImplementor session)
 				throws SQLException {
 			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
 			return IdentifierGeneratorHelper.getGeneratedIdentity(
 					insert.getGeneratedKeys(),
 					getPersister().getRootTableKeyColumnNames()[0],
 					getPersister().getIdentifierType(),
-					session.getFactory().getDialect()
+					session.getJdbcServices().getJdbcEnvironment().getDialect()
 			);
 		}
 	}

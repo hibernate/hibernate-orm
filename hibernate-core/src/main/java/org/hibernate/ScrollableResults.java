@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -29,20 +30,26 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public interface ScrollableResults extends java.io.Closeable {
+public interface ScrollableResults extends AutoCloseable {
+
+	/**
+	 * Release resources immediately.
+	 */
+	void close();
+
 	/**
 	 * Advance to the next result.
 	 *
 	 * @return {@code true} if there is another result
 	 */
-	public boolean next();
+	boolean next();
 
 	/**
 	 * Retreat to the previous result.
 	 *
 	 * @return {@code true} if there is a previous result
 	 */
-	public boolean previous();
+	boolean previous();
 
 	/**
 	 * Scroll the specified number of positions from the current position.
@@ -51,53 +58,53 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @return {@code true} if there is a result at the new location
 	 */
-	public boolean scroll(int positions);
+	boolean scroll(int positions);
 
 	/**
 	 * Go to the last result.
 	 *
 	 * @return {@code true} if there are any results
 	 */
-	public boolean last();
+	boolean last();
 
 	/**
 	 * Go to the first result.
 	 *
 	 * @return {@code true} if there are any results
 	 */
-	public boolean first();
+	boolean first();
 
 	/**
-	 * Go to a location just before first result,  This is the location of the cursor on a newly returned
+	 * Go to a location just beforeQuery first result,  This is the location of the cursor on a newly returned
 	 * scrollable result.
 	 */
-	public void beforeFirst();
+	void beforeFirst();
 
 	/**
-	 * Go to a location just after the last result.
+	 * Go to a location just afterQuery the last result.
 	 */
-	public void afterLast();
+	void afterLast();
 
 	/**
 	 * Is this the first result?
 	 *
 	 * @return {@code true} if this is the first row of results, otherwise {@code false}
 	 */
-	public boolean isFirst();
+	boolean isFirst();
 
 	/**
 	 * Is this the last result?
 	 *
 	 * @return {@code true} if this is the last row of results.
 	 */
-	public boolean isLast();
+	boolean isLast();
 
 	/**
 	 * Get the current position in the results. The first position is number 0 (unlike JDBC).
 	 *
 	 * @return The current position number, numbered from 0; -1 indicates that there is no current row
 	 */
-	public int getRowNumber();
+	int getRowNumber();
 
 	/**
 	 * Set the current position in the result set.  Can be numbered from the first position (positive number) or
@@ -108,19 +115,14 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @return true if there is a row at that row number
 	 */
-	public boolean setRowNumber(int rowNumber);
-
-	/**
-	 * Release resources immediately.
-	 */
-	public void close();
+	boolean setRowNumber(int rowNumber);
 
 	/**
 	 * Get the current row of results.
 	 *
 	 * @return The array of results
 	 */
-	public Object[] get();
+	Object[] get();
 
 	/**
 	 * Get the <tt>i</tt>th object in the current row of results, without
@@ -134,7 +136,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If i is an invalid index.
 	 */
-	public Object get(int i);
+	Object get(int i);
 
 	/**
 	 * Get the type of the <tt>i</tt>th column of results.
@@ -145,7 +147,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If i is an invalid index.
 	 */
-	public Type getType(int i);
+	Type getType(int i);
 
 	/**
 	 * Convenience method to read an integer.
@@ -156,7 +158,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public Integer getInteger(int col);
+	Integer getInteger(int col);
 
 	/**
 	 * Convenience method to read a long.
@@ -167,7 +169,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public Long getLong(int col);
+	Long getLong(int col);
 
 	/**
 	 * Convenience method to read a float.
@@ -178,7 +180,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public Float getFloat(int col);
+	Float getFloat(int col);
 
 	/**
 	 * Convenience method to read a boolean.
@@ -189,7 +191,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public Boolean getBoolean(int col);
+	Boolean getBoolean(int col);
 
 	/**
 	 * Convenience method to read a double.
@@ -200,7 +202,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public Double getDouble(int col);
+	Double getDouble(int col);
 
 	/**
 	 * Convenience method to read a short.
@@ -211,7 +213,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public Short getShort(int col);
+	Short getShort(int col);
 
 	/**
 	 * Convenience method to read a byte.
@@ -222,7 +224,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public Byte getByte(int col);
+	Byte getByte(int col);
 
 	/**
 	 * Convenience method to read a char.
@@ -233,7 +235,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public Character getCharacter(int col);
+	Character getCharacter(int col);
 
 	/**
 	 * Convenience method to read a binary (byte[]).
@@ -244,7 +246,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public byte[] getBinary(int col);
+	byte[] getBinary(int col);
 
 	/**
 	 * Convenience method to read a String using streaming.
@@ -255,7 +257,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public String getText(int col);
+	String getText(int col);
 
 	/**
 	 * Convenience method to read a blob.
@@ -266,7 +268,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public Blob getBlob(int col);
+	Blob getBlob(int col);
 
 	/**
 	 * Convenience method to read a clob.
@@ -277,7 +279,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public Clob getClob(int col);
+	Clob getClob(int col);
 
 	/**
 	 * Convenience method to read a string.
@@ -288,7 +290,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public String getString(int col);
+	String getString(int col);
 
 	/**
 	 * Convenience method to read a BigDecimal.
@@ -299,7 +301,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public BigDecimal getBigDecimal(int col);
+	BigDecimal getBigDecimal(int col);
 
 	/**
 	 * Convenience method to read a BigInteger.
@@ -310,7 +312,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public BigInteger getBigInteger(int col);
+	BigInteger getBigInteger(int col);
 
 	/**
 	 * Convenience method to read a Date.
@@ -321,7 +323,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public Date getDate(int col);
+	Date getDate(int col);
 
 	/**
 	 * Convenience method to read a Locale.
@@ -332,7 +334,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public Locale getLocale(int col);
+	Locale getLocale(int col);
 
 	/**
 	 * Convenience method to read a Calendar.
@@ -343,7 +345,7 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public Calendar getCalendar(int col);
+	Calendar getCalendar(int col);
 
 	/**
 	 * Convenience method to read a TimeZone.
@@ -354,5 +356,5 @@ public interface ScrollableResults extends java.io.Closeable {
 	 *
 	 * @throws IndexOutOfBoundsException If col is an invalid index.
 	 */
-	public TimeZone getTimeZone(int col);
+	TimeZone getTimeZone(int col);
 }

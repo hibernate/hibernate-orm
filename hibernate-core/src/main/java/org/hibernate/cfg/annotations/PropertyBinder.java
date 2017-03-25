@@ -51,7 +51,7 @@ import org.jboss.logging.Logger;
  * @author Emmanuel Bernard
  */
 public class PropertyBinder {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PropertyBinder.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PropertyBinder.class.getName());
 
 	private MetadataBuildingContext buildingContext;
 
@@ -160,7 +160,7 @@ public class PropertyBinder {
 			);
 		}
 		if ( !declaringClassSet ) {
-			throw new AssertionFailure( "declaringClass has not been set before a bind" );
+			throw new AssertionFailure( "declaringClass has not been set beforeQuery a bind" );
 		}
 	}
 

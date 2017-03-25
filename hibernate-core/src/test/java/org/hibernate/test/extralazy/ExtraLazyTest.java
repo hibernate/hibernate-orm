@@ -5,11 +5,6 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.extralazy;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -19,10 +14,17 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gavin King
@@ -31,6 +33,11 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "extralazy/UserGroup.hbm.xml","extralazy/Parent.hbm.xml","extralazy/Child.hbm.xml" };
+	}
+	
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { School.class, Student.class, Championship.class };
 	}
 
 	@Test
@@ -247,6 +254,91 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 		Child child2 = parent2.getChildren().get(child.getFirstName()); // causes SQLGrammarException because of wrong condition: 	where child0_.PARENT_ID=? and child0_.null=?
 		assertNotNull(child2);
 		session2.close();
+	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-10874")
+	public void testWhereClauseOnBidirectionalCollection() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		School school = new School(1);
+		s.persist(school);
+
+		Student gavin = new Student("gavin", 4);
+		Student turin = new Student("turin", 3);
+		Student mike = new Student("mike", 5);
+		Student fred = new Student("fred", 2);
+
+		gavin.setSchool(school);
+		turin.setSchool(school);
+		mike.setSchool(school);
+		fred.setSchool(school);
+
+		s.persist(gavin);
+		s.persist(turin);
+		s.persist(mike);
+		s.persist(fred);
+
+		t.commit();
+		s.close();
+
+		s = openSession();
+		School school2 = s.get(School.class, 1);
+
+		assertEquals(4, school2.getStudents().size());
+
+		assertEquals( 2, school2.getTopStudents().size() );
+		assertTrue( school2.getTopStudents().contains( gavin ) );
+		assertTrue( school2.getTopStudents().contains( mike ) );
+
+		assertEquals(2,  school2.getStudentsMap().size() );
+		assertTrue( school2.getStudentsMap().containsKey( gavin.getId() ) );
+		assertTrue( school2.getStudentsMap().containsKey( mike.getId() ) );
+
+		s.close();
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-3319" )
+	public void testWhereClauseOnUnidirectionalCollection() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Championship championship = new Championship( 1 );
+		s.persist(championship);
+
+		Student gavin = new Student("gavin", 4);
+		Student turin = new Student("turin", 3);
+		Student mike = new Student("mike", 5);
+		Student fred = new Student("fred", 2);
+
+		championship.getStudents().add( gavin );
+		championship.getStudents().add( turin );
+		championship.getStudents().add( mike );
+		championship.getStudents().add( fred );
+
+		s.persist(gavin);
+		s.persist(turin);
+		s.persist(mike);
+		s.persist(fred);
+
+		t.commit();
+		s.close();
+
+		s = openSession();
+
+		Championship championship2 = s.get(Championship.class, 1);
+		assertEquals( 2, championship2.getStudents().size() );
+		assertTrue( championship2.getStudents().contains( gavin ) );
+		assertTrue( championship2.getStudents().contains( mike ) );
+
+		s.close();
+	}
+
+	@Override
+	protected boolean rebuildSessionFactoryOnError() {
+		return false;
 	}
 }
 

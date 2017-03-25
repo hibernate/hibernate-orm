@@ -11,16 +11,15 @@ import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.infinispan.util.FutureUpdate;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
-import org.hibernate.cache.infinispan.util.TombstoneUpdate;
 import org.hibernate.cache.infinispan.util.Tombstone;
+import org.hibernate.cache.infinispan.util.TombstoneUpdate;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.context.Flag;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -39,8 +38,9 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 		this.region = region;
 		this.cache = region.getCache();
 		this.writeCache = Caches.ignoreReturnValuesCache(cache);
-		this.asyncWriteCache = Caches.asyncWriteCache(cache, Flag.IGNORE_RETURN_VALUES);
-		this.putFromLoadCache = writeCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY );
+		// Note that correct behaviour of local and async writes depends on LockingInterceptor (see there for details)
+		this.asyncWriteCache = writeCache.withFlags(Flag.FORCE_ASYNCHRONOUS);
+		this.putFromLoadCache = asyncWriteCache.withFlags(Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY);
 		Configuration configuration = cache.getCacheConfiguration();
 		if (configuration.clustering().cacheMode().isInvalidation()) {
 			throw new IllegalArgumentException("For tombstone-based caching, invalidation cache is not allowed.");
@@ -53,7 +53,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	}
 
 	@Override
-	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
+	public Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException {
 		if (txTimestamp < region.getLastRegionInvalidation() ) {
 			return null;
 		}
@@ -70,12 +70,12 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	}
 
 	@Override
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version) {
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version) {
 		return putFromLoad(session, key, value, txTimestamp, version, false);
 	}
 
 	@Override
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride) throws CacheException {
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride) throws CacheException {
 		long lastRegionInvalidation = region.getLastRegionInvalidation();
 		if (txTimestamp < lastRegionInvalidation) {
 			log.tracef("putFromLoad not executed since tx started at %d, before last region invalidation finished = %d", txTimestamp, lastRegionInvalidation);
@@ -103,32 +103,31 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	}
 
 	@Override
-	public boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
+	public boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version) throws CacheException {
 		write(session, key, value);
 		return true;
 	}
 
 	@Override
-	public boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion) throws CacheException {
+	public boolean update(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion) throws CacheException {
 		write(session, key, value);
 		return true;
 	}
 
-	protected void write(SessionImplementor session, Object key, Object value) {
+	@Override
+	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
+		write(session, key, null);
+	}
+
+	protected void write(SharedSessionContractImplementor session, Object key, Object value) {
 		TransactionCoordinator tc = session.getTransactionCoordinator();
-		FutureUpdateSynchronization sync = new FutureUpdateSynchronization(tc, writeCache, requiresTransaction, key, value);
-		// FutureUpdate is handled in TombstoneCallInterceptor
-		writeCache.put(key, new FutureUpdate(sync.getUuid(), null), region.getTombstoneExpiration(), TimeUnit.MILLISECONDS);
+		FutureUpdateSynchronization sync = new FutureUpdateSynchronization(tc, asyncWriteCache, requiresTransaction, key, value, region, session.getTimestamp());
+		// The update will be invalidating all putFromLoads for the duration of expiration or until removed by the synchronization
+		Tombstone tombstone = new Tombstone(sync.getUuid(), region.nextTimestamp() + region.getTombstoneExpiration());
+		// The outcome of this operation is actually defined in TombstoneCallInterceptor
+		// Metadata in PKVC are cleared and set in the interceptor, too
+		writeCache.put(key, tombstone);
 		tc.getLocalSynchronizations().registerSynchronization(sync);
-	}
-
-	@Override
-	public void remove(SessionImplementor session, Object key) throws CacheException {
-		TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
-		TombstoneSynchronization sync = new TombstoneSynchronization(transactionCoordinator, asyncWriteCache, requiresTransaction, region, key);
-		Tombstone tombstone = new Tombstone(sync.getUuid(), session.getTimestamp() + region.getTombstoneExpiration(), false);
-		writeCache.put(key, tombstone, region.getTombstoneExpiration(), TimeUnit.MILLISECONDS);
-		transactionCoordinator.getLocalSynchronizations().registerSynchronization(sync);
 	}
 
 	@Override
@@ -144,7 +143,7 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 
 	@Override
 	public void evict(Object key) throws CacheException {
-		writeCache.put(key, TombstoneUpdate.EVICT);
+		writeCache.put(key, new TombstoneUpdate<>(region.nextTimestamp(), null));
 	}
 
 	@Override
@@ -159,16 +158,16 @@ public class TombstoneAccessDelegate implements AccessDelegate {
 	}
 
 	@Override
-	public void unlockItem(SessionImplementor session, Object key) throws CacheException {
+	public void unlockItem(SharedSessionContractImplementor session, Object key) throws CacheException {
 	}
 
 	@Override
-	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) {
+	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
 		return false;
 	}
 
 	@Override
-	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
+	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
 		return false;
 	}
 }

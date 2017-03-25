@@ -103,7 +103,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 		}
 
 		// method should have arguments, and have same number as incoming arguments
-		if ( ! ( method.getParameterTypes().length > 0 && args.length == method.getParameterTypes().length ) ) {
+		if ( ! ( method.getParameterCount() > 0 && args.length == method.getParameterCount() ) ) {
 			return false;
 		}
 
@@ -125,14 +125,14 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 	 * @throws NoSuchMethodException Should never happen, but...
 	 */
 	private Method locateCorrespondingColumnIndexMethod(Method columnNameMethod) throws NoSuchMethodException {
-		final Class[] actualParameterTypes = new Class[columnNameMethod.getParameterTypes().length];
+		final Class[] actualParameterTypes = new Class[columnNameMethod.getParameterCount()];
 		actualParameterTypes[0] = int.class;
 		System.arraycopy(
 				columnNameMethod.getParameterTypes(),
 				1,
 				actualParameterTypes,
 				1,
-				columnNameMethod.getParameterTypes().length - 1
+				columnNameMethod.getParameterCount() - 1
 		);
 		return columnNameMethod.getDeclaringClass().getMethod( columnNameMethod.getName(), actualParameterTypes );
 	}

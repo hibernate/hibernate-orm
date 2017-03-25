@@ -55,10 +55,9 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 
 	@Override
 	public boolean canBeRemapped() {
-		// todo : consider the ramifications of this.
-		// certainly we need to account for the remapping of the delegate sql-type, but is it really valid to
-		// allow remapping of the converter sql-type?
-		return delegate.canBeRemapped();
+		// any remapping of the underlying SqlTypeDescriptor should have
+		// happened prior to it being passed to us.
+		return false;
 	}
 
 

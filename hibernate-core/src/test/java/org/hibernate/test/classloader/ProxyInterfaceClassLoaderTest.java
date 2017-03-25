@@ -56,7 +56,7 @@ public class ProxyInterfaceClassLoaderTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	interface IPerson {
+	public interface IPerson {
 
 		int getId();
 

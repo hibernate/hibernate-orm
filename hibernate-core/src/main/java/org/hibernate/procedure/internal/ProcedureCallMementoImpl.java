@@ -11,9 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.ParameterMode;
 
-import org.hibernate.Session;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
@@ -62,12 +61,7 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 	}
 
 	@Override
-	public ProcedureCall makeProcedureCall(Session session) {
-		return new ProcedureCallImpl( (SessionImplementor) session, this );
-	}
-
-	@Override
-	public ProcedureCall makeProcedureCall(SessionImplementor session) {
+	public ProcedureCall makeProcedureCall(SharedSessionContractImplementor session) {
 		return new ProcedureCallImpl( session, this );
 	}
 

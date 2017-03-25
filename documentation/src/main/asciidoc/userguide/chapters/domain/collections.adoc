@@ -427,7 +427,7 @@ include::{sourcedir}/BidirectionalSetTest.java[tags=collections-bidirectional-se
 ==== Sorted sets
 
 For sorted sets, the entity mapping must use the `SortedSet` interface instead.
-According to the `SortedSet` contract, all elements must implement the comparable interface and therefore provide the sorting logic.
+According to the `SortedSet` contract, all elements must implement the `Comparable` interface and therefore provide the sorting logic.
 
 [[collections-unidirectional-sorted-set]]
 ===== Unidirectional sorted sets
@@ -544,7 +544,7 @@ include::{extrasdir}/collections-map-unidirectional-example.sql[]
 [[collections-map-bidirectional]]
 ===== Bidirectional maps
 
-Like most bidirectional associations, this relationship is owned by the child-side while the parent is the inverse side abd can propagate its own state transitions to the child entities.
+Like most bidirectional associations, this relationship is owned by the child-side while the parent is the inverse side and can propagate its own state transitions to the child entities.
 In the following example, you can see that `@MapKeyEnumerated` was used so that the `Phone` enumeration becomes the map key.
 
 [[collections-map-bidirectional-example]]
@@ -626,3 +626,46 @@ include::{extrasdir}/collections-comma-delimited-collection-lifecycle-example.sq
 ====
 
 See the Hibernate Integrations Guide for more details on developing custom value type mappings.
+
+[[collections-custom]]
+==== Custom collection types
+
+If you wish to use other collection types than `List`, `Set` or `Map`, like `Queue` for instance,
+you have to use a custom collection type, as illustrated by the following example:
+
+[[collections-custom-collection-mapping-example]]
+.Custom collection mapping example
+====
+[source,java]
+----
+include::{sourcedir}/QueueTest.java[tags=collections-custom-collection-mapping-example,indent=0]
+
+include::{sourcedir}/type/QueueType.java[tags=collections-custom-collection-mapping-example,indent=0]
+
+include::{sourcedir}/type/PersistentQueue.java[tags=collections-custom-collection-mapping-example,indent=0]
+----
+====
+
+[NOTE]
+====
+The reason why the `Queue` interface is not used for the entity attribute is because Hibernate only allows the following types:
+
+- `java.util.List`
+- `java.util.Set`
+- `java.util.Map`
+- `java.util.SortedSet`
+- `java.util.SortedMap`
+
+However, the custom collection type can still be customized as long as the base type is one of the aformentioned persistent types.
+====
+
+This way, the `Phone` collection can be used as a `java.util.Queue`:
+
+[[collections-custom-collection-example]]
+.Custom collection example
+====
+[source,java]
+----
+include::{sourcedir}/QueueTest.java[tags=collections-custom-collection-example,indent=0]
+----
+====

@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.immutable.entitywithmutablecollection;
+import javax.persistence.PersistenceException;
 import java.util.Iterator;
 
 import org.junit.Test;
@@ -21,6 +22,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -860,7 +862,8 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 			s.merge( pOrig );
 			assertFalse( isContractVersioned );
 		}
-		catch (StaleObjectStateException ex) {
+		catch (PersistenceException ex) {
+			assertTyping(StaleObjectStateException.class, ex.getCause());
 			assertTrue( isContractVersioned);
 		}
 		finally {
@@ -918,11 +921,14 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 			t.commit();
 			assertFalse( isContractVersioned );
 		}
-		catch (StaleStateException ex) {
+		catch (PersistenceException ex) {
 			t.rollback();
 			assertTrue( isContractVersioned );
-			if ( ! sessionFactory().getSessionFactoryOptions().isJdbcBatchVersionedData() ) {
-				assertTrue( StaleObjectStateException.class.isInstance( ex ) );
+			if ( !sessionFactory().getSessionFactoryOptions().isJdbcBatchVersionedData() ) {
+				assertTyping( StaleObjectStateException.class, ex.getCause() );
+			}
+			else {
+				assertTyping( StaleStateException.class, ex.getCause() );
 			}
 		}
 		s.close();

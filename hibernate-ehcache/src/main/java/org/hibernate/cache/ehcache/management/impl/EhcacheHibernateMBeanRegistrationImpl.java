@@ -88,7 +88,7 @@ public class EhcacheHibernateMBeanRegistrationImpl
 		} while ( tries < MAX_MBEAN_REGISTRATION_RETRIES );
 		if ( !success ) {
 			throw new Exception(
-					"Cannot register mbean for CacheManager with name" + manager.getName() + " after "
+					"Cannot register mbean for CacheManager with name" + manager.getName() + " afterQuery "
 							+ MAX_MBEAN_REGISTRATION_RETRIES + " retries. Last tried name=" + registeredCacheManagerName,
 					exception
 			);

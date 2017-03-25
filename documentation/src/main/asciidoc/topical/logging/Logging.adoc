@@ -58,7 +58,7 @@ JDK Logging would be used if none of the other framework jars are available.
 == Log Categories of Interest
 
 It is recommended that you familiarize yourself with the log messages sent from Hibernate.  A lot of work has been put
-into making the Hibernate loggiong as detailed as possible, without making it unreadable.  It is an essential
+into making the Hibernate logging as detailed as possible, without making it unreadable.  It is an essential
 troubleshooting device.  Some log categories of particular interest include:
 
 .Hibernate Log Categories of Interest

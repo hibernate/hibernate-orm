@@ -14,11 +14,8 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.EqualsHelper;
-
-import org.dom4j.Element;
-import org.dom4j.Node;
 
 /**
  * Abstract superclass of the built in Type hierarchy.
@@ -49,7 +46,7 @@ public abstract class AbstractType implements Type {
 		return ( (Comparable) x ).compareTo(y);
 	}
 
-	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException {
 
 		if (value==null) {
@@ -60,7 +57,7 @@ public abstract class AbstractType implements Type {
 		}
 	}
 
-	public Object assemble(Serializable cached, SessionImplementor session, Object owner)
+	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException {
 		if ( cached==null ) {
 			return null;
@@ -70,14 +67,14 @@ public abstract class AbstractType implements Type {
 		}
 	}
 
-	public boolean isDirty(Object old, Object current, SessionImplementor session) throws HibernateException {
+	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) throws HibernateException {
 		return !isSame( old, current );
 	}
 
 	public Object hydrate(
 		ResultSet rs,
 		String[] names,
-		SessionImplementor session,
+		SharedSessionContractImplementor session,
 		Object owner)
 	throws HibernateException, SQLException {
 		// TODO: this is very suboptimal for some subclasses (namely components),
@@ -85,12 +82,12 @@ public abstract class AbstractType implements Type {
 		return nullSafeGet(rs, names, session, owner);
 	}
 
-	public Object resolve(Object value, SessionImplementor session, Object owner)
+	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
 	throws HibernateException {
 		return value;
 	}
 
-	public Object semiResolve(Object value, SessionImplementor session, Object owner) 
+	public Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner) 
 	throws HibernateException {
 		return value;
 	}
@@ -99,7 +96,7 @@ public abstract class AbstractType implements Type {
 		return false;
 	}
 
-	public boolean isModified(Object old, Object current, boolean[] checkable, SessionImplementor session)
+	public boolean isModified(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session)
 	throws HibernateException {
 		return isDirty(old, current, session);
 	}
@@ -131,7 +128,7 @@ public abstract class AbstractType implements Type {
 	public Object replace(
 			Object original, 
 			Object target, 
-			SessionImplementor session, 
+			SharedSessionContractImplementor session, 
 			Object owner, 
 			Map copyCache, 
 			ForeignKeyDirection foreignKeyDirection) 
@@ -147,9 +144,9 @@ public abstract class AbstractType implements Type {
 		return include ? replace(original, target, session, owner, copyCache) : target;
 	}
 
-	public void beforeAssemble(Serializable cached, SessionImplementor session) {}
+	public void beforeAssemble(Serializable cached, SharedSessionContractImplementor session) {}
 
-	/*public Object copy(Object original, Object target, SessionImplementor session, Object owner, Map copyCache)
+	/*public Object copy(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map copyCache)
 	throws HibernateException {
 		if (original==null) return null;
 		return assemble( disassemble(original, session), session, owner );

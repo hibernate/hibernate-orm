@@ -55,6 +55,12 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	}
 
 	@Override
+	public SharedSessionBuilder connectionHandlingMode() {
+		delegate.connectionHandlingMode();
+		return this;
+	}
+
+	@Override
 	public SharedSessionBuilder autoJoinTransactions() {
 		delegate.autoJoinTransactions();
 		return this;
@@ -69,12 +75,6 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	@Override
 	public SharedSessionBuilder flushBeforeCompletion() {
 		delegate.flushBeforeCompletion();
-		return this;
-	}
-
-	@Override
-	public SharedSessionBuilder transactionContext() {
-		delegate.transactionContext();
 		return this;
 	}
 

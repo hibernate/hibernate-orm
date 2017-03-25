@@ -123,7 +123,7 @@ public class TestClassMetadata {
 	}
 
 	private void validateCallbackMethod(Method method, CallbackType type, List<Throwable> errors) {
-		if ( method.getParameterTypes().length > 0 ) {
+		if ( method.getParameterCount() > 0 ) {
 			errors.add(
 					new InvalidMethodForAnnotationException(
 							type.buildTypeMarker() + " callback only valid on no-arg methods : "
@@ -210,7 +210,7 @@ public class TestClassMetadata {
 	public void performAfterClassCallbacks(Object target) {
 		performCallbacks( afterClassOnceMethods, target );
 		if ( SessionFactoryRegistry.INSTANCE.hasRegistrations() ) {
-			log.warnf( "Open SessionFactory instances found after completion of test class [%s]; closing them", testClass.getName() );
+			log.warnf( "Open SessionFactory instances found afterQuery completion of test class [%s]; closing them", testClass.getName() );
 			SessionFactoryRegistry.INSTANCE.clearRegistrations();
 		}
 	}

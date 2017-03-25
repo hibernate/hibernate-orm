@@ -58,7 +58,7 @@ import org.jboss.logging.Logger;
  */
 class TypeSafeActivator {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TypeSafeActivator.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TypeSafeActivator.class.getName());
 
 	private static final String FACTORY_PROPERTY = "javax.persistence.validation.factory";
 
@@ -264,12 +264,14 @@ class TypeSafeActivator {
 			applyLength( property, descriptor, propertyDesc );
 
 			// pass an empty set as composing constraints inherit the main constraint and thus are matching already
-			hasNotNull = hasNotNull || applyConstraints(
+			boolean hasNotNullFromComposingConstraints = applyConstraints(
 					descriptor.getComposingConstraints(),
 					property, propertyDesc, null,
 					canApplyNotNull,
-                    dialect
+					dialect
 			);
+
+			hasNotNull = hasNotNull || hasNotNullFromComposingConstraints;
 		}
 		return hasNotNull;
 	}

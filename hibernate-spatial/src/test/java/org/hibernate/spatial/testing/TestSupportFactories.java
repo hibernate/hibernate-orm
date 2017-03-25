@@ -8,6 +8,8 @@
 package org.hibernate.spatial.testing;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.testing.dialects.h2geodb.GeoDBTestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQL56TestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQLTestSupport;
@@ -51,7 +53,9 @@ public class TestSupportFactories {
 
 	private static Class<? extends TestSupport> getSupportFactoryClass(Dialect dialect) {
 		String canonicalName = dialect.getClass().getCanonicalName();
-		if ( "org.hibernate.spatial.dialect.postgis.PostgisDialect".equals( canonicalName ) ) {
+
+		if ( (dialect instanceof SpatialDialect) && PostgreSQL82Dialect.class.isAssignableFrom( dialect.getClass() ) ) {
+			//this test works because all postgis dialects ultimately derive of the Postgresql82Dialect
 			return PostgisTestSupport.class;
 		}
 		if ( "org.hibernate.spatial.dialect.h2geodb.GeoDBDialect".equals( canonicalName ) ) {
@@ -64,15 +68,15 @@ public class TestSupportFactories {
 				"org.hibernate.spatial.dialect.mysql.MySQL5InnoDBSpatialDialect".equals( canonicalName ) ) {
 			return MySQLTestSupport.class;
 		}
-		if ( "org.hibernate.spatial.dialect.mysql.MySQLSpatial56Dialect".equals( canonicalName ) ||
+		if ( "org.hibernate.spatial.dialect.mysql.MySQL56SpatialDialect".equals( canonicalName ) ||
 				"org.hibernate.spatial.dialect.mysql.MySQL56InnoDBSpatialDialect".equals( canonicalName ) ) {
 			return MySQL56TestSupport.class;
 		}
-		if ( "org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect".equals( canonicalName ) ) {
+		if ( "org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect".equals( canonicalName ) ||
+				"org.hibernate.spatial.dialect.oracle.OracleSpatialSDO10gDialect".equals( canonicalName )) {
 			return OracleSDOTestSupport.class;
 		}
 		throw new IllegalArgumentException( "Dialect not known in test suite" );
 	}
 
 }
-

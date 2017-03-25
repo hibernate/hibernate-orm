@@ -7,8 +7,8 @@
 package org.hibernate.boot.internal;
 
 import java.util.Map;
+import java.util.TimeZone;
 
-import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -45,12 +45,18 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final Object validatorFactoryReference;
 
 	// SessionFactory behavior
+	private boolean jpaBootstrap;
 	private final String sessionFactoryName;
 	private final boolean sessionFactoryNameAlsoJndiName;
 
 	// Session behavior
 	private final boolean flushBeforeCompletionEnabled;
 	private final boolean autoCloseSessionEnabled;
+	private boolean jtaTransactionAccessEnabled;
+	private boolean allowRefreshDetachedEntity;
+
+	private boolean allowOutOfTransactionUpdateOperations;
+	private boolean releaseResourcesOnCloseEnabled;
 
 	// transaction handling
 	private final boolean jtaTrackByThread;
@@ -59,6 +65,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	// Statistics/Interceptor/observers
 	private final boolean statisticsEnabled;
 	private final Interceptor interceptor;
+	private Class<? extends Interceptor> statelessInterceptorClass;
 	private final StatementInspector statementInspector;
 	private final SessionFactoryObserver[] sessionFactoryObserverList;
 	private final BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;	// not exposed on builder atm
@@ -89,7 +96,9 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final Map querySubstitutions;
 	private final boolean strictJpaQueryLanguageCompliance;
 	private final boolean namedQueryStartupCheckingEnabled;
+	private final boolean conventionalJavaConstants;
 	private final boolean procedureParameterNullPassingEnabled;
+	private final boolean collectionJoinSubqueryRewriteEnabled;
 
 	// Caching
 	private final boolean secondLevelCacheEnabled;
@@ -113,6 +122,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean commentsEnabled;
 	private final PhysicalConnectionHandlingMode physicalConnectionHandlingMode;
 	private final boolean wrapResultSetsEnabled;
+	private final TimeZone jdbcTimeZone;
 
 	private final Map<String, SQLFunction> sqlFunctions;
 
@@ -122,17 +132,23 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.beanManagerReference = state.getBeanManagerReference();
 		this.validatorFactoryReference = state.getValidatorFactoryReference();
 
+		this.jpaBootstrap = state.isJpaBootstrap();
+		this.jtaTransactionAccessEnabled = state.isJtaTransactionAccessEnabled();
+		this.allowRefreshDetachedEntity = state.isAllowRefreshDetachedEntity();
+		this.allowOutOfTransactionUpdateOperations = state.isAllowOutOfTransactionUpdateOperations();
 		this.sessionFactoryName = state.getSessionFactoryName();
 		this.sessionFactoryNameAlsoJndiName = state.isSessionFactoryNameAlsoJndiName();
 
 		this.flushBeforeCompletionEnabled = state.isFlushBeforeCompletionEnabled();
 		this.autoCloseSessionEnabled = state.isAutoCloseSessionEnabled();
+		this.releaseResourcesOnCloseEnabled = state.isReleaseResourcesOnCloseEnabled();
 
 		this.jtaTrackByThread = state.isJtaTrackByThread();
 		this.preferUserTransaction = state.isPreferUserTransaction();
 
 		this.statisticsEnabled = state.isStatisticsEnabled();
 		this.interceptor = state.getInterceptor();
+		this.statelessInterceptorClass = state.getStatelessInterceptorImplementor();
 		this.statementInspector = state.getStatementInspector();
 		this.sessionFactoryObserverList = state.getSessionFactoryObservers();
 		this.baselineSessionEventsListenerBuilder = state.getBaselineSessionEventsListenerBuilder();
@@ -160,7 +176,9 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.querySubstitutions = state.getQuerySubstitutions();
 		this.strictJpaQueryLanguageCompliance = state.isStrictJpaQueryLanguageCompliance();
 		this.namedQueryStartupCheckingEnabled = state.isNamedQueryStartupCheckingEnabled();
+		this.conventionalJavaConstants = state.isConventionalJavaConstants();
 		this.procedureParameterNullPassingEnabled = state.isProcedureParameterNullPassingEnabled();
+		this.collectionJoinSubqueryRewriteEnabled = state.isCollectionJoinSubqueryRewriteEnabled();
 
 		this.secondLevelCacheEnabled = state.isSecondLevelCacheEnabled();
 		this.queryCacheEnabled = state.isQueryCacheEnabled();
@@ -182,11 +200,28 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.commentsEnabled = state.isCommentsEnabled();
 
 		this.sqlFunctions = state.getCustomSqlFunctionMap();
+
+		this.jdbcTimeZone = state.getJdbcTimeZone();
 	}
 
 	@Override
 	public StandardServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
+	}
+
+	@Override
+	public boolean isJpaBootstrap() {
+		return jpaBootstrap;
+	}
+
+	@Override
+	public boolean isJtaTransactionAccessEnabled() {
+		return jtaTransactionAccessEnabled;
+	}
+
+	@Override
+	public boolean isAllowRefreshDetachedEntity() {
+		return allowRefreshDetachedEntity;
 	}
 
 	@Override
@@ -227,6 +262,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public Interceptor getInterceptor() {
 		return interceptor;
+	}
+
+	@Override
+	public Class<? extends Interceptor> getStatelessInterceptorImplementor() {
+		return statelessInterceptorClass;
 	}
 
 	@Override
@@ -339,8 +379,28 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	}
 
 	@Override
+	public boolean isConventionalJavaConstants() {
+		return conventionalJavaConstants;
+	}
+
+	@Override
 	public boolean isProcedureParameterNullPassingEnabled() {
 		return procedureParameterNullPassingEnabled;
+	}
+
+	@Override
+	public boolean isCollectionJoinSubqueryRewriteEnabled() {
+		return collectionJoinSubqueryRewriteEnabled;
+	}
+
+	@Override
+	public boolean isAllowOutOfTransactionUpdateOperations() {
+		return allowOutOfTransactionUpdateOperations;
+	}
+
+	@Override
+	public boolean isReleaseResourcesOnCloseEnabled() {
+		return releaseResourcesOnCloseEnabled;
 	}
 
 	@Override
@@ -461,5 +521,10 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public boolean isPreferUserTransaction() {
 		return preferUserTransaction;
+	}
+
+	@Override
+	public TimeZone getJdbcTimeZone() {
+		return jdbcTimeZone;
 	}
 }

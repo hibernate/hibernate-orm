@@ -25,6 +25,7 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 /**
  * XaResourceCapableTransactionImpl.
@@ -41,6 +42,7 @@ public class XaTransactionImpl implements Transaction {
    private final XaTransactionManagerImpl jtaTransactionManager;
    private List<XAResource> enlistedResources = new ArrayList<XAResource>();
    private Xid xid = new XaResourceCapableTransactionXid();
+   private ConnectionProvider connectionProvider;
 
    public XaTransactionImpl(XaTransactionManagerImpl jtaTransactionManager) {
       this.jtaTransactionManager = jtaTransactionManager;
@@ -84,7 +86,8 @@ public class XaTransactionImpl implements Transaction {
          if (connection != null) {
             try {
                connection.commit();
-               connection.close();
+               connectionProvider.closeConnection(connection);
+               connection = null;
             } catch (SQLException sqle) {
                status = Status.STATUS_UNKNOWN;
                throw new SystemException();
@@ -147,11 +150,12 @@ public class XaTransactionImpl implements Transaction {
       synchronizations.add(synchronization);
    }
 
-   public void enlistConnection(Connection connection) {
+   public void enlistConnection(Connection connection, ConnectionProvider connectionProvider) {
       if (this.connection != null) {
          throw new IllegalStateException("Connection already registered");
       }
       this.connection = connection;
+      this.connectionProvider = connectionProvider;
    }
 
    public Connection getEnlistedConnection() {

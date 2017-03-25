@@ -95,9 +95,16 @@ public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> {
 			return isTrue( (Character) value ) ? TRUE : FALSE;
 		}
 		if ( String.class.isInstance( value ) ) {
-			return isTrue( ( (String) value ).charAt( 0 ) ) ? TRUE : FALSE;
+			return isTrue((String) value) ? TRUE : FALSE;
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	private boolean isTrue(String strValue) {
+		if (strValue != null && !strValue.isEmpty()) {
+			return isTrue(strValue.charAt(0));
+		}
+		return false;
 	}
 
 	private boolean isTrue(char charValue) {

@@ -96,18 +96,23 @@ Hibernate always uses the locking mechanism of the database, and never lock obje
 ====
 
 [[locking-LockMode]]
-=== The `LockMode` class
+=== `LockMode` and `LockModeType`
 
-The `LockMode` class defines the different lock levels that Hibernate can acquire.
+Long before JPA 1.0, Hibernate already defined various explicit locking strategies through its `LockMode` enumeration.
+JPA comes with its own http://docs.oracle.com/javaee/7/api/javax/persistence/LockModeType.html[`LockModeType`] enumeration which defines similar strategies as the Hibernate-native `LockMode`.
 
-[cols=",",]
+[cols=",",, options="header"]
 |=======================================================================
-|LockMode.WRITE |acquired automatically when Hibernate updates or inserts a row.
-|LockMode.UPGRADE |acquired upon explicit user request using `SELECT ... FOR UPDATE` on databases which support that syntax.
-|LockMode.UPGRADE_NOWAIT |acquired upon explicit user request using a `SELECT ... FOR UPDATE NOWAIT` in Oracle.
-|LockMode.UPGRADE_SKIPLOCKED |acquired upon explicit user request using a `SELECT ... FOR UPDATE SKIP LOCKED` in Oracle, or `SELECT ... with (rowlock, updlock, readpast) in SQL Server`.
-|LockMode.READ |acquired automatically when Hibernate reads data under Repeatable Read or Serializable isolation level. It can be re-acquired by explicit user request.
-|LockMode.NONE |The absence of a lock. All objects switch to this lock mode at the end of a Transaction. Objects associated with the session via a call to update() or saveOrUpdate() also start out in this lock mode.
+|`LockModeType`|`LockMode`|Description
+
+|`NONE`|`NONE` |The absence of a lock. All objects switch to this lock mode at the end of a Transaction. Objects associated with the session via a call to `update()` or `saveOrUpdate()` also start out in this lock mode.
+|`READ` and `OPTIMISTIC`|`READ` | The entity version is checked towards the end of the currently running transaction.
+|`WRITE` and `OPTIMISTIC_FORCE_INCREMENT`|`WRITE` | The entity version is incremented automatically even if the entity has not changed.
+|`PESSIMISTIC_FORCE_INCREMENT`|`PESSIMISTIC_FORCE_INCREMENT` | The entity is locked pessimistically and its version is incremented automatically even if the entity has not changed.
+|`PESSIMISTIC_READ`|`PESSIMISTIC_READ` | The entity is locked pessimistically using a shared lock, if the database supports such a feature. Otherwise, an explicit lock is used.
+|`PESSIMISTIC_WRITE`|`PESSIMISTIC_WRITE`, `UPGRADE` | The entity is locked using an explicit lock.
+|`PESSIMISTIC_WRITE` with a `javax.persistence.lock.timeout` setting of 0 |`UPGRADE_NOWAIT` | The lock acquisition request fails fast if the row s already locked.
+|`PESSIMISTIC_WRITE` with a `javax.persistence.lock.timeout` setting of -2 |`UPGRADE_SKIPLOCKED` | The lock acquisition request skips the already locked rows. It uses a `SELECT ... FOR UPDATE SKIP LOCKED` in Oracle and PostgreSQL 9.5, or `SELECT ... with (rowlock, updlock, readpast) in SQL Server`.
 |=======================================================================
 
 The explicit user request mentioned above occurs as a consequence of any of the following actions:
@@ -182,3 +187,75 @@ include::{sourcedir}/ExplicitLockingTest.java[tags=locking-buildLockRequest-exam
 include::{extrasdir}/locking-buildLockRequest-example.sql[]
 ----
 ====
+
+[[locking-follow-on]]
+=== Follow-on-locking
+
+When using Oracle, the https://docs.oracle.com/database/121/SQLRF/statements_10002.htm#SQLRF55371[`FOR UPDATE` exclusive locking clause] cannot be used with:
+
+- `DISTINCT`
+- `GROUP BY`
+- `UNION`
+- inlined views (derived tables), therefore, affecting the legacy Oracle pagination mechanism as well.
+
+For this reason, Hibernate uses secondary selects to lock the previously fetched entities.
+
+[[locking-follow-on-example]]
+.Follow-on-locking example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ExplicitLockingTest.java[tags=locking-follow-on-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/locking-follow-on-example.sql[]
+----
+====
+
+[NOTE]
+====
+To avoid the N+1 query problem, a separate query can be used to apply the lock using the associated entity identifiers.
+====
+
+[[locking-follow-on-secondary-query-example]]
+.Secondary query entity locking
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ExplicitLockingTest.java[tags=locking-follow-on-secondary-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/locking-follow-on-secondary-query-example.sql[]
+----
+====
+
+The lock request was moved from the original query to a secondary one which takes the previously fetched entities to lock their associated database records.
+
+Prior to Hibernate 5.2.1, the the follow-on-locking mechanism was applied uniformly to any locking query executing on Oracle.
+Since 5.2.1, the Oracle Dialect tries to figure out if the current query demand the follow-on-locking mechanism.
+
+Even more important is that you can overrule the default follow-on-locking detection logic and explicitly enable or disable it on a per query basis.
+
+[[locking-follow-on-explicit-example]]
+.Disabling the follow-on-locking mechanism explicitly
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ExplicitLockingTest.java[tags=locking-follow-on-explicit-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/locking-follow-on-explicit-example.sql[]
+----
+====
+
+[NOTE]
+====
+The follow-on-locking mechanism should be explicitly enabled only if the current executing query fails because the `FOR UPDATE` clause cannot be applied, meaning that the Dialect resolving mechanism needs to be further improved.
+====
+

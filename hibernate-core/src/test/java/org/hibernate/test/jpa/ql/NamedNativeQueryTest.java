@@ -6,10 +6,6 @@
  */
 package org.hibernate.test.jpa.ql;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -18,10 +14,14 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
+
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Janario Oliveira
@@ -139,10 +139,8 @@ public class NamedNativeQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialects( {
-		@SkipForDialect( value = MySQLDialect.class, comment = "MySQL appears to have trouble with fe.id selected twice in one statement"),
-		@SkipForDialect( value = SQLServerDialect.class, comment = "SQL Server does not support the || operator.")
-	} )
+	@SkipForDialect( value = MySQLDialect.class, comment = "MySQL appears to have trouble with fe.id selected twice in one statement")
+	@SkipForDialect( value = SQLServerDialect.class, comment = "SQL Server does not support the || operator.")
 	// TODO: Re-form DestinationEntity.insertSelect to something more supported?
 	public void testInsertMultipleValues() {
 		final String name = "Name";

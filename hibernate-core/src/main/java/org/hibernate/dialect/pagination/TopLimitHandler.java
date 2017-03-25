@@ -7,6 +7,7 @@
 package org.hibernate.dialect.pagination;
 
 import java.util.Locale;
+
 import org.hibernate.engine.spi.RowSelection;
 
 
@@ -53,9 +54,16 @@ public class TopLimitHandler extends AbstractLimitHandler {
 		final int selectDistinctIndex = sql.toLowerCase(Locale.ROOT).indexOf( "select distinct" );
 		final int insertionPoint = selectIndex + (selectDistinctIndex == selectIndex ? 15 : 6);
 
-		return new StringBuilder( sql.length() + 8 )
-				.append( sql )
-				.insert( insertionPoint, " TOP ? " )
-				.toString();
+		StringBuilder sb = new StringBuilder( sql.length() + 8 )
+				.append( sql );
+		
+		if ( supportsVariableLimit ) {
+			sb.insert( insertionPoint, " TOP ? " );
+		}
+		else {
+			sb.insert( insertionPoint, " TOP " + getMaxOrLimit( selection ) + " " );
+		}
+		
+		return sb.toString();
 	}
 }

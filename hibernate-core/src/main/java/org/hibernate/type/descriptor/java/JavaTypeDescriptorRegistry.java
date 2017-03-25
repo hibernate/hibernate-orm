@@ -11,6 +11,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 import org.jboss.logging.Logger;
@@ -21,11 +25,11 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class JavaTypeDescriptorRegistry {
-	private static final Logger log = Logger.getLogger( JavaTypeDescriptorRegistry.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( JavaTypeDescriptorRegistry.class );
 
 	public static final JavaTypeDescriptorRegistry INSTANCE = new JavaTypeDescriptorRegistry();
 
-	private ConcurrentHashMap<Class,JavaTypeDescriptor> descriptorsByClass = new ConcurrentHashMap<Class, JavaTypeDescriptor>();
+	private ConcurrentHashMap<Class,JavaTypeDescriptor> descriptorsByClass = new ConcurrentHashMap<>();
 
 	public JavaTypeDescriptorRegistry() {
 		addDescriptorInternal( ByteTypeDescriptor.INSTANCE );
@@ -111,10 +115,6 @@ public class JavaTypeDescriptorRegistry {
 			return descriptor;
 		}
 
-		if ( Serializable.class.isAssignableFrom( cls ) ) {
-			return new SerializableTypeDescriptor( cls );
-		}
-
 		// find the first "assignable" match
 		for ( Map.Entry<Class,JavaTypeDescriptor> entry : descriptorsByClass.entrySet() ) {
 			if ( entry.getKey().isAssignableFrom( cls ) ) {
@@ -123,26 +123,49 @@ public class JavaTypeDescriptorRegistry {
 			}
 		}
 
-		log.warnf( "Could not find matching type descriptor for requested Java class [%s]; using fallback", cls.getName() );
+		if ( Serializable.class.isAssignableFrom( cls ) ) {
+			return new SerializableTypeDescriptor( cls );
+		}
+
+		log.debugf(
+				"Could not find matching JavaTypeDescriptor for requested Java class [%s]; using fallback.  " +
+						"This means Hibernate does not know how to perform certain basic operations in relation to this Java type." +
+						"",
+				cls.getName()
+		);
+		checkEqualsAndHashCode( cls );
+
 		return new FallbackJavaTypeDescriptor<T>( cls );
+	}
+
+	@SuppressWarnings("unchecked")
+	private void checkEqualsAndHashCode(Class javaType) {
+		if ( !ReflectHelper.overridesEquals( javaType ) || !ReflectHelper.overridesHashCode( javaType ) ) {
+			log.unknownJavaTypeNoEqualsHashCode( javaType );
+		}
 	}
 
 
 	public static class FallbackJavaTypeDescriptor<T> extends AbstractTypeDescriptor<T> {
-		@SuppressWarnings("unchecked")
 		protected FallbackJavaTypeDescriptor(final Class<T> type) {
+			super(type, createMutabilityPlan(type));
+		}
+
+		@SuppressWarnings("unchecked")
+		private static <T> MutabilityPlan<T> createMutabilityPlan(final Class<T> type) {
+			if ( type.isAnnotationPresent( Immutable.class ) ) {
+				return ImmutableMutabilityPlan.INSTANCE;
+			}
 			// MutableMutabilityPlan is the "safest" option, but we do not necessarily know how to deepCopy etc...
-			super(
-					type,
-					new MutableMutabilityPlan<T>() {
-						@Override
-						protected T deepCopyNotNull(T value) {
-							throw new HibernateException(
-									"Not known how to deep copy value of type: [" + type.getName() + "]"
-							);
-						}
-					}
-			);
+			return new MutableMutabilityPlan<T>() {
+				@Override
+				protected T deepCopyNotNull(T value) {
+					throw new HibernateException(
+							"Not known how to deep copy value of type: [" + type
+									.getName() + "]"
+					);
+				}
+			};
 		}
 
 		@Override

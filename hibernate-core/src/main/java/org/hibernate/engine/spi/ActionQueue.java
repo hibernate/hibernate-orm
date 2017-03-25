@@ -10,11 +10,14 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -41,8 +44,13 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.EntityType;
+import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
 /**
@@ -61,6 +69,9 @@ public class ActionQueue {
 	private SessionImplementor session;
 
 	private UnresolvedEntityInsertActions unresolvedInsertions;
+
+	// NOTE: ExecutableList fields must be instantiated via ListProvider#init or #getOrInit
+	//       to ensure that they are instantiated consistently.
 
 	// Object insertions, updates, and deletions have list semantics because
 	// they must happen in the right order so as to respect referential
@@ -88,84 +99,121 @@ public class ActionQueue {
 	private BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
 
 	/**
-	 * An array containing providers for all the ExecutableLists in execution order
+	 * An LinkedHashMap containing providers for all the ExecutableLists, inserted in execution order
 	 */
-	private static final ListProvider[] EXECUTABLE_LISTS;
-
+	private static final LinkedHashMap<Class<? extends Executable>,ListProvider> EXECUTABLE_LISTS_MAP;
 	static {
-		EXECUTABLE_LISTS = new ListProvider[8];
-		EXECUTABLE_LISTS[0] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) {
-				return instance.orphanRemovals;
-			}
+		EXECUTABLE_LISTS_MAP = new LinkedHashMap<Class<? extends Executable>,ListProvider>( 8 );
 
-			ExecutableList<?> init(ActionQueue instance) {
-				return instance.orphanRemovals = new ExecutableList<OrphanRemovalAction>();
-			}
-		};
-		EXECUTABLE_LISTS[1] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) {
-				return instance.insertions;
-			}
-
-			ExecutableList<?> init(ActionQueue instance) {
-				return instance.insertions = new ExecutableList<AbstractEntityInsertAction>( new InsertActionSorter() );
-			}
-		};
-		EXECUTABLE_LISTS[2] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) {
-				return instance.updates;
-			}
-
-			ExecutableList<?> init(ActionQueue instance) {
-				return instance.updates = new ExecutableList<EntityUpdateAction>();
-			}
-		};
-		EXECUTABLE_LISTS[3] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) {
-				return instance.collectionQueuedOps;
-			}
-
-			ExecutableList<?> init(ActionQueue instance) {
-				return instance.collectionQueuedOps = new ExecutableList<QueuedOperationCollectionAction>();
-			}
-		};
-		EXECUTABLE_LISTS[4] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) {
-				return instance.collectionRemovals;
-			}
-
-			ExecutableList<?> init(ActionQueue instance) {
-				return instance.collectionRemovals = new ExecutableList<CollectionRemoveAction>();
-			}
-		};
-		EXECUTABLE_LISTS[5] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) {
-				return instance.collectionUpdates;
-			}
-
-			ExecutableList<?> init(ActionQueue instance) {
-				return instance.collectionUpdates = new ExecutableList<CollectionUpdateAction>();
-			}
-		};
-		EXECUTABLE_LISTS[6] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) {
-				return instance.collectionCreations;
-			}
-
-			ExecutableList<?> init(ActionQueue instance) {
-				return instance.collectionCreations = new ExecutableList<CollectionRecreateAction>();
-			}
-		};
-		EXECUTABLE_LISTS[7] = new ListProvider() {
-			ExecutableList<?> get(ActionQueue instance) {
-				return instance.deletions;
-			}
-
-			ExecutableList<?> init(ActionQueue instance) {
-				return instance.deletions = new ExecutableList<EntityDeleteAction>();
-			}
-		};
+		EXECUTABLE_LISTS_MAP.put(
+				OrphanRemovalAction.class,
+				new ListProvider<OrphanRemovalAction>() {
+					ExecutableList<OrphanRemovalAction> get(ActionQueue instance) {
+						return instance.orphanRemovals;
+					}
+					ExecutableList<OrphanRemovalAction> init(ActionQueue instance) {
+						// OrphanRemovalAction executables never require sorting.
+						return instance.orphanRemovals = new ExecutableList<OrphanRemovalAction>( false );
+					}
+				}
+		);
+		EXECUTABLE_LISTS_MAP.put(
+				AbstractEntityInsertAction.class,
+				new ListProvider<AbstractEntityInsertAction>() {
+					ExecutableList<AbstractEntityInsertAction> get(ActionQueue instance) {
+						return instance.insertions;
+					}
+					ExecutableList<AbstractEntityInsertAction> init(ActionQueue instance) {
+						if ( instance.isOrderInsertsEnabled() ) {
+							return instance.insertions = new ExecutableList<AbstractEntityInsertAction>(
+									new InsertActionSorter()
+							);
+						}
+						else {
+							return instance.insertions = new ExecutableList<AbstractEntityInsertAction>(
+									false
+							);
+						}
+					}
+				}
+		);
+		EXECUTABLE_LISTS_MAP.put(
+				EntityUpdateAction.class,
+				new ListProvider<EntityUpdateAction>() {
+					ExecutableList<EntityUpdateAction> get(ActionQueue instance) {
+						return instance.updates;
+					}
+					ExecutableList<EntityUpdateAction> init(ActionQueue instance) {
+						return instance.updates = new ExecutableList<EntityUpdateAction>(
+								instance.isOrderUpdatesEnabled()
+						);
+					}
+				}
+		);
+		EXECUTABLE_LISTS_MAP.put(
+				QueuedOperationCollectionAction.class,
+				new ListProvider<QueuedOperationCollectionAction>() {
+					ExecutableList<QueuedOperationCollectionAction> get(ActionQueue instance) {
+						return instance.collectionQueuedOps;
+					}
+					ExecutableList<QueuedOperationCollectionAction> init(ActionQueue instance) {
+						return instance.collectionQueuedOps = new ExecutableList<QueuedOperationCollectionAction>(
+								instance.isOrderUpdatesEnabled()
+						);
+					}
+				}
+		);
+		EXECUTABLE_LISTS_MAP.put(
+				CollectionRemoveAction.class,
+				new ListProvider<CollectionRemoveAction>() {
+					ExecutableList<CollectionRemoveAction> get(ActionQueue instance) {
+						return instance.collectionRemovals;
+					}
+					ExecutableList<CollectionRemoveAction> init(ActionQueue instance) {
+						return instance.collectionRemovals = new ExecutableList<CollectionRemoveAction>(
+								instance.isOrderUpdatesEnabled()
+						);
+					}
+				}
+		);
+		EXECUTABLE_LISTS_MAP.put(
+				CollectionUpdateAction.class,
+				new ListProvider<CollectionUpdateAction>() {
+					ExecutableList<CollectionUpdateAction> get(ActionQueue instance) {
+						return instance.collectionUpdates;
+					}
+					ExecutableList<CollectionUpdateAction> init(ActionQueue instance) {
+						return instance.collectionUpdates = new ExecutableList<CollectionUpdateAction>(
+								instance.isOrderUpdatesEnabled()
+						);
+					}
+				}
+		);
+		EXECUTABLE_LISTS_MAP.put(
+				CollectionRecreateAction.class,
+				new ListProvider<CollectionRecreateAction>() {
+					ExecutableList<CollectionRecreateAction> get(ActionQueue instance) {
+						return instance.collectionCreations;
+					}
+					ExecutableList<CollectionRecreateAction> init(ActionQueue instance) {
+						return instance.collectionCreations = new ExecutableList<CollectionRecreateAction>(
+								instance.isOrderUpdatesEnabled()
+						);
+					}
+				}
+		);
+		EXECUTABLE_LISTS_MAP.put(
+				EntityDeleteAction.class,
+				new ListProvider<EntityDeleteAction>() {
+					ExecutableList<EntityDeleteAction> get(ActionQueue instance) {
+						return instance.deletions;
+					}
+					ExecutableList<EntityDeleteAction> init(ActionQueue instance) {
+						// EntityDeleteAction executables never require sorting.
+						return instance.deletions = new ExecutableList<EntityDeleteAction>( false );
+					}
+				}
+		);
 	}
 
 	/**
@@ -179,8 +227,8 @@ public class ActionQueue {
 	}
 
 	public void clear() {
-		for ( int i = 0; i < EXECUTABLE_LISTS.length; ++i ) {
-			ExecutableList<?> l = EXECUTABLE_LISTS[i].get(this);
+		for ( ListProvider listProvider : EXECUTABLE_LISTS_MAP.values() ) {
+			ExecutableList<?> l = listProvider.get( this );
 			if( l != null ) {
 				l.clear();
 			}
@@ -202,9 +250,9 @@ public class ActionQueue {
 
 	private void addInsertAction(AbstractEntityInsertAction insert) {
 		if ( insert.isEarlyInsert() ) {
-			// For early inserts, must execute inserts before finding non-nullable transient entities.
+			// For early inserts, must execute inserts beforeQuery finding non-nullable transient entities.
 			// TODO: find out why this is necessary
-			LOG.tracev( "Executing inserts before finding non-nullable transient entities for early insert: [{0}]", insert );
+			LOG.tracev( "Executing inserts beforeQuery finding non-nullable transient entities for early insert: [{0}]", insert );
 			executeInserts();
 		}
 		NonNullableTransientDependencies nonNullableTransientDependencies = insert.findNonNullableTransientEntities();
@@ -226,17 +274,14 @@ public class ActionQueue {
 
 	private void addResolvedEntityInsertAction(AbstractEntityInsertAction insert) {
 		if ( insert.isEarlyInsert() ) {
-			LOG.trace( "Executing insertions before resolved early-insert" );
+			LOG.trace( "Executing insertions beforeQuery resolved early-insert" );
 			executeInserts();
 			LOG.debug( "Executing identity-insert immediately" );
 			execute( insert );
 		}
 		else {
 			LOG.trace( "Adding resolved non-early insert action." );
-			if( insertions == null ) {
-				insertions = new ExecutableList<AbstractEntityInsertAction>( new InsertActionSorter() );
-			}
-			insertions.add(insert);
+			addAction( AbstractEntityInsertAction.class, insert );
 		}
 		insert.makeEntityManaged();
 		if( unresolvedInsertions != null ) {
@@ -244,6 +289,11 @@ public class ActionQueue {
 				addResolvedEntityInsertAction(resolvedAction);
 			}
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T extends Executable & Comparable & Serializable> void addAction(Class<T> executableClass, T action) {
+		EXECUTABLE_LISTS_MAP.get( executableClass ).getOrInit( this ).add( action );
 	}
 
 	/**
@@ -262,10 +312,7 @@ public class ActionQueue {
 	 * @param action The action representing the entity deletion
 	 */
 	public void addAction(EntityDeleteAction action) {
-		if( deletions == null ) {
-			deletions = new ExecutableList<EntityDeleteAction>();
-		}
-		deletions.add( action );
+		addAction( EntityDeleteAction.class, action );
 	}
 
 	/**
@@ -274,10 +321,7 @@ public class ActionQueue {
 	 * @param action The action representing the orphan removal
 	 */
 	public void addAction(OrphanRemovalAction action) {
-		if( orphanRemovals == null ) {
-			orphanRemovals = new ExecutableList<OrphanRemovalAction>();
-		}
-		orphanRemovals.add( action );
+		addAction( OrphanRemovalAction.class, action );
 	}
 
 	/**
@@ -286,10 +330,7 @@ public class ActionQueue {
 	 * @param action The action representing the entity update
 	 */
 	public void addAction(EntityUpdateAction action) {
-		if( updates == null ) {
-			updates = new ExecutableList<EntityUpdateAction>();
-		}
-		updates.add( action );
+		addAction( EntityUpdateAction.class, action );
 	}
 
 	/**
@@ -298,10 +339,7 @@ public class ActionQueue {
 	 * @param action The action representing the (re)creation of a collection
 	 */
 	public void addAction(CollectionRecreateAction action) {
-		if( collectionCreations == null) {
-			collectionCreations = new ExecutableList<CollectionRecreateAction>();
-		}
-		collectionCreations.add( action );
+		addAction( CollectionRecreateAction.class, action );
 	}
 
 	/**
@@ -310,10 +348,7 @@ public class ActionQueue {
 	 * @param action The action representing the removal of a collection
 	 */
 	public void addAction(CollectionRemoveAction action) {
-		if( collectionRemovals == null ) {
-			collectionRemovals = new ExecutableList<CollectionRemoveAction>();
-		}
-		collectionRemovals.add( action );
+		addAction( CollectionRemoveAction.class, action );
 	}
 
 	/**
@@ -322,10 +357,7 @@ public class ActionQueue {
 	 * @param action The action representing the update of a collection
 	 */
 	public void addAction(CollectionUpdateAction action) {
-		if( collectionUpdates == null ) {
-			collectionUpdates = new ExecutableList<CollectionUpdateAction>();
-		}
-		collectionUpdates.add( action );
+		addAction( CollectionUpdateAction.class, action );
 	}
 
 	/**
@@ -334,10 +366,7 @@ public class ActionQueue {
 	 * @param action The action representing the queued operation
 	 */
 	public void addAction(QueuedOperationCollectionAction action) {
-		if( collectionQueuedOps == null) {
-			collectionQueuedOps = new ExecutableList<QueuedOperationCollectionAction>();
-		}
-		collectionQueuedOps.add( action );
+		addAction( QueuedOperationCollectionAction.class, action );
 	}
 
 	/**
@@ -380,7 +409,7 @@ public class ActionQueue {
 	/**
 	 * Throws {@link org.hibernate.PropertyValueException} if there are any unresolved entity insert actions that depend
 	 * on non-nullable associations with a transient entity. This method should be called on completion of an operation
-	 * (after all cascades are completed) that saves an entity.
+	 * (afterQuery all cascades are completed) that saves an entity.
 	 * 
 	 * @throws org.hibernate.PropertyValueException if there are any unresolved entity insert actions;
 	 * {@link org.hibernate.PropertyValueException#getEntityName()} and
@@ -428,8 +457,8 @@ public class ActionQueue {
 			throw new IllegalStateException( "About to execute actions, but there are unresolved entity insert actions." );
 		}
 
-		for ( int i = 0; i < EXECUTABLE_LISTS.length; ++i ) {
-			ExecutableList<?> l = EXECUTABLE_LISTS[i].get(this);
+		for ( ListProvider listProvider : EXECUTABLE_LISTS_MAP.values() ) {
+			ExecutableList<?> l = listProvider.get( this );
 			if ( l != null && !l.isEmpty() ) {
 				executeActions( l );
 			}
@@ -503,9 +532,9 @@ public class ActionQueue {
 		if ( tables.isEmpty() ) {
 			return false;
 		}
-		for ( int i = 0; i < EXECUTABLE_LISTS.length; ++i ) {
-			ExecutableList<?> l = EXECUTABLE_LISTS[i].get(this);
-			if ( areTablesToBeUpdated(l, tables) ) {
+		for ( ListProvider listProvider : EXECUTABLE_LISTS_MAP.values() ) {
+			ExecutableList<?> l = listProvider.get( this );
+			if ( areTablesToBeUpdated( l, tables ) ) {
 				return true;
 			}
 		}
@@ -578,7 +607,7 @@ public class ActionQueue {
 		finally {
 			if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 				// Strictly speaking, only a subset of the list may have been processed if a RuntimeException occurs.
-				// We still invalidate all spaces. I don't see this as a big deal - after all, RuntimeExceptions are
+				// We still invalidate all spaces. I don't see this as a big deal - afterQuery all, RuntimeExceptions are
 				// unexpected.
 				Set<Serializable> propertySpaces = list.getQuerySpaces();
 				invalidateSpaces( propertySpaces.toArray( new Serializable[propertySpaces.size()] ) );
@@ -708,7 +737,7 @@ public class ActionQueue {
 	}
 
 	public void sortCollectionActions() {
-		if ( session.getFactory().getSessionFactoryOptions().isOrderUpdatesEnabled() ) {
+		if ( isOrderUpdatesEnabled() ) {
 			// sort the updates by fk
 			if( collectionCreations != null ) {
 				collectionCreations.sort();
@@ -726,13 +755,21 @@ public class ActionQueue {
 	}
 
 	public void sortActions() {
-		if ( session.getFactory().getSessionFactoryOptions().isOrderUpdatesEnabled() && updates != null ) {
+		if ( isOrderUpdatesEnabled() && updates != null ) {
 			// sort the updates by pk
 			updates.sort();
 		}
-		if ( session.getFactory().getSessionFactoryOptions().isOrderInsertsEnabled() && insertions != null ) {
+		if ( isOrderInsertsEnabled() && insertions != null ) {
 			insertions.sort();
 		}
+	}
+
+	private boolean isOrderUpdatesEnabled() {
+		return session.getFactory().getSessionFactoryOptions().isOrderUpdatesEnabled();
+	}
+
+	private boolean isOrderInsertsEnabled() {
+		return session.getFactory().getSessionFactoryOptions().isOrderInsertsEnabled();
 	}
 
 	public void clearFromFlushNeededCheck(int previousCollectionRemovalSize) {
@@ -813,7 +850,7 @@ public class ActionQueue {
 		}
 		unresolvedInsertions.serialize( oos );
 
-		for ( ListProvider p : EXECUTABLE_LISTS ) {
+		for ( ListProvider p : EXECUTABLE_LISTS_MAP.values() ) {
 			ExecutableList<?> l = p.get(this);
 			if( l == null ) {
 				oos.writeBoolean(false);
@@ -843,8 +880,7 @@ public class ActionQueue {
 
 		rtn.unresolvedInsertions = UnresolvedEntityInsertActions.deserialize( ois, session );
 
-		for ( int i = 0; i < EXECUTABLE_LISTS.length; ++i ) {
-			ListProvider provider = EXECUTABLE_LISTS[i];
+		for ( ListProvider provider : EXECUTABLE_LISTS_MAP.values() ) {
 			ExecutableList<?> l = provider.get(rtn);
 			boolean notNull = ois.readBoolean();
 			if( notNull ) {
@@ -886,7 +922,7 @@ public class ActionQueue {
 	}
 
 	/**
-	 * Encapsulates behavior needed for before transaction processing
+	 * Encapsulates behavior needed for beforeQuery transaction processing
 	 */
 	private static class BeforeTransactionCompletionProcessQueue extends AbstractTransactionCompletionProcessQueue<BeforeTransactionCompletionProcess> {
 		private BeforeTransactionCompletionProcessQueue(SessionImplementor session) {
@@ -909,7 +945,7 @@ public class ActionQueue {
 	}
 
 	/**
-	 * Encapsulates behavior needed for after transaction processing
+	 * Encapsulates behavior needed for afterQuery transaction processing
 	 */
 	private static class AfterTransactionCompletionProcessQueue extends AbstractTransactionCompletionProcessQueue<AfterTransactionCompletionProcess> {
 		private Set<String> querySpacesToInvalidate = new HashSet<String>();
@@ -979,12 +1015,56 @@ public class ActionQueue {
 		 */
 		public static final InsertActionSorter INSTANCE = new InsertActionSorter();
 
+		private static class BatchIdentifier {
+
+			private final String entityName;
+
+			private Set<String> parentEntityNames = new HashSet<>( );
+
+			private Set<String> childEntityNames = new HashSet<>( );
+
+			public BatchIdentifier(
+					String entityName) {
+				this.entityName = entityName;
+			}
+
+			@Override
+			public boolean equals(Object o) {
+				if ( this == o ) {
+					return true;
+				}
+				if ( !( o instanceof BatchIdentifier ) ) {
+					return false;
+				}
+				BatchIdentifier that = (BatchIdentifier) o;
+				return Objects.equals( entityName, that.entityName );
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash( entityName );
+			}
+
+			public String getEntityName() {
+				return entityName;
+			}
+
+			public Set<String> getParentEntityNames() {
+				return parentEntityNames;
+			}
+
+			public Set<String> getChildEntityNames() {
+				return childEntityNames;
+			}
+		}
+
 		// the mapping of entity names to their latest batch numbers.
-		private Map<String, Integer> latestBatches;
-		private Map<Object, Integer> entityBatchNumber;
+		private List<BatchIdentifier> latestBatches;
+
+		private Map<Object, BatchIdentifier> entityBatchIdentifier;
 
 		// the map of batch numbers to EntityInsertAction lists
-		private Map<Integer, List<AbstractEntityInsertAction>> actionBatches;
+		private Map<BatchIdentifier, List<AbstractEntityInsertAction>> actionBatches;
 
 		public InsertActionSorter() {
 		}
@@ -994,102 +1074,122 @@ public class ActionQueue {
 		 */
 		public void sort(List<AbstractEntityInsertAction> insertions) {
 			// optimize the hash size to eliminate a rehash.
-			this.latestBatches = new HashMap<String, Integer>();
-			this.entityBatchNumber = new HashMap<Object, Integer>( insertions.size() + 1, 1.0f );
-			this.actionBatches = new HashMap<Integer, List<AbstractEntityInsertAction>>();
+			this.latestBatches = new ArrayList<>( );
+			this.entityBatchIdentifier = new HashMap<>( insertions.size() + 1, 1.0f );
+			this.actionBatches = new HashMap<>();
 
-			// the list of entity names that indicate the batch number
 			for ( AbstractEntityInsertAction action : insertions ) {
-				// remove the current element from insertions. It will be added back later.
-				String entityName = action.getEntityName();
+				BatchIdentifier batchIdentifier = new BatchIdentifier( action.getEntityName() );
 
 				// the entity associated with the current action.
 				Object currentEntity = action.getInstance();
+				int index = latestBatches.indexOf( batchIdentifier );
 
-				Integer batchNumber;
-				if ( latestBatches.containsKey( entityName ) ) {
-					// There is already an existing batch for this type of entity.
-					// Check to see if the latest batch is acceptable.
-					batchNumber = findBatchNumber( action, entityName );
+				if ( index != -1 )  {
+					batchIdentifier = latestBatches.get( index );
 				}
 				else {
-					// add an entry for this type of entity.
-					// we can be assured that all referenced entities have already
-					// been processed,
-					// so specify that this entity is with the latest batch.
-					// doing the batch number before adding the name to the list is
-					// a faster way to get an accurate number.
-
-					batchNumber = actionBatches.size();
-					latestBatches.put( entityName, batchNumber );
+					latestBatches.add( batchIdentifier );
 				}
-				entityBatchNumber.put( currentEntity, batchNumber );
-				addToBatch( batchNumber, action );
+				addParentChildEntityNames( action, batchIdentifier );
+				entityBatchIdentifier.put( currentEntity, batchIdentifier );
+				addToBatch(batchIdentifier, action);
 			}
 			insertions.clear();
 
+			for ( int i = 0; i < latestBatches.size(); i++ ) {
+				BatchIdentifier batchIdentifier = latestBatches.get( i );
+				String entityName = batchIdentifier.getEntityName();
+
+				//Make sure that child entries are not before parents
+				for ( int j = i - 1; j >= 0; j-- ) {
+					BatchIdentifier prevBatchIdentifier = latestBatches.get( j );
+					if(prevBatchIdentifier.getParentEntityNames().contains( entityName )) {
+						latestBatches.remove( i );
+						latestBatches.add( j, batchIdentifier );
+					}
+				}
+
+				//Make sure that parent entries are not after children
+				for ( int j = i + 1; j < latestBatches.size(); j++ ) {
+					BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
+					//Take care of unidirectional @OneToOne associations but exclude bidirectional @ManyToMany
+					if(nextBatchIdentifier.getChildEntityNames().contains( entityName ) &&
+						!batchIdentifier.getChildEntityNames().contains( nextBatchIdentifier.getEntityName() )) {
+						latestBatches.remove( i );
+						latestBatches.add( j, batchIdentifier );
+					}
+				}
+			}
+
 			// now rebuild the insertions list. There is a batch for each entry in the name list.
-			for ( int i = 0; i < actionBatches.size(); i++ ) {
-				List<AbstractEntityInsertAction> batch = actionBatches.get( i );
+			for ( BatchIdentifier rootIdentifier : latestBatches ) {
+				List<AbstractEntityInsertAction> batch = actionBatches.get( rootIdentifier );
 				insertions.addAll( batch );
 			}
 		}
 
 		/**
-		 * Finds an acceptable batch for this entity to be a member as part of the {@link InsertActionSorter}
+		 * Add parent and child entity names so that we know how to rearrange dependencies
 		 * 
 		 * @param action The action being sorted
-		 * @param entityName The name of the entity affected by the action
-		 * @return An appropriate batch number; todo document this process better
+		 * @param batchIdentifier The batch identifier of the entity affected by the action
 		 */
-		private Integer findBatchNumber(AbstractEntityInsertAction action, String entityName) {
-			// loop through all the associated entities and make sure they have been
-			// processed before the latest
-			// batch associated with this entity type.
-
-			// the current batch number is the latest batch for this entity type.
-			Integer latestBatchNumberForType = latestBatches.get( entityName );
-
-			// loop through all the associations of the current entity and make sure that they are processed
-			// before the current batch number
+		private void addParentChildEntityNames(AbstractEntityInsertAction action, BatchIdentifier batchIdentifier) {
 			Object[] propertyValues = action.getState();
-			Type[] propertyTypes = action.getPersister().getClassMetadata().getPropertyTypes();
+			ClassMetadata classMetadata = action.getPersister().getClassMetadata();
+			if ( classMetadata != null ) {
+				Type[] propertyTypes = classMetadata.getPropertyTypes();
 
-			for ( int i = 0; i < propertyValues.length; i++ ) {
-				Object value = propertyValues[i];
-				Type type = propertyTypes[i];
-				if ( type.isEntityType() && value != null ) {
-					// find the batch number associated with the current association, if any.
-					Integer associationBatchNumber = entityBatchNumber.get( value );
-					if ( associationBatchNumber != null && associationBatchNumber.compareTo( latestBatchNumberForType ) > 0 ) {
-						// create a new batch for this type. The batch number is the number of current batches.
-						latestBatchNumberForType = actionBatches.size();
-						latestBatches.put( entityName, latestBatchNumberForType );
-						// since this entity will now be processed in the latest possible batch,
-						// we can be assured that it will come after all other associations,
-						// there's not need to continue checking.
-						break;
+				for ( int i = 0; i < propertyValues.length; i++ ) {
+					Object value = propertyValues[i];
+					Type type = propertyTypes[i];
+					if ( type.isEntityType() && value != null ) {
+						EntityType entityType = (EntityType) type;
+						String entityName = entityType.getName();
+
+						if ( entityType.isOneToOne() &&
+								OneToOneType.class.cast( entityType ).getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
+							batchIdentifier.getChildEntityNames().add( entityName );
+						}
+						else {
+							batchIdentifier.getParentEntityNames().add( entityName );
+						}
+					}
+					else if ( type.isCollectionType() && value != null ) {
+						CollectionType collectionType = (CollectionType) type;
+						final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) action.getSession() )
+								.getSessionFactory();
+						if ( collectionType.getElementType( sessionFactory ).isEntityType() ) {
+							String entityName = collectionType.getAssociatedEntityName( sessionFactory );
+							batchIdentifier.getChildEntityNames().add( entityName );
+						}
 					}
 				}
 			}
-			return latestBatchNumberForType;
 		}
 
-		private void addToBatch(Integer batchNumber, AbstractEntityInsertAction action) {
-			List<AbstractEntityInsertAction> actions = actionBatches.get( batchNumber );
+		private void addToBatch(BatchIdentifier batchIdentifier, AbstractEntityInsertAction action) {
+			List<AbstractEntityInsertAction> actions = actionBatches.get( batchIdentifier );
 
 			if ( actions == null ) {
-				actions = new LinkedList<AbstractEntityInsertAction>();
-				actionBatches.put( batchNumber, actions );
+				actions = new LinkedList<>();
+				actionBatches.put( batchIdentifier, actions );
 			}
 			actions.add( action );
 		}
 
 	}
 
-
-	private static abstract class ListProvider {
-		abstract ExecutableList<?> get(ActionQueue instance);
-		abstract ExecutableList<?> init(ActionQueue instance);
+	private static abstract class ListProvider<T extends Executable & Comparable & Serializable> {
+		abstract ExecutableList<T> get(ActionQueue instance);
+		abstract ExecutableList<T> init(ActionQueue instance);
+		ExecutableList<T> getOrInit( ActionQueue instance ) {
+			ExecutableList<T> list = get( instance );
+			if ( list == null ) {
+				list = init( instance );
+			}
+			return list;
+		}
 	}
 }

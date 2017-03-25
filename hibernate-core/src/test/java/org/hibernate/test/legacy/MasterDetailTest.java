@@ -9,11 +9,7 @@ package org.hibernate.test.legacy;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
@@ -21,6 +17,8 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.HSQLDialect;
@@ -52,6 +50,15 @@ public class MasterDetailTest extends LegacyTestCase {
 			"legacy/UpDown.hbm.xml",
 			"legacy/Eye.hbm.xml"
 		};
+	}
+
+	@Override
+	public void configure(Configuration cfg) {
+		super.configure(cfg);
+		Properties props = new Properties();
+		props.put( Environment.ORDER_INSERTS, "true" );
+		props.put( Environment.STATEMENT_BATCH_SIZE, "10" );
+		cfg.addProperties( props );
 	}
 
 	@Test
@@ -972,21 +979,29 @@ public class MasterDetailTest extends LegacyTestCase {
 		Custom c = new Custom();
 		c.setName( "foo" );
 		c.id="100";
-		String id = (String) s.save(c);
-		assertTrue( c==s.load(Custom.class, id) );
+		s.beginTransaction();
+		String id = id = (String) s.save( c );
+		assertTrue( c == s.load( Custom.class, id ) );
 		s.flush();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		c = (Custom) s.load(Custom.class, id);
 		assertTrue( c.getName().equals("foo") );
 		c.setName( "bar" );
 		s.flush();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		c = (Custom) s.load(Custom.class, id);
 		assertTrue( c.getName().equals("bar") );
 		s.delete(c);
 		s.flush();
+		s.getTransaction().commit();
 		s.close();
 		s = openSession();
 		boolean none = false;
@@ -998,7 +1013,6 @@ public class MasterDetailTest extends LegacyTestCase {
 		}
 		assertTrue(none);
 		s.close();
-
 	}
 
 	@Test

@@ -20,16 +20,15 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
-import org.hibernate.tool.schema.internal.exec.JdbcConnectionContextNonSharedImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,10 +62,9 @@ public class TableGeneratorQuotingTest extends BaseUnitTestCase {
 
 		final ConnectionProvider connectionProvider = serviceRegistry.getService( ConnectionProvider.class );
 		final GenerationTarget target = new GenerationTargetToDatabase(
-				new JdbcConnectionContextNonSharedImpl(
-						new JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess( connectionProvider ),
-						serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger(),
-						true
+				new DdlTransactionIsolatorTestingImpl(
+						serviceRegistry,
+						new JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess( connectionProvider )
 				)
 		);
 

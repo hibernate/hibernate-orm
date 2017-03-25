@@ -9,7 +9,7 @@ package org.hibernate.event.spi;
 import java.io.Serializable;
 
 /**
- * Called after recreating a collection
+ * Called afterQuery recreating a collection
  *
  * @author Gail Badner
  */

@@ -9,8 +9,8 @@ package org.hibernate.spatial.testing;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-
 import org.hibernate.service.ServiceRegistry;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 

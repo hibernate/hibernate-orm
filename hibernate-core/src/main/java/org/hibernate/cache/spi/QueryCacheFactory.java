@@ -6,9 +6,7 @@
  */
 package org.hibernate.cache.spi;
 
-import java.util.Properties;
-
-import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.engine.spi.CacheImplementor;
 
 /**
  * Defines a factory for query cache instances.  These factories are responsible for
@@ -20,16 +18,10 @@ public interface QueryCacheFactory {
 	/**
 	 * Builds a named query cache.
 	 *
-	 * @param regionName The cache region name
-	 * @param updateTimestampsCache The cache of timestamp values to use to perform up-to-date checks.
-	 * @param settings The Hibernate SessionFactory settings.
-	 * @param props Any properties.
+	 * @param region The cache region
+	 * @param cacheManager The CacheImplementor reference.
 	 *
 	 * @return The cache.
 	 */
-	public QueryCache getQueryCache(
-			String regionName,
-			UpdateTimestampsCache updateTimestampsCache,
-			SessionFactoryOptions settings,
-			Properties props);
+	QueryCache buildQueryCache(QueryResultsRegion region, CacheImplementor cacheManager);
 }

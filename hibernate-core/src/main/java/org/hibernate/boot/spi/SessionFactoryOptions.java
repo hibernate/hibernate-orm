@@ -7,8 +7,8 @@
 package org.hibernate.boot.spi;
 
 import java.util.Map;
+import java.util.TimeZone;
 
-import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
@@ -49,6 +49,23 @@ public interface SessionFactoryOptions {
 	Object getValidatorFactoryReference();
 
 	/**
+	 * @deprecated (since 5.2) In fact added in 5.2 as part of consolidating JPA support
+	 * directly into Hibernate contracts (SessionFactory, Session); intended to provide
+	 * transition help in cases where we need to know the difference in JPA/native use for
+	 * various reasons.
+	 *
+	 * @see SessionFactoryBuilderImplementor#markAsJpaBootstrap
+	 */
+	@Deprecated
+	boolean isJpaBootstrap();
+
+	boolean isJtaTransactionAccessEnabled();
+
+	default boolean isAllowRefreshDetachedEntity() {
+		return false;
+	}
+
+	/**
 	 * The name to be used for the SessionFactory.  This is use both in:<ul>
 	 *     <li>in-VM serialization</li>
 	 *     <li>JNDI binding, depending on {@link #isSessionFactoryNameAlsoJndiName}</li>
@@ -78,6 +95,13 @@ public interface SessionFactoryOptions {
 	 * @return The interceptor to use factory wide.  May be {@code null}
 	 */
 	Interceptor getInterceptor();
+
+	/**
+	 * Get the interceptor to use by default for all sessions opened from this factory.
+	 *
+	 * @return The interceptor to use factory wide.  May be {@code null}
+	 */
+	Class<? extends Interceptor> getStatelessInterceptorImplementor();
 
 	StatementInspector getStatementInspector();
 
@@ -122,6 +146,8 @@ public interface SessionFactoryOptions {
 	boolean isStrictJpaQueryLanguageCompliance();
 
 	boolean isNamedQueryStartupCheckingEnabled();
+
+	boolean isConventionalJavaConstants();
 
 	boolean isSecondLevelCacheEnabled();
 
@@ -181,4 +207,12 @@ public interface SessionFactoryOptions {
 	boolean isPreferUserTransaction();
 
 	boolean isProcedureParameterNullPassingEnabled();
+
+	boolean isCollectionJoinSubqueryRewriteEnabled();
+
+	boolean isAllowOutOfTransactionUpdateOperations();
+
+	boolean isReleaseResourcesOnCloseEnabled();
+
+	TimeZone getJdbcTimeZone();
 }

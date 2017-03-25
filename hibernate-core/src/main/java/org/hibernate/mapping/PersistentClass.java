@@ -382,11 +382,13 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	/**
-	 * Build an iterator of properties which are "referenceable".
-	 *
-	 * @return The property iterator.
+	 * Build an iterator of properties which may be referenced in association mappings.
+	 * <p>
+	 * Includes properties defined in superclasses of the mapping inheritance.
+	 * Includes all properties defined as part of a join.
 	 *
 	 * @see #getReferencedProperty for a discussion of "referenceable"
+	 * @return The referenceable property iterator.
 	 */
 	public Iterator getReferenceablePropertyIterator() {
 		return getPropertyClosureIterator();
@@ -396,7 +398,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	 * Given a property path, locate the appropriate referenceable property reference.
 	 * <p/>
 	 * A referenceable property is a property  which can be a target of a foreign-key
-	 * mapping (an identifier or explcitly named in a property-ref).
+	 * mapping (e.g. {@code @ManyToOne}, {@code @OneToOne}).
 	 *
 	 * @param propertyPath The property path to resolve into a property reference.
 	 *
@@ -686,8 +688,11 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	 * iterator only accounts for "normal" properties (i.e. non-identifier
 	 * properties).
 	 * <p/>
-	 * Differs from {@link #getUnjoinedPropertyIterator} in that the iterator
-	 * we return here will include properties defined as part of a join.
+	 * Differs from {@link #getUnjoinedPropertyIterator} in that the returned iterator
+	 * will include properties defined as part of a join.
+	 * <p/>
+	 * Differs from {@link #getReferenceablePropertyIterator} in that the properties
+	 * defined in superclasses of the mapping inheritance are not included.
 	 *
 	 * @return An iterator over the "normal" properties.
 	 */

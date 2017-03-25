@@ -14,11 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
 import javax.persistence.Version;
 
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -35,6 +38,7 @@ import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
+import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
@@ -42,6 +46,7 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+import org.jboss.logging.Logger;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 import static org.hibernate.envers.internal.tools.Tools.newHashSet;
@@ -58,6 +63,11 @@ import static org.hibernate.envers.internal.tools.Tools.newHashSet;
  * @author Lukasz Zuchowski (author at zuchos dot com)
  */
 public class AuditedPropertiesReader {
+	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			EnversMessageLogger.class,
+			AuditedPropertiesReader.class.getName()
+	);
+
 	protected final ModificationStore defaultStore;
 	private final PersistentPropertiesSource persistentPropertiesSource;
 	private final AuditedPropertiesHolder auditedPropertiesHolder;
@@ -507,6 +517,8 @@ public class AuditedPropertiesReader {
 			return false;
 		}
 
+		validateLobMappingSupport( property );
+
 		propertyData.setName( propertyName );
 		propertyData.setBeanName( property.getName() );
 		propertyData.setAccessType( accessType );
@@ -524,6 +536,30 @@ public class AuditedPropertiesReader {
 		return true;
 	}
 
+	private void validateLobMappingSupport(XProperty property) {
+		// HHH-9834 - Sanity check
+		try {
+			if ( property.isAnnotationPresent( ElementCollection.class ) ) {
+				if ( property.isAnnotationPresent( Lob.class ) ) {
+					if ( !property.getCollectionClass().isAssignableFrom( Map.class ) ) {
+						throw new MappingException(
+								"@ElementCollection combined with @Lob is only supported for Map collection types."
+						);
+					}
+				}
+			}
+		}
+		catch ( MappingException e ) {
+			throw new HibernateException(
+					String.format(
+							"Invalid mapping in [%s] for property [%s]",
+							property.getDeclaringClass().getName(),
+							property.getName()
+					),
+					e
+			);
+		}
+	}
 
 	protected boolean checkAudited(
 			XProperty property,
@@ -544,12 +580,12 @@ public class AuditedPropertiesReader {
 			propertyData.setStore( aud.modStore() );
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
-			if(aud.modifiedColumnName() != null && !"".equals(aud.modifiedColumnName())) {
-				propertyData.setModifiedFlagName(aud.modifiedColumnName());
+			if( aud.modifiedColumnName() != null && !"".equals( aud.modifiedColumnName() ) ) {
+				propertyData.setModifiedFlagName( aud.modifiedColumnName() );
 			}
 			else {
 				propertyData.setModifiedFlagName(
-						MetadataTools.getModifiedFlagPropertyName(propertyName, modifiedFlagSuffix)
+						MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix )
 				);
 			}
 			return true;
@@ -560,8 +596,17 @@ public class AuditedPropertiesReader {
 	}
 
 	protected boolean checkUsingModifiedFlag(Audited aud) {
-		return globalCfg.hasSettingForUsingModifiedFlag() ?
-				globalCfg.isGlobalWithModifiedFlag() : aud.withModifiedFlag();
+		// HHH-10468
+		if ( globalCfg.hasSettingForUsingModifiedFlag() ) {
+			// HHH-10468
+			// Modify behavior so that if the global setting has been set by user properties, then
+			// the audit behavior should be a disjunction between the global setting and the field
+			// annotation.  This allows the annotation to take precedence when the global value is
+			// false and for the global setting to take precedence when true.
+			return globalCfg.isGlobalWithModifiedFlag() || aud.withModifiedFlag();
+		}
+		// no global setting enabled, use the annotation's value only.
+		return aud.withModifiedFlag();
 	}
 
 	private void setPropertyRelationMappedBy(XProperty property, PropertyAuditingData propertyData) {

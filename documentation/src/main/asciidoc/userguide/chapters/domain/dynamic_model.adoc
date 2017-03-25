@@ -15,12 +15,6 @@ Persistent entities do not necessarily have to be represented as POJO/JavaBean c
 Hibernate also supports dynamic models (using `Map`s of `Map`s at runtime).
 With this approach, you do not write persistent classes, only mapping files.
 
-[NOTE]
-====
-The mapping of dynamic models is beyond the scope of this chapter.
-We will discuss using such models with Hibernate, in the <<mapping, next chapter>>.
-====
-
 A given entity has just one entity mode within a given SessionFactory.
 This is a change from previous versions which allowed to define multiple entity modes for an entity and to select which to load.
 Entity modes can now be mixed within a domain model; a dynamic entity might reference a POJO entity, and vice versa.

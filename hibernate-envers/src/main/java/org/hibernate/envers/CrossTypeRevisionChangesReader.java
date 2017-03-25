@@ -31,7 +31,7 @@ public interface CrossTypeRevisionChangesReader {
 	 * @throws IllegalStateException If the associated entity manager is closed.
 	 * @throws IllegalArgumentException If a revision number is <code>null</code>, less or equal to 0.
 	 */
-	public List<Object> findEntities(Number revision) throws IllegalStateException, IllegalArgumentException;
+	List<Object> findEntities(Number revision) throws IllegalStateException, IllegalArgumentException;
 
 	/**
 	 * Find all entities changed (added, updated or removed) in a given revision. Executes <i>n+1</i> SQL queries,
@@ -45,7 +45,7 @@ public interface CrossTypeRevisionChangesReader {
 	 * @throws IllegalStateException If the associated entity manager is closed.
 	 * @throws IllegalArgumentException If a revision number is {@code null}, less or equal to 0.
 	 */
-	public List<Object> findEntities(Number revision, RevisionType revisionType) throws IllegalStateException,
+	List<Object> findEntities(Number revision, RevisionType revisionType) throws IllegalStateException,
 			IllegalArgumentException;
 
 	/**
@@ -63,7 +63,7 @@ public interface CrossTypeRevisionChangesReader {
 	 * @throws IllegalStateException If the associated entity manager is closed.
 	 * @throws IllegalArgumentException If a revision number is {@code null}, less or equal to 0.
 	 */
-	public Map<RevisionType, List<Object>> findEntitiesGroupByRevisionType(Number revision)
+	Map<RevisionType, List<Object>> findEntitiesGroupByRevisionType(Number revision)
 			throws IllegalStateException,
 			IllegalArgumentException;
 
@@ -77,6 +77,6 @@ public interface CrossTypeRevisionChangesReader {
 	 * @throws IllegalStateException If the associated entity manager is closed.
 	 * @throws IllegalArgumentException If a revision number is {@code null}, less or equal to 0.
 	 */
-	public Set<Pair<String, Class>> findEntityTypes(Number revision)
+	Set<Pair<String, Class>> findEntityTypes(Number revision)
 			throws IllegalStateException, IllegalArgumentException;
 }

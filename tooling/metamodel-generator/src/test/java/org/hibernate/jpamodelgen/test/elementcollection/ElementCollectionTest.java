@@ -15,6 +15,7 @@ import org.junit.Test;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMapAttributesInMetaModelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoSourceFileGeneratedFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 
 /**
  * @author Hardy Ferentschik
@@ -57,6 +58,16 @@ public class ElementCollectionTest extends CompilationTest {
 
 		assertMapAttributesInMetaModelFor(
 				Hostel.class, "cleaners", Room.class, Cleaner.class, "Wrong type in map attribute."
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11004")
+	@WithClasses({ OfficeBuilding.class })
+	public void testArrayValueElementCollection() {
+		assertMetamodelClassGeneratedFor( OfficeBuilding.class );
+		assertMapAttributesInMetaModelFor(
+				OfficeBuilding.class, "doorCodes", Integer.class, byte[].class, "Wrong type in map attribute."
 		);
 	}
 }

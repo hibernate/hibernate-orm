@@ -25,7 +25,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
-import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToStdout;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -35,6 +34,7 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -117,15 +117,24 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 	}
 
-	class TargetImpl extends ScriptTargetOutputToStdout {
+	class TargetImpl implements ScriptTargetOutput {
 		boolean found = false;
 
 		@Override
+		public void prepare() {
+
+		}
+
+		@Override
 		public void accept(String action) {
-			super.accept( action );
 			if ( action.startsWith( "insert into test_seq" ) ) {
 				found = true;
 			}
+		}
+
+		@Override
+		public void release() {
+
 		}
 	}
 }

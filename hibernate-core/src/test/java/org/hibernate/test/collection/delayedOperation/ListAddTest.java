@@ -23,13 +23,16 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.collection.spi.PersistentCollection;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 /**
@@ -129,7 +132,7 @@ public class ListAddTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	/**
-	 * This test succeeds thanks to a dirty workaround consisting in initializing the ordered question list after the
+	 * This test succeeds thanks to a dirty workaround consisting in initializing the ordered question list afterQuery the
 	 * question has been inserted
 	 */
 	@Test
@@ -153,6 +156,24 @@ public class ListAddTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		transaction.commit();
 		session.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10375")
+	public void testAddQuestionAfterSessionIsClosed(){
+		Session session = openSession();
+		Transaction transaction = session.beginTransaction();
+
+		Quizz quizz = session.get( Quizz.class, 1 );
+		assertThat(  "expected 3 questions", quizz.getQuestions().size(), is(3) );
+		transaction.commit();
+		session.close();
+
+		quizz.addQuestion(  new Question( 4, "question 4" ) );
+		assertThat(  "expected 4 questions", quizz.getQuestions().size(), is(4) );
+
+		quizz.addQuestion(  1, new Question( 5, "question 5" ) );
+		assertThat(  "expected 5 questions", quizz.getQuestions().size(), is(5) );
 	}
 
 

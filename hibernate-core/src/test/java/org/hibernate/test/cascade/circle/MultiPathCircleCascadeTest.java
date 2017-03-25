@@ -8,6 +8,8 @@ package org.hibernate.test.cascade.circle;
 
 import java.util.Iterator;
 
+import javax.persistence.PersistenceException;
+
 import org.junit.Test;
 
 import org.hibernate.JDBCException;
@@ -19,6 +21,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
@@ -49,10 +52,15 @@ import static org.junit.Assert.fail;
  */
 public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 	private static interface EntityOperation {
+		boolean isLegacy();
 		Object doEntityOperation(Object entity, Session s);
 	}
 	private static EntityOperation MERGE_OPERATION =
 			new EntityOperation() {
+				@Override
+				public boolean isLegacy() {
+					return false;
+				}
 				@Override
 				public Object doEntityOperation(Object entity, Session s) {
 					return s.merge( entity );
@@ -61,6 +69,10 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 	private static EntityOperation SAVE_OPERATION =
 			new EntityOperation() {
 				@Override
+				public boolean isLegacy() {
+					return true;
+				}
+				@Override
 				public Object doEntityOperation(Object entity, Session s) {
 					s.save( entity );
 					return entity;
@@ -68,6 +80,10 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 			};
 	private static EntityOperation SAVE_UPDATE_OPERATION =
 			new EntityOperation() {
+				@Override
+				public boolean isLegacy() {
+					return true;
+				}
 				@Override
 				public Object doEntityOperation(Object entity, Session s) {
 					s.saveOrUpdate( entity );
@@ -124,7 +140,8 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 			checkExceptionFromNullValueForNonNullable(
 					ex,
 					((SessionImplementor) s).getFactory().getSettings().isCheckNullability(),
-					false
+					false,
+					operation.isLegacy()
 			);
 		}
 		finally {
@@ -165,7 +182,8 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 			checkExceptionFromNullValueForNonNullable(
 					ex,
 					((SessionImplementor) s).getFactory().getSettings().isCheckNullability(),
-					true
+					true,
+					operation.isLegacy()
 			);
 		}
 		finally {
@@ -204,7 +222,8 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 			checkExceptionFromNullValueForNonNullable(
 					ex,
 					((SessionImplementor) s).getFactory().getSettings().isCheckNullability(),
-					true
+					true,
+					operation.isLegacy()
 			);
 		}
 		finally {
@@ -660,18 +679,28 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	protected void checkExceptionFromNullValueForNonNullable(
-			Exception ex, boolean checkNullability, boolean isNullValue
+			Exception ex, boolean checkNullability, boolean isNullValue, boolean isLegacy
 	) {
 		if ( isNullValue ) {
 			if ( checkNullability ) {
-				assertTrue( ex instanceof PropertyValueException );
+                if ( isLegacy ) {
+					assertTyping( PropertyValueException.class, ex );
+				}
+				else {
+					assertTyping( PersistenceException.class, ex );
+				}
 			}
 			else {
 				assertTrue( (ex instanceof JDBCException) || (ex.getCause() instanceof JDBCException) );
 			}
 		}
 		else {
-			assertTrue( ex instanceof TransientPropertyValueException );
+			if ( isLegacy ) {
+				assertTyping( TransientPropertyValueException.class, ex );
+			}
+			else {
+				assertTyping( IllegalStateException.class, ex );
+			}
 		}
 	}
 

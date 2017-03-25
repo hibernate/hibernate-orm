@@ -42,7 +42,7 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 			Object primaryKey,
 			Number revision,
 			boolean removed) {
-		return new BasicCollectionInitializor<T>(
+		return new BasicCollectionInitializor<>(
 				enversService,
 				versionsReader,
 				commonCollectionMapperData.getQueryGenerator(),
@@ -65,7 +65,7 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 			return null;
 		}
 		else if ( oldCollection instanceof Map ) {
-			return ((Map) oldCollection).keySet();
+			return ( (Map) oldCollection ).keySet();
 		}
 		else {
 			return (Collection) oldCollection;

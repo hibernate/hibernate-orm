@@ -5,12 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.proxy.map;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.CompositeType;
@@ -33,8 +34,8 @@ public class MapProxyFactory implements ProxyFactory {
 
 	}
 
-	public HibernateProxy getProxy(final Serializable id, final SessionImplementor session)
-			throws HibernateException {
+	@Override
+	public HibernateProxy getProxy(final Serializable id, final SharedSessionContractImplementor session) {
 		return new MapProxy( new MapLazyInitializer( entityName, id, session ) );
 	}
 

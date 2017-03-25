@@ -13,7 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
@@ -40,14 +40,14 @@ import antlr.collections.AST;
 public class DeleteExecutor extends BasicExecutor {
 	private static final Logger LOG = Logger.getLogger( DeleteExecutor.class );
 
-	private final List<String> deletes = new ArrayList<String>();
+	private final List<String> deletes = new ArrayList<>();
 	private List<ParameterSpecification> parameterSpecifications;
 
 	public DeleteExecutor(HqlSqlWalker walker, Queryable persister) {
 		super( walker, persister );
 		
 		final SessionFactoryImplementor factory = walker.getSessionFactoryHelper().getFactory();
-		final Dialect dialect = factory.getDialect();
+		final Dialect dialect = factory.getJdbcServices().getJdbcEnvironment().getDialect();
 		
 		try {
 			final DeleteStatement deleteStatement = (DeleteStatement) walker.getAST();
@@ -61,7 +61,7 @@ public class DeleteExecutor extends BasicExecutor {
 				idSubselectWhere = gen.getSQL().length() > 7 ? gen.getSQL() : "";
 			}
 			else {
-				parameterSpecifications = new ArrayList<ParameterSpecification>();
+				parameterSpecifications = new ArrayList<>();
 				idSubselectWhere = "";
 			}
 			
@@ -69,8 +69,7 @@ public class DeleteExecutor extends BasicExecutor {
 			for ( Type type : persister.getPropertyTypes() ) {
 				if ( type.isCollectionType() ) {
 					final CollectionType cType = (CollectionType) type;
-					final AbstractCollectionPersister cPersister = (AbstractCollectionPersister) factory
-							.getCollectionPersister( cType.getRole() );
+					final AbstractCollectionPersister cPersister = (AbstractCollectionPersister) factory.getMetamodel().collectionPersister( cType.getRole() );
 					if ( cPersister.isManyToMany() ) {
 						if ( persister.getIdentifierColumnNames().length > 1
 								&& !dialect.supportsTuplesInSubqueries() ) {
@@ -87,7 +86,7 @@ public class DeleteExecutor extends BasicExecutor {
 							final String where = "(" + StringHelper.join( ", ", cPersister.getKeyColumnNames() )
 									+ ") in " + idSubselect;
 							final Delete delete = new Delete().setTableName( cPersister.getTableName() ).setWhere( where );
-							if ( factory.getSettings().isCommentsEnabled() ) {
+							if ( factory.getSessionFactoryOptions().isCommentsEnabled() ) {
 								delete.setComment( "delete FKs in join table" );
 							}
 							deletes.add( delete.toStatementString() );
@@ -102,7 +101,7 @@ public class DeleteExecutor extends BasicExecutor {
 	}
 	
 	@Override
-	public int execute(QueryParameters parameters, SessionImplementor session) throws HibernateException {
+	public int execute(QueryParameters parameters, SharedSessionContractImplementor session) throws HibernateException {
 		for (String delete : deletes) {
 			doExecute( parameters, session, delete, parameterSpecifications );
 		}

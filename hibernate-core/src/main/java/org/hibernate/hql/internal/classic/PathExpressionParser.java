@@ -111,12 +111,12 @@ public class PathExpressionParser implements Parser {
 		String alias = q.getPathAlias( path.toString() );
 		if ( alias != null ) {
 			reset( q ); //reset the dotcount (but not the path)
-			currentName = alias; //after reset!
+			currentName = alias; //afterQuery reset!
 			currentPropertyMapping = q.getPropertyMapping( currentName );
 			if ( !ignoreInitialJoin ) {
 				JoinSequence ojf = q.getPathJoin( path.toString() );
 				try {
-					joinSequence.addCondition( ojf.toJoinFragment( q.getEnabledFilters(), true ).toWhereFragmentString() ); //after reset!
+					joinSequence.addCondition( ojf.toJoinFragment( q.getEnabledFilters(), true ).toWhereFragmentString() ); //afterQuery reset!
 				}
 				catch ( MappingException me ) {
 					throw new QueryException( me );
@@ -344,7 +344,7 @@ public class PathExpressionParser implements Parser {
 		QueryableCollection collPersister = q.getCollectionPersister( collectionRole );
 
 		if ( !collPersister.hasIndex() ) {
-			throw new QueryException( "unindexed collection before []: " + path );
+			throw new QueryException( "unindexed collection beforeQuery []: " + path );
 		}
 
 		String[] indexCols = collPersister.getIndexColumnNames();

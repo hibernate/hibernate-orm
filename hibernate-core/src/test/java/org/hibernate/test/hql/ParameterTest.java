@@ -6,10 +6,12 @@
  */
 package org.hibernate.test.hql;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -91,6 +93,42 @@ public class ParameterTest extends BaseCoreFunctionalTestCase {
 
 			s.delete( human );
 			s.delete( human1 );
+			t.commit();
+		}
+		catch (Exception e) {
+			if ( session.getTransaction().getStatus() == TransactionStatus.ACTIVE ) {
+				session.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			s.close();
+		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10796")
+	public void testSetPropertiesMapNotContainingAllTheParameters() throws Exception {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		try {
+			Human human = new Human();
+			human.setNickName( "nick" );
+			human.setIntValue( 1 );
+			s.save( human );
+
+			Map parameters = new HashMap();
+			parameters.put( "nickNames", "nick" );
+
+			List<Integer> intValues = new ArrayList<>();
+			intValues.add( 1 );
+			Query q = s.createQuery(
+					"from Human h where h.nickName in (:nickNames) and h.intValue in (:intValues)" );
+			q.setParameterList( "intValues" , intValues);
+			q.setProperties( (parameters) );
+			assertThat( q.list().size(), is( 1 ) );
+
+			s.delete( human );
 			t.commit();
 		}
 		catch (Exception e) {

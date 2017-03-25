@@ -24,13 +24,14 @@ import org.hibernate.cache.internal.StandardQueryCache;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
-
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTest;
-import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-import junit.framework.AssertionFailedError;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTest;
+import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+import org.junit.Test;
+import junit.framework.AssertionFailedError;
+
 import org.infinispan.AdvancedCache;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
@@ -40,9 +41,12 @@ import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
 import org.infinispan.util.concurrent.IsolationLevel;
 
 import org.jboss.logging.Logger;
-import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests of QueryResultRegionImpl.
@@ -224,11 +228,11 @@ public class QueryRegionImplTest extends AbstractGeneralDataRegionTest {
 	}
 
 	protected interface SessionConsumer {
-		void accept(SessionImplementor session) throws Exception;
+		void accept(SharedSessionContractImplementor session) throws Exception;
 	}
 
 	protected interface SessionCallable<T> {
-		T call(SessionImplementor session) throws Exception;
+		T call(SharedSessionContractImplementor session) throws Exception;
 	}
 
 	protected <T> T callWithSession(SessionFactory sessionFactory, SessionCallable<T> callable) throws Exception {
@@ -236,7 +240,7 @@ public class QueryRegionImplTest extends AbstractGeneralDataRegionTest {
 		Transaction tx = session.getTransaction();
 		tx.begin();
 		try {
-			T retval = callable.call((SessionImplementor) session);
+			T retval = callable.call((SharedSessionContractImplementor) session);
 			tx.commit();
 			return retval;
 		} catch (Exception e) {

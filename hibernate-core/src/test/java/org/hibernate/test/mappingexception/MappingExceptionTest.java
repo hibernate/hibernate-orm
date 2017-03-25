@@ -159,6 +159,10 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			assertEquals( inv.getType(), "URL" );
 			assertEquals( inv.getPath(), "file://nothere" );
 		}
+		catch (org.hibernate.boot.MappingException me) {
+			assertEquals( me.getOrigin().getType(), SourceType.URL );
+			assertEquals( me.getOrigin().getName(), "file://nothere" );
+		}
 	}
 
 	@Test

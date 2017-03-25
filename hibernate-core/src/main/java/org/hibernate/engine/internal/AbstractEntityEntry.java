@@ -16,6 +16,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
@@ -23,7 +24,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
@@ -297,7 +298,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public boolean isNullifiable(boolean earlyInsert, SessionImplementor session) {
+	public boolean isNullifiable(boolean earlyInsert, SharedSessionContractImplementor session) {
 		if ( getStatus() == Status.SAVING ) {
 			return true;
 		}
@@ -321,6 +322,18 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	}
 
 	@Override
+	public void overwriteLoadedStateCollectionValue(String propertyName, PersistentCollection collection) {
+		// nothing to do if status is READ_ONLY
+		if ( getStatus() != Status.READ_ONLY ) {
+			assert propertyName != null;
+			assert loadedState != null;
+
+			final int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
+			loadedState[propertyIndex] = collection;
+		}
+	}
+
+	@Override
 	public boolean requiresDirtyCheck(Object entity) {
 		return isModifiableEntity()
 				&& ( !isUnequivocallyNonDirty( entity ) );
@@ -329,7 +342,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	@SuppressWarnings( {"SimplifiableIfStatement"})
 	private boolean isUnequivocallyNonDirty(Object entity) {
 		if ( entity instanceof SelfDirtinessTracker ) {
-			return ! ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
+			return ! persister.hasCollections() && ! ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes();
 		}
 
 		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =

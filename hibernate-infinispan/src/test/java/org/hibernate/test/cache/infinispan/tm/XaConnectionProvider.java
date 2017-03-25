@@ -75,7 +75,7 @@ public class XaConnectionProvider implements ConnectionProvider {
 			Connection connection = currentTransaction.getEnlistedConnection();
 			if ( connection == null ) {
 				connection = actualConnectionProvider.getConnection();
-				currentTransaction.enlistConnection( connection );
+				currentTransaction.enlistConnection( connection, actualConnectionProvider );
 			}
 			return connection;
 		}
@@ -83,7 +83,7 @@ public class XaConnectionProvider implements ConnectionProvider {
 
 	public void closeConnection(Connection conn) throws SQLException {
 		if ( !isTransactional ) {
-			conn.close();
+			actualConnectionProvider.closeConnection(conn);
 		}
 	}
 

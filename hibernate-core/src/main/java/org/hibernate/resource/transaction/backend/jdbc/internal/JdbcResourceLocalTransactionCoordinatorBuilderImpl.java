@@ -6,13 +6,14 @@
  */
 package org.hibernate.resource.transaction.backend.jdbc.internal;
 
-import org.hibernate.ConnectionAcquisitionMode;
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
+import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**
  * Concrete builder for resource-local TransactionCoordinator instances.
@@ -28,7 +29,7 @@ public class JdbcResourceLocalTransactionCoordinatorBuilderImpl implements Trans
 	public static final JdbcResourceLocalTransactionCoordinatorBuilderImpl INSTANCE = new JdbcResourceLocalTransactionCoordinatorBuilderImpl();
 
 	@Override
-	public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, TransactionCoordinatorOptions options) {
+	public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, Options options) {
 		if ( owner instanceof JdbcResourceTransactionAccess ) {
 			return new JdbcResourceLocalTransactionCoordinatorImpl( this, owner, (JdbcResourceTransactionAccess) owner );
 		}
@@ -44,12 +45,12 @@ public class JdbcResourceLocalTransactionCoordinatorBuilderImpl implements Trans
 	}
 
 	@Override
-	public ConnectionReleaseMode getDefaultConnectionReleaseMode() {
-		return ConnectionReleaseMode.AFTER_TRANSACTION;
+	public PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode() {
+		return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
 	}
 
 	@Override
-	public ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode() {
-		return ConnectionAcquisitionMode.AS_NEEDED;
+	public DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext) {
+		return new DdlTransactionIsolatorNonJtaImpl( jdbcContext );
 	}
 }

@@ -20,6 +20,9 @@ import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
+import org.hibernate.cache.internal.SimpleCacheKeysFactory;
+import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.Cache71Dialect;
 import org.hibernate.dialect.DB2390Dialect;
@@ -41,6 +44,7 @@ import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.JDataStoreDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MimerSQLDialect;
+import org.hibernate.dialect.MySQL57Dialect;
 import org.hibernate.dialect.MySQL57InnoDBDialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQL5InnoDBDialect;
@@ -87,9 +91,9 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
 import org.jboss.logging.Logger;
 
@@ -158,6 +162,7 @@ public class StrategySelectorBuilder {
 		addMultiTableBulkIdStrategies( strategySelector );
 		addEntityCopyObserverStrategies( strategySelector );
 		addImplicitNamingStrategies( strategySelector );
+		addCacheKeysFactories( strategySelector );
 
 		// apply auto-discovered registrations
 		for ( StrategyRegistrationProvider provider : classLoaderService.loadJavaServices( StrategyRegistrationProvider.class ) ) {
@@ -209,6 +214,7 @@ public class StrategySelectorBuilder {
 		addDialect( strategySelector, MySQL5Dialect.class );
 		addDialect( strategySelector, MySQL5InnoDBDialect.class );
 		addDialect( strategySelector, MySQL57InnoDBDialect.class );
+		addDialect( strategySelector, MySQL57Dialect.class );
 		addDialect( strategySelector, Oracle8iDialect.class );
 		addDialect( strategySelector, Oracle9iDialect.class );
 		addDialect( strategySelector, Oracle10gDialect.class );
@@ -436,6 +442,19 @@ public class StrategySelectorBuilder {
 				ImplicitNamingStrategy.class,
 				"component-path",
 				ImplicitNamingStrategyComponentPathImpl.class
+		);
+	}
+
+	private void addCacheKeysFactories(StrategySelectorImpl strategySelector) {
+		strategySelector.registerStrategyImplementor(
+			CacheKeysFactory.class,
+			DefaultCacheKeysFactory.SHORT_NAME,
+			DefaultCacheKeysFactory.class
+		);
+		strategySelector.registerStrategyImplementor(
+			CacheKeysFactory.class,
+			SimpleCacheKeysFactory.SHORT_NAME,
+			SimpleCacheKeysFactory.class
 		);
 	}
 }

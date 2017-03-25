@@ -6,20 +6,18 @@
  */
 package org.hibernate.internal.util;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.collections.ArrayHelper;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.StringTokenizer;
+
+import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 public final class StringHelper {
 
@@ -46,7 +44,11 @@ public final class StringHelper {
 		if ( length == 0 ) {
 			return "";
 		}
-		StringBuilder buf = new StringBuilder( length * strings[0].length() )
+		// Allocate space for length * firstStringLength;
+		// If strings[0] is null, then its length is defined as 4, since that's the
+		// length of "null".
+		final int firstStringLength = strings[0] != null ? strings[0].length() : 4;
+		StringBuilder buf = new StringBuilder( length * firstStringLength )
 				.append( strings[0] );
 		for ( int i = 1; i < length; i++ ) {
 			buf.append( seperator ).append( strings[i] );
@@ -180,10 +182,16 @@ public final class StringHelper {
 		// there is already a right-parenthesis; we assume there will be a matching right-parenthesis.
 		// 2) "... IN ?1", we assume that "?1" needs to be enclosed in parentheses, because there
 		// is no left-parenthesis.
+
+		// We need to check the placeholder is not used in `Order By FIELD(...)` (HHH-10502)
+		// Examples:
+		// " ... Order By FIELD(id,?1)",  after expand parameters, the sql is "... Order By FIELD(id,?,?,?)"
 		boolean encloseInParens =
 				actuallyReplace
 						&& encloseInParensIfNecessary
-						&& !( getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' );
+						&& !( getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' ) &&
+						!( getLastNonWhitespaceCharacter( beforePlaceholder ) == ',' && getFirstNonWhitespaceCharacter(
+								afterPlaceholder ) == ')' );
 		StringBuilder buf = new StringBuilder( beforePlaceholder );
 		if ( encloseInParens ) {
 			buf.append( '(' );
@@ -267,12 +275,12 @@ public final class StringHelper {
 	}
 
 	public static String unqualify(String qualifiedName) {
-		int loc = qualifiedName.lastIndexOf( "." );
+		int loc = qualifiedName.lastIndexOf( '.' );
 		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( loc + 1 );
 	}
 
 	public static String qualifier(String qualifiedName) {
-		int loc = qualifiedName.lastIndexOf( "." );
+		int loc = qualifiedName.lastIndexOf( '.' );
 		return ( loc < 0 ) ? "" : qualifiedName.substring( 0, loc );
 	}
 
@@ -332,7 +340,7 @@ public final class StringHelper {
 		if ( name == null || !name.startsWith( qualifierBase ) ) {
 			return name;
 		}
-		return name.substring( qualifierBase.length() + 1 ); // +1 to start after the following '.'
+		return name.substring( qualifierBase.length() + 1 ); // +1 to start afterQuery the following '.'
 	}
 
 	/**
@@ -492,6 +500,13 @@ public final class StringHelper {
 			throw new NullPointerException( "prefix or name were null attempting to build qualified name" );
 		}
 		return prefix + '.' + name;
+	}
+
+	public static String qualifyConditionally(String prefix, String name) {
+		if ( name == null ) {
+			throw new NullPointerException( "name was null attempting to build qualified name" );
+		}
+		return isEmpty( prefix ) ? name : prefix + '.' + name;
 	}
 
 	public static String[] qualify(String prefix, String[] names) {

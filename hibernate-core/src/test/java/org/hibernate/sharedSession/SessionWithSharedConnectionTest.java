@@ -15,10 +15,9 @@ import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -234,7 +233,7 @@ public class SessionWithSharedConnectionTest extends BaseCoreFunctionalTestCase 
 				.autoClose( true )
 				.openSession();
 		
-		//the secondary session should be automatically closed after the commit
+		//the secondary session should be automatically closed afterQuery the commit
 		session.getTransaction().commit();
 		
 		assertFalse( secondarySession.isOpen() );

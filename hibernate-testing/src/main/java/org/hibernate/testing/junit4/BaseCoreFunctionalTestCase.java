@@ -9,10 +9,8 @@ package org.hibernate.testing.junit4;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.function.Consumer;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
@@ -35,8 +33,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -47,6 +44,7 @@ import org.hibernate.testing.cache.CachingRegionFactory;
 import org.junit.After;
 import org.junit.Before;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.fail;
 
 /**
@@ -93,13 +91,20 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 
-	// before/after test class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// beforeQuery/afterQuery test class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@BeforeClassOnce
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected void buildSessionFactory() {
+		buildSessionFactory( null );
+	}
+
+	protected void buildSessionFactory(Consumer<Configuration> configurationAdapter) {
 		// for now, build the configuration to get all the property settings
 		configuration = constructAndConfigureConfiguration();
+		if ( configurationAdapter != null ) {
+			configurationAdapter.accept(configuration);
+		}
 		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
 		serviceRegistry = buildServiceRegistry( bootRegistry, configuration );
 		// this is done here because Configuration does not currently support 4.0 xsd
@@ -109,6 +114,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void rebuildSessionFactory() {
+		rebuildSessionFactory( null );
+	}
+
+	protected void rebuildSessionFactory(Consumer<Configuration> configurationAdapter) {
 		if ( sessionFactory == null ) {
 			return;
 		}
@@ -122,7 +131,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		catch (Exception ignore) {
 		}
 
-		buildSessionFactory();
+		buildSessionFactory( configurationAdapter );
 	}
 
 	protected Configuration buildConfiguration() {
@@ -313,7 +322,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 
-	// before/after each test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// beforeQuery/afterQuery each test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Before
 	public final void beforeTest() throws Exception {
@@ -373,20 +382,22 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		return false;
 	}
 
+	protected boolean isCleanupTestDataUsingBulkDelete() {
+		return false;
+	}
+
 	protected void cleanupTestData() throws Exception {
-		Session s = openSession();
-		Transaction transaction = s.beginTransaction();
-		try {
-			s.createQuery( "delete from java.lang.Object" ).executeUpdate();
-			transaction.commit();
+		if(isCleanupTestDataUsingBulkDelete()) {
+			doInHibernate( this::sessionFactory, s -> {
+				s.createQuery( "delete from java.lang.Object" ).executeUpdate();
+			} );
 		}
-		catch (Exception e) {
-			if ( transaction.getStatus().canRollback() ) {
-				transaction.rollback();
-			}
-		}
-		finally {
-			s.close();
+		else {
+			// Because of https://hibernate.atlassian.net/browse/HHH-5529,
+			// we can'trely on a Bulk Delete query which will not clear the link tables in @ElementCollection or unidirectional collections
+			doInHibernate( this::sessionFactory, s -> {
+				s.createQuery( "from java.lang.Object" ).list().forEach( s::remove );
+			} );
 		}
 	}
 

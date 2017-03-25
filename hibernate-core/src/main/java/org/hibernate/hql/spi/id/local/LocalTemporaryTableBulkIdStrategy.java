@@ -13,7 +13,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
 import org.hibernate.hql.internal.ast.tree.FromElement;
@@ -105,7 +105,7 @@ public class LocalTemporaryTableBulkIdStrategy
 
 		return new TableBasedUpdateHandlerImpl( factory, walker, tableInfo ) {
 			@Override
-			protected void prepareForUse(Queryable persister, SessionImplementor session) {
+			protected void prepareForUse(Queryable persister, SharedSessionContractImplementor session) {
 				Helper.INSTANCE.createTempTable(
 						tableInfo,
 						ddlTransactionHandling,
@@ -114,7 +114,7 @@ public class LocalTemporaryTableBulkIdStrategy
 			}
 
 			@Override
-			protected void releaseFromUse(Queryable persister, SessionImplementor session) {
+			protected void releaseFromUse(Queryable persister, SharedSessionContractImplementor session) {
 				Helper.INSTANCE.releaseTempTable(
 						tableInfo,
 						afterUseAction,
@@ -136,7 +136,7 @@ public class LocalTemporaryTableBulkIdStrategy
 
 		return new TableBasedDeleteHandlerImpl( factory, walker, tableInfo ) {
 			@Override
-			protected void prepareForUse(Queryable persister, SessionImplementor session) {
+			protected void prepareForUse(Queryable persister, SharedSessionContractImplementor session) {
 				Helper.INSTANCE.createTempTable(
 						tableInfo,
 						ddlTransactionHandling,
@@ -145,7 +145,7 @@ public class LocalTemporaryTableBulkIdStrategy
 			}
 
 			@Override
-			protected void releaseFromUse(Queryable persister, SessionImplementor session) {
+			protected void releaseFromUse(Queryable persister, SharedSessionContractImplementor session) {
 				Helper.INSTANCE.releaseTempTable(
 						tableInfo,
 						afterUseAction,

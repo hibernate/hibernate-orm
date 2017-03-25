@@ -6,7 +6,7 @@
  */
 package org.hibernate.cache.infinispan.access;
 
-import java.util.UUID;
+import javax.transaction.Status;
 
 /**
  * Synchronization that should release the locks after invalidation is complete.
@@ -14,13 +14,14 @@ import java.util.UUID;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class InvalidationSynchronization implements javax.transaction.Synchronization {
-	public final UUID uuid = UUID.randomUUID();
+	public final Object lockOwner;
 	private final NonTxPutFromLoadInterceptor nonTxPutFromLoadInterceptor;
-	private final Object[] keys;
+	private final Object key;
 
-	public InvalidationSynchronization(NonTxPutFromLoadInterceptor nonTxPutFromLoadInterceptor, Object[] keys) {
+	public InvalidationSynchronization(NonTxPutFromLoadInterceptor nonTxPutFromLoadInterceptor, Object key, Object lockOwner) {
 		this.nonTxPutFromLoadInterceptor = nonTxPutFromLoadInterceptor;
-		this.keys = keys;
+		this.key = key;
+		this.lockOwner = lockOwner;
 	}
 
 	@Override
@@ -28,6 +29,6 @@ public class InvalidationSynchronization implements javax.transaction.Synchroniz
 
 	@Override
 	public void afterCompletion(int status) {
-		nonTxPutFromLoadInterceptor.broadcastEndInvalidationCommand(keys, uuid);
+		nonTxPutFromLoadInterceptor.endInvalidating(key, lockOwner, status == Status.STATUS_COMMITTED || status == Status.STATUS_COMMITTING);
 	}
 }

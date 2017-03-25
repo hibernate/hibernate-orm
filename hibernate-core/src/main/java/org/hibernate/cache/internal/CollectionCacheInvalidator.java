@@ -16,7 +16,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
@@ -82,11 +82,11 @@ public class CollectionCacheInvalidator
 	}
 
 	private void integrate(SessionFactoryServiceRegistry serviceRegistry, SessionFactoryImplementor sessionFactory) {
-		if ( !sessionFactory.getSettings().isAutoEvictCollectionCache() ) {
+		if ( !sessionFactory.getSessionFactoryOptions().isAutoEvictCollectionCache() ) {
 			// feature is disabled
 			return;
 		}
-		if ( !sessionFactory.getSettings().isSecondLevelCacheEnabled() ) {
+		if ( !sessionFactory.getSessionFactoryOptions().isSecondLevelCacheEnabled() ) {
 			// Nothing to do, if caching is disabled
 			return;
 		}
@@ -100,12 +100,12 @@ public class CollectionCacheInvalidator
 		try {
 			SessionFactoryImplementor factory = persister.getFactory();
 
-			Set<String> collectionRoles = factory.getCollectionRolesByEntityParticipant( persister.getEntityName() );
+			Set<String> collectionRoles = factory.getMetamodel().getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( collectionRoles == null || collectionRoles.isEmpty() ) {
 				return;
 			}
 			for ( String role : collectionRoles ) {
-				final CollectionPersister collectionPersister = factory.getCollectionPersister( role );
+				final CollectionPersister collectionPersister = factory.getMetamodel().collectionPersister( role );
 				if ( !collectionPersister.hasCache() ) {
 					// ignore collection if no caching is used
 					continue;
@@ -137,11 +137,8 @@ public class CollectionCacheInvalidator
 				else {
 					LOG.debug( "Evict CollectionRegion " + role );
 					final SoftLock softLock = collectionPersister.getCacheAccessStrategy().lockRegion();
-					session.getActionQueue().registerProcess( new AfterTransactionCompletionProcess() {
-						@Override
-						public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-							collectionPersister.getCacheAccessStrategy().unlockRegion( softLock );
-						}
+					session.getActionQueue().registerProcess( (success, session1) -> {
+						collectionPersister.getCacheAccessStrategy().unlockRegion( softLock );
 					} );
 				}
 			}
@@ -160,8 +157,7 @@ public class CollectionCacheInvalidator
 		if ( obj != null ) {
 			id = session.getContextEntityIdentifier( obj );
 			if ( id == null ) {
-				id = session.getSessionFactory().getClassMetadata( obj.getClass() )
-						.getIdentifier( obj, session );
+				id = session.getSessionFactory().getMetamodel().entityPersister( obj.getClass() ).getIdentifier( obj, session );
 			}
 		}
 		return id;
@@ -186,7 +182,7 @@ public class CollectionCacheInvalidator
 				CollectionPersister persister,
 				PersistentCollection collection,
 				Serializable key,
-				SessionImplementor session) {
+				SharedSessionContractImplementor session) {
 			super( persister, collection, key, session );
 		}
 

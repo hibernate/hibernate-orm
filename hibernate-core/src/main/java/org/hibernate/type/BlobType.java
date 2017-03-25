@@ -5,9 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
+
 import java.sql.Blob;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
 
 /**
@@ -34,7 +35,8 @@ public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
 	}
 
 	@Override
-	protected Blob getReplacement(Blob original, Blob target, SessionImplementor session) {
-		return session.getFactory().getDialect().getLobMergeStrategy().mergeBlob( original, target, session );
+	protected Blob getReplacement(Blob original, Blob target, SharedSessionContractImplementor session) {
+		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeBlob( original, target, session );
 	}
+
 }

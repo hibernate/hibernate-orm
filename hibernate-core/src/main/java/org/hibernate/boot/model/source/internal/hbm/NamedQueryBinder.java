@@ -6,10 +6,10 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
-import javax.xml.bind.JAXBElement;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import javax.xml.bind.JAXBElement;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.jaxb.hbm.internal.ImplicitResultSetMappingDefinition;
@@ -156,7 +156,7 @@ public class NamedQueryBinder {
 			// returns it defines.  But binding for those entities may have not been
 			// completed yet.  For "normal" ResultSet mappings, this is already handled by
 			// the fact that MetadataSourceProcessor#processResultSetMappings() is called
-			// after all entity hierarchies have been processed.  However, here we are in
+			// afterQuery all entity hierarchies have been processed.  However, here we are in
 			// the middle of processing named-queries (either top-level or entity-level)
 			// and have no guarantee that any entity bindings we may need here are bound.
 			// So we add the second-pass to bind the implicit resultSet mapping.

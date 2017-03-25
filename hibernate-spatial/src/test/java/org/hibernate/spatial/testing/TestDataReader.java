@@ -29,7 +29,7 @@ public class TestDataReader {
 			Document document = reader.read( getInputStream( fileName ) );
 			addDataElements( document, testDataElements );
 		}
-		catch ( DocumentException e ) {
+		catch (DocumentException e) {
 			throw new RuntimeException( e );
 		}
 		return testDataElements;
@@ -47,7 +47,7 @@ public class TestDataReader {
 		int id = Integer.parseInt( element.selectSingleNode( "id" ).getText() );
 		String type = element.selectSingleNode( "type" ).getText();
 		String wkt = element.selectSingleNode( "wkt" ).getText();
-		TestDataElement testDataElement = new TestDataElement( id, type, wkt);
+		TestDataElement testDataElement = new TestDataElement( id, type, wkt );
 		testDataElements.add( testDataElement );
 	}
 

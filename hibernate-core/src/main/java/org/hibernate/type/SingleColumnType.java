@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Provide convenient methods for binding and extracting values for use with {@link BasicType}.
@@ -38,7 +38,7 @@ public interface SingleColumnType<T> extends Type {
 	 * @throws org.hibernate.HibernateException Generally some form of mismatch error.
 	 * @throws java.sql.SQLException Indicates problem making the JDBC call(s).
 	 */
-	T nullSafeGet(ResultSet rs, String name, SessionImplementor session) throws HibernateException, SQLException;
+	T nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session) throws HibernateException, SQLException;
 
 	/**
 	 * Get a column value from a result set, without worrying about the possibility of null values.
@@ -52,11 +52,11 @@ public interface SingleColumnType<T> extends Type {
 	 * @throws org.hibernate.HibernateException Generally some form of mismatch error.
 	 * @throws java.sql.SQLException Indicates problem making the JDBC call(s).
 	 */
-	Object get(ResultSet rs, String name, SessionImplementor session) throws HibernateException, SQLException;
+	Object get(ResultSet rs, String name, SharedSessionContractImplementor session) throws HibernateException, SQLException;
 
 	/**
 	 * Set a parameter value without worrying about the possibility of null
-	 * values.  Called from {@link #nullSafeSet} after nullness checks have
+	 * values.  Called from {@link #nullSafeSet} afterQuery nullness checks have
 	 * been performed.
 	 *
 	 * @param st The statement into which to bind the parameter value.
@@ -67,5 +67,5 @@ public interface SingleColumnType<T> extends Type {
 	 * @throws org.hibernate.HibernateException Generally some form of mismatch error.
 	 * @throws java.sql.SQLException Indicates problem making the JDBC call(s).
 	 */
-	void set(PreparedStatement st, T value, int index, SessionImplementor session) throws HibernateException, SQLException;
+	void set(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException;
 }

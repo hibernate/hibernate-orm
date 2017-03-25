@@ -5,11 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.pretty;
+
 import java.io.Serializable;
 
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
@@ -239,7 +241,7 @@ public final class MessageHelper {
 			CollectionPersister persister,
 			PersistentCollection collection,
 			Serializable collectionKey,
-			SessionImplementor session ) {
+			SharedSessionContractImplementor session ) {
 		
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
@@ -260,8 +262,9 @@ public final class MessageHelper {
 				ownerKey = collectionKey;
 			}
 			else {
-				ownerKey = session.getPersistenceContext()
-						.getEntry( collection.getOwner() ).getId();
+				Object collectionOwner = collection == null ? null : collection.getOwner();
+				EntityEntry entry = collectionOwner == null ? null : session.getPersistenceContext().getEntry(collectionOwner);
+				ownerKey = entry == null ? null : entry.getId();
 			}
 			s.append( ownerIdentifierType.toLoggableString( 
 					ownerKey, session.getFactory() ) );

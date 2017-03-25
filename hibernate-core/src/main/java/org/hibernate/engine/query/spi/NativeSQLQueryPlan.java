@@ -17,7 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
@@ -91,7 +91,7 @@ public class NativeSQLQueryPlan implements Serializable {
 			final PreparedStatement st,
 			final QueryParameters queryParameters,
 			final int start,
-			final SessionImplementor session) throws SQLException {
+			final SharedSessionContractImplementor session) throws SQLException {
 		final Object[] values = queryParameters.getFilteredPositionalParameterValues();
 		final Type[] types = queryParameters.getFilteredPositionalParameterTypes();
 		int span = 0;
@@ -121,7 +121,7 @@ public class NativeSQLQueryPlan implements Serializable {
 			final PreparedStatement ps,
 			final Map namedParams,
 			final int start,
-			final SessionImplementor session) throws SQLException {
+			final SharedSessionContractImplementor session) throws SQLException {
 		if ( namedParams != null ) {
 			// assumes that types are all of span 1
 			final Iterator iter = namedParams.entrySet().iterator();
@@ -148,7 +148,7 @@ public class NativeSQLQueryPlan implements Serializable {
 		return 0;
 	}
 
-	protected void coordinateSharedCacheCleanup(SessionImplementor session) {
+	protected void coordinateSharedCacheCleanup(SharedSessionContractImplementor session) {
 		final BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, getCustomQuery().getQuerySpaces() );
 
 		if ( session.isEventSource() ) {
@@ -171,7 +171,7 @@ public class NativeSQLQueryPlan implements Serializable {
 	 */
 	public int performExecuteUpdate(
 			QueryParameters queryParameters,
-			SessionImplementor session) throws HibernateException {
+			SharedSessionContractImplementor session) throws HibernateException {
 
 		coordinateSharedCacheCleanup( session );
 
@@ -195,7 +195,7 @@ public class NativeSQLQueryPlan implements Serializable {
 			}
 			finally {
 				if ( ps != null ) {
-					session.getJdbcCoordinator().getResourceRegistry().release( ps );
+					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 					session.getJdbcCoordinator().afterStatementExecution();
 				}
 			}

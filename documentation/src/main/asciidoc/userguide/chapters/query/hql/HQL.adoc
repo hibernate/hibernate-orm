@@ -100,18 +100,18 @@ Relying on provider specific hints limits your applications portability to some 
     Attributes that are not specified are treated as `FetchType.LAZY` or `FetchType.EAGER` depending on the attribute's definition in metadata.
     For details, see the EntityGraph discussions in <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
 `org.hibernate.cacheMode`::
-    Defines the `CacheMode` to use. See `org.hibernate.Query#setCacheMode`.
+    Defines the `CacheMode` to use. See `org.hibernate.query.Query#setCacheMode`.
 `org.hibernate.cacheable`::
-    Defines whether the query is cacheable. true/false. See `org.hibernate.Query#setCacheable`.
+    Defines whether the query is cacheable. true/false. See `org.hibernate.query.Query#setCacheable`.
 `org.hibernate.cacheRegion`::
-    For queries that are cacheable, defines a specific cache region to use. See `org.hibernate.Query#setCacheRegion`.
+    For queries that are cacheable, defines a specific cache region to use. See `org.hibernate.query.Query#setCacheRegion`.
 `org.hibernate.comment`::
-    Defines the comment to apply to the generated SQL. See `org.hibernate.Query#setComment`.
+    Defines the comment to apply to the generated SQL. See `org.hibernate.query.Query#setComment`.
 `org.hibernate.fetchSize`::
-    Defines the JDBC fetch-size to use. See `org.hibernate.Query#setFetchSize`
+    Defines the JDBC fetch-size to use. See `org.hibernate.query.Query#setFetchSize`
 `org.hibernate.flushMode`::
-    Defines the Hibernate-specific `FlushMode` to use. See `org.hibernate.Query#setFlushMode.` If possible, prefer using `javax.persistence.Query#setFlushMode` instead.
-`org.hibernate.readOnly`:: Defines that entities and collections loaded by this query should be marked as read-only. See `org.hibernate.Query#setReadOnly`
+    Defines the Hibernate-specific `FlushMode` to use. See `org.hibernate.query.Query#setFlushMode.` If possible, prefer using `javax.persistence.Query#setFlushMode` instead.
+`org.hibernate.readOnly`:: Defines that entities and collections loaded by this query should be marked as read-only. See `org.hibernate.query.Query#setReadOnly`
 
 The final thing that needs to happen before the query can be executed is to bind the values for any defined parameters.
 JPA defines a simplified set of parameter binding methods.
@@ -170,7 +170,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-single-result-example]
 [[hql-api]]
 === Hibernate Query API
 
-In Hibernate, the HQL query is represented as `org.hibernate.Query` which is obtained from a `Session`.
+In Hibernate, the HQL query is represented as `org.hibernate.query.Query` which is obtained from a `Session`.
 If the HQL is a named query, `Session#getNamedQuery` would be used; otherwise `Session#createQuery` is needed.
 
 [[hql-api-example]]
@@ -295,6 +295,8 @@ include::{sourcedir}/HQLTest.java[tags=hql-api-list-example]
 ----
 ====
 
+It is also possible to extract a single result from a `Query`.
+
 [[hql-api-unique-result-example]]
 .Hibernate `uniqueResult()`
 ====
@@ -310,23 +312,47 @@ If the unique result is used often and the attributes upon which it is based are
 See the <<chapters/domain/natural_id.adoc#naturalid,Natural Ids>> for more information on this topic.
 ====
 
-Hibernate offers 2 additional, specialized methods for performing the query and handling results.
+[[hql-api-scroll]]
+==== Query scrolling
+
+Hibernate offers additional, specialized methods for scrolling the query and handling results using a server-side cursor.
+
 `Query#scroll` works in tandem with the JDBC notion of a scrollable `ResultSet`.
-The `scroll` method is overloaded.
+
+The `Query#scroll` method is overloaded:
 
 * Then main form accepts a single argument of type `org.hibernate.ScrollMode` which indicates the type of scrolling to be used.
 See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/ScrollMode.html[Javadocs] for the details on each.
 * The second form takes no argument and will use the `ScrollMode` indicated by `Dialect#defaultScrollMode`.
+
 `Query#scroll` returns a `org.hibernate.ScrollableResults` which wraps the underlying JDBC (scrollable) `ResultSet` and provides access to the results.
-Since this form holds the JDBC `ResultSet` open, the application should indicate when it is done with the `ScrollableResults` by calling its `close()` method (as inherited from `java.io.Closeable` so that `ScrollableResults` will work with try-with-resources blocks!).
-If left unclosed by the application, Hibernate will automatically close the `ScrollableResults` when the current transaction completes.
+Unlike a typical forward-only `ResultSet`, the `ScrollableResults` allows you to navigate the `ResultSet` in any direction.
+
+[[hql-api-scroll-example]]
+.Scrolling through a `ResultSet` containing entities
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-api-scroll-example]
+----
+====
+
+[IMPORTANT]
+====
+Since this form holds the JDBC `ResultSet` open, the application should indicate when it is done with the `ScrollableResults` by calling its `close()` method (as inherited from `java.io.Closeable`
+so that `ScrollableResults` will work with https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html[try-with-resources] blocks).
+
+If left unclosed by the application, Hibernate will automatically close the underlying resources (e.g. `ResultSet` and `PreparedStatement`) used internally by the `ScrollableResults` when the current transaction is ended (either commit or rollback).
+
+However, it is good practice to close the `ScrollableResults` explicitly.
+====
 
 [NOTE]
 ====
 If you plan to use `Query#scroll` with collection fetches it is important that your query explicitly order the results so that the JDBC results contain the related rows sequentially.
 ====
 
-The last is `Query#iterate`, which is intended for loading entities which the application feels certain will be in the second-level cache.
+Hibernate also supports `Query#iterate`, which is intended for loading entities when it is known that the loaded entries are already stored in the second-level cache.
 The idea behind iterate is that just the matching identifiers will be obtained in the SQL query.
 From these the identifiers are resolved by second-level cache lookup.
 If these second-level cache lookups fail, additional queries will need to be issued against the database.
@@ -340,6 +366,37 @@ In cases where many of the entities do not exist in the second-level cache, this
 The `Iterator` returned from `Query#iterate` is actually a specially typed Iterator: `org.hibernate.engine.HibernateIterator`.
 It is specialized to expose a `close()` method (again, inherited from `java.io.Closeable`).
 When you are done with this `Iterator` you should close it, either by casting to `HibernateIterator` or `Closeable`, or by calling https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Hibernate.html#close-java.util.Iterator-[`Hibernate#close(java.util.Iterator)`].
+
+Since 5.2, Hibernate offers support for returning a `Stream` which can be later used to transform the underlying `ResultSet`.
+
+Internally, the `stream()` behaves like a `Query#scroll` and the underlying result is backed by a `ScrollableResults`.
+
+Fetching a projection using the `Query#stream` method can be done as follows:
+
+[[hql-api-stream-projection-example]]
+.Hibernate `stream()` using a projection result type
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-api-stream-projection-example]
+----
+====
+
+When fetching a single result, like a `Person` entity, instead of a `Stream<Object[]>`, Hibernate is going to figure out the actual type, so the result is a `Stream<Person>`.
+
+[[hql-api-stream-example]]
+.Hibernate `stream()` using an entity result type
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-api-stream-example]
+----
+====
+
+[IMPORTANT]
+====
+Just like with `ScrollableResults`, you should always close a Hibernate `Stream` either explicitly or using a https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html[try-with-resources] block.
+====
 
 [[hql-case-sensitivity]]
 === Case Sensitivity
@@ -436,7 +493,7 @@ This is a Hibernate specific feature and will not work in a portable manner.
 Custom version types, `org.hibernate.usertype.UserVersionType`, are not allowed in conjunction with a `update versioned` statement.
 ====
 
-An `UPDATE` statement is executed using the `executeUpdate()` of either `org.hibernate.Query` or `javax.persistence.Query`.
+An `UPDATE` statement is executed using the `executeUpdate()` of either `org.hibernate.query.Query` or `javax.persistence.Query`.
 The method is named for those familiar with the JDBC `executeUpdate()` on `java.sql.PreparedStatement`.
 
 The `int` value returned by the `executeUpdate()` method indicates the number of entities effected by the operation.
@@ -476,7 +533,7 @@ include::{extrasdir}/statement_delete_bnf.txt[]
 ----
 ====
 
-A `DELETE` statement is also executed using the `executeUpdate()` method of either `org.hibernate.Query` or `javax.persistence.Query`.
+A `DELETE` statement is also executed using the `executeUpdate()` method of either `org.hibernate.query.Query` or `javax.persistence.Query`.
 
 [[hql-insert]]
 === Insert statements
@@ -743,6 +800,89 @@ For further information about collection-valued association references, see <<hq
 In the case of component/embedded attributes, the join is simply logical and does not correlate to a physical (SQL) join.
 Unlike explicit joins, however, implicit joins may also reference basic state fields as long as the path expression ends there.
 
+[[hql-distinct]]
+=== Distinct
+
+For JPQL and HQL, `DISTINCT` has two meanings:
+
+. It can be passed to the database so that duplicates are removed from a result set
+. It can be used to filter out the same parent entity references when join fetching a child collection
+
+[[hql-distinct-projection-query]]
+==== Using DISTINCT with SQL projections
+
+For SQL projections, `DISTINCT` needs to be passed to the database because the duplicated entries need to be filtered out before being returned to the database client.
+
+[[hql-distinct-projection-query-example]]
+.Using DISTINCT with projection queries example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SelectDistinctTest.java[tags=hql-distinct-projection-query-example]
+----
+====
+
+When running the query above, Hibernate generates the following SQL query:
+
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/hql-distinct-projection-query-example.sql[]
+----
+====
+
+For this particular use case, passing the `DISTINCT` keyword from JPQL/HQL to the database is the right thing to do.
+
+[[hql-distinct-entity-query]]
+==== Using DISTINCT with entity queries
+
+`DISTINCT` can also be used to filter out entity object references when fetching a child association along with the parent entities.
+
+[[hql-distinct-entity-query-example]]
+.Using DISTINCT with entity queries example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SelectDistinctTest.java[tags=hql-distinct-entity-query-example]
+----
+====
+
+In this case, `DISTINCT` is used because there can be multiple `Books` entities associated to a given `Person`.
+If in the database there are 3 `Persons` in the database and each person has 2 `Books`, without `DISTINCT` this query will return 6 `Persons` since
+the SQL-level result-set size is given by the number of joined `Book` records.
+
+However, the `DISTINCT` keyword is passed to the database as well:
+
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/hql-distinct-entity-query-example.sql[]
+----
+====
+
+In this case, the `DISTINCT` SQL keyword is undesirable since it does a redundant result set sorting, as explained http://in.relation.to/2016/08/04/introducing-distinct-pass-through-query-hint/[in this blog post].
+To fix this issue, Hibernate 5.2.2 added support for the `HINT_PASS_DISTINCT_THROUGH` entity query hint:
+
+[[hql-distinct-entity-query-hint-example]]
+.Using DISTINCT with entity queries example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SelectDistinctTest.java[tags=hql-distinct-entity-query-hint-example]
+----
+====
+
+With this entity query hint, Hibernate will not pass the `DISTINCT` keyword to the SQL query:
+
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/hql-distinct-entity-query-hint-example.sql[]
+----
+====
+
+When using the `HINT_PASS_DISTINCT_THROUGH` entity query hint, Hibernate can still remove the duplicated parent-side entities from the query result.
+
 [[hql-collection-valued-associations]]
 === Collection member references
 
@@ -962,7 +1102,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-example]
 ----
 ====
 
-Aggregations often appear with grouping. For information on grouping see <<hql-grouping>>.
+Aggregations often appear with grouping. For information on grouping see <<hql-group-by>>.
 
 [[hql-exp-functions]]
 === Scalar functions
@@ -988,7 +1128,8 @@ include::{sourcedir}/HQLTest.java[tags=hql-concat-function-example]
 
 SUBSTRING::
 	  Extracts a portion of a string value.
-	  The second argument denotes the starting position. The third (optional) argument denotes the length.
+	  The second argument denotes the starting position, where 1 is the first character of the string.
+	  The third (optional) argument denotes the length.
 
 ====
 [source, JAVA, indent=0]
@@ -1126,7 +1267,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-bit-length-function-example]
 CAST::
 	Performs a SQL cast.
 	The cast target should name the Hibernate mapping type to use.
-	See the <<chapters/domain/basic_types.adoc#[basic-provided,data types>> chapter on for more information.
+	See the <<chapters/domain/basic_types.adoc#basic-provided,data types>> chapter on for more information.
 
 ====
 [source, JAVA, indent=0]
@@ -1663,5 +1804,40 @@ Null values can be placed in front or at the end of the sorted set using `NULLS 
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-order-by-example]
+----
+====
+
+[[hql-read-only-entities]]
+=== Read-only entities
+
+As explained in <<chapters/domain/immutability.adoc#entity-immutability,entity immutability>> section, fetching entities in read-only mode is much more efficient than fetching read-write entities.
+Even if the entities are mutable, you can still fetch them in read-only mode, and benefit from reducing the memory footprint and speeding up the flushing process.
+
+Read-only entities are skipped by the dirty checking mechanism as illustrated by the following example:
+
+[[hql-read-only-entities-example]]
+.Read-only entities query example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-read-only-entities-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/hql-read-only-entities-example.sql[]
+----
+====
+
+As you can see, there is no SQL `UPDATE` being executed.
+
+The Hibernate native API offers a `Query#setReadOnly` method, as an alternative to using a JPA query hint:
+
+[[hql-read-only-entities-native-example]]
+.Read-only entities native query example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-read-only-entities-native-example]
 ----
 ====

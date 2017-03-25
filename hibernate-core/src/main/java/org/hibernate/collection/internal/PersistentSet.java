@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -50,7 +50,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	 *
 	 * @param session The session to which this set will belong.
 	 */
-	public PersistentSet(SessionImplementor session) {
+	public PersistentSet(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
@@ -61,7 +61,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	 * @param session The session to which this set will belong.
 	 * @param set The underlying set data.
 	 */
-	public PersistentSet(SessionImplementor session, java.util.Set set) {
+	public PersistentSet(SharedSessionContractImplementor session, java.util.Set set) {
 		super( session );
 		// Sets can be just a view of a part of another collection.
 		// do we need to copy it to be sure it won't be changing

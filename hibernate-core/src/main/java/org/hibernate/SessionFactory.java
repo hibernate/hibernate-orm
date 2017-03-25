@@ -11,9 +11,11 @@ import java.sql.Connection;
 import java.util.Map;
 import java.util.Set;
 import javax.naming.Referenceable;
+import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.stat.Statistics;
@@ -34,7 +36,7 @@ import org.hibernate.stat.Statistics;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionFactory extends Referenceable, Serializable, java.io.Closeable {
+public interface SessionFactory extends EntityManagerFactory, HibernateEntityManagerFactory, Referenceable, Serializable, java.io.Closeable {
 	/**
 	 * Get the special options used to build the factory.
 	 *
@@ -102,64 +104,6 @@ public interface SessionFactory extends Referenceable, Serializable, java.io.Clo
 	StatelessSession openStatelessSession(Connection connection);
 
 	/**
-	 * Retrieve the {@link ClassMetadata} associated with the given entity class.
-	 *
-	 * @param entityClass The entity class
-	 *
-	 * @return The metadata associated with the given entity; may be null if no such
-	 * entity was mapped.
-	 *
-	 * @throws HibernateException Generally null is returned instead of throwing.
-	 */
-	ClassMetadata getClassMetadata(Class entityClass);
-
-	/**
-	 * Retrieve the {@link ClassMetadata} associated with the given entity class.
-	 *
-	 * @param entityName The entity class
-	 *
-	 * @return The metadata associated with the given entity; may be null if no such
-	 * entity was mapped.
-	 *
-	 * @throws HibernateException Generally null is returned instead of throwing.
-	 * @since 3.0
-	 */
-	ClassMetadata getClassMetadata(String entityName);
-
-	/**
-	 * Get the {@link CollectionMetadata} associated with the named collection role.
-	 *
-	 * @param roleName The collection role (in form [owning-entity-name].[collection-property-name]).
-	 *
-	 * @return The metadata associated with the given collection; may be null if no such
-	 * collection was mapped.
-	 *
-	 * @throws HibernateException Generally null is returned instead of throwing.
-	 */
-	CollectionMetadata getCollectionMetadata(String roleName);
-
-	/**
-	 * Retrieve the {@link ClassMetadata} for all mapped entities.
-	 *
-	 * @return A map containing all {@link ClassMetadata} keyed by the
-	 * corresponding {@link String} entity-name.
-	 *
-	 * @throws HibernateException Generally empty map is returned instead of throwing.
-	 *
-	 * @since 3.0 changed key from {@link Class} to {@link String}.
-	 */
-	Map<String,ClassMetadata> getAllClassMetadata();
-
-	/**
-	 * Get the {@link CollectionMetadata} for all mapped collections.
-	 *
-	 * @return a map from <tt>String</tt> to <tt>CollectionMetadata</tt>
-	 *
-	 * @throws HibernateException Generally empty map is returned instead of throwing.
-	 */
-	Map getAllCollectionMetadata();
-
-	/**
 	 * Retrieve the statistics fopr this factory.
 	 *
 	 * @return The statistics.
@@ -171,7 +115,7 @@ public interface SessionFactory extends Referenceable, Serializable, java.io.Clo
 	 * connection pools, etc).
 	 * <p/>
 	 * It is the responsibility of the application to ensure that there are no
-	 * open {@link Session sessions} before calling this method as the impact
+	 * open {@link Session sessions} beforeQuery calling this method as the impact
 	 * on those {@link Session sessions} is indeterminate.
 	 * <p/>
 	 * No-ops if already {@link #isClosed closed}.
@@ -192,6 +136,7 @@ public interface SessionFactory extends Referenceable, Serializable, java.io.Clo
 	 *
 	 * @return The direct cache access API.
 	 */
+	@Override
 	Cache getCache();
 
 	/**
@@ -225,4 +170,81 @@ public interface SessionFactory extends Referenceable, Serializable, java.io.Clo
 	 * @return The factory's {@link TypeHelper}
 	 */
 	TypeHelper getTypeHelper();
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Deprecations
+
+	/**
+	 * Retrieve the {@link ClassMetadata} associated with the given entity class.
+	 *
+	 * @param entityClass The entity class
+	 *
+	 * @return The metadata associated with the given entity; may be null if no such
+	 * entity was mapped.
+	 *
+	 * @throws HibernateException Generally null is returned instead of throwing.
+	 *
+	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
+	 */
+	@Deprecated
+	ClassMetadata getClassMetadata(Class entityClass);
+
+	/**
+	 * Retrieve the {@link ClassMetadata} associated with the given entity class.
+	 *
+	 * @param entityName The entity class
+	 *
+	 * @return The metadata associated with the given entity; may be null if no such
+	 * entity was mapped.
+	 *
+	 * @throws HibernateException Generally null is returned instead of throwing.
+	 * @since 3.0
+	 *
+	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
+	 */
+	@Deprecated
+	ClassMetadata getClassMetadata(String entityName);
+
+	/**
+	 * Get the {@link CollectionMetadata} associated with the named collection role.
+	 *
+	 * @param roleName The collection role (in form [owning-entity-name].[collection-property-name]).
+	 *
+	 * @return The metadata associated with the given collection; may be null if no such
+	 * collection was mapped.
+	 *
+	 * @throws HibernateException Generally null is returned instead of throwing.
+	 *
+	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
+	 */
+	@Deprecated
+	CollectionMetadata getCollectionMetadata(String roleName);
+
+	/**
+	 * Retrieve the {@link ClassMetadata} for all mapped entities.
+	 *
+	 * @return A map containing all {@link ClassMetadata} keyed by the
+	 * corresponding {@link String} entity-name.
+	 *
+	 * @throws HibernateException Generally empty map is returned instead of throwing.
+	 *
+	 * @since 3.0 changed key from {@link Class} to {@link String}.
+	 *
+	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
+	 */
+	@Deprecated
+	Map<String,ClassMetadata> getAllClassMetadata();
+
+	/**
+	 * Get the {@link CollectionMetadata} for all mapped collections.
+	 *
+	 * @return a map from <tt>String</tt> to <tt>CollectionMetadata</tt>
+	 *
+	 * @throws HibernateException Generally empty map is returned instead of throwing.
+	 *
+	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
+	 */
+	@Deprecated
+	Map getAllCollectionMetadata();
 }

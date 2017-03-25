@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate;
+
 import java.util.Properties;
 
 import org.hibernate.type.BasicType;
@@ -18,6 +19,12 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public interface TypeHelper {
+	// todo : deprecate all these BasicType methods with overloaded forms taking:
+	//		* Java type
+	//		* Converter
+	//		* Java type + sql-type indicator (type code/SqlTypeDescriptor)
+
+
 	/**
 	 * Retrieve the basic type registered against the given name.
 	 *

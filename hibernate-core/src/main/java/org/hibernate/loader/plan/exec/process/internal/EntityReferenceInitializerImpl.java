@@ -18,7 +18,7 @@ import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.plan.exec.process.spi.EntityReferenceInitializer;
@@ -133,7 +133,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 		// Look for the hydrated form
 		final Object identifierHydratedForm = processingState.getIdentifierHydratedForm();
 		if ( identifierHydratedForm == null ) {
-			// we need to register the missing identifier, but that happens later after all readers have had a chance
+			// we need to register the missing identifier, but that happens later afterQuery all readers have had a chance
 			// to resolve its EntityKey
 			return;
 		}
@@ -201,25 +201,23 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 		// Otherwise, we need to load it from the ResultSet...
 
 		// determine which entity instance to use.  Either the supplied one, or instantiate one
-		Object optionalEntityInstance = null;
-		if ( isReturn && context.shouldUseOptionalEntityInformation() ) {
+		Object entityInstance = null;
+		if ( isReturn &&
+				context.shouldUseOptionalEntityInformation() &&
+				context.getQueryParameters().getOptionalObject() != null ) {
 			final EntityKey optionalEntityKey = ResultSetProcessorHelper.getOptionalObjectKey(
 					context.getQueryParameters(),
 					context.getSession()
 			);
-			if ( optionalEntityKey != null ) {
-				if ( optionalEntityKey.equals( entityKey ) ) {
-					optionalEntityInstance = context.getQueryParameters().getOptionalObject();
-				}
+			if ( optionalEntityKey != null && optionalEntityKey.equals( entityKey ) ) {
+				entityInstance = context.getQueryParameters().getOptionalObject();
 			}
 		}
 
 		final String concreteEntityTypeName = getConcreteEntityTypeName( resultSet, context, entityKey );
-
-		final Object entityInstance = optionalEntityInstance != null
-				? optionalEntityInstance
-				: context.getSession().instantiate( concreteEntityTypeName, entityKey.getIdentifier() );
-
+		if ( entityInstance == null ) {
+			entityInstance = context.getSession().instantiate( concreteEntityTypeName, entityKey.getIdentifier() );
+		}
 		processingState.registerEntityInstance( entityInstance );
 
 		// need to hydrate it.
@@ -275,7 +273,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 		final Serializable id = entityKey.getIdentifier();
 
 		// Get the persister for the _subclass_
-		final Loadable concreteEntityPersister = (Loadable) context.getSession().getFactory().getEntityPersister( concreteEntityTypeName );
+		final Loadable concreteEntityPersister = (Loadable) context.getSession().getFactory().getMetamodel().entityPersister( concreteEntityTypeName );
 
 		if ( log.isTraceEnabled() ) {
 			log.tracev(
@@ -299,7 +297,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 				context.getSession()
 		);
 
-		final EntityPersister rootEntityPersister = context.getSession().getFactory().getEntityPersister(
+		final EntityPersister rootEntityPersister = context.getSession().getFactory().getMetamodel().entityPersister(
 				concreteEntityPersister.getRootEntityName()
 		);
 		final Object[] values;
@@ -447,7 +445,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 	}
 
 	private void checkVersion(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			ResultSet resultSet,
 			EntityPersister persister,
 			EntityAliases entityAliases,
@@ -476,7 +474,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 
 			if ( !versionType.isEqual( version, currentVersion ) ) {
 				if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
-					session.getFactory().getStatisticsImplementor().optimisticFailure( persister.getEntityName() );
+					session.getFactory().getStatistics().optimisticFailure( persister.getEntityName() );
 				}
 				throw new StaleObjectStateException( persister.getEntityName(), entityKey.getIdentifier() );
 			}

@@ -20,7 +20,7 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.userguide.util.TransactionUtil.doInHibernate;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Vlad Mihalcea

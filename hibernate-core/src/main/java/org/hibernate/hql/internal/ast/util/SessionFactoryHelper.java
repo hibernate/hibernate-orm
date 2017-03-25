@@ -51,7 +51,7 @@ public class SessionFactoryHelper {
 	 */
 	public SessionFactoryHelper(SessionFactoryImplementor sfi) {
 		this.sfi = sfi;
-		this.collectionPropertyMappingByRole = new HashMap<String, PropertyMapping>();
+		this.collectionPropertyMappingByRole = new HashMap<>();
 	}
 
 	/**
@@ -91,7 +91,7 @@ public class SessionFactoryHelper {
 	 * @return The qualified class name.
 	 */
 	public String getImportedClassName(String className) {
-		return sfi.getImportedClassName( className );
+		return sfi.getMetamodel().getImportedClassName( className );
 	}
 
 	/**
@@ -115,12 +115,12 @@ public class SessionFactoryHelper {
 	 * @return The defined persister for this class, or null if none found.
 	 */
 	public static Queryable findQueryableUsingImports(SessionFactoryImplementor sfi, String className) {
-		final String importedClassName = sfi.getImportedClassName( className );
+		final String importedClassName = sfi.getMetamodel().getImportedClassName( className );
 		if ( importedClassName == null ) {
 			return null;
 		}
 		try {
-			return (Queryable) sfi.getEntityPersister( importedClassName );
+			return (Queryable) sfi.getMetamodel().entityPersister( importedClassName );
 		}
 		catch ( MappingException me ) {
 			return null;
@@ -139,18 +139,18 @@ public class SessionFactoryHelper {
 	public EntityPersister findEntityPersisterByName(String name) throws MappingException {
 		// First, try to get the persister using the given name directly.
 		try {
-			return sfi.getEntityPersister( name );
+			return sfi.getMetamodel().entityPersister( name );
 		}
 		catch ( MappingException ignore ) {
 			// unable to locate it using this name
 		}
 
 		// If that didn't work, try using the 'import' name.
-		String importedClassName = sfi.getImportedClassName( name );
+		String importedClassName = sfi.getMetamodel().getImportedClassName( name );
 		if ( importedClassName == null ) {
 			return null;
 		}
-		return sfi.getEntityPersister( importedClassName );
+		return sfi.getMetamodel().entityPersister( importedClassName );
 	}
 
 	/**
@@ -186,7 +186,7 @@ public class SessionFactoryHelper {
 	 */
 	public QueryableCollection getCollectionPersister(String role) {
 		try {
-			return (QueryableCollection) sfi.getCollectionPersister( role );
+			return (QueryableCollection) sfi.getMetamodel().collectionPersister( role );
 		}
 		catch ( ClassCastException cce ) {
 			throw new QueryException( "collection is not queryable: " + role );
@@ -208,7 +208,7 @@ public class SessionFactoryHelper {
 	 */
 	public QueryableCollection requireQueryableCollection(String role) throws QueryException {
 		try {
-			QueryableCollection queryableCollection = (QueryableCollection) sfi.getCollectionPersister( role );
+			QueryableCollection queryableCollection = (QueryableCollection) sfi.getMetamodel().collectionPersister( role );
 			if ( queryableCollection != null ) {
 				collectionPropertyMappingByRole.put( role, new CollectionPropertyMapping( queryableCollection ) );
 			}
@@ -268,7 +268,7 @@ public class SessionFactoryHelper {
 	 */
 	public JoinSequence createJoinSequence(boolean implicit, AssociationType associationType, String tableAlias, JoinType joinType, String[] columns) {
 		JoinSequence joinSequence = createJoinSequence();
-		joinSequence.setUseThetaStyle( implicit );    // Implicit joins use theta style (WHERE pk = fk), explicit joins use JOIN (after from)
+		joinSequence.setUseThetaStyle( implicit );    // Implicit joins use theta style (WHERE pk = fk), explicit joins use JOIN (afterQuery from)
 		joinSequence.addJoin( associationType, tableAlias, joinType, columns );
 		return joinSequence;
 	}
@@ -419,6 +419,6 @@ public class SessionFactoryHelper {
 	}
 
 	public boolean isStrictJPAQLComplianceEnabled() {
-		return sfi.getSettings().isStrictJPAQLCompliance();
+		return sfi.getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance();
 	}
 }

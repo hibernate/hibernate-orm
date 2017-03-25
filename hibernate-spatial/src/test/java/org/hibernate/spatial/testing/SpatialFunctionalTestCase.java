@@ -52,10 +52,10 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 		try {
 			dataSourceUtils.insertTestData( testData );
 		}
-		catch ( BatchUpdateException e ) {
+		catch (BatchUpdateException e) {
 			throw new RuntimeException( e.getNextException() );
 		}
-		catch ( SQLException e ) {
+		catch (SQLException e) {
 			throw new RuntimeException( e );
 		}
 	}
@@ -74,12 +74,12 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 		try {
 			session = openSession();
 			tx = session.beginTransaction();
-			String hql = String.format("delete from org.hibernate.spatial.integration.%s.GeomEntity", pckg);
+			String hql = String.format( "delete from org.hibernate.spatial.integration.%s.GeomEntity", pckg );
 			Query q = session.createQuery( hql );
 			q.executeUpdate();
 			tx.commit();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			if ( tx != null ) {
 				tx.rollback();
 			}
@@ -98,7 +98,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 * @return
 	 */
 	protected void afterConfigurationBuilt(Configuration cfg) {
-        super.afterConfigurationBuilt(cfg);
+		super.afterConfigurationBuilt( cfg );
 		initializeSpatialTestSupport( serviceRegistry() );
 	}
 
@@ -110,7 +110,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 			testData = support.createTestData( this );
 			geometryEquality = support.createGeometryEquality();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			throw new RuntimeException( e );
 		}
 	}
@@ -139,7 +139,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	}
 
 	public String[] getMappings() {
-		return new String[] { };
+		return new String[] {};
 	}
 
 	@Override
@@ -198,7 +198,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	}
 
 	protected <T> void compare(Map<Integer, T> expected, Map<Integer, T> received, String geometryType) {
-		for ( Map.Entry<Integer, T> entry:  expected.entrySet()) {
+		for ( Map.Entry<Integer, T> entry : expected.entrySet() ) {
 			Integer id = entry.getKey();
 			getLogger().debug( "Case :" + id );
 			getLogger().debug( "expected: " + expected.get( id ) );
@@ -212,9 +212,10 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 		if ( expected instanceof byte[] ) {
 			assertArrayEquals( "Failure on testsuite-suite for case " + id, (byte[]) expected, (byte[]) received );
 
-		} else if ( expected instanceof Geometry ) {
-			if ( JTS.equals(geometryType) ) {
-				if ( !( received instanceof Geometry ) ) {
+		}
+		else if ( expected instanceof Geometry ) {
+			if ( JTS.equals( geometryType ) ) {
+				if ( !(received instanceof Geometry) ) {
 					fail(
 							"Expected a JTS Geometry, but received an object of type " + received.getClass()
 									.getCanonicalName()
@@ -224,8 +225,9 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 						"Failure on testsuite-suite for case " + id,
 						geometryEquality.test( (Geometry) expected, (Geometry) received )
 				);
-			} else {
-				if ( !( received instanceof org.geolatte.geom.Geometry ) ) {
+			}
+			else {
+				if ( !(received instanceof org.geolatte.geom.Geometry) ) {
 					fail(
 							"Expected a Geolatte Geometry, but received an object of type " + received.getClass()
 									.getCanonicalName()
@@ -233,14 +235,17 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 				}
 				assertTrue(
 						"Failure on testsuite-suite for case " + id,
-						geometryEquality.test( (Geometry) expected, (Geometry) org.geolatte.geom.jts.JTS.to((org.geolatte.geom.Geometry)received) )
+						geometryEquality.test(
+								(Geometry) expected,
+								(Geometry) org.geolatte.geom.jts.JTS.to( (org.geolatte.geom.Geometry) received )
+						)
 				);
 			}
 
 		}
 		else {
 			if ( expected instanceof Long ) {
-				assertEquals( "Failure on testsuite-suite for case " + id, ( (Long) expected ).intValue(), received );
+				assertEquals( "Failure on testsuite-suite for case " + id, ((Long) expected).intValue(), received );
 			}
 			else {
 				assertEquals( "Failure on testsuite-suite for case " + id, expected, received );

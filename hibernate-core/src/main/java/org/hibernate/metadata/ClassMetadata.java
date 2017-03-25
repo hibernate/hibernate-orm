@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -120,7 +120,7 @@ public interface ClassMetadata {
 	 * Return the values of the mapped properties of the object
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
-	Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session)
+	Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SharedSessionContractImplementor session)
 	throws HibernateException;
 
 
@@ -141,7 +141,7 @@ public interface ClassMetadata {
 	 *
 	 * @return The instantiated entity.
 	 */
-	Object instantiate(Serializable id, SessionImplementor session);
+	Object instantiate(Serializable id, SharedSessionContractImplementor session);
 
 	/**
 	 * Get the value of a particular (named) property
@@ -170,7 +170,7 @@ public interface ClassMetadata {
 	/**
 	 * Get the identifier of an instance (throw an exception if no identifier property)
 	 *
-	 * @deprecated Use {@link #getIdentifier(Object,SessionImplementor)} instead
+	 * @deprecated Use {@link #getIdentifier(Object,SharedSessionContractImplementor)} instead
 	 */
 	@Deprecated
 	@SuppressWarnings( {"JavaDoc"})
@@ -184,7 +184,7 @@ public interface ClassMetadata {
 	 *
 	 * @return The identifier
 	 */
-	Serializable getIdentifier(Object entity, SessionImplementor session);
+	Serializable getIdentifier(Object entity, SharedSessionContractImplementor session);
 
 	/**
 	 * Inject the identifier value into the given entity.
@@ -193,7 +193,7 @@ public interface ClassMetadata {
 	 * @param id The value to be injected as the identifier.
 	 * @param session The session from which is requests originates
 	 */
-	void setIdentifier(Object entity, Serializable id, SessionImplementor session);
+	void setIdentifier(Object entity, Serializable id, SharedSessionContractImplementor session);
 
 
 	/**

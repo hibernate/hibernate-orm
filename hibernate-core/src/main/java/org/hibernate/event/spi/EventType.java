@@ -136,10 +136,10 @@ public final class EventType<T> {
 	}
 
 	private final String eventName;
-	private final Class<? extends T> baseListenerInterface;
+	private final Class<T> baseListenerInterface;
 	private final int ordinal;
 
-	private EventType(String eventName, Class<? extends T> baseListenerInterface) {
+	private EventType(String eventName, Class<T> baseListenerInterface) {
 		this.eventName = eventName;
 		this.baseListenerInterface = baseListenerInterface;
 		this.ordinal = typeCounter.getAndIncrement();

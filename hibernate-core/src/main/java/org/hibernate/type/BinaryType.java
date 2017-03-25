@@ -8,12 +8,15 @@ package org.hibernate.type;
 
 import java.util.Comparator;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@code byte[]}
+ *
+ * Implementation of the {@link VersionType} interface should be considered deprecated.
+ * For binary entity versions/timestamps, {@link RowVersionType} should be used instead.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -37,8 +40,16 @@ public class BinaryType
 		return new String[] { getName(), "byte[]", byte[].class.getName() };
 	}
 
+	/**
+	 * Generate an initial version.
+	 *
+	 * @param session The session from which this request originates.
+	 * @return an instance of the type
+	 * @deprecated use {@link RowVersionType} for binary entity versions/timestamps
+	 */
 	@Override
-	public byte[] seed(SessionImplementor session) {
+	@Deprecated
+	public byte[] seed(SharedSessionContractImplementor session) {
 		// Note : simply returns null for seed() and next() as the only known
 		// 		application of binary types for versioning is for use with the
 		// 		TIMESTAMP datatype supported by Sybase and SQL Server, which
@@ -46,12 +57,28 @@ public class BinaryType
 		return null;
 	}
 
+	/**
+	 * Increment the version.
+	 *
+	 * @param session The session from which this request originates.
+	 * @param current the current version
+	 * @return an instance of the type
+	 * @deprecated use {@link RowVersionType} for binary entity versions/timestamps
+	 */
 	@Override
-	public byte[] next(byte[] current, SessionImplementor session) {
+	@Deprecated
+	public byte[] next(byte[] current, SharedSessionContractImplementor session) {
 		return current;
 	}
 
+	/**
+	 * Get a comparator for version values.
+	 *
+	 * @return The comparator to use to compare different version values.
+	 * @deprecated use {@link RowVersionType} for binary entity versions/timestamps
+	 */
 	@Override
+	@Deprecated
 	public Comparator<byte[]> getComparator() {
 		return PrimitiveByteArrayTypeDescriptor.INSTANCE.getComparator();
 	}

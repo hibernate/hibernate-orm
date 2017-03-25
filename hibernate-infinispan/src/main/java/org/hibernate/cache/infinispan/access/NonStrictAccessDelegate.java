@@ -6,6 +6,9 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import java.util.Comparator;
+import java.util.concurrent.TimeUnit;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
@@ -13,14 +16,12 @@ import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.infinispan.util.VersionedEntry;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.context.Flag;
-
-import java.util.Comparator;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Access delegate that relaxes the consistency a bit: stale reads are prohibited only after the transaction
@@ -44,7 +45,8 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 		this.region = region;
 		this.cache = region.getCache();
 		this.writeCache = Caches.ignoreReturnValuesCache(cache);
-		this.putFromLoadCache = writeCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY );
+		// Note that correct behaviour of local and async writes depends on LockingInterceptor (see there for details)
+		this.putFromLoadCache = writeCache.withFlags( Flag.ZERO_LOCK_ACQUISITION_TIMEOUT, Flag.FAIL_SILENTLY, Flag.FORCE_ASYNCHRONOUS );
 		Configuration configuration = cache.getCacheConfiguration();
 		if (configuration.clustering().cacheMode().isInvalidation()) {
 			throw new IllegalArgumentException("Nonstrict-read-write mode cannot use invalidation.");
@@ -59,7 +61,7 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 	}
 
 	@Override
-	public Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
+	public Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException {
 		if (txTimestamp < region.getLastRegionInvalidation() ) {
 			return null;
 		}
@@ -71,12 +73,12 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 	}
 
 	@Override
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version) {
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version) {
 		return putFromLoad(session, key, value, txTimestamp, version, false);
 	}
 
 	@Override
-	public boolean putFromLoad(SessionImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride) throws CacheException {
+	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride) throws CacheException {
 		long lastRegionInvalidation = region.getLastRegionInvalidation();
 		if (txTimestamp < lastRegionInvalidation) {
 			log.tracef("putFromLoad not executed since tx started at %d, before last region invalidation finished = %d", txTimestamp, lastRegionInvalidation);
@@ -107,25 +109,24 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 		}
 		// we can't use putForExternalRead since the PFER flag means that entry is not wrapped into context
 		// when it is present in the container. TombstoneCallInterceptor will deal with this.
-		if (!(value instanceof CacheEntry)) {
-			value = new VersionedEntry(value, version, txTimestamp);
-		}
-		putFromLoadCache.put(key, value);
+		// Even if value is instanceof CacheEntry, we have to wrap it in VersionedEntry and add transaction timestamp.
+		// Otherwise, old eviction record wouldn't be overwritten.
+		putFromLoadCache.put(key, new VersionedEntry(value, version, txTimestamp));
 		return true;
 	}
 
 	@Override
-	public boolean insert(SessionImplementor session, Object key, Object value, Object version) throws CacheException {
+	public boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public boolean update(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion) throws CacheException {
+	public boolean update(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion) throws CacheException {
 		return false;
 	}
 
 	@Override
-	public void remove(SessionImplementor session, Object key) throws CacheException {
+	public void remove(SharedSessionContractImplementor session, Object key) throws CacheException {
 		// there's no 'afterRemove', so we have to use our own synchronization
 		// the API does not provide version of removed item but we can't load it from the cache
 		// as that would be prone to race conditions - if the entry was updated in the meantime
@@ -149,7 +150,7 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 
 	@Override
 	public void evict(Object key) throws CacheException {
-		writeCache.put(key, new VersionedEntry(null, null, region.nextTimestamp()), region.getTombstoneExpiration(), TimeUnit.MILLISECONDS);
+		writeCache.put(key, new VersionedEntry(null, null, region.nextTimestamp()));
 	}
 
 	@Override
@@ -164,17 +165,17 @@ public class NonStrictAccessDelegate implements AccessDelegate {
 	}
 
 	@Override
-	public void unlockItem(SessionImplementor session, Object key) throws CacheException {
+	public void unlockItem(SharedSessionContractImplementor session, Object key) throws CacheException {
 	}
 
 	@Override
-	public boolean afterInsert(SessionImplementor session, Object key, Object value, Object version) {
+	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
 		writeCache.put(key, getVersioned(value, version, session.getTimestamp()));
 		return true;
 	}
 
 	@Override
-	public boolean afterUpdate(SessionImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
+	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
 		writeCache.put(key, getVersioned(value, currentVersion, session.getTimestamp()));
 		return true;
 	}

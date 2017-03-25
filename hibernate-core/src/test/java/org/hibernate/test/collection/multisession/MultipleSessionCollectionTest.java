@@ -34,9 +34,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.jboss.logging.Logger;
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -44,8 +41,12 @@ import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SessionImplementor;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -69,7 +70,7 @@ public class MultipleSessionCollectionTest extends BaseCoreFunctionalTestCase {
 		s1.getTransaction().begin();
 		s1.saveOrUpdate( p );
 
-		// try to save the same entity in a new session before flushing the first session
+		// try to save the same entity in a new session beforeQuery flushing the first session
 
 		Session s2 = openSession();
 		s2.getTransaction().begin();
@@ -112,7 +113,7 @@ public class MultipleSessionCollectionTest extends BaseCoreFunctionalTestCase {
 		s1.saveOrUpdate( p );
 		s1.flush();
 
-		// try to save the same entity in a new session after flushing the first session
+		// try to save the same entity in a new session afterQuery flushing the first session
 
 		Session s2 = openSession();
 		s2.getTransaction().begin();
@@ -254,7 +255,7 @@ public class MultipleSessionCollectionTest extends BaseCoreFunctionalTestCase {
 		s1.getTransaction().begin();
 		s1.persist( p );
 
-		// Copy p.children into a different Parent before flush and try to save in new session.
+		// Copy p.children into a different Parent beforeQuery flush and try to save in new session.
 
 		Parent pWithSameChildren = new Parent();
 		pWithSameChildren.children = p.children;
@@ -299,7 +300,7 @@ public class MultipleSessionCollectionTest extends BaseCoreFunctionalTestCase {
 		s1.persist( p );
 		s1.flush();
 
-		// Copy p.children into a different Parent after flush and try to save in new session.
+		// Copy p.children into a different Parent afterQuery flush and try to save in new session.
 
 		Parent pWithSameChildren = new Parent();
 		pWithSameChildren.children = p.children;
@@ -505,7 +506,7 @@ public class MultipleSessionCollectionTest extends BaseCoreFunctionalTestCase {
 		s1.flush();
 		s1.getTransaction().commit();
 
-		// need to commit after flushing; otherwise, will get lock failure when try to move the collection below
+		// need to commit afterQuery flushing; otherwise, will get lock failure when try to move the collection below
 
 		assertNull( ( (SessionImplementor) s1 ).getPersistenceContext().getEntry( p1 ) );
 		CollectionEntry ceChildren = ( (SessionImplementor) s1 ).getPersistenceContext().getCollectionEntry( (PersistentCollection) p1.children );
@@ -548,7 +549,7 @@ public class MultipleSessionCollectionTest extends BaseCoreFunctionalTestCase {
 		s1.flush();
 		s1.getTransaction().commit();
 
-		// need to commit after flushing; otherwise, will get lock failure when try to move the collection below
+		// need to commit afterQuery flushing; otherwise, will get lock failure when try to move the collection below
 
 		assertNull( ( (SessionImplementor) s1 ).getPersistenceContext().getEntry( p1 ) );
 		CollectionEntry ceChildren = ( (SessionImplementor) s1 ).getPersistenceContext().getCollectionEntry( (PersistentCollection) p1.children );
@@ -590,7 +591,7 @@ public class MultipleSessionCollectionTest extends BaseCoreFunctionalTestCase {
 		s1.delete( p1 );
 
 		// Assign the deleted collection to a different entity with same collection role (p2.nickNames)
-		// before committing delete.
+		// beforeQuery committing delete.
 
 		p2.nickNames = p1.nickNames;
 		Session s2 = openSession();
@@ -630,7 +631,7 @@ public class MultipleSessionCollectionTest extends BaseCoreFunctionalTestCase {
 		s1.delete( p1 );
 
 		// Assign the deleted collection to a different entity with different collection role (p2.oldNickNames)
-		// before committing delete.
+		// beforeQuery committing delete.
 
 		p2.oldNickNames = p1.nickNames;
 		Session s2 = openSession();

@@ -28,7 +28,8 @@ public class ConcurrentSecondLevelCacheStatisticsImpl extends CategorizedStatist
 	private AtomicLong missCount = new AtomicLong();
 	private AtomicLong putCount = new AtomicLong();
 
-	ConcurrentSecondLevelCacheStatisticsImpl(Region region,
+	ConcurrentSecondLevelCacheStatisticsImpl(
+			Region region,
 			EntityRegionAccessStrategy entityRegionAccessStrategy,
 			CollectionRegionAccessStrategy collectionRegionAccessStrategy) {
 		super( region.getName() );

@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -44,14 +44,14 @@ public interface CompositeUserType {
 	 *
 	 * @return an array of "property names"
 	 */
-	public String[] getPropertyNames();
+	String[] getPropertyNames();
 
 	/**
 	 * Get the corresponding "property types".
 	 *
 	 * @return an array of Hibernate types
 	 */
-	public Type[] getPropertyTypes();
+	Type[] getPropertyTypes();
 
 	/**
 	 * Get the value of a property.
@@ -61,7 +61,7 @@ public interface CompositeUserType {
 	 * @return the property value
 	 * @throws HibernateException
 	 */
-	public Object getPropertyValue(Object component, int property) throws HibernateException;
+	Object getPropertyValue(Object component, int property) throws HibernateException;
 
 	/**
 	 * Set the value of a property.
@@ -71,14 +71,14 @@ public interface CompositeUserType {
 	 * @param value the value to set
 	 * @throws HibernateException
 	 */
-	public void setPropertyValue(Object component, int property, Object value) throws HibernateException;
+	void setPropertyValue(Object component, int property, Object value) throws HibernateException;
 
 	/**
 	 * The class returned by <tt>nullSafeGet()</tt>.
 	 *
 	 * @return Class
 	 */
-	public Class returnedClass();
+	Class returnedClass();
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality".
@@ -86,12 +86,12 @@ public interface CompositeUserType {
      *
 	 * @throws HibernateException
 	 */
-	public boolean equals(Object x, Object y) throws HibernateException;
+	boolean equals(Object x, Object y) throws HibernateException;
 	
 	/**
 	 * Get a hashcode for the instance, consistent with persistence "equality"
 	 */
-	public int hashCode(Object x) throws HibernateException;
+	int hashCode(Object x) throws HibernateException;
 
 	/**
 	 * Retrieve an instance of the mapped class from a JDBC resultset. Implementors
@@ -105,8 +105,7 @@ public interface CompositeUserType {
 	 * @throws HibernateException
 	 * @throws SQLException
 	 */
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) 
-	throws HibernateException, SQLException;
+	Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException;
 
 	/**
 	 * Write an instance of the mapped class to a prepared statement. Implementors
@@ -120,8 +119,7 @@ public interface CompositeUserType {
 	 * @throws HibernateException
 	 * @throws SQLException
 	 */
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) 
-	throws HibernateException, SQLException;
+	void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException;
 
 	/**
 	 * Return a deep copy of the persistent state, stopping at entities and at collections.
@@ -130,14 +128,14 @@ public interface CompositeUserType {
 	 * @return Object a copy
 	 * @throws HibernateException
 	 */
-	public Object deepCopy(Object value) throws HibernateException;
+	Object deepCopy(Object value) throws HibernateException;
 
 	/**
 	 * Check if objects of this type mutable.
 	 *
 	 * @return boolean
 	 */
-	public boolean isMutable();
+	boolean isMutable();
 
 	/**
 	 * Transform the object into its cacheable representation. At the very least this
@@ -150,7 +148,7 @@ public interface CompositeUserType {
 	 * @return a cachable representation of the object
 	 * @throws HibernateException
 	 */
-	public Serializable disassemble(Object value, SessionImplementor session) throws HibernateException;
+	Serializable disassemble(Object value, SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Reconstruct an object from the cacheable representation. At the very least this
@@ -162,8 +160,7 @@ public interface CompositeUserType {
 	 * @return a reconstructed object from the cachable representation
 	 * @throws HibernateException
 	 */
-	public Object assemble(Serializable cached, SessionImplementor session, Object owner) 
-	throws HibernateException;
+	Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to
@@ -175,6 +172,5 @@ public interface CompositeUserType {
 	 *
 	 * @throws HibernateException
 	 */
-	public Object replace(Object original, Object target, SessionImplementor session, Object owner) 
-	throws HibernateException;
+	Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner) throws HibernateException;
 }

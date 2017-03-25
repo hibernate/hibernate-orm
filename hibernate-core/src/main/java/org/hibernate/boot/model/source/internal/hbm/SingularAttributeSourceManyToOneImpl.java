@@ -9,6 +9,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.util.List;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOnDeleteEnum;
 import org.hibernate.boot.model.JavaTypeDescriptor;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.source.spi.AttributeRole;
@@ -191,7 +192,7 @@ class SingularAttributeSourceManyToOneImpl
 
 	@Override
 	public boolean isCascadeDeleteEnabled() {
-		return false;
+		return JaxbHbmOnDeleteEnum.CASCADE.equals( manyToOneElement.getOnDelete() );
 	}
 
 	@Override
@@ -216,7 +217,7 @@ class SingularAttributeSourceManyToOneImpl
 
 	@Override
 	public boolean areValuesNullableByDefault() {
-		return true;
+		return getNaturalIdMutability() == NaturalIdMutability.NOT_NATURAL_ID;
 	}
 
 	@Override

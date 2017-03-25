@@ -21,21 +21,21 @@ public interface LogicalConnection {
 	 * @return {@code true} if still open ({@link #close} has not been called yet); {@code false} if not open
 	 * (({@link #close} has been called).
 	 */
-	public boolean isOpen();
+	boolean isOpen();
 
 	/**
 	 * Closes the JdbcSession, making it inactive and forcing release of any held resources
 	 *
 	 * @return Legacy :(  Returns the JDBC Connection *if* the user passed in a Connection originally.
 	 */
-	public Connection close();
+	Connection close();
 
 	/**
 	 * Is this JdbcSession currently physically connected (meaning does it currently hold a JDBC Connection)?
 	 *
 	 * @return {@code true} if the JdbcSession currently hold a JDBC Connection; {@code false} if it does not.
 	 */
-	public boolean isPhysicallyConnected();
+	boolean isPhysicallyConnected();
 
 	/**
 	 * Provides access to the registry of JDBC resources associated with this LogicalConnection.
@@ -44,6 +44,6 @@ public interface LogicalConnection {
 	 *
 	 * @throws org.hibernate.ResourceClosedException if the LogicalConnection is closed
 	 */
-	public ResourceRegistry getResourceRegistry();
+	ResourceRegistry getResourceRegistry();
 
 }

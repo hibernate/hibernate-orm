@@ -8,7 +8,31 @@ dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.hikaricp )
     testCompile project( ':hibernate-testing' )
-    testRuntime libraries.slf4j_log4j
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Java 9 ftw!
+    if ( JavaVersion.current().isJava9Compatible() ) {
+        // The JDK used to run Gradle is Java 9+, and we assume that that is the same
+        //		JDK for executing tasks
+        compile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+        compile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+        compile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+        compile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+        compile( 'javax:javaee-api:7.0' )
+
+        testCompile( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+        testCompile( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+        testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+        testCompile( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+        testCompile( 'javax:javaee-api:7.0' )
+
+        testRuntime( 'com.sun.xml.bind:jaxb-impl:2.2.11' )
+        testRuntime( 'org.glassfish.jaxb:jaxb-xjc:2.2.11' )
+        testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics:0.11.0' )
+        testRuntime( 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.11.0' )
+        testRuntime( 'javax:javaee-api:7.0' )
+    }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
 mavenPom {
@@ -18,4 +42,11 @@ mavenPom {
 
 def osgiDescription() {
 	return mavenPom.description
+}
+
+if ( JavaVersion.current().isJava9Compatible() ) {
+    logger.warn( '[WARN] Skipping all tests for hibernate-hikaricp due to Javassist JDK 9 incompatibility' )
+
+    // Hikari CP relies on Javassist which we know has issues with Java 9
+    test.enabled = false
 }

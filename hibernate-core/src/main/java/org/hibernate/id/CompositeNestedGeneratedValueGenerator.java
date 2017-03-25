@@ -13,7 +13,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * For composite identifiers, defines a number of "nested" generations that
@@ -49,7 +49,7 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 	/**
 	 * Contract for declaring how to locate the context for sub-value injection.
 	 */
-	public static interface GenerationContextLocator {
+	public interface GenerationContextLocator {
 		/**
 		 * Given the incoming object, determine the context for injecting back its generated
 		 * id sub-values.
@@ -59,14 +59,14 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 		 *
 		 * @return The injection context
 		 */
-		public Serializable locateGenerationContext(SessionImplementor session, Object incomingObject);
+		Serializable locateGenerationContext(SharedSessionContractImplementor session, Object incomingObject);
 	}
 
 	/**
 	 * Contract for performing the actual sub-value generation, usually injecting it into the
 	 * determined {@link GenerationContextLocator#locateGenerationContext context}
 	 */
-	public static interface GenerationPlan extends ExportableProducer {
+	public interface GenerationPlan extends ExportableProducer {
 		/**
 		 * Execute the value generation.
 		 *
@@ -74,11 +74,11 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 		 * @param incomingObject The entity for which we are generating id
 		 * @param injectionContext The context into which the generated value can be injected
 		 */
-		public void execute(SessionImplementor session, Object incomingObject, Object injectionContext);
+		void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext);
 	}
 
 	private final GenerationContextLocator generationContextLocator;
-	private List<GenerationPlan> generationPlans = new ArrayList<GenerationPlan>();
+	private List<GenerationPlan> generationPlans = new ArrayList<>();
 
 	public CompositeNestedGeneratedValueGenerator(GenerationContextLocator generationContextLocator) {
 		this.generationContextLocator = generationContextLocator;
@@ -89,7 +89,7 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 	}
 
 	@Override
-	public Serializable generate(SessionImplementor session, Object object) throws HibernateException {
+	public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		final Serializable context = generationContextLocator.locateGenerationContext( session, object );
 
 		for ( Object generationPlan : generationPlans ) {

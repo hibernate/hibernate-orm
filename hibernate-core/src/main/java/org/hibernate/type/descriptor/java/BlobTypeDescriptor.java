@@ -62,6 +62,11 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 	}
 
 	@Override
+	public String extractLoggableRepresentation(Blob value) {
+		return value == null ? "null" : "{blob}";
+	}
+
+	@Override
 	public String toString(Blob value) {
 		final byte[] bytes;
 		try {

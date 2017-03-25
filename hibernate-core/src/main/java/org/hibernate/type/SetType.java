@@ -11,7 +11,7 @@ import java.util.HashSet;
 
 import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 public class SetType extends CollectionType {
@@ -20,18 +20,22 @@ public class SetType extends CollectionType {
 		super( typeScope, role, propertyRef );
 	}
 
-	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key) {
-		return new PersistentSet(session);
+	@Override
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
+		return new PersistentSet( session );
 	}
 
+	@Override
 	public Class getReturnedClass() {
 		return java.util.Set.class;
 	}
 
-	public PersistentCollection wrap(SessionImplementor session, Object collection) {
+	@Override
+	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
 		return new PersistentSet( session, (java.util.Set) collection );
 	}
 
+	@Override
 	public Object instantiate(int anticipatedSize) {
 		return anticipatedSize <= 0
 				? new HashSet()

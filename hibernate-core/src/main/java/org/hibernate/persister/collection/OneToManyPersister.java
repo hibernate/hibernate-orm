@@ -19,7 +19,7 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -84,7 +84,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				.addPrimaryKeyColumns( keyColumnNames );
 
 		if ( hasIndex && !indexContainsFormula ) {
-			update.addColumns( indexColumnNames, "null" );
+			for ( int i = 0 ; i < indexColumnNames.length ; i++ ) {
+				if ( indexColumnIsSettable[i] ) {
+					update.addColumn( indexColumnNames[i], "null" );
+				}
+			}
 		}
 
 		if ( hasWhere ) {
@@ -108,7 +112,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				.addColumns( keyColumnNames );
 
 		if ( hasIndex && !indexContainsFormula ) {
-			update.addColumns( indexColumnNames );
+			for ( int i = 0 ; i < indexColumnNames.length ; i++ ) {
+				if ( indexColumnIsSettable[i] ) {
+					update.addColumn( indexColumnNames[i] );
+				}
+			}
 		}
 
 		//identifier collections not supported for 1-to-many
@@ -132,7 +140,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			update.addPrimaryKeyColumns( new String[] {identifierColumnName} );
 		}
 		if ( hasIndex && !indexContainsFormula ) {
-			update.addColumns( indexColumnNames );
+			for ( int i = 0 ; i < indexColumnNames.length ; i++ ) {
+				if ( indexColumnIsSettable[i] ) {
+					update.addColumn( indexColumnNames[i] );
+				}
+			}
 		}
 
 		return update.toStatementString();
@@ -149,7 +161,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				.addColumns( keyColumnNames, "null" );
 
 		if ( hasIndex && !indexContainsFormula ) {
-			update.addColumns( indexColumnNames, "null" );
+			for ( int i = 0 ; i < indexColumnNames.length ; i++ ) {
+				if ( indexColumnIsSettable[i] ) {
+					update.addColumn( indexColumnNames[i], "null" );
+				}
+			}
 		}
 
 		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
@@ -165,21 +181,21 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	public void recreate(PersistentCollection collection, Serializable id, SessionImplementor session)
+	public void recreate(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		super.recreate( collection, id, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
 	}
 
 	@Override
-	public void insertRows(PersistentCollection collection, Serializable id, SessionImplementor session)
+	public void insertRows(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		super.insertRows( collection, id, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
 	}
 
 	@Override
-	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id, SessionImplementor session)
+	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		writeIndex( collection, collection.queuedAdditionIterator(), id, false, session );
 	}
@@ -189,9 +205,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			Iterator entries,
 			Serializable id,
 			boolean resetIndex,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		// If one-to-many and inverse, still need to create the index.  See HHH-5732.
-		if ( isInverse && hasIndex && !indexContainsFormula ) {
+		if ( isInverse && hasIndex && !indexContainsFormula && ArrayHelper.countTrue( indexColumnIsSettable ) > 0 ) {
 			try {
 				if ( entries.hasNext() ) {
 					int nextIndex = resetIndex ? 0 : getSize( id, session );
@@ -306,7 +322,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private BasicBatchKey insertRowBatchKey;
 
 	@Override
-	protected int doUpdateRows(Serializable id, PersistentCollection collection, SessionImplementor session) {
+	protected int doUpdateRows(Serializable id, PersistentCollection collection, SharedSessionContractImplementor session) {
 
 		// we finish all the "removes" first to take care of possible unique
 		// constraints and so that we can take better advantage of batching
@@ -560,7 +576,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	protected CollectionInitializer createSubselectInitializer(SubselectFetch subselect, SessionImplementor session) {
+	protected CollectionInitializer createSubselectInitializer(SubselectFetch subselect, SharedSessionContractImplementor session) {
 		return new SubselectOneToManyLoader(
 				this,
 				subselect.toSubselectString( getCollectionType().getLHSPropertyName() ),
@@ -573,7 +589,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	public Object getElementByIndex(Serializable key, Object index, SessionImplementor session, Object owner) {
+	public Object getElementByIndex(Serializable key, Object index, SharedSessionContractImplementor session, Object owner) {
 		return new CollectionElementLoader( this, getFactory(), session.getLoadQueryInfluencers() )
 				.loadElement( session, key, incrementIndexByBase( index ) );
 	}

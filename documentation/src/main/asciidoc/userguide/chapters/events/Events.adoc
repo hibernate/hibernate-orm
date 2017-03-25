@@ -72,16 +72,29 @@ The listeners should be considered stateless; they are shared between requests, 
 
 A custom listener implements the appropriate interface for the event it wants to process and/or extend one of the convenience base classes
 (or even the default event listeners used by Hibernate out-of-the-box as these are declared non-final for this purpose).
+
 Here is an example of a custom load event listener:
 
 [[events-interceptors-load-listener-example]]
-.Custom LoadListener example
+.Custom `LoadListener` example
 ====
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/ListenerTest.java[tags=events-interceptors-load-listener-example]
 ----
 ====
+
+[[events-mixing-events-and-interceptors]]
+=== Mixing Events and Interceptors
+
+When you want to customize the entity state transition behavior, you have to options:
+
+. you provide a custom `Interceptor`, which is taken into consideration by the default Hibernate event listeners.
+For example, the `Interceptor#onSave()` method is invoked by Hibernate `AbstractSaveEventListener`.
+Or, the `Interceptor#onLoad()` is called by the `DefaultPreLoadEventListener`.
+. you can replace any given default event listener with your own implementation.
+When doing this, you should probably extend the default listeners because otherwise you'd have to take care of all the low-level entity state transition logic.
+For example, if you replace the `DefaultPreLoadEventListener` with your own implementation, then, only if you call the `Interceptor#onLoad()` method explicitly, you can mix the custom load event listener with a custom Hibernate interceptor.
 
 [[events-declarative-security]]
 === Hibernate declarative security
@@ -151,7 +164,7 @@ For callback methods defined on an entity listener class, the method must have a
 A callback method can throw a `RuntimeException`.
 If the callback method does throw a `RuntimeException`, then the current transaction, if any, must be rolled back.
 
-A callback method must not invoke EntityManager or Query methods!
+A callback method must not invoke `EntityManager` or `Query` methods!
 
 It is possible that multiple callback methods are defined for a particular lifecycle event.
 When that is the case, the defined order of execution is well defined by the JPA spec (specifically section 3.5.4):

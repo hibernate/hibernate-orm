@@ -303,7 +303,12 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		return false;
 	}
 
-//	@Override
+	@Override
+	public boolean isWithinElementCollection() {
+		return false;
+	}
+
+	//	@Override
 //	public AttributeConverterDefinition resolveAttributeConverter(String attributeName) {
 //
 //		// @Convert annotations take precedence if present

@@ -6,8 +6,10 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
-import javax.transaction.SystemException;
 import java.io.Serializable;
+import javax.transaction.SystemException;
+
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * A pluggable strategy for defining how the {@link javax.transaction.Synchronization} registered by Hibernate handles
@@ -24,7 +26,7 @@ public interface ExceptionMapper extends Serializable {
 	 *
 	 * @return The appropriate exception to throw
 	 */
-	public RuntimeException mapStatusCheckFailure(String message, SystemException systemException);
+	RuntimeException mapStatusCheckFailure(String message, SystemException systemException, SessionImplementor sessionImplementor);
 
 	/**
 	 * Map an exception encountered during a managed flush to the appropriate runtime-based exception.
@@ -34,5 +36,5 @@ public interface ExceptionMapper extends Serializable {
 	 *
 	 * @return The appropriate exception to throw
 	 */
-	public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure);
+	RuntimeException mapManagedFlushFailure(String message, RuntimeException failure, SessionImplementor session);
 }

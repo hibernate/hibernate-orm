@@ -2,6 +2,7 @@
 == Persistence Contexts
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/pc
 :sourcedir-caching: ../../../../../test/java/org/hibernate/userguide/caching
+:extrasdir: extras
 
 Both the `org.hibernate.Session` API and `javax.persistence.EntityManager` API represent a context for dealing with persistent data.
 This concept is called a `persistence context`.
@@ -156,6 +157,18 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-id-native-examp
 
 In both cases null is returned if no matching database row was found.
 
+It's possible to return a Java 8 `Optional` as well:
+
+[[tag::pc-find-optional-by-id-native-example]]
+.Obtaining an Optional entity reference with its data initialized using the `byId()` Hibernate API
+====
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-optional-by-id-native-example]
+----
+====
+
 [[pc-find-natural-id]]
 === Obtain an entity by natural-id
 
@@ -190,6 +203,17 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-natural-id-exam
 ----
 ====
 
+We can also use a Java 8 `Optional` to load an entity by its natural id:
+
+[[pc-find-optional-by-simple-natural-id-example]]
+.Load an Optional entity by natural-id
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-optional-by-simple-natural-id-example]
+----
+====
+
 Hibernate offer a consistent API for accessing persistent data by identifier or by the natural-id. Each of these defines the same two data access methods:
 
 getReference::
@@ -201,7 +225,7 @@ load::
 	Will return the persistent data associated with the given identifier value or null if that identifier does not exist.
 
 Each of these two methods define an overloading variant accepting a `org.hibernate.LockOptions` argument.
-Locking is discussed in a separate <<chapters/locking/locking.adoc#locking,chapter>>.
+Locking is discussed in a separate <<chapters/locking/Locking.adoc#locking,chapter>>.
 
 [[pc-managed-state]]
 === Modifying managed/persistent state
@@ -261,6 +285,44 @@ Only the entity instance and its value type collections are refreshed unless you
 However, please note that Hibernate has the capability to handle this automatically through its notion of generated properties.
 See the discussion of non-identifier <<chapters/domain/basic_types.adoc#mapping-generated,generated attributes>>.
 ====
+
+[IMPORTANT]
+====
+Traditionally, Hibernate has been allowing detached entities to be refreshed.
+Unfortunately, JPA prohibits this practice and specifies that an `IllegalArgumentException` should be thrown instead.
+
+For this reason, when bootstrapping the Hibernate `SessionFactory` using the native API, the legacy detached entity refresh behavior is going to be preserved.
+On the other hand, when bootstrapping Hibernate through JPA `EntityManagerFactory` building process, detached entities are not allowed to be refreshed by default.
+
+However, this default behavior can be overwritten through the `hibernate.allow_refresh_detached_entity` configuration property.
+If this property is explicitly set to `true`, then you can refresh detached entities even when using the JPA bootstraps mechanism, therefore bypassing the JPA specification restriction.
+
+For more about the `hibernate.allow_refresh_detached_entity` configuration property,
+check out the <<appendices/Configurations.adoc#misc,Configurations>> section as well.
+====
+
+[[pc-refresh-gotchas]]
+==== Refresh gotchas
+
+The `refresh` entity state transition is meant to overwrite the entity attributes according to the info currently contained in the associated database record.
+
+However, you have to be very careful when cascading the refresh action to any transient entity.
+
+For instance, consider the following example:
+
+[[pc-refresh-child-entity-jpa-example]]
+.Refreshing entity state gotcha
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/PersistenceContextTest.java[tags=pc-refresh-child-entity-jpa-example]
+----
+====
+
+In the aforementioned example, an `EntityNotFoundException` is thrown because the `Book` entity is still in a transient state.
+When the refresh action is cascaded from the `Person` entity, Hibernate will not be able to locate the `Book` entity in the database.
+
+For this reason, you should be very careful when mixing the refresh action with transient child entity objects.
 
 [[pc-detach]]
 === Working with detached data
@@ -344,6 +406,65 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-merge-jpa-example]
 ----
 include::{sourcedir}/PersistenceContextTest.java[tags=pc-merge-native-example]
 ----
+====
+
+[[pc-merge-gotchas]]
+===== Merging gotchas
+
+For example, Hibernate throws `IllegalStateException` when merging a parent entity which has references to 2 detached child entities `child1` and `child2` (obtained from different sessions), and `child1` and `child2` represent the same persistent entity, `Child`.
+
+A new configuration property, `hibernate.event.merge.entity_copy_observer`, controls how Hibernate will respond when multiple representations of the same persistent entity ("entity copy") is detected while merging.
+
+The possible values are:
+
+disallow (the default):: throws `IllegalStateException` if an entity copy is detected
+allow:: performs the merge operation on each entity copy that is detected
+log:: (provided for testing only) performs the merge operation on each entity copy that is detected and logs information about the entity copies.
+This setting requires DEBUG logging be enabled for `org.hibernate.event.internal.EntityCopyAllowedLoggedObserver`.
+
+In addition, the application may customize the behavior by providing an implementation of `org.hibernate.event.spi.EntityCopyObserver` and setting `hibernate.event.merge.entity_copy_observer` to the class name.
+When this property is set to `allow` or `log`, Hibernate will merge each entity copy detected while cascading the merge operation.
+In the process of merging each entity copy, Hibernate will cascade the merge operation from each entity copy to its associations with `cascade=CascadeType.MERGE` or `CascadeType.ALL`.
+The entity state resulting from merging an entity copy will be overwritten when another entity copy is merged.
+
+[WARNING]
+====
+Because cascade order is undefined, the order in which the entity copies are merged is undefined.
+As a result, if property values in the entity copies are not consistent, the resulting entity state will be indeterminate, and data will be lost from all entity copies except for the last one merged.
+Therefore, the *last writer wins*.
+
+
+If an entity copy cascades the merge operation to an association that is (or contains) a new entity, that new entity will be merged (i.e., persisted and the merge operation will be cascaded to its associations according to its mapping),
+even if that same association is ultimately overwritten when Hibernate merges a different representation having a different value for its association.
+
+If the association is mapped with `orphanRemoval = true`, the new entity will not be deleted because the semantics of orphanRemoval do not apply if the entity being orphaned is a new entity.
+
+There are known issues when representations of the same persistent entity have different values for a collection.
+See https://hibernate.atlassian.net/browse/HHH-9239[HHH-9239] and https://hibernate.atlassian.net/browse/HHH-9240[HHH-9240] for more details.
+These issues can cause data loss or corruption.
+
+By setting `hibernate.event.merge.entity_copy_observer` configuration property to `allow` or `log`,
+Hibernate will allow entity copies of any type of entity to be merged.
+
+The only way to exclude particular entity classes or associations that contain critical data is to provide a custom implementation of `org.hibernate.event.spi.EntityCopyObserver` with the desired behavior,
+and setting `hibernate.event.merge.entity_copy_observer` to the class name.
+====
+
+[TIP]
+====
+Hibernate provides limited DEBUG logging capabilities that can help determine the entity classes for which entity copies were found.
+By setting `hibernate.event.merge.entity_copy_observer` to `log` and enabling DEBUG logging for `org.hibernate.event.internal.EntityCopyAllowedLoggedObserver`,
+the following will be logged each time an application calls `EntityManager.merge( entity )` or +
+`Session.merge( entity )`:
+
+- number of times multiple representations of the same persistent entity was detected summarized by entity name;
+- details by entity name and ID, including output from calling toString() on each representation being merged as well as the merge result.
+
+The log should be reviewed to determine if multiple representations of entities containing critical data are detected.
+If so, the application should be modified so there is only one representation, and a custom implementation of `org.hibernate.event.spi.EntityCopyObserver` should be provided to disallow entity copies for entities with critical data.
+
+Using optimistic locking is recommended to detect if different representations are from different versions of the same persistent entity.
+If they are not from the same version, Hibernate will throw either the JPA `OptimisticLockException` or the native `StaleObjectStateException` depending on your bootstrapping strategy.
 ====
 
 [[pc-contains]]
@@ -443,3 +564,167 @@ To verify if an entity instance is currently attached to the running persistence
 include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-contains-example]
 ----
 ====
+
+[[pc-cascade]]
+=== Cascading entity state transitions
+
+JPA allows you to propagate the state transition from a parent entity to a child.
+For this purpose, the JPA `javax.persistence.CascadeType` defines various cascade types:
+
+`ALL`:: cascades all entity state transitions
+`PERSIST`:: cascades the entity persist operation.
+`MERGE`:: cascades the entity merge operation.
+`REMOVE`:: cascades the entity remove operation.
+`REFRESH`:: cascades the entity refresh operation.
+`DETACH`:: cascades the entity detach operation.
+
+Additionally, the `CascadeType.ALL` will propagate any Hibernate-specific operation, which is defined by the `org.hibernate.annotations.CascadeType` enum:
+
+`SAVE_UPDATE`:: cascades the entity saveOrUpdate operation.
+`REPLICATE`:: cascades the entity replicate operation.
+`LOCK`:: cascades the entity lock operation.
+
+The following examples will explain some of the aforementioned cascade operations using the following entities:
+
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/Person.java[tags=pc-cascade-domain-model-example]
+
+include::{sourcedir}/Phone.java[tags=pc-cascade-domain-model-example]
+----
+
+[[pc-cascade-persist]]
+==== `CascadeType.PERSIST`
+
+The `CascadeType.PERSIST` allows us to persist a child entity along with the parent one.
+
+[[pc-cascade-persist-example]]
+.`CascadeType.PERSIST` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadePersistTest.java[tags=pc-cascade-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-cascade-persist-example.sql[]
+----
+====
+
+Even if just the `Person` parent entity was persisted, Hibernate has managed to cascade the persist operation to the associated `Phone` child entity as well.
+
+[[pc-cascade-merge]]
+==== `CascadeType.MERGE`
+
+The `CascadeType.MERGE` allows us to merge a child entity along with the parent one.
+
+.`CascadeType.MERGE` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeMergeTest.java[tags=pc-cascade-merge-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-cascade-merge-example.sql[]
+----
+====
+
+During merge, the current state of the entity is copied onto the entity version that was just fetched from the database.
+That's the reason why Hibernate executed the SELECT statement which fetched both the `Person` entity along with its children.
+
+[[pc-cascade-remove]]
+==== `CascadeType.REMOVE`
+
+The `CascadeType.REMOVE` allows us to remove a child entity along with the parent one.
+Traditionally, Hibernate called this operation delete, that's why the `org.hibernate.annotations.CascadeType` provides a `DELETE` cascade option.
+However, `CascadeType.REMOVE` and `org.hibernate.annotations.CascadeType.DELETE` are identical.
+
+[[pc-cascade-remove-example]]
+.`CascadeType.REMOVE` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeRemoveTest.java[tags=pc-cascade-remove-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-cascade-remove-example.sql[]
+----
+====
+
+[[pc-cascade-detach]]
+==== `CascadeType.DETACH`
+
+`CascadeType.DETACH` is used to propagate the detach operation from a parent entity to a child.
+
+[[pc-cascade-detach-example]]
+.`CascadeType.DETACH` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeDetachTest.java[tags=pc-cascade-detach-example]
+----
+====
+
+[[pc-cascade-lock]]
+==== `CascadeType.LOCK`
+
+Although unintuitively, `CascadeType.LOCK` does not propagate a lock request from a parent entity to its children.
+Such a use case requires the use of the `PessimisticLockScope.EXTENDED` value of the `javax.persistence.lock.scope` property.
+
+However, `CascadeType.LOCK` allows us to reattach a parent entity along with its children to the currently running Persistence Context.
+
+.`CascadeType.LOCK` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeLockTest.java[tags=pc-cascade-lock-example]
+----
+====
+
+[[pc-cascade-refresh]]
+==== `CascadeType.REFRESH`
+
+The `CascadeType.REFRESH` is used to propagate the refresh operation from a parent entity to a child.
+The refresh operation will discard the current entity state, and it will override it using the one loaded from the database.
+
+.`CascadeType.REFRESH` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeRefreshTest.java[tags=pc-cascade-refresh-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-cascade-refresh-example.sql[]
+----
+====
+
+In the aforementioned example, you can see that both the `Person` and `Phone` entities are refreshed even if we only called this operation on the parent entity only.
+
+[[pc-cascade-replicate]]
+==== `CascadeType.REPLICATE`
+
+The `CascadeType.REPLICATE` is to replicate both the parent and the child entities.
+The replicate operation allows you to synchronize entities coming from different sources of data.
+
+.`CascadeType.REPLICATE` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeReplicateTest.java[tags=pc-cascade-replicate-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-cascade-replicate-example.sql[]
+----
+====
+
+As illustrated by the SQL statements being generated, both the `Person` and `Phone` entities are replicated to the underlying database rows.
+

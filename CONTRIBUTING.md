@@ -1,9 +1,11 @@
 # Guidelines for Contributing
+
 Contributions from the community are essential in keeping Hibernate (any Open Source
 project really) strong and successful.  While we try to keep requirements for
 contributing to a minimum, there are a few guidelines we ask that you mind.
 
 ## Getting Started
+
 If you are just getting started with Git, GitHub and/or contributing to Hibernate via
 GitHub there are a few pre-requisite steps.
 
@@ -18,6 +20,7 @@ the linked page, this also includes:
 or [Eclipse](https://community.jboss.org/wiki/ContributingToHibernateUsingEclipse).
 
 ## Create the working (topic) branch
+
 Create a [topic branch](http://git-scm.com/book/en/Git-Branching-Branching-Workflows#Topic-Branches) on which you
 will work.  The convention is to name the branch using the JIRA issue key.  If there is not already a JIRA issue
 covering the work you want to do, create one.  Assuming you will be working from the master branch and working
@@ -25,6 +28,7 @@ on the JIRA HHH-123 : `git checkout -b HHH-123 master`
 
 
 ## Code
+
 Do yo thing!
 
 ## Commit
@@ -41,7 +45,8 @@ appreciated btw), please use rebasing rather than merging.  Merging creates
 "merge commits" that really muck up the project timeline._
 
 ## Submit
+
 * If you have not already, sign the [Contributor License Agreement](https://cla.jboss.org).
 * Push your changes to the topic branch in your fork of the repository.
-* Initiate a [pull request](http://help.github.com/send-pull-requests/)
+* Initiate a [pull request](http://help.github.com/articles/creating-a-pull-request)
 * Update the JIRA issue, adding a comment including a link to the created pull request

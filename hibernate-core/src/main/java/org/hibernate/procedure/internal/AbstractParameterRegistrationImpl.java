@@ -16,7 +16,7 @@ import javax.persistence.TemporalType;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.ParameterBind;
 import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
@@ -142,7 +142,7 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 		);
 	}
 
-	protected SessionImplementor session() {
+	protected SharedSessionContractImplementor session() {
 		return procedureCall.getSession();
 	}
 
@@ -273,8 +273,23 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 						);
 					}
 				}
-				for ( int i = 0; i < sqlTypesToUse.length; i++ ) {
-					statement.registerOutParameter( startIndex + i, sqlTypesToUse[i] );
+				// TODO: sqlTypesToUse.length > 1 does not seem to have a working use case (HHH-10769).
+				// The idea is that an embeddable/custom type can have more than one column values
+				// that correspond with embeddable/custom attribute value. This does not seem to
+				// be working yet. For now, if sqlTypesToUse.length > 1, then register
+				// the out parameters by position (since we only have one name).
+				// This will cause a failure if there are other parameters bound by
+				// name and the dialect does not support "mixed" named/positional parameters;
+				// e.g., Oracle.
+				if ( sqlTypesToUse.length == 1 &&
+						procedureCall.getParameterStrategy() == ParameterStrategy.NAMED &&
+						canDoNameParameterBinding() ) {
+					statement.registerOutParameter( getName(), sqlTypesToUse[0] );
+				}
+				else {
+					for ( int i = 0; i < sqlTypesToUse.length; i++ ) {
+						statement.registerOutParameter( startIndex + i, sqlTypesToUse[i] );
+					}
 				}
 			}
 
@@ -374,12 +389,37 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 			throw new ParameterMisuseException( "REF_CURSOR parameters should be accessed via results" );
 		}
 
+		// TODO: sqlTypesToUse.length > 1 does not seem to have a working use case (HHH-10769).
+		// For now, if sqlTypes.length > 1 with a named parameter, then extract
+		// parameter values by position (since we only have one name).
+		final boolean useNamed = sqlTypes.length == 1 &&
+				procedureCall.getParameterStrategy() == ParameterStrategy.NAMED &&
+				canDoNameParameterBinding();
+
 		try {
 			if ( ProcedureParameterExtractionAware.class.isInstance( hibernateType ) ) {
-				return (T) ( (ProcedureParameterExtractionAware) hibernateType ).extract( statement, startIndex, session() );
+				if ( useNamed ) {
+					return (T) ( (ProcedureParameterExtractionAware) hibernateType ).extract(
+							statement,
+							new String[] { getName() },
+							session()
+					);
+				}
+				else {
+					return (T) ( (ProcedureParameterExtractionAware) hibernateType ).extract(
+							statement,
+							startIndex,
+							session()
+					);
+				}
 			}
 			else {
-				return (T) statement.getObject( startIndex );
+				if ( useNamed ) {
+					return (T) statement.getObject( name );
+				}
+				else {
+					return (T) statement.getObject( startIndex );
+				}
 			}
 		}
 		catch (SQLException e) {

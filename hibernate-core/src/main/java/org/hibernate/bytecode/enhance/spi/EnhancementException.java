@@ -14,6 +14,11 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public class EnhancementException extends HibernateException {
+
+	public EnhancementException(String message) {
+		super( message );
+	}
+
 	/**
 	 * Constructs an EnhancementException
 	 *

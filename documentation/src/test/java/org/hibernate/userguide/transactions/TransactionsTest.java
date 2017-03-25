@@ -74,6 +74,7 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 		}
 		finally {
 			session.close();
+			sessionFactory.close();
 		}
 		//end::transactions-api-jdbc-example[]
 	}
@@ -123,6 +124,7 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 		}
 		finally {
 			session.close();
+			sessionFactory.close();
 		}
 		//end::transactions-api-cmt-example[]
 	}
@@ -176,6 +178,7 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 		}
 		finally {
 			session.close();
+			sessionFactory.close();
 		}
 		//end::transactions-api-bmt-example[]
 	}

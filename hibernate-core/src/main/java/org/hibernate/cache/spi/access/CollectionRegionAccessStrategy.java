@@ -17,7 +17,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  * {@link #lockItem} -> {@link #remove} -> {@link #unlockItem}
  * <p/>
  * There is another usage pattern that is used to invalidate entries
- * after performing "bulk" HQL/SQL operations:
+ * afterQuery performing "bulk" HQL/SQL operations:
  * {@link #lockRegion} -> {@link #removeAll} -> {@link #unlockRegion}
  *
  * @author Gavin King

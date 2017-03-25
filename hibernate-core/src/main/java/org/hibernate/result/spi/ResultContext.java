@@ -10,18 +10,18 @@ import java.util.Set;
 
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public interface ResultContext {
-	public SessionImplementor getSession();
-	public Set<String> getSynchronizedQuerySpaces();
+	SharedSessionContractImplementor getSession();
+	Set<String> getSynchronizedQuerySpaces();
 
 	// for now...
 	// see Loader-redesign proposal
-	public String getSql();
-	public QueryParameters getQueryParameters();
-	public NativeSQLQueryReturn[] getQueryReturns();
+	String getSql();
+	QueryParameters getQueryParameters();
+	NativeSQLQueryReturn[] getQueryReturns();
 }

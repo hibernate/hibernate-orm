@@ -11,11 +11,11 @@
 
 <hibernate-mapping>
 
-  <class name="org.hibernate.test.subselectfetch.Name" table="Name">
+  <class name="org.hibernate.test.subselectfetch.Name" table="T_Name">
     <id name="id" column="id"/>
-    <property  name="name" column="name"/>
+    <property  name="name" column="c_name"/>
 
-    <property name="nameLength" formula="(select len(name) from name where id=name.id)"/>
+    <property name="nameLength" formula="(select len(c_name) from T_Name where id = T_Name.id)"/>
 
     <bag name="values" inverse="true" lazy="false" fetch="subselect">
       <key column="name_id"/>

@@ -61,10 +61,10 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		String originalId = verEntCfg.getOriginalIdPropName();
 		String revisionPropertyName = verEntCfg.getRevisionFieldName();
 
-		Object revisionInfoObject = ((Map) versionsEntity.get( originalId )).get( revisionPropertyName );
+		Object revisionInfoObject = ( (Map) versionsEntity.get( originalId ) ).get( revisionPropertyName );
 
 		if ( revisionInfoObject instanceof HibernateProxy ) {
-			return (Number) ((HibernateProxy) revisionInfoObject).getHibernateLazyInitializer().getIdentifier();
+			return (Number) ( (HibernateProxy) revisionInfoObject ).getHibernateLazyInitializer().getIdentifier();
 		}
 		else {
 			// Not a proxy - must be read from cache or with a join
@@ -94,7 +94,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 			criterion.addToQuery(
 					enversService,
 					versionsReader,
-					entityName,
+					aliasToEntityNameMap,
 					QueryConstants.REFERENCED_ENTITY_ALIAS,
 					qb,
 					qb.getRootParameters()

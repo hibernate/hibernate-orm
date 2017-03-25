@@ -56,12 +56,12 @@ public enum CascadeType {
 	/**
 	 * JPA originally planned on calling DETACH EVICT.
 	 *
-	 * @deprecated use javax.persistence.CascadeType.DETACH
+	 * @deprecated use {@link javax.persistence.CascadeType#DETACH}
 	 */
 	@Deprecated
 	EVICT,
 	/**
-	 * Corresponds to {@link javax.persistence.CascadeType#REFRESH}.
+	 * Corresponds to {@link javax.persistence.CascadeType#DETACH}.
 	 */
 	DETACH
 }

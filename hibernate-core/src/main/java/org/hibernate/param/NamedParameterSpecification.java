@@ -5,11 +5,12 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.param;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 
 /**
@@ -46,7 +47,7 @@ public class NamedParameterSpecification extends AbstractExplicitParameterSpecif
 	public int bind(
 			PreparedStatement statement,
 			QueryParameters qp,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			int position) throws SQLException {
 		TypedValue typedValue = qp.getNamedParameters().get( name );
 		typedValue.getType().nullSafeSet( statement, typedValue.getValue(), position, session );

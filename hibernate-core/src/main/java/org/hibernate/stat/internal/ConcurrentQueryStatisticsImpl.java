@@ -79,17 +79,25 @@ public class ConcurrentQueryStatisticsImpl extends CategorizedStatistics impleme
 	}
 
 	/**
-	 * average time in ms taken by the excution of this query onto the DB
+	 * average time in ms taken by the execution of this query onto the DB
 	 */
 	public long getExecutionAvgTime() {
+		return (long) getExecutionAvgTimeAsDouble();
+	}
+
+	/**
+	 * average time in ms as double taken by the execution of this query onto the DB
+	 */
+	public double getExecutionAvgTimeAsDouble() {
 		// We write lock here to be sure that we always calculate the average time
 		// with all updates from the executed applied: executionCount and totalExecutionTime
 		// both used in the calculation
 		writeLock.lock();
 		try {
-			long avgExecutionTime = 0;
-			if (executionCount.get() > 0) {
-				avgExecutionTime = totalExecutionTime.get() / executionCount.get();
+			double avgExecutionTime = 0;
+			if ( executionCount.get() > 0 ) {
+				avgExecutionTime = totalExecutionTime.get() / (double) executionCount
+						.get();
 			}
 			return avgExecutionTime;
 		}
@@ -99,17 +107,24 @@ public class ConcurrentQueryStatisticsImpl extends CategorizedStatistics impleme
 	}
 
 	/**
-	 * max time in ms taken by the excution of this query onto the DB
+	 * max time in ms taken by the execution of this query onto the DB
 	 */
 	public long getExecutionMaxTime() {
 		return executionMaxTime.get();
 	}
 
 	/**
-	 * min time in ms taken by the excution of this query onto the DB
+	 * min time in ms taken by the execution of this query onto the DB
 	 */
 	public long getExecutionMinTime() {
 		return executionMinTime.get();
+	}
+
+	/**
+	 * total time in ms taken by the execution of this query onto the DB
+	 */
+	public long getExecutionTotalTime() {
+		return totalExecutionTime.get();
 	}
 
 	/**

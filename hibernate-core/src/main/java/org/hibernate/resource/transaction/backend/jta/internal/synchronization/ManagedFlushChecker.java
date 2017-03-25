@@ -8,7 +8,7 @@ package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
 import java.io.Serializable;
 
-import org.hibernate.internal.SessionImpl;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * A pluggable strategy for defining how the {@link javax.transaction.Synchronization} registered by Hibernate determines
@@ -16,7 +16,10 @@ import org.hibernate.internal.SessionImpl;
  * through the sister strategy {@link ExceptionMapper}.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated (since 5.2) no longer needed since integrating HEM into hibernate-core.
  */
+@Deprecated
 public interface ManagedFlushChecker extends Serializable {
 	/**
 	 * Check whether we should perform the managed flush
@@ -25,5 +28,5 @@ public interface ManagedFlushChecker extends Serializable {
 	 *
 	 * @return True to indicate to perform the managed flush; false otherwise.
 	 */
-	public boolean shouldDoManagedFlush(SessionImpl session);
+	boolean shouldDoManagedFlush(SessionImplementor session);
 }

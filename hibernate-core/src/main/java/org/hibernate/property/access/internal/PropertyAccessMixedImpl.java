@@ -6,9 +6,12 @@
  */
 package org.hibernate.property.access.internal;
 
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.Getter;
@@ -27,56 +30,53 @@ import org.hibernate.property.access.spi.SetterMethodImpl;
  * @author Steve Ebersole
  */
 public class PropertyAccessMixedImpl implements PropertyAccess {
-	private final PropertyAccessStrategyMixedImpl strategy;
+	private final PropertyAccessStrategy strategy;
 
 	private final Getter getter;
 	private final Setter setter;
 
 	public PropertyAccessMixedImpl(
-			PropertyAccessStrategyMixedImpl strategy,
+			PropertyAccessStrategy strategy,
 			Class containerJavaType,
 			String propertyName) {
 		this.strategy = strategy;
 
-		final Field field = fieldOrNull( containerJavaType, propertyName );
-		final Method getterMethod = getterMethodOrNull( containerJavaType, propertyName );
+		AccessType propertyAccessType = getAccessType( containerJavaType, propertyName );
 
-		final Class propertyJavaType;
+		switch ( propertyAccessType ) {
+			case FIELD: {
+				Field field = fieldOrNull( containerJavaType, propertyName );
+				if ( field == null ) {
+					throw new PropertyAccessBuildingException(
+						"Could not locate field for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
+					);
+				}
+				this.getter = fieldGetter( containerJavaType, propertyName, field );
+				this.setter = fieldSetter( containerJavaType, propertyName, field );
+				break;
+			}
+			case PROPERTY: {
+				Method getterMethod = getterMethodOrNull( containerJavaType, propertyName );
+				if ( getterMethod == null ) {
+					throw new PropertyAccessBuildingException(
+						"Could not locate getter for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
+					);
+				}
+				Method setterMethod = setterMethodOrNull( containerJavaType, propertyName, getterMethod.getReturnType() );
 
-		// need one of field or getterMethod to be non-null
-		if ( field == null && getterMethod == null ) {
-			throw new PropertyAccessBuildingException(
-					"Could not locate field nor getter method for property named [" + containerJavaType.getName() +
-							"#" + propertyName + "]"
-			);
-		}
-		else if ( field != null ) {
-			propertyJavaType = field.getType();
-			this.getter = new GetterFieldImpl( containerJavaType, propertyName, field );
-		}
-		else {
-			propertyJavaType = getterMethod.getReturnType();
-			this.getter = new GetterMethodImpl( containerJavaType, propertyName, getterMethod );
-		}
-
-		final Method setterMethod = setterMethodOrNull( containerJavaType, propertyName, propertyJavaType );
-
-		// need one of field or setterMethod to be non-null
-		if ( field == null && setterMethod == null ) {
-			throw new PropertyAccessBuildingException(
-					"Could not locate field nor setter method for property named [" + containerJavaType.getName() +
-							"#" + propertyName + "]"
-			);
-		}
-		else if ( field != null ) {
-			this.setter = new SetterFieldImpl( containerJavaType, propertyName, field );
-		}
-		else {
-			this.setter = new SetterMethodImpl( containerJavaType, propertyName, setterMethod );
+				this.getter = propertyGetter( containerJavaType, propertyName, getterMethod );
+				this.setter = propertySetter( containerJavaType, propertyName, setterMethod );
+				break;
+			}
+			default: {
+				throw new PropertyAccessBuildingException(
+					"Invalid access type " + propertyAccessType + " for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
+				);
+			}
 		}
 	}
 
-	private static Field fieldOrNull(Class containerJavaType, String propertyName) {
+	protected static Field fieldOrNull(Class containerJavaType, String propertyName) {
 		try {
 			return ReflectHelper.findField( containerJavaType, propertyName );
 		}
@@ -85,7 +85,7 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 		}
 	}
 
-	private static Method getterMethodOrNull(Class containerJavaType, String propertyName) {
+	protected static Method getterMethodOrNull(Class containerJavaType, String propertyName) {
 		try {
 			return ReflectHelper.findGetterMethod( containerJavaType, propertyName );
 		}
@@ -94,13 +94,57 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 		}
 	}
 
-	private static Method setterMethodOrNull(Class containerJavaType, String propertyName, Class propertyJavaType) {
+	protected static Method setterMethodOrNull(Class containerJavaType, String propertyName, Class propertyJavaType) {
 		try {
 			return ReflectHelper.findSetterMethod( containerJavaType, propertyName, propertyJavaType );
 		}
 		catch (PropertyNotFoundException e) {
 			return null;
 		}
+	}
+
+	protected static AccessType getAccessType(Class<?> containerJavaType, String propertyName) {
+		Field field = fieldOrNull( containerJavaType, propertyName );
+		AccessType fieldAccessType = getAccessTypeOrNull( field );
+		if ( fieldAccessType != null ) {
+			return fieldAccessType;
+		}
+		AccessType methodAccessType = getAccessTypeOrNull( getterMethodOrNull( containerJavaType, propertyName ) );
+		if ( methodAccessType != null ) {
+			return methodAccessType;
+		}
+		// No @Access on property or field; check to see if containerJavaType has an explicit @Access
+		AccessType classAccessType = getAccessTypeOrNull( containerJavaType );
+		if ( classAccessType != null ) {
+			return classAccessType;
+		}
+		return field != null ? AccessType.FIELD : AccessType.PROPERTY;
+	}
+
+	private static AccessType getAccessTypeOrNull(AnnotatedElement element) {
+		if ( element == null ) {
+			return null;
+		}
+		Access elementAccess = element.getAnnotation( Access.class );
+		return elementAccess == null ? null : elementAccess.value();
+	}
+
+	// --- //
+
+	protected Getter fieldGetter(Class<?> containerJavaType, String propertyName, Field field) {
+		return new GetterFieldImpl( containerJavaType, propertyName, field );
+	}
+
+	protected Setter fieldSetter(Class<?> containerJavaType, String propertyName, Field field) {
+		return new SetterFieldImpl( containerJavaType, propertyName, field );
+	}
+
+	protected Getter propertyGetter(Class<?> containerJavaType, String propertyName, Method method) {
+		return new GetterMethodImpl( containerJavaType, propertyName, method );
+	}
+
+	protected Setter propertySetter(Class<?> containerJavaType, String propertyName, Method method) {
+		return method == null ? null : new SetterMethodImpl( containerJavaType, propertyName, method );
 	}
 
 	@Override

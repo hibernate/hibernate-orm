@@ -37,7 +37,7 @@ public class JtaExceptionListener extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test(expected = RollbackException.class)
-	@Priority(5) // must run before testDataNotPersisted()
+	@Priority(5) // must run beforeQuery testDataNotPersisted()
 	public void testTransactionRollback() throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 

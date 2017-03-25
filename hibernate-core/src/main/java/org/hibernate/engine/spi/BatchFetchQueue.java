@@ -42,7 +42,7 @@ public class BatchFetchQueue {
 	 * A map of {@link SubselectFetch subselect-fetch descriptors} keyed by the
 	 * {@link EntityKey) against which the descriptor is registered.
 	 */
-	private final Map<EntityKey, SubselectFetch> subselectsByEntityKey = new HashMap<EntityKey, SubselectFetch>(8);
+	private final Map<EntityKey, SubselectFetch> subselectsByEntityKey = new HashMap<>( 8 );
 
 	/**
 	 * Used to hold information about the entities that are currently eligible for batch-fetching.  Ultimately
@@ -51,14 +51,13 @@ public class BatchFetchQueue {
 	 * A Map structure is used to segment the keys by entity type since loading can only be done for a particular entity
 	 * type at a time.
 	 */
-	private final Map <String,LinkedHashSet<EntityKey>> batchLoadableEntityKeys = new HashMap <String,LinkedHashSet<EntityKey>>(8);
+	private final Map <String,LinkedHashSet<EntityKey>> batchLoadableEntityKeys = new HashMap<>( 8 );
 	
 	/**
 	 * Used to hold information about the collections that are currently eligible for batch-fetching.  Ultimately
 	 * used by {@link #getCollectionBatch} to build collection load batches.
 	 */
-	private final Map<String, LinkedHashMap<CollectionEntry, PersistentCollection>> batchLoadableCollections =
-			new HashMap<String, LinkedHashMap <CollectionEntry, PersistentCollection>>(8);
+	private final Map<String, LinkedHashMap<CollectionEntry, PersistentCollection>> batchLoadableCollections = new HashMap<>( 8 );
 
 	/**
 	 * Constructs a queue for the given context.
@@ -72,7 +71,7 @@ public class BatchFetchQueue {
 	/**
 	 * Clears all entries from this fetch queue.
 	 * <p/>
-	 * Called after flushing or clearing the session.
+	 * Called afterQuery flushing or clearing the session.
 	 */
 	public void clear() {
 		batchLoadableEntityKeys.clear();
@@ -107,7 +106,7 @@ public class BatchFetchQueue {
 	/**
 	 * After evicting or deleting an entity, we don't need to
 	 * know the query that was used to load it anymore (don't
-	 * call this after loading the entity, since we might still
+	 * call this afterQuery loading the entity, since we might still
 	 * need to load its collections)
 	 */
 	public void removeSubselect(EntityKey key) {
@@ -130,7 +129,7 @@ public class BatchFetchQueue {
 		if ( key.isBatchLoadable() ) {
 			LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName());
 			if (set == null) {
-				set = new LinkedHashSet<EntityKey>(8);
+				set = new LinkedHashSet<>( 8 );
 				batchLoadableEntityKeys.put( key.getEntityName(), set);
 			}
 			set.add(key);
@@ -167,7 +166,7 @@ public class BatchFetchQueue {
 
 	/**
 	 * Get a batch of unloaded identifiers for this class, using a slightly
-	 * complex algorithm that tries to grab keys registered immediately after
+	 * complex algorithm that tries to grab keys registered immediately afterQuery
 	 * the given key.
 	 *
 	 * @param persister The persister for the entities being loaded.
@@ -192,7 +191,7 @@ public class BatchFetchQueue {
 		if ( set != null ) {
 			for ( EntityKey key : set ) {
 				if ( checkForEnd && i == end ) {
-					//the first id found after the given id
+					//the first id found afterQuery the given id
 					return ids;
 				}
 				if ( persister.getIdentifierType().isEqual( id, key.getIdentifier() ) ) {
@@ -215,7 +214,7 @@ public class BatchFetchQueue {
 	}
 
 	private boolean isCached(EntityKey entityKey, EntityPersister persister) {
-		final SessionImplementor session = context.getSession();
+		final SharedSessionContractImplementor session = context.getSession();
 		if ( context.getSession().getCacheMode().isGetEnabled() && persister.hasCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 			final Object key = cache.generateCacheKey(
@@ -241,7 +240,7 @@ public class BatchFetchQueue {
 
 		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( persister.getRole() );
 		if ( map == null ) {
-			map = new LinkedHashMap<CollectionEntry, PersistentCollection>( 16 );
+			map = new LinkedHashMap<>( 16 );
 			batchLoadableCollections.put( persister.getRole(), map );
 		}
 		map.put( ce, collection );
@@ -301,7 +300,7 @@ public class BatchFetchQueue {
 				}
 
 				if ( checkForEnd && i == end ) {
-					return keys; //the first key found after the given key
+					return keys; //the first key found afterQuery the given key
 				}
 
 				final boolean isEqual = collectionPersister.getKeyType().isEqual(
@@ -331,7 +330,7 @@ public class BatchFetchQueue {
 	}
 
 	private boolean isCached(Serializable collectionKey, CollectionPersister persister) {
-		SessionImplementor session = context.getSession();
+		SharedSessionContractImplementor session = context.getSession();
 		if ( session.getCacheMode().isGetEnabled() && persister.hasCache() ) {
 			CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 			Object cacheKey = cache.generateCacheKey(

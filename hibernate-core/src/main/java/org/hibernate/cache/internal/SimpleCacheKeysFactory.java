@@ -8,7 +8,7 @@ package org.hibernate.cache.internal;
 
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -18,8 +18,8 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class SimpleCacheKeysFactory implements CacheKeysFactory {
-
-public static CacheKeysFactory INSTANCE = new SimpleCacheKeysFactory();
+	public static final String SHORT_NAME = "simple";
+	public static CacheKeysFactory INSTANCE = new SimpleCacheKeysFactory();
 
 	@Override
 	public Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
@@ -32,9 +32,9 @@ public static CacheKeysFactory INSTANCE = new SimpleCacheKeysFactory();
 	}
 
 	@Override
-	public Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SessionImplementor session) {
+	public Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
 		// natural ids always need to be wrapped
-		return new OldNaturalIdCacheKey(naturalIdValues, persister.getPropertyTypes(), persister.getNaturalIdentifierProperties(), null, session);
+		return new NaturalIdCacheKey(naturalIdValues, persister.getPropertyTypes(), persister.getNaturalIdentifierProperties(), null, session);
 	}
 
 	@Override
@@ -49,6 +49,6 @@ public static CacheKeysFactory INSTANCE = new SimpleCacheKeysFactory();
 
 	@Override
 	public Object[] getNaturalIdValues(Object cacheKey) {
-		return ((OldNaturalIdCacheKey) cacheKey).getNaturalIdValues();
+		return ((NaturalIdCacheKey) cacheKey).getNaturalIdValues();
 	}
 }

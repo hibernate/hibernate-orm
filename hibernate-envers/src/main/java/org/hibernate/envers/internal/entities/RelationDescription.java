@@ -11,6 +11,7 @@ import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class RelationDescription {
 	private final String fromPropertyName;
@@ -22,6 +23,7 @@ public class RelationDescription {
 	private final PropertyMapper fakeBidirectionalRelationMapper;
 	private final PropertyMapper fakeBidirectionalRelationIndexMapper;
 	private final boolean insertable;
+	private final boolean indexed;
 	private boolean bidirectional;
 
 	public static RelationDescription toOne(
@@ -36,7 +38,7 @@ public class RelationDescription {
 			boolean ignoreNotFound) {
 		return new RelationDescription(
 				fromPropertyName, relationType, toEntityName, mappedByPropertyName, idMapper,
-				fakeBidirectionalRelationMapper, fakeBidirectionalRelationIndexMapper, insertable, ignoreNotFound
+				fakeBidirectionalRelationMapper, fakeBidirectionalRelationIndexMapper, insertable, ignoreNotFound, false
 		);
 	}
 
@@ -48,14 +50,15 @@ public class RelationDescription {
 			IdMapper idMapper,
 			PropertyMapper fakeBidirectionalRelationMapper,
 			PropertyMapper fakeBidirectionalRelationIndexMapper,
-			boolean insertable) {
+			boolean insertable,
+			boolean indexed) {
 		// Envers populates collections by executing dedicated queries. Special handling of
 		// @NotFound(action = NotFoundAction.IGNORE) can be omitted in such case as exceptions
 		// (e.g. EntityNotFoundException, ObjectNotFoundException) are never thrown.
 		// Therefore assigning false to ignoreNotFound.
 		return new RelationDescription(
 				fromPropertyName, relationType, toEntityName, mappedByPropertyName, idMapper, fakeBidirectionalRelationMapper,
-				fakeBidirectionalRelationIndexMapper, insertable, false
+				fakeBidirectionalRelationIndexMapper, insertable, false, indexed
 		);
 	}
 
@@ -68,7 +71,8 @@ public class RelationDescription {
 			PropertyMapper fakeBidirectionalRelationMapper,
 			PropertyMapper fakeBidirectionalRelationIndexMapper,
 			boolean insertable,
-			boolean ignoreNotFound) {
+			boolean ignoreNotFound,
+			boolean indexed) {
 		this.fromPropertyName = fromPropertyName;
 		this.relationType = relationType;
 		this.toEntityName = toEntityName;
@@ -78,7 +82,7 @@ public class RelationDescription {
 		this.fakeBidirectionalRelationMapper = fakeBidirectionalRelationMapper;
 		this.fakeBidirectionalRelationIndexMapper = fakeBidirectionalRelationIndexMapper;
 		this.insertable = insertable;
-
+		this.indexed = indexed;
 		this.bidirectional = false;
 	}
 
@@ -116,6 +120,10 @@ public class RelationDescription {
 
 	public boolean isInsertable() {
 		return insertable;
+	}
+
+	public boolean isIndexed() {
+		return indexed;
 	}
 
 	public boolean isBidirectional() {

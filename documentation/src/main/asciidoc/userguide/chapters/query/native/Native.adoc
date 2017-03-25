@@ -641,6 +641,56 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-composite-key-entity-associ
 ----
 ====
 
+[[sql-global-catalog-schema]]
+=== Resolving global catalog and schema in native SQL queries
+
+When using multiple database catalogs and schemas, Hibernate offers the possibility of
+setting a global catalog or schema so that you don't have to declare it explicitly for every entity.
+
+[[sql-global-catalog-schema-configuration]]
+.Setting global catalog and schema
+====
+[source, XML, indent=0]
+----
+<property name="hibernate.default_catalog" value="crm"/>
+<property name="hibernate.default_schema" value="analytics"/>
+----
+====
+
+This way, we can imply the global *crm* catalog and *analytics* schema in every JPQL, HQL or Criteria API query.
+
+However, for native queries, the SQL query is passed as is, therefore you need to explicitly set the global catalog and schema whenever you are referencing a database table.
+Fortunately, Hibernate allows you to resolve the current global catalog and schema using the following placeholders:
+
+{h-catalog}:: resolves the current `hibernate.default_catalog` configuration property value.
+{h-schema}:: resolves the current `hibernate.default_schema` configuration property value.
+{h-domain}:: resolves the current `hibernate.default_catalog` and `hibernate.default_schema` configuration property values (e.g. catalog.schema).
+
+Withe these placeholders, you can imply the catalog, schema, or both catalog and schema for every native query.
+
+So, when running the following native query:
+
+[source, JAVA, indent=0]
+----
+@NamedNativeQuery(
+    name = "last_30_days_hires",
+    query =
+        "select * " +
+        "from {h-domain}person " +
+        "where age(hired_on) < '30 days'",
+    resultClass = Person.class
+)
+----
+
+Hibernate is going to resolve the `{h-domain}` placeholder according to the values of the default catalog and schema:
+
+[source, SQL, indent=0]
+----
+SELECT *
+FROM   crm.analytics.person
+WHERE  age(hired_on) < '30 days'
+----
+
 [[sql-sp]]
 === Using stored procedures for querying
 

@@ -30,6 +30,9 @@ public interface AuditQuery {
 
 	AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType);
 
+	AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType,
+			String alias);
+
 	AuditQuery add(AuditCriterion criterion);
 
 	AuditQuery addProjection(AuditProjection projection);
@@ -53,4 +56,6 @@ public interface AuditQuery {
 	AuditQuery setTimeout(int timeout);
 
 	AuditQuery setLockMode(LockMode lockMode);
+
+	String getAlias();
 }

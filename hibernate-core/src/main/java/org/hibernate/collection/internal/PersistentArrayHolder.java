@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -49,7 +49,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	 * @param session The session
 	 * @param array The array (the persistent "collection").
 	 */
-	public PersistentArrayHolder(SessionImplementor session, Object array) {
+	public PersistentArrayHolder(SharedSessionContractImplementor session, Object array) {
 		super( session );
 		this.array = array;
 		setInitialized();
@@ -61,7 +61,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	 * @param session The session
 	 * @param persister The persister for the array
 	 */
-	public PersistentArrayHolder(SessionImplementor session, CollectionPersister persister) {
+	public PersistentArrayHolder(SharedSessionContractImplementor session, CollectionPersister persister) {
 		super( session );
 		elementClass = persister.getElementClass();
 	}
@@ -225,7 +225,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 
 	@Override
 	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
-		final java.util.List<Integer> deletes = new ArrayList<Integer>();
+		final java.util.List<Integer> deletes = new ArrayList<>();
 		final Serializable sn = getSnapshot();
 		final int snSize = Array.getLength( sn );
 		final int arraySize = Array.getLength( array );

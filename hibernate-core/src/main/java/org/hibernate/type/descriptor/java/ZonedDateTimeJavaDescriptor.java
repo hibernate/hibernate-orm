@@ -40,7 +40,7 @@ public class ZonedDateTimeJavaDescriptor extends AbstractTypeDescriptor<ZonedDat
 
 	@Override
 	public ZonedDateTime fromString(String string) {
-		return (ZonedDateTime) ZonedDateTimeType.FORMATTER.parse( string );
+		return ZonedDateTime.from( ZonedDateTimeType.FORMATTER.parse( string ) );
 	}
 
 	@Override

@@ -17,6 +17,6 @@ public class EntityModeConverter {
 	}
 
 	public static String toXml(EntityMode entityMode) {
-		return entityMode.name();
+		return ( null == entityMode ) ? null : entityMode.getExternalName();
 	}
 }

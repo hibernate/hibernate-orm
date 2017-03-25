@@ -17,7 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
@@ -102,7 +102,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 	 * @param lockOptions
 	 */
 	public final List loadEntityBatch(
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final Serializable[] ids,
 			final Type idType,
 			final Object optionalObject,
@@ -147,12 +147,12 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 	}
 
 	@Override
-	public Object load(Serializable id, Object optionalObject, SessionImplementor session) throws HibernateException {
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session) throws HibernateException {
 		return load( id, optionalObject, session, LockOptions.NONE );
 	}
 
 	@Override
-	public Object load(Serializable id, Object optionalObject, SessionImplementor session, LockOptions lockOptions) {
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions) {
 
 		final Object result;
 		try {
@@ -174,7 +174,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			result = extractEntityResult( results );
 		}
 		catch ( SQLException sqle ) {
-			throw getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not load an entity: " + MessageHelper.infoString(
 							entityPersister,

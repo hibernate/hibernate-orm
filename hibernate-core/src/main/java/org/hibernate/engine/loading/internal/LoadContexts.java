@@ -16,7 +16,7 @@ import java.util.Set;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -59,7 +59,7 @@ public class LoadContexts {
 		return persistenceContext;
 	}
 
-	private SessionImplementor getSession() {
+	private SharedSessionContractImplementor getSession() {
 		return getPersistenceContext().getSession();
 	}
 

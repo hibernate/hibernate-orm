@@ -78,7 +78,6 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.NamedQueryRepository;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
@@ -97,6 +96,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.TypeResolver;
 
 /**
@@ -1567,7 +1567,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 
 	/**
-	 * Ugh!  But we need this done before we ask Envers to produce its entities.
+	 * Ugh!  But we need this done beforeQuery we ask Envers to produce its entities.
 	 */
 	public void processSecondPasses(MetadataBuildingContext buildingContext) {
 		inSecondPass = true;
@@ -1811,45 +1811,49 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 				fk.setReferencedTable( referencedClass.getTable() );
 
-				// todo : should we apply a physical naming too?
-				if ( fk.getName() == null ) {
-					final Identifier nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineForeignKeyName(
-							new ImplicitForeignKeyNameSource() {
-								final List<Identifier> columnNames = extractColumnNames( fk.getColumns() );
-								List<Identifier> referencedColumnNames = null;
+				Identifier nameIdentifier;
 
-								@Override
-								public Identifier getTableName() {
-									return table.getNameIdentifier();
-								}
+				ImplicitForeignKeyNameSource foreignKeyNameSource = new ImplicitForeignKeyNameSource() {
+					final List<Identifier> columnNames = extractColumnNames( fk.getColumns() );
+					List<Identifier> referencedColumnNames = null;
 
-								@Override
-								public List<Identifier> getColumnNames() {
-									return columnNames;
-								}
+					@Override
+					public Identifier getTableName() {
+						return table.getNameIdentifier();
+					}
 
-								@Override
-								public Identifier getReferencedTableName() {
-									return fk.getReferencedTable().getNameIdentifier();
-								}
+					@Override
+					public List<Identifier> getColumnNames() {
+						return columnNames;
+					}
 
-								@Override
-								public List<Identifier> getReferencedColumnNames() {
-									if ( referencedColumnNames == null ) {
-										referencedColumnNames = extractColumnNames( fk.getReferencedColumns() );
-									}
-									return referencedColumnNames;
-								}
+					@Override
+					public Identifier getReferencedTableName() {
+						return fk.getReferencedTable().getNameIdentifier();
+					}
 
-								@Override
-								public MetadataBuildingContext getBuildingContext() {
-									return buildingContext;
-								}
-							}
-					);
+					@Override
+					public List<Identifier> getReferencedColumnNames() {
+						if ( referencedColumnNames == null ) {
+							referencedColumnNames = extractColumnNames( fk.getReferencedColumns() );
+						}
+						return referencedColumnNames;
+					}
 
-					fk.setName( nameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() ) );
-				}
+					@Override
+					public Identifier getUserProvidedIdentifier() {
+						return fk.getName() != null ? Identifier.toIdentifier( fk.getName() ) : null;
+					}
+
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return buildingContext;
+					}
+				};
+
+				nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineForeignKeyName(foreignKeyNameSource);
+
+				fk.setName( nameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() ) );
 
 				fk.alignColumns();
 			}
@@ -1959,34 +1963,39 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			}
 		}
 
+		final String originalKeyName = keyName;
+
 		if ( unique ) {
-			if ( StringHelper.isEmpty( keyName ) ) {
-				final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineUniqueKeyName(
-						new ImplicitUniqueKeyNameSource() {
-							@Override
-							public MetadataBuildingContext getBuildingContext() {
-								return buildingContext;
-							}
+			final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineUniqueKeyName(
+				new ImplicitUniqueKeyNameSource() {
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return buildingContext;
+					}
 
-							@Override
-							public Identifier getTableName() {
-								return table.getNameIdentifier();
-							}
+					@Override
+					public Identifier getTableName() {
+						return table.getNameIdentifier();
+					}
 
-							private List<Identifier> columnNameIdentifiers;
+					private List<Identifier> columnNameIdentifiers;
 
-							@Override
-							public List<Identifier> getColumnNames() {
-								// be lazy about building these
-								if ( columnNameIdentifiers == null ) {
-									columnNameIdentifiers = toIdentifiers( columnNames );
-								}
-								return columnNameIdentifiers;
-							}
+					@Override
+					public List<Identifier> getColumnNames() {
+						// be lazy about building these
+						if ( columnNameIdentifiers == null ) {
+							columnNameIdentifiers = toIdentifiers( columnNames );
 						}
-				);
-				keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
-			}
+						return columnNameIdentifiers;
+					}
+
+					@Override
+					public Identifier getUserProvidedIdentifier() {
+						return originalKeyName != null ? Identifier.toIdentifier( originalKeyName ) : null;
+					}
+				}
+			);
+			keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
 
 			UniqueKey uk = table.getOrCreateUniqueKey( keyName );
 			for ( int i = 0; i < columns.length; i++ ) {
@@ -1999,33 +2008,36 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			}
 		}
 		else {
-			if ( StringHelper.isEmpty( keyName ) ) {
-				final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineIndexName(
-						new ImplicitIndexNameSource() {
-							@Override
-							public MetadataBuildingContext getBuildingContext() {
-								return buildingContext;
-							}
+			final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy().determineIndexName(
+				new ImplicitIndexNameSource() {
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return buildingContext;
+					}
 
-							@Override
-							public Identifier getTableName() {
-								return table.getNameIdentifier();
-							}
+					@Override
+					public Identifier getTableName() {
+						return table.getNameIdentifier();
+					}
 
-							private List<Identifier> columnNameIdentifiers;
+					private List<Identifier> columnNameIdentifiers;
 
-							@Override
-							public List<Identifier> getColumnNames() {
-								// be lazy about building these
-								if ( columnNameIdentifiers == null ) {
-									columnNameIdentifiers = toIdentifiers( columnNames );
-								}
-								return columnNameIdentifiers;
-							}
+					@Override
+					public List<Identifier> getColumnNames() {
+						// be lazy about building these
+						if ( columnNameIdentifiers == null ) {
+							columnNameIdentifiers = toIdentifiers( columnNames );
 						}
-				);
-				keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
-			}
+						return columnNameIdentifiers;
+					}
+
+					@Override
+					public Identifier getUserProvidedIdentifier() {
+						return originalKeyName != null ? Identifier.toIdentifier( originalKeyName ) : null;
+					}
+				}
+			);
+			keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
 
 			Index index = table.getOrCreateIndex( keyName );
 			for ( int i = 0; i < columns.length; i++ ) {
@@ -2039,7 +2051,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		if ( unbound.size() > 0 || unboundNoLogical.size() > 0 ) {
-			StringBuilder sb = new StringBuilder( "Unable to create unique key constraint (" );
+			StringBuilder sb = new StringBuilder( "Unable to create " );
+			if ( unique ) {
+				sb.append( "unique key constraint (" );
+			}
+			else {
+				sb.append( "index (" );
+			}
 			for ( String columnName : columnNames ) {
 				sb.append( columnName ).append( ", " );
 			}

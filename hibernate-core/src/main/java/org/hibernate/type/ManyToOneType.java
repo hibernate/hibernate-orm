@@ -19,7 +19,7 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -84,10 +84,12 @@ public class ManyToOneType extends EntityType {
 		this.isLogicalOneToOne = isLogicalOneToOne;
 	}
 
+	@Override
 	protected boolean isNullable() {
 		return ignoreNotFound;
 	}
 
+	@Override
 	public boolean isAlwaysDirtyChecked() {
 		// always need to dirty-check, even when non-updateable;
 		// this ensures that when the association is updated,
@@ -96,14 +98,17 @@ public class ManyToOneType extends EntityType {
 		return true;
 	}
 
+	@Override
 	public boolean isOneToOne() {
 		return false;
 	}
 
+	@Override
 	public boolean isLogicalOneToOne() {
 		return isLogicalOneToOne;
 	}
 
+	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		return requireIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
 	}
@@ -120,6 +125,7 @@ public class ManyToOneType extends EntityType {
 		return fkTargetType;
 	}
 
+	@Override
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
 		return requireIdentifierOrUniqueKeyType( mapping ).sqlTypes( mapping );
 	}
@@ -134,33 +140,37 @@ public class ManyToOneType extends EntityType {
 		return requireIdentifierOrUniqueKeyType( mapping ).defaultSizes( mapping );
 	}
 
+	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
 			Object value,
 			int index,
 			boolean[] settable,
-			SessionImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		requireIdentifierOrUniqueKeyType( session.getFactory() )
 				.nullSafeSet( st, getIdentifier( value, session ), index, settable, session );
 	}
 
+	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
 			Object value,
 			int index,
-			SessionImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		requireIdentifierOrUniqueKeyType( session.getFactory() )
 				.nullSafeSet( st, getIdentifier( value, session ), index, session );
 	}
 
+	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
 		return ForeignKeyDirection.FROM_PARENT;
 	}
 
+	@Override
 	public Object hydrate(
 			ResultSet rs,
 			String[] names,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException, SQLException {
 		// return the (fully resolved) identifier value, but do not resolve
 		// to the actual referenced entity instance
@@ -175,7 +185,7 @@ public class ManyToOneType extends EntityType {
 	 * Register the entity as batch loadable, if enabled
 	 */
 	@SuppressWarnings({ "JavaDoc" })
-	private void scheduleBatchLoadIfNeeded(Serializable id, SessionImplementor session) throws MappingException {
+	private void scheduleBatchLoadIfNeeded(Serializable id, SharedSessionContractImplementor session) throws MappingException {
 		//cannot batch fetch by unique key (property-ref associations)
 		if ( uniqueKeyPropertyName == null && id != null ) {
 			final EntityPersister persister = getAssociatedEntityPersister( session.getFactory() );
@@ -188,15 +198,17 @@ public class ManyToOneType extends EntityType {
 		}
 	}
 
+	@Override
 	public boolean useLHSPrimaryKey() {
 		return false;
 	}
 
+	@Override
 	public boolean isModified(
 			Object old,
 			Object current,
 			boolean[] checkable,
-			SessionImplementor session) throws HibernateException {
+			SharedSessionContractImplementor session) throws HibernateException {
 		if ( current == null ) {
 			return old!=null;
 		}
@@ -209,9 +221,10 @@ public class ManyToOneType extends EntityType {
 				.isDirty( old, getIdentifier( current, session ), session );
 	}
 
+	@Override
 	public Serializable disassemble(
 			Object value,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException {
 
 		if ( value == null ) {
@@ -235,9 +248,10 @@ public class ManyToOneType extends EntityType {
 		}
 	}
 
+	@Override
 	public Object assemble(
 			Serializable oid,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException {
 		
 		//TODO: currently broken for unique-key references (does not detect
@@ -253,15 +267,17 @@ public class ManyToOneType extends EntityType {
 		}
 	}
 
-	private Serializable assembleId(Serializable oid, SessionImplementor session) {
+	private Serializable assembleId(Serializable oid, SharedSessionContractImplementor session) {
 		//the owner of the association is not the owner of the id
 		return ( Serializable ) getIdentifierType( session ).assemble( oid, session, null );
 	}
 
-	public void beforeAssemble(Serializable oid, SessionImplementor session) {
+	@Override
+	public void beforeAssemble(Serializable oid, SharedSessionContractImplementor session) {
 		scheduleBatchLoadIfNeeded( assembleId( oid, session ), session );
 	}
-	
+
+	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		boolean[] result = new boolean[ getColumnSpan( mapping ) ];
 		if ( value != null ) {
@@ -269,11 +285,12 @@ public class ManyToOneType extends EntityType {
 		}
 		return result;
 	}
-	
+
+	@Override
 	public boolean isDirty(
 			Object old,
 			Object current,
-			SessionImplementor session) throws HibernateException {
+			SharedSessionContractImplementor session) throws HibernateException {
 		if ( isSame( old, current ) ) {
 			return false;
 		}
@@ -282,11 +299,12 @@ public class ManyToOneType extends EntityType {
 		return getIdentifierType( session ).isDirty( oldid, newid, session );
 	}
 
+	@Override
 	public boolean isDirty(
 			Object old,
 			Object current,
 			boolean[] checkable,
-			SessionImplementor session) throws HibernateException {
+			SharedSessionContractImplementor session) throws HibernateException {
 		if ( isAlwaysDirtyChecked() ) {
 			return isDirty( old, current, session );
 		}

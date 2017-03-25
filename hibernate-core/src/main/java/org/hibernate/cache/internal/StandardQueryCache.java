@@ -22,12 +22,12 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.CacheImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
-
-import org.jboss.logging.Logger;
 
 /**
  * The standard implementation of the Hibernate QueryCache interface.  This
@@ -39,16 +39,13 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class StandardQueryCache implements QueryCache {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			StandardQueryCache.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StandardQueryCache.class );
 
 	private static final boolean DEBUGGING = LOG.isDebugEnabled();
 	private static final boolean TRACING = LOG.isTraceEnabled();
 
-	private QueryResultsRegion cacheRegion;
-	private UpdateTimestampsCache updateTimestampsCache;
+	private final QueryResultsRegion cacheRegion;
+	private final UpdateTimestampsCache updateTimestampsCache;
 
 	/**
 	 * Constructs a StandardQueryCache instance
@@ -80,6 +77,12 @@ public class StandardQueryCache implements QueryCache {
 		this.updateTimestampsCache = updateTimestampsCache;
 	}
 
+	public StandardQueryCache(QueryResultsRegion cacheRegion, CacheImplementor cacheManager) {
+		LOG.startingQueryCache( cacheRegion.getName() );
+		this.cacheRegion = cacheRegion;
+		this.updateTimestampsCache = cacheManager.getUpdateTimestampsCache();
+	}
+
 	@Override
 	public QueryResultsRegion getRegion() {
 		return cacheRegion;
@@ -107,7 +110,7 @@ public class StandardQueryCache implements QueryCache {
 			final Type[] returnTypes,
 			final List result,
 			final boolean isNaturalKeyLookup,
-			final SessionImplementor session) throws HibernateException {
+			final SharedSessionContractImplementor session) throws HibernateException {
 		if ( isNaturalKeyLookup && result.isEmpty() ) {
 			return false;
 		}
@@ -150,7 +153,7 @@ public class StandardQueryCache implements QueryCache {
 			final Type[] returnTypes,
 			final boolean isNaturalKeyLookup,
 			final Set<Serializable> spaces,
-			final SessionImplementor session) throws HibernateException {
+			final SharedSessionContractImplementor session) throws HibernateException {
 		if ( DEBUGGING ) {
 			LOG.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
 		}
@@ -196,7 +199,7 @@ public class StandardQueryCache implements QueryCache {
 			final boolean isNaturalKeyLookup,
 			boolean singleResult,
 			final Type[] returnTypes,
-			final SessionImplementor session) throws HibernateException {
+			final SharedSessionContractImplementor session) throws HibernateException {
 
 		try {
 			final List result = new ArrayList( cacheable.size() - 1 );
@@ -235,7 +238,7 @@ public class StandardQueryCache implements QueryCache {
 		}
 	}
 
-	private List getCachedResults(QueryKey key, SessionImplementor session) {
+	private List getCachedResults(QueryKey key, SharedSessionContractImplementor session) {
 		List cacheable = null;
 		try {
 			session.getEventListenerManager().cacheGetStart();
@@ -248,7 +251,7 @@ public class StandardQueryCache implements QueryCache {
 	}
 
 
-	protected boolean isUpToDate(Set<Serializable> spaces, Long timestamp, SessionImplementor session) {
+	protected boolean isUpToDate(Set<Serializable> spaces, Long timestamp, SharedSessionContractImplementor session) {
 		if ( DEBUGGING ) {
 			LOG.debugf( "Checking query spaces are up-to-date: %s", spaces );
 		}

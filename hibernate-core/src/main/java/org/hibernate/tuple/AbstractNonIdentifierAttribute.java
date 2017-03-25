@@ -86,7 +86,7 @@ public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute i
 
 	@Override
 	public boolean isDirtyCheckable(boolean hasUninitializedProperties) {
-		return isDirtyCheckable() && ( !hasUninitializedProperties || !isLazy() );
+		return isDirtyCheckable();
 	}
 
 	@Override

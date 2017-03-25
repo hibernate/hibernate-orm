@@ -14,12 +14,10 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.jdbc.Size;
-
-import org.dom4j.Node;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Gavin King
@@ -34,7 +32,7 @@ public class MetaType extends AbstractType {
 	public MetaType(Map<Object,String> discriminatorValuesToEntityNameMap, Type baseType) {
 		this.baseType = baseType;
 		this.discriminatorValuesToEntityNameMap = discriminatorValuesToEntityNameMap;
-		this.entityNameToDiscriminatorValueMap = new HashMap<String,Object>();
+		this.entityNameToDiscriminatorValueMap = new HashMap<>();
 		for ( Map.Entry<Object,String> entry : discriminatorValuesToEntityNameMap.entrySet() ) {
 			entityNameToDiscriminatorValueMap.put( entry.getValue(), entry.getKey() );
 		}
@@ -62,91 +60,102 @@ public class MetaType extends AbstractType {
 		return baseType.defaultSizes( mapping );
 	}
 
+	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		return baseType.getColumnSpan(mapping);
 	}
 
+	@Override
 	public Class getReturnedClass() {
 		return String.class;
 	}
 
+	@Override
 	public Object nullSafeGet(
-		ResultSet rs,
-		String[] names,
-		SessionImplementor session,
-		Object owner)
-	throws HibernateException, SQLException {
+			ResultSet rs,
+			String[] names,
+			SharedSessionContractImplementor session,
+			Object owner) throws HibernateException, SQLException {
 		Object key = baseType.nullSafeGet(rs, names, session, owner);
 		return key==null ? null : discriminatorValuesToEntityNameMap.get(key);
 	}
 
+	@Override
 	public Object nullSafeGet(
-		ResultSet rs,
-		String name,
-		SessionImplementor session,
-		Object owner)
-	throws HibernateException, SQLException {
+			ResultSet rs,
+			String name,
+			SharedSessionContractImplementor session,
+			Object owner) throws HibernateException, SQLException {
 		Object key = baseType.nullSafeGet(rs, name, session, owner);
 		return key==null ? null : discriminatorValuesToEntityNameMap.get(key);
 	}
 
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
-	throws HibernateException, SQLException {
-		baseType.nullSafeSet(st, value==null ? null : entityNameToDiscriminatorValueMap.get(value), index, session);
-	}
-	
+	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
 			Object value,
 			int index,
-			boolean[] settable, 
-			SessionImplementor session) throws HibernateException, SQLException {
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
+		baseType.nullSafeSet(st, value==null ? null : entityNameToDiscriminatorValueMap.get(value), index, session);
+	}
+
+	@Override
+	public void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			boolean[] settable,
+			SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		if ( settable[0] ) {
 			nullSafeSet(st, value, index, session);
 		}
 	}
 
+	@Override
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
 		return toXMLString(value, factory);
 	}
 	
-	public String toXMLString(Object value, SessionFactoryImplementor factory)
-		throws HibernateException {
+	public String toXMLString(Object value, SessionFactoryImplementor factory) throws HibernateException {
 		return (String) value; //value is the entity name
 	}
 
-	public Object fromXMLString(String xml, Mapping factory)
-		throws HibernateException {
+	public Object fromXMLString(String xml, Mapping factory) throws HibernateException {
 		return xml; //xml is the entity name
 	}
 
+	@Override
 	public String getName() {
 		return baseType.getName(); //TODO!
 	}
 
-	public Object deepCopy(Object value, SessionFactoryImplementor factory)
-	throws HibernateException {
+	@Override
+	public Object deepCopy(Object value, SessionFactoryImplementor factory) throws HibernateException {
 		return value;
 	}
 
+	@Override
 	public Object replace(
 			Object original, 
 			Object target,
-			SessionImplementor session, 
+			SharedSessionContractImplementor session,
 			Object owner, 
 			Map copyCache) {
 		return original;
 	}
-	
+
+	@Override
 	public boolean isMutable() {
 		return false;
 	}
 
+	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		throw new UnsupportedOperationException();
 	}
 
-	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session) throws HibernateException {
+	@Override
+	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) throws HibernateException {
 		return checkable[0] && isDirty(old, current, session);
 	}
 	

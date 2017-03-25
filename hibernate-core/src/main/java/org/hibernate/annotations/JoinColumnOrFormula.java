@@ -6,6 +6,7 @@
  */
 package org.hibernate.annotations;
 
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import javax.persistence.JoinColumn;
@@ -22,6 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
+@Repeatable(JoinColumnsOrFormulas.class)
 public @interface JoinColumnOrFormula {
 	/**
 	 * The formula to use in joining.

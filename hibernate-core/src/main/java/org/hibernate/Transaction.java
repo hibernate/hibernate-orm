@@ -6,6 +6,7 @@
  */
 package org.hibernate;
 
+import javax.persistence.EntityTransaction;
 import javax.transaction.Synchronization;
 
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -26,42 +27,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
  * @author Anton van Straaten
  * @author Steve Ebersole
  */
-public interface Transaction {
-
-	/**
-	 * Begin this transaction.  No-op if the transaction has already been begun.  Note that this is not necessarily
-	 * symmetrical since usually multiple calls to {@link #commit} or {@link #rollback} will error.
-	 *
-	 * @throws HibernateException Indicates a problem beginning the transaction.
-	 */
-	void begin();
-
-	/**
-	 * Commit this transaction.  This might entail a number of things depending on the context:<ul>
-	 *     <li>
-	 *         If the underlying transaction was initiated from this Transaction the Session will be flushed,
-	 *         unless the Session is in {@link FlushMode#MANUAL} FlushMode.
-	 *     </li>
-	 *     <li>
-	 *         If the underlying transaction was initiated from this Transaction, commit the underlying transaction.
-	 *     </li>
-	 *     <li>
-	 *         Coordinate various callbacks
-	 *     </li>
-	 * </ul>
-	 *
-	 * @throws HibernateException Indicates a problem committing the transaction.
-	 */
-	void commit();
-
-	/**
-	 * Rollback this transaction.  Either rolls back the underlying transaction or ensures it cannot later commit
-	 * (depending on the actual underlying strategy).
-	 *
-	 * @throws HibernateException Indicates a problem rolling back the transaction.
-	 */
-	void rollback();
-
+public interface Transaction extends EntityTransaction {
 	/**
 	 * Get the current local status of this transaction.
 	 * <p/>
@@ -84,7 +50,7 @@ public interface Transaction {
 	/**
 	 * Set the transaction timeout for any transaction started by a subsequent call to {@link #begin} on this instance.
 	 *
-	 * @param seconds The number of seconds before a timeout.
+	 * @param seconds The number of seconds beforeQuery a timeout.
 	 */
 	void setTimeout(int seconds);
 
@@ -98,6 +64,8 @@ public interface Transaction {
 	/**
 	 * Make a best effort to mark the underlying transaction for rollback only.
 	 */
-	void markRollbackOnly();
+	default void markRollbackOnly() {
+		setRollbackOnly();
+	}
 
 }

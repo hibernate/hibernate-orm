@@ -18,8 +18,9 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
-public interface PropertyMapper {
+public interface PropertyMapper extends ModifiedFlagMapperSupport {
 	/**
 	 * Maps properties to the given map, basing on differences between properties of new and old objects.
 	 *
@@ -55,8 +56,8 @@ public interface PropertyMapper {
 	 *
 	 * @param session The current session.
 	 * @param referencingPropertyName Name of the field, which holds the collection in the entity.
-	 * @param newColl New collection, after updates.
-	 * @param oldColl Old collection, before updates.
+	 * @param newColl New collection, afterQuery updates.
+	 * @param oldColl Old collection, beforeQuery updates.
 	 * @param id Id of the object owning the collection.
 	 *
 	 * @return List of changes that need to be performed on the persistent store.

@@ -11,10 +11,13 @@ import java.util.Map;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
+import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.Helper;
 
@@ -55,14 +58,18 @@ public class SchemaManagementToolCoordinator {
 		}
 
 		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
+		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+
+		boolean haltOnError = configService.getSetting( AvailableSettings.HBM2DDL_HALT_ON_ERROR, Boolean.class, false);
 
 		final ExecutionOptions executionOptions = buildExecutionOptions(
 				configurationValues,
-				ExceptionHandlerLoggedImpl.INSTANCE
+				haltOnError ? ExceptionHandlerHaltImpl.INSTANCE :
+						ExceptionHandlerLoggedImpl.INSTANCE
 		);
 
-		performDatabaseAction( actions.getDatabaseAction(), metadata, tool, serviceRegistry, executionOptions );
 		performScriptAction( actions.getScriptAction(), metadata, tool, serviceRegistry, executionOptions );
+		performDatabaseAction( actions.getDatabaseAction(), metadata, tool, serviceRegistry, executionOptions );
 
 		if ( actions.getDatabaseAction() == Action.CREATE_DROP ) {
 			//noinspection unchecked
@@ -207,8 +214,12 @@ public class SchemaManagementToolCoordinator {
 			);
 		}
 
-		final ScriptSourceInput scriptSourceInput = includesScripts
-				? Helper.interpretScriptSourceSetting( scriptSourceSetting, serviceRegistry.getService( ClassLoaderService.class ) )
+		final ScriptSourceInput scriptSourceInput = includesScripts ?
+				Helper.interpretScriptSourceSetting(
+						scriptSourceSetting,
+						serviceRegistry.getService( ClassLoaderService.class ),
+						(String) configurationValues.get( AvailableSettings.HBM2DDL_CHARSET_NAME )
+				)
 				: null;
 
 		return new JpaTargetAndSourceDescriptor() {
@@ -332,13 +343,16 @@ public class SchemaManagementToolCoordinator {
 			);
 		}
 
+		String charsetName = (String) configurationValues.get( AvailableSettings.HBM2DDL_CHARSET_NAME );
+
 		final ScriptSourceInput scriptSourceInput = includesScripts
-				? Helper.interpretScriptSourceSetting( scriptSourceSetting, serviceRegistry.getService( ClassLoaderService.class ) )
+				? Helper.interpretScriptSourceSetting( scriptSourceSetting, serviceRegistry.getService( ClassLoaderService.class ), charsetName )
 				: null;
 
 		final ScriptTargetOutput scriptTargetOutput = Helper.interpretScriptTargetSetting(
 				settingSelector.getScriptTargetSetting( configurationValues ),
-				serviceRegistry.getService( ClassLoaderService.class )
+				serviceRegistry.getService( ClassLoaderService.class ),
+				charsetName
 		);
 
 		return new JpaTargetAndSourceDescriptor() {

@@ -18,13 +18,13 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class BetweenExpression implements Criterion {
 	private final String propertyName;
-	private final Object lo;
-	private final Object hi;
+	private final Object low;
+	private final Object high;
 
-	protected BetweenExpression(String propertyName, Object lo, Object hi) {
+	protected BetweenExpression(String propertyName, Object low, Object high) {
 		this.propertyName = propertyName;
-		this.lo = lo;
-		this.hi = hi;
+		this.low = low;
+		this.high = high;
 	}
 
 	@Override
@@ -37,14 +37,14 @@ public class BetweenExpression implements Criterion {
 	@Override
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		return new TypedValue[] {
-				criteriaQuery.getTypedValue( criteria, propertyName, lo ),
-				criteriaQuery.getTypedValue( criteria, propertyName, hi )
+				criteriaQuery.getTypedValue( criteria, propertyName, low),
+				criteriaQuery.getTypedValue( criteria, propertyName, high)
 		};
 	}
 
 	@Override
 	public String toString() {
-		return propertyName + " between " + lo + " and " + hi;
+		return propertyName + " between " + low + " and " + high;
 	}
 
 }

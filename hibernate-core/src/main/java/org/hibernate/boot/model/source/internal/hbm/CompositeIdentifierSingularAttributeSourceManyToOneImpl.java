@@ -158,7 +158,7 @@ public class CompositeIdentifierSingularAttributeSourceManyToOneImpl
 
 	@Override
 	public String getXmlNodeName() {
-		return keyManyToOneElement.getName();
+		return null;
 	}
 
 	@Override

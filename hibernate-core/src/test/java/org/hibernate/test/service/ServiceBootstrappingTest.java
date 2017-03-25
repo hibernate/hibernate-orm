@@ -6,10 +6,6 @@
  */
 package org.hibernate.test.service;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Properties;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -19,21 +15,25 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Assume;
 import org.junit.Test;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author Steve Ebersole
  */
 @RequiresDialect( H2Dialect.class )
 public class ServiceBootstrappingTest extends BaseUnitTestCase {
+
 	@Test
 	public void testBasicBuild() {
 		// this test requires that SHOW_SQL property isn't passed from the outside (eg. via Gradle)
@@ -43,16 +43,19 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 		final StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
 				.build();
-		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
-		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
-		final ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
-				ConnectionProviderJdbcConnectionAccess.class,
-				jdbcServices.getBootstrapJdbcConnectionAccess()
-		);
-		assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
-		assertFalse( jdbcServices.getSqlStatementLogger().isLogToStdout() );
-
-		serviceRegistry.destroy();
+		try {
+			final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+			assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
+			final ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
+					ConnectionProviderJdbcConnectionAccess.class,
+					jdbcServices.getBootstrapJdbcConnectionAccess()
+			);
+			assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
+			assertFalse( jdbcServices.getSqlStatementLogger().isLogToStdout() );
+		}
+		finally {
+			serviceRegistry.destroy();
+		}
 	}
 
 	@Test
@@ -61,20 +64,23 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 		props.put( Environment.SHOW_SQL, "true" );
 
 		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
-				.applySettings( props )
-				.build();
+			.applySettings( props )
+			.build();
 
-		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		try {
+			JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
-		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
-		final ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
-				ConnectionProviderJdbcConnectionAccess.class,
-				jdbcServices.getBootstrapJdbcConnectionAccess()
-		);
-		assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
-		assertTrue( jdbcServices.getSqlStatementLogger().isLogToStdout() );
-
-		serviceRegistry.destroy();
+			assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
+			final ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
+					ConnectionProviderJdbcConnectionAccess.class,
+					jdbcServices.getBootstrapJdbcConnectionAccess()
+			);
+			assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
+			assertTrue( jdbcServices.getSqlStatementLogger().isLogToStdout() );
+		}
+		finally {
+			serviceRegistry.destroy();
+		}
 	}
 
 	@Test
@@ -82,31 +88,40 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
 				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
 				.build();
-		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
-
-		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
-		ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
-				ConnectionProviderJdbcConnectionAccess.class,
-				jdbcServices.getBootstrapJdbcConnectionAccess()
-		);
-		assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
 
 		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
 		props.setProperty( Environment.DIALECT, H2Dialect.class.getName() );
 
-		serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
-				.applySettings( props )
-				.addService( ConnectionProvider.class, new UserSuppliedConnectionProviderImpl() )
-				.build();
-		jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		try {
+			JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
-		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
-		connectionAccess = assertTyping(
-				ConnectionProviderJdbcConnectionAccess.class,
-				jdbcServices.getBootstrapJdbcConnectionAccess()
-		);
-		assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( UserSuppliedConnectionProviderImpl.class ) );
+			assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
+			ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
+					ConnectionProviderJdbcConnectionAccess.class,
+					jdbcServices.getBootstrapJdbcConnectionAccess()
+			);
+			assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
+		}
+		finally {
+			serviceRegistry.destroy();
+		}
 
-		serviceRegistry.destroy();
+		try {
+			serviceRegistry = (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder()
+					.applySettings( props )
+					.addService( ConnectionProvider.class, new UserSuppliedConnectionProviderImpl() )
+					.build();
+			JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+
+			assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
+			ConnectionProviderJdbcConnectionAccess connectionAccess = assertTyping(
+					ConnectionProviderJdbcConnectionAccess.class,
+					jdbcServices.getBootstrapJdbcConnectionAccess()
+			);
+			assertTrue( connectionAccess.getConnectionProvider().isUnwrappableAs( UserSuppliedConnectionProviderImpl.class ) );
+		}
+		finally {
+			serviceRegistry.destroy();
+		}
 	}
 }

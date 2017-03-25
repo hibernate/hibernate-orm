@@ -31,7 +31,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
@@ -58,11 +58,10 @@ public class EntityMetamodel implements Serializable {
 	private static final int NO_VERSION_INDX = -66;
 
 	private final SessionFactoryImplementor sessionFactory;
-	private final AbstractEntityPersister persister;
 
 	private final String name;
 	private final String rootName;
-	private final EntityType entityType;
+	private EntityType entityType;
 
 	private final IdentifierProperty identifierAttribute;
 	private final boolean versioned;
@@ -126,14 +125,12 @@ public class EntityMetamodel implements Serializable {
 
 	public EntityMetamodel(
 			PersistentClass persistentClass,
-			AbstractEntityPersister persister,
+			EntityPersister persister,
 			SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
-		this.persister = persister;
 
 		name = persistentClass.getEntityName();
 		rootName = persistentClass.getRootClass().getEntityName();
-		entityType = sessionFactory.getTypeResolver().getTypeFactory().manyToOne( name );
 
 		identifierAttribute = PropertyFactory.buildIdentifierAttribute(
 				persistentClass,
@@ -337,8 +334,11 @@ public class EntityMetamodel implements Serializable {
 				LOG.entityMappedAsNonAbstract(name);
 			}
 		}
+
 		selectBeforeUpdate = persistentClass.hasSelectBeforeUpdate();
-		dynamicUpdate = persistentClass.useDynamicUpdate();
+
+		dynamicUpdate = persistentClass.useDynamicUpdate()
+				|| ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() && getBytecodeEnhancementMetadata().getLazyAttributesMetadata().getFetchGroupNames().size() > 1 );
 		dynamicInsert = persistentClass.useDynamicInsert();
 
 		polymorphic = persistentClass.isPolymorphic();
@@ -830,7 +830,7 @@ public class EntityMetamodel implements Serializable {
 		// insert-generated identifier.  That wont work if the natural-id is also insert-generated.
 		//
 		// Assumptions:
-		//		* That code checks that there is a natural identifier before making this call, so we assume the same here
+		//		* That code checks that there is a natural identifier beforeQuery making this call, so we assume the same here
 		// 		* That code assumes a non-composite natural-id, so we assume the same here
 		final InDatabaseValueGenerationStrategy strategy = inDatabaseValueGenerationStrategies[ naturalIdPropertyNumbers[0] ];
 		return strategy != null && strategy.getGenerationTiming() != GenerationTiming.NEVER;
@@ -889,6 +889,9 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	public EntityType getEntityType() {
+		if ( entityType == null ) {
+			entityType = sessionFactory.getTypeResolver().getTypeFactory().manyToOne( name );
+		}
 		return entityType;
 	}
 

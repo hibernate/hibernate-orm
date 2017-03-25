@@ -12,7 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.Loader;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -69,7 +69,7 @@ public class PaddedBatchingCollectionInitializerBuilder extends BatchingCollecti
 		}
 
 		@Override
-		public void initialize(Serializable id, SessionImplementor session)	throws HibernateException {
+		public void initialize(Serializable id, SharedSessionContractImplementor session)	throws HibernateException {
 			final Serializable[] batch = session.getPersistenceContext()
 					.getBatchFetchQueue()
 					.getCollectionBatch( collectionPersister(), id, batchSizes[0] );

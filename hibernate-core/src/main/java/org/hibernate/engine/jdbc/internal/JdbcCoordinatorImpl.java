@@ -19,8 +19,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
@@ -36,10 +34,10 @@ import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl;
 import org.hibernate.resource.jdbc.internal.LogicalConnectionProvidedImpl;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -56,14 +54,10 @@ import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransacti
  * @author Sanne Grinovero
  */
 public class JdbcCoordinatorImpl implements JdbcCoordinator {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			JdbcCoordinatorImpl.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JdbcCoordinatorImpl.class );
 
 	private transient LogicalConnectionImplementor logicalConnection;
 	private transient JdbcSessionOwner owner;
-	private final ConnectionReleaseMode connectionReleaseMode;
 
 	private transient Batch currentBatch;
 
@@ -72,13 +66,13 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	/**
 	 * This is a marker value to insert instead of null values for when a Statement gets registered in xref
 	 * but has no associated ResultSets registered. This is useful to efficiently check against duplicate
-	 * registration but you'll have to check against instance equality rather than null before attempting
+	 * registration but you'll have to check against instance equality rather than null beforeQuery attempting
 	 * to add elements to this set.
 	 */
 	private static final Set<ResultSet> EMPTY_RESULTSET = Collections.emptySet();
 
-	private final HashMap<Statement,Set<ResultSet>> xref = new HashMap<Statement,Set<ResultSet>>();
-	private final Set<ResultSet> unassociatedResultSets = new HashSet<ResultSet>();
+	private final HashMap<Statement,Set<ResultSet>> xref = new HashMap<>();
+	private final Set<ResultSet> unassociatedResultSets = new HashSet<>();
 	private transient SqlExceptionHelper exceptionHelper;
 
 	private Statement lastQuery;
@@ -98,23 +92,17 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public JdbcCoordinatorImpl(
 			Connection userSuppliedConnection,
 			JdbcSessionOwner owner) {
-		if ( userSuppliedConnection != null ) {
+		this.isUserSuppliedConnection = userSuppliedConnection != null;
+
+		if ( isUserSuppliedConnection ) {
 			this.logicalConnection = new LogicalConnectionProvidedImpl( userSuppliedConnection );
-			this.isUserSuppliedConnection = true;
 		}
 		else {
 			this.logicalConnection = new LogicalConnectionManagedImpl(
 					owner.getJdbcConnectionAccess(),
 					owner.getJdbcSessionContext()
 			);
-			this.isUserSuppliedConnection = false;
 		}
-		this.connectionReleaseMode = determineConnectionReleaseMode(
-				owner.getJdbcConnectionAccess(),
-				isUserSuppliedConnection,
-				owner.getJdbcSessionContext()
-						.getConnectionReleaseMode()
-		);
 		this.owner = owner;
 		this.exceptionHelper = owner.getJdbcSessionContext()
 				.getServiceRegistry()
@@ -125,11 +113,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	private JdbcCoordinatorImpl(
 			LogicalConnectionImplementor logicalConnection,
 			boolean isUserSuppliedConnection,
-			ConnectionReleaseMode connectionReleaseMode,
 			JdbcSessionOwner owner) {
 		this.logicalConnection = logicalConnection;
 		this.isUserSuppliedConnection = isUserSuppliedConnection;
-		this.connectionReleaseMode = connectionReleaseMode;
 		this.owner = owner;
 		this.exceptionHelper = owner.getJdbcSessionContext()
 				.getServiceRegistry()
@@ -185,12 +171,18 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public Connection close() {
 		LOG.tracev( "Closing JDBC container [{0}]", this );
-		if ( currentBatch != null ) {
-			LOG.closingUnreleasedBatch();
-			currentBatch.release();
+		Connection connection;
+		try {
+			if ( currentBatch != null ) {
+				LOG.closingUnreleasedBatch();
+				currentBatch.release();
+			}
+			cleanup();
 		}
-		cleanup();
-		return logicalConnection.close();
+		finally {
+			connection = logicalConnection.close();
+		}
+		return connection;
 	}
 
 	@Override
@@ -268,7 +260,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void afterStatementExecution() {
-		LOG.tracev( "Starting after statement execution processing [{0}]", getConnectionReleaseMode() );
+		LOG.tracev( "Starting afterQuery statement execution processing [{0}]", getConnectionReleaseMode() );
 		if ( getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
 				LOG.debug( "Skipping aggressive release due to manual disabling" );
@@ -297,16 +289,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	private boolean hasRegisteredResources() {
 		return getResourceRegistry().hasRegisteredResources();
-	}
-
-	@Override
-	public ResourceRegistry getResourceRegistry(){
-		return this.logicalConnection.getResourceRegistry();
-	}
-
-	@Override
-	public  ConnectionReleaseMode getConnectionReleaseMode() {
-		return this.connectionReleaseMode;
 	}
 
 	private ConnectionReleaseMode determineConnectionReleaseMode(
@@ -508,12 +490,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 *
 	 * @throws IOException Trouble accessing the stream
 	 */
+	@Override
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		if ( ! isReadyForSerialization() ) {
 			throw new HibernateException( "Cannot serialize Session while connected" );
 		}
 		oos.writeBoolean( isUserSuppliedConnection );
-		oos.writeObject( connectionReleaseMode );
 		logicalConnection.serialize( oos );
 	}
 
@@ -532,7 +514,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			ObjectInputStream ois,
 			JdbcSessionOwner owner) throws IOException, ClassNotFoundException {
 		final boolean isUserSuppliedConnection = ois.readBoolean();
-		final ConnectionReleaseMode connectionReleaseMode = (ConnectionReleaseMode) ois.readObject();
 		LogicalConnectionImplementor logicalConnection;
 		if ( isUserSuppliedConnection ) {
 			logicalConnection = LogicalConnectionProvidedImpl.deserialize( ois );
@@ -544,6 +525,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 					owner.getJdbcSessionContext()
 			);
 		}
-		return new JdbcCoordinatorImpl( logicalConnection, isUserSuppliedConnection, connectionReleaseMode, owner );
+		return new JdbcCoordinatorImpl( logicalConnection, isUserSuppliedConnection, owner );
 	}
 }

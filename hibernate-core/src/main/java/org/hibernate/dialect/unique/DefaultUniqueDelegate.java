@@ -85,7 +85,7 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 
 		final StringBuilder buf = new StringBuilder( "alter table " );
 		buf.append( tableName );
-		buf.append(" drop constraint " );
+		buf.append( getDropUnique() );
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
 			buf.append( "if exists " );
 		}
@@ -94,6 +94,10 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 			buf.append( " if exists" );
 		}
 		return buf.toString();
+	}
+
+	protected String getDropUnique(){
+		return " drop constraint ";
 	}
 
 }

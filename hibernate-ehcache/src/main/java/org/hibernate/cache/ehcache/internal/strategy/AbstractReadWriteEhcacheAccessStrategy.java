@@ -17,7 +17,8 @@ import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -51,12 +52,12 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
 
 	/**
 	 * Returns <code>null</code> if the item is not readable.  Locked items are not readable, nor are items created
-	 * after the start of this transaction.
+	 * afterQuery the start of this transaction.
 	 *
-	 * @see RegionAccessStrategy#get(SessionImplementor, Object, long)
-	 * @see RegionAccessStrategy#get(SessionImplementor, Object, long)
+	 * @see RegionAccessStrategy#get(SharedSessionContractImplementor, Object, long)
+	 * @see RegionAccessStrategy#get(SharedSessionContractImplementor, Object, long)
 	 */
-	public final Object get(SessionImplementor session, Object key, long txTimestamp) throws CacheException {
+	public final Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException {
 		readLockIfNeeded( key );
 		try {
 			final Lockable item = (Lockable) region().get( key );
@@ -78,12 +79,12 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
 	 * Returns <code>false</code> and fails to put the value if there is an existing un-writeable item mapped to this
 	 * key.
 	 *
-	 * @see RegionAccessStrategy#putFromLoad(SessionImplementor, Object, Object, long, Object, boolean)
-	 * @see RegionAccessStrategy#putFromLoad(SessionImplementor, Object, Object, long, Object, boolean)
+	 * @see RegionAccessStrategy#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object, boolean)
+	 * @see RegionAccessStrategy#putFromLoad(SharedSessionContractImplementor, Object, Object, long, Object, boolean)
 	 */
 	@Override
 	public final boolean putFromLoad(
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object key,
 			Object value,
 			long txTimestamp,
@@ -110,10 +111,10 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
 	/**
 	 * Soft-lock a cache item.
 	 *
-	 * @see RegionAccessStrategy#lockItem(SessionImplementor, Object, Object)
-	 * @see RegionAccessStrategy#lockItem(SessionImplementor, Object, Object)
+	 * @see RegionAccessStrategy#lockItem(SharedSessionContractImplementor, Object, Object)
+	 * @see RegionAccessStrategy#lockItem(SharedSessionContractImplementor, Object, Object)
 	 */
-	public final SoftLock lockItem(SessionImplementor session, Object key, Object version) throws CacheException {
+	public final SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version) throws CacheException {
 		region().writeLock( key );
 		try {
 			final Lockable item = (Lockable) region().get( key );
@@ -134,10 +135,10 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
 	/**
 	 * Soft-unlock a cache item.
 	 *
-	 * @see RegionAccessStrategy#unlockItem(SessionImplementor, Object, SoftLock)
-	 * @see RegionAccessStrategy#unlockItem(SessionImplementor, Object, SoftLock)
+	 * @see RegionAccessStrategy#unlockItem(SharedSessionContractImplementor, Object, SoftLock)
+	 * @see RegionAccessStrategy#unlockItem(SharedSessionContractImplementor, Object, SoftLock)
 	 */
-	public final void unlockItem(SessionImplementor session, Object key, SoftLock lock) throws CacheException {
+	public final void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException {
 		region().writeLock( key );
 		try {
 			final Lockable item = (Lockable) region().get( key );
@@ -272,6 +273,15 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
 		@Override
 		public Lock lock(long timeout, UUID uuid, long lockId) {
 			return new Lock( timeout, uuid, lockId, version );
+		}
+
+		@Override
+		public String toString() {
+			return "Item{" +
+					"value=" + value +
+					", version=" + version +
+					", timestamp=" + timestamp +
+					'}';
 		}
 	}
 

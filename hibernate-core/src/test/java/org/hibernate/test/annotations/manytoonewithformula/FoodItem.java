@@ -6,6 +6,7 @@
  */
 
 package org.hibernate.test.annotations.manytoonewithformula;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -13,7 +14,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.JoinColumnOrFormula;
-import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
 
 /**
@@ -43,11 +43,8 @@ public class FoodItem {
 	}
 
 	@ManyToOne
-	@JoinColumnsOrFormulas(
-	{ 
-	  @JoinColumnOrFormula(column=@JoinColumn(name="order_nbr", referencedColumnName="order_nbr")),
-	  @JoinColumnOrFormula(formula=@JoinFormula(value="'F'", referencedColumnName="is_default"))
-	})
+	@JoinColumnOrFormula(column=@JoinColumn(name="order_nbr", referencedColumnName="order_nbr"))
+	@JoinColumnOrFormula(formula=@JoinFormula(value="'F'", referencedColumnName="is_default"))
 	public Menu getOrder() {
 		return order;
 	}

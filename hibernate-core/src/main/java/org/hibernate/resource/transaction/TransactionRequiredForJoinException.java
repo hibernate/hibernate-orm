@@ -7,6 +7,7 @@
 package org.hibernate.resource.transaction;
 
 import org.hibernate.HibernateException;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 /**
  * Indicates a call to {@link TransactionCoordinator#explicitJoin()} that requires an

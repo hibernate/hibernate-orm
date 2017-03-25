@@ -20,8 +20,9 @@ import org.hibernate.spatial.testing.GeometryEquality;
  * Geometry objects, which cannot be cast to {@link org.hibernate.spatial.jts.mgeom.MGeometry} objects.
  *
  * @author Jan Boonen, Geodan IT b.v.
+ * @deprecated This should no longer be necesseary
  */
-@Deprecated //NO LONGER REQUIRED
+@Deprecated
 public class GeoDBGeometryEquality extends GeometryEquality {
 
 	@Override

@@ -141,7 +141,7 @@ import org.dom4j.Element;
  */
 @SuppressWarnings("unchecked")
 public class JPAOverriddenAnnotationReader implements AnnotationReader {
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JPAOverriddenAnnotationReader.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JPAOverriddenAnnotationReader.class );
 
 	private static final String SCHEMA_VALIDATION = "Activate schema validation for more information";
 	private static final String WORD_SEPARATOR = "-";

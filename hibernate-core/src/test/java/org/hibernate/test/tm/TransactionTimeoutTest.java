@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.tm;
 
+import javax.persistence.PersistenceException;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
@@ -21,6 +23,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.jdbc.Person;
 import org.junit.Test;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 
@@ -53,17 +56,29 @@ public class TransactionTimeoutTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
-	@Test(expected = TransactionException.class)
+	@Test
 	public void testTransactionTimeoutFailure() throws InterruptedException {
 		Session session = openSession();
-		Transaction transaction = session.getTransaction();
-		transaction.setTimeout( 1 );
-		assertEquals( -1, ((SessionImplementor)session).getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod() );
-		transaction.begin();
-		Thread.sleep( 1000 );
-		session.persist( new Person( "Lukasz", "Antoniak" ) );
-		transaction.commit();
-		session.close();
+		try {
+			Transaction transaction = session.getTransaction();
+			transaction.setTimeout( 1 );
+			assertEquals( -1,
+						  ( (SessionImplementor) session ).getJdbcCoordinator().determineRemainingTransactionTimeOutPeriod()
+			);
+			transaction.begin();
+			Thread.sleep( 1000 );
+			session.persist( new Person( "Lukasz", "Antoniak" ) );
+			transaction.commit();
+		}
+		catch (TransactionException e) {
+			// expected
+		}
+		catch (PersistenceException e) {
+			assertTyping( TransactionException.class, e.getCause() );
+		}
+		finally {
+			session.close();
+		}
 	}
 
 	@Test

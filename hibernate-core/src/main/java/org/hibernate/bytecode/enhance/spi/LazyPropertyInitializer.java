@@ -9,7 +9,7 @@ package org.hibernate.bytecode.enhance.spi;
 import java.io.Serializable;
 import java.util.Set;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Contract for controlling how lazy properties get initialized.
@@ -46,6 +46,6 @@ public interface LazyPropertyInitializer {
 	 *
 	 * @return ?
 	 */
-	Object initializeLazyProperty(String fieldName, Object entity, SessionImplementor session);
+	Object initializeLazyProperty(String fieldName, Object entity, SharedSessionContractImplementor session);
 
 }

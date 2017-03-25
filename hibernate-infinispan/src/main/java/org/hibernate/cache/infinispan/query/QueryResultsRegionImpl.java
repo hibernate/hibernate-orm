@@ -6,6 +6,10 @@
  */
 package org.hibernate.cache.infinispan.query;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
@@ -16,17 +20,13 @@ import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
 import org.hibernate.cache.infinispan.util.InvocationAfterCompletion;
 import org.hibernate.cache.spi.QueryResultsRegion;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.TransactionConfiguration;
 import org.infinispan.context.Flag;
 import org.infinispan.transaction.TransactionMode;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Region for caching query results.
@@ -41,7 +41,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 	private final AdvancedCache evictCache;
 	private final AdvancedCache putCache;
 	private final AdvancedCache getCache;
-	private final ConcurrentMap<SessionImplementor, Map> transactionContext = new ConcurrentHashMap<SessionImplementor, Map>();
+	private final ConcurrentMap<SharedSessionContractImplementor, Map> transactionContext = new ConcurrentHashMap<SharedSessionContractImplementor, Map>();
 	private final boolean putCacheRequiresTransaction;
 
 	/**
@@ -103,7 +103,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 	}
 
 	@Override
-	public Object get(SessionImplementor session, Object key) throws CacheException {
+	public Object get(SharedSessionContractImplementor session, Object key) throws CacheException {
 		if ( !checkValid() ) {
 			return null;
 		}
@@ -126,7 +126,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void put(SessionImplementor session, Object key, Object value) throws CacheException {
+	public void put(SharedSessionContractImplementor session, Object key, Object value) throws CacheException {
 		if ( checkValid() ) {
 			// See HHH-7898: Even with FAIL_SILENTLY flag, failure to write in transaction
 			// fails the whole transaction. It is an Infinispan quirk that cannot be fixed
@@ -164,12 +164,12 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 	}
 
 	private class PostTransactionQueryUpdate extends InvocationAfterCompletion {
-		private final SessionImplementor session;
+		private final SharedSessionContractImplementor session;
 		private final Object key;
 		private final Object value;
 
-		public PostTransactionQueryUpdate(TransactionCoordinator tc, SessionImplementor session, Object key, Object value) {
-			super(tc, putCache, putCacheRequiresTransaction);
+		public PostTransactionQueryUpdate(TransactionCoordinator tc, SharedSessionContractImplementor session, Object key, Object value) {
+			super(tc, putCacheRequiresTransaction);
 			this.session = session;
 			this.key = key;
 			this.value = value;
@@ -182,9 +182,9 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 		}
 
 		@Override
-		protected void invoke(boolean success, AdvancedCache cache) {
+		protected void invoke(boolean success) {
 			if (success) {
-				cache.put(key, value);
+				putCache.put(key, value);
 			}
 		}
 	}

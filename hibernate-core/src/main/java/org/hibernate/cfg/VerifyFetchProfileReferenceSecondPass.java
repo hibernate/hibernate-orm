@@ -54,5 +54,3 @@ public class VerifyFetchProfileReferenceSecondPass implements SecondPass {
 		);
 	}
 }
-
-

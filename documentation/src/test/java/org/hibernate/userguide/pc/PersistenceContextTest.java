@@ -9,7 +9,10 @@ package org.hibernate.userguide.pc;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -27,7 +30,9 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 
-import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
+import org.jboss.logging.Logger;
+
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -36,6 +41,8 @@ import static org.junit.Assert.assertTrue;
  * @author Vlad Mihalcea
  */
 public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase {
+
+	private static final Logger log = Logger.getLogger( PersistenceContextTest.class );
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -132,6 +139,10 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			Person person = session.byId( Person.class ).load( personId );
 			//end::pc-find-by-id-native-example[]
 
+			//tag::pc-find-optional-by-id-native-example[]
+			Optional<Person> optionalPerson = session.byId( Person.class ).loadOptional( personId );
+			//end::pc-find-optional-by-id-native-example[]
+
 			String isbn = "123-456-7890";
 
 			//tag::pc-find-by-simple-natural-id-example[]
@@ -144,9 +155,19 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			String isbn = "123-456-7890";
 
 			//tag::pc-find-by-natural-id-example[]
-			Book book = session.byNaturalId( Book.class ).using( "isbn", isbn ).load( );
+			Book book = session
+				.byNaturalId( Book.class )
+				.using( "isbn", isbn )
+				.load( );
 			//end::pc-find-by-natural-id-example[]
 			assertNotNull(book);
+
+			//tag::pc-find-optional-by-simple-natural-id-example[]
+			Optional<Book> optionalBook = session
+				.byNaturalId( Book.class )
+				.using( "isbn", isbn )
+				.loadOptional( );
+			//end::pc-find-optional-by-simple-natural-id-example[]
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -172,6 +193,31 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			//end::pc-refresh-jpa-example[]
 		} );
 
+		try {
+			doInJPA( this::entityManagerFactory, entityManager -> {
+				Long personId = _personId;
+
+				//tag::pc-refresh-child-entity-jpa-example[]
+				try {
+					Person person = entityManager.find( Person.class, personId );
+
+					Book book = new Book();
+					book.setId( 100L );
+					book.setTitle( "Hibernate User Guide" );
+					book.setAuthor( person );
+					person.getBooks().add( book );
+
+					entityManager.refresh( person );
+				}
+				catch ( EntityNotFoundException expected ) {
+					log.info( "Beware when cascading the refresh associations to transient entities!" );
+				}
+				//end::pc-refresh-child-entity-jpa-example[]
+			} );
+		}
+		catch ( Exception expected ) {
+		}
+
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
 			Long personId = _personId;
@@ -192,7 +238,7 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 
 			session.doWork( connection -> {
 				try(Statement statement = connection.createStatement()) {
-					statement.executeUpdate( "UPDATE person SET name = UPPER(name)" );
+					statement.executeUpdate( "UPDATE Person SET name = UPPER(name)" );
 				}
 			} );
 
@@ -335,7 +381,7 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 
 		private String name;
 
-		@OneToMany(mappedBy = "author")
+		@OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
 		private List<Book> books = new ArrayList<>(  );
 
 		public Long getId() {

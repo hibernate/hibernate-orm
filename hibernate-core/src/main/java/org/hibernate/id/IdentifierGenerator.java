@@ -9,7 +9,7 @@ package org.hibernate.id;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * The general contract between a class that generates unique
@@ -51,5 +51,5 @@ public interface IdentifierGenerator {
 	 *
 	 * @throws HibernateException Indicates trouble generating the identifier
 	 */
-	public Serializable generate(SessionImplementor session, Object object) throws HibernateException;
+	public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException;
 }

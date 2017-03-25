@@ -1,25 +1,5 @@
 package org.hibernate.test.cache.infinispan.functional;
 
-import org.hibernate.PessimisticLockException;
-import org.hibernate.Session;
-import org.hibernate.StaleStateException;
-import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
-import org.hibernate.cache.infinispan.util.Caches;
-import org.hibernate.cache.infinispan.util.VersionedEntry;
-import org.hibernate.cache.spi.entry.CacheEntry;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.test.cache.infinispan.functional.entities.Item;
-import org.hibernate.test.cache.infinispan.functional.entities.OtherItem;
-import org.infinispan.AdvancedCache;
-import org.infinispan.commands.write.PutKeyValueCommand;
-import org.infinispan.commons.util.ByRef;
-import org.infinispan.context.Flag;
-import org.infinispan.context.InvocationContext;
-import org.infinispan.interceptors.base.BaseCustomInterceptor;
-import org.junit.Test;
-
-import javax.transaction.Synchronization;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -32,8 +12,32 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
+import javax.transaction.Synchronization;
 
-import static org.junit.Assert.*;
+import org.hibernate.PessimisticLockException;
+import org.hibernate.Session;
+import org.hibernate.StaleStateException;
+import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
+import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.util.VersionedEntry;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
+import org.hibernate.test.cache.infinispan.functional.entities.Item;
+import org.hibernate.test.cache.infinispan.functional.entities.OtherItem;
+import org.junit.Test;
+
+import org.infinispan.AdvancedCache;
+import org.infinispan.commands.write.PutKeyValueCommand;
+import org.infinispan.commons.util.ByRef;
+import org.infinispan.context.Flag;
+import org.infinispan.context.InvocationContext;
+import org.infinispan.interceptors.base.BaseCustomInterceptor;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -139,7 +143,7 @@ public class VersionedTest extends AbstractNonInvalidationTest {
 
       Future<Boolean> action = executor.submit(() -> withTxSessionApply(s -> {
          try {
-            ((SessionImplementor) s).getTransactionCoordinator().getLocalSynchronizations().registerSynchronization(new Synchronization() {
+            ((SharedSessionContractImplementor) s).getTransactionCoordinator().getLocalSynchronizations().registerSynchronization(new Synchronization() {
                @Override
                public void beforeCompletion() {
                }
@@ -216,11 +220,7 @@ public class VersionedTest extends AbstractNonInvalidationTest {
    public void testEvictUpdateExpiration() throws Exception {
       // since the timestamp for update is based on session open/tx begin time, we have to do this sequentially
       sessionFactory().getCache().evictEntity(Item.class, itemId);
-
-      Map contents = Caches.entrySet(entityCache).toMap();
-      assertEquals(1, contents.size());
-      assertEquals(VersionedEntry.class, contents.get(itemId).getClass());
-
+      assertSingleEmpty();
       TIME_SERVICE.advance(1);
 
       withTxSession(s -> {
@@ -231,6 +231,22 @@ public class VersionedTest extends AbstractNonInvalidationTest {
 
       assertSingleCacheEntry();
       TIME_SERVICE.advance(timeout + 1);
+      assertSingleCacheEntry();
+   }
+
+   @Test
+   public void testEvictAndPutFromLoad() throws Exception {
+      sessionFactory().getCache().evictEntity(Item.class, itemId);
+      assertSingleEmpty();
+      TIME_SERVICE.advance(1);
+
+      withTxSession(s -> {
+         Item item = s.load(Item.class, itemId);
+         assertEquals("Original item", item.getDescription());
+      });
+
+      assertSingleCacheEntry();
+      TIME_SERVICE.advance(TIMEOUT + 1);
       assertSingleCacheEntry();
    }
 
@@ -333,19 +349,5 @@ public class VersionedTest extends AbstractNonInvalidationTest {
       value = contents.get(itemId);
       assertEquals(VersionedEntry.class, value.getClass());
       assertNull(((VersionedEntry) value).getValue());
-   }
-
-   protected void assertEmptyCache() {
-      assertNull(entityCache.get(itemId)); // force expiration
-      Map contents = Caches.entrySet(entityCache).toMap();
-      assertEquals(Collections.EMPTY_MAP, contents);
-   }
-
-   protected Object assertSingleCacheEntry() {
-      Map contents = Caches.entrySet(entityCache).toMap();
-      assertEquals(1, contents.size());
-      Object value = contents.get(itemId);
-      assertTrue(contents.toString(), value instanceof CacheEntry);
-      return value;
    }
 }

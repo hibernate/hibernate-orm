@@ -26,7 +26,8 @@ public interface CacheDataDescription {
 	/**
 	 * Is the data to be cached considered versioned?
 	 *
-	 * If {@code true}, it is illegal for {@link #getVersionComparator} to return {@code null}.
+	 * If {@code true}, it is illegal for {@link #getVersionComparator} to return {@code null}
+	 * or an instance of {@link org.hibernate.type.descriptor.java.IncomparableComparator}.
 	 *
 	 * @return {@code true} if the data is versioned; {@code false} otherwise.
 	 */

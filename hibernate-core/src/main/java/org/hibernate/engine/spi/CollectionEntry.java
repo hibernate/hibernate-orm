@@ -18,10 +18,9 @@ import org.hibernate.MappingException;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
-
-import org.jboss.logging.Logger;
 
 /**
  * We need an entry to tell us all about the current state
@@ -30,7 +29,7 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public final class CollectionEntry implements Serializable {
-	private static final Logger LOG = CoreLogging.logger( CollectionEntry.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( CollectionEntry.class );
 
 	//ATTRIBUTES MAINTAINED BETWEEN FLUSH CYCLES
 
@@ -95,7 +94,7 @@ public final class CollectionEntry implements Serializable {
 
 		collection.setSnapshot(loadedKey, role, null);
 
-		//postInitialize() will be called after initialization
+		//postInitialize() will be called afterQuery initialization
 	}
 
 	/**
@@ -121,7 +120,7 @@ public final class CollectionEntry implements Serializable {
 		ignore = false;
 
 		loadedKey = collection.getKey();
-		setLoadedPersister( factory.getCollectionPersister( collection.getRole() ) );
+		setLoadedPersister( factory.getMetamodel().collectionPersister( collection.getRole() ) );
 
 		snapshot = collection.getStoredSnapshot();
 	}
@@ -169,55 +168,61 @@ public final class CollectionEntry implements Serializable {
 			loadedKey = collection.getKey();
 		}
 
-		boolean nonMutableChange = collection.isDirty() &&
-				getLoadedPersister()!=null &&
-				!getLoadedPersister().isMutable();
-		if (nonMutableChange) {
+		boolean nonMutableChange = collection.isDirty()
+				&& getLoadedPersister() != null
+				&& !getLoadedPersister().isMutable();
+		if ( nonMutableChange ) {
 			throw new HibernateException(
 					"changed an immutable collection instance: " +
 					MessageHelper.collectionInfoString( getLoadedPersister().getRole(), getLoadedKey() )
-				);
+			);
 		}
 
-		dirty(collection);
+		dirty( collection );
 
 		if ( LOG.isDebugEnabled() && collection.isDirty() && getLoadedPersister() != null ) {
-			LOG.debugf( "Collection dirty: %s",
-					MessageHelper.collectionInfoString( getLoadedPersister().getRole(), getLoadedKey() ) );
+			LOG.debugf(
+					"Collection dirty: %s",
+					MessageHelper.collectionInfoString( getLoadedPersister().getRole(), getLoadedKey() )
+			);
 		}
 
-		setDoupdate(false);
-		setDoremove(false);
-		setDorecreate(false);
-		setReached(false);
-		setProcessed(false);
+		setReached( false );
+		setProcessed( false );
+
+		setDoupdate( false );
+		setDoremove( false );
+		setDorecreate( false );
 	}
 
 	public void postInitialize(PersistentCollection collection) throws HibernateException {
-		snapshot = getLoadedPersister().isMutable() ?
-				collection.getSnapshot( getLoadedPersister() ) :
-				null;
+		snapshot = getLoadedPersister().isMutable()
+				? collection.getSnapshot( getLoadedPersister() )
+				: null;
 		collection.setSnapshot(loadedKey, role, snapshot);
-		if (getLoadedPersister().getBatchSize() > 1) {
-			((AbstractPersistentCollection) collection).getSession().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(this); 
+		if ( getLoadedPersister().getBatchSize() > 1 ) {
+			( (AbstractPersistentCollection) collection ).getSession()
+					.getPersistenceContext()
+					.getBatchFetchQueue()
+					.removeBatchLoadableCollection( this );
 		}
 	}
 
 	/**
-	 * Called after a successful flush
+	 * Called afterQuery a successful flush
 	 */
 	public void postFlush(PersistentCollection collection) throws HibernateException {
 		if ( isIgnore() ) {
 			ignore = false;
 		}
 		else if ( !isProcessed() ) {
-			throw new AssertionFailure( "collection [" + collection.getRole() + "] was not processed by flush()" );
+			throw new HibernateException( LOG.collectionNotProcessedByFlush( collection.getRole() ) );
 		}
 		collection.setSnapshot(loadedKey, role, snapshot);
 	}
 
 	/**
-	 * Called after execution of an action
+	 * Called afterQuery execution of an action
 	 */
 	public void afterAction(PersistentCollection collection) {
 		loadedKey = getCurrentKey();
@@ -273,7 +278,7 @@ public final class CollectionEntry implements Serializable {
 	}
 
 	void afterDeserialize(SessionFactoryImplementor factory) {
-		loadedPersister = ( factory == null ? null : factory.getCollectionPersister(role) );
+		loadedPersister = ( factory == null ? null : factory.getMetamodel().collectionPersister( role ) );
 	}
 
 	public boolean wasDereferenced() {

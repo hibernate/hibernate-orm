@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.Statement;
@@ -16,6 +18,7 @@ import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 
@@ -38,7 +41,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 *
 	 * @return The logical connection
 	 */
-	public LogicalConnectionImplementor getLogicalConnection();
+	LogicalConnectionImplementor getLogicalConnection();
 
 	/**
 	 * Get a batch instance.
@@ -47,44 +50,44 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 *
 	 * @return The batch
 	 */
-	public Batch getBatch(BatchKey key);
+	Batch getBatch(BatchKey key);
 
 	/**
 	 * Execute the currently managed batch (if any)
 	 */
-	public void executeBatch();
+	void executeBatch();
 
 	/**
 	 * Abort the currently managed batch (if any)
 	 */
-	public void abortBatch();
+	void abortBatch();
 
 	/**
 	 * Obtain the statement preparer associated with this JDBC coordinator.
 	 *
 	 * @return This coordinator's statement preparer
 	 */
-	public StatementPreparer getStatementPreparer();
+	StatementPreparer getStatementPreparer();
 
 	/**
 	 * Obtain the resultset extractor associated with this JDBC coordinator.
 	 *
 	 * @return This coordinator's resultset extractor
 	 */
-	public ResultSetReturn getResultSetReturn();
+	ResultSetReturn getResultSetReturn();
 
 	/**
 	 * Callback to let us know that a flush is beginning.  We use this fact
-	 * to temporarily circumvent aggressive connection releasing until after
+	 * to temporarily circumvent aggressive connection releasing until afterQuery
 	 * the flush cycle is complete {@link #flushEnding()}
 	 */
-	public void flushBeginning();
+	void flushBeginning();
 
 	/**
 	 * Callback to let us know that a flush is ending.  We use this fact to
 	 * stop circumventing aggressive releasing connections.
 	 */
-	public void flushEnding();
+	void flushEnding();
 
 	/**
 	 * Close this coordinator and release and resources.
@@ -93,22 +96,22 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 *
 	 * @see org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor#close
 	 */
-	public Connection close();
+	Connection close();
 
 	/**
 	 * Signals the end of transaction.
 	 * <p/>
-	 * Intended for use from the transaction coordinator, after local transaction completion.  Used to conditionally
+	 * Intended for use from the transaction coordinator, afterQuery local transaction completion.  Used to conditionally
 	 * release the JDBC connection aggressively if the configured release mode indicates.
 	 */
-	public void afterTransaction();
+	void afterTransaction();
 
 	/**
 	 * Used to signify that a statement has completed execution which may
 	 * indicate that this logical connection need to perform an
 	 * aggressive release of its physical connection.
 	 */
-	public void afterStatementExecution();
+	void afterStatementExecution();
 
 	/**
 	 * Perform the requested work handling exceptions, coordinating and handling return processing.
@@ -117,53 +120,79 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 * @param <T> The result type.
 	 * @return The work result.
 	 */
-	public <T> T coordinateWork(WorkExecutorVisitable<T> work);
+	<T> T coordinateWork(WorkExecutorVisitable<T> work);
 
 	/**
 	 * Attempt to cancel the last query sent to the JDBC driver.
 	 */
-	public void cancelLastQuery();
+	void cancelLastQuery();
 
     /**
-	 * Calculate the amount of time, in seconds, still remaining before transaction timeout occurs.
+	 * Calculate the amount of time, in seconds, still remaining beforeQuery transaction timeout occurs.
 	 *
 	 * @return The number of seconds remaining until until a transaction timeout occurs.  A negative value indicates
 	 * no timeout was requested.
 	 *
 	 * @throws org.hibernate.TransactionException Indicates the time out period has already been exceeded.
 	 */
-	public int determineRemainingTransactionTimeOutPeriod();
+	int determineRemainingTransactionTimeOutPeriod();
 
 	/**
 	 * Enable connection releases
 	 */
-	public void enableReleases();
+	void enableReleases();
 
 	/**
 	 * Disable connection releases
 	 */
-	public void disableReleases();
+	void disableReleases();
 
 	/**
 	 * Register a query statement as being able to be cancelled.
 	 * 
 	 * @param statement The cancel-able query statement.
 	 */
-	public void registerLastQuery(Statement statement);
+	void registerLastQuery(Statement statement);
 
 	/**
 	 * Can this coordinator be serialized?
 	 *
 	 * @return {@code true} indicates the coordinator can be serialized.
 	 */
-	public boolean isReadyForSerialization();
+	boolean isReadyForSerialization();
 
 	/**
 	 * The release mode under which this logical connection is operating.
 	 *
 	 * @return the release mode.
+	 *
+	 * @deprecated (since 5.2) use {@link PhysicalConnectionHandlingMode} via {@link #getLogicalConnection} instead
 	 */
-	public ConnectionReleaseMode getConnectionReleaseMode();
+	@Deprecated
+	default ConnectionReleaseMode getConnectionReleaseMode() {
+		return getLogicalConnection().getConnectionHandlingMode().getReleaseMode();
+	}
 
-	public ResourceRegistry getResourceRegistry();
+	/**
+	 * The mode for physical handling of the JDBC Connection
+	 *
+	 * @return The JDBC Connection handlng mode
+	 *
+	 * @deprecated (since 5.2) access via {@link #getLogicalConnection} instead
+	 */
+	@Deprecated
+	default PhysicalConnectionHandlingMode getConnectionHandlingMode() {
+		return getLogicalConnection().getConnectionHandlingMode();
+	}
+
+	/**
+	 * @deprecated (since 5.2) access via {@link #getLogicalConnection} instead
+	 */
+	@Deprecated
+	default ResourceRegistry getResourceRegistry() {
+		return getLogicalConnection().getResourceRegistry();
+	}
+
+	void serialize(ObjectOutputStream objectOutputStream) throws IOException;
+
 }

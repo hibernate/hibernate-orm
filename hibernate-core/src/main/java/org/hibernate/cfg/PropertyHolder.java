@@ -7,6 +7,7 @@
 package org.hibernate.cfg;
 
 import javax.persistence.Column;
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 
@@ -42,6 +43,11 @@ public interface PropertyHolder {
 	 */
 	boolean isOrWithinEmbeddedId();
 
+	/**
+	 * Return true if this component is withing an @ElementCollection.
+	 */
+	boolean isWithinElementCollection();
+
 	PersistentClass getPersistentClass();
 
 	boolean isComponent();
@@ -61,6 +67,14 @@ public interface PropertyHolder {
 	 * return null if the column is not overridden, or an array of column if true
 	 */
 	JoinColumn[] getOverriddenJoinColumn(String propertyName);
+
+	/**
+	 * return null if hte foreign key is not overridden, or the foreign key if true
+	 */
+	default ForeignKey getOverriddenForeignKey(String propertyName) {
+		// todo: does this necessarily need to be a default method?
+		return null;
+	}
 
 	/**
 	 * return

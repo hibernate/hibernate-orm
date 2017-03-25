@@ -12,16 +12,16 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.pretty.MessageHelper;
 
+import org.jboss.logging.Logger;
+
 /**
  * MergeContext is a Map implementation that is intended to be used by a merge
  * event listener to keep track of each entity being merged and their corresponding
- * managed result. Entities to be merged may to be added to the MergeContext before
+ * managed result. Entities to be merged may to be added to the MergeContext beforeQuery
  * the merge operation has cascaded to that entity.
  *
  * "Merge entity" and "mergeEntity" method parameter refer to an entity that is (or will be)
@@ -215,7 +215,7 @@ class MergeContext implements Map {
 	 * method is called, then <code>managedEntity</code> must be the same as what is already associated
 	 * with <code>mergeEntity</code>.
 	 *
-	 * @param mergeEntity the mergge entity; must be non-null
+	 * @param mergeEntity the merge entity; must be non-null
 	 * @param managedEntity the managed entity; must be non-null
 	 * @param isOperatedOn indicates if the merge operation is performed on the mergeEntity.
 	 *
@@ -229,6 +229,17 @@ class MergeContext implements Map {
 	/* package-private */ Object put(Object mergeEntity, Object managedEntity, boolean isOperatedOn) {
 		if ( mergeEntity == null || managedEntity == null ) {
 			throw new NullPointerException( "null merge and managed entities are not supported by " + getClass().getName() );
+		}
+
+		// Detect invalid 'managed entity' -> 'managed entity' mappings where key != value
+		if ( managedToMergeEntityXref.containsKey( mergeEntity ) ) {
+			if ( managedToMergeEntityXref.get( mergeEntity ) != mergeEntity ) {
+				throw new IllegalStateException(
+						"MergeContext#attempt to create managed -> managed mapping with different entities: "
+								+ printEntity( mergeEntity ) + "; " + printEntity(
+								managedEntity )
+				);
+			}
 		}
 
 		Object oldManagedEntity = mergeToManagedEntityXref.put( mergeEntity, managedEntity );

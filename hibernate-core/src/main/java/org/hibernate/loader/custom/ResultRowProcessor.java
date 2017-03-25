@@ -10,7 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Models an entire "row" of results within a custom query
@@ -55,7 +55,7 @@ public class ResultRowProcessor {
 	 * @throws java.sql.SQLException
 	 * @throws org.hibernate.HibernateException
 	 */
-	public Object buildResultRow(Object[] data, ResultSet resultSet, boolean hasTransformer, SessionImplementor session)
+	public Object buildResultRow(Object[] data, ResultSet resultSet, boolean hasTransformer, SharedSessionContractImplementor session)
 			throws SQLException, HibernateException {
 		final Object[] resultRow = buildResultRow( data, resultSet, session );
 		if ( hasTransformer ) {
@@ -68,7 +68,7 @@ public class ResultRowProcessor {
 		}
 	}
 
-	public Object[] buildResultRow(Object[] data, ResultSet resultSet, SessionImplementor session)
+	public Object[] buildResultRow(Object[] data, ResultSet resultSet, SharedSessionContractImplementor session)
 			throws SQLException, HibernateException {
 		Object[] resultRow;
 		if ( !hasScalars ) {

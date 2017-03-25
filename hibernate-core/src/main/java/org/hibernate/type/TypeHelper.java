@@ -7,10 +7,13 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Map;
 
+import org.hibernate.Hibernate;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.tuple.NonIdentifierAttribute;
 
@@ -40,7 +43,7 @@ public class TypeHelper {
 			final Type[] types,
 			final boolean[] copy,
 			final Object[] target,
-			final SessionImplementor session) {
+			final SharedSessionContractImplementor session) {
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( copy[i] ) {
 				if ( values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
@@ -65,7 +68,7 @@ public class TypeHelper {
 	public static void beforeAssemble(
 			final Serializable[] row,
 			final Type[] types,
-			final SessionImplementor session) {
+			final SharedSessionContractImplementor session) {
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( row[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
 				&& row[i] != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
@@ -86,7 +89,7 @@ public class TypeHelper {
 	public static Object[] assemble(
 			final Serializable[] row,
 			final Type[] types,
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final Object owner) {
 		Object[] assembled = new Object[row.length];
 		for ( int i = 0; i < types.length; i++ ) {
@@ -115,7 +118,7 @@ public class TypeHelper {
 			final Object[] row,
 			final Type[] types,
 			final boolean[] nonCacheable,
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final Object owner) {
 		Serializable[] disassembled = new Serializable[row.length];
 		for ( int i = 0; i < row.length; i++ ) {
@@ -148,7 +151,7 @@ public class TypeHelper {
 			final Object[] original,
 			final Object[] target,
 			final Type[] types,
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final Object owner,
 			final Map copyCache) {
 		Object[] copied = new Object[original.length];
@@ -197,7 +200,7 @@ public class TypeHelper {
 			final Object[] original,
 			final Object[] target,
 			final Type[] types,
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final Object owner,
 			final Map copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
@@ -235,7 +238,7 @@ public class TypeHelper {
 			final Object[] original,
 			final Object[] target,
 			final Type[] types,
-			final SessionImplementor session,
+			final SharedSessionContractImplementor session,
 			final Object owner,
 			final Map copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
@@ -276,6 +279,33 @@ public class TypeHelper {
 	 * @param includeColumns Columns to be included in the dirty checking, per property
 	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
 	 * @param session The session from which the dirty check request originated.
+	 *
+	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
+	 *
+	 * @deprecated Use {org.hibernate.type.TypeHelper{@link #findDirty(NonIdentifierAttribute[], Object[], Object[], boolean[][], SharedSessionContractImplementor)} indtead
+	 */
+	@Deprecated
+	public static int[] findDirty(
+			final NonIdentifierAttribute[] properties,
+			final Object[] currentState,
+			final Object[] previousState,
+			final boolean[][] includeColumns,
+			final boolean anyUninitializedProperties,
+			final SharedSessionContractImplementor session) {
+		return findDirty( properties, currentState, previousState, includeColumns, session );
+	}
+
+	/**
+	 * Determine if any of the given field values are dirty, returning an array containing
+	 * indices of the dirty fields.
+	 * <p/>
+	 * If it is determined that no fields are dirty, null is returned.
+	 *
+	 * @param properties The property definitions
+	 * @param currentState The current state of the entity
+	 * @param previousState The baseline state of the entity
+	 * @param includeColumns Columns to be included in the dirty checking, per property
+	 * @param session The session from which the dirty check request originated.
 	 * 
 	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
 	 */
@@ -284,15 +314,14 @@ public class TypeHelper {
 			final Object[] currentState,
 			final Object[] previousState,
 			final boolean[][] includeColumns,
-			final boolean anyUninitializedProperties,
-			final SessionImplementor session) {
+			final SharedSessionContractImplementor session) {
 		int[] results = null;
 		int count = 0;
 		int span = properties.length;
 
 		for ( int i = 0; i < span; i++ ) {
 			final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-					&& properties[i].isDirtyCheckable( anyUninitializedProperties )
+					&& properties[i].isDirtyCheckable()
 					&& properties[i].getType().isDirty( previousState[i], currentState[i], includeColumns[i], session );
 			if ( dirty ) {
 				if ( results == null ) {
@@ -322,32 +351,63 @@ public class TypeHelper {
 	 * @param currentState The current state of the entity
 	 * @param previousState The baseline state of the entity
 	 * @param includeColumns Columns to be included in the mod checking, per property
+	 * @param includeProperties Array of property indices that identify which properties participate in check
 	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
 	 * @param session The session from which the dirty check request originated.
 	 *
 	 * @return Array containing indices of the modified properties, or null if no properties considered modified.
+	 *
+	 * @deprecated Use {@link #findModified(NonIdentifierAttribute[], Object[], Object[], boolean[][], boolean[], boolean, SharedSessionContractImplementor)}
+	 * instead.
 	 */
+	@Deprecated
 	public static int[] findModified(
 			final NonIdentifierAttribute[] properties,
 			final Object[] currentState,
 			final Object[] previousState,
 			final boolean[][] includeColumns,
+			final boolean[] includeProperties,
 			final boolean anyUninitializedProperties,
-			final SessionImplementor session) {
+			final SharedSessionContractImplementor session) {
+		return findModified( properties, currentState, previousState, includeColumns, includeProperties, session );
+	}
+
+	/**
+	 * Determine if any of the given field values are modified, returning an array containing
+	 * indices of the modified fields.
+	 * <p/>
+	 * If it is determined that no fields are dirty, null is returned.
+	 *
+	 * @param properties The property definitions
+	 * @param currentState The current state of the entity
+	 * @param previousState The baseline state of the entity
+	 * @param includeColumns Columns to be included in the mod checking, per property
+	 * @param includeProperties Array of property indices that identify which properties participate in check
+	 * @param session The session from which the dirty check request originated.
+	 *
+	 * @return Array containing indices of the modified properties, or null if no properties considered modified.
+	 **/
+	public static int[] findModified(
+			final NonIdentifierAttribute[] properties,
+			final Object[] currentState,
+			final Object[] previousState,
+			final boolean[][] includeColumns,
+			final boolean[] includeProperties,
+			final SharedSessionContractImplementor session) {
 		int[] results = null;
 		int count = 0;
 		int span = properties.length;
 
 		for ( int i = 0; i < span; i++ ) {
-			final boolean modified = currentState[i]!=LazyPropertyInitializer.UNFETCHED_PROPERTY
-					&& properties[i].isDirtyCheckable(anyUninitializedProperties)
-					&& properties[i].getType().isModified( previousState[i], currentState[i], includeColumns[i], session );
-
+			final boolean modified = currentState[ i ] != LazyPropertyInitializer.UNFETCHED_PROPERTY
+					&& includeProperties[ i ]
+					&& properties[ i ].isDirtyCheckable()
+					&& properties[ i ].getType().isModified( previousState[ i ], currentState[ i ], includeColumns[ i ], session );
 			if ( modified ) {
 				if ( results == null ) {
-					results = new int[span];
+					results = new int[ span ];
 				}
-				results[count++] = i;
+				results[ count++ ] = i;
 			}
 		}
 
@@ -355,9 +415,30 @@ public class TypeHelper {
 			return null;
 		}
 		else {
-			int[] trimmed = new int[count];
+			int[] trimmed = new int[ count ];
 			System.arraycopy( results, 0, trimmed, 0, count );
 			return trimmed;
 		}
+	}
+
+	public static String toLoggableString(
+			Object[] state,
+			Type[] types,
+			SessionFactoryImplementor factory) {
+		final StringBuilder buff = new StringBuilder();
+		for ( int i = 0; i < state.length; i++ ) {
+			if ( i > 0 ) {
+				buff.append( ", " );
+			}
+
+			// HHH-11173 - Instead of having to account for unfectched lazy properties in all types, it's done here
+			if ( state[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || !Hibernate.isInitialized( state[i] ) ) {
+				buff.append( "<uninitialized>" );
+			}
+			else {
+				buff.append( types[i].toLoggableString( state[i], factory ) );
+			}
+		}
+		return buff.toString();
 	}
 }

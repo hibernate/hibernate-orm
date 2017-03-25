@@ -74,6 +74,7 @@ public class BasicTypeRegistry implements Serializable {
 
 		register( BinaryType.INSTANCE );
 		register( WrapperBinaryType.INSTANCE );
+		register( RowVersionType.INSTANCE );
 		register( ImageType.INSTANCE );
 		register( CharArrayType.INSTANCE );
 		register( CharacterArrayType.INSTANCE );

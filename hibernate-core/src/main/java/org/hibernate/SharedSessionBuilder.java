@@ -6,85 +6,88 @@
  */
 package org.hibernate;
 
-import java.sql.Connection;
-
 /**
  * Specialized {@link SessionBuilder} with access to stuff from another session.
  *
  * @author Steve Ebersole
  */
-public interface SharedSessionBuilder extends SessionBuilder {
+public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends SessionBuilder<T> {
+
 	/**
-	 * Signifies the interceptor from the original session should be used to create the new session.
+	 * Signifies that the transaction context from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@link #connection()} instead
 	 */
-	public SharedSessionBuilder interceptor();
+	@Deprecated
+	default T transactionContext() {
+		return connection();
+	}
 
 	/**
 	 * Signifies that the connection from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SharedSessionBuilder connection();
+	T connection();
+
+	/**
+	 * Signifies the interceptor from the original session should be used to create the new session.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	T interceptor();
+
+	/**
+	 * Signifies that the connection release mode from the original session should be used to create the new session.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated (snce 6.0) use {@link #connectionHandlingMode} instead.
+	 */
+	@Deprecated
+	T connectionReleaseMode();
 
 	/**
 	 * Signifies that the connection release mode from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SharedSessionBuilder connectionReleaseMode();
+	T connectionHandlingMode();
 
 	/**
 	 * Signifies that the autoJoinTransaction flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public SharedSessionBuilder autoJoinTransactions();
+	T autoJoinTransactions();
+
+	/**
+	 * Signifies that the FlushMode from the original session should be used to create the new session.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	T flushMode();
 
 	/**
 	 * Signifies that the autoClose flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated For same reasons as {@link SessionBuilder#autoClose(boolean)} was deprecated.  However, shared
-	 * session builders can use {@link #autoClose(boolean)} since they do not "inherit" the owner.
 	 */
-	@Deprecated
-	public SharedSessionBuilder autoClose();
+	T autoClose();
 
 	/**
 	 * Signifies that the flushBeforeCompletion flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
-	 */
-	public SharedSessionBuilder flushBeforeCompletion();
-
-	/**
-	 * Signifies that the transaction context from the original session should be used to create the new session.
 	 *
-	 * @return {@code this}, for method chaining
+	 * @deprecated (since 5.2) use {@link #flushMode()} instead.
 	 */
-	public SharedSessionBuilder transactionContext();
-
-	@Override
-	SharedSessionBuilder interceptor(Interceptor interceptor);
-
-	@Override
-	SharedSessionBuilder noInterceptor();
-
-	@Override
-	SharedSessionBuilder connection(Connection connection);
-
-	@Override
-	SharedSessionBuilder connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
-
-	@Override
-	SharedSessionBuilder autoJoinTransactions(boolean autoJoinTransactions);
-
-	@Override
-	SharedSessionBuilder autoClose(boolean autoClose);
-
-	@Override
-	SharedSessionBuilder flushBeforeCompletion(boolean flushBeforeCompletion);
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	default T flushBeforeCompletion() {
+		flushMode();
+		return (T) this;
+	}
 }

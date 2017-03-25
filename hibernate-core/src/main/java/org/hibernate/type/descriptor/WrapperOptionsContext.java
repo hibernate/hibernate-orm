@@ -10,12 +10,20 @@ package org.hibernate.type.descriptor;
  * Defines the context for {@link WrapperOptions}
  *
  * @author Steve Ebersole
+ *
+ * @deprecated (since 5.2) Just directly implement WrapperOptions
  */
-public interface WrapperOptionsContext {
+@Deprecated
+public interface WrapperOptionsContext extends WrapperOptions {
 	/**
 	 * Obtain the WrapperOptions for this context.
 	 *
 	 * @return The WrapperOptions
+	 *
+	 * @deprecated (since 5.2) Just directly implement WrapperOptions
 	 */
-	WrapperOptions getWrapperOptions();
+	@Deprecated
+	default WrapperOptions getWrapperOptions() {
+		return this;
+	}
 }

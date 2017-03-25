@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
@@ -36,7 +36,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 			final PersistentCollection collection,
 			final CollectionPersister persister,
 			final Serializable id,
-			final SessionImplementor session) {
+			final SharedSessionContractImplementor session) {
 		super( persister, collection, id, session );
 	}
 
@@ -53,7 +53,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 		postRecreate();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatisticsImplementor().recreateCollection( getPersister().getRole() );
+			getSession().getFactory().getStatistics().recreateCollection( getPersister().getRole() );
 		}
 	}
 

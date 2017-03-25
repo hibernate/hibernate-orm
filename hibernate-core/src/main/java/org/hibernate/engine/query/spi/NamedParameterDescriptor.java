@@ -6,8 +6,8 @@
  */
 package org.hibernate.engine.query.spi;
 
-import java.io.Serializable;
-
+import org.hibernate.Incubating;
+import org.hibernate.query.QueryParameter;
 import org.hibernate.type.Type;
 
 /**
@@ -15,7 +15,8 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class NamedParameterDescriptor implements Serializable {
+@Incubating
+public class NamedParameterDescriptor implements QueryParameter {
 	private final String name;
 	private Type expectedType;
 	private final int[] sourceLocations;
@@ -40,6 +41,21 @@ public class NamedParameterDescriptor implements Serializable {
 		return name;
 	}
 
+	@Override
+	public Integer getPosition() {
+		return null;
+	}
+
+	@Override
+	public Class getParameterType() {
+		return expectedType == null ? null : expectedType.getReturnedClass();
+	}
+
+	@Override
+	public boolean isJpaPositionalParameter() {
+		return isJpaStyle();
+	}
+
 	public Type getExpectedType() {
 		return expectedType;
 	}
@@ -59,5 +75,28 @@ public class NamedParameterDescriptor implements Serializable {
 	 */
 	public void resetExpectedType(Type type) {
 		this.expectedType = type;
+	}
+
+	@Override
+	public Type getType() {
+		return expectedType;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		NamedParameterDescriptor that = (NamedParameterDescriptor) o;
+		return getName().equals( that.getName() );
+	}
+
+	@Override
+	public int hashCode() {
+		return getName().hashCode();
 	}
 }

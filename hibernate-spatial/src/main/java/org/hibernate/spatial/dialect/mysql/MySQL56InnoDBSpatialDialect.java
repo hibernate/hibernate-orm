@@ -12,22 +12,9 @@ package org.hibernate.spatial.dialect.mysql;
  *
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 9/13/13
+ * @deprecated Use "hibernate.dialect.storage_engine=innodb" environment variable or JVM system property instead.
  */
+@Deprecated
 public class MySQL56InnoDBSpatialDialect extends MySQL56SpatialDialect {
-
-	@Override
-	public boolean supportsCascadeDelete() {
-		return true;
-	}
-
-	@Override
-	public String getTableTypeString() {
-		return " ENGINE=InnoDB";
-	}
-
-	@Override
-	public boolean hasSelfReferentialForeignKeyBug() {
-		return true;
-	}
 
 }

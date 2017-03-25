@@ -6,23 +6,29 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.BatchUpdateException;
+import java.sql.CallableStatement;
+import java.sql.SQLException;
+
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
-import java.sql.BatchUpdateException;
-import java.sql.SQLException;
+import org.mockito.Mockito;
 
+import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Testing of patched support for PostgreSQL Lock error detection. HHH-7251
@@ -30,27 +36,27 @@ import static org.junit.Assert.assertTrue;
  * @author Bryan Varner
  */
 public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
-	
+
 	@Test
 	public void testDeadlockException() {
 		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
 		SQLExceptionConversionDelegate delegate = dialect.buildSQLExceptionConversionDelegate();
 		assertNotNull(delegate);
-		
+
 		JDBCException exception = delegate.convert(new SQLException("Deadlock Detected", "40P01"), "", "");
 		assertTrue(exception instanceof LockAcquisitionException);
 	}
-	
+
 	@Test
 	public void testTimeoutException() {
 		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
 		SQLExceptionConversionDelegate delegate = dialect.buildSQLExceptionConversionDelegate();
 		assertNotNull(delegate);
-		
+
 		JDBCException exception = delegate.convert(new SQLException("Lock Not Available", "55P03"), "", "");
 		assertTrue(exception instanceof PessimisticLockException);
 	}
-	
+
 	/**
 	 * Tests that getForUpdateString(String aliases, LockOptions lockOptions) will return a String
 	 * that will effect the SELECT ... FOR UPDATE OF tableAlias1, ..., tableAliasN
@@ -60,10 +66,10 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
 		LockOptions lockOptions = new LockOptions();
 		lockOptions.setAliasSpecificLockMode("tableAlias1", LockMode.PESSIMISTIC_WRITE);
-		
+
 		String forUpdateClause = dialect.getForUpdateString("tableAlias1", lockOptions);
 		assertTrue("for update of tableAlias1".equals(forUpdateClause));
-		
+
 		lockOptions.setAliasSpecificLockMode("tableAlias2", LockMode.PESSIMISTIC_WRITE);
 		forUpdateClause = dialect.getForUpdateString("tableAlias1,tableAlias2", lockOptions);
 		assertTrue("for update of tableAlias1,tableAlias2".equals(forUpdateClause));
@@ -77,5 +83,19 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 		batchUpdateException.setNextException(psqlException);
 		String constraintName = dialect.getViolatedConstraintNameExtracter().extractConstraintName(batchUpdateException);
 		assertThat(constraintName, is("uk_4bm1x2ultdmq63y3h5r3eg0ej"));
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8687")
+	public void testMessageException() throws SQLException {
+		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		try {
+			dialect.getResultSet( Mockito.mock( CallableStatement.class), "abc" );
+			fail( "Expected UnsupportedOperationException" );
+		}
+		catch (Exception e) {
+			assertTrue( e instanceof UnsupportedOperationException );
+			assertEquals( "PostgreSQL only supports accessing REF_CURSOR parameters by position", e.getMessage() );
+		}
 	}
 }

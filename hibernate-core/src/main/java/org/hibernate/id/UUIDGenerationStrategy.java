@@ -5,10 +5,11 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
 import java.util.UUID;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * A strategy for generating a variant 2 {@link UUID} value.
@@ -32,7 +33,7 @@ public interface UUIDGenerationStrategy extends Serializable {
 	 *
 	 * @return The supported generation version
 	 */
-	public int getGeneratedVersion();
+	int getGeneratedVersion();
 
 	/**
 	 * Generate the UUID.
@@ -41,6 +42,6 @@ public interface UUIDGenerationStrategy extends Serializable {
 	 *
 	 * @return The generated UUID.
 	 */
-	public UUID generateUUID(SessionImplementor session);
+	UUID generateUUID(SharedSessionContractImplementor session);
 
 }

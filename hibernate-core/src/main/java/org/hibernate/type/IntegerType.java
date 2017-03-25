@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
 
 /**
@@ -29,6 +29,7 @@ public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
 	public IntegerType() {
 		super( org.hibernate.type.descriptor.sql.IntegerTypeDescriptor.INSTANCE, IntegerTypeDescriptor.INSTANCE );
 	}
+
 	@Override
 	public String getName() {
 		return "integer";
@@ -36,32 +37,39 @@ public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
 
 	@Override
 	public String[] getRegistrationKeys() {
-		return new String[] { getName(), int.class.getName(), Integer.class.getName() };
+		return new String[] {getName(), int.class.getName(), Integer.class.getName()};
 	}
+
 	@Override
 	public Serializable getDefaultValue() {
 		return ZERO;
 	}
+
 	@Override
 	public Class getPrimitiveClass() {
 		return int.class;
 	}
+
 	@Override
 	public String objectToSQLString(Integer value, Dialect dialect) throws Exception {
 		return toString( value );
 	}
+
 	@Override
 	public Integer stringToObject(String xml) {
 		return fromString( xml );
 	}
+
 	@Override
-	public Integer seed(SessionImplementor session) {
+	public Integer seed(SharedSessionContractImplementor session) {
 		return ZERO;
 	}
+
 	@Override
-	public Integer next(Integer current, SessionImplementor session) {
-		return current+1;
+	public Integer next(Integer current, SharedSessionContractImplementor session) {
+		return current + 1;
 	}
+
 	@Override
 	public Comparator<Integer> getComparator() {
 		return getJavaTypeDescriptor().getComparator();

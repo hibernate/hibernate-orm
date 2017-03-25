@@ -27,7 +27,6 @@ public class ImportContextImpl implements ImportContext {
 
 	private String basePackage = "";
 
-	private static final String LINE_SEPARATOR = System.getProperty( "line.separator" );
 	private static final Map<String, String> PRIMITIVES = new HashMap<String, String>();
 
 	static {
@@ -152,10 +151,10 @@ public class ImportContextImpl implements ImportContext {
 			// don't add automatically "imported" stuff
 			if ( !isAutoImported( next ) ) {
 				if ( staticImports.contains( next ) ) {
-					builder.append( "import static " ).append( next ).append( ";" ).append( LINE_SEPARATOR );
+					builder.append( "import static " ).append( next ).append( ";" ).append( System.lineSeparator() );
 				}
 				else {
-					builder.append( "import " ).append( next ).append( ";" ).append( LINE_SEPARATOR );
+					builder.append( "import " ).append( next ).append( ";" ).append( System.lineSeparator() );
 				}
 			}
 		}

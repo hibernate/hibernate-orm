@@ -96,7 +96,12 @@ public class SimpleSelect {
 	}
 
 	public SimpleSelect addWhereToken(String token) {
-		whereTokens.add( token );
+		if (token != null ) {
+			if (!whereTokens.isEmpty()) {
+				and();
+			}
+			whereTokens.add( token );
+		}
 		return this;
 	}
 

@@ -129,10 +129,10 @@ class FromElementType {
 	 */
 	String renderScalarIdentifierSelect(int i) {
 		checkInitialized();
-		String[] cols = getPropertyMapping( EntityPersister.ENTITY_ID ).toColumns(
-				getTableAlias(),
-				EntityPersister.ENTITY_ID
-		);
+
+		final String idPropertyName = getIdentifierPropertyName();
+		String[] cols = getPropertyMapping( idPropertyName ).toColumns( getTableAlias(), idPropertyName );
+
 		StringBuilder buf = new StringBuilder();
 		// For property references generate <tablealias>.<columnname> as <projectionalias>
 		for ( int j = 0; j < cols.length; j++ ) {
@@ -429,7 +429,7 @@ class FromElementType {
 			// this is hacky, but really this is difficult to handle given the current codebase.
 			if ( persister != propertyMapping ) {
 				// we want the subquery...
-				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfCollectionPropertiesInHql( path, fromElement.getClassAlias() );
+//				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfCollectionPropertiesInHql( path, fromElement.getClassAlias() );
 				return getCollectionPropertyReference( path ).toColumns( tableAlias );
 			}
 		}
@@ -675,6 +675,16 @@ class FromElementType {
 		public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException {
 			validate( propertyName );
 			return queryableCollection.toColumns( propertyName );
+		}
+	}
+
+	public String getIdentifierPropertyName() {
+		if ( getEntityPersister() != null && getEntityPersister().getEntityMetamodel() != null
+				&& getEntityPersister().getEntityMetamodel().hasNonIdentifierPropertyNamedId() ) {
+			return getEntityPersister().getIdentifierPropertyName();
+		}
+		else {
+			return EntityPersister.ENTITY_ID;
 		}
 	}
 }

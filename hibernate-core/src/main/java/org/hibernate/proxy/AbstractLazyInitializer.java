@@ -11,12 +11,11 @@ import java.io.Serializable;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.Session;
 import org.hibernate.SessionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -38,7 +37,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private boolean initialized;
 	private boolean readOnly;
 	private boolean unwrap;
-	private transient SessionImplementor session;
+	private transient SharedSessionContractImplementor session;
 	private Boolean readOnlyBeforeAttachedToSession;
 
 	private String sessionFactoryUuid;
@@ -57,7 +56,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 * @param id The identifier of the entity being proxied.
 	 * @param session The session owning the proxy.
 	 */
-	protected AbstractLazyInitializer(String entityName, Serializable id, SessionImplementor session) {
+	protected AbstractLazyInitializer(String entityName, Serializable id, SharedSessionContractImplementor session) {
 		this.entityName = entityName;
 		this.id = id;
 		// initialize other fields depending on session state
@@ -90,12 +89,12 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	@Override
-	public final SessionImplementor getSession() {
+	public final SharedSessionContractImplementor getSession() {
 		return session;
 	}
 
 	@Override
-	public final void setSession(SessionImplementor s) throws HibernateException {
+	public final void setSession(SharedSessionContractImplementor s) throws HibernateException {
 		if ( s != session ) {
 			// check for s == null first, since it is least expensive
 			if ( s == null ) {
@@ -122,7 +121,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	private static EntityKey generateEntityKeyOrNull(Serializable id, SessionImplementor s, String entityName) {
+	private static EntityKey generateEntityKeyOrNull(Serializable id, SharedSessionContractImplementor s, String entityName) {
 		if ( id == null || s == null || entityName == null ) {
 			return null;
 		}
@@ -155,11 +154,11 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			else {
 				target = session.immediateLoad( entityName, id );
 				initialized = true;
-				checkTargetState();
+				checkTargetState(session);
 			}
 		}
 		else {
-			checkTargetState();
+			checkTargetState(session);
 		}
 	}
 
@@ -172,7 +171,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			try {
 				SessionFactoryImplementor sf = (SessionFactoryImplementor)
 						SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
-				SessionImplementor session = (SessionImplementor) sf.openSession();
+				SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
 				session.getPersistenceContext().setDefaultReadOnly( true );
 				session.setFlushMode( FlushMode.MANUAL );
 
@@ -184,36 +183,36 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 					// be created even if a current session and transaction are
 					// open (ex: session.clear() was used).  We must prevent
 					// multiple transactions.
-					( ( Session) session ).beginTransaction();
+					session.beginTransaction();
 				}
 
 				try {
 					target = session.immediateLoad( entityName, id );
+					initialized = true;
+					checkTargetState(session);
 				}
 				finally {
 					// make sure the just opened temp session gets closed!
 					try {
 						if ( !isJTA ) {
-							( ( Session) session ).getTransaction().commit();
+							session.getTransaction().commit();
 						}
-						( (Session) session ).close();
+						session.close();
 					}
 					catch (Exception e) {
 						log.warn( "Unable to close temporary session used to load lazy proxy associated to no session" );
 					}
 				}
-				initialized = true;
-				checkTargetState();
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				log.error( "Initialization failure", e );
 				throw new LazyInitializationException( e.getMessage() );
 			}
 		}
 		else if ( session.isOpen() && session.isConnected() ) {
 			target = session.immediateLoad( entityName, id );
 			initialized = true;
-			checkTargetState();
+			checkTargetState(session);
 		}
 		else {
 			throw new LazyInitializationException( "could not initialize proxy - Session was closed or disced" );
@@ -230,10 +229,10 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	private void checkTargetState() {
+	private void checkTargetState(SharedSessionContractImplementor session) {
 		if ( !unwrap ) {
 			if ( target == null ) {
-				getSession().getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
+				session.getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
 			}
 		}
 	}
@@ -268,7 +267,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	@Override
-	public final Object getImplementation(SessionImplementor s) throws HibernateException {
+	public final Object getImplementation(SharedSessionContractImplementor s) throws HibernateException {
 		final EntityKey entityKey = generateEntityKeyOrNull( getIdentifier(), s, getEntityName() );
 		return (entityKey == null ? null : s.getPersistenceContext().getEntity( entityKey ));
 	}
@@ -353,7 +352,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 * Set the read-only/modifiable setting that should be put in affect when it is
 	 * attached to a session.
 	 * <p/>
-	 * This method should only be called during deserialization, before associating
+	 * This method should only be called during deserialization, beforeQuery associating
 	 * the proxy with a session.
 	 *
 	 * @param readOnlyBeforeAttachedToSession, the read-only/modifiable setting to use when

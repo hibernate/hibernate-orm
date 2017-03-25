@@ -12,6 +12,9 @@ import org.hibernate.internal.util.StringHelper;
  * @author Steve Ebersole
  */
 public abstract class AbstractAttributeKey {
+	// todo : replace this with "{element}"
+	private static final String COLLECTION_ELEMENT = "collection&&element";
+
 	private final AbstractAttributeKey parent;
 	private final String property;
 	private final String fullPath;
@@ -54,28 +57,84 @@ public abstract class AbstractAttributeKey {
 		this.fullPath = prefix + property;
 	}
 
+	/**
+	 * How many "parts" are there to this path/role?
+	 *
+	 * @return The number of parts.
+	 */
 	public int getDepth() {
 		return depth;
 	}
 
 	protected abstract char getDelimiter();
 
+	/**
+	 * Creates a new AbstractAttributeKey by appending the passed part.
+	 *
+	 * @param property The part to append
+	 *
+	 * @return The new AbstractAttributeKey
+	 */
 	public abstract AbstractAttributeKey append(String property);
 
+	/**
+	 * Access to the parent part
+	 *
+	 * @return the parent part
+	 */
 	public AbstractAttributeKey getParent() {
 		return parent;
 	}
 
+	/**
+	 * Access to the end path part.
+	 *
+	 * @return the end path part
+	 */
 	public String getProperty() {
 		return property;
 	}
 
+	/**
+	 * Access to the full path as a String
+	 *
+	 * @return The full path as a String
+	 */
 	public String getFullPath() {
 		return fullPath;
 	}
 
+	/**
+	 * Does this part represent a root.
+	 *
+	 * @return {@code true} if this part is a root.
+	 */
 	public boolean isRoot() {
 		return parent == null;
+	}
+
+	/**
+	 * Does this part represent a collection-element reference?
+	 *
+	 * @return {@code true} if the current property is a collection element
+	 * marker ({@link #COLLECTION_ELEMENT}
+	 */
+	public boolean isCollectionElement() {
+		return COLLECTION_ELEMENT.equals( property );
+	}
+
+	/**
+	 * Does any part represent a collection-element reference?
+	 *
+	 * @return {@code true} if this part or any parent part is a collection element
+	 * marker ({@link #COLLECTION_ELEMENT}.
+	 */
+	public boolean isPartOfCollectionElement() {
+		return fullPath.contains( '.' + COLLECTION_ELEMENT );
+	}
+
+	public String stripCollectionElementMarker() {
+		return fullPath.replace( '.' + COLLECTION_ELEMENT, "" );
 	}
 
 	@Override

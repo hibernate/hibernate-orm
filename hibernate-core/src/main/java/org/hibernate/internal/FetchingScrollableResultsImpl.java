@@ -12,7 +12,7 @@ import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.loader.Loader;
 import org.hibernate.type.Type;
@@ -41,7 +41,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 	public FetchingScrollableResultsImpl(
 			ResultSet rs,
 			PreparedStatement ps,
-			SessionImplementor sess,
+			SharedSessionContractImplementor sess,
 			Loader loader,
 			QueryParameters queryParameters,
 			Type[] types,
@@ -72,7 +72,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 				getResultSet(),
 				getSession(),
 				getQueryParameters(),
-				false
+				true
 		);
 
 

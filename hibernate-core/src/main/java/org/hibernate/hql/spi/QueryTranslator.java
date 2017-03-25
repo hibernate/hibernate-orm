@@ -15,10 +15,10 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -51,7 +51,7 @@ public interface QueryTranslator {
 	 * @return The query list results.
 	 * @throws HibernateException
 	 */
-	List list(SessionImplementor session, QueryParameters queryParameters)
+	List list(SharedSessionContractImplementor session, QueryParameters queryParameters)
 			throws HibernateException;
 
 	/**
@@ -73,7 +73,7 @@ public interface QueryTranslator {
 	 * @return The ScrollableResults wrapper around the query results.
 	 * @throws HibernateException
 	 */
-	ScrollableResults scroll(QueryParameters queryParameters, SessionImplementor session)
+	ScrollableResultsImplementor scroll(QueryParameters queryParameters, SharedSessionContractImplementor session)
 			throws HibernateException;
 
 	/**
@@ -84,7 +84,7 @@ public interface QueryTranslator {
 	 * @return The number of entities updated or deleted.
 	 * @throws HibernateException
 	 */
-	int executeUpdate(QueryParameters queryParameters, SessionImplementor session)
+	int executeUpdate(QueryParameters queryParameters, SharedSessionContractImplementor session)
 			throws HibernateException;
 
 	/**

@@ -12,7 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
@@ -99,18 +99,18 @@ public class MyOidType implements CompositeUserType {
 	}
 
 	public Object nullSafeGet(
-			ResultSet aResultSet, String[] names, SessionImplementor aSessionImplementor, Object aObject
+			ResultSet aResultSet, String[] names, SharedSessionContractImplementor session, Object aObject
 	) throws HibernateException, SQLException {
-		Integer highval = StandardBasicTypes.INTEGER.nullSafeGet( aResultSet, names[0], aSessionImplementor );
-		Integer midval = StandardBasicTypes.INTEGER.nullSafeGet( aResultSet, names[1], aSessionImplementor );
-		Integer lowval = StandardBasicTypes.INTEGER.nullSafeGet( aResultSet, names[2], aSessionImplementor );
-		Integer other = StandardBasicTypes.INTEGER.nullSafeGet( aResultSet, names[3], aSessionImplementor );
+		Integer highval = StandardBasicTypes.INTEGER.nullSafeGet( aResultSet, names[0], session );
+		Integer midval = StandardBasicTypes.INTEGER.nullSafeGet( aResultSet, names[1], session );
+		Integer lowval = StandardBasicTypes.INTEGER.nullSafeGet( aResultSet, names[2], session );
+		Integer other = StandardBasicTypes.INTEGER.nullSafeGet( aResultSet, names[3], session );
 
 		return new MyOid( highval, midval, lowval, other );
 	}
 
 	public void nullSafeSet(
-			PreparedStatement aPreparedStatement, Object value, int index, SessionImplementor aSessionImplementor
+			PreparedStatement aPreparedStatement, Object value, int index, SharedSessionContractImplementor session
 	) throws HibernateException, SQLException {
 		MyOid c;
 		if ( value == null ) {
@@ -121,10 +121,10 @@ public class MyOidType implements CompositeUserType {
 			c = (MyOid) value;
 		}
 
-		StandardBasicTypes.INTEGER.nullSafeSet( aPreparedStatement, c.getHigh(), index, aSessionImplementor );
-		StandardBasicTypes.INTEGER.nullSafeSet( aPreparedStatement, c.getMiddle(), index + 1, aSessionImplementor );
-		StandardBasicTypes.INTEGER.nullSafeSet( aPreparedStatement, c.getLow(), index + 2, aSessionImplementor );
-		StandardBasicTypes.INTEGER.nullSafeSet( aPreparedStatement, c.getOther(), index + 3, aSessionImplementor );
+		StandardBasicTypes.INTEGER.nullSafeSet( aPreparedStatement, c.getHigh(), index, session );
+		StandardBasicTypes.INTEGER.nullSafeSet( aPreparedStatement, c.getMiddle(), index + 1, session );
+		StandardBasicTypes.INTEGER.nullSafeSet( aPreparedStatement, c.getLow(), index + 2, session );
+		StandardBasicTypes.INTEGER.nullSafeSet( aPreparedStatement, c.getOther(), index + 3, session );
 	}
 
 	public Object deepCopy(Object aObject) throws HibernateException {
@@ -137,16 +137,16 @@ public class MyOidType implements CompositeUserType {
 		return false;
 	}
 
-	public Serializable disassemble(Object value, SessionImplementor aSessionImplementor) throws HibernateException {
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session) throws HibernateException {
 		return (Serializable) deepCopy( value );
 	}
 
-	public Object assemble(Serializable cached, SessionImplementor aSessionImplementor, Object aObject)
+	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object aObject)
 			throws HibernateException {
 		return deepCopy( cached );
 	}
 
-	public Object replace(Object original, Object target, SessionImplementor aSessionImplementor, Object aObject2)
+	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object aObject2)
 			throws HibernateException {
 		// we are immutable. return original
 		return original;

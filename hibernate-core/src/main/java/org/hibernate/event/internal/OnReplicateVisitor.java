@@ -10,6 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CollectionType;
@@ -41,14 +42,14 @@ public class OnReplicateVisitor extends ReattachVisitor {
 		}
 
 		final EventSource session = getSession();
-		final CollectionPersister persister = session.getFactory().getCollectionPersister( type.getRole() );
+		final CollectionPersister persister = session.getFactory().getMetamodel().collectionPersister( type.getRole() );
 
 		if ( isUpdate ) {
 			removeCollection( persister, extractCollectionKeyFromOwner( persister ), session );
 		}
 		if ( collection != null && collection instanceof PersistentCollection ) {
 			final PersistentCollection wrapper = (PersistentCollection) collection;
-			wrapper.setCurrentSession( session );
+			wrapper.setCurrentSession( (SessionImplementor) session );
 			if ( wrapper.wasInitialized() ) {
 				session.getPersistenceContext().addNewCollection( persister, wrapper );
 			}

@@ -13,7 +13,7 @@ import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
@@ -73,10 +73,11 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 	}
 
 	@Override
-	public Serializable generate(SessionImplementor sessionImplementor, Object object) {
-		Session session = ( Session ) sessionImplementor;
+	public Serializable generate(SharedSessionContractImplementor sessionImplementor, Object object) {
+		// needs to be a Session for the #save and #contains calls below...
+		final Session session = ( Session ) sessionImplementor;
 
-		final EntityPersister persister = sessionImplementor.getFactory().getEntityPersister( entityName );
+		final EntityPersister persister = sessionImplementor.getFactory().getMetamodel().entityPersister( entityName );
 		Object associatedObject = persister.getPropertyValue( object, propertyName );
 		if ( associatedObject == null ) {
 			throw new IdentifierGenerationException(
@@ -107,7 +108,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 			id = session.save( foreignValueSourceType.getAssociatedEntityName(), associatedObject );
 		}
 
-		if ( session.contains(object) ) {
+		if ( session.contains( entityName, object ) ) {
 			//abort the save (the object is already saved by a circular cascade)
 			return IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR;
 			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");

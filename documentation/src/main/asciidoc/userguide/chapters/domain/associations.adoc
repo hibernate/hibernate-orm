@@ -213,7 +213,7 @@ include::{extrasdir}/associations-one-to-one-bidirectional-lifecycle-example.sql
 ====
 
 When using a bidirectional `@OneToOne` association, Hibernate enforces the unique constraint upon fetching the child-side.
-If there are more than one children associated with the same parent, Hibernate will throw a constraint violation exception.
+If there are more than one children associated with the same parent, Hibernate will throw a `org.hibernate.exception.ConstraintViolationException`.
 Continuing the previous example, when adding another `PhoneDetails`, Hibernate validates the uniqueness constraint when reloading the `Phone` object.
 
 [[associations-one-to-one-bidirectional-constraint-example]]
@@ -362,7 +362,7 @@ include::{extrasdir}/associations-many-to-many-bidirectional-with-link-entity-ex
 ----
 ====
 
-Both the `Person` and the `Address` have a` mappedBy` `@OneToMany` side, while the `PersonAddress` owns the `person` and the `address` `@ManyToOne` associations.
+Both the `Person` and the `Address` have a `mappedBy` `@OneToMany` side, while the `PersonAddress` owns the `person` and the `address` `@ManyToOne` associations.
 Because this mapping is formed out of two bidirectional associations, the helper methods are even more relevant.
 
 [NOTE]
@@ -388,3 +388,69 @@ include::{extrasdir}/associations-many-to-many-bidirectional-with-link-entity-li
 ====
 
 There is only one delete statement executed because, this time, the association is controlled by the `@ManyToOne` side which only has to monitor the state of the underlying foreign key relationship to trigger the right DML statement.
+
+[[associations-not-found]]
+==== `@NotFound` association mapping
+
+When dealing with associations which are not enforced by a Foreign Key,
+it's possible to bump into inconsistencies if the child record cannot reference a parent entity.
+
+By default, Hibernate will complain whenever a child association references a non-existing parent record.
+However, you can configure this behavior so that Hibernate can ignore such an Exception and simply assign `null` as a parent object referenced.
+
+To ignore non-existing parent entity references, even though not really recommended, it's possible to use the annotation `org.hibernate.annotation.NotFound` annotation with a value of `org.hibernate.annotations.NotFoundAction.IGNORE`.
+
+Considering the following `City` and `Person` entity mappings:
+
+[[associations-not-found-domain-model-example]]
+.`@NotFound` mapping example
+====
+[source,java]
+----
+include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-domain-model-example,indent=0]
+----
+====
+
+If we have the following entities in our database:
+
+[[associations-not-found-persist-example]]
+.`@NotFound` mapping example
+====
+[source,java]
+----
+include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-persist-example,indent=0]
+----
+====
+
+When loading the `Person` entity, Hibernate is able to locate the associated `City` parent entity:
+
+[[associations-not-found-find-example]]
+.`@NotFound` find existing entity example
+====
+[source,java]
+----
+include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-find-example,indent=0]
+----
+====
+
+However, if we change the `cityName` attribute to a non-existing city:
+
+[[associations-not-found-non-existing-persist-example]]
+.`@NotFound` change to non-existing City example
+====
+[source,java]
+----
+include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-non-existing-persist-example,indent=0]
+----
+====
+
+Hibernate is not going to throw any exception, and it will assign a value of `null` for the non-existing `City` entity reference:
+
+[[associations-not-found-non-existing-find-example]]
+.`@NotFound` find non-existing City example
+====
+[source,java]
+----
+include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-non-existing-find-example,indent=0]
+----
+====

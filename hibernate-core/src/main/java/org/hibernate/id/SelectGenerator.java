@@ -15,7 +15,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.insert.AbstractSelectingDelegate;
 import org.hibernate.id.insert.IdentifierGeneratingInsert;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
@@ -114,7 +114,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 		}
 
 		protected void bindParameters(
-				SessionImplementor session,
+				SharedSessionContractImplementor session,
 				PreparedStatement ps,
 				Object entity) throws SQLException {
 			Object uniqueKeyValue = persister.getPropertyValue( entity, uniqueKeyPropertyName );
@@ -122,7 +122,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 		}
 
 		protected Serializable getResult(
-				SessionImplementor session,
+				SharedSessionContractImplementor session,
 				ResultSet rs,
 				Object entity) throws SQLException {
 			if ( !rs.next() ) {

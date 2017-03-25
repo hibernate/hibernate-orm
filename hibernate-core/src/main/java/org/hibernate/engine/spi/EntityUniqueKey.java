@@ -76,7 +76,7 @@ public class EntityUniqueKey implements Serializable {
 	@Override
 	public boolean equals(Object other) {
 		EntityUniqueKey that = (EntityUniqueKey) other;
-		return that.entityName.equals( entityName )
+		return that != null && that.entityName.equals( entityName )
 				&& that.uniqueKeyName.equals( uniqueKeyName )
 				&& keyType.isEqual( that.key, key );
 	}

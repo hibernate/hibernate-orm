@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -53,21 +53,21 @@ public interface PersistentCollection {
 	 *
 	 * @return The owner
 	 */
-	public Object getOwner();
+	Object getOwner();
 
 	/**
 	 * Set the reference to the owning entity
 	 *
 	 * @param entity The owner
 	 */
-	public void setOwner(Object entity);
+	void setOwner(Object entity);
 
 	/**
 	 * Is the collection empty? (don't try to initialize the collection)
 	 *
 	 * @return {@code false} if the collection is non-empty; {@code true} otherwise.
 	 */
-	public boolean empty();
+	boolean empty();
 
 	/**
 	 * After flushing, re-init snapshot state.
@@ -76,39 +76,39 @@ public interface PersistentCollection {
 	 * @param role The collection role
 	 * @param snapshot The snapshot state
 	 */
-	public void setSnapshot(Serializable key, String role, Serializable snapshot);
+	void setSnapshot(Serializable key, String role, Serializable snapshot);
 
 	/**
 	 * After flushing, clear any "queued" additions, since the
 	 * database state is now synchronized with the memory state.
 	 */
-	public void postAction();
+	void postAction();
 	
 	/**
 	 * Return the user-visible collection (or array) instance
 	 *
 	 * @return The underlying collection/array
 	 */
-	public Object getValue();
+	Object getValue();
 
 	/**
-	 * Called just before reading any rows from the JDBC result set
+	 * Called just beforeQuery reading any rows from the JDBC result set
 	 */
-	public void beginRead();
+	void beginRead();
 
 	/**
-	 * Called after reading all rows from the JDBC result set
+	 * Called afterQuery reading all rows from the JDBC result set
 	 *
 	 * @return Whether to end the read.
 	 */
-	public boolean endRead();
+	boolean endRead();
 	
 	/**
-	 * Called after initializing from cache
+	 * Called afterQuery initializing from cache
 	 *
 	 * @return ??
 	 */
-	public boolean afterInitialize();
+	boolean afterInitialize();
 
 	/**
 	 * Could the application possibly have a direct reference to
@@ -116,7 +116,7 @@ public interface PersistentCollection {
 	 *
 	 * @return {@code true} indicates that the application might have access to the underlying collection/array.
 	 */
-	public boolean isDirectlyAccessible();
+	boolean isDirectlyAccessible();
 
 	/**
 	 * Disassociate this collection from the given session.
@@ -125,7 +125,7 @@ public interface PersistentCollection {
 	 *
 	 * @return true if this was currently associated with the given session
 	 */
-	public boolean unsetSession(SessionImplementor currentSession);
+	boolean unsetSession(SharedSessionContractImplementor currentSession);
 
 	/**
 	 * Associate the collection with the given session.
@@ -137,7 +137,7 @@ public interface PersistentCollection {
 	 * @throws HibernateException if the collection was already associated
 	 * with another open session
 	 */
-	public boolean setCurrentSession(SessionImplementor session) throws HibernateException;
+	boolean setCurrentSession(SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Read the state of the collection from a disassembled cached value
@@ -146,7 +146,7 @@ public interface PersistentCollection {
 	 * @param disassembled The disassembled cached state
 	 * @param owner The collection owner
 	 */
-	public void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner);
+	void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner);
 
 	/**
 	 * Iterate all collection entries, during update of the database
@@ -155,7 +155,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The iterator
 	 */
-	public Iterator entries(CollectionPersister persister);
+	Iterator entries(CollectionPersister persister);
 
 	/**
 	 * Read a row from the JDBC result set
@@ -170,7 +170,7 @@ public interface PersistentCollection {
 	 * @throws HibernateException Generally indicates a problem resolving data read from the ResultSet
 	 * @throws SQLException Indicates a problem accessing the ResultSet
 	 */
-	public Object readFrom(ResultSet rs, CollectionPersister role, CollectionAliases descriptor, Object owner)
+	Object readFrom(ResultSet rs, CollectionPersister role, CollectionAliases descriptor, Object owner)
 			throws HibernateException, SQLException;
 
 	/**
@@ -183,18 +183,18 @@ public interface PersistentCollection {
 	 *
 	 * @return The identifier value
 	 */
-	public Object getIdentifier(Object entry, int i);
+	Object getIdentifier(Object entry, int i);
 	
 	/**
 	 * Get the index of the given collection entry
 	 *
 	 * @param entry The collection entry/element
 	 * @param i The assumed index
-	 * @param persister it was more elegant before we added this...
+	 * @param persister it was more elegant beforeQuery we added this...
 	 *
 	 * @return The index value
 	 */
-	public Object getIndex(Object entry, int i, CollectionPersister persister);
+	Object getIndex(Object entry, int i, CollectionPersister persister);
 	
 	/**
 	 * Get the value of the given collection entry.  Generally the given entry parameter value will just be returned.
@@ -204,7 +204,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The corresponding object that is part of the collection elements.
 	 */
-	public Object getElement(Object entry);
+	Object getElement(Object entry);
 	
 	/**
 	 * Get the snapshot value of the given collection entry
@@ -214,16 +214,16 @@ public interface PersistentCollection {
 	 *
 	 * @return The snapshot state for that element
 	 */
-	public Object getSnapshotElement(Object entry, int i);
+	Object getSnapshotElement(Object entry, int i);
 
 	/**
-	 * Called before any elements are read into the collection,
+	 * Called beforeQuery any elements are read into the collection,
 	 * allowing appropriate initializations to occur.
 	 *
 	 * @param persister The underlying collection persister.
-	 * @param anticipatedSize The anticipated size of the collection after initialization is complete.
+	 * @param anticipatedSize The anticipated size of the collection afterQuery initialization is complete.
 	 */
-	public void beforeInitialize(CollectionPersister persister, int anticipatedSize);
+	void beforeInitialize(CollectionPersister persister, int anticipatedSize);
 
 	/**
 	 * Does the current state exactly match the snapshot?
@@ -233,7 +233,7 @@ public interface PersistentCollection {
 	 * @return {@code true} if the current state and the snapshot state match.
 	 *
 	 */
-	public boolean equalsSnapshot(CollectionPersister persister);
+	boolean equalsSnapshot(CollectionPersister persister);
 
 	/**
 	 * Is the snapshot empty?
@@ -242,7 +242,7 @@ public interface PersistentCollection {
 	 *
 	 * @return {@code true} if the given snapshot is empty
 	 */
-	public boolean isSnapshotEmpty(Serializable snapshot);
+	boolean isSnapshotEmpty(Serializable snapshot);
 	
 	/**
 	 * Disassemble the collection to get it ready for the cache
@@ -251,7 +251,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The disassembled state
 	 */
-	public Serializable disassemble(CollectionPersister persister) ;
+	Serializable disassemble(CollectionPersister persister) ;
 
 	/**
 	 * Do we need to completely recreate this collection when it changes?
@@ -260,7 +260,7 @@ public interface PersistentCollection {
 	 *
 	 * @return {@code true} if a change requires a recreate.
 	 */
-	public boolean needsRecreate(CollectionPersister persister);
+	boolean needsRecreate(CollectionPersister persister);
 
 	/**
 	 * Return a new snapshot of the current state of the collection
@@ -269,12 +269,12 @@ public interface PersistentCollection {
 	 *
 	 * @return The snapshot
 	 */
-	public Serializable getSnapshot(CollectionPersister persister);
+	Serializable getSnapshot(CollectionPersister persister);
 
 	/**
 	 * To be called internally by the session, forcing immediate initialization.
 	 */
-	public void forceInitialization();
+	void forceInitialization();
 
 	/**
 	 * Does the given element/entry exist in the collection?
@@ -284,7 +284,7 @@ public interface PersistentCollection {
 	 *
 	 * @return {@code true} if the given entry is a collection element
 	 */
-	public boolean entryExists(Object entry, int i);
+	boolean entryExists(Object entry, int i);
 
 	/**
 	 * Do we need to insert this element?
@@ -295,7 +295,7 @@ public interface PersistentCollection {
 	 *
 	 * @return {@code true} if the element needs inserting
 	 */
-	public boolean needsInserting(Object entry, int i, Type elemType);
+	boolean needsInserting(Object entry, int i, Type elemType);
 
 	/**
 	 * Do we need to update this element?
@@ -306,7 +306,7 @@ public interface PersistentCollection {
 	 *
 	 * @return {@code true} if the element needs updating
 	 */
-	public boolean needsUpdating(Object entry, int i, Type elemType);
+	boolean needsUpdating(Object entry, int i, Type elemType);
 
 	/**
 	 * Can each element in the collection be mapped unequivocally to a single row in the database?  Generally
@@ -314,7 +314,7 @@ public interface PersistentCollection {
 	 *
 	 * @return {@code true} if the row for each element is known
 	 */
-	public boolean isRowUpdatePossible();
+	boolean isRowUpdatePossible();
 
 	/**
 	 * Get all the elements that need deleting
@@ -324,7 +324,7 @@ public interface PersistentCollection {
 	 *
 	 * @return An iterator over the elements to delete
 	 */
-	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula);
+	Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula);
 
 	/**
 	 * Is this the wrapper for the given collection instance?
@@ -333,28 +333,28 @@ public interface PersistentCollection {
 	 *
 	 * @return  {@code true} if this is a wrapper around that given collection instance.
 	 */
-	public boolean isWrapper(Object collection);
+	boolean isWrapper(Object collection);
 
 	/**
 	 * Is this instance initialized?
 	 *
 	 * @return Was this collection initialized?  Or is its data still not (fully) loaded?
 	 */
-	public boolean wasInitialized();
+	boolean wasInitialized();
 
 	/**
 	 * Does this instance have any "queued" operations?
 	 *
 	 * @return {@code true} indicates there are pending, queued, delayed operations
 	 */
-	public boolean hasQueuedOperations();
+	boolean hasQueuedOperations();
 
 	/**
 	 * Iterator over the "queued" additions
 	 *
 	 * @return The iterator
 	 */
-	public Iterator queuedAdditionIterator();
+	Iterator queuedAdditionIterator();
 	
 	/**
 	 * Get the "queued" orphans
@@ -363,73 +363,73 @@ public interface PersistentCollection {
 	 *
 	 * @return The orphaned elements
 	 */
-	public Collection getQueuedOrphans(String entityName);
+	Collection getQueuedOrphans(String entityName);
 	
 	/**
 	 * Get the current collection key value
 	 *
 	 * @return the current collection key value
 	 */
-	public Serializable getKey();
+	Serializable getKey();
 	
 	/**
 	 * Get the current role name
 	 *
 	 * @return the collection role name
 	 */
-	public String getRole();
+	String getRole();
 	
 	/**
 	 * Is the collection unreferenced?
 	 *
 	 * @return {@code true} if the collection is no longer referenced by an owner
 	 */
-	public boolean isUnreferenced();
+	boolean isUnreferenced();
 	
 	/**
 	 * Is the collection dirty? Note that this is only
-	 * reliable during the flush cycle, after the 
+	 * reliable during the flush cycle, afterQuery the
 	 * collection elements are dirty checked against
 	 * the snapshot.
 	 *
 	 * @return {@code true} if the collection is dirty
 	 */
-	public boolean isDirty();
+	boolean isDirty();
 	
 	/**
-	 * Clear the dirty flag, after flushing changes
+	 * Clear the dirty flag, afterQuery flushing changes
 	 * to the database.
 	 */
-	public void clearDirty();
+	void clearDirty();
 	
 	/**
 	 * Get the snapshot cached by the collection instance
 	 *
 	 * @return The internally stored snapshot state
 	 */
-	public Serializable getStoredSnapshot();
+	Serializable getStoredSnapshot();
 	
 	/**
 	 * Mark the collection as dirty
 	 */
-	public void dirty();
+	void dirty();
 	
 	/**
-	 * Called before inserting rows, to ensure that any surrogate keys
+	 * Called beforeQuery inserting rows, to ensure that any surrogate keys
 	 * are fully generated
 	 *
 	 * @param persister The collection persister
 	 */
-	public void preInsert(CollectionPersister persister);
+	void preInsert(CollectionPersister persister);
 
 	/**
-	 * Called after inserting a row, to fetch the natively generated id
+	 * Called afterQuery inserting a row, to fetch the natively generated id
 	 *
 	 * @param persister The collection persister
 	 * @param entry The collection element just inserted
 	 * @param i The element position/index
 	 */
-	public void afterRowInsert(CollectionPersister persister, Object entry, int i);
+	void afterRowInsert(CollectionPersister persister, Object entry, int i);
 
 	/**
 	 * get all "orphaned" elements
@@ -439,6 +439,6 @@ public interface PersistentCollection {
 	 *
 	 * @return The orphans
 	 */
-	public Collection getOrphans(Serializable snapshot, String entityName);
+	Collection getOrphans(Serializable snapshot, String entityName);
 	
 }

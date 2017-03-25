@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.cache.infinispan;
 
+import java.io.InputStream;
 import java.util.Properties;
 import java.util.function.BiConsumer;
-
 import javax.transaction.TransactionManager;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -26,15 +26,18 @@ import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatfor
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.service.ServiceRegistry;
 
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.infinispan.configuration.cache.ClusteringConfigurationBuilder;
+import org.infinispan.commons.util.FileLookupFactory;
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
+import org.infinispan.configuration.parsing.ParserRegistry;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.configuration.cache.CacheMode;
+import org.infinispan.configuration.cache.ClusteringConfigurationBuilder;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
@@ -44,8 +47,17 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.transaction.TransactionMode;
 
-import static org.hibernate.cache.infinispan.InfinispanRegionFactory.*;
-import static org.junit.Assert.*;
+import static org.hibernate.cache.infinispan.InfinispanRegionFactory.DEF_PENDING_PUTS_RESOURCE;
+import static org.hibernate.cache.infinispan.InfinispanRegionFactory.DEF_TIMESTAMPS_RESOURCE;
+import static org.hibernate.cache.infinispan.InfinispanRegionFactory.DataType;
+import static org.hibernate.cache.infinispan.InfinispanRegionFactory.INFINISPAN_CONFIG_RESOURCE_PROP;
+import static org.hibernate.cache.infinispan.InfinispanRegionFactory.TIMESTAMPS_CACHE_RESOURCE_PROP;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * InfinispanRegionFactoryTestCase.
@@ -296,14 +308,18 @@ public class InfinispanRegionFactoryTestCase  {
 
 	@Test(expected = CacheException.class)
 	public void testTimestampValidation() {
+		final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
 		Properties p = createProperties();
-		final DefaultCacheManager manager = new DefaultCacheManager(GlobalConfigurationBuilder.defaultClusteredBuilder().build());
+      InputStream configStream = FileLookupFactory.newInstance().lookupFile(InfinispanRegionFactory.DEF_INFINISPAN_CONFIG_RESOURCE, getClass().getClassLoader());
+      ConfigurationBuilderHolder cbh = new ParserRegistry().parse(configStream);
+      DefaultCacheManager manager = new DefaultCacheManager(cbh, true);
 		ConfigurationBuilder builder = new ConfigurationBuilder();
 		builder.clustering().cacheMode(CacheMode.INVALIDATION_SYNC);
 		manager.defineConfiguration( DEF_TIMESTAMPS_RESOURCE, builder.build() );
 		try {
-			InfinispanRegionFactory factory = createRegionFactory(manager, p, null);
-			factory.start(null, p);
+			InfinispanRegionFactory factory = createRegionFactory( manager, p, null );
+			factory.start( CacheTestUtil.sfOptionsForStart(), p );
+			TimestampsRegionImpl region = (TimestampsRegionImpl) factory.buildTimestampsRegion( timestamps, p );
 			fail( "Should have failed saying that invalidation is not allowed for timestamp caches." );
 		} finally {
 			TestingUtil.killCacheManagers( manager );

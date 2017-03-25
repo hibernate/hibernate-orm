@@ -24,8 +24,7 @@ However, for each audited entity, a new table is introduced - `entity_table_AUD`
 [NOTE]
 ====
 Envers automatically creates audit tables if `hibernate.hbm2ddl.auto` option is set to `create`, `create-drop` or `update`.
-Otherwise, to export complete database schema programmatically, use `org.hibernate.envers.tools.hbm2ddl.EnversSchemaGenerator`.
-Appropriate DDL statements can be also generated with Ant task described later in this manual.
+Appropriate DDL statements can also be generated with an Ant task in <<envers-generateschema>>.
 ====
 
 Instead of annotating the whole class and auditing all properties, you can annotate only some persistent properties with `@Audited`.
@@ -468,6 +467,8 @@ And to select only entities that are related to a given entity:
 query.add( AuditEntity.property( "address" ).eq( relatedEntityInstance ) );
 // or
 query.add( AuditEntity.relatedId( "address" ).eq( relatedEntityId ) );
+// or
+query.add( AuditEntity.relatedId( "address" ).in( relatedEntityId1, relatedEntityId2 ) );
 ----
 
 You can limit the number of results, order them, and set aggregations and projections (except grouping) in the usual way.
@@ -626,6 +627,119 @@ Other queries (also accessible from `org.hibernate.envers.CrossTypeRevisionChang
 
 Note that methods described above can be legally used only when the default mechanism of tracking changed entity names is enabled (see <<envers-tracking-modified-entities-revchanges>>).
 
+[[envers-querying-entity-relation-jobs]]
+=== Querying for entities using entity relation joins
+
+Audit queries support the ability to apply constraints, projections, and sort operations based on entity relations.  In order
+to traverse entity relations through an audit query, you must use the relation traversal API with a join type.
+
+[IMPORTANT]
+====
+Relation join queries are considered experimental and may change in future releases.
+====
+
+[NOTE]
+====
+Relation joins can only be applied to `*-to-one` mappings and can only be specified using `JoinType.LEFT` or
+`JoinType.INNER`.
+====
+
+The basis for creating an entity relation join query is as follows:
+
+[source,java]
+----
+// create an inner join query
+AuditQuery query = getAuditReader().createQuery()
+    .forEntitiesAtRevision( Car.class, 1 )
+    .traverseRelation( "owner", JoinType.INNER );
+
+// create a left join query
+AuditQuery query = getAuditReader().createQuery()
+    .forEntitiesAtRevision( Car.class, 1 )
+    .traverseRelation( "owner", JoinType.LEFT );
+----
+
+Like any other query, constraints may be added to restrict the results.  For example, to find all `Car` entities that
+have an owner with a name starting with `Joe`, you would use:
+
+[source,java]
+----
+AuditQuery query = getAuditReader().createQuery()
+    .forEntitiesAtRevision( Car.class, 1 )
+    .traverseRelation( "owner", JoinType.INNER )
+    .add( AuditEntity.property( "name" ).like( "Joe%" ) );
+----
+
+It is also possible to traverse beyond the first relation in an entity graph.  For example, to find all `Car` entities
+where the owner's address has a street number that equals `1234`:
+
+[source,java]
+----
+AuditQuery query = getAuditReader().createQuery()
+    .forEntitiesAtRevision( Car.class, 1 )
+    .traverseRelation( "owner", JoinType.INNER )
+    .traverseRelation( "address", JoinType.INNER )
+    .add( AuditEntity.property( "streetNumber" ).eq( 1234 ) );
+----
+
+Complex constraints may also be added that are applicable to properties of nested relations or the base query entity or
+relation state, such as testing for `null`.  For example, the following query illustrates how to find all `Car` entities where
+the owner's age is `20` or that the car has _no_ owner:
+
+[source,java]
+----
+AuditQuery query = getAuditReader().createQuery()
+    .forEntitiesAtRevision( Car.class, 1 )
+    .traverseRelation( "owner", JoinType.LEFT, "p" )
+    .up()
+    .add(
+        AuditEntity.or(
+            AuditEntity.property( "p", "age" ).eq( 20 ),
+            AuditEntity.relatedId( "owner" ).eq( null )
+        )
+    )
+    .addOrder( AuditEntity.property( "make" ).asc() );
+----
+
+[NOTE]
+====
+Queries can use the `up` method to navigate back up the entity graph.
+====
+
+Disjunction criterion may also be applied to relation join queries.  For example, the following query will find all
+`Car` entities where the owner's age is `20` or that the owner lives at an address where the street number equals `1234`:
+
+[source,java]
+----
+AuditQuery query = getAuditReader().createQuery()
+    .forEntitiesAtRevision( Car.class, 1 )
+    .traverseRelation( "owner", JoinType.INNER, "p" )
+    .traverseRelation( "address", JoinType.INNER, "a" )
+    .up()
+    .up()
+    .add(
+        AuditEntity.disjunction()
+            .add( AuditEntity.property( "p", "age" ).eq( 20 ) )
+            .add( AuditEntity.property( "a", "streetNumber" ).eq( 1234 )
+        )
+    )
+    .addOrder( AuditEntity.property( "make" ).asc() );
+----
+
+Lastly, this example illustrates how related entity properties can be compared as a constraint.  This query shows how to
+find the `Car` entities where the owner's `age` equals the `streetNumber` of where the owner lives:
+
+[source,java]
+----
+AuditQuery query = getAuditReader().createQuery()
+    .forEntitiesAtRevision( Car.class, 1 )
+    .traverseRelation( "owner", JoinType.INNER, "p" )
+    .traverseRelation( "address", JoinType.INNER, "a" )
+    .up()
+    .up()
+    .add( AuditEntity.property( "p", "age" ).eqProperty( "a", "streetNumber" ) );
+----
+
 === Conditional auditing
 
 Envers persists audit data in reaction to various Hibernate events (e.g. `post update`, `post insert`, and so on), using a series of event listeners from the `org.hibernate.envers.event.spi` package.
@@ -645,6 +759,12 @@ To use customized Envers event listeners, the following steps are needed:
 
 . For the integrator to be automatically used when Hibernate starts up, you will need to add a `META-INF/services/org.hibernate.integrator.spi.Integrator` file to your jar.
   The file should contain the fully qualified name of the class implementing the interface.
+
+[NOTE]
+====
+The use of `hibernate.listeners.envers.autoRegister` has been deprecated.  A new configuration setting
+`hibernate.envers.autoRegisterListeners` should be used instead.
+====
 
 === Understanding the Envers Schema
 
@@ -688,21 +808,20 @@ Your opinions on the subject are very welcome on the forum! :)
 [[envers-generateschema]]
 === Generating schema with Ant
 
-If you like to generate the database schema file with the Hibernate Tools Ant task,
-you'll probably notice that the generated file doesn't contain definitions of audit tables.
-To generate the audit tables, you simply need to use `org.hibernate.tool.ant.EnversHibernateToolTask`, instead of the usual `org.hibernate.tool.ant.HibernateToolTask`.
-The former class extends the latter, and only adds generation of the version entities, meaning you can use the task just as you are used to.
+If you would like to generate the database schema file with the Hibernate Tools Ant task, you simply need to use the
+`org.hibernate.tool.ant.HibernateToolTask` to do so.  This task will generate the definitions of all entities, both of
+which are audited by Envers and those which are not.
 
 For example:
 
 [source,xml]
 ----
-<target name="schemaexport" depends="build-demo"
-  description="Exports a generated schema to DB and file">
-  <taskdef name="hibernatetool"
-    classname="org.hibernate.tool.ant.EnversHibernateToolTask"
-    classpathref="build.demo.classpath"/>
-
+<target name="schemaexport" depends="build-demo" description="Exports a generated schema to DB and file">
+  <taskdef
+    name="hibernatetool"
+    classname="org.hibernate.tool.ant.HibernateToolTask"
+    classpathref="build.demo.classpath"
+  />
   <hibernatetool destdir=".">
     <classpath>
       <fileset refid="lib.hibernate" />
@@ -714,9 +833,10 @@ For example:
       drop="false"
       create="true"
       export="false"
-      outputfilename="versioning-ddl.sql"
+      outputfilename="entities-ddl.sql"
       delimiter=";"
-      format="true"/>
+      format="true"
+    />
   </hibernatetool>
 </target>
 ----
@@ -776,7 +896,7 @@ alter table Person
 [[envers-mappingexceptions]]
 === Mapping exceptions
 
-=== What isn't and will not be supported
+==== What isn't and will not be supported
 
 Bags are not supported because they can contain non-unique elements.
 Persisting, a bag of `String`s violates the relational database principle that each table is a set of tuples.
@@ -789,7 +909,7 @@ There are at least two ways out if you need bag semantics:
 . use an indexed collection, with the `@javax.persistence.OrderColumn` annotation
 . provide a unique id for your elements with the `@CollectionId` annotation.
 
-=== What isn't and _will_ be supported
+==== What isn't and _will_ be supported
 
 . Bag style collections with a `@CollectionId` identifier column (see https://hibernate.atlassian.net/browse/HHH-3950[HHH-3950]).
 

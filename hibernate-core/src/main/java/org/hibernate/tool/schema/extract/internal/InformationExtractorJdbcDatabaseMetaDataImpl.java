@@ -10,6 +10,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -28,7 +29,6 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
@@ -36,6 +36,7 @@ import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
 import org.hibernate.tool.schema.extract.spi.IndexInformation;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
+import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.PrimaryKeyInformation;
 import org.hibernate.tool.schema.extract.spi.SchemaExtractionException;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -58,7 +59,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	public InformationExtractorJdbcDatabaseMetaDataImpl(ExtractionContext extractionContext) {
 		this.extractionContext = extractionContext;
-		
+
 		ConfigurationService configService = extractionContext.getServiceRegistry()
 				.getService( ConfigurationService.class );
 
@@ -75,20 +76,18 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			);
 		}
 
-		final String[] tempTableTypes;
+		final List<String> tableTypesList = new ArrayList<>();
+		tableTypesList.add( "TABLE" );
+		tableTypesList.add( "VIEW" );
 		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings(), false ) ) {
-			tempTableTypes = new String[] {"TABLE", "VIEW", "SYNONYM"};
+			tableTypesList.add( "SYNONYM" );
 		}
-		else {
-			tempTableTypes = new String[] {"TABLE", "VIEW"};
+		if ( extraPhysicalTableTypes != null ) {
+			Collections.addAll( tableTypesList, extraPhysicalTableTypes );
 		}
+		extractionContext.getJdbcEnvironment().getDialect().augmentRecognizedTableTypes( tableTypesList );
 
-		if ( this.extraPhysicalTableTypes != null ) {
-			this.tableTypes = ArrayHelper.join( tempTableTypes, this.extraPhysicalTableTypes );
-		}
-		else {
-			this.tableTypes = tempTableTypes;
-		}
+		this.tableTypes = tableTypesList.toArray( new String[ tableTypesList.size() ] );
 	}
 
 	protected IdentifierHelper identifierHelper() {
@@ -194,29 +193,17 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		return extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataSchemaName( identifierToUse );
 	}
 
-	public TableInformation extractTableInformation(
-			Identifier catalog,
-			Identifier schema,
-			Identifier name,
-			ResultSet resultSet) throws SQLException {
-		if ( catalog == null ) {
-			catalog = identifierHelper().toIdentifier( resultSet.getString( "TABLE_CAT" ) );
-		}
-		if ( schema == null ) {
-			schema = identifierHelper().toIdentifier( resultSet.getString( "TABLE_SCHEM" ) );
-		}
-		if ( name == null ) {
-			name = identifierHelper().toIdentifier( resultSet.getString( "TABLE_NAME" ) );
-		}
+	private TableInformation extractTableInformation(ResultSet resultSet) throws SQLException {
+		final QualifiedTableName tableName = extractTableName( resultSet );
 
-		final QualifiedTableName tableName = new QualifiedTableName( catalog, schema, name );
-
-		return new TableInformationImpl(
+		final TableInformationImpl tableInformation = new TableInformationImpl(
 				this,
+				identifierHelper(),
 				tableName,
 				isPhysicalTableType( resultSet.getString( "TABLE_TYPE" ) ),
 				resultSet.getString( "REMARKS" )
 		);
+		return tableInformation;
 	}
 
 	@Override
@@ -249,12 +236,11 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 				}
 			}
 
-
 			// 2) look in default namespace
 			if ( extractionContext.getDefaultCatalog() != null || extractionContext.getDefaultSchema() != null ) {
 				tableInfo = locateTableInNamespace(
-						extractionContext.getJdbcEnvironment().getCurrentCatalog(),
-						extractionContext.getJdbcEnvironment().getCurrentSchema(),
+						extractionContext.getDefaultCatalog(),
+						extractionContext.getDefaultSchema(),
 						tableName
 				);
 
@@ -262,7 +248,6 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 					return tableInfo;
 				}
 			}
-
 
 			// 3) look in all namespaces
 			try {
@@ -276,7 +261,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 				);
 
 				try {
-					return processGetTableResults(
+					return processTableResults(
 							null,
 							null,
 							tableName,
@@ -293,6 +278,130 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			}
 			catch (SQLException sqlException) {
 				throw convertSQLException( sqlException, "Error accessing table metadata" );
+			}
+		}
+	}
+
+	public NameSpaceTablesInformation getTables(Identifier catalog, Identifier schema) {
+
+		String catalogFilter = null;
+		String schemaFilter = null;
+
+		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsCatalogs() ) {
+			if ( catalog == null ) {
+				if ( extractionContext.getJdbcEnvironment().getCurrentCatalog() != null ) {
+					// 1) look in current namespace
+					catalogFilter = toMetaDataObjectName( extractionContext.getJdbcEnvironment().getCurrentCatalog() );
+				}
+				else if ( extractionContext.getDefaultCatalog() != null ) {
+					// 2) look in default namespace
+					catalogFilter = toMetaDataObjectName( extractionContext.getDefaultCatalog() );
+				}
+				else {
+					catalogFilter = "";
+				}
+			}
+			else {
+				catalogFilter = toMetaDataObjectName( catalog );
+			}
+		}
+
+		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsSchemas() ) {
+			if ( schema == null ) {
+				if ( extractionContext.getJdbcEnvironment().getCurrentSchema() != null ) {
+					// 1) look in current namespace
+					schemaFilter = toMetaDataObjectName( extractionContext.getJdbcEnvironment().getCurrentSchema() );
+				}
+				else if ( extractionContext.getDefaultSchema() != null ) {
+					// 2) look in default namespace
+					schemaFilter = toMetaDataObjectName( extractionContext.getDefaultSchema() );
+				}
+				else {
+					schemaFilter = "";
+				}
+			}
+			else {
+				schemaFilter = toMetaDataObjectName( schema );
+			}
+		}
+
+		try {
+			ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getTables(
+					catalogFilter,
+					schemaFilter,
+					"%",
+					tableTypes
+			);
+
+			final NameSpaceTablesInformation tablesInformation = processTableResults( resultSet );
+			populateTablesWithColumns( catalogFilter, schemaFilter, tablesInformation );
+			return tablesInformation;
+		}
+		catch (SQLException sqlException) {
+			throw convertSQLException( sqlException, "Error accessing table metadata" );
+		}
+	}
+
+	private void populateTablesWithColumns(
+			String catalogFilter,
+			String schemaFilter,
+			NameSpaceTablesInformation tables) {
+		try {
+			ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getColumns(
+					catalogFilter,
+					schemaFilter,
+					null,
+					"%"
+			);
+			try {
+				String currentTableName = "";
+				TableInformation currentTable = null;
+				while ( resultSet.next() ) {
+					if ( !currentTableName.equals( resultSet.getString( "TABLE_NAME" ) ) ) {
+						currentTableName = resultSet.getString( "TABLE_NAME" );
+						currentTable = tables.getTableInformation( currentTableName );
+					}
+					if ( currentTable != null ) {
+						final ColumnInformationImpl columnInformation = new ColumnInformationImpl(
+								currentTable,
+								DatabaseIdentifier.toIdentifier( resultSet.getString( "COLUMN_NAME" ) ),
+								resultSet.getInt( "DATA_TYPE" ),
+								new StringTokenizer( resultSet.getString( "TYPE_NAME" ), "() " ).nextToken(),
+								resultSet.getInt( "COLUMN_SIZE" ),
+								resultSet.getInt( "DECIMAL_DIGITS" ),
+								interpretTruthValue( resultSet.getString( "IS_NULLABLE" ) )
+						);
+						currentTable.addColumn( columnInformation );
+					}
+				}
+			}
+			finally {
+				resultSet.close();
+			}
+		}
+		catch (SQLException e) {
+			throw convertSQLException(
+					e,
+					"Error accessing tables metadata"
+			);
+		}
+	}
+
+	private NameSpaceTablesInformation processTableResults(ResultSet resultSet) throws SQLException {
+		try {
+			NameSpaceTablesInformation tables = new NameSpaceTablesInformation(identifierHelper());
+			while ( resultSet.next() ) {
+				final TableInformation tableInformation = extractTableInformation( resultSet );
+				tables.addTableInformation( tableInformation );
+			}
+
+			return tables;
+		}
+		finally {
+			try {
+				resultSet.close();
+			}
+			catch (SQLException ignore) {
 			}
 		}
 	}
@@ -343,7 +452,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 					tableTypes
 			);
 
-			return processGetTableResults(
+			return processTableResults(
 					catalogToUse,
 					schemaToUse,
 					tableName,
@@ -355,39 +464,41 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		}
 	}
 
-	private TableInformation processGetTableResults(
+	private TableInformation processTableResults(
 			Identifier catalog,
 			Identifier schema,
 			Identifier tableName,
 			ResultSet resultSet) throws SQLException {
 		try {
-			if ( !resultSet.next() ) {
+			boolean found = false;
+			TableInformation tableInformation = null;
+			while ( resultSet.next() ) {
+				if ( tableName.equals( Identifier.toIdentifier( resultSet.getString( "TABLE_NAME" ),
+																tableName.isQuoted() ) ) ) {
+					if ( found ) {
+						log.multipleTablesFound( tableName.render() );
+						final String catalogName = catalog == null ? "" : catalog.render();
+						final String schemaName = schema == null ? "" : schema.render();
+						throw new SchemaExtractionException(
+								String.format(
+										Locale.ENGLISH,
+										"More than one table found in namespace (%s, %s) : %s",
+										catalogName,
+										schemaName,
+										tableName.render()
+								)
+						);
+					}
+					else {
+						found = true;
+						tableInformation = extractTableInformation( resultSet );
+						addColumns( tableInformation );
+					}
+				}
+			}
+			if ( !found ) {
 				log.tableNotFound( tableName.render() );
-				return null;
 			}
-
-			final TableInformation tableInformation = extractTableInformation(
-					catalog,
-					schema,
-					tableName,
-					resultSet
-			);
-
-			if ( resultSet.next() ) {
-				log.multipleTablesFound( tableName.render() );
-				final String catalogName = catalog == null ? "" : catalog.render();
-				final String schemaName = schema == null ? "" : schema.render();
-				throw new SchemaExtractionException(
-						String.format(
-								Locale.ENGLISH,
-								"More than one table found in namespace (%s, %s) : %s",
-								catalogName,
-								schemaName,
-								tableName.render()
-						)
-				);
-			}
-
 			return tableInformation;
 		}
 		finally {
@@ -416,69 +527,60 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		}
 	}
 
-	@Override
-	public ColumnInformation getColumn(TableInformation tableInformation, Identifier columnIdentifier) {
-		final Identifier catalog = tableInformation.getName().getCatalogName();
-		final Identifier schema = tableInformation.getName().getSchemaName();
+	private void addColumns(TableInformation tableInformation) {
+		final QualifiedTableName tableName = tableInformation.getName();
+		final Identifier catalog = tableName.getCatalogName();
+		final Identifier schema = tableName.getSchemaName();
 
 		final String catalogFilter;
 		final String schemaFilter;
 
-		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsCatalogs() ) {
-			if ( catalog == null ) {
-				catalogFilter = "";
-			}
-			else {
-				catalogFilter = toMetaDataObjectName( catalog );
-			}
+		if ( catalog == null ) {
+			catalogFilter = "";
 		}
 		else {
-			catalogFilter = null;
+			catalogFilter = catalog.getText();
 		}
 
-		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsSchemas() ) {
-			if ( schema == null ) {
-				schemaFilter = "";
-			}
-			else {
-				schemaFilter = toMetaDataObjectName( schema );
-			}
+		if ( schema == null ) {
+			schemaFilter = "";
 		}
 		else {
-			schemaFilter = null;
+			schemaFilter = schema.getText();
 		}
 
-		final String tableFilter = toMetaDataObjectName( tableInformation.getName().getTableName() );
-		final String columnFilter = toMetaDataObjectName( columnIdentifier );
 		try {
 			ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getColumns(
 					catalogFilter,
 					schemaFilter,
-					tableFilter,
-					columnFilter
+					tableName.getTableName().getText(),
+					"%"
 			);
 
 			try {
-				if ( !resultSet.next() ) {
-					return null;
+				while ( resultSet.next() ) {
+					final String columnName = resultSet.getString( "COLUMN_NAME" );
+					final ColumnInformationImpl columnInformation = new ColumnInformationImpl(
+							tableInformation,
+							DatabaseIdentifier.toIdentifier( columnName ),
+							resultSet.getInt( "DATA_TYPE" ),
+							new StringTokenizer( resultSet.getString( "TYPE_NAME" ), "() " ).nextToken(),
+							resultSet.getInt( "COLUMN_SIZE" ),
+							resultSet.getInt( "DECIMAL_DIGITS" ),
+							interpretTruthValue( resultSet.getString( "IS_NULLABLE" ) )
+					);
+					tableInformation.addColumn( columnInformation );
 				}
-				return new ColumnInformationImpl(
-						tableInformation,
-						identifierHelper().toIdentifier( resultSet.getString( "COLUMN_NAME" ) ),
-						resultSet.getInt( "DATA_TYPE" ),
-						new StringTokenizer( resultSet.getString( "TYPE_NAME" ), "() " ).nextToken(),
-						resultSet.getInt( "COLUMN_SIZE" ),
-						resultSet.getInt( "DECIMAL_DIGITS" ),
-						interpretTruthValue( resultSet.getString( "IS_NULLABLE" ) )
-				);
-
 			}
 			finally {
 				resultSet.close();
 			}
 		}
 		catch (SQLException e) {
-			throw convertSQLException( e, "Error accessing column metadata: " + tableInformation.getName().toString() );
+			throw convertSQLException(
+					e,
+					"Error accessing column metadata: " + tableName.toString()
+			);
 		}
 	}
 
@@ -494,11 +596,32 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	@Override
 	public PrimaryKeyInformation getPrimaryKey(TableInformationImpl tableInformation) {
+		final QualifiedTableName tableName = tableInformation.getName();
+		final Identifier catalog = tableName.getCatalogName();
+		final Identifier schema = tableName.getSchemaName();
+
+		final String catalogFilter;
+		final String schemaFilter;
+
+		if ( catalog == null ) {
+			catalogFilter = "";
+		}
+		else {
+			catalogFilter = catalog.getText();
+		}
+
+		if ( schema == null ) {
+			schemaFilter = "";
+		}
+		else {
+			schemaFilter = schema.getText();
+		}
+
 		try {
 			ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getPrimaryKeys(
-					identifierHelper().toMetaDataCatalogName( tableInformation.getName().getCatalogName() ),
-					identifierHelper().toMetaDataSchemaName( tableInformation.getName().getSchemaName() ),
-					identifierHelper().toMetaDataObjectName( tableInformation.getName().getTableName() )
+					catalogFilter,
+					schemaFilter,
+					tableInformation.getName().getTableName().getText()
 			);
 
 			final List<ColumnInformation> pkColumns = new ArrayList<ColumnInformation>();
@@ -510,7 +633,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 					final String currentPkName = resultSet.getString( "PK_NAME" );
 					final Identifier currentPkIdentifier = currentPkName == null
 							? null
-							: identifierHelper().toIdentifier( currentPkName );
+							: DatabaseIdentifier.toIdentifier( currentPkName );
 					if ( firstPass ) {
 						pkIdentifier = currentPkIdentifier;
 						firstPass = false;
@@ -527,9 +650,10 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 					}
 
 					final int columnPosition = resultSet.getInt( "KEY_SEQ" );
-					final String columnName = resultSet.getString( "COLUMN_NAME" );
 
-					final Identifier columnIdentifier = identifierHelper().toIdentifier( columnName );
+					final Identifier columnIdentifier = DatabaseIdentifier.toIdentifier(
+							resultSet.getString( "COLUMN_NAME" )
+					);
 					final ColumnInformation column = tableInformation.getColumn( columnIdentifier );
 					pkColumns.add( columnPosition-1, column );
 				}
@@ -561,15 +685,35 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	@Override
 	public Iterable<IndexInformation> getIndexes(TableInformation tableInformation) {
-		final Map<Identifier, IndexInformationImpl.Builder> builders = new HashMap<Identifier, IndexInformationImpl.Builder>();
+		final Map<Identifier, IndexInformationImpl.Builder> builders = new HashMap<>();
+		final QualifiedTableName tableName = tableInformation.getName();
+		final Identifier catalog = tableName.getCatalogName();
+		final Identifier schema = tableName.getSchemaName();
+
+		final String catalogFilter;
+		final String schemaFilter;
+
+		if ( catalog == null ) {
+			catalogFilter = "";
+		}
+		else {
+			catalogFilter = catalog.getText();
+		}
+
+		if ( schema == null ) {
+			schemaFilter = "";
+		}
+		else {
+			schemaFilter = schema.getText();
+		}
 
 		try {
 			ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getIndexInfo(
-					identifierHelper().toMetaDataCatalogName( tableInformation.getName().getCatalogName() ),
-					identifierHelper().toMetaDataSchemaName( tableInformation.getName().getSchemaName() ),
-					identifierHelper().toMetaDataObjectName( tableInformation.getName().getTableName() ),
-					false,		// DO NOT limit to just unique
-					true		// DO require up-to-date results
+					catalogFilter,
+					schemaFilter,
+					tableName.getTableName().getText(),
+					false,        // DO NOT limit to just unique
+					true        // DO require up-to-date results
 			);
 
 			try {
@@ -578,10 +722,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 						continue;
 					}
 
-					final Identifier indexIdentifier = identifierHelper().toIdentifier(
-							resultSet.getString(
-									"INDEX_NAME"
-							)
+					final Identifier indexIdentifier = DatabaseIdentifier.toIdentifier(
+							resultSet.getString( "INDEX_NAME" )
 					);
 					IndexInformationImpl.Builder builder = builders.get( indexIdentifier );
 					if ( builder == null ) {
@@ -589,7 +731,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 						builders.put( indexIdentifier, builder );
 					}
 
-					final Identifier columnIdentifier = identifierHelper().toIdentifier( resultSet.getString( "COLUMN_NAME" ) );
+					final Identifier columnIdentifier = DatabaseIdentifier.toIdentifier( resultSet.getString( "COLUMN_NAME" ) );
 					final ColumnInformation columnInformation = tableInformation.getColumn( columnIdentifier );
 					if ( columnInformation == null ) {
 						// See HHH-10191: this may happen when dealing with Oracle/PostgreSQL function indexes
@@ -622,13 +764,33 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	@Override
 	public Iterable<ForeignKeyInformation> getForeignKeys(TableInformation tableInformation) {
-		final Map<Identifier, ForeignKeyBuilder> fkBuilders = new HashMap<Identifier, ForeignKeyBuilder>();
+		final Map<Identifier, ForeignKeyBuilder> fkBuilders = new HashMap<>();
+		final QualifiedTableName tableName = tableInformation.getName();
+		final Identifier catalog = tableName.getCatalogName();
+		final Identifier schema = tableName.getSchemaName();
+
+		final String catalogFilter;
+		final String schemaFilter;
+
+		if ( catalog == null ) {
+			catalogFilter = "";
+		}
+		else {
+			catalogFilter = catalog.getText();
+		}
+
+		if ( schema == null ) {
+			schemaFilter = "";
+		}
+		else {
+			schemaFilter = schema.getText();
+		}
 
 		try {
 			ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getImportedKeys(
-					identifierHelper().toMetaDataCatalogName( tableInformation.getName().getCatalogName() ),
-					identifierHelper().toMetaDataSchemaName( tableInformation.getName().getSchemaName() ),
-					identifierHelper().toMetaDataObjectName( tableInformation.getName().getTableName() )
+					catalogFilter,
+					schemaFilter,
+					tableInformation.getName().getTableName().getText()
 			);
 
 			// todo : need to account for getCrossReference() as well...
@@ -636,7 +798,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			try {
 				while ( resultSet.next() ) {
 					// IMPL NOTE : The builder is mainly used to collect the column reference mappings
-					final Identifier fkIdentifier = identifierHelper().toIdentifier(
+					final Identifier fkIdentifier = DatabaseIdentifier.toIdentifier(
 							resultSet.getString( "FK_NAME" )
 					);
 					ForeignKeyBuilder fkBuilder = fkBuilders.get( fkIdentifier );
@@ -658,10 +820,10 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 						continue;
 					}
 
-					final Identifier fkColumnIdentifier = identifierHelper().toIdentifier(
+					final Identifier fkColumnIdentifier = DatabaseIdentifier.toIdentifier(
 							resultSet.getString( "FKCOLUMN_NAME" )
 					);
-					final Identifier pkColumnIdentifier = identifierHelper().toIdentifier(
+					final Identifier pkColumnIdentifier = DatabaseIdentifier.toIdentifier(
 							resultSet.getString( "PKCOLUMN_NAME" )
 					);
 
@@ -731,6 +893,18 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		final String incomingCatalogName = resultSet.getString( prefix + "TABLE_CAT" );
 		final String incomingSchemaName = resultSet.getString( prefix + "TABLE_SCHEM" );
 		final String incomingTableName = resultSet.getString( prefix + "TABLE_NAME" );
+
+		final DatabaseIdentifier catalog = DatabaseIdentifier.toIdentifier( incomingCatalogName );
+		final DatabaseIdentifier schema = DatabaseIdentifier.toIdentifier( incomingSchemaName );
+		final DatabaseIdentifier table = DatabaseIdentifier.toIdentifier( incomingTableName );
+
+		return new QualifiedTableName( catalog, schema, table );
+	}
+
+	private QualifiedTableName extractTableName(ResultSet resultSet) throws SQLException {
+		final String incomingCatalogName = resultSet.getString( "TABLE_CAT" );
+		final String incomingSchemaName = resultSet.getString( "TABLE_SCHEM" );
+		final String incomingTableName = resultSet.getString( "TABLE_NAME" );
 
 		final DatabaseIdentifier catalog = DatabaseIdentifier.toIdentifier( incomingCatalogName );
 		final DatabaseIdentifier schema = DatabaseIdentifier.toIdentifier( incomingSchemaName );

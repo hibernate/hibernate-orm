@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
@@ -50,7 +50,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 			Object instance,
 			EntityPersister persister,
 			boolean isVersionIncrementDisabled,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			boolean isDelayed) {
 		super(
 				( isDelayed ? generateDelayedPostInsertIdentifier() : null ),
@@ -69,7 +69,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 		nullifyTransientReferencesIfNotAlready();
 
 		final EntityPersister persister = getPersister();
-		final SessionImplementor session = getSession();
+		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();
 
 		final boolean veto = preInsert();
@@ -91,7 +91,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 		}
 
 
-		//TODO: this bit actually has to be called after all cascades!
+		//TODO: this bit actually has to be called afterQuery all cascades!
 		//      but since identity insert is called *synchronously*,
 		//      instead of asynchronously as other actions, it isn't
 		/*if ( persister.hasCache() && !persister.isCacheInvalidationRequired() ) {
@@ -127,7 +127,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 	}
 
 	@Override
-	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 		//TODO: reenable if we also fix the above todo
 		/*EntityPersister persister = getEntityPersister();
 		if ( success && persister.hasCache() && !persister.isCacheInvalidationRequired() ) {

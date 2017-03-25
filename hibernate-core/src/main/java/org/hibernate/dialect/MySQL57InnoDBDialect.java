@@ -13,7 +13,9 @@ import org.hibernate.dialect.function.StaticPrecisionFspTimestampFunction;
 
 /**
  * @author Gail Badner
+ * @deprecated Use "hibernate.dialect.storage_engine=innodb" environment variable or JVM system property instead.
  */
+@Deprecated
 public class MySQL57InnoDBDialect extends MySQL5InnoDBDialect {
 	public MySQL57InnoDBDialect() {
 		super();
@@ -30,6 +32,11 @@ public class MySQL57InnoDBDialect extends MySQL5InnoDBDialect {
 		// the SQL 1992 default of 6 (which is inconsistent with the MySQL
 		// default).
 		registerColumnType( Types.TIMESTAMP, "datetime(6)" );
+
+		// MySQL 5.7 brings JSON native support with a dedicated datatype.
+		// For more details about MySql new JSON datatype support, see:
+		// https://dev.mysql.com/doc/refman/5.7/en/json.html
+		registerColumnType( Types.JAVA_OBJECT, "json" );
 
 		// MySQL also supports fractional seconds precision for time values
 		// (time(fsp)). According to SQL 1992, the default for <time precision>
@@ -59,5 +66,13 @@ public class MySQL57InnoDBDialect extends MySQL5InnoDBDialect {
 
 		// from_unixtime(), timestamp() are functions that return TIMESTAMP that do not support a
 		// fractional seconds precision argument (so there's no need to override them here):
+	}
+
+	/**
+	 * @see <a href="https://dev.mysql.com/worklog/task/?id=7019">MySQL 5.7 work log</a>
+	 * @return supports IN clause row value expressions
+	 */
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return true;
 	}
 }

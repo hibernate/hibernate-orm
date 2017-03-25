@@ -128,6 +128,11 @@ public final class StandardBasicTypes {
 	public static final StringType STRING = StringType.INSTANCE;
 
 	/**
+	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#NVARCHAR NVARCHAR}
+	 */
+	public static final StringNVarcharType NSTRING = StringNVarcharType.INSTANCE;
+
+	/**
 	 * The standard Hibernate type for mapping {@link java.net.URL} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 *
 	 * @see UrlType
@@ -229,6 +234,14 @@ public final class StandardBasicTypes {
 	 * @see WrapperBinaryType
 	 */
 	public static final WrapperBinaryType WRAPPER_BINARY = WrapperBinaryType.INSTANCE;
+
+	/**
+	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#VARBINARY VARBINARY},
+	 * specifically for entity versions/timestamps.
+	 *
+	 * @see RowVersionType
+	 */
+	public static final RowVersionType ROW_VERSION = RowVersionType.INSTANCE;
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#LONGVARBINARY LONGVARBINARY}.

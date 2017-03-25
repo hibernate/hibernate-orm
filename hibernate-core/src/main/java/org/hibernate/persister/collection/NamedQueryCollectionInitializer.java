@@ -10,11 +10,11 @@ import java.io.Serializable;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.AbstractQueryImpl;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.collection.CollectionInitializer;
+import org.hibernate.query.spi.NativeQueryImplementor;
 
 /**
  * A wrapper around a named query.
@@ -33,22 +33,22 @@ public final class NamedQueryCollectionInitializer implements CollectionInitiali
 		this.persister = persister;
 	}
 
-	public void initialize(Serializable key, SessionImplementor session) throws HibernateException {
+	public void initialize(Serializable key, SharedSessionContractImplementor session) throws HibernateException {
 		LOG.debugf( "Initializing collection: %s using named query: %s", persister.getRole(), queryName );
 
-		//TODO: is there a more elegant way than downcasting?
-		AbstractQueryImpl query = (AbstractQueryImpl) session.getNamedSQLQuery( queryName );
-		if ( query.getNamedParameters().length > 0 ) {
-			query.setParameter(
-					query.getNamedParameters()[0],
+		NativeQueryImplementor nativeQuery = session.getNamedNativeQuery( queryName );
+
+		if ( nativeQuery.getParameterMetadata().hasNamedParameters() ) {
+			nativeQuery.setParameter(
+					nativeQuery.getParameterMetadata().getNamedParameterNames().iterator().next(),
 					key,
 					persister.getKeyType()
 			);
 		}
 		else {
-			query.setParameter( 0, key, persister.getKeyType() );
+			nativeQuery.setParameter( 0, key, persister.getKeyType() );
 		}
 
-		query.setCollectionKey( key ).setFlushMode( FlushMode.MANUAL ).list();
+		nativeQuery.setCollectionKey( key ).setFlushMode( FlushMode.MANUAL ).list();
 	}
 }

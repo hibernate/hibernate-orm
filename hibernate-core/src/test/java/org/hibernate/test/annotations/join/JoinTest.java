@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.annotations.join;
 
+import javax.persistence.PersistenceException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
@@ -18,11 +19,13 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.mapping.Join;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -162,9 +165,14 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 			tx.commit();
 			fail( "unique constraints violation on secondary table" );
 		}
-		catch (HibernateException e) {
-			//success
-			tx.rollback();
+		catch (PersistenceException e) {
+			try {
+				assertTyping( ConstraintViolationException.class, e.getCause() );
+				//success
+			}
+			finally {
+				tx.rollback();
+			}
 		}
 		finally {
 			s.close();

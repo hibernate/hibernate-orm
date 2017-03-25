@@ -20,7 +20,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
@@ -397,7 +397,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 		}
 
 		@Override
-		public Serializable locateGenerationContext(SessionImplementor session, Object incomingObject) {
+		public Serializable locateGenerationContext(SharedSessionContractImplementor session, Object incomingObject) {
 			return session.getEntityPersister( entityName, incomingObject ).getIdentifier( incomingObject, session );
 		}
 	}
@@ -414,7 +414,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 		}
 
 		@Override
-		public void execute(SessionImplementor session, Object incomingObject, Object injectionContext) {
+		public void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext) {
 			final Object generatedValue = subGenerator.generate( session, incomingObject );
 			injector.set( injectionContext, generatedValue, session.getFactory() );
 		}

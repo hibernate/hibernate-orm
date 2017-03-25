@@ -5,22 +5,27 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.mapping.Table;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 
+import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -37,9 +42,10 @@ import static org.hibernate.test.schemafilter.RecordingTarget.Category.TABLE_DRO
 
 @TestForIssue(jiraKey = "HHH-9876")
 @SuppressWarnings({"rawtypes", "unchecked"})
+@RequiresDialectFeature( value = {DialectChecks.SupportSchemaCreation.class})
 public class SchemaFilterTest extends BaseUnitTestCase {
 
-	private final ServiceRegistry serviceRegistry;
+	private final StandardServiceRegistryImpl serviceRegistry;
 	private final Metadata metadata;
 
 	public SchemaFilterTest() {
@@ -57,6 +63,11 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 		ms.addAnnotatedClass( Schema2Entity3.class );
 		ms.addAnnotatedClass( Schema2Entity4.class );
 		this.metadata = ms.buildMetadata();
+	}
+
+	@AfterClassOnce
+	public void shutdown() {
+		serviceRegistry.destroy();
 	}
 
 	@Test
@@ -163,5 +174,86 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 		public boolean includeSequence(Sequence sequence) {
 			return true;
 		}
+	}
+
+	@Entity
+	@javax.persistence.Table(name = "the_entity_1", schema = "the_schema_1")
+	public static class Schema1Entity1 {
+
+		@Id
+		private long id;
+
+		public long getId() {
+			return id;
+		}
+
+		public void setId( long id ) {
+			this.id = id;
+		}
+	}
+
+	@Entity
+	@javax.persistence.Table(name = "the_entity_2", schema = "the_schema_1")
+	public static class Schema1Entity2 {
+
+		@Id
+		private long id;
+
+		public long getId() {
+			return id;
+		}
+
+		public void setId( long id ) {
+			this.id = id;
+		}
+	}
+
+	@Entity
+	@javax.persistence.Table(name = "the_entity_3", schema = "the_schema_2")
+	public static class Schema2Entity3 {
+
+		@Id
+		private long id;
+
+		public long getId() {
+			return id;
+		}
+
+		public void setId( long id ) {
+			this.id = id;
+		}
+	}
+
+	@Entity
+	@javax.persistence.Table(name = "the_entity_4", schema = "the_schema_2")
+	public static class Schema2Entity4 {
+
+		@Id
+		private long id;
+
+		public long getId() {
+			return id;
+		}
+
+		public void setId( long id ) {
+			this.id = id;
+		}
+	}
+
+	@Entity
+	@javax.persistence.Table(name = "the_entity_0")
+	public static class SchemaNoneEntity0 {
+
+		@Id
+		private long id;
+
+		public long getId() {
+			return id;
+		}
+
+		public void setId( long id ) {
+			this.id = id;
+		}
+
 	}
 }

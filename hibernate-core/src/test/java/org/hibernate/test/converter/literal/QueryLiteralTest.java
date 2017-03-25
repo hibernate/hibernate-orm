@@ -24,6 +24,7 @@ import org.hibernate.Session;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -64,7 +65,8 @@ public class QueryLiteralTest extends BaseNonConfigCoreFunctionalTestCase {
 			find( entity.getId(), "e.integerWrapper='10'" );
 			fail("Should throw QueryException!");
 		}
-		catch (QueryException e) {
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
 			assertTrue( e.getMessage().contains( "AttributeConverter domain-model attribute type [org.hibernate.test.converter.literal.QueryLiteralTest$IntegerWrapper] and JDBC type [java.lang.Integer] did not match query literal type [java.lang.String]" ) );
 		}
 	}
@@ -93,8 +95,7 @@ public class QueryLiteralTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( "HUNDRED", entity.getSameTypeConverter() );
 
 		Session session = openSession();
-		String value = (String) session.createSQLQuery(
-				"select e.same_type_converter from entity_converter e where e.id=:id" )
+		String value = (String) session.createSQLQuery( "select e.same_type_converter from entity_converter e where e.id=:id" )
 				.setParameter( "id", entity.getId() )
 				.uniqueResult();
 		assertEquals( "VALUE_HUNDRED", value );

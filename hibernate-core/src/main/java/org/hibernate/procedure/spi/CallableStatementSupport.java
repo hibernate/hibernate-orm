@@ -9,22 +9,22 @@ package org.hibernate.procedure.spi;
 import java.sql.CallableStatement;
 import java.util.List;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public interface CallableStatementSupport {
-	public String renderCallableStatement(
+	String renderCallableStatement(
 			String name,
 			ParameterStrategy parameterStrategy,
 			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
-			SessionImplementor session);
+			SharedSessionContractImplementor session);
 
-	public void registerParameters(
+	void registerParameters(
 			String procedureName,
 			CallableStatement statement,
 			ParameterStrategy parameterStrategy,
 			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
-			SessionImplementor session);
+			SharedSessionContractImplementor session);
 }

@@ -21,10 +21,9 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -36,7 +35,6 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Instantiator;
-import org.hibernate.tuple.PojoInstantiator;
 import org.hibernate.type.CompositeType;
 
 /**
@@ -183,7 +181,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			PersistentClass persistentClass,
 			Getter idGetter,
 			Setter idSetter) {
-		// TODO : YUCK!!!  fix after HHH-1907 is complete
+		// TODO : YUCK!!!  fix afterQuery HHH-1907 is complete
 		return Environment.getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory( getFactory() );
 //		return getFactory().getSettings().getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory();
 	}
@@ -219,8 +217,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session)
-			throws HibernateException {
+	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SharedSessionContractImplementor session) {
 		if ( shouldGetAllProperties( entity ) && optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			return getPropertyValuesWithOptimizer( entity );
 		}
@@ -270,7 +267,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	//TODO: need to make the majority of this functionality into a top-level support class for custom impl support
 
 	@Override
-	public void afterInitialize(Object entity, SessionImplementor session) {
+	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
 
 		// moving to multiple fetch groups, the idea of `lazyPropertiesAreUnfetched` really
 		// needs to become either:

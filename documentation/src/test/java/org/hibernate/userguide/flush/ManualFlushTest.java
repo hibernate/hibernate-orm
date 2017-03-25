@@ -24,8 +24,7 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
-
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -56,7 +55,7 @@ public class ManualFlushTest extends BaseEntityManagerFunctionalTestCase {
             entityManager.persist(person);
 
             Session session = entityManager.unwrap( Session.class);
-            session.setFlushMode( FlushMode.MANUAL);
+            session.setHibernateFlushMode( FlushMode.MANUAL );
 
             assertTrue(((Number) entityManager
                 .createQuery("select count(id) from Person")

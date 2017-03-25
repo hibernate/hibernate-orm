@@ -10,7 +10,8 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * Loads multiple entities at once by identifiers
+ * Loads multiple entities at once by identifiers, ultimately via one of the
+ * {@link #multiLoad} methods, using the various options specified (if any)
  *
  * @author Steve Ebersole
  */
@@ -49,18 +50,53 @@ public interface MultiIdentifierLoadAccess<T> {
 	MultiIdentifierLoadAccess<T> withBatchSize(int batchSize);
 
 	/**
-	 * Should we check the Session to see whether it already contains any of the
+	 * Specify whether we should check the Session to see whether it already contains any of the
 	 * entities to be loaded in a managed state <b>for the purpose of not including those
-	 * ids to the batch-load SQL</b>
+	 * ids to the batch-load SQL</b>.
 	 *
-	 * @param enabled {@code true} enables this checking; {@code false} disables it.
+	 * @param enabled {@code true} enables this checking; {@code false} (the default) disables it.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	MultiIdentifierLoadAccess<T> enableSessionCheck(boolean enabled);
 
 	/**
-	 * Perform a load of multiple entities by identifiers
+	 * Should the multi-load operation be allowed to return entities that are locally
+	 * deleted?  A locally deleted entity is one which has been passed to this
+	 * Session's {@link Session#delete} / {@link Session#remove} method, but not
+	 * yet flushed.  The default behavior is to handle them as null in the return
+	 * (see {@link #enableOrderedReturn}).
+	 *
+	 * @param enabled {@code true} enables returning the deleted entities;
+	 * {@code false} (the default) disables it.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	MultiIdentifierLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled);
+
+	/**
+	 * Should the return List be ordered and positional in relation to the
+	 * incoming ids?  If enabled (the default), the return List is ordered and
+	 * positional relative to the incoming ids.  In other words, a request to
+	 * {@code multiLoad([2,1,3])} will return {@code [Entity#2, Entity#1, Entity#3]}.
+	 * <p/>
+	 * An important distinction is made here in regards to the handling of
+	 * unknown entities depending on this "ordered return" setting.  If enabled
+	 * a null is inserted into the List at the proper position(s).  If disabled,
+	 * the nulls are not put into the return List.  In other words, consumers of
+	 * the returned ordered List would need to be able to handle null elements.
+	 *
+	 * @param enabled {@code true} (the default) enables ordering;
+	 * {@code false} disables it.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	MultiIdentifierLoadAccess<T> enableOrderedReturn(boolean enabled);
+
+	/**
+	 * Perform a load of multiple entities by identifiers.  See {@link #enableOrderedReturn}
+	 * and {@link #enableReturnOfDeletedEntities} for options which effect
+	 * the size and "shape" of the return list.
 	 *
 	 * @param ids The ids to load
 	 * @param <K> The identifier type
@@ -70,7 +106,9 @@ public interface MultiIdentifierLoadAccess<T> {
 	<K extends Serializable> List<T> multiLoad(K... ids);
 
 	/**
-	 * Perform a load of multiple entities by identifiers
+	 * Perform a load of multiple entities by identifiers.  See {@link #enableOrderedReturn}
+	 * and {@link #enableReturnOfDeletedEntities} for options which effect
+	 * the size and "shape" of the return list.
 	 *
 	 * @param ids The ids to load
 	 * @param <K> The identifier type

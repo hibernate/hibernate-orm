@@ -23,9 +23,9 @@ public interface ResourceRegistry {
 	 *
 	 * @return True if the registry does have registered resources; false otherwise.
 	 */
-	public boolean hasRegisteredResources();
+	boolean hasRegisteredResources();
 
-	public void releaseResources();
+	void releaseResources();
 
 	/**
 	 * Register a JDBC statement.
@@ -34,14 +34,14 @@ public interface ResourceRegistry {
 	 * @param cancelable Is the statement being registered capable of being cancelled?  In other words,
 	 * should we register it to be the target of subsequent {@link #cancelLastQuery()} calls?
 	 */
-	public void register(Statement statement, boolean cancelable);
+	void register(Statement statement, boolean cancelable);
 
 	/**
 	 * Release a previously registered statement.
 	 *
 	 * @param statement The statement to release.
 	 */
-	public void release(Statement statement);
+	void release(Statement statement);
 
 	/**
 	 * Register a JDBC result set.
@@ -53,7 +53,7 @@ public interface ResourceRegistry {
 	 * @param resultSet The result set to register.
 	 * @param statement Statement from which {@link java.sql.ResultSet} has been generated.
 	 */
-	public void register(ResultSet resultSet, Statement statement);
+	void register(ResultSet resultSet, Statement statement);
 
 	/**
 	 * Release a previously registered result set.
@@ -61,17 +61,17 @@ public interface ResourceRegistry {
 	 * @param resultSet The result set to release.
 	 * @param statement Statement from which {@link java.sql.ResultSet} has been generated.
 	 */
-	public void release(ResultSet resultSet, Statement statement);
+	void release(ResultSet resultSet, Statement statement);
 
-	public void register(Blob blob);
-	public void release(Blob blob);
+	void register(Blob blob);
+	void release(Blob blob);
 
-	public void register(Clob clob);
-	public void release(Clob clob);
+	void register(Clob clob);
+	void release(Clob clob);
 
-	public void register(NClob nclob);
-	public void release(NClob nclob);
+	void register(NClob nclob);
+	void release(NClob nclob);
 
-	public void cancelLastQuery();
+	void cancelLastQuery();
 
 }

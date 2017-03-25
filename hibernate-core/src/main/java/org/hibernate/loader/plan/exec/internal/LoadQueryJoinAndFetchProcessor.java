@@ -6,6 +6,10 @@
  */
 package org.hibernate.loader.plan.exec.internal;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -41,6 +45,7 @@ import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.BagType;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -55,6 +60,7 @@ import org.jboss.logging.Logger;
  * </ol>
  *
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 public class LoadQueryJoinAndFetchProcessor {
 	private static final Logger LOG = CoreLogging.logger( LoadQueryJoinAndFetchProcessor.class );
@@ -177,7 +183,8 @@ public class LoadQueryJoinAndFetchProcessor {
 		addJoins(
 				join,
 				joinFragment,
-				joinable
+				joinable,
+				null
 		);
 	}
 
@@ -218,8 +225,8 @@ public class LoadQueryJoinAndFetchProcessor {
 	private void addJoins(
 			Join join,
 			JoinFragment joinFragment,
-			Joinable joinable) {
-
+			Joinable joinable,
+			String joinConditions) {
 		final String rhsTableAlias = aliasResolutionContext.resolveSqlTableAliasFromQuerySpaceUid(
 				join.getRightHandSide().getUid()
 		);
@@ -234,10 +241,18 @@ public class LoadQueryJoinAndFetchProcessor {
 			throw new IllegalStateException( "QuerySpace with that UID was not yet registered in the AliasResolutionContext" );
 		}
 
+		String otherConditions = join.getAnyAdditionalJoinConditions( rhsTableAlias );
+		if ( !StringHelper.isEmpty( otherConditions ) && !StringHelper.isEmpty( joinConditions ) ) {
+			otherConditions += " and " + joinConditions;
+		}
+		else if ( !StringHelper.isEmpty( joinConditions ) ) {
+			otherConditions = joinConditions;
+		}
+
 		// add join fragments from the collection table -> element entity table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		final String additionalJoinConditions = resolveAdditionalJoinCondition(
 				rhsTableAlias,
-				join.getAnyAdditionalJoinConditions( rhsTableAlias ),
+				otherConditions,
 				joinable,
 				getJoinedAssociationTypeOrNull( join )
 		);
@@ -349,7 +364,8 @@ public class LoadQueryJoinAndFetchProcessor {
 		addJoins(
 				join,
 				joinFragment,
-				(Joinable) rightHandSide.getCollectionPersister()
+				(Joinable) rightHandSide.getCollectionPersister(),
+				null
 		);
 	}
 
@@ -373,21 +389,26 @@ public class LoadQueryJoinAndFetchProcessor {
 		if ( StringHelper.isEmpty( entityTableAlias ) ) {
 			throw new IllegalStateException( "Collection element (many-to-many) table alias cannot be empty" );
 		}
+
+		final String manyToManyFilter;
 		if ( JoinDefinedByMetadata.class.isInstance( join ) &&
 				CollectionPropertyNames.COLLECTION_ELEMENTS.equals( ( (JoinDefinedByMetadata) join ).getJoinedPropertyName() ) ) {
 			final CollectionQuerySpace leftHandSide = (CollectionQuerySpace) join.getLeftHandSide();
 			final CollectionPersister persister = leftHandSide.getCollectionPersister();
-			final String manyToManyFilter = persister.getManyToManyFilterFragment(
+			manyToManyFilter = persister.getManyToManyFilterFragment(
 					entityTableAlias,
 					buildingParameters.getQueryInfluencers().getEnabledFilters()
 			);
-			joinFragment.addCondition( manyToManyFilter );
+		}
+		else {
+			manyToManyFilter = null;
 		}
 
 		addJoins(
 				join,
 				joinFragment,
-				(Joinable) entityPersister
+				(Joinable) entityPersister,
+				manyToManyFilter
 		);
 	}
 
@@ -443,10 +464,8 @@ public class LoadQueryJoinAndFetchProcessor {
 			Fetch fetch,
 			ReaderCollector readerCollector,
 			FetchStatsImpl fetchStats) {
-		if ( ! FetchStrategyHelper.isJoinFetched( fetch.getFetchStrategy() ) ) {
-			return;
-		}
 
+		// process fetch even if it is not join fetched
 		if ( EntityFetch.class.isInstance( fetch ) ) {
 			final EntityFetch entityFetch = (EntityFetch) fetch;
 			processEntityFetch(
@@ -494,6 +513,10 @@ public class LoadQueryJoinAndFetchProcessor {
 //		}
 
 		fetchStats.processingFetch( fetch );
+		if ( ! FetchStrategyHelper.isJoinFetched( fetch.getFetchStrategy() ) ) {
+			// not join fetched, so nothing else to do
+			return;
+		}
 
 		// First write out the SQL SELECT fragments
 		final Joinable joinable = (Joinable) fetch.getEntityPersister();
@@ -540,7 +563,13 @@ public class LoadQueryJoinAndFetchProcessor {
 			CollectionAttributeFetch fetch,
 			ReaderCollector readerCollector,
 			FetchStatsImpl fetchStats) {
+
 		fetchStats.processingFetch( fetch );
+
+		if ( ! FetchStrategyHelper.isJoinFetched( fetch.getFetchStrategy() ) ) {
+			// not join fetched, so nothing else to do
+			return;
+		}
 
 		final CollectionReferenceAliases aliases = aliasResolutionContext.resolveCollectionReferenceAliases(
 				fetch.getQuerySpaceUid()
@@ -649,6 +678,7 @@ public class LoadQueryJoinAndFetchProcessor {
 	 */
 	private static class FetchStatsImpl implements FetchStats {
 		private boolean hasSubselectFetch;
+		private Set<CollectionAttributeFetch> joinedBagAttributeFetches;
 
 		public void processingFetch(Fetch fetch) {
 			if ( ! hasSubselectFetch ) {
@@ -657,11 +687,31 @@ public class LoadQueryJoinAndFetchProcessor {
 					hasSubselectFetch = true;
 				}
 			}
+			if ( isJoinFetchedBag( fetch ) ) {
+				if ( joinedBagAttributeFetches == null ) {
+					joinedBagAttributeFetches = new HashSet<>();
+				}
+				joinedBagAttributeFetches.add( (CollectionAttributeFetch) fetch );
+			}
 		}
 
 		@Override
 		public boolean hasSubselectFetches() {
 			return hasSubselectFetch;
+		}
+
+		@Override
+		public Set<CollectionAttributeFetch> getJoinedBagAttributeFetches() {
+			return joinedBagAttributeFetches == null ? Collections.emptySet() : joinedBagAttributeFetches;
+		}
+
+		private boolean isJoinFetchedBag(Fetch fetch) {
+			if ( FetchStrategyHelper.isJoinFetched( fetch.getFetchStrategy() ) &&
+					CollectionAttributeFetch.class.isInstance( fetch ) ) {
+				final CollectionAttributeFetch collectionAttributeFetch = (CollectionAttributeFetch) fetch;
+				return collectionAttributeFetch.getFetchedType().getClass().isAssignableFrom( BagType.class );
+			}
+			return false;
 		}
 	}
 

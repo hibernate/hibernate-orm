@@ -44,7 +44,11 @@ public class EvictAllCommand extends BaseRpcCommand {
 
 	@Override
 	public Object perform(InvocationContext ctx) throws Throwable {
-		region.invalidateRegion();
+		// When a node is joining the cluster, it may receive an EvictAllCommand before the regions
+		// are started up. It's safe to ignore such invalidation at this point since no data got in.
+		if (region != null) {
+			region.invalidateRegion();
+		}
 		return null;
 	}
 

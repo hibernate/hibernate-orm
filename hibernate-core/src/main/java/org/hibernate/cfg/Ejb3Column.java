@@ -42,7 +42,7 @@ import org.jboss.logging.Logger;
  */
 public class Ejb3Column {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Ejb3Column.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Ejb3Column.class.getName());
 
 	private MetadataBuildingContext context;
 
@@ -269,13 +269,9 @@ public class Ejb3Column {
 		if ( applyNamingStrategy ) {
 			if ( StringHelper.isEmpty( columnName ) ) {
 				if ( propertyName != null ) {
-					/// HHH-6005 magic
-					if ( propertyName.contains( ".collection&&element." ) ) {
-						propertyName = propertyName.replace( "collection&&element.", "" );
-					}
 					final AttributePath attributePath = AttributePath.parse( propertyName );
 
-					final Identifier implicitName = normalizer.normalizeIdentifierQuoting(
+					Identifier implicitName = normalizer.normalizeIdentifierQuoting(
 							implicitNamingStrategy.determineBasicColumnName(
 									new ImplicitBasicColumnNameSource() {
 										@Override
@@ -298,6 +294,12 @@ public class Ejb3Column {
 									}
 							)
 					);
+
+					// HHH-6005 magic
+					if ( implicitName.getText().contains( "_collection&&element_" ) ) {
+						implicitName = Identifier.toIdentifier( implicitName.getText().replace( "_collection&&element_", "_" ),
+								implicitName.isQuoted() );
+					}
 
 					final Identifier physicalName = physicalNamingStrategy.toPhysicalColumnName( implicitName, database.getJdbcEnvironment() );
 					mappingColumn.setName( physicalName.render( database.getDialect() ) );
@@ -364,7 +366,7 @@ public class Ejb3Column {
 		}
 		else {
 			getMappingColumn().setValue( value );
-			value.addColumn( getMappingColumn() );
+			value.addColumn( getMappingColumn(), insertable, updatable );
 			value.getTable().addColumn( getMappingColumn() );
 			addColumnBinding( value );
 			table = value.getTable();
@@ -596,7 +598,7 @@ public class Ejb3Column {
 					column.setPropertyName(
 							BinderHelper.getRelativePath( propertyHolder, inferredData.getPropertyName() )
 					);
-			 		column.setNullable(
+					column.setNullable(
 						col.nullable()
 					); //TODO force to not null if available? This is a (bad) user choice.
 					column.setUnique( col.unique() );
@@ -630,7 +632,7 @@ public class Ejb3Column {
 		}
 	}
 
-	//must only be called after all setters are defined and before bind
+	//must only be called afterQuery all setters are defined and beforeQuery bind
 	private void extractDataFromPropertyData(PropertyData inferredData) {
 		if ( inferredData != null ) {
 			XProperty property = inferredData.getProperty();

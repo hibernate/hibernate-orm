@@ -23,6 +23,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
@@ -47,7 +48,6 @@ import static org.junit.Assert.fail;
 public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( EnhancerTestUtils.class );
 
-	private static EnhancementContext enhancementContext = new EnhancerTestContext();
 	private static String workingDir = System.getProperty( "java.io.tmpdir" );
 
 	/**
@@ -58,8 +58,8 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 		CtClass entityCtClass = generateCtClassForAnEntity( classToEnhance );
 
 		byte[] original = entityCtClass.toBytecode();
-		byte[] enhanced = new Enhancer( enhancementContext ).enhance( entityCtClass.getName(), original );
-		assertFalse( "entity was not enhanced", Arrays.equals( original, enhanced ) );
+		byte[] enhanced = Environment.getBytecodeProvider().getEnhancer( new EnhancerTestContext() ).enhance( entityCtClass.getName(), original );
+		assertFalse( "entity was not enhanced", enhanced == null );
 		log.infof( "enhanced entity [%s]", entityCtClass.getName() );
 
 		ClassPool cp = new ClassPool( false );
@@ -81,18 +81,20 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 	}
 	/* --- */
 
-	@SuppressWarnings("unchecked")
-	public static void runEnhancerTestTask(final Class<? extends EnhancerTestTask> task) {
+	public static <T extends EnhancerTestTask> void runEnhancerTestTask(Class<T> task) {
+		runEnhancerTestTask( task, new EnhancerTestContext() );
+	}
 
+	public static <T extends EnhancerTestTask> void runEnhancerTestTask(Class<T> task, EnhancementContext context) {
 		EnhancerTestTask taskObject = null;
 		ClassLoader defaultCL = Thread.currentThread().getContextClassLoader();
 		try {
-			ClassLoader cl = EnhancerTestUtils.getEnhancerClassLoader( task.getPackage().getName() );
+			ClassLoader cl = EnhancerTestUtils.getEnhancerClassLoader( context, task.getPackage().getName() );
 			EnhancerTestUtils.setupClassLoader( cl, task );
 			EnhancerTestUtils.setupClassLoader( cl, task.newInstance().getAnnotatedClasses() );
 
 			Thread.currentThread().setContextClassLoader( cl );
-			taskObject = ( (Class<? extends EnhancerTestTask>) cl.loadClass( task.getName() ) ).newInstance();
+			taskObject = cl.loadClass( task.getName() ).asSubclass( EnhancerTestTask.class ).newInstance();
 
 			taskObject.prepare();
 			taskObject.execute();
@@ -123,36 +125,44 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 		}
 	}
 
-	private static ClassLoader getEnhancerClassLoader(final String packageName) {
+	private static ClassLoader getEnhancerClassLoader(EnhancementContext context, String packageName) {
 		return new ClassLoader() {
+
+			private Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( context );
+
 			@SuppressWarnings("ResultOfMethodCallIgnored")
 			@Override
 			public Class<?> loadClass(String name) throws ClassNotFoundException {
 				if ( !name.startsWith( packageName ) ) {
 					return getParent().loadClass( name );
 				}
-				final Class c = findLoadedClass( name );
+				Class c = findLoadedClass( name );
 				if ( c != null ) {
 					return c;
 				}
 
-				final InputStream is = this.getResourceAsStream(  name.replace( '.', '/' ) + ".class" );
+				InputStream is = getResourceAsStream( name.replace( '.', '/' ) + ".class" );
 				if ( is == null ) {
 					throw new ClassNotFoundException( name + " not found" );
 				}
 
 				try {
-					final byte[] original = new byte[is.available()];
+					byte[] original = new byte[is.available()];
 					new BufferedInputStream( is ).read( original );
 
-					final byte[] enhanced = new Enhancer( enhancementContext ).enhance( name, original );
+					byte[] enhanced = enhancer.enhance( name, original );
 
-					File f = new File( workingDir + File.separator + name.replace( ".", File.separator ) + ".class" );
-					f.getParentFile().mkdirs();
-					f.createNewFile();
-					FileOutputStream out = new FileOutputStream( f );
-					out.write( enhanced );
-					out.close();
+					if ( enhanced != null ) {
+						File f = new File( workingDir + File.separator + name.replace( ".", File.separator ) + ".class" );
+						f.getParentFile().mkdirs();
+						f.createNewFile();
+						FileOutputStream out = new FileOutputStream( f );
+						out.write( enhanced );
+						out.close();
+					}
+					else {
+						enhanced = original;
+					}
 
 					return defineClass( name, enhanced, 0, enhanced.length );
 				}
@@ -172,7 +182,7 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 
 	public static Object getFieldByReflection(Object entity, String fieldName) {
 		try {
-			Field field =  entity.getClass().getDeclaredField( fieldName );
+			Field field = entity.getClass().getDeclaredField( fieldName );
 			field.setAccessible( true );
 			return field.get( entity );
 		}
@@ -196,7 +206,7 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 	 * compares the dirty fields of an entity with a set of expected values
 	 */
 	public static void checkDirtyTracking(Object entityInstance, String... dirtyFields) {
-		final SelfDirtinessTracker selfDirtinessTracker = (SelfDirtinessTracker) entityInstance;
+		SelfDirtinessTracker selfDirtinessTracker = (SelfDirtinessTracker) entityInstance;
 		assertEquals( dirtyFields.length > 0, selfDirtinessTracker.$$_hibernate_hasDirtyAttributes() );
 		String[] tracked = selfDirtinessTracker.$$_hibernate_getDirtyAttributes();
 		assertEquals( dirtyFields.length, tracked.length );

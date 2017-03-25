@@ -7,6 +7,7 @@
 package org.hibernate.engine.spi;
 
 import java.sql.Connection;
+import java.util.TimeZone;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Interceptor;
@@ -97,6 +98,12 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 	@Override
 	public SessionBuilder clearEventListeners() {
 		delegate.clearEventListeners();
+		return this;
+	}
+
+	@Override
+	public SessionBuilder jdbcTimeZone(TimeZone timeZone) {
+		delegate.jdbcTimeZone(timeZone);
 		return this;
 	}
 }

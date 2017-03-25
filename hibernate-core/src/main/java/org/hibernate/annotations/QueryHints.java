@@ -6,6 +6,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.engine.spi.QueryParameters;
+
 /**
  * Consolidation of hints available to Hibernate JPA queries.  Mainly used to define features available on
  * Hibernate queries that have no corollary in JPA queries.
@@ -116,5 +118,23 @@ public class QueryHints {
 	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition in metadata
 	 */
 	public static final String LOADGRAPH = "javax.persistence.loadgraph";
+
+	/**
+	 * Hint to enable/disable the follow-on-locking mechanism provided by {@link org.hibernate.dialect.Dialect#useFollowOnLocking(QueryParameters)}.
+	 * A value of {@code true} enables follow-on-locking, whereas a value of {@code false} disables it.
+	 * If the value is {@code null}, the the {@code Dialect} strategy is going to be used instead.
+	 *
+	 * @since 5.2
+	 */
+	public static final String FOLLOW_ON_LOCKING = "hibernate.query.followOnLocking";
+
+	/**
+	 * Hint to enable/disable the pass-distinct-through mechanism.
+	 * A value of {@code true} enables pass-distinct-through, whereas a value of {@code false} disables it.
+	 * When the pass-distinct-through is disabled, the HQL and JPQL distinct clause is no longer passed to the SQL statement.
+	 *
+	 * @since 5.2
+	 */
+	public static final String PASS_DISTINCT_THROUGH = "hibernate.query.passDistinctThrough";
 
 }

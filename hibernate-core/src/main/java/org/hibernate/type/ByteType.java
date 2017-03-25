@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.ByteTypeDescriptor;
 import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
 
@@ -31,6 +31,7 @@ public class ByteType
 	public ByteType() {
 		super( TinyIntTypeDescriptor.INSTANCE, ByteTypeDescriptor.INSTANCE );
 	}
+
 	@Override
 	public String getName() {
 		return "byte";
@@ -38,36 +39,44 @@ public class ByteType
 
 	@Override
 	public String[] getRegistrationKeys() {
-		return new String[] { getName(), byte.class.getName(), Byte.class.getName() };
+		return new String[] {getName(), byte.class.getName(), Byte.class.getName()};
 	}
+
 	@Override
 	public Serializable getDefaultValue() {
 		return ZERO;
 	}
+
 	@Override
 	public Class getPrimitiveClass() {
 		return byte.class;
 	}
+
 	@Override
 	public String objectToSQLString(Byte value, Dialect dialect) {
 		return toString( value );
 	}
+
 	@Override
 	public Byte stringToObject(String xml) {
 		return fromString( xml );
 	}
+
 	@Override
 	public Byte fromStringValue(String xml) {
 		return fromString( xml );
 	}
+
 	@Override
-	public Byte next(Byte current, SessionImplementor session) {
+	public Byte next(Byte current, SharedSessionContractImplementor session) {
 		return (byte) ( current + 1 );
 	}
+
 	@Override
-	public Byte seed(SessionImplementor session) {
+	public Byte seed(SharedSessionContractImplementor session) {
 		return ZERO;
 	}
+
 	@Override
 	public Comparator<Byte> getComparator() {
 		return getJavaTypeDescriptor().getComparator();

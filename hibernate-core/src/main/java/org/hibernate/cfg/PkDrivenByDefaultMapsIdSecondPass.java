@@ -33,7 +33,7 @@ public class PkDrivenByDefaultMapsIdSecondPass implements SecondPass {
 			throw new AnnotationException(
 					"Unknown entity name: " + referencedEntityName
 			);
-		};
+		}
 		TableBinder.linkJoinColumnWithValueOverridingNameIfImplicit(
 				referencedEntity,
 				referencedEntity.getKey().getColumnIterator(),

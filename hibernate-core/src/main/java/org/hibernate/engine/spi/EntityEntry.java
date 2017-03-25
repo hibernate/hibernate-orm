@@ -9,9 +9,9 @@ package org.hibernate.engine.spi;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.Set;
 
 import org.hibernate.LockMode;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -38,6 +38,10 @@ public interface EntityEntry {
 
 	Object[] getLoadedState();
 
+	Object getLoadedValue(String propertyName);
+
+	void overwriteLoadedStateCollectionValue(String propertyName, PersistentCollection collection);
+
 	Object[] getDeletedState();
 
 	void setDeletedState(Object[] deletedState);
@@ -62,12 +66,12 @@ public interface EntityEntry {
 	Object getRowId();
 
 	/**
-	 * Handle updating the internal state of the entry after actually performing
+	 * Handle updating the internal state of the entry afterQuery actually performing
 	 * the database update.  Specifically we update the snapshot information and
 	 * escalate the lock mode
 	 *
 	 * @param entity The entity instance
-	 * @param updatedState The state calculated after the update (becomes the
+	 * @param updatedState The state calculated afterQuery the update (becomes the
 	 * new {@link #getLoadedState() loaded state}.
 	 * @param nextVersion The new version.
 	 */
@@ -85,9 +89,7 @@ public interface EntityEntry {
 	 */
 	void postInsert(Object[] insertedState);
 
-	boolean isNullifiable(boolean earlyInsert, SessionImplementor session);
-
-	Object getLoadedValue(String propertyName);
+	boolean isNullifiable(boolean earlyInsert, SharedSessionContractImplementor session);
 
 	/**
 	 * Not sure this is the best method name, but the general idea here is to return {@code true} if the entity can

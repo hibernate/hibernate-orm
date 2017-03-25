@@ -7,6 +7,7 @@
 
 //$Id$
 package org.hibernate.test.annotations.entity;
+
 import java.util.Set;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -17,7 +18,6 @@ import javax.persistence.Lob;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OptimisticLockType;
@@ -41,10 +41,8 @@ import org.hibernate.annotations.Where;
 		polymorphism = PolymorphismType.EXPLICIT)
 @Where(clause = "1=1")
 @FilterDef(name = "minLength", parameters = {@ParamDef(name = "minLength", type = "integer")})
-@Filters({
-@Filter(name = "betweenLength"),
+@Filter(name = "betweenLength")
 @Filter(name = "minLength", condition = ":minLength <= length")
-		})
 @org.hibernate.annotations.Table(appliesTo = "Forest",
 		indexes = {@Index(name = "idx", columnNames = {"name", "length"})})
 public class Forest {

@@ -67,6 +67,11 @@ public class PluralAttributeElementSourceManyToManyImpl
 					}
 
 					@Override
+					public boolean isUnique() {
+						return jaxbManyToManyElement.isUnique();
+					}
+
+					@Override
 					public String getFormulaAttribute() {
 						return jaxbManyToManyElement.getFormulaAttribute();
 					}

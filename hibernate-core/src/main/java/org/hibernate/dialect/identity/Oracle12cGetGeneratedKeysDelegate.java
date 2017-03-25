@@ -11,8 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.identity.GetGeneratedKeysDelegate;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.PostInsertIdentityPersister;
 
 /**
@@ -31,7 +30,7 @@ public class Oracle12cGetGeneratedKeysDelegate extends GetGeneratedKeysDelegate 
 	}
 
 	@Override
-	protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
+	protected PreparedStatement prepare(String insertSQL, SharedSessionContractImplementor session) throws SQLException {
 		return session
 				.getJdbcCoordinator()
 				.getStatementPreparer()

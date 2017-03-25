@@ -88,7 +88,7 @@ public class BlobProxy implements InvocationHandler {
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		final String methodName = method.getName();
-		final int argCount = method.getParameterTypes().length;
+		final int argCount = method.getParameterCount();
 
 		if ( "length".equals( methodName ) && argCount == 0 ) {
 			return getLength();

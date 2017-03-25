@@ -16,7 +16,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -47,7 +47,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 	private IntegralDataTypeHolder previousValueHolder;
 
 	@Override
-	public synchronized Serializable generate(SessionImplementor session, Object object) throws HibernateException {
+	public synchronized Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		if ( sql != null ) {
 			initializePreviousValueHolder( session );
 		}
@@ -100,7 +100,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		sql = "select max(" + column + ") from " + buf.toString();
 	}
 
-	private void initializePreviousValueHolder(SessionImplementor session) {
+	private void initializePreviousValueHolder(SharedSessionContractImplementor session) {
 		previousValueHolder = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
 
 		final boolean debugEnabled = LOG.isDebugEnabled();
@@ -124,16 +124,16 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 					}
 				}
 				finally {
-					session.getJdbcCoordinator().getResourceRegistry().release( rs, st );
+					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
 				}
 			}
 			finally {
-				session.getJdbcCoordinator().getResourceRegistry().release( st );
+				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 				session.getJdbcCoordinator().afterStatementExecution();
 			}
 		}
 		catch (SQLException sqle) {
-			throw session.getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not fetch initial value for increment generator",
 					sql

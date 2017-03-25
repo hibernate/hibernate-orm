@@ -22,6 +22,7 @@ import org.hibernate.internal.util.StringHelper;
 public class ForeignKey extends Constraint {
 	private Table referencedTable;
 	private String referencedEntityName;
+	private String keyDefinition;
 	private boolean cascadeDeleteEnabled;
 	private List<Column> referencedColumns = new ArrayList<Column>();
 	private boolean creationEnabled = true;
@@ -77,13 +78,23 @@ public class ForeignKey extends Constraint {
 			i++;
 		}
 
-		final String result = dialect.getAddForeignKeyConstraintString(
-				constraintName,
-				columnNames,
-				referencedTable.getQualifiedName( dialect, defaultCatalog, defaultSchema ),
-				referencedColumnNames,
-				isReferenceToPrimaryKey()
-		);
+		final String result = keyDefinition != null ?
+				dialect.getAddForeignKeyConstraintString(
+						constraintName,
+						keyDefinition
+				) :
+				dialect.getAddForeignKeyConstraintString(
+						constraintName,
+						columnNames,
+						referencedTable.getQualifiedName(
+								dialect,
+								defaultCatalog,
+								defaultSchema
+						),
+						referencedColumnNames,
+						isReferenceToPrimaryKey()
+				);
+		
 		return cascadeDeleteEnabled && dialect.supportsCascadeDelete()
 				? result + " on delete cascade"
 				: result;
@@ -153,6 +164,14 @@ public class ForeignKey extends Constraint {
 		this.referencedEntityName = referencedEntityName;
 	}
 
+	public String getKeyDefinition() {
+		return keyDefinition;
+	}
+
+	public void setKeyDefinition(String keyDefinition) {
+		this.keyDefinition = keyDefinition;
+	}
+	
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
 		final StringBuilder buf = new StringBuilder( "alter table " );
 		buf.append( getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ) );

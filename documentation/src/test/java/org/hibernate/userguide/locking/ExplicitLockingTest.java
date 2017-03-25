@@ -23,13 +23,16 @@ import javax.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.Query;
 
+import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -94,7 +97,7 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testBuildLockRequest() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "testBuildlLockRequest" );
+			log.info( "testBuildLockRequest" );
 			Person person = new Person( "John Doe" );
 			Phone home = new Phone( "123-456-7890" );
 			Phone office = new Phone( "098-765-4321" );
@@ -130,6 +133,56 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 			//end::locking-buildLockRequest-scope-example[]
 		} );
 
+	}
+
+	@Test
+	@RequiresDialect(Oracle8iDialect.class)
+	public void testFollowOnLocking() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			log.info( "testBuildLockRequest" );
+			Person person1 = new Person( "John Doe" );
+			Person person2 = new Person( "Mrs. John Doe" );
+
+			entityManager.persist( person1 );
+			entityManager.persist( person2 );
+			entityManager.flush();
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::locking-follow-on-example[]
+			List<Person> persons = entityManager.createQuery(
+				"select DISTINCT p from Person p", Person.class)
+			.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+			.getResultList();
+			//end::locking-follow-on-example[]
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::locking-follow-on-secondary-query-example[]
+			List<Person> persons = entityManager.createQuery(
+				"select DISTINCT p from Person p", Person.class)
+			.getResultList();
+
+			entityManager.createQuery(
+				"select p.id from Person p where p in :persons")
+			.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+			.setParameter( "persons", persons )
+			.getResultList();
+			//end::locking-follow-on-secondary-query-example[]
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::locking-follow-on-explicit-example[]
+			List<Person> persons = entityManager.createQuery(
+				"select p from Person p", Person.class)
+			.setMaxResults( 10 )
+			.unwrap( Query.class )
+			.setLockOptions(
+				new LockOptions( LockMode.PESSIMISTIC_WRITE )
+					.setFollowOnLocking( false ) )
+			.getResultList();
+			//end::locking-follow-on-explicit-example[]
+		} );
 	}
 
 	//tag::locking-jpa-query-hints-scope-entity-example[]

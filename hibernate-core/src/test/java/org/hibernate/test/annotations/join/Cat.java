@@ -7,6 +7,7 @@
 
 //$Id$
 package org.hibernate.test.annotations.join;
+
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -21,7 +22,6 @@ import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.Table;
-import org.hibernate.annotations.Tables;
 
 /**
  * @author Emmanuel Bernard
@@ -31,12 +31,10 @@ import org.hibernate.annotations.Tables;
 @SecondaryTable(name = "`Cat nbr1`"),
 @SecondaryTable(name = "Cat2", uniqueConstraints = {@UniqueConstraint(columnNames = {"storyPart2"})})
 		})
-@Tables( {
-	@Table(appliesTo = "Cat", indexes = @Index(name = "secondname",
-			columnNames = "secondName"), comment = "My cat table" ),
-	@Table(appliesTo = "Cat2", foreignKey = @ForeignKey(name="FK_CAT2_CAT"), fetch = FetchMode.SELECT,
-			sqlInsert=@SQLInsert(sql="insert into Cat2(storyPart2, id) values(upper(?), ?)") )
-			} )
+@Table(appliesTo = "Cat", indexes = @Index(name = "secondname",
+		columnNames = "secondName"), comment = "My cat table" )
+@Table(appliesTo = "Cat2", foreignKey = @ForeignKey(name="FK_CAT2_CAT"), fetch = FetchMode.SELECT,
+		sqlInsert=@SQLInsert(sql="insert into Cat2(storyPart2, id) values(upper(?), ?)") )
 public class Cat implements Serializable {
 
 	private Integer id;

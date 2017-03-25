@@ -16,6 +16,7 @@ import org.hibernate.loader.entity.EntityJoinWalker;
 import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
+import org.hibernate.loader.plan.exec.query.internal.QueryBuildingParametersImpl;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
@@ -66,27 +67,14 @@ public class LoadPlanStructureAssertionHelper {
 		LoadQueryDetails details = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
 				plan,
 				persister.getKeyColumnNames(),
-				new QueryBuildingParameters() {
-					@Override
-					public LoadQueryInfluencers getQueryInfluencers() {
-						return influencers;
-					}
+				new QueryBuildingParametersImpl(
+						influencers,
+						batchSize,
+						lockMode,
+						null
 
-					@Override
-					public int getBatchSize() {
-						return batchSize;
-					}
-
-					@Override
-					public LockMode getLockMode() {
-						return lockMode;
-					}
-
-					@Override
-					public LockOptions getLockOptions() {
-						return null;
-					}
-				}, sf
+				),
+				sf
 		);
 
 		compare( walker, details );

@@ -6,6 +6,8 @@
  */
 
 package org.hibernate.test.annotations.entity;
+
+import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 
 import org.hibernate.annotations.Filter;
@@ -16,10 +18,11 @@ import org.hibernate.annotations.ParamDef;
  * @author Sharath Reddy
  */
 @FilterDef(name = "byCategory", parameters = {@ParamDef(name = "category", type = "string")})
-@Filter(name = "byCategory", condition = ":category = CATEGORY")
+@Filter(name = "byCategory", condition = ":category = `CATEGORY`")
 @MappedSuperclass
 public class Tool extends Widget {
 
+	@Column(name="`CATEGORY`")
 	private String category;
 
 	public String getCategory() {

@@ -12,7 +12,7 @@ import java.util.TreeMap;
 
 import org.hibernate.collection.internal.PersistentSortedMap;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 
@@ -25,7 +25,8 @@ public class SortedMapType extends MapType {
 		this.comparator = comparator;
 	}
 
-	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key) {
+	@Override
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
 		PersistentSortedMap map = new PersistentSortedMap(session);
 		map.setComparator(comparator);
 		return map;
@@ -39,8 +40,9 @@ public class SortedMapType extends MapType {
 	public Object instantiate(int anticipatedSize) {
 		return new TreeMap(comparator);
 	}
-	
-	public PersistentCollection wrap(SessionImplementor session, Object collection) {
+
+	@Override
+	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
 		return new PersistentSortedMap( session, (java.util.SortedMap) collection );
 	}
 }

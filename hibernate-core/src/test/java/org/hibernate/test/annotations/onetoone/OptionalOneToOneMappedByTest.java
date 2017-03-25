@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.annotations.onetoone;
 
+import javax.persistence.PersistenceException;
+
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -14,6 +16,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -37,7 +40,8 @@ public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 			fail( "should have failed with IdentifierGenerationException" );
 		}
-		catch (IdentifierGenerationException ex) {
+		catch (PersistenceException ex) {
+			assertTyping(IdentifierGenerationException.class, ex.getCause());
 			// expected
 		}
 		finally {

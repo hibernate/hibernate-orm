@@ -12,10 +12,9 @@ import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.collection.CollectionInitializer;
@@ -68,7 +67,7 @@ public abstract class AbstractLoadPlanBasedCollectionInitializer
 	}
 
 	@Override
-	public void initialize(Serializable id, SessionImplementor session)
+	public void initialize(Serializable id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( log.isDebugEnabled() ) {
 			log.debugf( "Loading collection: %s",
@@ -95,7 +94,7 @@ public abstract class AbstractLoadPlanBasedCollectionInitializer
 			);
 		}
 		catch ( SQLException sqle ) {
-			throw getFactory().getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not initialize a collection: " +
 							MessageHelper.collectionInfoString( collectionPersister, id, getFactory() ),

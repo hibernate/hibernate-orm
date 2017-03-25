@@ -14,7 +14,7 @@ statement.
 == Legacy support (in-database generation)
 
 Historically applications would have to manually refresh the state of any entities that included such generated values
-to account for these generated values.  Starting in version 3.2, however, Hibernate began allowing the aplication to
+to account for these generated values.  Starting in version 3.2, however, Hibernate began allowing the application to
 mark attributes as generated, which allows the application to delegate this responsibility to Hibernate.  When
 Hibernate issues an SQL INSERT or UPDATE for an entity that has defined in-database value generation, it immediately
 issues a select afterwards to retrieve the generated values.

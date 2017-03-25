@@ -7,337 +7,156 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.Selection;
 
-import org.hibernate.CacheMode;
-import org.hibernate.Criteria;
-import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Interceptor;
-import org.hibernate.Query;
-import org.hibernate.SQLQuery;
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.jdbc.LobCreationContext;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
-import org.hibernate.loader.custom.CustomQuery;
+import org.hibernate.Session;
+import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.WrapperOptionsContext;
+import org.hibernate.query.spi.NativeQueryImplementor;
+import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
 /**
- * Defines the internal contract between {@link org.hibernate.Session} / {@link org.hibernate.StatelessSession} and
- * other parts of Hibernate such as {@link Type}, {@link EntityPersister} and
- * {@link org.hibernate.persister.collection.CollectionPersister} implementors
+ * Defines the "internal contract" for {@link Session} and other parts of Hibernate such as
+ * {@link org.hibernate.type.Type}, {@link org.hibernate.persister.entity.EntityPersister}
+ * and {@link org.hibernate.persister.collection.CollectionPersister} implementations.
+ *
+ * A Session, through this interface and SharedSessionContractImplementor, implements:<ul>
+ *     <li>
+ *         {@link org.hibernate.resource.jdbc.spi.JdbcSessionOwner} to drive the behavior of the
+ *         {@link org.hibernate.resource.jdbc.spi.JdbcSessionContext} delegate
+ *     </li>
+ *     <li>
+ *         {@link TransactionCoordinatorBuilder.Options}
+ *         to drive the creation of the {@link TransactionCoordinator} delegate
+ *     </li>
+ *     <li>
+ *         {@link org.hibernate.engine.jdbc.LobCreationContext} to act as the context for JDBC LOB instance creation
+ *     </li>
+ *     <li>
+ *         {@link org.hibernate.type.descriptor.WrapperOptions} to fulfill the behavior needed while
+ *         binding/extracting values to/from JDBC as part of the Type contracts
+ *     </li>
+ * </ul>
+ *
+ * See also {@link org.hibernate.event.spi.EventSource} which extends this interface providing
+ * bridge to the event generation features of {@link org.hibernate.event}
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionImplementor extends Serializable, LobCreationContext, WrapperOptionsContext {
+public interface SessionImplementor
+		extends Session, SharedSessionContractImplementor, HibernateEntityManagerImplementor {
+
+	@Override
+	SessionFactoryImplementor getSessionFactory();
+
 	/**
-	 * Match te method on {@link org.hibernate.Session} and {@link org.hibernate.StatelessSession}
+	 * @deprecated (since 5.2) use {@link #getHibernateFlushMode()} instead.
+	 */
+	@Deprecated
+	boolean isFlushBeforeCompletionEnabled();
+
+	ActionQueue getActionQueue();
+
+	Object instantiate(EntityPersister persister, Serializable id) throws HibernateException;
+
+	void forceFlush(EntityEntry e) throws HibernateException;
+
+	@Override
+	QueryImplementor createQuery(String queryString);
+
+	@Override
+	<T> QueryImplementor<T> createQuery(String queryString, Class<T> resultType);
+
+	@Override
+	<T> QueryImplementor<T> createNamedQuery(String name, Class<T> resultType);
+
+	@Override
+	QueryImplementor createNamedQuery(String name);
+
+	@Override
+	NativeQueryImplementor createNativeQuery(String sqlString);
+
+	@Override
+	NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass);
+
+	@Override
+	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping);
+
+	@Override
+	NativeQueryImplementor getNamedNativeQuery(String name);
+
+	@Override
+	QueryImplementor getNamedQuery(String queryName);
+
+	@Override
+	NativeQueryImplementor getNamedSQLQuery(String name);
+
+	@Override
+	<T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery);
+
+	@Override
+	QueryImplementor createQuery(CriteriaUpdate updateQuery);
+
+	@Override
+	QueryImplementor createQuery(CriteriaDelete deleteQuery);
+
+	/**
+	 * {@inheritDoc}
 	 *
-	 * @return The tenant identifier of this session
-	 */
-	String getTenantIdentifier();
-
-	/**
-	 * Provides access to JDBC connections
+	 * @deprecated (since 5.2) - see deprecation note on super
 	 *
-	 * @return The contract for accessing JDBC connections.
+	 * @return The typed query
 	 */
-	JdbcConnectionAccess getJdbcConnectionAccess();
+	@Deprecated
+	@Override
+	<T> QueryImplementor<T> createQuery(
+			String jpaqlString,
+			Class<T> resultClass,
+			Selection selection,
+			QueryOptions queryOptions);
 
 	/**
-	 * Hide the changing requirements of entity key creation
-	 *
-	 * @param id The entity id
-	 * @param persister The entity persister
-	 *
-	 * @return The entity key
+	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
 	 */
-	EntityKey generateEntityKey(Serializable id, EntityPersister persister);
+	@Deprecated
+	void merge(String entityName, Object object, Map copiedAlready) throws HibernateException;
 
 	/**
-	 * Retrieves the interceptor currently in use by this event source.
-	 *
-	 * @return The interceptor.
+	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
 	 */
-	Interceptor getInterceptor();
+	@Deprecated
+	void persist(String entityName, Object object, Map createdAlready) throws HibernateException;
 
 	/**
-	 * Enable/disable automatic cache clearing from after transaction
-	 * completion (for EJB3)
+	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
 	 */
-	void setAutoClear(boolean enabled);
+	@Deprecated
+	void persistOnFlush(String entityName, Object object, Map copiedAlready);
 
 	/**
-	 * Disable automatic transaction joining.  The really only has any effect for CMT transactions.  The default
-	 * Hibernate behavior is to auto join any active JTA transaction (register {@link javax.transaction.Synchronization}).
-	 * JPA however defines an explicit join transaction operation.
-	 * <p/>
-	 * See javax.persistence.EntityManager#joinTransaction
+	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
 	 */
-	void disableTransactionAutoJoin();
+	@Deprecated
+	void refresh(String entityName, Object object, Map refreshedAlready) throws HibernateException;
 
 	/**
-	 * Does this <tt>Session</tt> have an active Hibernate transaction
-	 * or is there a JTA transaction in progress?
+	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
 	 */
-	boolean isTransactionInProgress();
+	@Deprecated
+	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, Set transientEntities);
 
 	/**
-	 * Initialize the collection (if not already initialized)
+	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
 	 */
-	void initializeCollection(PersistentCollection collection, boolean writing)
-			throws HibernateException;
-
-	/**
-	 * Load an instance without checking if it was deleted.
-	 * <p/>
-	 * When <tt>nullable</tt> is disabled this method may create a new proxy or
-	 * return an existing proxy; if it does not exist, throw an exception.
-	 * <p/>
-	 * When <tt>nullable</tt> is enabled, the method does not create new proxies
-	 * (but might return an existing proxy); if it does not exist, return
-	 * <tt>null</tt>.
-	 * <p/>
-	 * When <tt>eager</tt> is enabled, the object is eagerly fetched
-	 */
-	Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable)
-			throws HibernateException;
-
-	/**
-	 * Load an instance immediately. This method is only called when lazily initializing a proxy.
-	 * Do not return the proxy.
-	 */
-	Object immediateLoad(String entityName, Serializable id) throws HibernateException;
-
-	/**
-	 * System time before the start of the transaction
-	 */
-	long getTimestamp();
-
-	/**
-	 * Get the creating <tt>SessionFactoryImplementor</tt>
-	 */
-	SessionFactoryImplementor getFactory();
-
-	/**
-	 * Execute a <tt>find()</tt> query
-	 */
-	List list(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute an <tt>iterate()</tt> query
-	 */
-	Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute a <tt>scroll()</tt> query
-	 */
-	ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute a criteria query
-	 */
-	ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode);
-
-	/**
-	 * Execute a criteria query
-	 */
-	List list(Criteria criteria);
-
-	/**
-	 * Execute a filter
-	 */
-	List listFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Iterate a filter
-	 */
-	Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters)
-			throws HibernateException;
-
-	/**
-	 * Get the <tt>EntityPersister</tt> for any instance
-	 *
-	 * @param entityName optional entity name
-	 * @param object the entity instance
-	 */
-	EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException;
-
-	/**
-	 * Get the entity instance associated with the given <tt>Key</tt>,
-	 * calling the Interceptor if necessary
-	 */
-	Object getEntityUsingInterceptor(EntityKey key) throws HibernateException;
-
-	/**
-	 * Return the identifier of the persistent object, or null if
-	 * not associated with the session
-	 */
-	Serializable getContextEntityIdentifier(Object object);
-
-	/**
-	 * The best guess entity name for an entity not in an association
-	 */
-	String bestGuessEntityName(Object object);
-
-	/**
-	 * The guessed entity name for an entity not in an association
-	 */
-	String guessEntityName(Object entity) throws HibernateException;
-
-	/**
-	 * Instantiate the entity class, initializing with the given identifier
-	 */
-	Object instantiate(String entityName, Serializable id) throws HibernateException;
-
-	/**
-	 * Execute an SQL Query
-	 */
-	List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-			throws HibernateException;
-
-	/**
-	 * Execute an SQL Query
-	 */
-	ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-			throws HibernateException;
-
-	/**
-	 * Execute a native SQL query, and return the results as a fully built list.
-	 *
-	 * @param spec The specification of the native SQL query to execute.
-	 * @param queryParameters The parameters by which to perform the execution.
-	 *
-	 * @return The result list.
-	 *
-	 * @throws HibernateException
-	 */
-	List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
-			throws HibernateException;
-
-	/**
-	 * Execute a native SQL query, and return the results as a scrollable result.
-	 *
-	 * @param spec The specification of the native SQL query to execute.
-	 * @param queryParameters The parameters by which to perform the execution.
-	 *
-	 * @return The resulting scrollable result.
-	 *
-	 * @throws HibernateException
-	 */
-	ScrollableResults scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters);
-
-	int getDontFlushFromFind();
-
-	//TODO: temporary
-
-	/**
-	 * Get the persistence context for this session
-	 */
-	PersistenceContext getPersistenceContext();
-
-	/**
-	 * Execute a HQL update or delete query
-	 */
-	int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute a native SQL update or delete query
-	 */
-	int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters)
-			throws HibernateException;
-
-
-	// copied from Session:
-
-	CacheMode getCacheMode();
-
-	void setCacheMode(CacheMode cm);
-
-	boolean isOpen();
-
-	boolean isConnected();
-
-	FlushMode getFlushMode();
-
-	void setFlushMode(FlushMode fm);
-
-	Connection connection();
-
-	void flush();
-
-	/**
-	 * Get a Query instance for a named query or named native SQL query
-	 */
-	Query getNamedQuery(String name);
-
-	/**
-	 * Get a Query instance for a named native SQL query
-	 */
-	Query getNamedSQLQuery(String name);
-
-	boolean isEventSource();
-
-	void afterScrollOperation();
-
-	/**
-	 * Retrieve access to the session's transaction coordinator.
-	 *
-	 * @return The transaction coordinator.
-	 */
-	TransactionCoordinator getTransactionCoordinator();
-
-	JdbcCoordinator getJdbcCoordinator();
-
-	/**
-	 * Determine whether the session is closed.  Provided separately from
-	 * {@link #isOpen()} as this method does not attempt any JTA synchronization
-	 * registration, where as {@link #isOpen()} does; which makes this one
-	 * nicer to use for most internal purposes.
-	 *
-	 * @return True if the session is closed; false otherwise.
-	 */
-	boolean isClosed();
-
-	boolean shouldAutoClose();
-
-	boolean isAutoCloseSessionEnabled();
-
-	/**
-	 * Get the load query influencers associated with this session.
-	 *
-	 * @return the load query influencers associated with this session;
-	 *         should never be null.
-	 */
-	LoadQueryInfluencers getLoadQueryInfluencers();
-
-	/**
-	 * Used from EntityManager
-	 *
-	 * @param namedQueryDefinition The named query definition
-	 *
-	 * @return The basic HQL/JPQL query (without saved settings applied)
-	 */
-	Query createQuery(NamedQueryDefinition namedQueryDefinition);
-
-	/**
-	 * Used from EntityManager
-	 *
-	 * @param namedQueryDefinition The named query definition
-	 *
-	 * @return The basic SQL query (without saved settings applied)
-	 */
-	SQLQuery createSQLQuery(NamedSQLQueryDefinition namedQueryDefinition);
-
-	SessionEventListenerManager getEventListenerManager();
+	@Deprecated
+	void removeOrphanBeforeUpdates(String entityName, Object child);
 }

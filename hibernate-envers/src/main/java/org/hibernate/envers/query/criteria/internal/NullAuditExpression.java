@@ -11,20 +11,21 @@ import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
-import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class NullAuditExpression implements AuditCriterion {
+public class NullAuditExpression extends AbstractAtomicExpression {
 	private PropertyNameGetter propertyNameGetter;
 
-	public NullAuditExpression(PropertyNameGetter propertyNameGetter) {
+	public NullAuditExpression(String alias, PropertyNameGetter propertyNameGetter) {
+		super( alias );
 		this.propertyNameGetter = propertyNameGetter;
 	}
 
-	public void addToQuery(
+	@Override
+	protected void addToQuery(
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			String entityName,
@@ -40,10 +41,10 @@ public class NullAuditExpression implements AuditCriterion {
 		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, propertyName );
 
 		if ( relatedEntity == null ) {
-			parameters.addNullRestriction( propertyName, true );
+			parameters.addNullRestriction( alias, propertyName );
 		}
 		else {
-			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, null, null, true );
+			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, null, alias, null, true );
 		}
 	}
 }

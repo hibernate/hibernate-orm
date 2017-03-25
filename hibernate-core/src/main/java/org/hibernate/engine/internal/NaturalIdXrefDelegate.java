@@ -18,7 +18,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
@@ -37,7 +37,7 @@ public class NaturalIdXrefDelegate {
 	private static final Logger LOG = Logger.getLogger( NaturalIdXrefDelegate.class );
 
 	private final StatefulPersistenceContext persistenceContext;
-	private final ConcurrentHashMap<EntityPersister, NaturalIdResolutionCache> naturalIdResolutionCacheMap = new ConcurrentHashMap<EntityPersister, NaturalIdResolutionCache>();
+	private final ConcurrentHashMap<EntityPersister, NaturalIdResolutionCache> naturalIdResolutionCacheMap = new ConcurrentHashMap<>();
 
 	/**
 	 * Constructs a NaturalIdXrefDelegate
@@ -53,7 +53,7 @@ public class NaturalIdXrefDelegate {
 	 *
 	 * @return The session
 	 */
-	protected SessionImplementor session() {
+	protected SharedSessionContractImplementor session() {
 		return persistenceContext.getSession();
 	}
 
@@ -310,7 +310,7 @@ public class NaturalIdXrefDelegate {
 
 	/**
 	 * As part of "load synchronization process", if a particular natural id is found to have changed we need to track
-	 * its invalidity until after the next flush.  This method lets the "load synchronization process" indicate
+	 * its invalidity until afterQuery the next flush.  This method lets the "load synchronization process" indicate
 	 * when it has encountered such changes.
 	 *
 	 * @param persister The persister representing the entity type.
@@ -331,7 +331,7 @@ public class NaturalIdXrefDelegate {
 
 	/**
 	 * Again, as part of "load synchronization process" we need to also be able to clear references to these
-	 * known-invalid natural-ids after flush.  This method exposes that capability.
+	 * known-invalid natural-ids afterQuery flush.  This method exposes that capability.
 	 */
 	public void unStashInvalidNaturalIdReferences() {
 		for ( NaturalIdResolutionCache naturalIdResolutionCache : naturalIdResolutionCacheMap.values() ) {

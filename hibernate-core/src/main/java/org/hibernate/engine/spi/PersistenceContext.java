@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -50,7 +49,7 @@ public interface PersistenceContext {
 	 *
 	 * @return The session.
 	 */
-	public SessionImplementor getSession();
+	public SharedSessionContractImplementor getSession();
 
 	/**
 	 * Retrieve this persistence context's managed load context.
@@ -106,7 +105,7 @@ public interface PersistenceContext {
 	public void setEntryStatus(EntityEntry entry, Status status);
 
 	/**
-	 * Called after transactions end
+	 * Called afterQuery transactions end
 	 */
 	public void afterTransactionCompletion();
 
@@ -426,7 +425,7 @@ public interface PersistenceContext {
 
 	/**
 	 * Register a <tt>PersistentCollection</tt> object for an array.
-	 * Associates a holder with an array - MUST be called after loading 
+	 * Associates a holder with an array - MUST be called afterQuery loading
 	 * array, since the array instance is not created until endLoad().
 	 */
 	public void addCollectionHolder(PersistentCollection holder);
@@ -516,12 +515,12 @@ public interface PersistenceContext {
 	public int getCascadeLevel();
 	
 	/**
-	 * Called before cascading
+	 * Called beforeQuery cascading
 	 */
 	public int incrementCascadeLevel();
 
 	/**
-	 * Called after cascading
+	 * Called afterQuery cascading
 	 */
 	public int decrementCascadeLevel();
 
@@ -532,17 +531,17 @@ public interface PersistenceContext {
 	public boolean isFlushing();
 	
 	/**
-	 * Called before and after the flushcycle
+	 * Called beforeQuery and afterQuery the flushcycle
 	 */
 	public void setFlushing(boolean flushing);
 
 	/**
-	 * Call this before begining a two-phase load
+	 * Call this beforeQuery begining a two-phase load
 	 */
 	public void beforeLoad();
 
 	/**
-	 * Call this after finishing a two-phase load
+	 * Call this afterQuery finishing a two-phase load
 	 */
 	public void afterLoad();
 	
@@ -846,7 +845,7 @@ public interface PersistenceContext {
 		 * when natural-id values were found to have changed.  Also responsible for tracking the old values 
 		 * as no longer valid until the next flush because otherwise going to the database would just re-pull
 		 * the old values as valid.  In this last responsibility, {@link #cleanupFromSynchronizations} is
-		 * the inverse process called after flush to clean up those entries.
+		 * the inverse process called afterQuery flush to clean up those entries.
 		 *
 		 * @param persister The persister representing the entity type.
 		 * @param pk The primary key

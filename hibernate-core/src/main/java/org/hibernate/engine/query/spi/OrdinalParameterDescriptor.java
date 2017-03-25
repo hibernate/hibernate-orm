@@ -6,8 +6,8 @@
  */
 package org.hibernate.engine.query.spi;
 
-import java.io.Serializable;
-
+import org.hibernate.Incubating;
+import org.hibernate.query.QueryParameter;
 import org.hibernate.type.Type;
 
 /**
@@ -15,7 +15,8 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class OrdinalParameterDescriptor implements Serializable {
+@Incubating
+public class OrdinalParameterDescriptor implements QueryParameter {
 	private final int ordinalPosition;
 	private final Type expectedType;
 	private final int sourceLocation;
@@ -43,5 +44,30 @@ public class OrdinalParameterDescriptor implements Serializable {
 
 	public int getSourceLocation() {
 		return sourceLocation;
+	}
+
+	@Override
+	public Type getType() {
+		return expectedType;
+	}
+
+	@Override
+	public String getName() {
+		return null;
+	}
+
+	@Override
+	public Integer getPosition() {
+		return ordinalPosition;
+	}
+
+	@Override
+	public Class getParameterType() {
+		return expectedType == null ? null : expectedType.getReturnedClass();
+	}
+
+	@Override
+	public boolean isJpaPositionalParameter() {
+		return false;
 	}
 }

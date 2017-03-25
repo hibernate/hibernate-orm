@@ -9,19 +9,44 @@ package org.hibernate;
 import java.io.Serializable;
 
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.QueryProducer;
 
 /**
  * Contract methods shared between {@link Session} and {@link StatelessSession}.
+ * <p/>
+ * NOTE : Poorly named.  "shared" simply indicates that its a unified contract between {@link Session} and
+ * {@link StatelessSession}.
  * 
  * @author Steve Ebersole
  */
-public interface SharedSessionContract extends Serializable {
+public interface SharedSessionContract extends QueryProducer, Serializable {
 	/**
 	 * Obtain the tenant identifier associated with this session.
 	 *
 	 * @return The tenant identifier associated with this session, or {@code null}
 	 */
-	public String getTenantIdentifier();
+	String getTenantIdentifier();
+
+	/**
+	 * End the session by releasing the JDBC connection and cleaning up.
+	 *
+	 * @throws HibernateException Indicates problems cleaning up.
+	 */
+	void close() throws HibernateException;
+
+	/**
+	 * Check if the session is still open.
+	 *
+	 * @return boolean
+	 */
+	boolean isOpen();
+
+	/**
+	 * Check if the session is currently connected.
+	 *
+	 * @return boolean
+	 */
+	boolean isConnected();
 
 	/**
 	 * Begin a unit of work and return the associated {@link Transaction} object.  If a new underlying transaction is
@@ -32,7 +57,7 @@ public interface SharedSessionContract extends Serializable {
 	 *
 	 * @see #getTransaction
 	 */
-	public Transaction beginTransaction();
+	Transaction beginTransaction();
 
 	/**
 	 * Get the {@link Transaction} instance associated with this session.  The concrete type of the returned
@@ -40,34 +65,7 @@ public interface SharedSessionContract extends Serializable {
 	 *
 	 * @return a Transaction instance
 	 */
-	public Transaction getTransaction();
-
-	/**
-	 * Create a {@link Query} instance for the named query string defined in the metadata.
-	 *
-	 * @param queryName the name of a query defined externally
-	 *
-	 * @return The query instance for manipulation and execution
-	 */
-	public Query getNamedQuery(String queryName);
-
-	/**
-	 * Create a {@link Query} instance for the given HQL query string.
-	 *
-	 * @param queryString The HQL query
-	 *
-	 * @return The query instance for manipulation and execution
-	 */
-	public Query createQuery(String queryString);
-
-	/**
-	 * Create a {@link SQLQuery} instance for the given SQL query string.
-	 *
-	 * @param queryString The SQL query
-	 * 
-	 * @return The query instance for manipulation and execution
-	 */
-	public SQLQuery createSQLQuery(String queryString);
+	Transaction getTransaction();
 
 	/**
 	 * Gets a ProcedureCall based on a named template
@@ -78,7 +76,7 @@ public interface SharedSessionContract extends Serializable {
 	 *
 	 * @see javax.persistence.NamedStoredProcedureQuery
 	 */
-	public ProcedureCall getNamedProcedureCall(String name);
+	ProcedureCall getNamedProcedureCall(String name);
 
 	/**
 	 * Creates a call to a stored procedure.
@@ -87,7 +85,7 @@ public interface SharedSessionContract extends Serializable {
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	public ProcedureCall createStoredProcedureCall(String procedureName);
+	ProcedureCall createStoredProcedureCall(String procedureName);
 
 	/**
 	 * Creates a call to a stored procedure with specific result set entity mappings.  Each class named
@@ -98,7 +96,7 @@ public interface SharedSessionContract extends Serializable {
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	public ProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses);
+	ProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses);
 
 	/**
 	 * Creates a call to a stored procedure with specific result set entity mappings.
@@ -108,7 +106,7 @@ public interface SharedSessionContract extends Serializable {
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	public ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings);
+	ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings);
 
 	/**
 	 * Create {@link Criteria} instance for the given class (entity or subclasses/implementors).
@@ -116,8 +114,11 @@ public interface SharedSessionContract extends Serializable {
 	 * @param persistentClass The class, which is an entity, or has entity subclasses/implementors
 	 *
 	 * @return The criteria instance for manipulation and execution
+	 *
+	 * @deprecated (since 5.2) for Session, use the JPA Criteria
 	 */
-	public Criteria createCriteria(Class persistentClass);
+	@Deprecated
+	Criteria createCriteria(Class persistentClass);
 
 	/**
 	 * Create {@link Criteria} instance for the given class (entity or subclasses/implementors), using a specific
@@ -127,8 +128,11 @@ public interface SharedSessionContract extends Serializable {
 	 * @param alias The alias to use
 	 *
 	 * @return The criteria instance for manipulation and execution
+	 *
+	 * @deprecated (since 5.2) for Session, use the JPA Criteria
 	 */
-	public Criteria createCriteria(Class persistentClass, String alias);
+	@Deprecated
+	Criteria createCriteria(Class persistentClass, String alias);
 
 	/**
 	 * Create {@link Criteria} instance for the given entity name.
@@ -136,8 +140,11 @@ public interface SharedSessionContract extends Serializable {
 	 * @param entityName The entity name
 
 	 * @return The criteria instance for manipulation and execution
+	 *
+	 * @deprecated (since 5.2) for Session, use the JPA Criteria
 	 */
-	public Criteria createCriteria(String entityName);
+	@Deprecated
+	Criteria createCriteria(String entityName);
 
 	/**
 	 * Create {@link Criteria} instance for the given entity name, using a specific alias.
@@ -146,6 +153,35 @@ public interface SharedSessionContract extends Serializable {
 	 * @param alias The alias to use
 	 *
 	 * @return The criteria instance for manipulation and execution
+	 *
+	 * @deprecated (since 5.2) for Session, use the JPA Criteria
 	 */
-	public Criteria createCriteria(String entityName, String alias);
+	@Deprecated
+	Criteria createCriteria(String entityName, String alias);
+
+	/**
+	 * Get the Session-level JDBC batch size for the current Session.
+	 * Overrides the SessionFactory JDBC batch size defined by the {@code hibernate.default_batch_fetch_size} configuration property for the scope of the current {@code Session}.
+	 *
+	 * @return Session-level JDBC batch size
+	 *
+	 * @since 5.2
+	 *
+	 * @see org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
+	 */
+	Integer getJdbcBatchSize();
+
+	/**
+	 * Set the Session-level JDBC batch size.
+	 * Overrides the SessionFactory JDBC batch size defined by the {@code hibernate.default_batch_fetch_size} configuration property for the scope of the current {@code Session}.
+	 *
+	 * @param jdbcBatchSize Session-level JDBC batch size
+	 *
+	 * @since 5.2
+	 *
+	 * @see org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
+	 */
+	void setJdbcBatchSize(Integer jdbcBatchSize);
 }

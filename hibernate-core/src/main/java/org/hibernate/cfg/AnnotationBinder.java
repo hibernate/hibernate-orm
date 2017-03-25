@@ -474,7 +474,7 @@ public final class AnnotationBinder {
 	}
 
 	/**
-	 * Bind a class having JSR175 annotations. Subclasses <b>have to</b> be bound after its parent class.
+	 * Bind a class having JSR175 annotations. Subclasses <b>have to</b> be bound afterQuery its parent class.
 	 *
 	 * @param clazzToProcess entity to bind as {@code XClass} instance
 	 * @param inheritanceStatePerClass Meta data about the inheritance relationships for all mapped classes
@@ -582,8 +582,8 @@ public final class AnnotationBinder {
 		entityBinder.setProxy( clazzToProcess.getAnnotation( Proxy.class ) );
 		entityBinder.setBatchSize( clazzToProcess.getAnnotation( BatchSize.class ) );
 		entityBinder.setWhere( clazzToProcess.getAnnotation( Where.class ) );
-	    entityBinder.setCache( determineCacheSettings( clazzToProcess, context ) );
-	    entityBinder.setNaturalIdCache( clazzToProcess, clazzToProcess.getAnnotation( NaturalIdCache.class ) );
+		entityBinder.setCache( determineCacheSettings( clazzToProcess, context ) );
+		entityBinder.setNaturalIdCache( clazzToProcess, clazzToProcess.getAnnotation( NaturalIdCache.class ) );
 
 		bindFilters( clazzToProcess, entityBinder, context );
 
@@ -655,6 +655,25 @@ public final class AnnotationBinder {
 				if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.name() ) ) {
 					key.setForeignKeyName( fk.name() );
 				}
+				else {
+					final PrimaryKeyJoinColumn pkJoinColumn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
+					final PrimaryKeyJoinColumns pkJoinColumns = clazzToProcess.getAnnotation( PrimaryKeyJoinColumns.class );
+
+					if ( pkJoinColumns != null && pkJoinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+						// don't apply a constraint based on ConstraintMode
+						key.setForeignKeyName( "none" );
+					}
+					else if ( pkJoinColumns != null && !StringHelper.isEmpty( pkJoinColumns.foreignKey().name() ) ) {
+						key.setForeignKeyName( pkJoinColumns.foreignKey().name() );
+					}
+					else if ( pkJoinColumn != null && pkJoinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+						// don't apply a constraint based on ConstraintMode
+						key.setForeignKeyName( "none" );
+					}
+					else if ( pkJoinColumn != null && !StringHelper.isEmpty( pkJoinColumn.foreignKey().name() ) ) {
+						key.setForeignKeyName( pkJoinColumn.foreignKey().name() );
+					}
+				}
 				if ( onDeleteAnn != null ) {
 					key.setCascadeDeleteEnabled( OnDeleteAction.CASCADE.equals( onDeleteAnn.action() ) );
 				}
@@ -701,7 +720,7 @@ public final class AnnotationBinder {
 			}
 		}
 
-        if ( onDeleteAnn != null && !onDeleteAppropriate ) {
+		if ( onDeleteAnn != null && !onDeleteAppropriate ) {
 			LOG.invalidOnDeleteAnnotation(propertyHolder.getEntityName());
 		}
 
@@ -1137,15 +1156,10 @@ public final class AnnotationBinder {
 		return new LocalCacheAnnotationImpl( region, determineCacheConcurrencyStrategy( context ) );
 	}
 
-	private static CacheConcurrencyStrategy DEFAULT_CACHE_CONCURRENCY_STRATEGY;
-
 	private static CacheConcurrencyStrategy determineCacheConcurrencyStrategy(MetadataBuildingContext context) {
-		if ( DEFAULT_CACHE_CONCURRENCY_STRATEGY == null ) {
-			DEFAULT_CACHE_CONCURRENCY_STRATEGY = CacheConcurrencyStrategy.fromAccessType(
-					context.getBuildingOptions().getImplicitCacheAccessType()
-			);
-		}
-		return DEFAULT_CACHE_CONCURRENCY_STRATEGY;
+		return CacheConcurrencyStrategy.fromAccessType(
+				context.getBuildingOptions().getImplicitCacheAccessType()
+		);
 	}
 
 	@SuppressWarnings({ "ClassExplicitlyAnnotation" })
@@ -1263,7 +1277,7 @@ public final class AnnotationBinder {
 			//check if superclass is not a potential persistent class
 			if ( inheritanceState.hasParents() ) {
 				throw new AssertionFailure(
-						"Subclass has to be binded after it's mother class: "
+						"Subclass has to be binded afterQuery it's mother class: "
 								+ superEntityState.getClazz().getName()
 				);
 			}
@@ -1520,7 +1534,7 @@ public final class AnnotationBinder {
 
 		/*
 		 * put element annotated by @Id in front
-		 * since it has to be parsed before any association by Hibernate
+		 * since it has to be parsed beforeQuery any association by Hibernate
 		 */
 		final XAnnotatedElement element = propertyAnnotatedElement.getProperty();
 		if ( element.isAnnotationPresent( Id.class ) || element.isAnnotationPresent( EmbeddedId.class ) ) {
@@ -1607,13 +1621,15 @@ public final class AnnotationBinder {
 			MetadataBuildingContext context,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) throws MappingException {
 
-		if ( entityBinder.isPropertyDefinedInSuperHierarchy( inferredData.getPropertyName() ) ) {
-			LOG.debugf(
-					"Skipping attribute [%s : %s] as it was already processed as part of super hierarchy",
-					inferredData.getClassOrElementName(),
-					inferredData.getPropertyName()
-			);
-			return;
+		if ( !propertyHolder.isComponent() ) {
+			if ( entityBinder.isPropertyDefinedInSuperHierarchy( inferredData.getPropertyName() ) ) {
+				LOG.debugf(
+						"Skipping attribute [%s : %s] as it was already processed as part of super hierarchy",
+						inferredData.getClassOrElementName(),
+						inferredData.getPropertyName()
+				);
+				return;
+			}
 		}
 
 		/**
@@ -1862,6 +1878,18 @@ public final class AnnotationBinder {
 				OneToMany oneToManyAnn = property.getAnnotation( OneToMany.class );
 				ManyToMany manyToManyAnn = property.getAnnotation( ManyToMany.class );
 				ElementCollection elementCollectionAnn = property.getAnnotation( ElementCollection.class );
+
+				if ( ( oneToManyAnn != null || manyToManyAnn != null || elementCollectionAnn != null ) &&
+						isToManyAssociationWithinEmbeddableCollection(
+								propertyHolder ) ) {
+					throw new AnnotationException(
+							"@OneToMany, @ManyToMany or @ElementCollection cannot be used inside an @Embeddable that is also contained within an @ElementCollection: "
+									+ BinderHelper.getPath(
+									propertyHolder,
+									inferredData
+							)
+					);
+				}
 
 				final IndexColumn indexColumn;
 
@@ -2271,7 +2299,7 @@ public final class AnnotationBinder {
 			}
 		}
 		//init index
-		//process indexes after everything: in second pass, many to one has to be done before indexes
+		//process indexes afterQuery everything: in second pass, many to one has to be done beforeQuery indexes
 		Index index = property.getAnnotation( Index.class );
 		if ( index != null ) {
 			if ( joinColumns != null ) {
@@ -2308,6 +2336,14 @@ public final class AnnotationBinder {
 				}
 			}
 		}
+	}
+
+	private static boolean isToManyAssociationWithinEmbeddableCollection(PropertyHolder propertyHolder) {
+		if(propertyHolder instanceof ComponentPropertyHolder) {
+			ComponentPropertyHolder componentPropertyHolder = (ComponentPropertyHolder) propertyHolder;
+			return componentPropertyHolder.isWithinElementCollection();
+		}
+		return false;
 	}
 
 	private static void setVersionInformation(XProperty property, PropertyBinder propertyBinder) {
@@ -2586,10 +2622,15 @@ public final class AnnotationBinder {
 			baseClassElements = new ArrayList<PropertyData>();
 			baseReturnedClassOrElement = baseInferredData.getClassOrElement();
 			bindTypeDefs( baseReturnedClassOrElement, buildingContext );
-			PropertyContainer propContainer = new PropertyContainer( baseReturnedClassOrElement, xClassProcessed, propertyAccessor );
-			addElementsOfClass( baseClassElements,  propContainer, buildingContext );
-			for ( PropertyData element : baseClassElements ) {
-				orderedBaseClassElements.put( element.getPropertyName(), element );
+			// iterate from base returned class up hierarchy to handle cases where the @Id attributes
+			// might be spread across the subclasses and super classes.
+			while ( !Object.class.getName().equals( baseReturnedClassOrElement.getName() ) ) {
+				PropertyContainer propContainer = new PropertyContainer( baseReturnedClassOrElement, xClassProcessed, propertyAccessor );
+				addElementsOfClass( baseClassElements,  propContainer, buildingContext );
+				for ( PropertyData element : baseClassElements ) {
+					orderedBaseClassElements.put( element.getPropertyName(), element );
+				}
+				baseReturnedClassOrElement = baseReturnedClassOrElement.getSuperclass();
 			}
 		}
 
@@ -2885,6 +2926,7 @@ public final class AnnotationBinder {
 		}
 		
 		final JoinColumn joinColumn = property.getAnnotation( JoinColumn.class );
+		final JoinColumns joinColumns = property.getAnnotation( JoinColumns.class );
 
 		//Make sure that JPA1 key-many-to-one columns are read only tooj
 		boolean hasSpecjManyToOne=false;
@@ -2900,7 +2942,7 @@ public final class AnnotationBinder {
 						&& ! BinderHelper.isEmptyAnnotationValue( joinColumn.name() )
 						&& joinColumn.name().equals( columnName )
 						&& !property.isAnnotationPresent( MapsId.class ) ) {
-				   hasSpecjManyToOne = true;
+					hasSpecjManyToOne = true;
 					for ( Ejb3JoinColumn column : columns ) {
 						column.setInsertable( false );
 						column.setUpdatable( false );
@@ -2913,8 +2955,8 @@ public final class AnnotationBinder {
 		final String propertyName = inferredData.getPropertyName();
 		value.setTypeUsingReflection( propertyHolder.getClassName(), propertyName );
 
-		if ( joinColumn != null
-				&& joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) {
+		if ( ( joinColumn != null && joinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT )
+				|| ( joinColumns != null && joinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT ) ) {
 			// not ideal...
 			value.setForeignKeyName( "none" );
 		}
@@ -2923,8 +2965,25 @@ public final class AnnotationBinder {
 			if ( fk != null && StringHelper.isNotEmpty( fk.name() ) ) {
 				value.setForeignKeyName( fk.name() );
 			}
-			else if ( joinColumn != null ) {
-				value.setForeignKeyName( StringHelper.nullIfEmpty( joinColumn.foreignKey().name() ) );
+			else {
+				final javax.persistence.ForeignKey fkOverride = propertyHolder.getOverriddenForeignKey(
+						StringHelper.qualify( propertyHolder.getPath(), propertyName )
+				);
+				if ( fkOverride != null && fkOverride.value() == ConstraintMode.NO_CONSTRAINT ) {
+					value.setForeignKeyName( "none" );
+				}
+				else if ( fkOverride != null ) {
+					value.setForeignKeyName( StringHelper.nullIfEmpty( fkOverride.name() ) );
+					value.setForeignKeyDefinition( StringHelper.nullIfEmpty( fkOverride.foreignKeyDefinition() ) );
+				}
+				else if ( joinColumns != null ) {
+					value.setForeignKeyName( StringHelper.nullIfEmpty( joinColumns.foreignKey().name() ) );
+					value.setForeignKeyDefinition( StringHelper.nullIfEmpty( joinColumns.foreignKey().foreignKeyDefinition() ) );
+				}
+				else if ( joinColumn != null ) {
+					value.setForeignKeyName( StringHelper.nullIfEmpty( joinColumn.foreignKey().name() ) );
+					value.setForeignKeyDefinition( StringHelper.nullIfEmpty( joinColumn.foreignKey().foreignKeyDefinition() ) );
+				}
 			}
 		}
 

@@ -19,4 +19,6 @@ public class Channel {
 	@Id
 	@GeneratedValue
 	public Integer id;
+
+	public String name;
 }

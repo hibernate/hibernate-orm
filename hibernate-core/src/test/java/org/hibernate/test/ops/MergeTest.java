@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.ops;
 
+import javax.persistence.PersistenceException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -19,6 +20,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
@@ -55,8 +57,9 @@ public class MergeTest extends AbstractOperationTestCase {
 			s.getTransaction().commit();
 			fail( "was expecting staleness error" );
 		}
-		catch ( StaleObjectStateException expected ) {
-			// expected outcome...
+		catch (PersistenceException e){
+			// expected
+			assertTyping( StaleObjectStateException.class, e.getCause());
 		}
 		finally {
 			s.getTransaction().rollback();

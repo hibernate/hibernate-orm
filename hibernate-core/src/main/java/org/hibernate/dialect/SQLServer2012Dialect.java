@@ -8,6 +8,8 @@ package org.hibernate.dialect;
 
 import java.util.List;
 
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -78,5 +80,15 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 		sql = buffer.toString();
 
 		return sql;
+	}
+
+	@Override
+	public boolean supportsLimitOffset() {
+		return true;
+	}
+
+	@Override
+	protected LimitHandler getDefaultLimitHandler() {
+		return new SQLServer2012LimitHandler();
 	}
 }

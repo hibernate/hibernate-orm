@@ -20,7 +20,7 @@ import org.hibernate.Session;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
-import org.hibernate.dialect.MySQL57InnoDBDialect;
+import org.hibernate.dialect.MySQL57Dialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gail Badner
  */
-@RequiresDialect(value = MySQL57InnoDBDialect.class)
+@RequiresDialect(value = MySQL57Dialect.class)
 @TestForIssue( jiraKey = "HHH-8401")
 public class MySQL57TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 	private final DateFormat timestampFormat = new SimpleDateFormat("HH:mm:ss.SSS");

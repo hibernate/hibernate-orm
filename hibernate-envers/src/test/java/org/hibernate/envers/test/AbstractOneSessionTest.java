@@ -86,7 +86,7 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest {
 
 	/**
 	 * Creates a new session and auditReader only if there is nothing created
-	 * before
+	 * beforeQuery
 	 */
 	@Before
 	public void initializeSession() {

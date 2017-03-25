@@ -16,11 +16,12 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 
 import org.hibernate.Session;
+import org.hibernate.engine.jdbc.ClobProxy;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 
-import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -49,8 +50,7 @@ public class ClobTest extends BaseEntityManagerFunctionalTestCase {
 			product.setName( "Mobile phone" );
 
 			session.doWork( connection -> {
-				product.setWarranty( connection.createClob() );
-				product.getWarranty().setString( 1, warranty );
+				product.setWarranty( ClobProxy.generateProxy( warranty ) );
 			} );
 
 			entityManager.persist( product );

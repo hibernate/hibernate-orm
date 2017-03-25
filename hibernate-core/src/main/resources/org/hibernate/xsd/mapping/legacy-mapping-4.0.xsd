@@ -497,6 +497,7 @@
                 </xs:sequence>
                 <xs:attributeGroup ref="table-information-group"/>
                 <xs:attribute name="check" type="xs:string"/>
+                <xs:attribute name="discriminator-value" type="xs:string" />
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
@@ -986,6 +987,7 @@
                 <xs:attribute name="node" type="xs:string"/>
                 <xs:attribute name="outer-join" type="OuterJoinEnum"/>
                 <xs:attribute name="property-ref" type="xs:string"/>
+                <xs:attribute name="on-delete" default="noaction" type="OnDeleteEnum"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
@@ -1021,6 +1023,7 @@
                 <xs:attribute name="unique" default="false" type="xs:boolean"/>
                 <xs:attribute name="unique-key" type="xs:string"/>
                 <xs:attribute name="update" default="true" type="xs:boolean"/>
+                <xs:attribute name="on-delete" default="noaction" type="OnDeleteEnum"/>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>

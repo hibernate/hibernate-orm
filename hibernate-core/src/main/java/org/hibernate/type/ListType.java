@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.collection.internal.PersistentList;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 public class ListType extends CollectionType {
@@ -21,22 +21,27 @@ public class ListType extends CollectionType {
 		super( typeScope, role, propertyRef );
 	}
 
-	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key) {
-		return new PersistentList(session);
+	@Override
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
+		return new PersistentList( session );
 	}
 
+	@Override
 	public Class getReturnedClass() {
 		return List.class;
 	}
 
-	public PersistentCollection wrap(SessionImplementor session, Object collection) {
+	@Override
+	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
 		return new PersistentList( session, (List) collection );
 	}
 
+	@Override
 	public Object instantiate(int anticipatedSize) {
 		return anticipatedSize <= 0 ? new ArrayList() : new ArrayList( anticipatedSize + 1 );
 	}
-	
+
+	@Override
 	public Object indexOf(Object collection, Object element) {
 		List list = (List) collection;
 		for ( int i=0; i<list.size(); i++ ) {

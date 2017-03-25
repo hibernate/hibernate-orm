@@ -1,6 +1,7 @@
 [[fetching]]
 == Fetching
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/fetching
+:extrasdir: extras
 
 Fetching, essentially, is the process of grabbing data from the database and making it available to the application.
 Tuning how an application does fetching is one of the biggest factors in determining how an application will perform.
@@ -44,6 +45,67 @@ _dynamic_ (sometimes referred to as runtime)::
     HQL/JPQL::: and both Hibernate and JPA Criteria queries have the ability to specify fetching, specific to said query.
     entity graphs::: Starting in Hibernate 4.2 (JPA 2.1) this is also an option.
 
+[[fetching-direct-vs-query]]
+=== Direct fetching vs entity queries
+
+To see the difference between direct fetching and entity queries in regard to eagerly fetched associations, consider the following entities:
+
+[[fetching-direct-vs-query-domain-model-example]]
+.Domain model
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-domain-model-example]
+----
+====
+
+The `Employee` entity has a `@ManyToOne` association to a `Department` which is fetched eagerly.
+
+When issuing a direct entity fetch, Hibernate executed the following SQL query:
+
+[[fetching-direct-vs-query-direct-fetching-example]]
+.Direct fetching example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-direct-fetching-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/fetching-direct-vs-query-direct-fetching-example.sql[]
+----
+====
+
+The `LEFT JOIN` clause is added to the generated SQL query because this association is required to be fetched eagerly.
+
+On the other hand, if you are using an entity query that does not contain a `JOIN FETCH` directive to the `Department` association:
+
+[[fetching-direct-vs-query-entity-query-example]]
+.Entity query fetching example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-entity-query-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/fetching-direct-vs-query-entity-query-example.sql[]
+----
+====
+
+Hibernate uses a secondary select instead. This is because the entity query fetch policy cannot be overridden,
+so Hibernate requires a secondary select to ensure that the EAGER association is fetched prior to returning the result to the user.
+
+[IMPORTANT]
+====
+If you forget to JOIN FETCH all EAGER associations, Hibernate is going to issue a secondary select for each and every one of those
+which, in turn, can lean to N+1 query issues.
+
+For this reason, you should prefer LAZY associations.
+====
+
 [[fetching-strategies]]
 === Applying fetch strategies
 
@@ -81,7 +143,7 @@ include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-no-fetching-exam
 ====
 
 In this example, the application gets the `Employee` data.
-However, because all associations from `Employee `are declared as LAZY (JPA defines the default for collections as LAZY) no other data is fetched.
+However, because all associations from `Employee` are declared as LAZY (JPA defines the default for collections as LAZY) no other data is fetched.
 
 If the login process does not need access to the `Employee` information specifically, another fetching optimization here would be to limit the width of the query results.
 
@@ -98,7 +160,7 @@ include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-no-fetching-scal
 === Dynamic fetching via queries
 
 For the second use case, consider a screen displaying the `Projects` for an `Employee`.
-Certainly access to the `Employee `is needed, as is the collection of `Projects` for that Employee. Information about `Departments`, other `Employees` or other `Projects` is not needed.
+Certainly access to the `Employee` is needed, as is the collection of `Projects` for that Employee. Information about `Departments`, other `Employees` or other `Projects` is not needed.
 
 [[fetching-strategies-dynamic-fetching-jpql-example]]
 .Dynamic JPQL fetching example
@@ -118,7 +180,7 @@ include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching
 ----
 ====
 
-In this example we have an `Employee `and their `Projects` loaded in a single query shown both as an HQL query and a JPA Criteria query.
+In this example we have an `Employee` and their `Projects` loaded in a single query shown both as an HQL query and a JPA Criteria query.
 In both cases, this resolves to exactly one database query to get all that information.
 
 [[fetching-strategies-dynamic-fetching-entity-graph]]
@@ -167,6 +229,256 @@ include::{sourcedir}/ProfileFetchingTest.java[tags=fetching-strategies-dynamic-f
 ----
 ====
 
-Here the `Employee `is obtained by natural-id lookup and the Employee's `Project` data is fetched eagerly.
-If the `Employee `data is resolved from cache, the `Project` data is resolved on its own.
-However, if the `Employee` data is not resolved in cache, the `Employee `and `Project` data is resolved in one SQL query via join as we saw above.
+Here the `Employee` is obtained by natural-id lookup and the Employee's `Project` data is fetched eagerly.
+If the `Employee` data is resolved from cache, the `Project` data is resolved on its own.
+However, if the `Employee` data is not resolved in cache, the `Employee` and `Project` data is resolved in one SQL query via join as we saw above.
+
+[[fetching-batch]]
+=== Batch fetching
+
+Hibernate offers the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/BatchSize.html[`@BatchSize`] annotation,
+which can be used when fetching uninitialized entity proxies.
+
+Considering the following entity mapping:
+
+[[fetching-batch-mapping-example]]
+.`@BatchSize` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/BatchFetchingTest.java[tags=fetching-batch-mapping-example]
+----
+====
+
+Considering that we have previously fetched several `Department` entities,
+and now we need to initialize the `employees` entity collection for each particular `Department`,
+the `@BatchSize` annotations allows us to load multiple `Employee` entities in a single database roundtrip.
+
+[[fetching-batch-fetching-example]]
+.`@BatchSize` fetching example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/BatchFetchingTest.java[tags=fetching-batch-fetching-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/fetching-batch-fetching-example.sql[]
+----
+====
+
+As you can see in the example above, there are only two SQL statements used to fetch the `Employee` entities associated to multiple `Department` entities.
+
+[TIP]
+====
+Without `@BatchSize`, you'd run into a N+1 query issue, so,
+instead of 2 SQL statements, there would be 10 queries needed for fetching the `Employee` child entities.
+
+However, although `@BatchSize` is better than running into an N+1 query issue,
+most of the time, a DTO projection or a `JOIN FETCH` is a much better alternative since
+it allows you to fetch all the required data with a single query.
+====
+
+[[fetching-fetch-annotation]]
+=== The `@Fetch` annotation mapping
+
+Besides the `FetchType.LAZY` or `FetchType.EAGER` JPA annotations,
+you can also use the Hibernate-specific `@Fetch` annotation that accepts one of the following `FetchMode`s:
+
+SELECT::
+	Use a secondary select for each individual entity, collection, or join load.
+JOIN::
+	Use an outer join to load the related entities, collections or joins.
+SUBSELECT::
+	Available for collections only.  
+	When accessing a non-initialized collection, this fetch mode will trigger loading all elements of all collections of the same role
+	for all owners associated with the persistence context using a single secondary select.
+
+[[fetching-fetchmode-select]]
+=== `FetchMode.SELECT`
+
+To demonstrate how `FetchMode.SELECT` works, consider the following entity mapping:
+
+[[fetching-strategies-fetch-mode-select-mapping-example]]
+.`FetchMode.SELECT` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FetchModeSelectTest.java[tags=fetching-strategies-fetch-mode-select-mapping-example]
+----
+====
+
+Considering there are multiple `Department` entities, each one having multiple `Employee` entities,
+when executing the following test case, Hibernate fetches every uninitialized `Employee`
+collection using a secondary `SELECT` statement upon accessing the child collection for the first time:
+
+[[fetching-strategies-fetch-mode-select-example]]
+.`FetchMode.SELECT` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FetchModeSelectTest.java[tags=fetching-strategies-fetch-mode-select-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/fetching-strategies-fetch-mode-select-example.sql[]
+----
+====
+
+The more `Department` entities are fetched by the first query, the more secondary `SELECT` statements are executed to initialize the `employees` collections.
+Therefore, `FetchMode.SELECT` can lead to N+1 query issues.
+
+[[fetching-fetchmode-subselect]]
+=== `FetchMode.SUBSELECT`
+
+To demonstrate how `FetchMode.SUBSELECT` works, we are going to modify the <<fetching-strategies-fetch-mode-select-mapping-example>> to use
+`FetchMode.SUBSELECT`:
+
+[[fetching-strategies-fetch-mode-subselect-mapping-example]]
+.`FetchMode.SUBSELECT` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-mode-subselect-mapping-example]
+----
+====
+
+Now, we are going to fetch all `Department` entities that match a given filtering criteria
+and then navigate their `employees` collections.
+
+Hibernate is going to avoid the N+1 query issue by generating a single SQL statement to initialize all `employees` collections
+for all `Department` entities that were previously fetched.
+Instead of using passing all entity identifiers, Hibernate simply reruns the previous query that fetched the `Department` entities.
+
+[[fetching-strategies-fetch-mode-subselect-example]]
+.`FetchMode.SUBSELECT` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-mode-subselect-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/fetching-strategies-fetch-mode-subselect-example.sql[]
+----
+====
+
+[[fetching-fetchmode-join]]
+=== `FetchMode.JOIN`
+
+To demonstrate how `FetchMode.JOIN` works, we are going to modify the <<fetching-strategies-fetch-mode-select-mapping-example>> to use
+`FetchMode.JOIN` instead:
+
+[[fetching-strategies-fetch-mode-join-mapping-example]]
+.`FetchMode.JOIN` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FetchModeJoinTest.java[tags=fetching-strategies-fetch-mode-join-mapping-example]
+----
+====
+
+Now, we are going to fetch one `Department` and navigate its `employees` collections.
+
+[NOTE]
+====
+The reason why we are not using a JPQL query to fetch multiple `Department` entities is because
+the `FetchMode.JOIN` strategy would be overridden by the query fetching directive.
+
+To fetch multiple relationships with a JPQL query, the `JOIN FETCH` directive must be used instead.
+
+Therefore, `FetchMode.JOIN` is useful for when entities are fetched directly, via their identifier or natural-id.
+
+Also, the `FetchMode.JOIN` acts as a `FetchType.EAGER` strategy.
+Even if we mark the association as `FetchType.LAZY`, the `FetchMode.JOIN` will load the association eagerly.
+====
+
+Hibernate is going to avoid the secondary query by issuing an OUTER JOIN for the `employees` collection.
+
+[[fetching-strategies-fetch-mode-join-example]]
+.`FetchMode.JOIN` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/FetchModeJoinTest.java[tags=fetching-strategies-fetch-mode-join-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/fetching-strategies-fetch-mode-join-example.sql[]
+----
+====
+
+This time, there was no secondary query because the child collection was loaded along with the parent entity.
+
+[[fetching-LazyCollection]]
+=== `@LazyCollection`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollection.html[`@LazyCollection`] annotation is used to specify the lazy fetching behavior of a given collection.
+The possible values are given by the `https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollectionOption.html[LazyCollectionOption]` enumeration:
+
+`TRUE`:: Load it when the state is requested.
+`FALSE`:: Eagerly load it.
+`EXTRA`:: Prefer extra queries over full collection loading.
+
+The `TRUE` and `FALSE` values are deprecated since you should be using the JPA http://docs.oracle.com/javaee/7/api/javax/persistence/FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
+
+The `EXTRA` value has no equivalent in the JPA specification, and it's used to avoid loading the entire collection even when the collection is accessed for the first time.
+Each element is fetched individually using a secondary query.
+
+[[fetching-LazyCollection-domain-model-example]]
+.`LazyCollectionOption.EXTRA` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/LazyCollectionTest.java[tags=fetching-LazyCollection-domain-model-example]
+----
+====
+
+[NOTE]
+====
+`LazyCollectionOption.EXTRA` only works for ordered collections,
+either List(s) that are annotated with @OrderColumn or Map(s).
+
+For bags (e.g. regular List(s) of entities that do not preserve any certain ordering),
+the @LazyCollection(LazyCollectionOption.EXTRA)` behaves like any other `FetchType.LAZY` collection
+(the collection is fetched entirely upon being accessed for the first time).
+====
+
+Now, considering we have the following entities:
+
+[[fetching-LazyCollection-persist-example]]
+.`LazyCollectionOption.EXTRA` Domain Model example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/LazyCollectionTest.java[tags=fetching-LazyCollection-persist-example]
+----
+====
+
+When fetching the `employee` collection entries by their position in the `List`,
+Hibernate generates the following SQL statements:
+
+[[fetching-LazyCollection-select-example]]
+.`LazyCollectionOption.EXTRA` fetching example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/LazyCollectionTest.java[tags=fetching-LazyCollection-select-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/fetching-LazyCollection-select-example.sql[]
+----
+====
+
+[WARNING]
+====
+Therefore, the child entities were fetched one after the other without triggering a full collection initialization.
+
+For this reason, caution is advised because `LazyCollectionOption.EXTRA` lazy collections are prone to N+1 query issues.
+====

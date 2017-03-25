@@ -77,6 +77,28 @@ public class RDMSOS2200Dialect extends Dialect {
 		}
 	};
 
+	private static final AbstractLimitHandler LEGACY_LIMIT_HANDLER = new AbstractLimitHandler() {
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			return sql + " fetch first " + getMaxOrLimit( selection ) + " rows only ";
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean supportsLimitOffset() {
+			return false;
+		}
+
+		@Override
+		public boolean supportsVariableLimit() {
+			return false;
+		}
+	};
+
 	/**
 	 * Constructs a RDMSOS2200Dialect
 	 */
@@ -343,6 +365,9 @@ public class RDMSOS2200Dialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
+		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
+			return LEGACY_LIMIT_HANDLER;
+		}
 		return LIMIT_HANDLER;
 	}
 

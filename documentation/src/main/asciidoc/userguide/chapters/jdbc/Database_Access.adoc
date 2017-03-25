@@ -184,6 +184,8 @@ If for some reason it is not able to determine the proper one or you want to use
 |MySQL5 |Support for the MySQL database, version 5.x
 |MySQL5InnoDB |Support for the MySQL database, version 5.x preferring the InnoDB storage engine when exporting tables.
 |MySQL57InnoDB |Support for the MySQL database, version 5.7 preferring the InnoDB storage engine when exporting tables. May work with newer versions
+|MariaDB |Support for the MariadB database. May work with newer versions
+|MariaDB53 |Support for the MariadB database, version 5.3 and newer.
 |Oracle8i |Support for the Oracle database, version 8i
 |Oracle9i |Support for the Oracle database, version 9i
 |Oracle10g |Support for the Oracle database, version 10g

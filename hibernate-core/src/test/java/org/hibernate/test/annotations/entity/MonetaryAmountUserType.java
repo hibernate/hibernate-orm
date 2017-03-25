@@ -16,7 +16,7 @@ import java.sql.SQLException;
 import java.util.Currency;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
@@ -67,7 +67,7 @@ public class MonetaryAmountUserType implements CompositeUserType {
 		return ( (MonetaryAmount) x ).getAmount().hashCode();
 	}
 
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException {
 		BigDecimal amt = StandardBasicTypes.BIG_DECIMAL.nullSafeGet( rs, names[0], session);
 		Currency cur = StandardBasicTypes.CURRENCY.nullSafeGet( rs, names[1], session );
@@ -77,7 +77,7 @@ public class MonetaryAmountUserType implements CompositeUserType {
 
 	public void nullSafeSet(
 			PreparedStatement st, Object value, int index,
-			SessionImplementor session
+			SharedSessionContractImplementor session
 	) throws HibernateException, SQLException {
 		MonetaryAmount ma = (MonetaryAmount) value;
 		BigDecimal amt = ma == null ? null : ma.getAmount();
@@ -95,17 +95,17 @@ public class MonetaryAmountUserType implements CompositeUserType {
 		return true;
 	}
 
-	public Serializable disassemble(Object value, SessionImplementor session)
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return (Serializable) deepCopy( value );
 	}
 
-	public Object assemble(Serializable cached, SessionImplementor session, Object owner)
+	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 		return deepCopy( cached );
 	}
 
-	public Object replace(Object original, Object target, SessionImplementor session, Object owner)
+	public Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 		return deepCopy( original ); //TODO: improve
 	}

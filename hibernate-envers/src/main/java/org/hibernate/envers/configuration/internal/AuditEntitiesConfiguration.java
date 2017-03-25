@@ -20,6 +20,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Stephanie Pau at Markit Group Plc
+ * @author Chris Cranford
  */
 public class  AuditEntitiesConfiguration {
 	private final String auditTablePrefix;
@@ -45,11 +46,14 @@ public class  AuditEntitiesConfiguration {
 	private final String revisionEndTimestampFieldName;
 
 	private final String embeddableSetOrdinalPropertyName;
+	private final EnversService enversService;
 
 	public AuditEntitiesConfiguration(
 			Properties properties,
-			String revisionInfoEntityName) {
+			String revisionInfoEntityName,
+			EnversService enversService) {
 		this.revisionInfoEntityName = revisionInfoEntityName;
+		this.enversService = enversService;
 
 		auditTablePrefix = ConfigurationHelper.getString( EnversSettings.AUDIT_TABLE_PREFIX, properties, "" );
 		auditTableSuffix = ConfigurationHelper.getString( EnversSettings.AUDIT_TABLE_SUFFIX, properties, "_AUD" );
@@ -84,7 +88,7 @@ public class  AuditEntitiesConfiguration {
 			revisionEndTimestampFieldName = null;
 		}
 
-		customAuditTablesNames = new HashMap<String, String>();
+		customAuditTablesNames = new HashMap<>();
 
 		revisionNumberPath = originalIdPropName + "." + revisionFieldName + ".id";
 		revisionPropBasePath = originalIdPropName + "." + revisionFieldName + ".";
@@ -162,5 +166,14 @@ public class  AuditEntitiesConfiguration {
 
 	public String getEmbeddableSetOrdinalPropertyName() {
 		return embeddableSetOrdinalPropertyName;
+	}
+
+	/**
+	 * @deprecated (since 5.2.1), while actually added in 5.2.1, this was added to cleanup the
+	 * audit strategy interface temporarily.
+	 */
+	@Deprecated
+	public EnversService getEnversService() {
+		return enversService;
 	}
 }

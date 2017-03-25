@@ -11,9 +11,12 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
 
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -29,6 +32,15 @@ public class CompositeIdAndNaturalIdTest extends BaseCoreFunctionalTestCase {
         cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
         cfg.setProperty( Environment.USE_QUERY_CACHE, "false" );
         cfg.setProperty( Environment.GENERATE_STATISTICS, "false" );
+    }
+
+    @Test
+    @TestForIssue( jiraKey = "HHH-10360")
+    public void testNaturalIdNullability() {
+        final EntityPersister persister = sessionFactory().getEntityPersister( Account.class.getName() );
+        final int propertyIndex = persister.getEntityMetamodel().getPropertyIndex( "shortCode" );
+        // the natural ID mapped as non-nullable
+        assertFalse( persister.getPropertyNullability()[propertyIndex] );
     }
 
     @Test

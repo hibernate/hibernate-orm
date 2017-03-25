@@ -12,7 +12,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Tracks non-nullable transient entities that would cause a particular entity insert to fail.
@@ -26,11 +26,11 @@ public final class NonNullableTransientDependencies {
 
 	void add(String propertyName, Object transientEntity) {
 		if ( propertyPathsByTransientEntity == null ) {
-			propertyPathsByTransientEntity = new IdentityHashMap<Object, Set<String>>();
+			propertyPathsByTransientEntity = new IdentityHashMap<>();
 		}
 		Set<String> propertyPaths = propertyPathsByTransientEntity.get( transientEntity );
 		if ( propertyPaths == null ) {
-			propertyPaths = new HashSet<String>();
+			propertyPaths = new HashSet<>();
 			propertyPathsByTransientEntity.put( transientEntity, propertyPaths );
 		}
 		propertyPaths.add( propertyName );
@@ -90,7 +90,7 @@ public final class NonNullableTransientDependencies {
 	 *
 	 * @return The loggable representation
 	 */
-	public String toLoggableString(SessionImplementor session) {
+	public String toLoggableString(SharedSessionContractImplementor session) {
 		final StringBuilder sb = new StringBuilder( getClass().getSimpleName() ).append( '[' );
 		if ( propertyPathsByTransientEntity != null ) {
 			for ( Map.Entry<Object,Set<String>> entry : propertyPathsByTransientEntity.entrySet() ) {

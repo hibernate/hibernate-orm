@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-
 /**
  * Marker interface for basic types.
  *
@@ -18,5 +17,5 @@ public interface BasicType extends Type {
 	 *
 	 * @return The keys under which to register this type.
 	 */
-	public String[] getRegistrationKeys();
+	String[] getRegistrationKeys();
 }

@@ -279,7 +279,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		Transaction tx1 = TestingJtaPlatformImpl.INSTANCE.getTransactionManager().suspend();
 
 		// open a new TX and run query again
-		// this TX is committed after query
+		// this TX is committed afterQuery query
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s2 = openSession();
 		List r2 = s2.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
@@ -519,6 +519,10 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		s = sessionFactory().getCurrentSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+	}
+
+	protected boolean rebuildSessionFactoryOnError() {
+		return false;
 	}
 
 }

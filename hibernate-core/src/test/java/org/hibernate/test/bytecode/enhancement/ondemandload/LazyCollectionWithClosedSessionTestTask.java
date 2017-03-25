@@ -31,41 +31,56 @@ public class LazyCollectionWithClosedSessionTestTask extends AbstractEnhancerTes
 		super.prepare( cfg );
 
 
-		Session s = getFactory().openSession();
-		s.beginTransaction();
+		try(Session s = getFactory().openSession()) {
+			s.beginTransaction();
+			try {
+				Store store = new Store( 1 ).setName( "Acme Super Outlet" );
+				s.persist( store );
 
-		Store store = new Store( 1 ).setName( "Acme Super Outlet" );
-		s.persist( store );
+				Product product = new Product( "007" ).setName( "widget" ).setDescription( "FooBar" );
+				s.persist( product );
 
-		Product product = new Product( "007" ).setName( "widget" ).setDescription( "FooBar" );
-		s.persist( product );
+				store.addInventoryProduct( product ).setQuantity( 10L ).setStorePrice( new BigDecimal( 500 ) );
 
-		store.addInventoryProduct( product ).setQuantity( 10L ).setStorePrice( new BigDecimal( 500 ) );
-
-		s.getTransaction().commit();
-		s.close();
+				s.getTransaction().commit();
+			}
+			catch (Exception e) {
+				if ( s.getTransaction().isActive() ) {
+					s.getTransaction().rollback();
+				}
+				throw e;
+			}
+		}
 	}
 
 	public void cleanup() {
 	}
 
 	public void execute() {
+		Store store = null;
 		getFactory().getStatistics().clear();
 
-		Session s = getFactory().openSession();
-		s.beginTransaction();
+		try (Session s = getFactory().openSession()) {
+			s.beginTransaction();
+			try {
+				// first load the store, making sure collection is not initialized
+				store = s.get( Store.class, 1 );
+				assertNotNull( store );
+				assertFalse( Hibernate.isInitialized( store.getInventories() ) );
 
-		// first load the store, making sure collection is not initialized
-		Store store = s.get( Store.class, 1 );
-		assertNotNull( store );
-		assertFalse( Hibernate.isInitialized( store.getInventories() ) );
+				assertEquals( 1, getFactory().getStatistics().getSessionOpenCount() );
+				assertEquals( 0, getFactory().getStatistics().getSessionCloseCount() );
 
-		assertEquals( 1, getFactory().getStatistics().getSessionOpenCount() );
-		assertEquals( 0, getFactory().getStatistics().getSessionCloseCount() );
-
-		// close the session and try to initialize collection
-		s.getTransaction().commit();
-		s.close();
+				// close the session and try to initialize collection
+				s.getTransaction().commit();
+			}
+			catch (Exception e) {
+				if ( s.getTransaction().isActive() ) {
+					s.getTransaction().rollback();
+				}
+				throw e;
+			}
+		}
 
 		assertEquals( 1, getFactory().getStatistics().getSessionOpenCount() );
 		assertEquals( 1, getFactory().getStatistics().getSessionCloseCount() );

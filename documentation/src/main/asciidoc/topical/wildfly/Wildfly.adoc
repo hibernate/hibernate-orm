@@ -1,0 +1,186 @@
+= Using latest Hibernate ORM within WildFly
+
+== Hibernate ORM within WildFly
+
+The http://wildfly.org/[WildFly application server] includes Hibernate ORM as the default JPA provider out of the box.
+
+This means that you don't need to package Hibernate ORM with the applications you deploy on WildFly,
+instead the application server will automatically enable Hibernate support if it detects that your application is using JPA.
+
+You can also benefit from these modules when not using JPA or JavaEE, to avoid including Hibernate ORM and all its
+dependencies into your deployment.
+This will require activating the module explicitly using a `jboss-deployment-structure.xml` file or a Manifest entry:
+see https://docs.jboss.org/author/display/WFLY10/Class+Loading+in+WildFly[Class Loading in WildFly] for some examples.
+
+There may be times though where a newer version of Hibernate ORM is available than the one coming with a given WildFly release.
+For that case the Hibernate ORM project provides a ZIP file containing the required modules, so that each new version
+can also be included in WildFly. Such a module will not replace the existing Hibernate ORM module, but it will become an
+alternative option that your application can choose to use instead of the default version it includes.
+
+Our goal is to provide a module ZIP file targeted at the WildFly version current at the time of the Hibernate release (e.g. WildFly 10 for Hibernate 5.1.x and 5.2.x).
+
+== Where to download the modules from
+
+The module ZIP files can be downloaded from Maven Central, to facilitate automatic unpacking during your build.
+
+.Maven identifier for the WildFly modules zip file
+
+====
+[source, XML]
+[subs="verbatim,attributes"]
+----
+   <groupId>org.hibernate</groupId>
+   <artifactId>hibernate-orm-modules</artifactId>
+   <version>{fullVersion}</version>
+   <classifier>wildfly-10-dist</classifier>
+   <type>zip</type>
+----
+====
+
+Once downloaded, extract the contents of the ZIP file into the _modules_ directory of your WildFly installation.
+
+.Example Maven build step to prepare WildFly with custom Hibernate ORM modules for integration tests
+
+====
+[source, XML]
+[subs="verbatim,attributes"]
+----
+<plugin>
+<artifactId>maven-dependency-plugin</artifactId>
+<executions>
+    <execution>
+        <id>unpack</id>
+        <phase>pre-integration-test</phase>
+        <goals>
+            <goal>unpack</goal>
+        </goals>
+        <configuration>
+            <artifactItems>
+                <artifactItem>
+                    <groupId>org.wildfly</groupId>
+                    <artifactId>wildfly-dist</artifactId>
+                    <version>${wildflyVersion}</version>
+                    <type>zip</type>
+                    <overWrite>true</overWrite>
+                    <outputDirectory>
+                      ${project.build.directory}/wildfly-node1
+                    </outputDirectory>
+                </artifactItem>
+                <artifactItem>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-orm-modules</artifactId>
+                    <version>${hibernateVersion}</version>
+                    <classifier>wildfly-10-dist</classifier>
+                    <type>zip</type>
+                    <overWrite>true</overWrite>
+                    <outputDirectory>
+                      ${project.build.directory}/wildfly-node1/wildfly-${wildflyVersion}/modules
+                    </outputDirectory>
+                </artifactItem>
+            </artifactItems>
+        </configuration>
+    </execution>
+</executions>
+</plugin>
+----
+====
+
+== WildFly module identifiers: slots and conventions
+
+Note that the Hibernate ORM modules coming with WildFly will remain untouched: you can switch between the original version and the new version from the ZIP file as needed as a matter of configuration. Different applications can use different versions.
+
+The application server identifies modules using a name and a _slot_.
+By default, the module _org.hibernate:main_ will be used to provide JPA support for given deployments: _main_ is the default slot and represents the copy of Hibernate ORM coming with WildFly itself.
+
+By convention all modules included with WildFly use the "main" slot, while the modules released by the Hibernate project
+will use a slot name which matches the version, and also provide an alias to match its "major.minor" version.
+
+Our suggestion is to depend on the module using the "major.minor" representation, as this simplifies rolling out bugfix
+releases (micro version updates) of Hibernate ORM without changing application configuration (micro versions are always expected to be backwards compatible and released as bugfix only).
+
+For example if your application wants to use the latest version of Hibernate ORM version {majorMinorVersion}.x it should declare to use the module _org.hibernate:{majorMinorVersion}_. You can of course decide to use the full version instead for more precise control, in case an application requires a very specific version.
+
+== Switch to a different Hibernate ORM slot
+
+In order to use a different module other than the default _org.hibernate:main_ specify the identifier of the module you wish to use via the `jboss.as.jpa.providerModule` property in the _persistence.xml_ file of your application, as in the following example.
+
+[[wildfly-using-custom-hibernate-orm-version]]
+.Using an alternative module slot of Hibernate ORM
+====
+[source, XML]
+[subs="verbatim,attributes"]
+----
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+    http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
+    version="2.1" >
+
+    <persistence-unit name="examplePu">
+
+        <!-- ... -->
+
+        <properties>
+            <property name="jboss.as.jpa.providerModule" value="org.hibernate:{majorMinorVersion}"/>
+        </properties>
+
+        <!-- ... -->
+
+    </persistence-unit>
+</persistence>
+----
+====
+
+Needless to say, this will affect the classpath of your application: if your single application declares multiple
+persistence units, they should all make a consistent choice!
+
+This property is documented in the https://docs.jboss.org/author/display/WFLY10/JPA+Reference+Guide[WildFly JPA Reference Guide];
+you might want to check it out as it lists several other useful properties.
+
+== Avoiding outdated Javassist versions from WildFly
+
+Since Hibernate ORM version 5.2, it requires a more recent version of Javassist than the one provided by WildFly 10.
+Unfortunately the JPA subsystem of WildFly will expose its Javassist version to any JPA application even if you override
+the module using the above mentioned `jboss.as.jpa.providerModule` property.
+
+To avoid this problem use a `jboss-deployment-structure.xml` to explicitly demand to not get the WildFly copy of
+javassist. This will allow Hibernate ORM to use the Javassist version provided by its own module, which will contain
+the recommended versions.
+
+.WildFly configuration file to avoid the wrong Javassist version
+
+====
+[source, XML]
+[subs="verbatim,attributes"]
+----
+
+<jboss-deployment-structure xmlns="urn:jboss:deployment-structure:1.1">
+    <deployment>
+        <exclusions>
+            <module name="org.javassist" />
+        </exclusions>
+    </deployment>
+</jboss-deployment-structure>
+
+----
+====
+
+This file needs to be included in your deployment, in the top level archive.
+The exact position depends on the deployment kind: for example when deploying a `WAR` file, include it in `WEB-INF`;
+other common deployment archives will expect this resource to be found in `META-INF`.
+
+See https://docs.jboss.org/author/display/WFLY10/Class+Loading+in+WildFly[Class Loading in WildFly] for more details
+about using a custom `jboss-deployment-structure.xml`.
+
+== Limitations of using the custom WildFly modules
+
+When using these modules you're going to give up on some of the integration which the application server
+normally automates.
+
+For example enabling an Infinispan 2nd level cache is straight forward when using the default Hibernate ORM
+module, as WildFly will automatically setup the dependency to the Infinispan and clustering components.
+When using these custom modules such integration will no longer work automatically: you can still
+enable all normally available features but these will require manual configuration, as if you were
+running Hibernate in a different container, or in no container.
+
+

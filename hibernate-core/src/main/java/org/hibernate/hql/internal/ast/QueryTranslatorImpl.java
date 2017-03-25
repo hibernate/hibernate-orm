@@ -18,13 +18,11 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.ScrollableResults;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
@@ -52,6 +50,7 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -233,6 +232,11 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			LOG.trace( "Converted antlr.ANTLRException", e );
 			throw new QueryException( e.getMessage(), hql );
 		}
+		catch ( IllegalArgumentException e ) {
+			// translate this into QueryException
+			LOG.trace( "Converted IllegalArgumentException", e );
+			throw new QueryException( e.getMessage(), hql );
+		}
 
 		//only needed during compilation phase...
 		this.enabledFilters = null;
@@ -347,14 +351,18 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	}
 
 	@Override
-	public List list(SessionImplementor session, QueryParameters queryParameters)
+	public List list(SharedSessionContractImplementor session, QueryParameters queryParameters)
 			throws HibernateException {
 		// Delegate to the QueryLoader...
 		errorIfDML();
 
 		final QueryNode query = (QueryNode) sqlAst;
 		final boolean hasLimit = queryParameters.getRowSelection() != null && queryParameters.getRowSelection().definesLimits();
-		final boolean needsDistincting = ( query.getSelectClause().isDistinct() || hasLimit ) && containsCollectionFetches();
+		final boolean needsDistincting = (
+				query.getSelectClause().isDistinct() ||
+				getEntityGraphQueryHint() != null ||
+				hasLimit )
+		&& containsCollectionFetches();
 
 		QueryParameters queryParametersToUse;
 		if ( hasLimit && containsCollectionFetches() ) {
@@ -416,14 +424,14 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	 * Return the query results, as an instance of <tt>ScrollableResults</tt>
 	 */
 	@Override
-	public ScrollableResults scroll(QueryParameters queryParameters, SessionImplementor session)
+	public ScrollableResultsImplementor scroll(QueryParameters queryParameters, SharedSessionContractImplementor session)
 			throws HibernateException {
 		// Delegate to the QueryLoader...
 		errorIfDML();
 		return queryLoader.scroll( queryParameters, session );
 	}
 	@Override
-	public int executeUpdate(QueryParameters queryParameters, SessionImplementor session)
+	public int executeUpdate(QueryParameters queryParameters, SharedSessionContractImplementor session)
 			throws HibernateException {
 		errorIfSelect();
 		return statementExecutor.execute( queryParameters, session );
@@ -518,7 +526,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 
 		// This is not strictly true.  We actually just need to make sure that
-		// it is ordered by root-entity PK and that that order-by comes before
+		// it is ordered by root-entity PK and that that order-by comes beforeQuery
 		// any non-root-entity ordering...
 
 		AST primaryOrdering = query.getOrderByClause().getFirstChild();
@@ -590,7 +598,6 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		private AST dotRoot;
 
 		public JavaConstantConverter(SessionFactoryImplementor factory) {
-
 			this.factory = factory;
 		}
 
@@ -612,7 +619,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 		private void handleDotStructure(AST dotStructureRoot) {
 			final String expression = ASTUtil.getPathText( dotStructureRoot );
-			final Object constant = ReflectHelper.getConstantValue( expression, factory.getServiceRegistry().getService( ClassLoaderService.class ) );
+			final Object constant = ReflectHelper.getConstantValue( expression, factory );
 			if ( constant != null ) {
 				dotStructureRoot.setFirstChild( null );
 				dotStructureRoot.setType( HqlTokenTypes.JAVA_CONSTANT );

@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.LongTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
 
@@ -58,12 +58,12 @@ public class LongType
 	}
 
 	@Override
-	public Long next(Long current, SessionImplementor session) {
+	public Long next(Long current, SharedSessionContractImplementor session) {
 		return current + 1L;
 	}
 
 	@Override
-	public Long seed(SessionImplementor session) {
+	public Long seed(SharedSessionContractImplementor session) {
 		return ZERO;
 	}
 

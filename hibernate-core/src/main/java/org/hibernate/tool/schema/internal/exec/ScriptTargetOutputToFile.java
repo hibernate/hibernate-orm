@@ -7,8 +7,9 @@
 package org.hibernate.tool.schema.internal.exec;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 
 import org.hibernate.internal.CoreLogging;
@@ -26,10 +27,19 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 	private static final Logger log = CoreLogging.logger( ScriptTargetOutputToFile.class );
 
 	private final File file;
+	private final String charsetName;
+
 	private Writer writer;
 
-	public ScriptTargetOutputToFile(File file) {
+	/**
+	 * Constructs a ScriptTargetOutputToFile instance
+	 *
+	 * @param file The file to read from
+	 * @param charsetName The charset name
+	 */
+	public ScriptTargetOutputToFile(File file, String charsetName) {
 		this.file = file;
+		this.charsetName = charsetName;
 	}
 
 	@Override
@@ -43,7 +53,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 	@Override
 	public void prepare() {
 		super.prepare();
-		this.writer = toFileWriter( this.file );
+		this.writer = toFileWriter( this.file, this.charsetName );
 	}
 
 	@Override
@@ -62,7 +72,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 	}
 
 	@SuppressWarnings("ResultOfMethodCallIgnored")
-	static Writer toFileWriter(File file) {
+	static Writer toFileWriter( File file, String charsetName ) {
 		try {
 			if ( ! file.exists() ) {
 				// best effort, since this is very likely not allowed in EE environments
@@ -77,7 +87,15 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 			log.debug( "Exception calling File#createNewFile : " + e.toString() );
 		}
 		try {
-			return new FileWriter( file, true );
+			return charsetName != null ?
+					new OutputStreamWriter(
+							new FileOutputStream( file, true ),
+							charsetName
+					) :
+					new OutputStreamWriter( new FileOutputStream(
+							file,
+							true
+					) );
 		}
 		catch (IOException e) {
 			throw new SchemaManagementException( "Unable to open specified script target file for writing : " + file, e );

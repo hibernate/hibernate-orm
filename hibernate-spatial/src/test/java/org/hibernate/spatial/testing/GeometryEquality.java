@@ -16,8 +16,9 @@ import com.vividsolutions.jts.geom.GeometryCollection;
  * <p/>
  * The notion of geometric equality can differ slightly between
  * spatial databases.
+ *
+ * @deprecated Should be replaced by Geolatte-geom GeometryEquality
  */
-//TODO -- replace by Geolatte-geom
 @Deprecated
 public class GeometryEquality {
 
@@ -32,10 +33,12 @@ public class GeometryEquality {
 		if ( geom1.isEmpty() ) {
 			return geom2.isEmpty();
 		}
-		if (!ignoreSRID && !equalSRID(geom1, geom2)) return false;
+		if ( !ignoreSRID && !equalSRID( geom1, geom2 ) ) {
+			return false;
+		}
 
 		if ( geom1 instanceof GeometryCollection ) {
-			if ( !( geom2 instanceof GeometryCollection ) ) {
+			if ( !(geom2 instanceof GeometryCollection) ) {
 				return false;
 			}
 			GeometryCollection expectedCollection = (GeometryCollection) geom1;
@@ -59,11 +62,12 @@ public class GeometryEquality {
 	 *
 	 * @param geom1
 	 * @param geom2
+	 *
 	 * @return
 	 */
 	private boolean equalSRID(Geometry geom1, Geometry geom2) {
 		return geom1.getSRID() == geom2.getSRID() ||
-				( geom1.getSRID() < 1 && geom2.getSRID() < 1);
+				(geom1.getSRID() < 1 && geom2.getSRID() < 1);
 	}
 
 	/**
@@ -76,7 +80,7 @@ public class GeometryEquality {
 	 */
 	protected boolean testSimpleGeometryEquality(Geometry geom1, Geometry geom2) {
 		//return geom1.equals(geom2);
-		return testTypeAndVertexEquality( geom1, geom2);
+		return testTypeAndVertexEquality( geom1, geom2 );
 	}
 
 	protected boolean testTypeAndVertexEquality(Geometry geom1, Geometry geom2) {
@@ -118,4 +122,3 @@ public class GeometryEquality {
 		return c1.x == c2.x && c1.y == c2.y;
 	}
 }
-

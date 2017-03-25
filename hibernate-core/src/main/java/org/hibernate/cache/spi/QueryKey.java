@@ -14,7 +14,7 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
@@ -55,7 +55,7 @@ public class QueryKey implements Serializable {
 	 * @param queryParameters The query parameters
 	 * @param filterKeys The keys of any enabled filters.
 	 * @param session The current session.
-	 * @param customTransformer The result transformer; should be null if data is not transformed before being cached.
+	 * @param customTransformer The result transformer; should be null if data is not transformed beforeQuery being cached.
 	 *
 	 * @return The generate query cache key.
 	 */
@@ -63,7 +63,7 @@ public class QueryKey implements Serializable {
 			String queryString,
 			QueryParameters queryParameters,
 			Set filterKeys,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			CacheableResultTransformer customTransformer) {
 		// disassemble positional parameters
 		final int positionalParameterCount = queryParameters.getPositionalParameterTypes().length;

@@ -6,6 +6,14 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
+
 import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.annotations.common.util.StringHelper;
@@ -18,6 +26,7 @@ import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
@@ -40,13 +49,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.List;
-import java.util.Locale;
-
 /**
  * A dialect for Oracle 8i.
  *
@@ -54,6 +56,14 @@ import java.util.Locale;
  */
 @SuppressWarnings("deprecation")
 public class Oracle8iDialect extends Dialect {
+
+	private static final Pattern DISTINCT_KEYWORD_PATTERN = Pattern.compile( "\\bdistinct\\b" );
+
+	private static final Pattern GROUP_BY_KEYWORD_PATTERN = Pattern.compile( "\\bgroup\\sby\\b" );
+
+	private static final Pattern ORDER_BY_KEYWORD_PATTERN = Pattern.compile( "\\border\\sby\\b" );
+
+	private static final Pattern UNION_KEYWORD_PATTERN = Pattern.compile( "\\bunion\\b" );
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -624,9 +634,33 @@ public class Oracle8iDialect extends Dialect {
 		return true;
 	}
 
+	/**
+	 * For Oracle, the FOR UPDATE clause cannot be applied when using ORDER BY, DISTINCT or views.
+	 * @param parameters
+	 * @return
+	 @see <a href="https://docs.oracle.com/database/121/SQLRF/statements_10002.htm#SQLRF01702">Oracle FOR UPDATE restrictions</a>
+	 */
 	@Override
-	public boolean useFollowOnLocking() {
-		return true;
+	public boolean useFollowOnLocking(QueryParameters parameters) {
+
+		if (parameters != null ) {
+			String lowerCaseSQL = parameters.getFilteredSQL().toLowerCase();
+
+			return
+				DISTINCT_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
+				GROUP_BY_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
+				UNION_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
+				(
+					parameters.hasRowSelection() &&
+						(
+							ORDER_BY_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
+							parameters.getRowSelection().getFirstRow() != null
+						)
+				);
+		}
+		else {
+			return true;
+		}
 	}
 	
 	@Override
@@ -671,5 +705,10 @@ public class Oracle8iDialect extends Dialect {
 	@Override
 	public boolean canCreateSchema() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsPartitionBy() {
+		return true;
 	}
 }

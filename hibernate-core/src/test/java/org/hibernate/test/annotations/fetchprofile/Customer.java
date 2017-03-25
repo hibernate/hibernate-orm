@@ -8,6 +8,7 @@
 // $Id$
 
 package org.hibernate.test.annotations.fetchprofile;
+
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Entity;
@@ -19,22 +20,19 @@ import javax.persistence.OneToMany;
 
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
-import org.hibernate.annotations.FetchProfiles;
 
 /**
  * @author Hardy Ferentschik
  */
 @Entity
-@FetchProfiles( {
-		@FetchProfile(name = "customer-with-orders", fetchOverrides = {
-				@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN)
-		}),
-		@FetchProfile(name = "customer-with-orders-and-country",
-				fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN),
-			@FetchProfile.FetchOverride(entity = Customer.class, association = "lastOrder", mode = FetchMode.JOIN),
-			@FetchProfile.FetchOverride(entity = Order.class, association = "country", mode = FetchMode.JOIN)
-		})
+@FetchProfile(name = "customer-with-orders", fetchOverrides = {
+		@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN)
+})
+@FetchProfile(name = "customer-with-orders-and-country",
+		fetchOverrides = {
+	@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN),
+	@FetchProfile.FetchOverride(entity = Customer.class, association = "lastOrder", mode = FetchMode.JOIN),
+	@FetchProfile.FetchOverride(entity = Order.class, association = "country", mode = FetchMode.JOIN)
 })
 public class Customer {
 	@Id

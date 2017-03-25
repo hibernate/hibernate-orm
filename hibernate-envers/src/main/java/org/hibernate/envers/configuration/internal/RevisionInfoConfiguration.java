@@ -316,7 +316,7 @@ public class RevisionInfoConfiguration {
 					}
 
 					// Checking if custom revision entity isn't audited
-					if (clazz.getAnnotation(Audited.class) != null) {
+					if ( clazz.getAnnotation( Audited.class ) != null ) {
 						throw new MappingException("An entity annotated with @RevisionEntity cannot be audited!");
 					}
 
@@ -350,14 +350,14 @@ public class RevisionInfoConfiguration {
 
 					revisionInfoEntityName = persistentClass.getEntityName();
 					revisionInfoClass = persistentClass.getMappedClass();
-					final Class<? extends RevisionListener> revisionListenerClass = getRevisionListenerClass(revisionEntity.value());
-					revisionInfoTimestampType = persistentClass.getProperty(revisionInfoTimestampData.getName()).getType();
-					if (globalCfg.isTrackEntitiesChangedInRevision()
-							|| (globalCfg.isUseRevisionEntityWithNativeId() && DefaultTrackingModifiedEntitiesRevisionEntity.class
-							.isAssignableFrom(revisionInfoClass))
-							|| (!globalCfg.isUseRevisionEntityWithNativeId() && SequenceIdTrackingModifiedEntitiesRevisionEntity.class
-							.isAssignableFrom(revisionInfoClass))
-							|| modifiedEntityNamesFound.isSet()) {
+					final Class<? extends RevisionListener> revisionListenerClass = getRevisionListenerClass( revisionEntity.value() );
+					revisionInfoTimestampType = persistentClass.getProperty( revisionInfoTimestampData.getName() ).getType();
+					if ( globalCfg.isTrackEntitiesChangedInRevision()
+							|| ( globalCfg.isUseRevisionEntityWithNativeId() && DefaultTrackingModifiedEntitiesRevisionEntity.class
+							.isAssignableFrom( revisionInfoClass ) )
+							|| ( !globalCfg.isUseRevisionEntityWithNativeId() && SequenceIdTrackingModifiedEntitiesRevisionEntity.class
+							.isAssignableFrom( revisionInfoClass ) )
+							|| modifiedEntityNamesFound.isSet() ) {
 						// If tracking modified entities parameter is enabled, custom revision info entity is a subtype
 						// of DefaultTrackingModifiedEntitiesRevisionEntity class, or @ModifiedEntityNames annotation is used.
 						revisionInfoGenerator = new DefaultTrackingModifiedEntitiesRevisionInfoGenerator(
@@ -369,7 +369,7 @@ public class RevisionInfoConfiguration {
 								modifiedEntityNamesData,
 								metadata.getMetadataBuildingOptions().getServiceRegistry()
 						);
-						globalCfg.setTrackEntitiesChangedInRevision(true);
+						globalCfg.setTrackEntitiesChangedInRevision( true );
 					}
 					else {
 						revisionInfoGenerator = new DefaultRevisionInfoGenerator(

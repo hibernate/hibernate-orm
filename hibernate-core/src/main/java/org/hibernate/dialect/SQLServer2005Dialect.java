@@ -58,7 +58,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	}
 
 	@Override
-	public LimitHandler getLimitHandler() {
+	protected LimitHandler getDefaultLimitHandler() {
 		return new SQLServer2005LimitHandler();
 	}
 
@@ -104,5 +104,10 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 				return null;
 			}
 		};
+	}
+
+	@Override
+	public boolean supportsNonQueryWithCTE() {
+		return true;
 	}
 }

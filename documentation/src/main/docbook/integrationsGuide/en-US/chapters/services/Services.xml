@@ -444,9 +444,9 @@
             <section>
                 <title>TransactionCoordinatorBuilder</title>
                 <para>
-                    <interfacename>org.hibernate.resource.transaction.TransactionCoordinatorBuilder</interfacename>
+                    <interfacename>org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder</interfacename>
                     is used by Hibernate to integrate with and underlying transaction system.  It is responsible for
-                    building <interfacename>org.hibernate.resource.transaction.TransactionCoordinator</interfacename>
+                    building <interfacename>org.hibernate.resource.transaction.spi.TransactionCoordinator</interfacename>
                     instances for use by each Hibernate Session.
                 </para>
             </section>

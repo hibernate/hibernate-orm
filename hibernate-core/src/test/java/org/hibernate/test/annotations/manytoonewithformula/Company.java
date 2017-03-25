@@ -6,6 +6,7 @@
  */
 
 package org.hibernate.test.annotations.manytoonewithformula;
+
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -14,7 +15,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.JoinColumnOrFormula;
-import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
 
 /**
@@ -36,11 +36,8 @@ public class Company implements Serializable {
 	}
 	
 	@ManyToOne
-	@JoinColumnsOrFormulas(
-	{ 
-		@JoinColumnOrFormula(column=@JoinColumn(name="id", referencedColumnName="company_id", updatable=false, insertable=false)),
-		@JoinColumnOrFormula(formula=@JoinFormula(value="'T'", referencedColumnName="is_default"))
-	})
+	@JoinColumnOrFormula(column=@JoinColumn(name="id", referencedColumnName="company_id", updatable=false, insertable=false))
+	@JoinColumnOrFormula(formula=@JoinFormula(value="'T'", referencedColumnName="is_default"))
 	public Person getDefaultContactPerson() {
 		return person;
 	}

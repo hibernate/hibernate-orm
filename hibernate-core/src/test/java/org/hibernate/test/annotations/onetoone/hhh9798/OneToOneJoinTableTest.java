@@ -6,20 +6,25 @@
  */
 package org.hibernate.test.annotations.onetoone.hhh9798;
 
+import javax.persistence.PersistenceException;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.id.IdentifierGenerationException;
 
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.fail;
 
 @TestForIssue(jiraKey = "HHH-9798")
 public class OneToOneJoinTableTest extends BaseCoreFunctionalTestCase {
 
-	@Test(expected = org.hibernate.exception.ConstraintViolationException.class)
+	@Test
 	public void storeNonUniqueRelationship() throws Throwable {
 		Session session = null;
 		try {
@@ -38,6 +43,9 @@ public class OneToOneJoinTableTest extends BaseCoreFunctionalTestCase {
 			tx.commit();
 
 			fail();
+		}catch (PersistenceException e){
+			assertTyping( ConstraintViolationException.class, e.getCause());
+			// expected
 		}
 		finally {
 			if ( session != null ) {

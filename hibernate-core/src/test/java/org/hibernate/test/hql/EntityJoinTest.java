@@ -6,58 +6,71 @@
  */
 package org.hibernate.test.hql;
 
+import java.util.Collections;
 import java.util.List;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
+import org.hibernate.hql.spi.QueryTranslator;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 /**
- * @author Steve Ebersole
+ * @author Steve Ebersole, Jan Martiska
+ * @author Christian Beikov
  */
 public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { FinancialRecord.class, User.class, Customer.class };
-	}
+    @Override
+    protected Class[] getAnnotatedClasses() {
+        return new Class[] {FinancialRecord.class, User.class, Customer.class};
+    }
 
-	@Test
-	public void testEntityJoins() {
-		createTestData();
+    @Before
+    public void prepare() {
+        createTestData();
+    }
 
-		try {
-//			testInnerEntityJoins();
-			testOuterEntityJoins();
-		}
-		finally {
-			deleteTestData();
-		}
-	}
+    @After
+    public void cleanup() {
+        deleteTestData();
+    }
 
-	private void testInnerEntityJoins() {
-		Session session = openSession();
-		session.beginTransaction();
+    @Test()
+    public void testInnerEntityJoins() {
+        doInHibernate( this::sessionFactory, session -> {
 
-		try {
-			List result = session.createQuery(
-					"select r.id, c.name, u.id, u.username " +
-							"from FinancialRecord r " +
-							"   inner join r.customer c " +
-							"	inner join User u on r.lastUpdateBy = u.username"
-			).list();
-			assertThat( result.size(), is( 1 ) );
+            // this should get financial records which have a lastUpdateBy user set
+            List<Object[]> result = session.createQuery(
+                    "select r.id, c.name, u.id, u.username " +
+                            "from FinancialRecord r " +
+                            "   inner join r.customer c " +
+                            "	inner join User u on r.lastUpdateBy = u.username"
+            ).list();
 
-			// NOTE that this leads to not really valid SQL, although some databases might support it /
+            assertThat( result.size(), is( 1 ) );
+            Object[] steveAndAcme = result.get( 0 );
+            assertThat( steveAndAcme[0], is( 1 ) );
+            assertThat( steveAndAcme[1], is( "Acme" ) );
+            assertThat( steveAndAcme[3], is( "steve" ) );
+
+            // NOTE that this leads to not really valid SQL, although some databases might support it /
 //			result = session.createQuery(
 //					"select r.id, r.customer.name, u.id, u.username " +
 //							"from FinancialRecord r " +
@@ -65,175 +78,270 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
 //			).list();
 //			assertThat( result.size(), is( 1 ) );
 
-		}
-		finally {
-			session.getTransaction().commit();
-			session.close();
-		}
+        } );
+    }
 
-	}
+    @Test
+    public void testLeftOuterEntityJoins() {
+        doInHibernate( this::sessionFactory, session -> {
+            // this should get all financial records even if their lastUpdateBy user is null
+            List<Object[]> result = session.createQuery(
+                    "select r.id, u.id, u.username " +
+                            "from FinancialRecord r " +
+                            "	left join User u on r.lastUpdateBy = u.username" +
+                            "   order by r.id"
+            ).list();
+            assertThat( result.size(), is( 2 ) );
 
-	private void testOuterEntityJoins() {
-		Session session = openSession();
-		session.beginTransaction();
+            Object[] stevesRecord = result.get( 0 );
+            assertThat( stevesRecord[0], is( 1 ) );
+            assertThat( stevesRecord[2], is( "steve" ) );
 
-		try {
-			List result = session.createQuery(
-					"select r.id, c.name, u.id, u.username " +
-							"from FinancialRecord r " +
-							"   inner join r.customer c " +
-							"	left join User u on r.lastUpdateBy = u.username"
-			).list();
-			assertThat( result.size(), is( 1 ) );
+            Object[] noOnesRecord = result.get( 1 );
+            assertThat( noOnesRecord[0], is( 2 ) );
+            assertNull( noOnesRecord[2] );
+        } );
+    }
 
-			// NOTE that this leads to not really valid SQL, although some databases might support it /
-//			result = session.createQuery(
-//					"select r.id, r.customer.name, u.id, u.username " +
-//							"from FinancialRecord r " +
-//							"	left join User u on r.lastUpdateBy = u.username"
-//			).list();
-//			assertThat( result.size(), is( 1 ) );
-		}
-		finally {
-			session.getTransaction().commit();
-			session.close();
-		}
-	}
+    @Test
+    @TestForIssue(jiraKey = "HHH-11337")
+    public void testLeftOuterEntityJoinsWithImplicitInnerJoinInSelectClause() {
+        doInHibernate( this::sessionFactory, session -> {
+            // this should get all financial records even if their lastUpdateBy user is null
+            List<Object[]> result = session.createQuery(
+                    "select r.id, u.id, u.username, r.customer.name " +
+                            "from FinancialRecord r " +
+                            "	left join User u on r.lastUpdateBy = u.username" +
+                            "   order by r.id"
+            ).list();
+            assertThat( result.size(), is( 2 ) );
 
-	private void createTestData() {
-		Session session = openSession();
-		session.getTransaction().begin();
+            Object[] stevesRecord = result.get( 0 );
+            assertThat( stevesRecord[0], is( 1 ) );
+            assertThat( stevesRecord[2], is( "steve" ) );
 
-		session.save( new User( 1, "steve") );
-		session.save( new User( 2, "jane") );
-		final Customer customer = new Customer( 1, "Acme" );
-		session.save( customer );
-		session.save( new FinancialRecord( 1, customer, "steve" ) );
+            Object[] noOnesRecord = result.get( 1 );
+            assertThat( noOnesRecord[0], is( 2 ) );
+            assertNull( noOnesRecord[2] );
+        } );
+    }
 
-		session.getTransaction().commit();
-		session.close();
-	}
+    @Test
+    @TestForIssue(jiraKey = "HHH-11340")
+    public void testJoinOnEntityJoinNode() {
+        doInHibernate( this::sessionFactory, session -> {
+            // this should get all financial records even if their lastUpdateBy user is null
+            List<Object[]> result = session.createQuery(
+                    "select u.username, c.name " +
+                            "from FinancialRecord r " +
+                            "	left join User u on r.lastUpdateBy = u.username " +
+                            "   left join u.customer c " +
+                            "   order by r.id"
+            ).list();
+            assertThat( result.size(), is( 2 ) );
 
-	private void deleteTestData() {
-		Session session = openSession();
-		session.getTransaction().begin();
+            Object[] stevesRecord = result.get( 0 );
+            assertThat( stevesRecord[0], is( "steve" ) );
+            assertThat( stevesRecord[1], is( "Acme" ) );
 
-		session.createQuery( "delete FinancialRecord" ).executeUpdate();
-		session.createQuery( "delete Customer" ).executeUpdate();
-		session.createQuery( "delete User" ).executeUpdate();
+            Object[] noOnesRecord = result.get( 1 );
+            assertNull( noOnesRecord[0] );
+            assertNull( noOnesRecord[1] );
+        } );
+    }
 
-		session.getTransaction().commit();
-		session.close();
-	}
+    @Test
+    @TestForIssue(jiraKey = "HHH-11538")
+    public void testNoImpliedJoinGeneratedForEqualityComparison() {
+        doInHibernate( this::sessionFactory, session -> {
+            final HQLQueryPlan plan = sessionFactory().getQueryPlanCache().getHQLQueryPlan(
+                    "select r.id, cust.name " +
+                            "from FinancialRecord r " +
+                            "	join Customer cust on r.customer = cust" +
+                            "   order by r.id",
+                    false,
+                    Collections.EMPTY_MAP
+            );
+            assertEquals( 1, plan.getTranslators().length );
+            final QueryTranslator translator = plan.getTranslators()[0];
+            final String generatedSql = translator.getSQLString();
 
-	@Entity(name = "Customer")
-	@Table(name = "customer")
-	public static class Customer {
-		private Integer id;
-		private String name;
+            int tableReferenceIndex = generatedSql.indexOf( " customer " );
+            assertNotEquals("Generated SQL doesn't contain a table reference for customer", -1, tableReferenceIndex );
+            int nextTableReferenceIndex = generatedSql.indexOf( " customer ", tableReferenceIndex + 1 );
+            assertEquals("Generated SQL wrongly joined customer twice", -1, nextTableReferenceIndex );
+        } );
+    }
 
-		public Customer() {
-		}
+    @Test
+    public void testRightOuterEntityJoins() {
+        doInHibernate( this::sessionFactory, session -> {
+            // this should get all users even if they have no financial records
+            List<Object[]> result = session.createQuery(
+                    "select r.id, u.id, u.username " +
+                            "from FinancialRecord r " +
+                            "	right join User u on r.lastUpdateBy = u.username" +
+                            "   order by u.id"
+            ).list();
 
-		public Customer(Integer id, String name) {
-			this.id = id;
-			this.name = name;
-		}
+            assertThat( result.size(), is( 2 ) );
 
-		@Id
-		public Integer getId() {
-			return id;
-		}
+            Object[] steveAndAcme = result.get( 0 );
+            assertThat( steveAndAcme[0], is( 1 ) );
+            assertThat( steveAndAcme[2], is( "steve" ) );
 
-		public void setId(Integer id) {
-			this.id = id;
-		}
+            Object[] janeAndNull = result.get( 1 );
+            assertNull( janeAndNull[0] );
+            assertThat( janeAndNull[2], is( "jane" ) );
+        } );
+    }
 
-		public String getName() {
-			return name;
-		}
+    private void createTestData() {
+        doInHibernate( this::sessionFactory, session -> {
 
-		public void setName(String name) {
-			this.name = name;
-		}
-	}
+            final Customer customer = new Customer( 1, "Acme" );
+            session.save( customer );
+            session.save( new User( 1, "steve", customer ) );
+            session.save( new User( 2, "jane" ) );
+            session.save( new FinancialRecord( 1, customer, "steve" ) );
+            session.save( new FinancialRecord( 2, customer, null ) );
 
-	@Entity(name = "FinancialRecord")
-	@Table(name = "financial_record")
-	public static class FinancialRecord {
-		private Integer id;
-		private Customer customer;
-		private String lastUpdateBy;
+        } );
+    }
 
-		public FinancialRecord() {
-		}
+    private void deleteTestData() {
+        doInHibernate( this::sessionFactory, session -> {
+            session.createQuery( "delete FinancialRecord" ).executeUpdate();
+            session.createQuery( "delete User" ).executeUpdate();
+            session.createQuery( "delete Customer" ).executeUpdate();
 
-		public FinancialRecord(Integer id, Customer customer, String lastUpdateBy) {
-			this.id = id;
-			this.customer = customer;
-			this.lastUpdateBy = lastUpdateBy;
-		}
+        } );
+    }
 
-		@Id
-		public Integer getId() {
-			return id;
-		}
+    @Entity(name = "Customer")
+    @Table(name = "customer")
+    public static class Customer {
+        private Integer id;
+        private String name;
 
-		public void setId(Integer id) {
-			this.id = id;
-		}
+        public Customer() {
+        }
 
-		@ManyToOne
-		@JoinColumn
-		public Customer getCustomer() {
-			return customer;
-		}
+        public Customer(Integer id, String name) {
+            this.id = id;
+            this.name = name;
+        }
 
-		public void setCustomer(Customer customer) {
-			this.customer = customer;
-		}
+        @Id
+        public Integer getId() {
+            return id;
+        }
 
-		public String getLastUpdateBy() {
-			return lastUpdateBy;
-		}
+        public void setId(Integer id) {
+            this.id = id;
+        }
 
-		public void setLastUpdateBy(String lastUpdateBy) {
-			this.lastUpdateBy = lastUpdateBy;
-		}
-	}
+        public String getName() {
+            return name;
+        }
 
-	@Entity(name = "User")
-	@Table(name = "`user`")
-	public static class User {
-		private Integer id;
-		private String username;
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
 
-		public User() {
-		}
+    @Entity(name = "FinancialRecord")
+    @Table(name = "financial_record")
+    public static class FinancialRecord {
+        private Integer id;
+        private Customer customer;
+        private String lastUpdateBy;
 
-		public User(Integer id, String username) {
-			this.id = id;
-			this.username = username;
-		}
+        public FinancialRecord() {
+        }
 
-		@Id
-		public Integer getId() {
-			return id;
-		}
+        public FinancialRecord(Integer id, Customer customer, String lastUpdateBy) {
+            this.id = id;
+            this.customer = customer;
+            this.lastUpdateBy = lastUpdateBy;
+        }
 
-		public void setId(Integer id) {
-			this.id = id;
-		}
+        @Id
+        public Integer getId() {
+            return id;
+        }
 
-		@NaturalId
-		public String getUsername() {
-			return username;
-		}
+        public void setId(Integer id) {
+            this.id = id;
+        }
 
-		public void setUsername(String username) {
-			this.username = username;
-		}
-	}
+        @ManyToOne
+        @JoinColumn
+        public Customer getCustomer() {
+            return customer;
+        }
+
+        public void setCustomer(Customer customer) {
+            this.customer = customer;
+        }
+
+        public String getLastUpdateBy() {
+            return lastUpdateBy;
+        }
+
+        public void setLastUpdateBy(String lastUpdateBy) {
+            this.lastUpdateBy = lastUpdateBy;
+        }
+    }
+
+    @Entity(name = "User")
+    @Table(name = "`user`")
+    public static class User {
+        private Integer id;
+        private String username;
+        private Customer customer;
+
+        public User() {
+        }
+
+        public User(Integer id, String username) {
+            this.id = id;
+            this.username = username;
+        }
+
+        public User(Integer id, String username, Customer customer) {
+            this.id = id;
+            this.username = username;
+            this.customer = customer;
+        }
+
+        @Id
+        public Integer getId() {
+            return id;
+        }
+
+        public void setId(Integer id) {
+            this.id = id;
+        }
+
+        @NaturalId
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        public Customer getCustomer() {
+            return customer;
+        }
+
+        public void setCustomer(Customer customer) {
+            this.customer = customer;
+        }
+    }
 
 
 }

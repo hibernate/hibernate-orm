@@ -13,13 +13,13 @@ import java.sql.Connection;
  *
  * @author Steve Ebersole
  */
-public interface StatelessSessionBuilder {
+public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
 	/**
 	 * Opens a session with the specified options.
 	 *
 	 * @return The session
 	 */
-	public StatelessSession openStatelessSession();
+	StatelessSession openStatelessSession();
 
 	/**
 	 * Adds a specific connection to the session options.
@@ -28,7 +28,7 @@ public interface StatelessSessionBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public StatelessSessionBuilder connection(Connection connection);
+	T connection(Connection connection);
 
 	/**
 	 * Define the tenant identifier to be associated with the opened session.
@@ -37,5 +37,5 @@ public interface StatelessSessionBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public StatelessSessionBuilder tenantIdentifier(String tenantIdentifier);
+	T tenantIdentifier(String tenantIdentifier);
 }

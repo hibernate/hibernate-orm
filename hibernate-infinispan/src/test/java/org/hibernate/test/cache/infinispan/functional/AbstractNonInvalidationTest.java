@@ -1,21 +1,8 @@
 package org.hibernate.test.cache.infinispan.functional;
 
-import org.hibernate.PessimisticLockException;
-import org.hibernate.StaleStateException;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
-import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
-import org.hibernate.cache.spi.Region;
-import org.hibernate.test.cache.infinispan.functional.entities.Item;
-import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
-import org.hibernate.test.cache.infinispan.util.TestTimeService;
-import org.hibernate.testing.AfterClassOnce;
-import org.hibernate.testing.BeforeClassOnce;
-import org.infinispan.AdvancedCache;
-import org.junit.After;
-import org.junit.Before;
-
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -27,7 +14,30 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.persistence.OptimisticLockException;
+import javax.persistence.PessimisticLockException;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
+import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
+import org.hibernate.cache.spi.Region;
+
+import org.hibernate.cache.spi.entry.CacheEntry;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.BeforeClassOnce;
+import org.hibernate.test.cache.infinispan.functional.entities.Item;
+import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
+import org.hibernate.test.cache.infinispan.util.TestTimeService;
+import org.junit.After;
+import org.junit.Before;
+
+import org.infinispan.AdvancedCache;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Common base for TombstoneTest and VersionedTest
@@ -45,6 +55,7 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
    protected long itemId;
    protected Region region;
    protected long timeout;
+   protected final List<Runnable> cleanup = new ArrayList<>();
 
    @BeforeClassOnce
    public void setup() {
@@ -61,6 +72,18 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
    @AfterClassOnce
    public void shutdown() {
       executor.shutdown();
+   }
+
+   @Override
+   protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
+      // This applies to manually set LOCK_TIMEOUT for H2 DB. AvailableSettings.JPA_LOCK_TIMEOUT
+      // works only for queries, not for CRUDs, so we have to modify the connection URL.
+      // Alternative could be executing SET LOCK_TIMEOUT 100 as a native query.
+      String url = (String) ssrb.getSettings().get(AvailableSettings.URL);
+      if (url != null && url.contains("LOCK_TIMEOUT")) {
+         url = url.replaceAll("LOCK_TIMEOUT=[^;]*", "LOCK_TIMEOUT=100");
+      }
+      ssrb.applySetting(AvailableSettings.URL, url);
    }
 
    @Override
@@ -87,6 +110,8 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
 
    @After
    public void cleanup() throws Exception {
+      cleanup.forEach(Runnable::run);
+      cleanup.clear();
       withTxSession(s -> {
          s.createQuery("delete from Item").executeUpdate();
       });
@@ -103,7 +128,7 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
                awaitOrThrow(preFlushLatch);
             }
             s.flush();
-         } catch (StaleStateException e) {
+         } catch (OptimisticLockException e) {
             log.info("Exception thrown: ", e);
             markRollbackOnly(s);
             return false;
@@ -126,18 +151,20 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
          try {
             Item item = s.load(Item.class, id);
             item.getName(); // force load & putFromLoad before the barrier
-            loadBarrier.await(WAIT_TIMEOUT, TimeUnit.SECONDS);
+            if (loadBarrier != null) {
+               loadBarrier.await(WAIT_TIMEOUT, TimeUnit.SECONDS);
+            }
             item.setDescription("Updated item");
             s.update(item);
             if (preFlushLatch != null) {
                awaitOrThrow(preFlushLatch);
             }
             s.flush();
-         } catch (StaleStateException e) {
+         } catch (OptimisticLockException e) {
             log.info("Exception thrown: ", e);
             markRollbackOnly(s);
             return false;
-         } catch (PessimisticLockException e) {
+         } catch (PessimisticLockException | org.hibernate.PessimisticLockException e) {
             log.info("Exception thrown: ", e);
             markRollbackOnly(s);
             return false;
@@ -146,7 +173,9 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
                flushLatch.countDown();
             }
          }
-         awaitOrThrow(commitLatch);
+         if (commitLatch != null) {
+            awaitOrThrow(commitLatch);
+         }
          return true;
       }));
    }
@@ -178,5 +207,23 @@ public abstract class AbstractNonInvalidationTest extends SingleNodeTest {
    protected void addSettings(Map settings) {
       super.addSettings(settings);
       settings.put(TestInfinispanRegionFactory.TIME_SERVICE, TIME_SERVICE);
+   }
+
+   protected void assertEmptyCache() {
+      assertNull(entityCache.get(itemId)); // force expiration
+      Map contents = Caches.entrySet(entityCache).toMap();
+      assertEquals(Collections.EMPTY_MAP, contents);
+   }
+
+   protected <T> T assertCacheContains(Class<T> expected) {
+      Map contents = Caches.entrySet(entityCache).toMap();
+      assertEquals("Cache does not have single element", 1, contents.size());
+      Object value = contents.get(itemId);
+      assertTrue(String.valueOf(value), expected.isInstance(value));
+      return (T) value;
+   }
+
+   protected Object assertSingleCacheEntry() {
+      return assertCacheContains(CacheEntry.class);
    }
 }

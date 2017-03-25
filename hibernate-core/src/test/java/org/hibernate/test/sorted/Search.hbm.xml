@@ -21,6 +21,11 @@
 			<key column="searchString"/>
 			<element column="text" type="string"/>
 		</set>
+		<map name="tokens" sort="natural" table="search_tokens">
+			<key column="searchString"/>
+			<map-key column="`key`" type="string"/>
+			<element column="`value`" type="string"/>
+		</map>
 	</class>
 	
 </hibernate-mapping>

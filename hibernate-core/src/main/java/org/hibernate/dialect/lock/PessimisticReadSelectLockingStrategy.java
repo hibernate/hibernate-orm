@@ -16,7 +16,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.SimpleSelect;
@@ -51,7 +51,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 	}
 
 	@Override
-	public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session) {
+	public void lock(Serializable id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
 		final String sql = determineSql( timeout );
 		final SessionFactoryImplementor factory = session.getFactory();
 		try {
@@ -72,24 +72,23 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 					try {
 						if ( !rs.next() ) {
 							if ( factory.getStatistics().isStatisticsEnabled() ) {
-								factory.getStatisticsImplementor()
-										.optimisticFailure( getLockable().getEntityName() );
+								factory.getStatistics().optimisticFailure( getLockable().getEntityName() );
 							}
 							throw new StaleObjectStateException( getLockable().getEntityName(), id );
 						}
 					}
 					finally {
-						session.getJdbcCoordinator().getResourceRegistry().release( rs, st );
+						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
 					}
 				}
 				finally {
-					session.getJdbcCoordinator().getResourceRegistry().release( st );
+					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 					session.getJdbcCoordinator().afterStatementExecution();
 				}
 
 			}
 			catch ( SQLException e ) {
-				throw session.getFactory().getSQLExceptionHelper().convert(
+				throw session.getJdbcServices().getSqlExceptionHelper().convert(
 						e,
 						"could not lock: " + MessageHelper.infoString( getLockable(), id, session.getFactory() ),
 						sql
@@ -113,7 +112,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 		if ( getLockable().isVersioned() ) {
 			select.addCondition( getLockable().getVersionColumnName(), "=?" );
 		}
-		if ( factory.getSettings().isCommentsEnabled() ) {
+		if ( factory.getSessionFactoryOptions().isCommentsEnabled() ) {
 			select.setComment( getLockMode() + " lock " + getLockable().getEntityName() );
 		}
 		return select.toStatementString();

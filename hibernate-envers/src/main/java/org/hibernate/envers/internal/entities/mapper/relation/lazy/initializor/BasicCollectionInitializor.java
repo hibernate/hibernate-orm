@@ -64,7 +64,7 @@ public class BasicCollectionInitializor<T extends Collection> extends AbstractCo
 		// otherwise it will be a List
 		Object elementData = collectionRow;
 		if ( collectionRow instanceof java.util.List ) {
-			elementData = ((List) collectionRow).get( elementComponentData.getComponentIndex() );
+			elementData = ( (List) collectionRow ).get( elementComponentData.getComponentIndex() );
 		}
 
 		// If the target entity is not audited, the elements may be the entities already, so we have to check

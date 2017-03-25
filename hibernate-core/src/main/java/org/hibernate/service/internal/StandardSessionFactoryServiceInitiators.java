@@ -26,7 +26,7 @@ public class StandardSessionFactoryServiceInitiators {
 	public static List<SessionFactoryServiceInitiator> LIST = buildStandardServiceInitiatorList();
 
 	private static List<SessionFactoryServiceInitiator> buildStandardServiceInitiatorList() {
-		final List<SessionFactoryServiceInitiator> serviceInitiators = new ArrayList<SessionFactoryServiceInitiator>();
+		final List<SessionFactoryServiceInitiator> serviceInitiators = new ArrayList<>();
 
 		serviceInitiators.add( EventListenerServiceInitiator.INSTANCE );
 		serviceInitiators.add( StatisticsInitiator.INSTANCE );

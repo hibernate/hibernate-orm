@@ -6,6 +6,7 @@
  */
 package org.hibernate.annotations;
 
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 
 import static java.lang.annotation.ElementType.FIELD;
@@ -24,6 +25,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @java.lang.annotation.Target( { PACKAGE, TYPE, METHOD, FIELD } )
 @Retention( RUNTIME )
+@Repeatable(AnyMetaDefs.class)
 public @interface AnyMetaDef {
 	/**
 	 * If defined, assign a global meta definition name to be used in an @Any or @ManyToAny annotation.  If

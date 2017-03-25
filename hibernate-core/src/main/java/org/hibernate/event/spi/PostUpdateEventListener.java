@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Called after updating the datastore
+ * Called afterQuery updating the datastore
  * 
  * @author Gavin King
  */

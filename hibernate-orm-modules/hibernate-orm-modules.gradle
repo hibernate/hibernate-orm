@@ -1,0 +1,186 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+apply plugin: 'maven-publish-auth'
+apply plugin: 'build-dashboard'
+apply plugin: 'project-report'
+apply plugin: org.hibernate.build.HibernateBuildPlugin
+apply plugin: 'idea'
+
+buildDir = "target"
+
+ext {
+    // Exact ORM version, e.g. "5.1.1.Final"
+    slot = rootProject.hibernateFullVersion
+    // Just the minor ORM version, e.g. "5.1"; Is used as an alias for the exact version
+    minorSlot = rootProject.hibernateMajorMinorVersion
+
+    final String[] wildFlyVersionComponents = wildflyVersion.split( '\\.' );
+
+    // e.g. "10" for WildFly 10.x
+    wildFlyMajorVersion = wildFlyVersionComponents[0];
+
+    artifactClassifier = "wildfly-${wildFlyMajorVersion}-dist"
+
+    moduleXmlStagingDir = file( "$buildDir/tmp/modules" )
+
+    wildFlyInstallDirBase = rootProject.buildDir
+    wildFlyInstallDir = "${rootProject.buildDir.absolutePath}/wildfly-${wildflyVersion}"
+
+    expandedModuleProperties = [
+            slot: slot,
+            minorSlot: minorSlot,
+            version: rootProject.hibernateTargetVersion,
+            wildflyVersion: wildflyVersion,
+            javassistVersion: javassistVersion,
+            byteBuddyVersion: byteBuddyVersion
+    ];
+}
+
+mavenPom {
+    name = "Hibernate ORM modules for WildFly ${wildFlyMajorVersion}"
+    description = "Hibernate ORM modules for WildFly ${wildFlyMajorVersion}"
+}
+
+configurations {
+    jipijapa {
+        transitive = false
+    }
+
+    wildflyDist
+
+    javassist
+    byteBuddy
+}
+
+dependencies {
+    jipijapa "org.wildfly:jipijapa-hibernate5:${wildflyVersion}"
+    wildflyDist "org.wildfly:wildfly-dist:${wildflyVersion}@zip"
+    javassist libraries.javassist
+    byteBuddy libraries.byteBuddy
+
+    testCompile project( ":hibernate-core" )
+    testCompile project( ":hibernate-envers" )
+    testCompile libraries.junit
+    testCompile libraries.arquillian_junit_container
+    testCompile libraries.arquillian_protocol_servlet
+    testCompile libraries.shrinkwrap_descriptors_api_javaee
+    testCompile libraries.shrinkwrap_descriptors_impl_javaee
+    testCompile libraries.wildfly_arquillian_container_managed
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// tasks related to creating and publishing the module zip
+
+task copyAndExpandModuleXml(type: Copy) {
+    description 'Performs a copy of the XML files defining the module into a staging directory for the purpose of performing token-replacement'
+
+    inputs.properties( expandedModuleProperties as Map )
+
+    into moduleXmlStagingDir
+    expand( expandedModuleProperties as Map )
+
+    into( 'org/hibernate/' + slot ) {
+        from 'src/main/modules/org/hibernate/core'
+    }
+
+    into( 'org/hibernate/infinispan/' + slot ) {
+        from 'src/main/modules/org/hibernate/infinispan'
+    }
+
+    into( 'org/hibernate/jipijapa-hibernate5/' + slot ) {
+        from 'src/main/modules/org/hibernate/jipijapa-hibernate5'
+    }
+
+    // create alias for the short name
+    into( 'org/hibernate/' + minorSlot ) {
+        from 'src/main/aliases/org/hibernate/core'
+    }
+
+    into( 'org/hibernate/infinispan/' + minorSlot ) {
+        from 'src/main/aliases/org/hibernate/infinispan'
+    }
+
+    into( 'org/hibernate/jipijapa-hibernate5/' + minorSlot ) {
+        from 'src/main/aliases/org/hibernate/jipijapa-hibernate5'
+    }
+}
+
+task createModulesZip(type: Zip, dependsOn: [copyAndExpandModuleXml]) {
+    baseName 'hibernate-orm-modules'
+    classifier artifactClassifier
+
+    from moduleXmlStagingDir
+
+    into( 'org/hibernate/' + slot ) {
+        from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+        from parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files
+
+        // also need Javassist's jar
+        from configurations.javassist
+        // also need Byte Buddy's jar
+        from configurations.byteBuddy
+    }
+
+    into( 'org/hibernate/infinispan/' + slot ) {
+        from parent.project( 'hibernate-infinispan' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') && !file.name.endsWith('-tests.jar') }
+    }
+
+    into( 'org/hibernate/jipijapa-hibernate5/' + slot ) {
+        from configurations.jipijapa
+    }
+}
+
+publishing {
+    publications {
+        mavenZip( MavenPublication ) {
+            artifact( createModulesZip ) {
+                classifier artifactClassifier
+            }
+        }
+    }
+}
+
+build.dependsOn createModulesZip
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// tasks related to in-container (Arquillian + WF) testing
+
+if ( JavaVersion.current().isJava9Compatible() ) {
+    logger.lifecycle( "WARNING - Skipping hibernate-orm-modules tests for Java 9" )
+    // WildFly has problems booting in Java 9
+    test.enabled = false
+}
+
+task installWildFly(type: Copy) {
+    description = 'Downloads the WildFly distribution and installs it into a local directory (if needed)'
+
+    from {
+        configurations.wildflyDist.collect { zipTree(it) }
+    }
+    into wildFlyInstallDirBase
+}
+
+task installHibernateModule( type:Copy, dependsOn: [createModulesZip, installWildFly]) {
+    duplicatesStrategy DuplicatesStrategy.EXCLUDE
+    from zipTree( createModulesZip.archivePath )
+    into "${wildFlyInstallDir}/modules"
+}
+
+task prepareWildFlyForTests( dependsOn: [installWildFly, installHibernateModule] )
+
+test.dependsOn prepareWildFlyForTests
+
+processTestResources {
+    expand( wildFlyInstallDir: wildFlyInstallDir, arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments" )
+}
+
+

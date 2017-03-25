@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.annotations.tableperclass;
 
+import javax.persistence.PersistenceException;
 import java.util.List;
 
 import org.junit.Test;
@@ -16,6 +17,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -74,13 +76,16 @@ public class TablePerClassTest extends BaseCoreFunctionalTestCase {
 		s.persist( product2 );
 		try {
 			s.flush();
-			fail("Database Exception not handled");
+			fail( "Database Exception not handled" );
 		}
-		catch( JDBCException e ) {
+		catch (PersistenceException e) {
+			assertTyping( JDBCException.class, e.getCause() );
 			//success
 		}
-		tx.rollback();
-		s.close();
+		finally {
+			tx.rollback();
+			s.close();
+		}
 	}
 
 	@Override

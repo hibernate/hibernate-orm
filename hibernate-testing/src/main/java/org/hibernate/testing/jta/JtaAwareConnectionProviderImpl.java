@@ -148,7 +148,12 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 
 	private void delist(Connection connection) {
 		// todo : verify the incoming connection is the currently enlisted one?
-		TestingJtaPlatformImpl.synchronizationRegistry().putResource( CONNECTION_KEY, null );
+		try {
+			TestingJtaPlatformImpl.synchronizationRegistry().putResource( CONNECTION_KEY, null );
+		}
+		catch ( Exception e ) {
+			System.err.println( "!!!Error trying to reset synchronization registry!!!" );
+		}
 		try {
 			delegate.closeConnection( connection );
 		}

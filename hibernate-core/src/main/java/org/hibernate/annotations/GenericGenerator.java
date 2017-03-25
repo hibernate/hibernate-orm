@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.annotations;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -21,6 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({PACKAGE, TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
+@Repeatable(GenericGenerators.class)
 public @interface GenericGenerator {
 	/**
 	 * unique generator name.

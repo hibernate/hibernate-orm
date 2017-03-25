@@ -11,9 +11,9 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.internal.NamedQueryRepository;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.TypeResolver;
 
 /**

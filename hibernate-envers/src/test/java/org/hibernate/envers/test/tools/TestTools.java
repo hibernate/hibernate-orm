@@ -20,6 +20,8 @@ import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */
@@ -82,5 +84,43 @@ public class TestTools {
 			}
 		}
 		return result;
+	}
+
+	public static <T> void assertCollectionsEqual(Collection<T> expected, Collection<T> actual) {
+		assertEquals( expected.size(), actual.size() );
+		Iterator<T> it = actual.iterator();
+		for ( T obj : actual ) {
+			assertEquals( obj, it.next() );
+		}
+	}
+
+	public static <K,E> MapBuilder<K,E> mapBuilder() {
+		return new MashMapBuilderImpl<K,E>();
+	}
+
+	public interface MapBuilder<K,E> {
+		MapBuilder<K,E> add(K key, E value);
+		Set<Map.Entry<K,E>> entries();
+		Map<K,E> map();
+	}
+
+	private static class MashMapBuilderImpl<K,E> implements MapBuilder<K,E> {
+		private final Map<K,E> hashMap = new HashMap<K, E>();
+
+		@Override
+		public MapBuilder<K, E> add(K key, E value) {
+			hashMap.put( key, value );
+			return this;
+		}
+
+		@Override
+		public Set<Map.Entry<K, E>> entries() {
+			return hashMap.entrySet();
+		}
+
+		@Override
+		public Map<K, E> map() {
+			return hashMap;
+		}
 	}
 }

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -34,19 +35,20 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.GeneratedValueGeneration;
+import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
-
 import org.jboss.logging.Logger;
-
-import org.dom4j.Element;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -56,6 +58,7 @@ import org.dom4j.Element;
  * @author Hern&aacute;n Chanfreau
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public final class AuditMetadataGenerator {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
@@ -113,9 +116,9 @@ public final class AuditMetadataGenerator {
 
 		this.auditEntityNameRegister = auditEntityNameRegister;
 
-		entitiesConfigurations = new HashMap<String, EntityConfiguration>();
-		notAuditedEntitiesConfigurations = new HashMap<String, EntityConfiguration>();
-		entitiesJoins = new HashMap<String, Map<Join, Element>>();
+		entitiesConfigurations = new HashMap<>();
+		notAuditedEntitiesConfigurations = new HashMap<>();
+		entitiesJoins = new HashMap<>();
 
 		classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
@@ -368,6 +371,14 @@ public final class AuditMetadataGenerator {
 			final String propertyName = property.getName();
 			final PropertyAuditingData propertyAuditingData = auditingData.getPropertyAuditingData( propertyName );
 			if ( propertyAuditingData != null ) {
+				// HHH-10246
+				// Verifies if a mapping exists using a @JoinColumn against a @NaturalId field
+				// and if so, this eliminates the mapping property as it isn't needed.
+				if ( property instanceof SyntheticProperty ) {
+					if ( property.getValue().isAlternateUniqueKey() ) {
+						continue;
+					}
+				}
 				addValue(
 						parent,
 						property.getValue(),
@@ -375,12 +386,26 @@ public final class AuditMetadataGenerator {
 						entityName,
 						xmlMappingData,
 						propertyAuditingData,
-						property.isInsertable(),
+						isPropertyInsertable( property ),
 						firstPass,
 						true
 				);
 			}
 		}
+	}
+
+	private boolean isPropertyInsertable(Property property) {
+		if ( !property.isInsertable() ) {
+			final ValueGeneration generation = property.getValueGenerationStrategy();
+			if ( generation instanceof GeneratedValueGeneration ) {
+				final GeneratedValueGeneration valueGeneration = (GeneratedValueGeneration) generation;
+				if ( GenerationTiming.INSERT == valueGeneration.getGenerationTiming()
+					|| GenerationTiming.ALWAYS == valueGeneration.getGenerationTiming() ) {
+					return true;
+				}
+			}
+		}
+		return property.isInsertable();
 	}
 
 	private boolean checkPropertiesAudited(Iterator<Property> properties, ClassAuditingData auditingData) {
@@ -431,7 +456,7 @@ public final class AuditMetadataGenerator {
 	@SuppressWarnings({"unchecked"})
 	private void createJoins(PersistentClass pc, Element parent, ClassAuditingData auditingData) {
 		final Iterator<Join> joins = pc.getJoinIterator();
-		final Map<Join, Element> joinElements = new HashMap<Join, Element>();
+		final Map<Join, Element> joinElements = new HashMap<>();
 		entitiesJoins.put( pc.getEntityName(), joinElements );
 
 		while ( joins.hasNext() ) {
@@ -455,6 +480,16 @@ public final class AuditMetadataGenerator {
 
 			final Element joinElement = MetadataTools.createJoin( parent, auditTableName, schema, catalog );
 			joinElements.put( join, joinElement );
+
+			// HHH-8305 - Fix case when join is considered optional.
+			if ( join.isOptional() ) {
+				joinElement.addAttribute( "optional", "true" );
+			}
+
+			// HHH-8305 - Fix case when join is the inverse side of a mapping.
+			if ( join.isInverse() ) {
+				joinElement.addAttribute( "inverse", "true" );
+			}
 
 			final Element joinKey = joinElement.addElement( "key" );
 			MetadataTools.addColumns( joinKey, join.getKey().getColumnIterator() );
@@ -659,6 +694,9 @@ public final class AuditMetadataGenerator {
 		createJoins( pc, classMapping, auditingData );
 		addJoins( pc, propertyMapper, auditingData, pc.getEntityName(), xmlMappingData, true );
 
+		// HHH-7940 - New synthetic property support for @IndexColumn/@OrderColumn dynamic properties
+		addSynthetics( classMapping, auditingData, propertyMapper, xmlMappingData, pc.getEntityName(), true );
+
 		// Storing the generated configuration
 		final EntityConfiguration entityCfg = new EntityConfiguration(
 				auditEntityName,
@@ -668,6 +706,28 @@ public final class AuditMetadataGenerator {
 				parentEntityName
 		);
 		entitiesConfigurations.put( pc.getEntityName(), entityCfg );
+	}
+
+	private void addSynthetics(
+			Element classMapping,
+			ClassAuditingData auditingData,
+			CompositeMapperBuilder currentMapper,
+			EntityXmlMappingData xmlMappingData,
+			String entityName,
+			boolean firstPass) {
+		for ( PropertyAuditingData propertyAuditingData : auditingData.getSyntheticProperties() ) {
+			addValue(
+					classMapping,
+					propertyAuditingData.getValue(),
+					currentMapper,
+					entityName,
+					xmlMappingData,
+					propertyAuditingData,
+					true,
+					firstPass,
+					false
+			);
+		}
 	}
 
 	@SuppressWarnings({"unchecked"})

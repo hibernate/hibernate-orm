@@ -1,0 +1,161 @@
+[[schema-generation]]
+== Schema generation
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/schema
+:extrasdir: extras
+:resourcesdir: ../../../../../test/resources
+
+
+Hibernate allows you to generate the database from the entity mappings.
+
+[TIP]
+====
+Although the automatic schema generation is very useful for testing and prototyping purposes, in a production environment,
+it's much more flexible to manage the schema using incremental migration scripts.
+====
+
+Traditionally, the process of generating  schema from entity mapping has been called `HBM2DDL`.
+To get a list of Hibernate-native and JPA-specific configuration properties consider reading the <<appendices/Configurations.adoc#configurations-hbmddl,Configurations>> section.
+
+Considering the following Domain Model:
+
+[[schema-generation-domain-model-example]]
+.Schema generation Domain Model
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SchemaGenerationTest.java[tags=schema-generation-domain-model-example]
+----
+====
+
+If the `hibernate.hbm2ddl.auto` configuration is set to `create`, Hibernate is going to generate the following database schema:
+
+[[sql-schema-generation-domain-model-example]]
+.Auto-generated database schema
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/sql-schema-generation-domain-model-example.sql[]
+----
+====
+
+[[schema-generation-script-files]]
+=== Importing script files
+
+To customize the schema generation process, the `hibernate.hbm2ddl.import_files` configuration property must be used to provide other scripts files that Hibernate can use when the `SessionFactory` is started.
+
+For instance, considering the following `schema-generation.sql` import file:
+
+[[schema-generation-import-file-example]]
+.Schema generation import file
+====
+[source, JAVA, indent=0]
+----
+include::{resourcesdir}/schema-generation.sql[]
+----
+====
+
+If we configure Hibernate to import the script above:
+
+[[schema-generation-import-file-configuration-example]]
+.Enabling query cache
+====
+[source, XML, indent=0]
+----
+<property
+    name="hibernate.hbm2ddl.import_files"
+    value="schema-generation.sql" />
+----
+====
+
+Hibernate is going to execute the script file after the schema is automatically generated.
+
+[[schema-generation-database-objects]]
+=== Database objects
+
+Hibernate allows you to customize the schema generation process via the HBM `database-object` element.
+
+Considering the following HBM mapping:
+
+[[schema-generation-database-object-example]]
+.Schema generation HBM database-object
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/SchemaGenerationTest.hbm.xml[]
+----
+====
+
+When the `SessionFactory` is bootstrapped, Hibernate is going to execute the `database-object`, therefore creating the `sp_count_books` function.
+
+[[schema-generation-database-checks]]
+=== Database-level checks
+
+Hibernate offers the `@Check` annotation so that you can specify an arbitrary SQL CHECK constraint which can be defined as follows:
+
+[[schema-generation-database-checks-example]]
+.Database check entity mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CheckTest.java[tag=schema-generation-database-checks-example]
+----
+====
+
+Now, if you try to add a `Book` entity with an `isbn` attribute whose length is not 13 characters,
+a `ConstraintViolationException` is going to be thrown.
+
+[[stag::schema-generation-database-checks-persist-example]]
+.Database check failure example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CheckTest.java[tag=schema-generation-database-checks-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/schema-generation-database-checks-persist-example.sql[]
+----
+====
+
+[[schema-generation-column-default-value]]
+=== Default value for database column
+
+With Hibernate, you can specify a default value for a given database column using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnDefault.html[`@ColumnDefault`] annotation.
+
+[[schema-generation-column-default-value-mapping-example]]
+.`@ColumnDefault` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-mapping-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/schema-generation-column-default-value-mapping-example.sql[]
+----
+====
+
+In the mapping above, both the `name` and `clientId` table columns are going to use a `DEFAULT` value.
+
+[NOTE]
+====
+The entity is annotated with the `@DynamicInsert` annotation so that the `INSERT` statement does not include the entity attribute that have not been set.
+====
+
+This way, when omitting the `name` and the `clientId` attribute, the database is going to set them according to their default values.
+
+[[schema-generation-column-default-value-persist-example]]
+.`@ColumnDefault` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/schema-generation-column-default-value-persist-example.sql[]
+----
+====

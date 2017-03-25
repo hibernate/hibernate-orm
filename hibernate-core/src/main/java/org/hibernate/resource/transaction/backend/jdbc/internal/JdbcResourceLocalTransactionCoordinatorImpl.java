@@ -16,12 +16,12 @@ import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
-import org.hibernate.resource.transaction.SynchronizationRegistry;
-import org.hibernate.resource.transaction.TransactionCoordinator;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
 import org.hibernate.resource.transaction.internal.SynchronizationRegistryStandardImpl;
+import org.hibernate.resource.transaction.spi.SynchronizationRegistry;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
@@ -68,7 +68,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	@Override
 	public TransactionDriver getTransactionDriverControl() {
 		// Again, this PhysicalTransactionDelegate will act as the bridge from the local transaction back into the
-		// coordinator.  We lazily build it as we invalidate each delegate after each transaction (a delegate is
+		// coordinator.  We lazily build it as we invalidate each delegate afterQuery each transaction (a delegate is
 		// valid for just one transaction)
 		if ( physicalTransactionDelegate == null ) {
 			physicalTransactionDelegate = new TransactionDriverControlImpl( jdbcResourceTransactionAccess.getResourceLocalTransaction() );
@@ -84,8 +84,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 	@Override
 	public boolean isJoined() {
-		return physicalTransactionDelegate != null && physicalTransactionDelegate.getStatus() == TransactionStatus.ACTIVE;
-
+		return physicalTransactionDelegate != null && getTransactionDriverControl().isActive( true );
 	}
 
 	@Override
@@ -168,16 +167,6 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		for ( TransactionObserver observer : observers ) {
 			observer.afterCompletion( successful, false );
 		}
-		invalidateDelegate();
-	}
-
-	private void invalidateDelegate() {
-		if ( physicalTransactionDelegate == null ) {
-			throw new IllegalStateException( "Physical-transaction delegate not known on attempt to invalidate" );
-		}
-
-		physicalTransactionDelegate.invalidate();
-		physicalTransactionDelegate = null;
 	}
 
 	public void addObserver(TransactionObserver observer) {
@@ -261,14 +250,16 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 
 		@Override
 		public void markRollbackOnly() {
-			if ( log.isDebugEnabled() ) {
-				log.debug(
-						"JDBC transaction marked for rollback-only (exception provided for stack trace)",
-						new Exception( "exception just for purpose of providing stack trace" )
-				);
-			}
+			if ( getStatus() != TransactionStatus.ROLLED_BACK && getStatus() != TransactionStatus.NOT_ACTIVE ) {
+				if ( log.isDebugEnabled() ) {
+					log.debug(
+							"JDBC transaction marked for rollback-only (exception provided for stack trace)",
+							new Exception( "exception just for purpose of providing stack trace" )
+					);
+				}
 
-			rollbackOnly = true;
+				rollbackOnly = true;
+			}
 		}
 	}
 }

@@ -513,7 +513,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		);
 
 		if ( event.isAssociationFetch() && event.getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			event.getSession().getFactory().getStatisticsImplementor().fetchEntity( event.getEntityClassName() );
+			event.getSession().getFactory().getStatistics().fetchEntity( event.getEntityClassName() );
 		}
 
 		return entity;

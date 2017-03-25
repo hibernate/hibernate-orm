@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.annotations;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 
 import static java.lang.annotation.ElementType.FIELD;
@@ -24,6 +25,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @java.lang.annotation.Target({FIELD,METHOD})
 @Retention(RUNTIME)
+@Repeatable(ColumnTransformers.class)
 public @interface ColumnTransformer {
 	/**
 	 * (Logical) column name for which the expression is used.

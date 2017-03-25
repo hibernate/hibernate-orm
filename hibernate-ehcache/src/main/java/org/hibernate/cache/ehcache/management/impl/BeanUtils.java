@@ -31,7 +31,7 @@ public class BeanUtils {
 		}
 		final String getterName = sb.toString();
 		for ( Method m : bean.getClass().getMethods() ) {
-			if ( getterName.equals( m.getName() ) && m.getParameterTypes().length == 0 ) {
+			if ( getterName.equals( m.getName() ) && m.getParameterCount() == 0 ) {
 				return m;
 			}
 		}

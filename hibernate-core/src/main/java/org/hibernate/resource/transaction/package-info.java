@@ -7,10 +7,10 @@
 
 /**
  * Defines the resource-level transaction capabilities of Hibernate, which revolves around the
- * {@link org.hibernate.resource.transaction.TransactionCoordinator} contract.
+ * {@link org.hibernate.resource.transaction.spi.TransactionCoordinator} contract.
  * <p/>
  * TransactionCoordinator instances can be obtained from
- * {@link org.hibernate.resource.transaction.TransactionCoordinatorBuilder}, which is a Service
+ * {@link org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder}, which is a Service
  * and available from the StandardServiceRegistry
  * <p/>
  * A few terms/concepts to keep in mind here...
@@ -20,7 +20,7 @@
  * The local transaction is the idea of transactionality exposed to the application (as
  * {@link org.hibernate.Transaction}) as a means to control the underlying transaction.  That
  * control flows from the {@link org.hibernate.Transaction} into the TransactionCoordinator
- * through the {@link org.hibernate.resource.transaction.TransactionCoordinator.TransactionDriver} it exposes.
+ * through the {@link org.hibernate.resource.transaction.spi.TransactionCoordinator.TransactionDriver} it exposes.
  *
  * <h2>Physical transaction</h2>
  *
@@ -42,7 +42,7 @@
  * The Hibernate transaction api allows the application itself to register JTA Synchronization
  * objects with the TransactionCoordinator.  These local Synchronizations work in all transaction
  * environments.  See {@link org.hibernate.Transaction#registerSynchronization} and
- * {@link org.hibernate.resource.transaction.SynchronizationRegistry} for additional details.
+ * {@link org.hibernate.resource.transaction.spi.SynchronizationRegistry} for additional details.
  *
  */
 package org.hibernate.resource.transaction;

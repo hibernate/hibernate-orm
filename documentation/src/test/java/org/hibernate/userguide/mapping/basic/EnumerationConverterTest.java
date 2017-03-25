@@ -16,7 +16,7 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 
-import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
@@ -83,7 +83,8 @@ public class EnumerationConverterTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Converter
-	public static class GenderConverter implements AttributeConverter<Gender, Character> {
+	public static class GenderConverter
+			implements AttributeConverter<Gender, Character> {
 
 		public Character convertToDatabaseColumn( Gender value ) {
 			if ( value == null ) {

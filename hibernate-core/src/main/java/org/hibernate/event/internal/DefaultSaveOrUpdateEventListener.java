@@ -53,7 +53,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 		final Serializable requestedId = event.getRequestedId();
 
 		if ( requestedId != null ) {
-			//assign the requested id to the proxy, *before*
+			//assign the requested id to the proxy, *beforeQuery*
 			//reassociating the proxy
 			if ( object instanceof HibernateProxy ) {
 				( (HibernateProxy) object ).getHibernateLazyInitializer().setIdentifier( requestedId );
@@ -156,7 +156,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 *
 	 * @param event The save event to be handled.
 	 *
-	 * @return The entity's identifier after saving.
+	 * @return The entity's identifier afterQuery saving.
 	 */
 	protected Serializable entityIsTransient(SaveOrUpdateEvent event) {
 
@@ -186,7 +186,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 *
 	 * @param event The initiating event.
 	 *
-	 * @return The entity's identifier value after saving.
+	 * @return The entity's identifier value afterQuery saving.
 	 */
 	protected Serializable saveWithGeneratedOrRequestedId(SaveOrUpdateEvent event) {
 		return saveWithGeneratedId(

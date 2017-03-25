@@ -34,6 +34,7 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 	protected abstract Setter buildSetter(Component component, Property prop);
 
 	protected AbstractComponentTuplizer(Component component) {
+		setComponentClass( component );
 		propertySpan = component.getPropertySpan();
 		getters = new Getter[propertySpan];
 		setters = new Setter[propertySpan];
@@ -101,5 +102,9 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 
 	public Getter getGetter(int i) {
 		return getters[i];
+	}
+
+	// It should be an abstract method but not sure if this can break any customer extension
+	protected void setComponentClass(Component component){
 	}
 }

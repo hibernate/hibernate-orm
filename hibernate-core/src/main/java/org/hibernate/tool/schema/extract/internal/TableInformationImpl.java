@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
 import org.hibernate.tool.schema.extract.spi.IndexInformation;
@@ -27,6 +28,8 @@ import org.hibernate.tool.schema.extract.spi.TableInformation;
  */
 public class TableInformationImpl implements TableInformation {
 	private final InformationExtractor extractor;
+	private final IdentifierHelper identifierHelper;
+
 	private final QualifiedTableName tableName;
 	private final boolean physicalTable;
 	private final String comment;
@@ -34,15 +37,18 @@ public class TableInformationImpl implements TableInformation {
 	private PrimaryKeyInformation primaryKey;
 	private Map<Identifier, ForeignKeyInformation> foreignKeys;
 	private Map<Identifier, IndexInformation> indexes;
+	private Map<Identifier, ColumnInformation> columns = new HashMap<>(  );
 
 	private boolean wasPrimaryKeyLoaded = false; // to avoid multiple db reads since primary key can be null.
 
 	public TableInformationImpl(
 			InformationExtractor extractor,
+			IdentifierHelper identifierHelper,
 			QualifiedTableName tableName,
 			boolean physicalTable,
-			String comment) {
+			String comment ) {
 		this.extractor = extractor;
+		this.identifierHelper = identifierHelper;
 		this.tableName = tableName;
 		this.physicalTable = physicalTable;
 		this.comment = comment;
@@ -65,7 +71,10 @@ public class TableInformationImpl implements TableInformation {
 
 	@Override
 	public ColumnInformation getColumn(Identifier columnIdentifier) {
-		return extractor.getColumn( this, columnIdentifier );
+		return columns.get( new Identifier(
+				identifierHelper.toMetaDataObjectName( columnIdentifier ),
+				false
+		) );
 	}
 
 	@Override
@@ -84,7 +93,7 @@ public class TableInformationImpl implements TableInformation {
 
 	protected Map<Identifier, ForeignKeyInformation> foreignKeys() {
 		if ( foreignKeys == null ) {
-			final Map<Identifier, ForeignKeyInformation> fkMap = new HashMap<Identifier, ForeignKeyInformation>();
+			final Map<Identifier, ForeignKeyInformation> fkMap = new HashMap<>();
 			final Iterable<ForeignKeyInformation> fks = extractor.getForeignKeys( this );
 			for ( ForeignKeyInformation fk : fks ) {
 				fkMap.put( fk.getForeignKeyIdentifier(), fk );
@@ -96,7 +105,10 @@ public class TableInformationImpl implements TableInformation {
 
 	@Override
 	public ForeignKeyInformation getForeignKey(Identifier fkIdentifier) {
-		return foreignKeys().get( fkIdentifier );
+		return foreignKeys().get( new Identifier(
+				identifierHelper.toMetaDataObjectName( fkIdentifier ),
+				false
+		)  );
 	}
 
 	@Override
@@ -106,7 +118,7 @@ public class TableInformationImpl implements TableInformation {
 
 	protected Map<Identifier, IndexInformation> indexes() {
 		if ( indexes == null ) {
-			final Map<Identifier, IndexInformation> indexMap = new HashMap<Identifier, IndexInformation>();
+			final Map<Identifier, IndexInformation> indexMap = new HashMap<>();
 			final Iterable<IndexInformation> indexes = extractor.getIndexes( this );
 			for ( IndexInformation index : indexes ) {
 				indexMap.put( index.getIndexIdentifier(), index );
@@ -117,8 +129,16 @@ public class TableInformationImpl implements TableInformation {
 	}
 
 	@Override
+	public void addColumn(ColumnInformation columnIdentifier) {
+		columns.put( columnIdentifier.getColumnIdentifier(), columnIdentifier );
+	}
+
+	@Override
 	public IndexInformation getIndex(Identifier indexName) {
-		return indexes().get( indexName );
+		return indexes().get( new Identifier(
+				identifierHelper.toMetaDataObjectName( indexName ),
+				false
+		) );
 	}
 
 	@Override

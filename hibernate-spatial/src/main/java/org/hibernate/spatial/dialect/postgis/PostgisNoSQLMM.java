@@ -20,8 +20,7 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class PostgisNoSQLMM extends PostgisDialect {
 
-	@Override
-	protected void registerTypesAndFunctions() {
+	public PostgisNoSQLMM() {
 
 		registerColumnType(
 				PGGeometryTypeDescriptor.INSTANCE.getSqlType(),

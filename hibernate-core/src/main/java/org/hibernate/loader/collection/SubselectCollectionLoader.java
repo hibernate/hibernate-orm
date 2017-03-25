@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.loader.collection;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
@@ -16,7 +17,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.Type;
@@ -58,7 +59,7 @@ public class SubselectCollectionLoader extends BasicCollectionLoader {
 	}
 
 	@Override
-	public void initialize(Serializable id, SessionImplementor session)
+	public void initialize(Serializable id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		loadCollectionSubselect( 
 				session, 

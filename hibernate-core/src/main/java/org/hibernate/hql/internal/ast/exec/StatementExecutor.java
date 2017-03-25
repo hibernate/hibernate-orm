@@ -5,9 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.hql.internal.ast.exec;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Encapsulates the strategy required to execute various types of update, delete,
@@ -17,7 +18,7 @@ import org.hibernate.engine.spi.SessionImplementor;
  */
 public interface StatementExecutor {
 
-	public String[] getSqlStatements();
+	String[] getSqlStatements();
 
 	/**
 	 * Execute the sql managed by this executor using the given parameters.
@@ -27,6 +28,6 @@ public interface StatementExecutor {
 	 * @return The number of entities updated/deleted.
 	 * @throws HibernateException
 	 */
-	public int execute(QueryParameters parameters, SessionImplementor session) throws HibernateException;
+	int execute(QueryParameters parameters, SharedSessionContractImplementor session) throws HibernateException;
 
 }

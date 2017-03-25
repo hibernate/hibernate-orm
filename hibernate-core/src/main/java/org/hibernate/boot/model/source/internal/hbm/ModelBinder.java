@@ -994,6 +994,8 @@ public class ModelBinder {
 				rootEntityDescriptor.getTable()
 		);
 
+		versionValue.makeVersion();
+
 		bindSimpleValueType(
 				sourceDocument,
 				versionAttributeSource.getTypeInformation(),
@@ -1041,6 +1043,7 @@ public class ModelBinder {
 		}
 
 		rootEntityDescriptor.setVersion( prop );
+		rootEntityDescriptor.setDeclaredVersion( prop );
 		rootEntityDescriptor.addProperty( prop );
 	}
 
@@ -1815,8 +1818,11 @@ public class ModelBinder {
 
 		keyBinding.setForeignKeyName( secondaryTableSource.getExplicitForeignKeyName() );
 
-		secondaryTableJoin.createPrimaryKey();
-		secondaryTableJoin.createForeignKey();
+		// skip creating primary and foreign keys for a subselect.
+		if ( secondaryTable.getSubselect() == null ) {
+			secondaryTableJoin.createPrimaryKey();
+			secondaryTableJoin.createForeignKey();
+		}
 	}
 
 	private Property createEmbeddedAttribute(
@@ -1889,7 +1895,7 @@ public class ModelBinder {
 				sourceDocument,
 				attributeSource.getRelationalValueSources(),
 				value,
-				true,
+				attributeSource.areValuesNullableByDefault(),
 				new RelationalObjectBinder.ColumnNamingDelegate() {
 					@Override
 					public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
@@ -3386,7 +3392,7 @@ public class ModelBinder {
 
 				makeIdentifier(
 						mappingDocument,
-						new IdentifierGeneratorDefinition( idSource.getGeneratorName() ),
+						new IdentifierGeneratorDefinition( idSource.getGeneratorName(), idSource.getParameters() ),
 						null,
 						idBinding
 				);
@@ -4111,7 +4117,7 @@ public class ModelBinder {
 				// implicit naming.  If we get here, we assume that there is only a single
 				// column making up the FK
 
-				final String referencedEntityAttributeName = manyToOneSource.getReferencedEntityAttributeName();
+//				final String referencedEntityAttributeName = manyToOneSource.getReferencedEntityAttributeName();
 
 				final PersistentClass referencedEntityBinding = mappingDocument.getMetadataCollector()
 						.getEntityBinding( referencedEntityName );
@@ -4123,35 +4129,35 @@ public class ModelBinder {
 					);
 				}
 
-				final EntityNaming entityNaming = new EntityNamingSourceImpl( referencedEntityBinding );
-
-				final Identifier referencedTableName;
-				final Identifier referencedColumnName;
-
-				if ( referencedEntityAttributeName == null ) {
-					referencedTableName = referencedEntityBinding.getTable().getNameIdentifier();
-					final Column referencedColumn = referencedEntityBinding.getTable()
-							.getPrimaryKey()
-							.getColumn( 0 );
-					referencedColumnName = mappingDocument.getMetadataCollector()
-							.getDatabase()
-							.getJdbcEnvironment()
-							.getIdentifierHelper()
-							.toIdentifier( referencedColumn.getQuotedName() );
-				}
-				else {
-					final Property referencedProperty = referencedEntityBinding.getReferencedProperty(
-							referencedEntityAttributeName
-					);
-					final SimpleValue value = (SimpleValue) referencedProperty.getValue();
-					referencedTableName = value.getTable().getNameIdentifier();
-					final Column referencedColumn = (Column) value.getColumnIterator().next();
-					referencedColumnName = mappingDocument.getMetadataCollector()
-							.getDatabase()
-							.getJdbcEnvironment()
-							.getIdentifierHelper()
-							.toIdentifier( referencedColumn.getQuotedName() );
-				}
+//				final EntityNaming entityNaming = new EntityNamingSourceImpl( referencedEntityBinding );
+//
+//				final Identifier referencedTableName;
+//				final Identifier referencedColumnName;
+//
+//				if ( referencedEntityAttributeName == null ) {
+//					referencedTableName = referencedEntityBinding.getTable().getNameIdentifier();
+//					final Column referencedColumn = referencedEntityBinding.getTable()
+//							.getPrimaryKey()
+//							.getColumn( 0 );
+//					referencedColumnName = mappingDocument.getMetadataCollector()
+//							.getDatabase()
+//							.getJdbcEnvironment()
+//							.getIdentifierHelper()
+//							.toIdentifier( referencedColumn.getQuotedName() );
+//				}
+//				else {
+//					final Property referencedProperty = referencedEntityBinding.getReferencedProperty(
+//							referencedEntityAttributeName
+//					);
+//					final SimpleValue value = (SimpleValue) referencedProperty.getValue();
+//					referencedTableName = value.getTable().getNameIdentifier();
+//					final Column referencedColumn = (Column) value.getColumnIterator().next();
+//					referencedColumnName = mappingDocument.getMetadataCollector()
+//							.getDatabase()
+//							.getJdbcEnvironment()
+//							.getIdentifierHelper()
+//							.toIdentifier( referencedColumn.getQuotedName() );
+//				}
 
 				relationalObjectBinder.bindColumnsAndFormulas(
 						mappingDocument,
@@ -4339,6 +4345,11 @@ public class ModelBinder {
 						@Override
 						public MetadataBuildingContext getBuildingContext() {
 							return mappingDocument;
+						}
+
+						@Override
+						public Identifier getUserProvidedIdentifier() {
+							return uk.getName() != null ? Identifier.toIdentifier( uk.getName() ) : null;
 						}
 					}
 			);

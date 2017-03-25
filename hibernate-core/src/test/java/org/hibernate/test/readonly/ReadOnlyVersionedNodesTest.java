@@ -6,10 +6,10 @@
  */
 package org.hibernate.test.readonly;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
+
 import org.hibernate.testing.FailureExpected;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -55,7 +55,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		// the changed name is still in the session
 		assertEquals( "node-name", node.getName() );
 		s.refresh( node );
-		// after refresh, the name reverts to the original value
+		// afterQuery refresh, the name reverts to the original value
 		assertEquals( "node", node.getName() );
 		node = ( VersionedNode ) s.get( VersionedNode.class, node.getId() );
 		assertEquals( "node", node.getName() );

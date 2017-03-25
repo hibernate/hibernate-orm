@@ -20,7 +20,6 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -34,10 +33,8 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
-@SkipForDialects({
-	@SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-6426"),
-	@SkipForDialect( value = PostgresPlusDialect.class, comment = "Almost all of the tests result in 'ambiguous column' errors.")
-})
+@SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-6426")
+@SkipForDialect( value = PostgresPlusDialect.class, comment = "Almost all of the tests result in 'ambiguous column' errors.")
 public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

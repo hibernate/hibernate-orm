@@ -410,8 +410,8 @@
         <title>Transaction configuration</title>
 
         <para>
-            Transaction handling per Session is handled by the <interfacename>org.hibernate.resource.transaction.TransactionCoordinator</interfacename>
-            contract, which are built by the <interfacename>org.hibernate.resource.transaction.TransactionCoordinatorBuilder</interfacename>
+            Transaction handling per Session is handled by the <interfacename>org.hibernate.resource.transaction.spi.TransactionCoordinator</interfacename>
+            contract, which are built by the <interfacename>org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder</interfacename>
             service.  TransactionCoordinatorBuilder represents a strategy for dealing with transactions whereas
             TransactionCoordinator represents one instance of that strategy related to a Session.  Which
             TransactionCoordinatorBuilder implementation to use is defined by the <literal>hibernate.transaction.coordinator_class</literal>
@@ -787,7 +787,7 @@
             </listitem>
             <listitem>
                 <para>
-                    <literal>hibernate.order_update</literal> - Forces Hibernate to order SQL updates by the
+                    <literal>hibernate.order_updates</literal> - Forces Hibernate to order SQL updates by the
                     entity type and the primary key value of the items being updated. This allows for more batching
                     to be used.  It will also result in fewer transaction deadlocks in highly concurrent systems.
                     Comes with a performance hit, so benchmark before and after to see if this actually helps or
@@ -916,7 +916,7 @@
             <listitem>
                 <para>
                     <literal>hibernate.query.plan_parameter_metadata_max_size</literal> - Controls the maximum number of
-                    <interfacename>org.hibernate.engine.query.spi.ParameterMetadata</interfacename> instances Hibernate
+                    <interfacename>org.hibernate.query.internal.ParameterMetadata</interfacename> instances Hibernate
                     will maintain in its QueryPlanCache.  The default is 128.
                 </para>
             </listitem>

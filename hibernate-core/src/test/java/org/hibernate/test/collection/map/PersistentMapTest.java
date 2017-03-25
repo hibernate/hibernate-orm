@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -38,6 +39,7 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  * @author Brett Meyer
+ * @author Gail Badner
  */
 public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 	@Override
@@ -47,7 +49,14 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 	
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { User.class, UserData.class };
+		return new Class<?>[] {
+				User.class,
+				UserData.class,
+				MultilingualString.class,
+				MultilingualStringParent.class,
+				Address.class,
+				Detail.class
+		};
 	}
 
 	@Test
@@ -160,7 +169,7 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
         session.getTransaction().commit();
         session.close();
     }
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-5732")
 	public void testClearMap() {
@@ -196,7 +205,145 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-5393")
+	public void testMapKeyColumnInEmbeddableElement() {
+		Session s = openSession();
+		s.getTransaction().begin();
+		MultilingualString m = new MultilingualString();
+		LocalizedString localizedString = new LocalizedString();
+		localizedString.setLanguage( "English" );
+		localizedString.setText( "name" );
+		m.getMap().put( localizedString.getLanguage(), localizedString );
+		localizedString = new LocalizedString();
+		localizedString.setLanguage( "English Pig Latin" );
+		localizedString.setText( "amenay" );
+		m.getMap().put( localizedString.getLanguage(), localizedString );
+		s.persist( m );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		m = s.get( MultilingualString.class, m.getId());
+		assertEquals( 2, m.getMap().size() );
+		localizedString = m.getMap().get( "English" );
+		assertEquals( "English", localizedString.getLanguage() );
+		assertEquals( "name", localizedString.getText() );
+		localizedString = m.getMap().get( "English Pig Latin" );
+		assertEquals( "English Pig Latin", localizedString.getLanguage() );
+		assertEquals( "amenay", localizedString.getText() );
+		s.delete( m );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HQLPARSER-15")
+	public void testJoinFetchElementCollectionWithParentSelect() {
+		Session s = openSession();
+		s.getTransaction().begin();
+
+		MultilingualString m = new MultilingualString();
+		LocalizedString localizedString = new LocalizedString();
+		localizedString.setLanguage( "English" );
+		localizedString.setText( "name" );
+		m.getMap().put( localizedString.getLanguage(), localizedString );
+		localizedString = new LocalizedString();
+		localizedString.setLanguage( "English Pig Latin" );
+		localizedString.setText( "amenay" );
+		m.getMap().put( localizedString.getLanguage(), localizedString );
+
+		MultilingualStringParent parent = new MultilingualStringParent();
+		parent.setString( m );
+
+		s.persist( m );
+		s.persist( parent );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		m = s.createQuery(
+				"SELECT s FROM MultilingualStringParent parent " +
+						"JOIN parent.string s " +
+						"JOIN FETCH s.map", MultilingualString.class )
+				.getSingleResult();
+		assertEquals( 2, m.getMap().size() );
+		localizedString = m.getMap().get( "English" );
+		assertEquals( "English", localizedString.getLanguage() );
+		assertEquals( "name", localizedString.getText() );
+		localizedString = m.getMap().get( "English Pig Latin" );
+		assertEquals( "English Pig Latin", localizedString.getLanguage() );
+		assertEquals( "amenay", localizedString.getText() );
+		s.delete( parent );
+		s.delete( m );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11038" )
+	public void testMapKeyColumnNonInsertableNonUpdatableBidirOneToMany() {
+		Session s = openSession();
+		s.getTransaction().begin();
+		User user = new User();
+		Address address = new Address();
+		address.addressType = "email";
+		address.addressText = "jane@doe.com";
+		user.addresses.put( address.addressType, address );
+		address.user = user;
+		s.persist( user );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		user = s.get( User.class, user.id );
+		user.addresses.clear();
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		user = s.get( User.class, user.id );
+		s.delete( user );
+		s.createQuery( "delete from " + User.class.getName() ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11038" )
+	public void testMapKeyColumnNonInsertableNonUpdatableUnidirOneToMany() {
+		Session s = openSession();
+		s.getTransaction().begin();
+		User user = new User();
+		Detail detail = new Detail();
+		detail.description = "desc";
+		detail.detailType = "trivial";
+		user.details.put( detail.detailType, detail );
+		s.persist( user );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		user = s.get( User.class, user.id );
+		user.details.clear();
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		user = s.get( User.class, user.id );
+		s.delete( user );
+		s.createQuery( "delete from " + User.class.getName() ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
+	}
+
 	@Entity
 	@Table(name = "MyUser")
 	private static class User implements Serializable {
@@ -206,6 +353,15 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
 		@MapKeyColumn(name = "name", nullable = true)
 		private Map<String, UserData> userDatas = new HashMap<String, UserData>();
+
+		@OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
+		@MapKeyColumn(name = "addressType", insertable = false, updatable = false)
+		private Map<String, Address> addresses = new HashMap<String, Address>();
+
+		@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+		@MapKeyColumn(name = "detailType", insertable = false, updatable = false)
+		@JoinColumn
+		private Map<String, Detail> details = new HashMap<String, Detail>();
 	}
 	
 	@Entity
@@ -217,5 +373,34 @@ public class PersistentMapTest extends BaseCoreFunctionalTestCase {
 		@ManyToOne
 		@JoinColumn(name = "userId")
 		private User user;
+	}
+
+	@Entity
+	@Table(name = "Address")
+	private static class Address {
+		@Id @GeneratedValue
+		private Integer id;
+
+		@ManyToOne
+		@JoinColumn(name = "userId")
+		private User user;
+
+		@Column(nullable = false)
+		private String addressType;
+
+		@Column(nullable = false)
+		private String addressText;
+	}
+
+	@Entity
+	@Table(name="Detail")
+	private static class Detail {
+		@Id @GeneratedValue
+		private Integer id;
+
+		@Column(nullable = false)
+		private String detailType;
+
+		private String description;
 	}
 }

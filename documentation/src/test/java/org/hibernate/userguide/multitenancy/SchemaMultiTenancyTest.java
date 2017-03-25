@@ -7,10 +7,14 @@
 package org.hibernate.userguide.multitenancy;
 
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.dialect.H2Dialect;
+
+import org.hibernate.testing.RequiresDialect;
 
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialect(H2Dialect.class)
 public class SchemaMultiTenancyTest extends AbstractMultiTenancyTest {
 
 	public static final String SCHEMA_TOKEN = ";INIT=CREATE SCHEMA IF NOT EXISTS %1$s\\;SET SCHEMA %1$s";

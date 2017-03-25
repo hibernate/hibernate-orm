@@ -9,10 +9,15 @@ package org.hibernate.test.cache.infinispan.functional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.Predicate;
 
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cache.infinispan.util.FutureUpdate;
+import org.hibernate.cache.infinispan.util.TombstoneUpdate;
+import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
@@ -24,23 +29,27 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.resource.transaction.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
+import org.hibernate.test.cache.infinispan.util.ExpectingInterceptor;
+import org.hibernate.testing.BeforeClassOnce;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.CustomParameterized;
+import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
 import org.hibernate.test.cache.infinispan.tm.XaConnectionProvider;
 import org.hibernate.test.cache.infinispan.util.InfinispanTestingSetup;
 import org.hibernate.test.cache.infinispan.util.TestInfinispanRegionFactory;
 import org.hibernate.test.cache.infinispan.util.TxUtil;
-import org.hibernate.testing.BeforeClassOnce;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
-
-import org.hibernate.testing.junit4.CustomParameterized;
-import org.infinispan.configuration.cache.CacheMode;
+import org.infinispan.AdvancedCache;
+import org.infinispan.commands.write.PutKeyValueCommand;
+import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import org.infinispan.configuration.cache.CacheMode;
 
 /**
  * @author Galder Zamarreño
@@ -88,6 +97,7 @@ public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctional
 	public boolean addVersions;
 
 	protected boolean useJta;
+	protected List<Runnable> cleanup = new ArrayList<>();
 
 	@CustomParameterized.Order(0)
 	@Parameterized.Parameters(name = "{0}, {6}")
@@ -118,6 +128,12 @@ public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctional
 	@BeforeClassOnce
 	public void setUseJta() {
 		useJta = jtaPlatformClass != null;
+	}
+
+	@After
+	public void runCleanup() {
+		cleanup.forEach(Runnable::run);
+		cleanup.clear();
 	}
 
 	@Override
@@ -181,6 +197,7 @@ public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctional
 		settings.put( Environment.GENERATE_STATISTICS, "true" );
 		settings.put( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );
 		settings.put( Environment.CACHE_REGION_FACTORY, getRegionFactoryClass().getName() );
+		settings.put( Environment.CACHE_KEYS_FACTORY, SimpleCacheKeysFactory.SHORT_NAME );
 		settings.put( TestInfinispanRegionFactory.TRANSACTIONAL, useTransactionalCache );
 		settings.put( TestInfinispanRegionFactory.CACHE_MODE, cacheMode);
 
@@ -195,5 +212,26 @@ public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctional
 
 	protected void markRollbackOnly(Session session) {
 		TxUtil.markRollbackOnly(useJta, session);
+	}
+
+	protected CountDownLatch expectAfterUpdate(AdvancedCache cache, int numUpdates) {
+		return expectPutWithValue(cache, value -> value instanceof FutureUpdate, numUpdates);
+	}
+
+	protected CountDownLatch expectEvict(AdvancedCache cache, int numUpdates) {
+		return expectPutWithValue(cache, value -> value instanceof TombstoneUpdate && ((TombstoneUpdate) value).getValue() == null, numUpdates);
+	}
+
+	protected CountDownLatch expectPutWithValue(AdvancedCache cache, Predicate<Object> valuePredicate, int numUpdates) {
+		if (!cacheMode.isInvalidation() && accessType != AccessType.NONSTRICT_READ_WRITE) {
+			CountDownLatch latch = new CountDownLatch(numUpdates);
+			ExpectingInterceptor.get(cache)
+				.when((ctx, cmd) -> cmd instanceof PutKeyValueCommand && valuePredicate.test(((PutKeyValueCommand) cmd).getValue()))
+				.countDown(latch);
+			cleanup.add(() -> ExpectingInterceptor.cleanup(cache));
+			return latch;
+		} else {
+			return new CountDownLatch(0);
+		}
 	}
 }

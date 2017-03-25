@@ -43,7 +43,7 @@ import javax.persistence.Version;
         name = "find_person_name",
         query =
             "SELECT name " +
-            "FROM person "
+            "FROM Person "
     ),
     //end::sql-scalar-NamedNativeQuery-example[]
     //tag::sql-multiple-scalar-values-NamedNativeQuery-example[]
@@ -53,7 +53,7 @@ import javax.persistence.Version;
             "SELECT " +
             "   name, " +
             "   nickName " +
-            "FROM person "
+            "FROM Person "
     ),
     //end::sql-multiple-scalar-values-NamedNativeQuery-example[]
     // tag::sql-multiple-scalar-values-dto-NamedNativeQuery-example[]
@@ -63,7 +63,7 @@ import javax.persistence.Version;
             "SELECT " +
             "   name, " +
             "   nickName " +
-            "FROM person ",
+            "FROM Person ",
         resultSetMapping = "name_and_nickName_dto"
     ),
     //end::sql-multiple-scalar-values-dto-NamedNativeQuery-example[]
@@ -78,7 +78,7 @@ import javax.persistence.Version;
             "   p.address AS \"address\", " +
             "   p.createdOn AS \"createdOn\", " +
             "   p.version AS \"version\" " +
-            "FROM person p " +
+            "FROM Person p " +
             "WHERE p.name LIKE :name",
         resultClass = Person.class
     ),
@@ -96,10 +96,10 @@ import javax.persistence.Version;
             "   pr.version AS \"pr.version\", " +
             "   ph.id AS \"ph.id\", " +
             "   ph.person_id AS \"ph.person_id\", " +
-            "   ph.phone_number AS \"ph.phone_number\", " +
-            "   ph.type AS \"ph.type\" " +
-            "FROM person pr " +
-            "JOIN phone ph ON pr.id = ph.person_id " +
+            "   ph.phone_number AS \"ph.number\", " +
+            "   ph.phone_type AS \"ph.type\" " +
+            "FROM Person pr " +
+            "JOIN Phone ph ON pr.id = ph.person_id " +
             "WHERE pr.name LIKE :name",
         resultSetMapping = "person_with_phones"
     )

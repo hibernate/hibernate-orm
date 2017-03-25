@@ -6,6 +6,8 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.EnumSet;
 
 import org.hibernate.boot.MetadataSources;
@@ -16,13 +18,18 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -75,7 +82,7 @@ public class SchemaExportTest extends BaseUnitTestCase {
     public void testBothType() {
 		final SchemaExport schemaExport = new SchemaExport();
 
-        // drop before create (nothing to drop yeT)
+        // drop beforeQuery create (nothing to drop yeT)
         schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.DROP, metadata );
         if ( doesDialectSupportDropTableIfExist() ) {
             assertEquals( 0, schemaExport.getExceptions().size() );
@@ -84,11 +91,14 @@ public class SchemaExportTest extends BaseUnitTestCase {
             assertEquals( 1, schemaExport.getExceptions().size() );
         }
 
-        // drop before create again (this time drops the tables before re-creating)
+        // drop beforeQuery create again (this time drops the tables beforeQuery re-creating)
 		schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH, metadata );
-        assertEquals( 0, schemaExport.getExceptions().size() );
+		int exceptionCount = schemaExport.getExceptions().size();
+		if ( doesDialectSupportDropTableIfExist() ) {
+			assertEquals( 0,  exceptionCount);
+		}
 
-        // drop tables
+		// drop tables
 		schemaExport.execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.DROP, metadata );
         assertEquals( 0, schemaExport.getExceptions().size() );
     }
@@ -116,7 +126,7 @@ public class SchemaExportTest extends BaseUnitTestCase {
     public void testCreateAndDrop() {
 		final SchemaExport schemaExport = new SchemaExport();
 
-        // should drop before creating, but tables don't exist yet
+        // should drop beforeQuery creating, but tables don't exist yet
         schemaExport.create( EnumSet.of( TargetType.DATABASE ), metadata );
 		if ( doesDialectSupportDropTableIfExist() ) {
 			assertEquals( 0, schemaExport.getExceptions().size() );
@@ -124,11 +134,31 @@ public class SchemaExportTest extends BaseUnitTestCase {
 		else {
 			assertEquals( 1, schemaExport.getExceptions().size() );
 		}
-        // call create again; it should drop tables before re-creating
+        // call create again; it should drop tables beforeQuery re-creating
 		schemaExport.create( EnumSet.of( TargetType.DATABASE ), metadata );
         assertEquals( 0, schemaExport.getExceptions().size() );
         // drop the tables
 		schemaExport.drop( EnumSet.of( TargetType.DATABASE ), metadata );
         assertEquals( 0, schemaExport.getExceptions().size() );
     }
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10678")
+	@RequiresDialectFeature( value = DialectChecks.SupportSchemaCreation.class)
+	public void testHibernateMappingSchemaPropertyIsNotIgnored() throws Exception {
+		File output = File.createTempFile( "update_script", ".sql" );
+		output.deleteOnExit();
+
+		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+				.addResource( "org/hibernate/test/schemaupdate/mapping2.hbm.xml" )
+				.buildMetadata();
+		metadata.validate();
+
+		final SchemaExport schemaExport = new SchemaExport();
+		schemaExport.setOutputFile( output.getAbsolutePath() );
+		schemaExport.execute( EnumSet.of( TargetType.SCRIPT ), SchemaExport.Action.CREATE, metadata );
+
+		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
+		assertThat( fileContent, fileContent.toLowerCase().contains( "create table schema1.version" ), is( true ) );
+	}
 }

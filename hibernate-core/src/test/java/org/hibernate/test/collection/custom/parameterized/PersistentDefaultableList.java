@@ -9,7 +9,7 @@ package org.hibernate.test.collection.custom.parameterized;
 import java.util.List;
 
 import org.hibernate.collection.internal.PersistentList;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * The "persistent wrapper" around our specialized collection contract
@@ -18,11 +18,11 @@ import org.hibernate.engine.spi.SessionImplementor;
  * @author Steve Ebersole
  */
 public class PersistentDefaultableList extends PersistentList implements DefaultableList {
-	public PersistentDefaultableList(SessionImplementor session) {
+	public PersistentDefaultableList(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
-	public PersistentDefaultableList(SessionImplementor session, List list) {
+	public PersistentDefaultableList(SharedSessionContractImplementor session, List list) {
 		super( session, list );
 	}
 

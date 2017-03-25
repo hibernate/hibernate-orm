@@ -8,15 +8,15 @@ package org.hibernate.test.dialect.unit.lockhint;
 
 import java.util.Collections;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -46,6 +46,12 @@ public abstract class AbstractLockHintTest extends BaseUnitTestCase {
 		new SyntaxChecker( "select xyz from ABC $HOLDER$, DEF d", "a" ).verify();
 	}
 
+	protected LockOptions lockOptions(String aliasToLock) {
+		LockOptions lockOptions = new LockOptions(LockMode.UPGRADE);
+		lockOptions.setAliasSpecificLockMode( aliasToLock, LockMode.UPGRADE );
+		return lockOptions;
+	}
+
 	protected class SyntaxChecker {
 		private final String aliasToLock;
 		private final String rawSql;
@@ -62,9 +68,7 @@ public abstract class AbstractLockHintTest extends BaseUnitTestCase {
 		}
 
 		public void verify() {
-			LockOptions lockOptions = new LockOptions(LockMode.UPGRADE);
-			lockOptions.setAliasSpecificLockMode( aliasToLock, LockMode.UPGRADE );
-			String actualProcessedSql = dialect.applyLocksToSql( rawSql, lockOptions, Collections.EMPTY_MAP );
+			String actualProcessedSql = dialect.applyLocksToSql( rawSql, lockOptions( aliasToLock ), Collections.EMPTY_MAP );
 			assertEquals( expectedProcessedSql, actualProcessedSql );
 		}
 	}

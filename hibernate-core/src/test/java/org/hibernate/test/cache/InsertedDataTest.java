@@ -13,10 +13,14 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.persister.entity.Lockable;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for handling of data just inserted during a transaction being read from the database
@@ -164,7 +168,9 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
-		assertEquals( 0, cacheMap.size() );
+		assertEquals( 1, cacheMap.size() );
+		Object lock = cacheMap.values().iterator().next();
+		assertEquals( "org.hibernate.testing.cache.AbstractReadWriteAccessStrategy$Lock", lock.getClass().getName() );
 
 		s = openSession();
 		s.beginTransaction();

@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -44,8 +44,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * Cached because of performance
 	 *
-	 * @see #getIdentifierType(SessionImplementor)
-	 * @see #getIdentifierType(Mapping)
+	 * @see #getIdentifierType
+	 * @see #getIdentifierType
 	 */
 	private transient volatile Type associatedIdentifierType;
 
@@ -242,13 +242,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return ReflectHelper.classForName( entityName );
 		}
 		catch (ClassNotFoundException cnfe) {
-			return this.scope.resolveFactory().getEntityPersister( entityName ).
+			return this.scope.resolveFactory().getMetamodel().entityPersister( entityName ).
 					getEntityTuplizer().getMappedClass();
 		}
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner)
+	public Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException, SQLException {
 		return nullSafeGet( rs, new String[] {name}, session, owner );
 	}
@@ -257,7 +257,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	public final Object nullSafeGet(
 			ResultSet rs,
 			String[] names,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException, SQLException {
 		return resolve( hydrate( rs, names, session, owner ), session, owner );
 	}
@@ -289,13 +289,20 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	public Object replace(
 			Object original,
 			Object target,
-			SessionImplementor session,
+			SharedSessionContractImplementor session,
 			Object owner,
 			Map copyCache) throws HibernateException {
 		if ( original == null ) {
 			return null;
 		}
 		Object cached = copyCache.get( original );
+		if ( cached == null ) {
+			// Avoid creation of invalid managed -> managed mapping in copyCache when traversing
+			// cascade loop (@OneToMany(cascade=ALL) with associated @ManyToOne(cascade=ALL)) in entity graph
+			if ( copyCache.containsValue( original ) ) {
+				cached = original;
+			}
+		}
 		if ( cached != null ) {
 			return cached;
 		}
@@ -418,7 +425,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * Resolve an identifier or unique key value
 	 */
 	@Override
-	public Object resolve(Object value, SessionImplementor session, Object owner) throws HibernateException {
+	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		if ( value != null && !isNull( owner, session ) ) {
 			if ( isReferenceToPrimaryKey() ) {
 				return resolveIdentifier( (Serializable) value, session );
@@ -442,7 +449,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		//form it returns the local variable to avoid a second volatile read: associatedEntityPersister
 		//needs to be volatile as the initialization might happen by a different thread than the readers.
 		if ( persister == null ) {
-			associatedEntityPersister = factory.getEntityPersister( getAssociatedEntityName() );
+			associatedEntityPersister = factory.getMetamodel().entityPersister( getAssociatedEntityName() );
 			return associatedEntityPersister;
 		}
 		else {
@@ -450,7 +457,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 	}
 
-	protected final Object getIdentifier(Object value, SessionImplementor session) throws HibernateException {
+	protected final Object getIdentifier(Object value, SharedSessionContractImplementor session) throws HibernateException {
 		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return ForeignKeys.getEntityIdentifierIfNotUnsaved(
 					getAssociatedEntityName(),
@@ -492,8 +499,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return "null";
 		}
 
-		EntityPersister persister = getAssociatedEntityPersister( factory );
-		StringBuilder result = new StringBuilder().append( associatedEntityName );
+		final EntityPersister persister = getAssociatedEntityPersister( factory );
+		if ( !persister.getEntityTuplizer().isInstance( value ) ) {
+			// it should be the id type...
+			if ( persister.getIdentifierType().getReturnedClass().isInstance( value ) ) {
+				return associatedEntityName + "#" + value;
+			}
+		}
+
+		final StringBuilder result = new StringBuilder().append( associatedEntityName );
 
 		if ( persister.hasIdentifierProperty() ) {
 			final Serializable id;
@@ -556,7 +570,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @return The identifier type
 	 */
-	Type getIdentifierType(final SessionImplementor session) {
+	Type getIdentifierType(final SharedSessionContractImplementor session) {
 		final Type type = associatedIdentifierType;
 		if ( type == null ) {
 			associatedIdentifierType = getIdentifierType( session.getFactory() );
@@ -624,7 +638,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @throws org.hibernate.HibernateException Indicates problems performing the load.
 	 */
-	protected final Object resolveIdentifier(Serializable id, SessionImplementor session) throws HibernateException {
+	protected final Object resolveIdentifier(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
 		boolean isProxyUnwrapEnabled = unwrapProxy &&
 				getAssociatedEntityPersister( session.getFactory() )
 						.isInstrumented();
@@ -644,7 +658,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return proxyOrEntity;
 	}
 
-	protected boolean isNull(Object owner, SessionImplementor session) {
+	protected boolean isNull(Object owner, SharedSessionContractImplementor session) {
 		return false;
 	}
 
@@ -664,9 +678,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			String entityName,
 			String uniqueKeyPropertyName,
 			Object key,
-			SessionImplementor session) throws HibernateException {
+			SharedSessionContractImplementor session) throws HibernateException {
 		final SessionFactoryImplementor factory = session.getFactory();
-		UniqueKeyLoadable persister = (UniqueKeyLoadable) factory.getEntityPersister( entityName );
+		UniqueKeyLoadable persister = (UniqueKeyLoadable) factory.getMetamodel().entityPersister( entityName );
 
 		//TODO: implement caching?! proxies?!
 

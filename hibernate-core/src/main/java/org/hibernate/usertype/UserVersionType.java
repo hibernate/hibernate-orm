@@ -5,9 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.usertype;
+
 import java.util.Comparator;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * A user type that may be used for a version property
@@ -23,7 +24,8 @@ public interface UserVersionType extends UserType, Comparator {
 	 * the "unsaved value" of entities.
 	 * @return an instance of the type
 	 */
-	public Object seed(SessionImplementor session);
+	Object seed(SharedSessionContractImplementor session);
+
 	/**
 	 * Increment the version.
 	 *
@@ -31,6 +33,6 @@ public interface UserVersionType extends UserType, Comparator {
 	 * @param current the current version
 	 * @return an instance of the type
 	 */
-	public Object next(Object current, SessionImplementor session);
+	Object next(Object current, SharedSessionContractImplementor session);
 
 }

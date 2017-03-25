@@ -44,7 +44,7 @@ public final class ToOneRelationMetadataGenerator {
 			CompositeMapperBuilder mapper,
 			String entityName,
 			boolean insertable) {
-		final String referencedEntityName = ((ToOne) value).getReferencedEntityName();
+		final String referencedEntityName = ( (ToOne) value ).getReferencedEntityName();
 
 		final IdMappingData idMapping = mainGenerator.getReferencedIdMappingData(
 				entityName,
@@ -160,7 +160,7 @@ public final class ToOneRelationMetadataGenerator {
 			CompositeMapperBuilder mapper,
 			String entityName,
 			boolean insertable) {
-		final String referencedEntityName = ((ToOne) value).getReferencedEntityName();
+		final String referencedEntityName = ( (ToOne) value ).getReferencedEntityName();
 
 		final IdMappingData idMapping = mainGenerator.getReferencedIdMappingData(
 				entityName,

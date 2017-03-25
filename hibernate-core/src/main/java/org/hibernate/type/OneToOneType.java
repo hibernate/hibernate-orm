@@ -16,7 +16,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -63,13 +63,15 @@ public class OneToOneType extends EntityType {
 		this.entityName = entityName;
 	}
 
+	@Override
 	public String getPropertyName() {
 		return propertyName;
 	}
-	
-	public boolean isNull(Object owner, SessionImplementor session) {
+
+	@Override
+	public boolean isNull(Object owner, SharedSessionContractImplementor session) {
 		if ( propertyName != null ) {
-			final EntityPersister ownerPersister = session.getFactory().getEntityPersister( entityName );
+			final EntityPersister ownerPersister = session.getFactory().getMetamodel().entityPersister( entityName );
 			final Serializable id = session.getContextEntityIdentifier( owner );
 			final EntityKey entityKey = session.generateEntityKey( id, ownerPersister );
 			return session.getPersistenceContext().isPropertyNull( entityKey, getPropertyName() );
@@ -79,10 +81,12 @@ public class OneToOneType extends EntityType {
 		}
 	}
 
+	@Override
 	public int getColumnSpan(Mapping session) throws MappingException {
 		return 0;
 	}
 
+	@Override
 	public int[] sqlTypes(Mapping session) throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
@@ -99,63 +103,72 @@ public class OneToOneType extends EntityType {
 		return SIZES;
 	}
 
+	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 
-	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SessionImplementor session) {
+	@Override
+	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SharedSessionContractImplementor session) {
 		//nothing to do
 	}
 
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) {
+	@Override
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) {
 		//nothing to do
 	}
 
+	@Override
 	public boolean isOneToOne() {
 		return true;
 	}
 
-	public boolean isDirty(Object old, Object current, SessionImplementor session) {
+	@Override
+	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) {
 		return false;
 	}
 
-	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session) {
+	@Override
+	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) {
 		return false;
 	}
 
-	public boolean isModified(Object old, Object current, boolean[] checkable, SessionImplementor session) {
+	@Override
+	public boolean isModified(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) {
 		return false;
 	}
 
+	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
 		return foreignKeyType;
 	}
 
+	@Override
 	public Object hydrate(
 		ResultSet rs,
 		String[] names,
-		SessionImplementor session,
-		Object owner)
-	throws HibernateException, SQLException {
-
+		SharedSessionContractImplementor session,
+		Object owner) throws HibernateException, SQLException {
 		return session.getContextEntityIdentifier(owner);
 	}
 
+	@Override
 	protected boolean isNullable() {
 		return foreignKeyType==ForeignKeyDirection.TO_PARENT;
 	}
 
+	@Override
 	public boolean useLHSPrimaryKey() {
 		return true;
 	}
 
-	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
-	throws HibernateException {
+	@Override
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		return null;
 	}
 
-	public Object assemble(Serializable oid, SessionImplementor session, Object owner)
-	throws HibernateException {
+	@Override
+	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		//this should be a call to resolve(), not resolveIdentifier(), 
 		//'cos it might be a property-ref, and we did not cache the
 		//referenced value
@@ -167,6 +180,7 @@ public class OneToOneType extends EntityType {
 	 * assemble/disassemble is implemented and because a one-to-one 
 	 * association is never dirty
 	 */
+	@Override
 	public boolean isAlwaysDirtyChecked() {
 		//TODO: this is kinda inconsistent with CollectionType
 		return false; 

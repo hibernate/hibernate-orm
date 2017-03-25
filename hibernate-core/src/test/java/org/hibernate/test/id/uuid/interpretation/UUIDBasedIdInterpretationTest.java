@@ -29,6 +29,7 @@ import org.hibernate.type.PostgresUUIDType;
 import org.hibernate.type.Type;
 import org.hibernate.type.UUIDBinaryType;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -40,6 +41,7 @@ import static org.junit.Assert.assertThat;
  * @author Steve Ebersole
  */
 public class UUIDBasedIdInterpretationTest extends BaseUnitTestCase {
+
 	@Test
 	@TestForIssue( jiraKey = "HHH-10564")
 	public void testH2() {
@@ -100,6 +102,7 @@ public class UUIDBasedIdInterpretationTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10564")
+	@RequiresDialect(H2Dialect.class)
 	public void testBinaryRuntimeUsage() {
 		StandardServiceRegistry ssr = buildStandardServiceRegistry( H2Dialect.class, true );
 		try {

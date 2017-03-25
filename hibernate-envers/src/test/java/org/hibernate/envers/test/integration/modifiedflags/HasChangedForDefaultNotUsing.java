@@ -10,14 +10,12 @@ import java.util.Arrays;
 import java.util.List;
 import javax.persistence.EntityManager;
 
-import org.hibernate.QueryException;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.Component2;
 import org.hibernate.envers.test.integration.modifiedflags.entities.PartialModifiedFlagsEntity;
 import org.hibernate.envers.test.integration.modifiedflags.entities.WithModifiedFlagReferencingEntity;
-
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
@@ -191,7 +189,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 		assertEquals( makeList( 3 ), extractRevisionNumbers( list ) );
 	}
 
-	@Test(expected = QueryException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testHasChangedComp2() throws Exception {
 		queryForPropertyHasChanged(
 				PartialModifiedFlagsEntity.class,
@@ -209,7 +207,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 		assertEquals( makeList( 5, 6 ), extractRevisionNumbers( list ) );
 	}
 
-	@Test(expected = QueryException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testHasChangedReferencing2() throws Exception {
 		queryForPropertyHasChanged(
 				PartialModifiedFlagsEntity.class,

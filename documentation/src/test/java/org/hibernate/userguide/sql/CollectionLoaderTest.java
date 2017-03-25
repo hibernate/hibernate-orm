@@ -7,6 +7,7 @@
 package org.hibernate.userguide.sql;
 
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.ElementCollection;
@@ -23,15 +24,18 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -39,6 +43,8 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Vlad Mihalcea
  */
+@RequiresDialect(H2Dialect.class)
+@RequiresDialect(PostgreSQL82Dialect.class)
 public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final Logger log = Logger.getLogger( CollectionLoaderTest.class );
@@ -56,8 +62,10 @@ public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap( Session.class );
 			session.doWork( connection -> {
 				try(Statement statement = connection.createStatement(); ) {
-					statement.executeUpdate( "ALTER TABLE person ADD COLUMN valid boolean" );
-					statement.executeUpdate( "ALTER TABLE Person_phones ADD COLUMN valid boolean" );
+					statement.executeUpdate( String.format( "ALTER TABLE person %s valid %s",
+						getDialect().getAddColumnString(), getDialect().getTypeName( Types.BOOLEAN )));
+					statement.executeUpdate( String.format( "ALTER TABLE Person_phones %s valid %s",
+						getDialect().getAddColumnString(), getDialect().getTypeName( Types.BOOLEAN )));
 				}
 			} );
 		});

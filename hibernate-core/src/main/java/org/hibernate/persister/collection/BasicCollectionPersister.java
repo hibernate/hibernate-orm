@@ -19,7 +19,7 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.StaticFilterAliasGenerator;
@@ -136,8 +136,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id, SessionImplementor session)
-			throws HibernateException {
+	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session) {
 		// nothing to do
 	}
 
@@ -187,7 +186,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private BasicBatchKey updateBatchKey;
 
 	@Override
-	protected int doUpdateRows(Serializable id, PersistentCollection collection, SessionImplementor session)
+	protected int doUpdateRows(Serializable id, PersistentCollection collection, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( ArrayHelper.isAllFalse( elementColumnIsSettable ) ) {
 			return 0;
@@ -263,7 +262,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					}
 					finally {
 						if ( !useBatch ) {
-							session.getJdbcCoordinator().getResourceRegistry().release( st );
+							session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 							session.getJdbcCoordinator().afterStatementExecution();
 						}
 					}
@@ -274,7 +273,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			return count;
 		}
 		catch (SQLException sqle) {
-			throw getSQLExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not update collection rows: " + MessageHelper.collectionInfoString(
 							this,
@@ -362,7 +361,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	protected CollectionInitializer createSubselectInitializer(SubselectFetch subselect, SessionImplementor session) {
+	protected CollectionInitializer createSubselectInitializer(SubselectFetch subselect, SharedSessionContractImplementor session) {
 		return new SubselectCollectionLoader(
 				this,
 				subselect.toSubselectString( getCollectionType().getLHSPropertyName() ),

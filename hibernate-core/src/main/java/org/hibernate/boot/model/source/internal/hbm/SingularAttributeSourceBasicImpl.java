@@ -171,7 +171,10 @@ class SingularAttributeSourceBasicImpl
 
 	@Override
 	public boolean areValuesNullableByDefault() {
-		return ! Helper.getValue( propertyElement.isNotNull(), false );
+		return ! Helper.getValue(
+				propertyElement.isNotNull(),
+				naturalIdMutability != NaturalIdMutability.NOT_NATURAL_ID
+		);
 	}
 
 	@Override

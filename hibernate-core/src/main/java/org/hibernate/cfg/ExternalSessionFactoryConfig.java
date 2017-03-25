@@ -316,8 +316,7 @@ public abstract class ExternalSessionFactoryConfig {
 		}
 	}
 
-	private void verifyInt(String value)
-	{
+	private void verifyInt(String value) {
 		if ( value != null ) {
 			Integer.parseInt( value );
 		}

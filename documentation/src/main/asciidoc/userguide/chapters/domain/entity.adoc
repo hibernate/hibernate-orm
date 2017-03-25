@@ -1,6 +1,7 @@
-[[entity]]
+﻿[[entity]]
 === Entity types
-:sourcedir: extras
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/locking
+:extrasdir: extras
 
 .Usage of the word _entity_
 [NOTE]
@@ -52,7 +53,7 @@ For the very same reason, you should also avoid declaring persistent attribute g
 ====
 Starting in 5.0 Hibernate offers a more robust version of bytecode enhancement as another means for handling lazy loading.
 Hibernate had some bytecode re-writing capabilities prior to 5.0 but they were very rudimentary.
-See the <chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
+See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
 ====
 
 [[entity-pojo-constructor]]
@@ -99,7 +100,7 @@ The placement of the `@Id` annotation marks the <<chapters/domain/access.adoc#ac
 ====
 [source,java]
 ----
-include::{sourcedir}/entity/Identifier.java[]
+include::{extrasdir}/entity/Identifier.java[]
 ----
 ====
 
@@ -116,7 +117,7 @@ By default, the entity name represents the unqualified name of the entity class 
 ====
 [source,java]
 ----
-include::{sourcedir}/entity/SimpleEntity.java[]
+include::{extrasdir}/entity/SimpleEntity.java[]
 ----
 ====
 
@@ -129,7 +130,7 @@ To explicitly give the name of the table or to specify other information about t
 ====
 [source,java]
 ----
-include::{sourcedir}/entity/SimpleEntityWithTable.java[]
+include::{extrasdir}/entity/SimpleEntityWithTable.java[]
 ----
 ====
 
@@ -162,7 +163,7 @@ So if we ask a Hibernate `Session` to load that specific Person multiple times w
 ====
 [source,java]
 ----
-include::{sourcedir}/entity/listing1.java[]
+include::{extrasdir}/entity/listing1.java[]
 ----
 ====
 
@@ -172,7 +173,7 @@ Consider another example using a persistent `java.util.Set`:
 ====
 [source,java]
 ----
-include::{sourcedir}/entity/listing3.java[]
+include::{extrasdir}/entity/listing3.java[]
 ----
 ====
 
@@ -182,12 +183,12 @@ However, the semantic changes when we mix instances loaded from different Sessio
 ====
 [source,java]
 ----
-include::{sourcedir}/entity/listing2.java[]
+include::{extrasdir}/entity/listing2.java[]
 ----
 
 [source,java]
 ----
-include::{sourcedir}/entity/listing4.java[]
+include::{extrasdir}/entity/listing4.java[]
 ----
 ====
 
@@ -199,7 +200,7 @@ Consider yet another case:
 ====
 [source,java]
 ----
-include::{sourcedir}/entity/listing5.java[]
+include::{extrasdir}/entity/listing5.java[]
 ----
 ====
 
@@ -212,7 +213,7 @@ A common initial approach is to use the entity's identifier attribute as the bas
 ====
 [source,java]
 ----
-include::{sourcedir}/entity/listing6.java[]
+include::{extrasdir}/entity/listing6.java[]
 ----
 ====
 
@@ -222,12 +223,12 @@ It turns out that this still breaks when adding transient instance of `Person` t
 ====
 [source,java]
 ----
-include::{sourcedir}/entity/listing7.java[]
+include::{extrasdir}/entity/listing7.java[]
 ----
 ====
 
-The issue here is a conflict between _the use of generated identifier_, _the contract of `Set`_ and _the equals/hashCode implementations_.
-`Set` says that the equals/hashCode value for an object should not change while the object is part of the Set.
+The issue here is a conflict between the use of generated identifier, the contract of `Set` and the equals/hashCode implementations.
+`Set` says that the equals/hashCode value for an object should not change while the object is part of the `Set`.
 But that is exactly what happened here because the equals/hasCode are based on the (generated) id, which was not set until the `session.getTransaction().commit()` call.
 
 Note that this is just a concern when using generated identifiers.
@@ -239,7 +240,7 @@ Another option is to force the identifier to be generated and set prior to addin
 ====
 [source,java]
 ----
-include::{sourcedir}/entity/listing8.java[]
+include::{extrasdir}/entity/listing8.java[]
 ----
 ====
 
@@ -251,13 +252,23 @@ The final approach is to use a "better" equals/hashCode implementation, making u
 ====
 [source,java]
 ----
-include::{sourcedir}/entity/listing9.java[]
+include::{extrasdir}/entity/listing9.java[]
 ----
 ====
 
 As you can see the question of equals/hashCode is not trivial, nor is there a one-size-fits-all solution.
 
-For details on mapping the identifier, see the <<chapters/domain/identifiers.adoc#identiifers,Identifiers>> chapter.
+[TIP]
+====
+Although using a natural-id is best for `equals` and `hashCode`, sometimes you only have the entity identifier that provides a unique constraint.
+
+It's possible to use the entity identifier for equality check, but it needs a workaround:
+
+- you need to provide a constant value for `hashCode` so that the hash code value does not change before and after the entity is flushed.
+- you need to compare the entity identifier equality only for non-transient entities.
+====
+
+For details on mapping the identifier, see the <<chapters/domain/identifiers.adoc#identifiers,Identifiers>> chapter.
 
 [[entity-pojo-optlock]]
 ==== Mapping optimistic locking
@@ -271,33 +282,129 @@ According to JPA, the valid types for these attributes are limited to:
 * `long` or `Long`
 * `java.sql.Timestamp`
 
-.Version
+[[entity-pojo-optlock-version-example]]
+.`@Version` annotation mapping
 ====
 [source,java]
 ----
-include::{sourcedir}/entity/Version.java[]
+include::{extrasdir}/entity/Version.java[]
 ----
 
 [source,java]
 ----
-include::{sourcedir}/entity/Timestamp.java[]
+include::{extrasdir}/entity/Timestamp.java[]
 ----
 
 [source,java]
 ----
-include::{sourcedir}/entity/Instant.java[]
+include::{extrasdir}/entity/Instant.java[]
 ----
 ====
+
+[[entity-pojo-optlock-versionless]]
+===== Versionless optimistic locking
+
+Although the default `@Version` property optimistic locking mechanism is sufficient in many situations,
+sometimes, you need rely on the actual database row column values to prevent *lost updates*.
 
 Hibernate supports a form of optimistic locking that does not require a dedicated "version attribute".
-This is intended mainly for use with modeling legacy schemas.
+This is also useful for use with modeling legacy schemas.
+
 The idea is that you can get Hibernate to perform "version checks" using either all of the entity's attributes, or just the attributes that have changed.
-This is achieved through the use of the `org.hibernate.annotations.OptimisticLocking` annotation which defines a single attribute of type `org.hibernate.annotations.OptimisticLockType`.
+This is achieved through the use of the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLocking.html[`@OptimisticLocking`]
+annotation which defines a single attribute of type
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLockType.html[`org.hibernate.annotations.OptimisticLockType`].
+
 There are 4 available OptimisticLockTypes:
 
-`NONE`:: optimistic locking is disabled even if there is a `@Version` annotation present
-`VERSION` (the default)::  performs optimistic locking based on a `@Version` as described above
-`ALL`:: performs optimistic locking based on _all_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements
-`DIRTY`:: performs optimistic locking based on _dirty_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements.
+`NONE`::
+	optimistic locking is disabled even if there is a `@Version` annotation present
+`VERSION` (the default)::
+	performs optimistic locking based on a `@Version` as described above
+`ALL`::
+	performs optimistic locking based on _all_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements
+`DIRTY`::
+	performs optimistic locking based on _dirty_ fields as part of an expanded WHERE clause restriction for the UPDATE/DELETE SQL statements
 
+[[entity-pojo-optlock-versionless-all]]
+====== Versionless optimistic locking using `OptimisticLockType.ALL`
 
+[[locking-optimistic-lock-type-all-example]]
+.`OptimisticLockType.ALL` mapping example
+====
+[source,java]
+----
+include::{sourcedir}/OptimisticLockTypeAllTest.java[tag=locking-optimistic-lock-type-all-example,indent=0]
+----
+====
+
+When you need to modify the `Person` entity above:
+
+[[locking-optimistic-lock-type-all-update-example]]
+.`OptimisticLockType.ALL` update example
+====
+[source,java]
+----
+include::{sourcedir}/OptimisticLockTypeAllTest.java[tag=locking-optimistic-lock-type-all-update-example,indent=0]
+----
+
+[source,SQL]
+----
+include::{extrasdir}/locking/locking-optimistic-lock-type-all-update-example.sql[]
+----
+====
+
+As you can see, all the columns of the associated database row are used in the `WHERE` clause.
+If any column has changed after the row was loaded, there won't be any match, and a `StaleStateException` or an `OptimisticLockException`
+is going to be thrown.
+
+[NOTE]
+====
+When using `OptimisticLockType.ALL`, you should also use `@DynamicUpdate` because the `UPDATE` statement must take into consideration all the entity property values.
+====
+
+[[entity-pojo-optlock-versionless-dirty]]
+====== Versionless optimistic locking using `OptimisticLockType.DIRTY`
+
+The `OptimisticLockType.DIRTY` differs from `OptimisticLockType.ALL`
+in that it only takes into consideration the entity properties that have changed
+since the entity was loaded in the currently running Persistence Context.
+
+[[locking-optimistic-lock-type-dirty-example]]
+.`OptimisticLockType.DIRTY` mapping example
+====
+[source,java]
+----
+include::{sourcedir}/OptimisticLockTypeDirtyTest.java[tag=locking-optimistic-lock-type-dirty-example,indent=0]
+----
+====
+
+When you need to modify the `Person` entity above:
+
+[[locking-optimistic-lock-type-dirty-update-example]]
+.`OptimisticLockType.DIRTY` update example
+====
+[source,java]
+----
+include::{sourcedir}/OptimisticLockTypeDirtyTest.java[tag=locking-optimistic-lock-type-dirty-update-example,indent=0]
+----
+
+[source,SQL]
+----
+include::{extrasdir}/locking/locking-optimistic-lock-type-dirty-update-example.sql[]
+----
+====
+
+This time, only the database column that has changed was used in the `WHERE` clause.
+
+[NOTE]
+====
+The main advantage of `OptimisticLockType.DIRTY` over `OptimisticLockType.ALL`
+and the default `OptimisticLockType.VERSION` used implicitly along with the `@Version` mapping,
+is that it allows you to minimize the risk of `OptimisticLockException` across non-overlapping entity property changes.
+
+When using `OptimisticLockType.DIRTY`, you should also use `@DynamicUpdate` because the `UPDATE` statement must take into consideration all the dirty entity property values,
+and also the `@SelectBeforeUpdate` annotation so that detached entities are properly handled by the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#update-java.lang.Object-[`Session#update(entity)`] operation.
+====

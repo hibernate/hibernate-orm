@@ -63,7 +63,7 @@ public class SynchronizationRegistryStandardImplTests {
 			assertEquals( 0, synchronization.getFailedCompletionCount() );
 		}
 
-		// after completion should clear registered synchronizations
+		// afterQuery completion should clear registered synchronizations
 		assertEquals( 0, registry.getNumberOfRegisteredSynchronizations() );
 		// reset the sync
 		synchronization.reset();
@@ -80,7 +80,7 @@ public class SynchronizationRegistryStandardImplTests {
 			assertEquals( 0, synchronization.getSuccessfulCompletionCount() );
 			assertEquals( 1, synchronization.getFailedCompletionCount() );
 
-			// after completion should clear registered synchronizations
+			// afterQuery completion should clear registered synchronizations
 			assertEquals( 0, registry.getNumberOfRegisteredSynchronizations() );
 		}
 	}

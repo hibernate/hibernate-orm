@@ -363,7 +363,7 @@ public abstract class AbstractExpectationsFactory {
 	/**
 	 * Returns the expected results of the convexhull function
 	 *
-	 * @param geom geometry with which each testsuite-suite geometry is unioned before convexhull calculation
+	 * @param geom geometry with which each testsuite-suite geometry is unioned beforeQuery convexhull calculation
 	 *
 	 * @return
 	 *
@@ -754,7 +754,7 @@ public abstract class AbstractExpectationsFactory {
 			polygon.setSRID( getTestSrid() );
 			return polygon;
 		}
-		catch ( ParseException e ) {
+		catch (ParseException e) {
 			throw new RuntimeException( e );
 		}
 	}
@@ -771,7 +771,7 @@ public abstract class AbstractExpectationsFactory {
 			point.setSRID( getTestSrid() );
 			return point;
 		}
-		catch ( ParseException e ) {
+		catch (ParseException e) {
 			throw new RuntimeException( e );
 		}
 	}
@@ -814,7 +814,7 @@ public abstract class AbstractExpectationsFactory {
 						//this code is a hack to deal with Oracle Spatial that returns Blob's for asWKB() function
 						//TODO -- clean up
 						if ( val instanceof Blob ) {
-							val = (T) ( (Blob) val ).getBytes( 1, MAX_BYTE_LEN );
+							val = (T) ((Blob) val).getBytes( 1, MAX_BYTE_LEN );
 						}
 						expected.put( id, val );
 				}
@@ -822,20 +822,26 @@ public abstract class AbstractExpectationsFactory {
 			return expected;
 		}
 		finally {
-			if (results != null) {
+			if ( results != null ) {
 				try {
 					results.close();
-				}catch(SQLException e) {}
+				}
+				catch (SQLException e) {
+				}
 			}
 			if ( preparedStatement != null ) {
 				try {
 					preparedStatement.close();
-				}catch(SQLException e) {}
+				}
+				catch (SQLException e) {
+				}
 			}
 			if ( cn != null ) {
 				try {
 					cn.close();
-				}catch(SQLException e){}
+				}
+				catch (SQLException e) {
+				}
 			}
 		}
 	}

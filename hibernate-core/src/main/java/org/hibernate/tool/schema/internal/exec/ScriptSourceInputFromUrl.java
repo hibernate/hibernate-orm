@@ -27,15 +27,19 @@ public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput implemen
 	private static final Logger log = Logger.getLogger( ScriptSourceInputFromFile.class );
 
 	private final URL url;
+	private final String charsetName;
+
 	private Reader reader;
 
 	/**
 	 * Constructs a ScriptSourceInputFromUrl instance
 	 *
 	 * @param url The url to read from
+	 * @param charsetName The charset name
 	 */
-	public ScriptSourceInputFromUrl(URL url) {
+	public ScriptSourceInputFromUrl(URL url, String charsetName) {
 		this.url = url;
+		this.charsetName = charsetName;
 	}
 
 	@Override
@@ -50,7 +54,9 @@ public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput implemen
 	public void prepare() {
 		super.prepare();
 		try {
-			this.reader = new InputStreamReader( url.openStream() );
+			this.reader = charsetName != null ?
+				new InputStreamReader( url.openStream(), charsetName ) :
+				new InputStreamReader( url.openStream() );
 		}
 		catch (IOException e) {
 			throw new SchemaManagementException(

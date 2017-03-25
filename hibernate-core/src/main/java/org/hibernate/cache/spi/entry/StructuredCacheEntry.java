@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.TypeHelper;
 
 /**
  * Structured CacheEntry format for entities.  Used to store the entry into the second-level cache
@@ -48,7 +49,12 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 		for ( int i = 0; i < names.length; i++ ) {
 			state[i] = (Serializable) map.get( names[i] );
 		}
-		return new StandardCacheEntryImpl( state, subclass, version );
+		return new StandardCacheEntryImpl(
+				state,
+				TypeHelper.toLoggableString( state, subclassPersister.getPropertyTypes(), factory ),
+				subclass,
+				version
+		);
 	}
 
 	@Override

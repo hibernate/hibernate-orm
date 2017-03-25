@@ -6,18 +6,22 @@
  */
 package org.hibernate.dialect;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Testing of patched support for Derby limit and offset queries; see HHH-3972
  *
  * @author Evan Leonard
  */
-@TestForIssue( jiraKey = "HHH-3972" )
 public class DerbyDialectTestCase extends BaseUnitTestCase {
 
 	private static class LocalDerbyDialect extends DerbyDialect {
@@ -27,6 +31,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-3972" )
 	public void testInsertLimitClause() {
 		final int limit = 50;
 		final String input = "select * from tablename t where t.cat = 5";
@@ -37,6 +42,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-3972" )
 	public void testInsertLimitWithOffsetClause() {
 		final int limit = 50;
 		final int offset = 200;
@@ -48,6 +54,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-3972" )
 	public void testInsertLimitWithForUpdateClause() {
 		final int limit = 50;
 		final int offset = 200;
@@ -60,6 +67,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-3972" )
 	public void testInsertLimitWithWithClause() {
 		final int limit = 50;
 		final int offset = 200;
@@ -72,6 +80,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-3972" )
 	public void testInsertLimitWithForUpdateAndWithClauses() {
 		final int limit = 50;
 		final int offset = 200;
@@ -81,5 +90,12 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 
 		final String actual = new LocalDerbyDialect().getLimitString( input, offset, limit );
 		assertEquals( expected, actual );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10238")
+	public void testDefaultMultiTableBulkIdStrategyIsLocal() {
+		MultiTableBulkIdStrategy actual = new LocalDerbyDialect().getDefaultMultiTableBulkIdStrategy();
+		assertThat(actual, is(instanceOf(LocalTemporaryTableBulkIdStrategy.class)));
 	}
 }

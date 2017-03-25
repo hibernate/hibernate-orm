@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.schematools;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.boot.MetadataSources;
@@ -14,17 +15,22 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.internal.ExtractionContextImpl;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 import org.junit.After;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.test.util.DdlTransactionIsolatorTestingImpl;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -37,7 +43,6 @@ public class TestExtraPhysicalTableTypes {
 
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
-
 	@After
 	public void tearDown() {
 		StandardServiceRegistryBuilder.destroy( ssr );
@@ -84,12 +89,16 @@ public class TestExtraPhysicalTableTypes {
 	private InformationExtractorJdbcDatabaseMetaDataImplTest buildInformationExtractorJdbcDatabaseMetaDataImplTest()
 			throws SQLException {
 		Database database = metadata.getDatabase();
+
+		final ConnectionProvider connectionProvider = ssr.getService( ConnectionProvider.class );
 		DatabaseInformation dbInfo = new DatabaseInformationImpl(
 				ssr,
 				database.getJdbcEnvironment(),
-				ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess(),
-				database.getDefaultNamespace().getPhysicalName().getCatalog(),
-				database.getDefaultNamespace().getPhysicalName().getSchema()
+				new DdlTransactionIsolatorTestingImpl( ssr,
+													   new JdbcEnvironmentInitiator.ConnectionProviderJdbcConnectionAccess(
+															   connectionProvider )
+				),
+				database.getDefaultNamespace().getName()
 		);
 		ExtractionContextImpl extractionContext = new ExtractionContextImpl(
 				ssr,
@@ -119,13 +128,35 @@ public class TestExtraPhysicalTableTypes {
 	}
 
 	public class InformationExtractorJdbcDatabaseMetaDataImplTest extends InformationExtractorJdbcDatabaseMetaDataImpl {
-
 		public InformationExtractorJdbcDatabaseMetaDataImplTest(ExtractionContext extractionContext) {
 			super( extractionContext );
 		}
 
 		public boolean isPhysicalTableType(String tableType) {
 			return super.isPhysicalTableType( tableType );
+		}
+	}
+
+	class DdlTransactionIsolatorImpl implements  DdlTransactionIsolator{
+
+		@Override
+		public JdbcContext getJdbcContext() {
+			return null;
+		}
+
+		@Override
+		public void prepare() {
+
+		}
+
+		@Override
+		public Connection getIsolatedConnection() {
+			return null;
+		}
+
+		@Override
+		public void release() {
+
 		}
 	}
 }

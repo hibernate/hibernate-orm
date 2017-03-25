@@ -22,7 +22,7 @@ public interface Region {
 	 *
 	 * @return The region name
 	 */
-	public String getName();
+	String getName();
 
 	/**
 	 * The "end state" contract of the region's lifecycle.  Called
@@ -31,7 +31,7 @@ public interface Region {
 	 *
 	 * @throws org.hibernate.cache.CacheException Indicates problem shutting down
 	 */
-	public void destroy() throws CacheException;
+	void destroy() throws CacheException;
 
 	/**
 	 * Determine whether this region contains data for the given key.
@@ -45,7 +45,7 @@ public interface Region {
 	 * @return True if the underlying cache contains corresponding data; false
 	 * otherwise.
 	 */
-	public boolean contains(Object key);
+	boolean contains(Object key);
 
 	/**
 	 * The number of bytes is this cache region currently consuming in memory.
@@ -53,21 +53,21 @@ public interface Region {
 	 * @return The number of bytes consumed by this region; -1 if unknown or
 	 * unsupported.
 	 */
-	public long getSizeInMemory();
+	long getSizeInMemory();
 
 	/**
 	 * The count of entries currently contained in the regions in-memory store.
 	 *
 	 * @return The count of entries in memory; -1 if unknown or unsupported.
 	 */
-	public long getElementCountInMemory();
+	long getElementCountInMemory();
 
 	/**
 	 * The count of entries currently contained in the regions disk store.
 	 *
 	 * @return The count of entries on disk; -1 if unknown or unsupported.
 	 */
-	public long getElementCountOnDisk();
+	long getElementCountOnDisk();
 
 	/**
 	 * Get the contents of this region as a map.
@@ -77,7 +77,7 @@ public interface Region {
 	 *
 	 * @return The content map.
 	 */
-	public Map toMap();
+	Map toMap();
 
 	/**
 	 * Get the next timestamp according to the underlying cache implementor.
@@ -86,7 +86,7 @@ public interface Region {
 	 *
 	 * @return The next timestamp
 	 */
-	public long nextTimestamp();
+	long nextTimestamp();
 
 	/**
 	 * Get a timeout value.
@@ -95,5 +95,5 @@ public interface Region {
 	 *
 	 * @return The time out value
 	 */
-	public int getTimeout();
+	int getTimeout();
 }

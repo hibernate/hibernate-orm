@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
@@ -42,6 +43,7 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 
@@ -130,7 +132,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 			if ( c.clustering().cacheMode().isInvalidation() ) {
 				throw log.timestampsMustNotUseInvalidation();
 			}
-			if (c.eviction().strategy() != EvictionStrategy.NONE) {
+			if (c.eviction().strategy().isEnabled()) {
 				throw log.timestampsMustNotUseEviction();
 			}
 		}),
@@ -273,6 +275,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 	 */
 	protected final Map<String, ConfigurationBuilder> configOverrides = new HashMap<>();
 
+	private CacheKeysFactory cacheKeysFactory;
 	private ConfigurationBuilderHolder defaultConfiguration;
 	private final Map<DataType, Configuration> dataTypeConfigurations = new HashMap<>();
 	private EmbeddedCacheManager manager;
@@ -301,22 +304,27 @@ public class InfinispanRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public CollectionRegion buildCollectionRegion(
-			String regionName,
-			Properties properties,
-			CacheDataDescription metadata) throws CacheException {
+	public CollectionRegion buildCollectionRegion(String regionName, Map<String, Object> configValues, CacheDataDescription metadata) {
 		if ( log.isDebugEnabled() ) {
 			log.debug( "Building collection cache region [" + regionName + "]" );
 		}
 		final AdvancedCache cache = getCache( regionName, DataType.COLLECTION, metadata);
-		final CollectionRegionImpl region = new CollectionRegionImpl( cache, regionName, transactionManager, metadata, this, buildCacheKeysFactory() );
+		final CollectionRegionImpl region = new CollectionRegionImpl( cache, regionName, transactionManager, metadata, this, getCacheKeysFactory() );
 		startRegion( region );
 		return region;
 	}
 
 	@Override
-	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
-			throws CacheException {
+	@SuppressWarnings("unchecked")
+	public CollectionRegion buildCollectionRegion(
+			String regionName,
+			Properties properties,
+			CacheDataDescription metadata) throws CacheException {
+		return buildCollectionRegion( regionName, (Map) properties, metadata );
+	}
+
+	@Override
+	public EntityRegion buildEntityRegion(String regionName, Map<String, Object> configValues, CacheDataDescription metadata) {
 		if ( log.isDebugEnabled() ) {
 			log.debugf(
 					"Building entity cache region [%s] (mutable=%s, versioned=%s)",
@@ -326,26 +334,36 @@ public class InfinispanRegionFactory implements RegionFactory {
 			);
 		}
 		final AdvancedCache cache = getCache( regionName, metadata.isMutable() ? DataType.ENTITY : DataType.IMMUTABLE_ENTITY, metadata );
-		final EntityRegionImpl region = new EntityRegionImpl( cache, regionName, transactionManager, metadata, this, buildCacheKeysFactory() );
+		final EntityRegionImpl region = new EntityRegionImpl( cache, regionName, transactionManager, metadata, this, getCacheKeysFactory() );
 		startRegion( region );
 		return region;
 	}
 
 	@Override
-	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
-			throws CacheException {
+	@SuppressWarnings("unchecked")
+	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata) {
+		return buildEntityRegion( regionName, (Map) properties, metadata );
+	}
+
+	@Override
+	public NaturalIdRegion buildNaturalIdRegion(String regionName, Map<String, Object> configValues, CacheDataDescription metadata) {
 		if ( log.isDebugEnabled() ) {
 			log.debug("Building natural id cache region [" + regionName + "]");
 		}
 		final AdvancedCache cache = getCache( regionName, DataType.NATURAL_ID, metadata);
-		final NaturalIdRegionImpl region = new NaturalIdRegionImpl( cache, regionName, transactionManager, metadata, this, buildCacheKeysFactory());
+		final NaturalIdRegionImpl region = new NaturalIdRegionImpl( cache, regionName, transactionManager, metadata, this, getCacheKeysFactory());
 		startRegion( region );
 		return region;
 	}
 
 	@Override
-	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties)
-			throws CacheException {
+	@SuppressWarnings("unchecked")
+	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata) {
+		return buildNaturalIdRegion( regionName, (Map) properties, metadata );
+	}
+
+	@Override
+	public QueryResultsRegion buildQueryResultsRegion(String regionName, Map<String, Object> configValues) {
 		if ( log.isDebugEnabled() ) {
 			log.debug( "Building query results cache region [" + regionName + "]" );
 		}
@@ -357,8 +375,13 @@ public class InfinispanRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties)
-			throws CacheException {
+	@SuppressWarnings("unchecked")
+	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties) {
+		return buildQueryResultsRegion( regionName, (Map) properties );
+	}
+
+	@Override
+	public TimestampsRegion buildTimestampsRegion(String regionName, Map<String, Object> configValues) {
 		if ( log.isDebugEnabled() ) {
 			log.debug( "Building timestamps cache region [" + regionName + "]" );
 		}
@@ -366,6 +389,12 @@ public class InfinispanRegionFactory implements RegionFactory {
 		final TimestampsRegionImpl region = createTimestampsRegion( cache, regionName );
 		startRegion( region );
 		return region;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties) {
+		return buildTimestampsRegion( regionName, (Map) properties );
 	}
 
 	protected TimestampsRegionImpl createTimestampsRegion(
@@ -382,13 +411,8 @@ public class InfinispanRegionFactory implements RegionFactory {
 		return dataTypeConfigurations.get(DataType.PENDING_PUTS);
 	}
 
-	private CacheKeysFactory buildCacheKeysFactory() {
-		if (settings.getMultiTenancyStrategy() != MultiTenancyStrategy.NONE) {
-			return DefaultCacheKeysFactory.INSTANCE;
-		}
-		else {
-			return SimpleCacheKeysFactory.INSTANCE;
-		}
+	private CacheKeysFactory getCacheKeysFactory() {
+		return cacheKeysFactory;
 	}
 
 	@Override
@@ -418,6 +442,10 @@ public class InfinispanRegionFactory implements RegionFactory {
 	@Override
 	public void start(SessionFactoryOptions settings, Properties properties) throws CacheException {
 		log.debug( "Starting Infinispan region factory" );
+
+		// determine the CacheKeysFactory to use...
+		this.cacheKeysFactory = determineCacheKeysFactory( settings, properties );
+
 		try {
 			this.settings = settings;
 			transactionManagerlookup = createTransactionManagerLookup( settings, properties );
@@ -447,6 +475,14 @@ public class InfinispanRegionFactory implements RegionFactory {
 		catch (Throwable t) {
 			throw log.unableToStart(t);
 		}
+	}
+
+	private CacheKeysFactory determineCacheKeysFactory(SessionFactoryOptions settings, Properties properties) {
+		return settings.getServiceRegistry().getService( StrategySelector.class ).resolveDefaultableStrategy(
+				CacheKeysFactory.class,
+				properties.get( AvailableSettings.CACHE_KEYS_FACTORY ),
+				DefaultCacheKeysFactory.INSTANCE
+		);
 	}
 
 	/* This method is overridden in WildFly, so the signature must not change. */
@@ -582,7 +618,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 		}
 		else if ( (suffixLoc = key.indexOf( MAX_ENTRIES_SUFFIX )) != -1 ) {
 			builder = getOrCreateConfig( prefixLoc, key, suffixLoc );
-			builder.eviction().maxEntries( Long.parseLong(value) );
+			builder.eviction().size( Long.parseLong(value) );
 		}
 		else if ( (suffixLoc = key.indexOf( LIFESPAN_SUFFIX )) != -1 ) {
 			builder = getOrCreateConfig( prefixLoc, key, suffixLoc );
@@ -671,8 +707,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 				log.debugf("Region '%s' has additional configuration set through properties.", regionName);
 				builder.read(override.build(false));
 			}
-			// with multi-tenancy the keys will be wrapped
-			if (settings.getMultiTenancyStrategy() == MultiTenancyStrategy.NONE) {
+			if (getCacheKeysFactory() instanceof SimpleCacheKeysFactory) {
 				// the keys may not define hashCode/equals correctly (e.g. arrays)
 				if (metadata != null && metadata.getKeyType() != null) {
 					builder.dataContainer().keyEquivalence(new TypeEquivalance(metadata.getKeyType()));

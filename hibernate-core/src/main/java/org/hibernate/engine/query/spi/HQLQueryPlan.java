@@ -18,11 +18,10 @@ import java.util.Set;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
-import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.QuerySplitter;
 import org.hibernate.hql.spi.FilterTranslator;
@@ -35,6 +34,8 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -51,7 +52,7 @@ public class HQLQueryPlan implements Serializable {
 	private final QueryTranslator[] translators;
 	private final String[] sqlStrings;
 
-	private final ParameterMetadata parameterMetadata;
+	private final ParameterMetadataImpl parameterMetadata;
 	private final ReturnMetadata returnMetadata;
 	private final Set querySpaces;
 
@@ -103,13 +104,12 @@ public class HQLQueryPlan implements Serializable {
 		final List<String> sqlStringList = new ArrayList<String>();
 		final Set<Serializable> combinedQuerySpaces = new HashSet<Serializable>();
 
-		final boolean hasCollectionRole = (collectionRole == null);
 		final Map querySubstitutions = factory.getSessionFactoryOptions().getQuerySubstitutions();
 		final QueryTranslatorFactory queryTranslatorFactory = factory.getServiceRegistry().getService( QueryTranslatorFactory.class );
 
 
 		for ( int i=0; i<length; i++ ) {
-			if ( hasCollectionRole ) {
+			if ( collectionRole == null ) {
 				translators[i] = queryTranslatorFactory
 						.createQueryTranslator( hql, concreteQueryStrings[i], enabledFilters, factory, entityGraphQueryHint );
 				translators[i].compile( querySubstitutions, shallow );
@@ -127,7 +127,7 @@ public class HQLQueryPlan implements Serializable {
 		this.querySpaces = combinedQuerySpaces;
 
 		if ( length == 0 ) {
-			parameterMetadata = new ParameterMetadata( null, null );
+			parameterMetadata = new ParameterMetadataImpl( null, null );
 			returnMetadata = null;
 		}
 		else {
@@ -150,8 +150,8 @@ public class HQLQueryPlan implements Serializable {
 		return querySpaces;
 	}
 
-	public ParameterMetadata getParameterMetadata() {
-		return parameterMetadata;
+	public ParameterMetadataImpl getParameterMetadata() {
+		return parameterMetadata.getOrdinalParametersZeroBasedCopy();
 	}
 
 	public ReturnMetadata getReturnMetadata() {
@@ -188,7 +188,7 @@ public class HQLQueryPlan implements Serializable {
 	@SuppressWarnings("unchecked")
 	public List performList(
 			QueryParameters queryParameters,
-			SessionImplementor session) throws HibernateException {
+			SharedSessionContractImplementor session) throws HibernateException {
 		if ( traceEnabled ) {
 			LOG.tracev( "Find: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
@@ -333,9 +333,9 @@ public class HQLQueryPlan implements Serializable {
 	 *
 	 * @throws HibernateException Indicates a problem performing the query
 	 */
-	public ScrollableResults performScroll(
+	public ScrollableResultsImplementor performScroll(
 			QueryParameters queryParameters,
-			SessionImplementor session) throws HibernateException {
+			SharedSessionContractImplementor session) throws HibernateException {
 		if ( traceEnabled ) {
 			LOG.tracev( "Iterate: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
@@ -360,7 +360,7 @@ public class HQLQueryPlan implements Serializable {
 	 *
 	 * @throws HibernateException Indicates a problem performing the execution
 	 */
-	public int performExecuteUpdate(QueryParameters queryParameters, SessionImplementor session)
+	public int performExecuteUpdate(QueryParameters queryParameters, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( traceEnabled ) {
 			LOG.tracev( "Execute update: {0}", getSourceQuery() );
@@ -376,7 +376,7 @@ public class HQLQueryPlan implements Serializable {
 		return result;
 	}
 
-	private ParameterMetadata buildParameterMetadata(ParameterTranslations parameterTranslations, String hql) {
+	private ParameterMetadataImpl buildParameterMetadata(ParameterTranslations parameterTranslations, String hql) {
 		final long start = traceEnabled ? System.nanoTime() : 0;
 		final ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( hql );
 
@@ -393,13 +393,13 @@ public class HQLQueryPlan implements Serializable {
 		ordinalParamCount = locations.length;
 
 		final OrdinalParameterDescriptor[] ordinalParamDescriptors = new OrdinalParameterDescriptor[ordinalParamCount];
-		for ( int i = 1; i <= ordinalParamCount; i++ ) {
-			ordinalParamDescriptors[ i - 1 ] = new OrdinalParameterDescriptor(
+		for ( int i = 0; i < ordinalParamCount; i++ ) {
+			ordinalParamDescriptors[ i ] = new OrdinalParameterDescriptor(
 					i,
 					parameterTranslations.supportsOrdinalParameterMetadata()
 							? parameterTranslations.getOrdinalParameterExpectedType( i )
 							: null,
-					locations[ i - 1 ]
+					locations[ i ]
 			);
 		}
 
@@ -417,7 +417,7 @@ public class HQLQueryPlan implements Serializable {
 					)
 			);
 		}
-		return new ParameterMetadata( ordinalParamDescriptors, namedParamDescriptorMap );
+		return new ParameterMetadataImpl( ordinalParamDescriptors, namedParamDescriptorMap );
 	}
 
 	/**

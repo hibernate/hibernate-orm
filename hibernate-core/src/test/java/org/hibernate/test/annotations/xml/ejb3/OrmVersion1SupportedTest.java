@@ -38,9 +38,6 @@ public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 	public void testOrm1Support() {
 		Triggerable triggerable = logInspection.watchForLogMessages( "HHH00196" );
 
-		// need to call buildSessionFactory, because this test is not using org.hibernate.testing.junit4.CustomRunner
-		buildSessionFactory();
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Light light = new Light();
@@ -54,9 +51,6 @@ public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertFalse( triggerable.wasTriggered() );
-
-		// which means we also need to close it manually
-		releaseSessionFactory();
 	}
 
 	@Override

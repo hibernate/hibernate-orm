@@ -27,12 +27,12 @@ public final class GraphTopologicalSort {
 	 */
 	public static <V, R> List<V> sort(GraphDefiner<V, R> definer) {
 		final List<V> values = definer.getValues();
-		final Map<R, Vertex<R>> vertices = new HashMap<R, Vertex<R>>();
+		final Map<R, Vertex<R>> vertices = new HashMap<>();
 
 		// Creating a vertex for each representation
 		for ( V v : values ) {
 			final R rep = definer.getRepresentation( v );
-			vertices.put( rep, new Vertex<R>( rep ) );
+			vertices.put( rep, new Vertex<>( rep ) );
 		}
 
 		// Connecting neighbourhooding vertices
@@ -47,7 +47,7 @@ public final class GraphTopologicalSort {
 		final List<R> sortedReps = new TopologicalSort<R>().sort( vertices.values() );
 
 		// Transforming the sorted representations to sorted values
-		final List<V> sortedValues = new ArrayList<V>( sortedReps.size() );
+		final List<V> sortedValues = new ArrayList<>( sortedReps.size() );
 		for ( R rep : sortedReps ) {
 			sortedValues.add( definer.getValue( rep ) );
 		}

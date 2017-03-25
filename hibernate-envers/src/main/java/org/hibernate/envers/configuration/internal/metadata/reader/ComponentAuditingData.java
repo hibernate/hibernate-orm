@@ -8,6 +8,7 @@ package org.hibernate.envers.configuration.internal.metadata.reader;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 
@@ -16,6 +17,7 @@ import static org.hibernate.envers.internal.tools.Tools.newHashMap;
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Hern&aacut;n Chanfreau
+ * @author Chris Cranford
  */
 public class ComponentAuditingData extends PropertyAuditingData implements AuditedPropertiesHolder {
 	private final Map<String, PropertyAuditingData> properties;
@@ -47,4 +49,12 @@ public class ComponentAuditingData extends PropertyAuditingData implements Audit
 	public Set<String> getPropertyNames() {
 		return properties.keySet();
 	}
+
+	public Iterable<String> getNonSyntheticPropertyNames() {
+		return properties.entrySet().stream()
+				.filter( e -> !e.getValue().isSyntheic() )
+				.map( Map.Entry::getKey )
+				.collect( Collectors.toList() );
+	}
+
 }

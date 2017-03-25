@@ -15,7 +15,7 @@ import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.JoinWalker;
@@ -74,7 +74,7 @@ public class CollectionElementLoader extends OuterJoinLoader {
 
 	}
 
-	public Object loadElement(SessionImplementor session, Object key, Object index)
+	public Object loadElement(SharedSessionContractImplementor session, Object key, Object index)
 			throws HibernateException {
 
 		List list = loadEntity(
@@ -107,8 +107,8 @@ public class CollectionElementLoader extends OuterJoinLoader {
 	protected Object getResultColumnOrRow(
 			Object[] row,
 			ResultTransformer transformer,
-			ResultSet rs, SessionImplementor session)
-			throws SQLException, HibernateException {
+			ResultSet rs,
+			SharedSessionContractImplementor session) throws SQLException, HibernateException {
 		return row[row.length - 1];
 	}
 

@@ -17,9 +17,13 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.tuple.entity.EntityMetamodel;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
@@ -38,6 +42,16 @@ public class MutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
 		cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
 		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10360")
+	public void testNaturalIdNullability() {
+		final EntityPersister persister = sessionFactory().getEntityPersister( User.class.getName() );
+		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
+		// nullability is not specified, so it should be non-nullable by hbm-specific default
+		assertFalse( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "name" )] );
+		assertFalse( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "org" )] );
 	}
 
 	@Test

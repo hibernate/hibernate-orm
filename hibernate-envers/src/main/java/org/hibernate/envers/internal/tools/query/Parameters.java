@@ -20,8 +20,8 @@ import org.hibernate.envers.internal.tools.MutableInteger;
  * @author Adam Warski (adam at warski dot org)
  */
 public class Parameters {
-	public final static String AND = "and";
-	public final static String OR = "or";
+	public static final String AND = "and";
+	public static final String OR = "or";
 
 	/**
 	 * Main alias of the entity.
@@ -58,10 +58,10 @@ public class Parameters {
 		this.connective = connective;
 		this.queryParamCounter = queryParamCounter;
 
-		subParameters = new ArrayList<Parameters>();
-		negatedParameters = new ArrayList<Parameters>();
-		expressions = new ArrayList<String>();
-		localQueryParamValues = new HashMap<String, Object>();
+		subParameters = new ArrayList<>();
+		negatedParameters = new ArrayList<>();
+		expressions = new ArrayList<>();
+		localQueryParamValues = new HashMap<>();
 	}
 
 	// Only for deep copy purpose.
@@ -70,16 +70,16 @@ public class Parameters {
 		this.connective = other.connective;
 		this.queryParamCounter = other.queryParamCounter.deepCopy();
 
-		subParameters = new ArrayList<Parameters>( other.subParameters.size() );
+		subParameters = new ArrayList<>( other.subParameters.size() );
 		for ( Parameters p : other.subParameters ) {
 			subParameters.add( p.deepCopy() );
 		}
-		negatedParameters = new ArrayList<Parameters>( other.negatedParameters.size() );
+		negatedParameters = new ArrayList<>( other.negatedParameters.size() );
 		for ( Parameters p : other.negatedParameters ) {
 			negatedParameters.add( p.deepCopy() );
 		}
-		expressions = new ArrayList<String>( other.expressions );
-		localQueryParamValues = new HashMap<String, Object>( other.localQueryParamValues );
+		expressions = new ArrayList<>( other.expressions );
+		localQueryParamValues = new HashMap<>( other.localQueryParamValues );
 	}
 
 	public Parameters deepCopy() {
@@ -122,10 +122,6 @@ public class Parameters {
 		return newParams;
 	}
 
-	public void addWhere(String left, String op, String right) {
-		addWhere( left, true, op, right, true );
-	}
-
 	/**
 	 * Adds <code>IS NULL</code> restriction.
 	 *
@@ -134,6 +130,16 @@ public class Parameters {
 	 */
 	public void addNullRestriction(String propertyName, boolean addAlias) {
 		addWhere( propertyName, addAlias, "is", "null", false );
+	}
+
+	/**
+	 * Adds <code>IS NULL</code> restriction.
+	 *
+	 * @param alias the alias which should be added to the property name.
+	 * @param propertyName Property name.
+	 */
+	public void addNullRestriction(String alias, String propertyName) {
+		addWhere( alias, propertyName, "is", null, "null" );
 	}
 
 	/**
@@ -146,36 +152,45 @@ public class Parameters {
 		addWhere( propertyName, addAlias, "is not", "null", false );
 	}
 
+	/**
+	 * Adds <code>IS NOT NULL</code> restriction.
+	 *
+	 * @param alias the alias which should be added to the property name.
+	 * @param propertyName Property name.
+	 */
+	public void addNotNullRestriction(String alias, String propertyName) {
+		addWhere( alias, propertyName, "is not", null, "null" );
+	}
+
 	public void addWhere(String left, boolean addAliasLeft, String op, String right, boolean addAliasRight) {
+		addWhere(
+				addAliasLeft ? alias : null,
+				left,
+				op,
+				addAliasRight ? alias : null,
+				right
+		);
+	}
+	
+	public void addWhere(String aliasLeft, String left, String op, String aliasRight, String right) {
 		final StringBuilder expression = new StringBuilder();
 
-		if ( addAliasLeft ) {
-			expression.append( alias ).append( "." );
+		if ( aliasLeft != null ) {
+			expression.append( aliasLeft ).append( "." );
 		}
 		expression.append( left );
 
 		expression.append( " " ).append( op ).append( " " );
 
-		if ( addAliasRight ) {
-			expression.append( alias ).append( "." );
+		if ( aliasRight != null ) {
+			expression.append( aliasRight ).append( "." );
 		}
 		expression.append( right );
 
 		expressions.add( expression.toString() );
 	}
-	
-	// compare properties from two different entities (aliases)
-	public void addWhere(final String aliasLeft, final String left, final String op, final String aliasRight, final String right) {
-		final StringBuilder expression = new StringBuilder();
 
-		expression.append( aliasLeft ).append( '.' ).append( left );
-		expression.append( ' ' ).append( op ).append( ' ' );
-		expression.append( aliasRight ).append( '.' ).append( right );
-
-		expressions.add( expression.toString() );
-	}
-
-	public void addWhereWithFunction(String left, String leftFunction, String op, Object paramValue){
+	public void addWhereWithFunction(String alias, String left, String leftFunction, String op, Object paramValue){
 		final String paramName = generateQueryParam();
 		localQueryParamValues.put( paramName, paramValue );
 		
@@ -192,6 +207,11 @@ public class Parameters {
 
 	public void addWhereWithParam(String left, String op, Object paramValue) {
 		addWhereWithParam( left, true, op, paramValue );
+	}
+
+	public void addWhereWithParam(String alias, String left, String op, Object paramValue ) {
+		String effectiveLeft = alias.concat( "." ).concat( left );
+		addWhereWithParam( effectiveLeft, false, op, paramValue );
 	}
 
 	public void addWhereWithParam(String left, boolean addAlias, String op, Object paramValue) {
@@ -218,7 +238,7 @@ public class Parameters {
 		expressions.add( expression.toString() );
 	}
 
-	public void addWhereWithParams(String left, String opStart, Object[] paramValues, String opEnd) {
+	public void addWhereWithParams(String alias, String left, String opStart, Object[] paramValues, String opEnd) {
 		final StringBuilder expression = new StringBuilder();
 
 		expression.append( alias ).append( "." ).append( left ).append( " " ).append( opStart );
@@ -239,15 +259,20 @@ public class Parameters {
 		expressions.add( expression.toString() );
 	}
 
-	public void addWhere(String left, String op, QueryBuilder right) {
-		addWhere( left, true, op, right );
+	public void addWhere(String left, boolean addAlias, String op, QueryBuilder right) {
+		addWhere(
+				addAlias ? alias : null,
+				left,
+				op,
+				right
+		);
 	}
 
-	public void addWhere(String left, boolean addAlias, String op, QueryBuilder right) {
+	public void addWhere( String leftAlias, String left, String op, QueryBuilder right) {
 		final StringBuilder expression = new StringBuilder();
 
-		if ( addAlias ) {
-			expression.append( alias ).append( "." );
+		if ( leftAlias != null ) {
+			expression.append( leftAlias ).append( "." );
 		}
 
 		expression.append( left );
@@ -259,6 +284,26 @@ public class Parameters {
 		expression.append( ")" );
 
 		expressions.add( expression.toString() );
+	}
+
+	/**
+	 * Add where clause with a null restriction: (left = right or (left is null and right is null))
+	 *
+	 * @param left Left property name.
+	 * @param addAliasLeft Whether to add the alias to the left property.
+	 * @param op The operator.
+	 * @param right Right property name.
+	 * @param addAliasRight Whether to add the alias to the right property.
+     */
+	public void addWhereOrNullRestriction(String left, boolean addAliasLeft, String op, String right, boolean addAliasRight) {
+		// apply the normal addWhere predicate
+		final Parameters sub1 = addSubParameters( "or" );
+		sub1.addWhere( left, addAliasLeft, op, right, addAliasRight );
+
+		// apply the is null predicate for both join properties
+		final Parameters sub2 = sub1.addSubParameters( "and" );
+		sub2.addNullRestriction( left, false );
+		sub2.addNullRestriction( right, false );
 	}
 
 	private void append(StringBuilder sb, String toAppend, MutableBoolean isFirst) {

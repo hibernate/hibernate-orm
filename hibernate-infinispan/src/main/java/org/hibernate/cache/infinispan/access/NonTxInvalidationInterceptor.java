@@ -8,8 +8,6 @@ package org.hibernate.cache.infinispan.access;
 
 import org.hibernate.cache.infinispan.util.CacheCommandInitializer;
 import org.hibernate.cache.infinispan.util.InfinispanMessageLogger;
-import org.infinispan.commands.CommandsFactory;
-import org.infinispan.commands.FlagAffectedCommand;
 import org.infinispan.commands.write.ClearCommand;
 import org.infinispan.commands.write.InvalidateCommand;
 import org.infinispan.commands.write.PutKeyValueCommand;
@@ -17,22 +15,14 @@ import org.infinispan.commands.write.PutMapCommand;
 import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commands.write.ReplaceCommand;
 import org.infinispan.commands.write.WriteCommand;
-import org.infinispan.commons.util.InfinispanCollections;
 import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.factories.annotations.Inject;
-import org.infinispan.factories.annotations.Start;
 import org.infinispan.interceptors.InvalidationInterceptor;
-import org.infinispan.interceptors.base.BaseRpcInterceptor;
-import org.infinispan.jmx.JmxStatisticsExposer;
-import org.infinispan.jmx.annotations.DataType;
 import org.infinispan.jmx.annotations.MBean;
-import org.infinispan.jmx.annotations.ManagedAttribute;
-import org.infinispan.jmx.annotations.ManagedOperation;
-import org.infinispan.jmx.annotations.MeasurementType;
-import org.infinispan.jmx.annotations.Parameter;
+import org.infinispan.util.concurrent.locks.RemoteLockCommand;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Collections;
 
 /**
  * This interceptor should completely replace default InvalidationInterceptor.
@@ -45,12 +35,9 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Galder Zamarreño
  */
 @MBean(objectName = "Invalidation", description = "Component responsible for invalidating entries on remote caches when entries are written to locally.")
-public class NonTxInvalidationInterceptor extends BaseRpcInterceptor implements JmxStatisticsExposer {
-	private final AtomicLong invalidations = new AtomicLong(0);
+public class NonTxInvalidationInterceptor extends BaseInvalidationInterceptor {
 	private final PutFromLoadValidator putFromLoadValidator;
-	private CommandsFactory commandsFactory;
 	private CacheCommandInitializer commandInitializer;
-	private boolean statisticsEnabled;
 
 	private static final InfinispanMessageLogger log = InfinispanMessageLogger.Provider.getLog(InvalidationInterceptor.class);
 
@@ -59,32 +46,53 @@ public class NonTxInvalidationInterceptor extends BaseRpcInterceptor implements 
 	}
 
 	@Inject
-	public void injectDependencies(CommandsFactory commandsFactory, CacheCommandInitializer commandInitializer) {
-		this.commandsFactory = commandsFactory;
+	public void injectDependencies(CacheCommandInitializer commandInitializer) {
 		this.commandInitializer = commandInitializer;
-	}
-
-	@Start
-	private void start() {
-		this.setStatisticsEnabled(cacheConfiguration.jmxStatistics().enabled());
 	}
 
 	@Override
 	public Object visitPutKeyValueCommand(InvocationContext ctx, PutKeyValueCommand command) throws Throwable {
-		if (!isPutForExternalRead(command)) {
-			return handleInvalidate(ctx, command, new Object[] { command.getKey() });
+		if (command.hasFlag(Flag.PUT_FOR_EXTERNAL_READ)) {
+			return invokeNextInterceptor(ctx, command);
 		}
-		return invokeNextInterceptor(ctx, command);
+		else {
+			boolean isTransactional = putFromLoadValidator.registerRemoteInvalidation(command.getKey(), command.getKeyLockOwner());
+			if (!isTransactional) {
+				throw new IllegalStateException("Put executed without transaction!");
+			}
+			if (!putFromLoadValidator.beginInvalidatingWithPFER(command.getKeyLockOwner(), command.getKey(), command.getValue())) {
+				log.failedInvalidatePendingPut(command.getKey(), cacheName);
+			}
+			RemoveCommand removeCommand = commandsFactory.buildRemoveCommand(command.getKey(), null, command.getFlags());
+			Object retval = invokeNextInterceptor(ctx, removeCommand);
+			if (command.isSuccessful()) {
+				invalidateAcrossCluster(command, isTransactional, command.getKey());
+			}
+			return retval;
+		}
 	}
 
 	@Override
 	public Object visitReplaceCommand(InvocationContext ctx, ReplaceCommand command) throws Throwable {
-		return handleInvalidate(ctx, command, new Object[] { command.getKey() });
+		throw new UnsupportedOperationException("Unexpected replace");
 	}
 
 	@Override
 	public Object visitRemoveCommand(InvocationContext ctx, RemoveCommand command) throws Throwable {
-		return handleInvalidate(ctx, command, new Object[] { command.getKey() });
+		boolean isTransactional = putFromLoadValidator.registerRemoteInvalidation(command.getKey(), command.getKeyLockOwner());
+		if (isTransactional) {
+			if (!putFromLoadValidator.beginInvalidatingKey(command.getKeyLockOwner(), command.getKey())) {
+				log.failedInvalidatePendingPut(command.getKey(), cacheName);
+			}
+		}
+		else {
+			log.trace("This is an eviction, not invalidating anything");
+		}
+		Object retval = invokeNextInterceptor(ctx, command);
+		if (command.isSuccessful()) {
+			invalidateAcrossCluster(command, isTransactional, command.getKey());
+		}
+		return retval;
 	}
 
 	@Override
@@ -93,7 +101,7 @@ public class NonTxInvalidationInterceptor extends BaseRpcInterceptor implements 
 		if (!isLocalModeForced(command)) {
 			// just broadcast the clear command - this is simplest!
 			if (ctx.isOriginLocal()) {
-				rpcManager.invokeRemotely(null, command, rpcManager.getDefaultRpcOptions(defaultSynchronous));
+				rpcManager.invokeRemotely(getMembers(), command, isSynchronous(command) ? syncRpcOptions : asyncRpcOptions);
 			}
 		}
 		return retval;
@@ -101,84 +109,27 @@ public class NonTxInvalidationInterceptor extends BaseRpcInterceptor implements 
 
 	@Override
 	public Object visitPutMapCommand(InvocationContext ctx, PutMapCommand command) throws Throwable {
-		if (!isPutForExternalRead(command)) {
-			return handleInvalidate(ctx, command, command.getMap().keySet().toArray());
-		}
-		return invokeNextInterceptor(ctx, command);
+		throw new UnsupportedOperationException("Unexpected putAll");
 	}
 
-	private Object handleInvalidate(InvocationContext ctx, WriteCommand command, Object[] keys) throws Throwable {
-		Object retval = invokeNextInterceptor(ctx, command);
-		if (command.isSuccessful() && keys != null && keys.length != 0) {
-			invalidateAcrossCluster(command, keys);
-		}
-		return retval;
-	}
-
-	private void invalidateAcrossCluster(FlagAffectedCommand command, Object[] keys) throws Throwable {
+	private <T extends WriteCommand & RemoteLockCommand> void invalidateAcrossCluster(T command, boolean isTransactional, Object key) throws Throwable {
 		// increment invalidations counter if statistics maintained
 		incrementInvalidations();
 		InvalidateCommand invalidateCommand;
-		Object sessionTransactionId = putFromLoadValidator.registerRemoteInvalidations(keys);
 		if (!isLocalModeForced(command)) {
-			if (sessionTransactionId == null) {
-				invalidateCommand = commandsFactory.buildInvalidateCommand(InfinispanCollections.<Flag>emptySet(), keys);
+			if (isTransactional) {
+				invalidateCommand = commandInitializer.buildBeginInvalidationCommand(
+						Collections.emptySet(), new Object[] { key }, command.getKeyLockOwner());
 			}
 			else {
-				invalidateCommand = commandInitializer.buildBeginInvalidationCommand(
-						InfinispanCollections.<Flag>emptySet(), keys, sessionTransactionId);
+				invalidateCommand = commandsFactory.buildInvalidateCommand(Collections.emptySet(), new Object[] { key });
 			}
 			if (log.isDebugEnabled()) {
 				log.debug("Cache [" + rpcManager.getAddress() + "] replicating " + invalidateCommand);
 			}
 
-			rpcManager.invokeRemotely(null, invalidateCommand, rpcManager.getDefaultRpcOptions(isSynchronous(command)));
+			rpcManager.invokeRemotely(getMembers(), invalidateCommand, isSynchronous(command) ? syncRpcOptions : asyncRpcOptions);
 		}
-	}
-
-	private void incrementInvalidations() {
-		if (statisticsEnabled) {
-			invalidations.incrementAndGet();
-		}
-	}
-
-	private boolean isPutForExternalRead(FlagAffectedCommand command) {
-		if (command.hasFlag(Flag.PUT_FOR_EXTERNAL_READ)) {
-			log.trace("Put for external read called.  Suppressing clustered invalidation.");
-			return true;
-		}
-		return false;
-	}
-
-	@ManagedOperation(
-			description = "Resets statistics gathered by this component",
-			displayName = "Reset statistics"
-	)
-	public void resetStatistics() {
-		invalidations.set(0);
-	}
-
-	@ManagedAttribute(
-			displayName = "Statistics enabled",
-			description = "Enables or disables the gathering of statistics by this component",
-			dataType = DataType.TRAIT,
-			writable = true
-	)
-	public boolean getStatisticsEnabled() {
-		return this.statisticsEnabled;
-	}
-
-	public void setStatisticsEnabled(@Parameter(name = "enabled", description = "Whether statistics should be enabled or disabled (true/false)") boolean enabled) {
-		this.statisticsEnabled = enabled;
-	}
-
-	@ManagedAttribute(
-			description = "Number of invalidations",
-			displayName = "Number of invalidations",
-			measurementType = MeasurementType.TRENDSUP
-	)
-	public long getInvalidations() {
-		return invalidations.get();
 	}
 
 }

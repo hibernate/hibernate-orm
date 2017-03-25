@@ -9,7 +9,6 @@ package org.hibernate.service.spi;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
-import org.hibernate.service.internal.SessionFactoryServiceRegistryImpl;
 
 /**
  * Contract for builder of {@link SessionFactoryServiceRegistry} instances.
@@ -24,12 +23,12 @@ public interface SessionFactoryServiceRegistryFactory extends Service {
 	 *
 	 * @param sessionFactory The (still being built) session factory.  Generally this is useful
 	 * for grabbing a reference for later use.  However, care should be taken when invoking on
-	 * the session factory until after it has been fully initialized.
+	 * the session factory until afterQuery it has been fully initialized.
 	 * @param sessionFactoryOptions The build options.
 	 *
 	 * @return The registry
 	 */
-	public SessionFactoryServiceRegistryImpl buildServiceRegistry(
+	SessionFactoryServiceRegistry buildServiceRegistry(
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions sessionFactoryOptions);
 

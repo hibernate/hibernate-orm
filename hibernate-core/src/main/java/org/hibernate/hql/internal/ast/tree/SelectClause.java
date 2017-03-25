@@ -121,7 +121,7 @@ public class SelectClause extends SelectExpressionList {
 		ArrayList queryReturnTypeList = new ArrayList();
 
 		// First, collect all of the select expressions.
-		// NOTE: This must be done *before* invoking setScalarColumnText() because setScalarColumnText()
+		// NOTE: This must be done *beforeQuery* invoking setScalarColumnText() because setScalarColumnText()
 		// changes the AST!!!
 		SelectExpression[] selectExpressions = collectSelectExpressions();
 
@@ -155,7 +155,7 @@ public class SelectClause extends SelectExpressionList {
 
 				Type type = selectExpression.getDataType();
 				if ( type == null ) {
-					throw new IllegalStateException(
+					throw new QueryException(
 							"No data type for node: " + selectExpression.getClass().getName() + " "
 									+ new ASTPrinter( SqlTokenTypes.class ).showAsString( (AST) selectExpression, "" )
 					);
@@ -176,7 +176,7 @@ public class SelectClause extends SelectExpressionList {
 			}
 		}
 
-		//init the aliases, after initing the constructornode
+		//init the aliases, afterQuery initing the constructornode
 		initAliases( selectExpressions );
 
 		if ( !getWalker().isShallowQuery() ) {
@@ -207,7 +207,9 @@ public class SelectClause extends SelectExpressionList {
 					else {
 						origin = fromElement.getRealOrigin();
 					}
-					if ( !fromElementsForLoad.contains( origin ) ) {
+					if ( !fromElementsForLoad.contains( origin )
+							// work around that fetch joins of element collections where their parent instead of the root is selected
+							&& ( !fromElement.isCollectionJoin() || !fromElementsForLoad.contains( fromElement.getFetchOrigin() ) ) ) {
 						throw new QueryException(
 								"query specified join fetching, but the owner " +
 										"of the fetched association was not present in the select list " +
@@ -393,8 +395,7 @@ public class SelectClause extends SelectExpressionList {
 		if ( aggregatedSelectExpression == null ) {
 			aliases = new String[selectExpressions.length];
 			for ( int i = 0; i < selectExpressions.length; i++ ) {
-				String alias = selectExpressions[i].getAlias();
-				aliases[i] = alias == null ? Integer.toString( i ) : alias;
+				aliases[i] = selectExpressions[i].getAlias();
 			}
 		}
 		else {

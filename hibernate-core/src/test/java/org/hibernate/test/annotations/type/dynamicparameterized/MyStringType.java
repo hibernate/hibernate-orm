@@ -30,10 +30,11 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.StringType;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
+
 import org.junit.Assert;
 
 /**
@@ -95,12 +96,12 @@ public class MyStringType implements UserType, DynamicParameterizedType {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws SQLException {
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws SQLException {
 		st.setString( index, this.value );
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws SQLException {
+	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		return rs.getString( names[0] );
 	}
 

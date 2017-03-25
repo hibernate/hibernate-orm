@@ -22,7 +22,10 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.osgi.test.client.AuditedDataPoint;
 import org.hibernate.osgi.test.client.DataPoint;
 import org.hibernate.osgi.test.client.SomeService;
 import org.hibernate.osgi.test.client.TestIntegrator;
@@ -30,10 +33,12 @@ import org.hibernate.osgi.test.client.TestStrategyRegistrationProvider;
 import org.hibernate.osgi.test.client.TestTypeContributor;
 import org.hibernate.type.BasicType;
 
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -54,8 +59,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.repositories;
-import static org.ops4j.pax.exam.CoreOptions.repository;
 import static org.ops4j.pax.exam.CoreOptions.when;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.configureConsole;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.debugConfiguration;
@@ -69,6 +72,7 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
  * Tests for hibernate-osgi running within a Karaf container via PaxExam.
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 @RunWith( PaxExam.class )
 @ExamReactorStrategy( PerClass.class )
@@ -112,6 +116,7 @@ public class OsgiIntegrationTest {
 				when( debug ).useOptions( keepRuntimeFolder() ),
 				logLevel( LogLevelOption.LogLevel.INFO ),
 				features( featureXmlUrl( paxExamEnvironment ), "hibernate-orm" ),
+				features( featureXmlUrl( paxExamEnvironment ), "hibernate-envers" ),
 				features( testingFeatureXmlUrl(), "hibernate-osgi-testing" )
 		);
 	}
@@ -154,6 +159,7 @@ public class OsgiIntegrationTest {
 //						+ ",org.h2"
 //						+ ",org.osgi.framework"
 //						+ ",org.hibernate"
+//						+ ",org.hibernate.envers"
 ////						+ ",org.hibernate.boot.model"
 ////						+ ",org.hibernate.boot.registry.selector"
 ////						+ ",org.hibernate.boot.registry.selector.spi"
@@ -190,8 +196,12 @@ public class OsgiIntegrationTest {
 	private BundleContext bundleContext;
 
 	@Test
-	public void testFeatureInstallation() throws Exception {
+	public void testActivation() throws Exception {
 		assertTrue( featuresService.isInstalled( featuresService.getFeature( "hibernate-orm" ) ) );
+		assertTrue( featuresService.isInstalled( featuresService.getFeature( "hibernate-envers" ) ) );
+
+		assertActiveBundle( "org.hibernate.core" );
+		assertActiveBundle( "org.hibernate.envers" );
 	}
 
 	@Test
@@ -285,6 +295,71 @@ public class OsgiIntegrationTest {
 	}
 
 	@Test
+	public void testNativeEnvers() throws Exception {
+		final ServiceReference sr = bundleContext.getServiceReference( SessionFactory.class.getName() );
+		final SessionFactory sf = ( SessionFactory )bundleContext.getService( sr );
+
+		final Integer adpId;
+
+		Session s = sf.openSession();
+		s.getTransaction().begin();
+		AuditedDataPoint adp = new AuditedDataPoint( "Chris" );
+		s.persist( adp );
+		s.getTransaction().commit();
+		adpId = adp.getId();
+		s.close();
+
+		s = sf.openSession();
+		s.getTransaction().begin();
+		adp = s.get( AuditedDataPoint.class, adpId );
+		adp.setName( "Chris2" );
+		s.getTransaction().commit();
+		s.close();
+
+		s = sf.openSession();
+		AuditReader ar = AuditReaderFactory.get( s );
+		assertEquals( 2, ar.getRevisions( AuditedDataPoint.class, adpId ).size() );
+		AuditedDataPoint rev1 = ar.find( AuditedDataPoint.class, adpId, 1 );
+		AuditedDataPoint rev2 = ar.find( AuditedDataPoint.class, adpId, 2 );
+		assertEquals( new AuditedDataPoint( adpId, "Chris" ), rev1 );
+		assertEquals( new AuditedDataPoint( adpId, "Chris2" ), rev2 );
+		s.close();
+	}
+
+	@Test
+	public void testJpaEnvers() throws Exception {
+		final ServiceReference serviceReference = bundleContext.getServiceReference( PersistenceProvider.class.getName() );
+		final PersistenceProvider persistenceProvider = (PersistenceProvider) bundleContext.getService( serviceReference );
+		final EntityManagerFactory emf = persistenceProvider.createEntityManagerFactory( "hibernate-osgi-test", null );
+
+		final Integer adpId;
+
+		EntityManager em = emf.createEntityManager();
+		em.getTransaction().begin();
+		AuditedDataPoint adp = new AuditedDataPoint( "Chris" );
+		em.persist( adp );
+		em.getTransaction().commit();
+		adpId = adp.getId();
+		em.close();
+
+		em = emf.createEntityManager();
+		em.getTransaction().begin();
+		adp = em.find( AuditedDataPoint.class, adpId );
+		adp.setName( "Chris2" );
+		em.getTransaction().commit();
+		em.close();
+
+		em = emf.createEntityManager();
+		AuditReader ar = AuditReaderFactory.get( em );
+		assertEquals( 2, ar.getRevisions( AuditedDataPoint.class, adpId ).size() );
+		AuditedDataPoint rev1 = ar.find( AuditedDataPoint.class, adpId, 1 );
+		AuditedDataPoint rev2 = ar.find( AuditedDataPoint.class, adpId, 2 );
+		assertEquals( new AuditedDataPoint( adpId, "Chris" ), rev1 );
+		assertEquals( new AuditedDataPoint( adpId, "Chris2" ), rev2 );
+		em.close();
+	}
+
+	@Test
 	public void testExtensionPoints() throws Exception {
 		final ServiceReference sr = bundleContext.getServiceReference( SessionFactory.class.getName() );
 		final SessionFactoryImplementor sfi = (SessionFactoryImplementor) bundleContext.getService( sr );
@@ -304,5 +379,16 @@ public class OsgiIntegrationTest {
 		final SessionFactoryImplementor sfi = (SessionFactoryImplementor) bundleContext.getService( sr );
 
 		assertNotNull( sfi.getServiceRegistry().getService( SomeService.class ) );
+	}
+
+	private void assertActiveBundle(String symbolicName) {
+		for (Bundle bundle : bundleContext.getBundles()) {
+			if (bundle.getSymbolicName().equals( symbolicName )) {
+				Assert.assertEquals(
+						symbolicName + " was found, but not in an ACTIVE state.", Bundle.ACTIVE, bundle.getState());
+				return;
+			}
+		}
+		Assert.fail("Could not find bundle: " + symbolicName);
 	}
 }

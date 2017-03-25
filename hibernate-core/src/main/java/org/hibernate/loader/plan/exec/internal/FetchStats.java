@@ -6,6 +6,10 @@
  */
 package org.hibernate.loader.plan.exec.internal;
 
+import java.util.Set;
+
+import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
+
 /**
  * Contract used to report collected information about fetches.  For now that is only whether there were
  * subselect fetches found
@@ -19,4 +23,11 @@ public interface FetchStats {
 	 * @return {@code true} if subselect fetches were encountered; {@code false} otherwise.
 	 */
 	public boolean hasSubselectFetches();
+
+	/**
+	 * Returns a set of bag attributes that are join-fetched.
+	 *
+	 * @return a set of bag attributes that are join-fetched.
+	 */
+	public Set<CollectionAttributeFetch> getJoinedBagAttributeFetches();
 }

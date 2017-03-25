@@ -23,7 +23,7 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 	protected String[] getMappings() {
 		return new String[] { "enums/Person.hbm.xml" };
 	}
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-8153")
 	public void hbmEnumTypeTest() {
@@ -35,7 +35,7 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 		s.persist( Person.person( Gender.FEMALE, HairColor.BLACK ) );
 		s.getTransaction().commit();
 		s.clear();
-		
+
 		s.getTransaction().begin();
 		assertEquals(s.createCriteria( Person.class )
 				.add( Restrictions.eq( "gender", Gender.MALE ) )

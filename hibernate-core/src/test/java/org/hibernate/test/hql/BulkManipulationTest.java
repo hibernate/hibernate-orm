@@ -38,6 +38,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 import junit.framework.AssertionFailedError;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -90,6 +91,9 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 			s.createQuery( "delete NonExistentEntity" ).executeUpdate();
 			fail( "no exception thrown" );
 		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
+		}
 		catch( QueryException ignore ) {
 		}
 
@@ -105,6 +109,9 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		try {
 			s.createQuery( "update NonExistentEntity e set e.someProp = ?" ).executeUpdate();
 			fail( "no exception thrown" );
+		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
 		}
 		catch( QueryException e ) {
 		}
@@ -210,9 +217,14 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
         try {
             s.createQuery("select :someParameter, id from Car");
             fail("Should throw an unsupported exception");
-        } catch(QueryException q) {
+        }
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
+		}
+		catch(QueryException q) {
             // allright
-        } finally {
+        }
+		finally {
             s.close();
         }
     }
@@ -287,7 +299,11 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
         try {
             org.hibernate.Query q1 = s.createQuery( "insert into Pickup (id, owner, vin) select :id, (select :description from Animal a where a.description = :description), :vin from Car" );
             fail("Unsupported exception should have been thrown");
-        } catch(QueryException e) {
+        }
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
+		}
+		catch(QueryException e) {
             assertTrue(e.getMessage().indexOf("Use of parameters in subqueries of INSERT INTO DML statements is not supported.") > -1);
         }
 
@@ -309,9 +325,10 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
         try {
             org.hibernate.Query q = s.createQuery( "insert into Pickup (id, owner, vin) select id, :owner, id from Car" );
             fail("Parameter type mismatch but no exception thrown");
-        } catch (Throwable throwable) {
-            assertTrue(throwable instanceof QueryException);
-            String m = throwable.getMessage();
+        }
+		catch (Throwable throwable) {
+			QueryException queryException = assertTyping( QueryException.class, throwable.getCause() );
+            String m = queryException.getMessage();
             // insertion type [org.hibernate.type.StringType@21e3cc77] and selection type [org.hibernate.type.LongType@7284aa02] at position 2 are not compatible [insert into Pickup (id, owner, vin) select id, :owner, id from org.hibernate.test.hql.Car]
             int st = m.indexOf("org.hibernate.type.StringType");
             int lt = m.indexOf("org.hibernate.type.LongType");
@@ -319,7 +336,8 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
             assertTrue("type causing error not reported", lt > -1);
             assertTrue(lt > st);
             assertTrue("wrong position of type error reported", m.indexOf("position 2") > -1);
-        } finally {
+        }
+		finally {
             s.close();
         }
     }
@@ -343,7 +361,8 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		t = s.beginTransaction();
 
-		s.createSQLQuery( "delete from Truck" ).executeUpdate();
+		int deleteCount = s.createSQLQuery( "delete from Truck" ).executeUpdate();
+		assertEquals( 1, deleteCount );
 
 		l = s.createQuery("from Vehicle").list();
 		assertEquals(l.size(),4);
@@ -407,6 +426,9 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 			s.createQuery( "insert into Pickup (owner, vin, id) select id, vin, owner from Car" ).executeUpdate();
 			fail( "mismatched types did not error" );
 		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
+		}
 		catch( QueryException e ) {
 			// expected result
 		}
@@ -433,6 +455,9 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		try {
 			s.createQuery( "insert into Human (id, bodyWeight) select id, bodyWeight from Lizard" ).executeUpdate();
 			fail( "superclass prop insertion did not error" );
+		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
 		}
 		catch( QueryException e ) {
 			// expected result
@@ -462,6 +487,9 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		try {
 			s.createQuery( "insert into Joiner (name, joinedName) select vin, owner from Car" ).executeUpdate();
 			fail( "mapped-join insertion did not error" );
+		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
 		}
 		catch( QueryException e ) {
 			// expected result
@@ -668,6 +696,9 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		try {
 			s.createQuery( "update Human set Human.description = 'xyz' where Human.id = 1 and Human.description is null" );
 			fail( "expected failure" );
+		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
 		}
 		catch( QueryException expected ) {
 			// ignore : expected behavior
@@ -893,6 +924,9 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		try {
 			s.createQuery( "update Human set mother.name.initial = :initial" ).setString( "initial", "F" ).executeUpdate();
 			fail( "update allowed across implicit join" );
+		}
+		catch (IllegalArgumentException e) {
+			assertTyping( QueryException.class, e.getCause() );
 		}
 		catch( QueryException e ) {
 		}

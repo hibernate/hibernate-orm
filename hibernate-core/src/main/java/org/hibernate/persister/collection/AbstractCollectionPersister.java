@@ -39,7 +39,7 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
@@ -151,6 +151,7 @@ public abstract class AbstractCollectionPersister
 	protected final String[] indexColumnNames;
 	protected final String[] indexFormulaTemplates;
 	protected final String[] indexFormulas;
+	protected final boolean[] indexColumnIsGettable;
 	protected final boolean[] indexColumnIsSettable;
 	protected final String[] elementColumnNames;
 	protected final String[] elementColumnWriters;
@@ -375,10 +376,13 @@ public abstract class AbstractCollectionPersister
 			IndexedCollection indexedCollection = (IndexedCollection) collectionBinding;
 			indexType = indexedCollection.getIndex().getType();
 			int indexSpan = indexedCollection.getIndex().getColumnSpan();
+			boolean[] indexColumnInsertability = indexedCollection.getIndex().getColumnInsertability();
+			boolean[] indexColumnUpdatability = indexedCollection.getIndex().getColumnUpdateability();
 			iter = indexedCollection.getIndex().getColumnIterator();
 			indexColumnNames = new String[indexSpan];
 			indexFormulaTemplates = new String[indexSpan];
 			indexFormulas = new String[indexSpan];
+			indexColumnIsGettable = new boolean[indexSpan];
 			indexColumnIsSettable = new boolean[indexSpan];
 			indexColumnAliases = new String[indexSpan];
 			int i = 0;
@@ -395,7 +399,8 @@ public abstract class AbstractCollectionPersister
 				else {
 					Column indexCol = (Column) s;
 					indexColumnNames[i] = indexCol.getQuotedName( dialect );
-					indexColumnIsSettable[i] = true;
+					indexColumnIsGettable[i] = true;
+					indexColumnIsSettable[i] = indexColumnInsertability[i] || indexColumnUpdatability[i];
 				}
 				i++;
 			}
@@ -405,6 +410,7 @@ public abstract class AbstractCollectionPersister
 		}
 		else {
 			indexContainsFormula = false;
+			indexColumnIsGettable = null;
 			indexColumnIsSettable = null;
 			indexFormulaTemplates = null;
 			indexFormulas = null;
@@ -678,11 +684,11 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public void initialize(Serializable key, SessionImplementor session) throws HibernateException {
+	public void initialize(Serializable key, SharedSessionContractImplementor session) throws HibernateException {
 		getAppropriateInitializer( key, session ).initialize( key, session );
 	}
 
-	protected CollectionInitializer getAppropriateInitializer(Serializable key, SessionImplementor session) {
+	protected CollectionInitializer getAppropriateInitializer(Serializable key, SharedSessionContractImplementor session) {
 		if ( queryLoaderName != null ) {
 			// if there is a user-specified loader, return that
 			// TODO: filters!?
@@ -700,7 +706,7 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	private CollectionInitializer getSubselectInitializer(Serializable key, SessionImplementor session) {
+	private CollectionInitializer getSubselectInitializer(Serializable key, SharedSessionContractImplementor session) {
 
 		if ( !isSubselectLoadable() ) {
 			return null;
@@ -730,7 +736,7 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	protected abstract CollectionInitializer createSubselectInitializer(SubselectFetch subselect, SessionImplementor session);
+	protected abstract CollectionInitializer createSubselectInitializer(SubselectFetch subselect, SharedSessionContractImplementor session);
 
 	protected abstract CollectionInitializer createCollectionInitializer(LoadQueryInfluencers loadQueryInfluencers)
 			throws MappingException;
@@ -828,13 +834,13 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public Object readElement(ResultSet rs, Object owner, String[] aliases, SessionImplementor session)
+	public Object readElement(ResultSet rs, Object owner, String[] aliases, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		return getElementType().nullSafeGet( rs, aliases, session, owner );
 	}
 
 	@Override
-	public Object readIndex(ResultSet rs, String[] aliases, SessionImplementor session)
+	public Object readIndex(ResultSet rs, String[] aliases, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		Object index = getIndexType().nullSafeGet( rs, aliases, session, null );
 		if ( index == null ) {
@@ -852,7 +858,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public Object readIdentifier(ResultSet rs, String alias, SessionImplementor session)
+	public Object readIdentifier(ResultSet rs, String alias, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		Object id = getIdentifierType().nullSafeGet( rs, alias, session, null );
 		if ( id == null ) {
@@ -862,7 +868,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public Object readKey(ResultSet rs, String[] aliases, SessionImplementor session)
+	public Object readKey(ResultSet rs, String[] aliases, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		return getKeyType().nullSafeGet( rs, aliases, session, null );
 	}
@@ -870,7 +876,7 @@ public abstract class AbstractCollectionPersister
 	/**
 	 * Write the key to a JDBC <tt>PreparedStatement</tt>
 	 */
-	protected int writeKey(PreparedStatement st, Serializable key, int i, SessionImplementor session)
+	protected int writeKey(PreparedStatement st, Serializable key, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 
 		if ( key == null ) {
@@ -883,7 +889,7 @@ public abstract class AbstractCollectionPersister
 	/**
 	 * Write the element to a JDBC <tt>PreparedStatement</tt>
 	 */
-	protected int writeElement(PreparedStatement st, Object elt, int i, SessionImplementor session)
+	protected int writeElement(PreparedStatement st, Object elt, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		getElementType().nullSafeSet( st, elt, i, elementColumnIsSettable, session );
 		return i + ArrayHelper.countTrue( elementColumnIsSettable );
@@ -893,7 +899,7 @@ public abstract class AbstractCollectionPersister
 	/**
 	 * Write the index to a JDBC <tt>PreparedStatement</tt>
 	 */
-	protected int writeIndex(PreparedStatement st, Object index, int i, SessionImplementor session)
+	protected int writeIndex(PreparedStatement st, Object index, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		getIndexType().nullSafeSet( st, incrementIndexByBase( index ), i, indexColumnIsSettable, session );
 		return i + ArrayHelper.countTrue( indexColumnIsSettable );
@@ -909,7 +915,7 @@ public abstract class AbstractCollectionPersister
 	/**
 	 * Write the element to a JDBC <tt>PreparedStatement</tt>
 	 */
-	protected int writeElementToWhere(PreparedStatement st, Object elt, int i, SessionImplementor session)
+	protected int writeElementToWhere(PreparedStatement st, Object elt, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( elementIsPureFormula ) {
 			throw new AssertionFailure( "cannot use a formula-based element in the where condition" );
@@ -922,7 +928,7 @@ public abstract class AbstractCollectionPersister
 	/**
 	 * Write the index to a JDBC <tt>PreparedStatement</tt>
 	 */
-	protected int writeIndexToWhere(PreparedStatement st, Object index, int i, SessionImplementor session)
+	protected int writeIndexToWhere(PreparedStatement st, Object index, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( indexContainsFormula ) {
 			throw new AssertionFailure( "cannot use a formula-based index in the where condition" );
@@ -934,7 +940,7 @@ public abstract class AbstractCollectionPersister
 	/**
 	 * Write the identifier to a JDBC <tt>PreparedStatement</tt>
 	 */
-	public int writeIdentifier(PreparedStatement st, Object id, int i, SessionImplementor session)
+	public int writeIdentifier(PreparedStatement st, Object id, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 
 		getIdentifierType().nullSafeSet( st, id, i, session );
@@ -1012,6 +1018,7 @@ public abstract class AbstractCollectionPersister
 		return new SimpleSelect( dialect )
 				.setTableName( getTableName() )
 				.addCondition( getKeyColumnNames(), "=?" )
+				.addWhereToken( sqlWhereString )
 				.addColumn( selectValue )
 				.toStatementString();
 	}
@@ -1025,6 +1032,7 @@ public abstract class AbstractCollectionPersister
 				.addCondition( getKeyColumnNames(), "=?" )
 				.addCondition( getIndexColumnNames(), "=?" )
 				.addCondition( indexFormulas, "=?" )
+				.addWhereToken( sqlWhereString )
 				.addColumn( "1" )
 				.toStatementString();
 	}
@@ -1038,6 +1046,7 @@ public abstract class AbstractCollectionPersister
 				.addCondition( getKeyColumnNames(), "=?" )
 				.addCondition( getIndexColumnNames(), "=?" )
 				.addCondition( indexFormulas, "=?" )
+				.addWhereToken( sqlWhereString )
 				.addColumns( getElementColumnNames(), elementColumnAliases )
 				.addColumns( indexFormulas, indexColumnAliases )
 				.toStatementString();
@@ -1049,6 +1058,7 @@ public abstract class AbstractCollectionPersister
 				.addCondition( getKeyColumnNames(), "=?" )
 				.addCondition( getElementColumnNames(), "=?" )
 				.addCondition( elementFormulas, "=?" )
+				.addWhereToken( sqlWhereString )
 				.addColumn( "1" )
 				.toStatementString();
 	}
@@ -1072,8 +1082,8 @@ public abstract class AbstractCollectionPersister
 
 	protected void appendIndexColumns(SelectFragment frag, String alias) {
 		if ( hasIndex ) {
-			for ( int i = 0; i < indexColumnIsSettable.length; i++ ) {
-				if ( indexColumnIsSettable[i] ) {
+			for ( int i = 0; i < indexColumnIsGettable.length; i++ ) {
+				if ( indexColumnIsGettable[i] ) {
 					frag.addColumn( alias, indexColumnNames[i], indexColumnAliases[i] );
 				}
 				else {
@@ -1156,7 +1166,7 @@ public abstract class AbstractCollectionPersister
 	private BasicBatchKey removeBatchKey;
 
 	@Override
-	public void remove(Serializable id, SessionImplementor session) throws HibernateException {
+	public void remove(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
 		if ( !isInverse && isRowDeleteEnabled() ) {
 
 			if ( LOG.isDebugEnabled() ) {
@@ -1237,7 +1247,7 @@ public abstract class AbstractCollectionPersister
 	protected BasicBatchKey recreateBatchKey;
 
 	@Override
-	public void recreate(PersistentCollection collection, Serializable id, SessionImplementor session)
+	public void recreate(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		if ( isInverse ) {
@@ -1360,7 +1370,7 @@ public abstract class AbstractCollectionPersister
 	private BasicBatchKey deleteBatchKey;
 
 	@Override
-	public void deleteRows(PersistentCollection collection, Serializable id, SessionImplementor session)
+	public void deleteRows(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		if ( isInverse ) {
@@ -1477,7 +1487,7 @@ public abstract class AbstractCollectionPersister
 	private BasicBatchKey insertBatchKey;
 
 	@Override
-	public void insertRows(PersistentCollection collection, Serializable id, SessionImplementor session)
+	public void insertRows(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		if ( isInverse ) {
@@ -1698,7 +1708,7 @@ public abstract class AbstractCollectionPersister
 	protected abstract String generateInsertRowString();
 
 	@Override
-	public void updateRows(PersistentCollection collection, Serializable id, SessionImplementor session)
+	public void updateRows(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		if ( !isInverse && collection.isRowUpdatePossible() ) {
@@ -1712,11 +1722,11 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	protected abstract int doUpdateRows(Serializable key, PersistentCollection collection, SessionImplementor session)
+	protected abstract int doUpdateRows(Serializable key, PersistentCollection collection, SharedSessionContractImplementor session)
 			throws HibernateException;
 
 	@Override
-	public void processQueuedOps(PersistentCollection collection, Serializable key, SessionImplementor session)
+	public void processQueuedOps(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( collection.hasQueuedOperations() ) {
 			doProcessQueuedOps( collection, key, session );
@@ -1732,16 +1742,16 @@ public abstract class AbstractCollectionPersister
 	 * @param session The session
 	 * @throws HibernateException
 	 *
-	 * @deprecated Use {@link #doProcessQueuedOps(org.hibernate.collection.spi.PersistentCollection, java.io.Serializable, org.hibernate.engine.spi.SessionImplementor)}
+	 * @deprecated Use {@link #doProcessQueuedOps(org.hibernate.collection.spi.PersistentCollection, java.io.Serializable, org.hibernate.engine.spi.SharedSessionContractImplementor)}
 	 */
 	@Deprecated
 	protected void doProcessQueuedOps(PersistentCollection collection, Serializable key,
-			int nextIndex, SessionImplementor session)
+			int nextIndex, SharedSessionContractImplementor session)
 			throws HibernateException {
 		doProcessQueuedOps( collection, key, session );
 	}
 
-	protected abstract void doProcessQueuedOps(PersistentCollection collection, Serializable key, SessionImplementor session)
+	protected abstract void doProcessQueuedOps(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
 			throws HibernateException;
 
 	@Override
@@ -1849,7 +1859,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public boolean isAffectedByEnabledFilters(SessionImplementor session) {
+	public boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session) {
 		return filterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilters() ) ||
 				( isManyToMany() && manyToManyFilterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilters() ) );
 	}
@@ -1913,7 +1923,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public int getSize(Serializable key, SessionImplementor session) {
+	public int getSize(Serializable key, SharedSessionContractImplementor session) {
 		try {
 			PreparedStatement st = session
 					.getJdbcCoordinator()
@@ -1945,16 +1955,16 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public boolean indexExists(Serializable key, Object index, SessionImplementor session) {
+	public boolean indexExists(Serializable key, Object index, SharedSessionContractImplementor session) {
 		return exists( key, incrementIndexByBase( index ), getIndexType(), sqlDetectRowByIndexString, session );
 	}
 
 	@Override
-	public boolean elementExists(Serializable key, Object element, SessionImplementor session) {
+	public boolean elementExists(Serializable key, Object element, SharedSessionContractImplementor session) {
 		return exists( key, element, getElementType(), sqlDetectRowByElementString, session );
 	}
 
-	private boolean exists(Serializable key, Object indexOrElement, Type indexOrElementType, String sql, SessionImplementor session) {
+	private boolean exists(Serializable key, Object indexOrElement, Type indexOrElementType, String sql, SharedSessionContractImplementor session) {
 		try {
 			PreparedStatement st = session
 					.getJdbcCoordinator()
@@ -1990,7 +2000,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public Object getElementByIndex(Serializable key, Object index, SessionImplementor session, Object owner) {
+	public Object getElementByIndex(Serializable key, Object index, SharedSessionContractImplementor session, Object owner) {
 		try {
 			PreparedStatement st = session
 					.getJdbcCoordinator()

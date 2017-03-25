@@ -21,7 +21,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.JoinWalker;
@@ -82,7 +82,7 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 		}
 
 		@Override
-		public void initialize(Serializable id, SessionImplementor session) throws HibernateException {
+		public void initialize(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
 			// first, figure out how many batchable ids we have...
 			final Serializable[] batch = session.getPersistenceContext()
 					.getBatchFetchQueue()
@@ -169,7 +169,7 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 		}
 
 		public final void doBatchedCollectionLoad(
-				final SessionImplementor session,
+				final SharedSessionContractImplementor session,
 				final Serializable[] ids,
 				final Type type) throws HibernateException {
 
@@ -189,7 +189,7 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 					ids,
 					alias,
 					collectionPersister().getKeyColumnNames(),
-					getFactory().getDialect()
+					session.getJdbcServices().getJdbcEnvironment().getDialect()
 			);
 
 			try {
@@ -221,7 +221,7 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 				}
 			}
 			catch ( SQLException e ) {
-				throw getFactory().getSQLExceptionHelper().convert(
+				throw session.getJdbcServices().getSqlExceptionHelper().convert(
 						e,
 						"could not initialize a collection batch: " +
 								MessageHelper.collectionInfoString( collectionPersister(), ids, getFactory() ),
@@ -233,7 +233,7 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 
 		}
 
-		private void doTheLoad(String sql, QueryParameters queryParameters, SessionImplementor session) throws SQLException {
+		private void doTheLoad(String sql, QueryParameters queryParameters, SharedSessionContractImplementor session) throws SQLException {
 			final RowSelection selection = queryParameters.getRowSelection();
 			final int maxRows = LimitHelper.hasMaxRows( selection ) ?
 					selection.getMaxRows() :
@@ -247,7 +247,7 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 				processResultSet( rs, queryParameters, session, true, null, maxRows, afterLoadActions );
 			}
 			finally {
-				session.getJdbcCoordinator().getResourceRegistry().release( st );
+				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 				session.getJdbcCoordinator().afterStatementExecution();
 			}
 		}

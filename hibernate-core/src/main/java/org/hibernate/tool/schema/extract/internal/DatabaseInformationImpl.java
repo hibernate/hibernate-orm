@@ -14,65 +14,55 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
+import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
+import org.hibernate.tool.schema.internal.exec.ImprovedExtractionContextImpl;
 
 /**
- * Access to information from the existing database.
- *
  * @author Steve Ebersole
  */
-public class DatabaseInformationImpl implements DatabaseInformation, ExtractionContext.DatabaseObjectAccess {
+public class DatabaseInformationImpl
+		implements DatabaseInformation, ExtractionContext.DatabaseObjectAccess {
 	private final JdbcEnvironment jdbcEnvironment;
-	private final ExtractionContext extractionContext;
+	private final ImprovedExtractionContextImpl extractionContext;
 	private final InformationExtractor extractor;
 
-	private final Map<QualifiedSequenceName,SequenceInformation> sequenceInformationMap = new HashMap<QualifiedSequenceName, SequenceInformation>();
-
-	public DatabaseInformationImpl(
-			JdbcEnvironment jdbcEnvironment,
-			InformationExtractor extractor,
-			ExtractionContext extractionContext) throws SQLException {
-		this.jdbcEnvironment = jdbcEnvironment;
-		this.extractionContext = extractionContext;
-		this.extractor = extractor;
-
-		// legacy code did initialize sequences...
-		initializeSequences();
-	}
+	private final Map<QualifiedSequenceName, SequenceInformation> sequenceInformationMap = new HashMap<QualifiedSequenceName, SequenceInformation>();
 
 	public DatabaseInformationImpl(
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
-			JdbcConnectionAccess jdbcConnectionAccess,
-			Identifier defaultCatalogName,
-			Identifier defaultSchemaName) throws SQLException {
+			DdlTransactionIsolator ddlTransactionIsolator,
+			Namespace.Name defaultNamespace) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
 
-		this.extractionContext = new ExtractionContextImpl(
+		this.extractionContext = new ImprovedExtractionContextImpl(
 				serviceRegistry,
 				jdbcEnvironment,
-				jdbcConnectionAccess,
-				this,
-				defaultCatalogName,
-				defaultSchemaName
+				ddlTransactionIsolator,
+				defaultNamespace.getCatalog(),
+				defaultNamespace.getSchema(),
+				this
 		);
 
 		// todo : make this pluggable
 		this.extractor = new InformationExtractorJdbcDatabaseMetaDataImpl( extractionContext );
 
-		// legacy code did initialize sequences...
+		// because we do not have defined a way to locate sequence info by name
 		initializeSequences();
 	}
 
 	private void initializeSequences() throws SQLException {
-		Iterable<SequenceInformation> itr = jdbcEnvironment.getDialect().getSequenceInformationExtractor().extractMetadata( extractionContext );
+		Iterable<SequenceInformation> itr = jdbcEnvironment.getDialect()
+				.getSequenceInformationExtractor()
+				.extractMetadata( extractionContext );
 		for ( SequenceInformation sequenceInformation : itr ) {
 			sequenceInformationMap.put(
 					// for now, follow the legacy behavior of storing just the
@@ -88,8 +78,13 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 	}
 
 	@Override
-	public boolean schemaExists(Namespace.Name schema) {
-		return extractor.schemaExists( schema.getCatalog(), schema.getSchema() );
+	public boolean catalogExists(Identifier catalog) {
+		return extractor.catalogExists( catalog );
+	}
+
+	@Override
+	public boolean schemaExists(Namespace.Name namespace) {
+		return extractor.schemaExists( namespace.getCatalog(), namespace.getSchema() );
 	}
 
 	@Override
@@ -102,22 +97,27 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 
 	@Override
 	public TableInformation getTableInformation(
-			Namespace.Name schemaName,
+			Namespace.Name namespace,
 			Identifier tableName) {
-		return getTableInformation( new QualifiedTableName( schemaName, tableName ) );
+		return getTableInformation( new QualifiedTableName( namespace, tableName ) );
 	}
 
 	@Override
-	public TableInformation getTableInformation(QualifiedTableName qualifiedTableName) {
-		if ( qualifiedTableName.getObjectName() == null ) {
+	public TableInformation getTableInformation(QualifiedTableName tableName) {
+		if ( tableName.getObjectName() == null ) {
 			throw new IllegalArgumentException( "Passed table name cannot be null" );
 		}
 
 		return extractor.getTable(
-				qualifiedTableName.getCatalogName(),
-				qualifiedTableName.getSchemaName(),
-				qualifiedTableName.getTableName()
+				tableName.getCatalogName(),
+				tableName.getSchemaName(),
+				tableName.getTableName()
 		);
+	}
+
+	@Override
+	public NameSpaceTablesInformation getTablesInformation(Namespace namespace) {
+		return extractor.getTables( namespace.getPhysicalName().getCatalog(), namespace.getPhysicalName().getSchema() );
 	}
 
 	@Override
@@ -129,20 +129,18 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 	}
 
 	@Override
-	public SequenceInformation getSequenceInformation(
-			Namespace.Name schemaName,
-			Identifier sequenceName) {
+	public SequenceInformation getSequenceInformation(Namespace.Name schemaName, Identifier sequenceName) {
 		return getSequenceInformation( new QualifiedSequenceName( schemaName, sequenceName ) );
 	}
 
 	@Override
-	public SequenceInformation getSequenceInformation(QualifiedSequenceName qualifiedSequenceName) {
-		return locateSequenceInformation( qualifiedSequenceName );
+	public SequenceInformation getSequenceInformation(QualifiedSequenceName sequenceName) {
+		return locateSequenceInformation( sequenceName );
 	}
 
 	@Override
-	public boolean catalogExists(Identifier catalog) {
-		return extractor.catalogExists( catalog );
+	public void cleanup() {
+		extractionContext.cleanup();
 	}
 
 	@Override
@@ -158,10 +156,5 @@ public class DatabaseInformationImpl implements DatabaseInformation, ExtractionC
 		}
 
 		return sequenceInformationMap.get( sequenceName );
-	}
-
-	@Override
-	public void cleanup() {
-		extractionContext.cleanup();
 	}
 }

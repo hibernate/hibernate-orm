@@ -1,6 +1,7 @@
 [[bootstrap]]
 == Bootstrap
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/bootstrap
+:extrasdir: extras
 
 The term bootstrapping refers to initializing and starting a software component.
 In Hibernate, we are specifically talking about the process of building a fully functional `SessionFactory` instance or `EntityManagerFactory` instance, for JPA.
@@ -17,6 +18,105 @@ Instead, we focus here on the API calls needed to perform the bootstrapping.
 ====
 During the bootstrap process, you might want to customize Hibernate behavior so make sure you check the <<appendices/Configurations.adoc#configurations,Configurations>> section as well.
 ====
+
+[[bootstrap-jpa]]
+=== JPA Bootstrapping
+
+Bootstrapping Hibernate as a JPA provider can be done in a JPA-spec compliant manner or using a proprietary bootstrapping approach.
+The standardized approach has some limitations in certain environments, but aside from those, it is *highly* recommended that you use JPA-standardized bootstrapping.
+
+[[bootstrap-jpa-compliant]]
+==== JPA-compliant bootstrapping
+
+In JPA, we are ultimately interested in bootstrapping a `javax.persistence.EntityManagerFactory` instance.
+The JPA specification defines two primary standardized bootstrap approaches depending on how the application intends to access the `javax.persistence.EntityManager` instances from an `EntityManagerFactory`.
+
+It uses the terms _EE_ and _SE_ for these two approaches, but those terms are very misleading in this context.
+What the JPA spec calls EE bootstrapping implies the existence of a container (EE, OSGi, etc), who'll manage and inject the persistence context on behalf of the application.
+What it calls SE bootstrapping is everything else. We will use the terms container-bootstrapping and application-bootstrapping in this guide.
+
+[NOTE]
+====
+If you would like additional details on accessing and using `EntityManager` instances, sections 7.6 and 7.7 of the JPA 2.1 specification cover container-managed and application-managed `EntityManagers`, respectively.
+====
+
+For compliant container-bootstrapping, the container will build an `EntityManagerFactory` for each persistent-unit defined in the `META-INF/persistence.xml` configuration file
+and make that available to the application for injection via the `javax.persistence.PersistenceUnit` annotation or via JNDI lookup.
+
+[[bootstrap-jpa-compliant-PersistenceUnit-example]]
+.Injecting a EntityManagerFactory
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceUnit-example]
+----
+====
+
+The `META-INF/persistence.xml` file looks as follows:
+
+[[bootstrap-jpa-compliant-persistence-xml-example]]
+.META-INF/persistence.xml configuration file
+====
+[source, JAVA, indent=0]
+----
+include::{extrasdir}/persistence.xml[]
+----
+====
+
+For compliant application-bootstrapping, rather than the container building the `EntityManagerFactory` for the application, the application builds the `EntityManagerFactory` itself using the `javax.persistence.Persistence` bootstrap class.
+The application creates an `EntityManagerFactory` by calling the `createEntityManagerFactory` method:
+
+[[bootstrap-jpa-compliant-EntityManagerFactory-example]]
+.Application bootstrapped EntityManagerFactory
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-EntityManagerFactory-example]
+----
+====
+
+[NOTE]
+====
+If you don't want to provide a `persistence.xml` configuration file, JPA allows you to provide all the configuration options in a
+http://docs.oracle.com/javaee/7/api/javax/persistence/spi/PersistenceUnitInfo.html[PersistenceUnitInfo] implementation and call
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/HibernatePersistenceProvider.html#createContainerEntityManagerFactory-javax.persistence.spi.PersistenceUnitInfo-java.util.Map-[HibernatePersistenceProvider.html#createContainerEntityManagerFactory].
+====
+
+[[bootstrap-jpa-xml-files]]
+==== Externalizing XML mapping files
+
+JPA offers two mapping options:
+
+- annotations
+- XML mappings
+
+Although annotations are much more common, there are projects were XML mappings are preferred.
+You can even mix annotations and XML mappings so that you can override annotation mappings with XML configurations that can be easily changed without recompiling the project source code.
+This is possible because if there are two conflicting mappings, the XML mappings takes precedence over its annotation counterpart.
+
+The JPA specifications requires the XML mappings to be located on the class path:
+
+[quote, Section 8.2.1.6.2 of the JPA 2.1 Specification]
+____
+An object/relational mapping XML file named `orm.xml` may be specified in the `META-INF` directory in the root of the persistence unit or in the `META-INF` directory of any jar file referenced by the `persistence.xml`.
+
+Alternatively, or in addition, one or more mapping files may be referenced by the mapping-file elements of the persistence-unit element. These mapping files may be present anywhere on the class path.
+____
+
+Therefore, the mapping files can reside in the application jar artifacts, or they can be stored in an external folder location with the cogitation that that location be included in the class path.
+
+Hibernate is more lenient in this regard so you can use any external location even outside of the application configured class path.
+
+[[bootstrap-jpa-compliant-persistence-xml-external-mappings-example]]
+.META-INF/persistence.xml configuration file for external XML mappings
+====
+[source, JAVA, indent=0]
+----
+include::{extrasdir}/persistence-external.xml[]
+----
+====
+
+In the `persistence.xml` configuration file above, the `orm.xml` XML file containing all JPA entity mappings is located in the `/etc/opt/app/mappings/` folder.
 
 [[bootstrap-native]]
 === Native Bootstrapping
@@ -177,67 +277,3 @@ The bootstrapping API is quite flexible, but in most cases it makes the most sen
 include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-SessionFactoryBuilder-example]
 ----
 ====
-
-[[bootstrap-jpa]]
-=== JPA Bootstrapping
-
-Bootstrapping Hibernate as a JPA provider can be done in a JPA-spec compliant manner or using a proprietary bootstrapping approach.
-The standardized approach has some limitations in certain environments, but aside from those, it is *highly* recommended that you use JPA-standardized bootstrapping.
-
-[[bootstrap-jpa-compliant]]
-==== JPA-compliant bootstrapping
-
-In JPA, we are ultimately interested in bootstrapping a `javax.persistence.EntityManagerFactory` instance.
-The JPA specification defines 2 primary standardized bootstrap approaches depending on how the application intends to access the `javax.persistence.EntityManager` instances from an `EntityManagerFactory`.
-It uses the terms _EE_ and _SE_ for these two approaches, but those terms are very misleading in this context.
-What the JPA spec calls EE bootstrapping implies the existence of a container (EE, OSGi, etc), who'll manage and inject the persistence context on behalf of the application.
-What it calls SE bootstrapping is everything else. We will use the terms container-bootstrapping and application-bootstrapping in this guide.
-
-If you would like additional details on accessing and using `EntityManager` instances, sections 7.6 and 7.7 of the JPA 2.1 specification cover container-managed and application-managed `EntityManagers`, respectively.
-
-For compliant container-bootstrapping, the container will build an `EntityManagerFactory` for each persistent-unit defined in the `META-INF/persistence.xml` configuration file
-and make that available to the application for injection via the `javax.persistence.PersistenceUnit` annotation or via JNDI lookup.
-
-[[bootstrap-jpa-compliant-PersistenceUnit-example]]
-.Injecting a EntityManagerFactory
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceUnit-example]
-----
-====
-
-For compliant application-bootstrapping, rather than the container building the `EntityManagerFactory` for the application, the application builds the `EntityManagerFactory` itself using the `javax.persistence.Persistence` bootstrap class.
-The application creates an `EntityManagerFactory` by calling the `createEntityManagerFactory` method:
-
-[[bootstrap-jpa-compliant-EntityManagerFactory-example]]
-.Application bootstrapped EntityManagerFactory
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-EntityManagerFactory-example]
-----
-====
-
-[[bootstrap-jpa-hibernate]]
-==== Proprietary JPA bootstrapping
-
-Hibernate defines a proprietary https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/internal/EntityManagerFactoryBuilderImpl.html[`EntityManagerFactoryBuilderImpl`]
-utility, which allows bootstrapping the JPA environment without even in the absence of the `persistence.xml` configuration file.
-To substitute the `persistence.xml` file, Hibernate offers the `PersistenceUnitInfoDescriptor` utility, which can take configuration that's available in the standard XML configuration file.
-
-[[bootstrap-native-EntityManagerFactory-example]]
-.Proprietary bootstrapped `EntityManagerFactory`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-PersistenceUnitInfoImpl-example]
-----
-
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-EntityManagerFactory-example]
-----
-====
-
-The `integrationSettings` allows the application developer to customize the bootstrapping process by specifying different `hibernate.integrator_provider` or `hibernate.strategy_registration_provider` integration providers.

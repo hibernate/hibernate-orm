@@ -14,15 +14,15 @@ package org.hibernate.annotations;
  */
 public enum FetchMode {
 	/**
-	 * use a select for each individual entity, collection, or join load.
+	 * Use a secondary select for each individual entity, collection, or join load.
 	 */
 	SELECT,
 	/**
-	 * use an outer join to load the related entities, collections or joins.
+	 * Use an outer join to load the related entities, collections or joins.
 	 */
 	JOIN,
 	/**
-	 * use a subselect query to load the additional collections.
+	 * Available for collections only.  When accessing a non-initialized collection, this fetch mode will trigger loading all elements of all collections of the same role for all owners associated with the persistence context using a single secondary select.
 	 */
 	SUBSELECT
 }

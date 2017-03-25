@@ -16,6 +16,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
@@ -120,6 +121,20 @@ public final class Hibernate {
 	 *
 	 * @return The log creator reference
 	 */
+	public static LobCreator getLobCreator(SharedSessionContractImplementor session) {
+		return session.getFactory()
+				.getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getLobCreator( session );
+	}
+
+	/**
+	 * Obtain a lob creator for the given session.
+	 *
+	 * @param session The session for which to obtain a lob creator
+	 *
+	 * @return The log creator reference
+	 */
 	public static LobCreator getLobCreator(SessionImplementor session) {
 		return session.getFactory()
 				.getServiceRegistry()
@@ -180,4 +195,21 @@ public final class Hibernate {
 		return true;
 	}
 
+    /**
+     * Unproxies a {@link HibernateProxy}. If the proxy is uninitialized, it automatically triggers an initialization.
+     * In case the supplied object is null or not a proxy, the object will be returned as-is.
+     *
+     * @param proxy the {@link HibernateProxy} to be unproxied
+     * @return the proxy's underlying implementation object, or the supplied object otherwise
+     */
+	public static Object unproxy(Object proxy) {
+		if ( proxy instanceof HibernateProxy ) {
+			HibernateProxy hibernateProxy = (HibernateProxy) proxy;
+			LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
+			return initializer.getImplementation();
+		}
+		else {
+			return proxy;
+		}
+	}
 }

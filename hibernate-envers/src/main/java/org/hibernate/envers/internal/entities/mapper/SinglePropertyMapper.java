@@ -20,7 +20,7 @@ import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
-import org.hibernate.envers.internal.tools.Tools;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 
@@ -29,6 +29,7 @@ import org.hibernate.property.access.spi.SetterFieldImpl;
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder {
 	private PropertyData propertyData;
@@ -57,12 +58,12 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			Object oldObj) {
 		data.put( propertyData.getName(), newObj );
 		boolean dbLogicallyDifferent = true;
-		if ( (session.getFactory()
+		if ( (session.getFactory().getJdbcServices()
 				.getDialect() instanceof Oracle8iDialect) && (newObj instanceof String || oldObj instanceof String) ) {
 			// Don't generate new revision when database replaces empty string with NULL during INSERT or UPDATE statements.
 			dbLogicallyDifferent = !(StringTools.isEmpty( newObj ) && StringTools.isEmpty( oldObj ));
 		}
-		return dbLogicallyDifferent && !Tools.objectsEqual( newObj, oldObj );
+		return dbLogicallyDifferent && !EqualsHelper.areEqual( newObj, oldObj );
 	}
 
 	@Override
@@ -71,8 +72,9 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			Map<String, Object> data,
 			Object newObj,
 			Object oldObj) {
-		if ( propertyData.isUsingModifiedFlag() ) {
-			data.put( propertyData.getModifiedFlagPropertyName(), !Tools.objectsEqual( newObj, oldObj ) );
+		// Synthetic properties are not subject to withModifiedFlag analysis
+		if ( propertyData.isUsingModifiedFlag() && !propertyData.isSynthetic() ) {
+			data.put( propertyData.getModifiedFlagPropertyName(), !EqualsHelper.areEqual( newObj, oldObj ) );
 		}
 	}
 
@@ -88,7 +90,8 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			Object primaryKey,
 			AuditReaderImplementor versionsReader,
 			Number revision) {
-		if ( data == null || obj == null ) {
+		// synthetic properties are not part of the entity model; therefore they should be ignored.
+		if ( data == null || obj == null || propertyData.isSynthetic() ) {
 			return;
 		}
 
@@ -130,4 +133,8 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 		return null;
 	}
 
+	@Override
+	public boolean hasPropertiesWithModifiedFlag() {
+		return propertyData != null && propertyData.isUsingModifiedFlag();
+	}
 }

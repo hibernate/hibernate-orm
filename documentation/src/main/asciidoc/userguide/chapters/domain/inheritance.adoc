@@ -82,6 +82,29 @@ include::{extrasdir}/entity-inheritance-single-table-persist-example.sql[]
 ----
 ====
 
+When using polymorphic queries, only a single table is required to be scanned to fetch all associated subclass instances.
+
+[[entity-inheritance-single-table-query-example]]
+.Single Table polymorphic query
+====
+[source,java]
+----
+include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-query-example,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/entity-inheritance-single-table-query-example.sql[]
+----
+====
+
+[IMPORTANT]
+====
+Among all other inheritance alternatives, the single table strategy performs the best since it requires access to one table only.
+Because all subclass columns are stored in a single table, it's not possible to use NOT NULL constraints anymore, so integrity checks must be moved either into the data access layer or enforced through `CHECK` or `TRIGGER` constraints.
+====
+
+[[entity-inheritance-discriminator]]
 ===== Discriminator
 
 The discriminator column contains marker values that tell the persistence layer what subclass to instantiate for a particular row.
@@ -112,6 +135,9 @@ Usually, the column should be part of the INSERT statement, but if your discrimi
 There used to be `@org.hibernate.annotations.ForceDiscriminator` annotation which was deprecated in version 3.6 and later removed. Use `@DiscriminatorOptions` instead.
 ====
 
+[[entity-inheritance-discriminator-formula]]
+====== Discriminator formula
+
 Assuming a legacy database schema where the discriminator is based on inspecting a certain column,
 we can take advantage of the Hibernate specific `@DiscriminatorFormula` annotation and map the inheritance model as follows:
 
@@ -132,27 +158,47 @@ include::{extrasdir}/entity-inheritance-single-table-discriminator-formula-examp
 The `@DiscriminatorFormula` defines a custom SQL clause that can be used to identify a certain subclass type.
 The `@DiscriminatorValue` defines the mapping between the result of the `@DiscriminatorFormula` and the inheritance subclass type.
 
-[IMPORTANT]
-====
-Among all other inheritance alternatives, the single table strategy performs the best since it requires access to one table only.
-Because all subclass columns are stored in a single table, it's not possible to use NOT NULL constraints anymore, so integrity checks must be moved into the data access layer.
-====
+[[entity-inheritance-discriminator-implicit]]
+====== Implicit discriminator values
 
-When using polymorphic queries, only a single table is required to be scanned to fetch all associated subclass instances.
+Aside from the usual discriminator values assigned to each individual subclass type, the `@DiscriminatorValue` can take two additional values:
 
-[[entity-inheritance-single-table-query-example]]
-.Single Table polymorphic query
+`null`:: If the underlying discriminator column is null, the `null` discriminator mapping is going to be used.
+`not null`:: If the underlying discriminator column has a not-null value that is not explicitly mapped to any entity, the `not-null` discriminator mapping used.
+
+To understand how these two values work, consider the following entity mapping:
+
+[[entity-inheritance-single-table-discriminator-value-example]]
+.@DiscriminatorValue `null` and `not-null` entity mapping
 ====
 [source,java]
 ----
-include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-query-example,indent=0]
+include::{sourcedir}/DiscriminatorNotNullSingleTableTest.java[tags=entity-inheritance-single-table-discriminator-value-example,indent=0]
+----
+====
+
+The `Account` class has a `@DiscriminatorValue( "null" )` mapping, meaning that any `account` row which does not contain any discriminator value will be mapped to an `Account` base class entity.
+The `DebitAccount` and `CreditAccount` entities use explicit discriminator values.
+The `OtherAccount` entity is used as a generic account type because it maps any database row whose discriminator column is not explicitly assigned to any other entity in the current inheritance tree.
+
+To visualize how it works, consider the following example:
+
+[[entity-inheritance-single-table-discriminator-value-persist-example]]
+.@DiscriminatorValue `null` and `not-null` entity persistence
+====
+[source,java]
+----
+include::{sourcedir}/DiscriminatorNotNullSingleTableTest.java[tags=entity-inheritance-single-table-discriminator-value-persist-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{extrasdir}/entity-inheritance-single-table-query-example.sql[]
+include::{extrasdir}/entity-inheritance-single-table-discriminator-value-persist-example.sql[]
 ----
 ====
+
+As you can see, the `Account` entity row has a value of `NULL` in the `DTYPE` discriminator column,
+while the `OtherAccount` entity was saved with a `DTYPE` column value of `other` which has not explicit mapping.
 
 [[entity-inheritance-joined-table]]
 ==== Joined table
@@ -218,7 +264,7 @@ include::{extrasdir}/entity-inheritance-joined-table-query-example.sql[]
 
 [IMPORTANT]
 ====
-Polymorphic queries can create Cartesian Products, so caution is advised.
+The joined table inheritance polymorphic queries can use several JOINS which might affect performance when fetching a large number of entities.
 ====
 
 [[entity-inheritance-table-per-class]]

@@ -46,7 +46,6 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 	 * @param osgiClassLoader The ClassLoader we built from OSGi Bundles
 	 * @param osgiJtaPlatform The OSGi-specific JtaPlatform impl we built
 	 * @param requestingBundle The OSGi Bundle requesting the PersistenceProvider
-	 * @param context The OSGi context
 	 */
 	public OsgiPersistenceProvider(
 			OsgiClassLoader osgiClassLoader,
@@ -75,7 +74,8 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 
 		osgiClassLoader.addBundle( requestingBundle );
 
-		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, settings, osgiClassLoader );
+		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, settings,
+				new OSGiClassLoaderServiceImpl( osgiClassLoader, osgiServiceUtil ) );
 		return builder == null ? null : builder.build();
 	}
 
@@ -91,8 +91,9 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 		);
 
 		osgiClassLoader.addClassLoader( info.getClassLoader() );
-
-		return Bootstrap.getEntityManagerFactoryBuilder( info, settings, osgiClassLoader ).build();
+		
+		return Bootstrap.getEntityManagerFactoryBuilder( info, settings,
+				new OSGiClassLoaderServiceImpl( osgiClassLoader, osgiServiceUtil ) ).build();
 	}
 
 	@SuppressWarnings("unchecked")

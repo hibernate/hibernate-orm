@@ -13,7 +13,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.Loader;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -79,7 +79,7 @@ public class LegacyBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuild
 		}
 
 		@Override
-		public Object load(Serializable id, Object optionalObject, SessionImplementor session, LockOptions lockOptions) {
+		public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions) {
 			final Serializable[] batch = session.getPersistenceContext()
 					.getBatchFetchQueue()
 					.getEntityBatch( persister(), id, batchSizes[0], persister().getEntityMode() );

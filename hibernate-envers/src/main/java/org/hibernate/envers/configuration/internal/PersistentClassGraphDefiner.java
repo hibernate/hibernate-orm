@@ -50,7 +50,7 @@ public class PersistentClassGraphDefiner implements GraphDefiner<PersistentClass
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public List<PersistentClass> getNeighbours(PersistentClass pc) {
-		final List<PersistentClass> neighbours = new ArrayList<PersistentClass>();
+		final List<PersistentClass> neighbours = new ArrayList<>();
 
 		addNeighbours( neighbours, (Iterator<PersistentClass>) pc.getSubclassIterator() );
 

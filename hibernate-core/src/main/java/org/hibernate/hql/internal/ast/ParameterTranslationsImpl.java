@@ -41,8 +41,7 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 	}
 
 	public ParameterInfo getOrdinalParameterInfo(int ordinalPosition) {
-		// remember that ordinal parameters numbers are 1-based!!!
-		return ordinalParameters[ordinalPosition - 1];
+		return ordinalParameters[ordinalPosition];
 	}
 
 	@Override
@@ -85,14 +84,14 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 	 */
 	public ParameterTranslationsImpl(List<ParameterSpecification> parameterSpecifications) {
 		class NamedParamTempHolder {
-			String name;
-			Type type;
-			List<Integer> positions = new ArrayList<Integer>();
+			private String name;
+			private Type type;
+			private List<Integer> positions = new ArrayList<>();
 		}
 
 		final int size = parameterSpecifications.size();
-		final List<ParameterInfo> ordinalParameterList = new ArrayList<ParameterInfo>();
-		final Map<String,NamedParamTempHolder> namedParameterMap = new HashMap<String,NamedParamTempHolder>();
+		final List<ParameterInfo> ordinalParameterList = new ArrayList<>();
+		final Map<String,NamedParamTempHolder> namedParameterMap = new HashMap<>();
 		for ( int i = 0; i < size; i++ ) {
 			final ParameterSpecification spec = parameterSpecifications.get( i );
 			if ( PositionalParameterSpecification.class.isInstance( spec ) ) {
@@ -124,7 +123,7 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 			namedParameters = java.util.Collections.emptyMap();
 		}
 		else {
-			final Map<String,ParameterInfo> namedParametersBacking = new HashMap<String,ParameterInfo>( namedParameterMap.size() );
+			final Map<String,ParameterInfo> namedParametersBacking = new HashMap<>( namedParameterMap.size() );
 			for ( NamedParamTempHolder holder : namedParameterMap.values() ) {
 				namedParametersBacking.put(
 						holder.name,

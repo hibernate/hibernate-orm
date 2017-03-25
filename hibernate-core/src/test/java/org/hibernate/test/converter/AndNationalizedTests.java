@@ -19,8 +19,10 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.mapping.PersistentClass;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -32,6 +34,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
+//@SkipForDialect(value = PostgreSQL81Dialect.class, comment = "Postgres does not support ")
 public class AndNationalizedTests extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9599")
@@ -42,10 +45,18 @@ public class AndNationalizedTests extends BaseUnitTestCase {
 			( (MetadataImpl) metadata ).validate();
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( TestEntity.class.getName() );
-			assertEquals(
-					Types.NVARCHAR,
-					entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]
-			);
+			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect){
+				// See issue HHH-10693
+				assertEquals(
+						Types.VARCHAR,
+						entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]
+				);
+			}else {
+				assertEquals(
+						Types.NVARCHAR,
+						entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]
+				);
+			}
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

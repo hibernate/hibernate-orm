@@ -12,7 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.insert.AbstractReturningDelegate;
@@ -44,7 +44,7 @@ public class GetGeneratedKeysDelegate
 	}
 
 	@Override
-	protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
+	protected PreparedStatement prepare(String insertSQL, SharedSessionContractImplementor session) throws SQLException {
 		return session
 				.getJdbcCoordinator()
 				.getStatementPreparer()
@@ -52,7 +52,7 @@ public class GetGeneratedKeysDelegate
 	}
 
 	@Override
-	public Serializable executeAndExtract(PreparedStatement insert, SessionImplementor session)
+	public Serializable executeAndExtract(PreparedStatement insert, SharedSessionContractImplementor session)
 			throws SQLException {
 		session.getJdbcCoordinator().getResultSetReturn().executeUpdate( insert );
 		ResultSet rs = null;
@@ -62,12 +62,12 @@ public class GetGeneratedKeysDelegate
 					rs,
 					persister.getRootTableKeyColumnNames()[0],
 					persister.getIdentifierType(),
-					session.getFactory().getDialect()
+					session.getJdbcServices().getJdbcEnvironment().getDialect()
 			);
 		}
 		finally {
 			if ( rs != null ) {
-				session.getJdbcCoordinator().getResourceRegistry().release( rs, insert );
+				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, insert );
 			}
 		}
 	}

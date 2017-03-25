@@ -10,7 +10,7 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Optional {@link Type} contract for implementations enabled
@@ -25,7 +25,7 @@ public interface ProcedureParameterNamedBinder {
 	 *
 	 * @return {@code true} indicates that @{link #nullSafeSet} calls will not fail
 	 */
-	public boolean canDoSetting();
+	boolean canDoSetting();
 
 	/**
 	 * Bind a value to the JDBC prepared statement, ignoring some columns as dictated by the 'settable' parameter.
@@ -40,6 +40,5 @@ public interface ProcedureParameterNamedBinder {
 	 * @throws HibernateException An error from Hibernate
 	 * @throws SQLException An error from the JDBC driver
 	 */
-	public void nullSafeSet(CallableStatement statement, Object value, String name, SessionImplementor session)
-			throws SQLException;
+	void nullSafeSet(CallableStatement statement, Object value, String name, SharedSessionContractImplementor session) throws SQLException;
 }

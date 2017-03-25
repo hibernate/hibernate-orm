@@ -23,7 +23,6 @@ import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitPrimaryKeyJoinColumnNameSource;
@@ -135,16 +134,15 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 	public static Ejb3JoinColumn[] buildJoinColumnsOrFormulas(
-			JoinColumnsOrFormulas anns,
+			JoinColumnOrFormula[] anns,
 			String mappedBy,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
-		JoinColumnOrFormula [] ann = anns.value();
-		Ejb3JoinColumn [] joinColumns = new Ejb3JoinColumn[ann.length];
-		for (int i = 0; i < ann.length; i++) {
-			JoinColumnOrFormula join = ann[i];
+		Ejb3JoinColumn [] joinColumns = new Ejb3JoinColumn[anns.length];
+		for (int i = 0; i < anns.length; i++) {
+			JoinColumnOrFormula join = anns[i];
 			JoinFormula formula = join.formula();
 			if (formula.value() != null && !formula.value().equals("")) {
 				joinColumns[i] = buildJoinFormula(
@@ -480,7 +478,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				getMappingColumn() != null ? getMappingColumn().isNullable() : false,
 				referencedColumn.getSqlType(),
 				getMappingColumn() != null ? getMappingColumn().isUnique() : false,
-			    false
+				false
 		);
 		linkWithValue( value );
 	}
@@ -764,7 +762,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 	@Override
-    protected void addColumnBinding(SimpleValue value) {
+	protected void addColumnBinding(SimpleValue value) {
 		if ( StringHelper.isEmpty( mappedBy ) ) {
 			// was the column explicitly quoted in the mapping/annotation
 			// TODO: in metamodel, we need to better split global quoting and explicit quoting w/ respect to logical names
@@ -957,7 +955,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				currentJoinColumn.setMappedBy( mappedBy );
 				currentJoinColumn.setJoinAnnotation( annJoin, propertyName );
 				currentJoinColumn.setNullable( false ); //I break the spec, but it's for good
-				//done after the annotation to override it
+				//done afterQuery the annotation to override it
 				currentJoinColumn.bind();
 				joinColumns[index] = currentJoinColumn;
 			}

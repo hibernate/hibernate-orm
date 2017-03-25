@@ -19,12 +19,12 @@ public interface ExplicitParameterSpecification extends ParameterSpecification {
 	 *
 	 * @return The line number.
 	 */
-	public int getSourceLine();
+	int getSourceLine();
 
 	/**
 	 * Retrieves the column number (within the {@link #getSourceLine()}) where this parameter occurs.
 	 *
 	 * @return The column number.
 	 */
-	public int getSourceColumn();
+	int getSourceColumn();
 }

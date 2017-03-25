@@ -718,16 +718,25 @@ public final class Template {
 		return token.startsWith( ":" );
 	}
 
-	private static boolean isFunctionOrKeyword(String lcToken, String nextToken, Dialect dialect, SQLFunctionRegistry functionRegistry) {
-		return "(".equals(nextToken) ||
-			KEYWORDS.contains(lcToken) ||
-			isFunction(lcToken, nextToken, functionRegistry ) ||
-			dialect.getKeywords().contains(lcToken) ||
-			FUNCTION_KEYWORDS.contains(lcToken);
+	private static boolean isFunctionOrKeyword(
+			String lcToken,
+			String nextToken,
+			Dialect dialect,
+			SQLFunctionRegistry functionRegistry) {
+		return "(".equals( nextToken ) ||
+				KEYWORDS.contains( lcToken ) ||
+				isType( lcToken, dialect ) ||
+				isFunction( lcToken, nextToken, functionRegistry ) ||
+				dialect.getKeywords().contains( lcToken ) ||
+				FUNCTION_KEYWORDS.contains( lcToken );
+	}
+
+	private static boolean isType(String lcToken, Dialect dialect) {
+		return dialect.isTypeNameRegistered( lcToken );
 	}
 
 	private static boolean isFunction(String lcToken, String nextToken, SQLFunctionRegistry functionRegistry) {
-		// checking for "(" is currently redundant because it is checked before getting here;
+		// checking for "(" is currently redundant because it is checked beforeQuery getting here;
 		// doing the check anyhow, in case that earlier check goes away;
 		if ( "(".equals( nextToken ) ) {
 			return true;

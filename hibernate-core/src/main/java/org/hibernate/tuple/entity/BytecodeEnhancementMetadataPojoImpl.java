@@ -6,15 +6,13 @@
  */
 package org.hibernate.tuple.entity;
 
-import java.util.Set;
-
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.bytecode.spi.NotInstrumentedException;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.PersistentClass;
 
 /**
@@ -69,10 +67,14 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 
 	@Override
 	public boolean hasUnFetchedAttributes(Object entity) {
-		LazyAttributeLoadingInterceptor interceptor = isEnhancedForLazyLoading()
-				? extractInterceptor( entity )
-				: null;
+		LazyAttributeLoadingInterceptor interceptor = enhancedForLazyLoading ? extractInterceptor( entity ) : null;
 		return interceptor != null && interceptor.hasAnyUninitializedAttributes();
+	}
+
+	@Override
+	public boolean isAttributeLoaded(Object entity, String attributeName) {
+		LazyAttributeLoadingInterceptor interceptor = enhancedForLazyLoading ? extractInterceptor( entity ) : null;
+		return interceptor == null || interceptor.isAttributeLoaded( attributeName );
 	}
 
 	@Override
@@ -100,7 +102,7 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 	}
 
 	@Override
-	public LazyAttributeLoadingInterceptor injectInterceptor(Object entity, SessionImplementor session) {
+	public LazyAttributeLoadingInterceptor injectInterceptor(Object entity, SharedSessionContractImplementor session) {
 		if ( !enhancedForLazyLoading ) {
 			throw new NotInstrumentedException( "Entity class [" + entityClass.getName() + "] is not enhanced for lazy loading" );
 		}

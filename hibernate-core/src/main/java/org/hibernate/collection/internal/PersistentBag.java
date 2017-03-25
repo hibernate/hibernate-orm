@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -45,7 +45,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	 *
 	 * @param session The session
 	 */
-	public PersistentBag(SessionImplementor session) {
+	public PersistentBag(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
@@ -56,7 +56,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	 * @param coll The base elements.
 	 */
 	@SuppressWarnings("unchecked")
-	public PersistentBag(SessionImplementor session, Collection coll) {
+	public PersistentBag(SharedSessionContractImplementor session, Collection coll) {
 		super( session );
 		if ( coll instanceof List ) {
 			bag = (List) coll;

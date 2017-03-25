@@ -6,7 +6,7 @@
  */
 package org.hibernate.engine.internal;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.VersionType;
@@ -38,7 +38,7 @@ public final class Versioning {
 	 * @param session The originating session
 	 * @return The initial optimistic locking value
 	 */
-	private static Object seed(VersionType versionType, SessionImplementor session) {
+	private static Object seed(VersionType versionType, SharedSessionContractImplementor session) {
 		final Object seed = versionType.seed( session );
 		LOG.tracef( "Seeding: %s", seed );
 		return seed;
@@ -60,7 +60,7 @@ public final class Versioning {
 			Object[] fields,
 			int versionProperty,
 			VersionType versionType,
-			SessionImplementor session) {
+			SharedSessionContractImplementor session) {
 		final Object initialVersion = fields[versionProperty];
 		if (
 			initialVersion==null ||
@@ -88,7 +88,7 @@ public final class Versioning {
 	 * @return The incremented optimistic locking value.
 	 */
 	@SuppressWarnings("unchecked")
-	public static Object increment(Object version, VersionType versionType, SessionImplementor session) {
+	public static Object increment(Object version, VersionType versionType, SharedSessionContractImplementor session) {
 		final Object next = versionType.next( version, session );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(

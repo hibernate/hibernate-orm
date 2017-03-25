@@ -64,7 +64,7 @@ public class RefreshEnhancedEntityTestTask extends AbstractEnhancerTestTask {
     protected void cleanup() {
     }
 
-    @Entity
+    @Entity(name = "Person")
     public static class Person {
 
         @Id
@@ -85,7 +85,7 @@ public class RefreshEnhancedEntityTestTask extends AbstractEnhancerTestTask {
         }
     }
 
-    @Entity
+    @Entity(name = "PersonAddress")
     public static class PersonAddress {
 
         @Id

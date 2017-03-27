@@ -96,6 +96,7 @@ public class SimpleCaseExpression<C,R>
 	private void adjustJavaType(Expression<? extends R> exp) {
 		if ( javaType == null ) {
 			javaType = (Class<R>) exp.getJavaType();
+			super.resetJavaType(javaType);
 		}
 	}
 

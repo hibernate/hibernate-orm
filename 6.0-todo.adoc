@@ -45,6 +45,12 @@
 
 == TODO items
 
+* Make sure `is shallow` is fully deprecated, both in terms of source code and being logged when that feature is used.
+ 	** Query#iterate
+ 	** dynamic-instantiations selecting an entity reference as a ctor argument - we will change to interpret this
+ 		as (1) fully select (no implicit fetching) that entity and (2) look for constructors with arguments
+ 		of the same castable type as the entity; for the short term we will have a backwards compatability flag for the
+ 		old behavior, but using it should log a "deprecation warning".
 * Consider a common "model walker" useable for `org.hibernate.mapping` model as well as `org.hibernate.persister` via
 	visitation contracts implemented in the tree + an external visitor.  This would also fit with users being able to
 	do walk model using a custom visitor.

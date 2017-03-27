@@ -32,7 +32,6 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
 public class SimpleCaseExpression<C,R>
 		extends ExpressionImpl<R>
 		implements SimpleCase<C,R>, Serializable {
-	private Class<R> javaType;
 	private final Expression<? extends C> expression;
 	private List<WhenClause> whenClauses = new ArrayList<WhenClause>();
 	private Expression<? extends R> otherwiseResult;
@@ -61,7 +60,6 @@ public class SimpleCaseExpression<C,R>
 			Class<R> javaType,
 			Expression<? extends C> expression) {
 		super( criteriaBuilder, javaType);
-		this.javaType = javaType;
 		this.expression = expression;
 	}
 
@@ -88,15 +86,8 @@ public class SimpleCaseExpression<C,R>
 				result
 		);
 		whenClauses.add( whenClause );
-		adjustJavaType( result );
+		resetJavaType( result.getJavaType() );
 		return this;
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	private void adjustJavaType(Expression<? extends R> exp) {
-		if ( javaType == null ) {
-			javaType = (Class<R>) exp.getJavaType();
-		}
 	}
 
 	public Expression<R> otherwise(R result) {
@@ -105,7 +96,7 @@ public class SimpleCaseExpression<C,R>
 
 	public Expression<R> otherwise(Expression<? extends R> result) {
 		this.otherwiseResult = result;
-		adjustJavaType( result );
+		resetJavaType( result.getJavaType() );
 		return this;
 	}
 

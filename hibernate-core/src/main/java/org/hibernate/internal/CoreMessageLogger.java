@@ -1342,8 +1342,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unknownOracleVersion(int databaseMajorVersion);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unknown Microsoft SQL Server major version [%s] using SQL Server 2000 dialect", id = 385)
-	void unknownSqlServerVersion(int databaseMajorVersion);
+	@Message(value = "Unknown Microsoft SQL Server major version [%s] using SQL Server [%s] dialect", id = 385)
+	void unknownSqlServerVersion(int databaseMajorVersion, int sqlServerYear);
 
 	@LogMessage(level = WARN)
 	@Message(value = "ResultSet had no statement associated with it, but was not yet registered", id = 386)

@@ -136,12 +136,12 @@ public class StandardDialectResolver extends AbstractDialectResolver {
                     return new SQLServer2012Dialect();
                 default: {
                     if (databaseMajorVersion < 8 ) {
-                        LOG.unknownSqlServerVersion(databaseMajorVersion);
+                        LOG.unknownSqlServerVersion(databaseMajorVersion, 2000);
                         return new SQLServerDialect();
                     }
                     else {
                         // assume `majorVersion > 13`
-                        LOG.unknownSqlServerVersion(databaseMajorVersion);
+                        LOG.unknownSqlServerVersion(databaseMajorVersion, 2012);
                         return new SQLServer2012Dialect();
                     }
                 }

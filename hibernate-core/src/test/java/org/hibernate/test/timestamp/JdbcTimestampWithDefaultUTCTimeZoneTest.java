@@ -12,7 +12,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.test.util.jdbc.TimeZoneConnectionProvider;
+import org.hibernate.testing.jdbc.TimeZoneConnectionProvider;
 
 /**
  * @author Vlad Mihalcea

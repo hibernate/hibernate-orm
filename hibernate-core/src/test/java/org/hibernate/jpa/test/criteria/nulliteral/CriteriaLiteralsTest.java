@@ -28,7 +28,7 @@ import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Before;
 import org.junit.Test;
 

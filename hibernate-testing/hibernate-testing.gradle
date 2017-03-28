@@ -16,6 +16,8 @@ dependencies {
     compile ( libraries.jboss_jta ) {
         transitive=false;
     }
+    compile( libraries.mockito )
+    compile( libraries.mockito_inline )
 }
 
 // resources inherently exclude sources

@@ -65,7 +65,6 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
     public void testCache() {
         doInJPA( this::entityManagerFactory, entityManager -> {
             entityManager.persist( new Person() );
-            entityManager.persist( new Person() );
 			Person aPerson= new Person();
 			aPerson.setName( "John Doe" );
 			aPerson.setCode( "unique-code" );

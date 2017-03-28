@@ -18,7 +18,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.ConnectionProviderDelegate;
+import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernateSessionBuilder;

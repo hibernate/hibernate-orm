@@ -27,7 +27,7 @@
 
         <filter name="effectiveDate" condition=":asOfDate BETWEEN eff_start_dt and eff_end_dt"/>
         <filter name="unioned">
-            'abc' in ( select d.reg from DEPARTMENT d where (d.dept_id=123) union select p.name from SALES_PERSON p )
+            'abc' in ( select d.REG from DEPARTMENT d where (d.DEPT_ID=123) union select p.NAME from SALES_PERSON p )
         </filter>
 
     </class>

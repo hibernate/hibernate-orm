@@ -18,10 +18,12 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.criterion.Order;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -36,6 +38,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Gavin King
  */
+@SkipForDialect(SQLServerDialect.class)
 public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

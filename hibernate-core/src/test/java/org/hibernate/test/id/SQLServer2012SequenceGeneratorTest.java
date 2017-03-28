@@ -6,6 +6,10 @@
  */
 package org.hibernate.test.id;
 
+import java.util.List;
+
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.hibernate.Session;
@@ -34,22 +38,18 @@ public class SQLServer2012SequenceGeneratorTest extends BaseCoreFunctionalTestCa
     @Test
     @TestForIssue(jiraKey = "HHH-8814")
     @RequiresDialect(value=SQLServer2012Dialect.class)
-    public void testStartOfSequence() throws Exception {
-        Session s = openSession();
-        Transaction tx = s.beginTransaction();
-        final Person person = new Person();
-        s.persist(person);
-        tx.commit();
-        s.close();
+    public void testStartOfSequence() {
+		final Person person = doInHibernate( this::sessionFactory, session -> {
+			final Person _person = new Person();
+			session.persist(_person);
+			return _person;
+		} );
 
         assertTrue(person.getId() == 10);
-
-		s = openSession();
-		tx = s.beginTransaction();
-		s.createQuery( "delete from Person" ).executeUpdate();
-		tx.commit();
-		s.close();
-
 	}
 
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
 }

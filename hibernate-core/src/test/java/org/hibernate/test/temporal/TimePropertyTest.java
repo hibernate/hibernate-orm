@@ -20,6 +20,8 @@ import org.junit.Test;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.dialect.SQLServerDialect;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static junit.framework.Assert.assertEquals;
@@ -55,7 +57,14 @@ public class TimePropertyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		final Query queryWithParameter = s.createQuery( "from TimePropertyTest$Entity where tAsDate=?" ).setParameter( 0, eGotten.tAsDate );
+
+		String queryString = "from TimePropertyTest$Entity where tAsDate = ?";
+
+		if( SQLServerDialect.class.isAssignableFrom( getDialect().getClass() )) {
+			queryString = "from TimePropertyTest$Entity where tAsDate = cast ( ? as time )";
+		}
+
+		final Query queryWithParameter = s.createQuery( queryString ).setParameter( 0, eGotten.tAsDate );
 		final Entity eQueriedWithParameter = (Entity) queryWithParameter.uniqueResult();
 		assertNotNull( eQueriedWithParameter );
 		s.getTransaction().commit();
@@ -63,7 +72,8 @@ public class TimePropertyTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		final Query query = s.createQuery( "from TimePropertyTest$Entity where tAsDate=?" ).setTime( 0, eGotten.tAsDate );
+
+		final Query query = s.createQuery( queryString ).setTime( 0, eGotten.tAsDate );
 		final Entity eQueried = (Entity) query.uniqueResult();
 		assertNotNull( eQueried );
 		s.getTransaction().commit();

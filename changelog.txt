@@ -3,7 +3,40 @@ Hibernate 5.0 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
-Changes in 5.0.12.Final (January 19, 2016)
+Changes in 5.0.13.Final (March 27, 2017)
+------------------------------------------------------------------------------------------------------------------------
+
+    [JBEAP-3455 / HHH-10689] - Some tests fails because oracle12c doesn't support single column identity table
+
+    [JBEAP-8393 / HHH-11400] - Found use of deprecated 'collection property' issue for valid JPQL query
+
+    [JBEAP-8556] Miscellaneous enhancement bugfixes
+                 [HHH-10981] - Support private persistent attributes in @MappedSuperclas
+                 [HHH-10989] - Unidirectional one-to-many doesn't take care of many side during removal if bytecode enhancement is on
+                 [HHH-11050] - Gradle Enhancement Task RuntimeException: class is frozen
+                 [HHH-11282] - Support m2e/Eclipse integration in hibernate-enhance-maven-plugin
+                 [HHH-11284] - Enhancer dirty tracking doesn't work with inherited entities
+                 [HHH-11287] - requiresDependencyResolution must bet set in plugin.xml to include maven dependencies in enhancement classpath 
+                 [HHH-11288] - Execution project artifacts are always empty, so dependencies are never included
+                 [HHH-11293] - Use of enhancer dirty tracking causes collections in entities to not be persisted
+                 [HHH-11294] - NPE in org.hibernate.jpa.internal.util.PersistenceUtilHelper.isInitialized(PersistentAttributeInterceptable)
+                 [HHH-11404] - ManagedSuperclass not enhanced when extending another ManagedSuperclass
+                 [HHH-11459] - Bytecode-enhanced Entity cannot be merged or refreshed
+                 [HHH-11576] - Unloaded collections get deleted when entity is bytecode enhanced
+
+    [JBEAP-8843] Upstream documentation improvements
+                 [HHH-2123] - clarification on the way interceptors and event system interact.
+                 [HHH-2643] - Improve Session.refresh() Javdoc to clarify contract
+                 [HHH-3771] - Best practice for equals/hashCode implementation
+                 [HHH-7010] - Document mapping annotations
+                 [HHH-11066] - Documentation regarding the reason @Filter is not supported with @Cache for collections
+                 [HHH-11132] - Add a Performance Tuning and Best Practices chapter
+                 [HHH-11174] - Document that XML file mappings can reside outside of JAR
+                 [HHH-11189] - Remove all links to external blog posts from User Guide
+
+    [JBEAP-9161 / HHH-11516]  Level two cache may not be enabled when using @Cacheable without/instead of @Cache
+
+Changes in 5.0.12.Final (January 19, 2017)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/25351
 

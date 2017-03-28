@@ -418,7 +418,15 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsCatalogs() ) {
 			if ( catalog == null ) {
-				catalogFilter = "";
+				String defaultCatalog = "";
+				if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsCatalogs() ) {
+					try {
+						defaultCatalog = extractionContext.getJdbcConnection().getCatalog();
+					}
+					catch (SQLException ignore) {
+					}
+				}
+				catalogFilter = defaultCatalog;
 			}
 			else {
 				catalogToUse = catalog;

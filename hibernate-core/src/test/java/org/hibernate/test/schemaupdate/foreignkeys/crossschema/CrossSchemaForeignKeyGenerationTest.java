@@ -163,6 +163,12 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 				TargetDescriptorImpl.INSTANCE
 		);
 
+		new IndividuallySchemaMigratorImpl( tool, DefaultSchemaFilter.INSTANCE ).doMigration(
+				metadata,
+				options,
+				TargetDescriptorImpl.INSTANCE
+		);
+
 		new SchemaDropperImpl( tool ).doDrop(
 				metadata,
 				options,

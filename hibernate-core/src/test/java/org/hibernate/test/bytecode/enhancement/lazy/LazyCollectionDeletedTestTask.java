@@ -12,14 +12,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.test.bytecode.enhancement.AbstractEnhancerTestTask;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.MapsId;
-import javax.persistence.OneToOne;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,7 +21,6 @@ import static org.junit.Assert.assertFalse;
  * @author Luis Barreiro
  */
 public class LazyCollectionDeletedTestTask extends AbstractEnhancerTestTask {
-    private static final int CHILDREN_SIZE = 10;
     private Long postId;
 
     public Class<?>[] getAnnotatedClasses() {
@@ -94,44 +85,5 @@ public class LazyCollectionDeletedTestTask extends AbstractEnhancerTestTask {
     }
 
     protected void cleanup() {
-    }
-
-    // --- //
-
-    @Entity( name = "Tag" )
-    public static class Tag {
-
-        @Id
-        @GeneratedValue
-        private Long id;
-
-        private String name;
-    }
-
-    @Entity( name = "Post" )
-    public static class Post {
-
-        @Id
-        @GeneratedValue
-        private Long id;
-
-        @ManyToMany( cascade = CascadeType.ALL )
-        private Set<Tag> tags;
-
-        @OneToOne( fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL )
-        private AdditionalDetails additionalDetails;
-    }
-
-    @Entity( name = "AdditionalDetails" )
-    public static class AdditionalDetails {
-
-        @Id
-        private Long id;
-
-        private String details;
-
-        @OneToOne( optional = false )
-        @MapsId
-        private Post post;
     }
 }

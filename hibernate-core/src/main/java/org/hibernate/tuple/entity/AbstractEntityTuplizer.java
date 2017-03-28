@@ -14,12 +14,15 @@ import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoader;
+import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
-import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -495,19 +498,32 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	public Object[] getPropertyValues(Object entity) throws HibernateException {
 		final int span = entityMetamodel.getPropertySpan();
 		final Object[] result = new Object[span];
-		final EntityInstrumentationMetadata enhancementMetadata = entityMetamodel.getInstrumentationMetadata();
-		final FieldInterceptor interceptor = enhancementMetadata.isInstrumented()
-				? enhancementMetadata.extractInterceptor( entity )
-				: null;
+
+		LazyAttributeLoader lazyAttributeLoader = null;
+		FieldInterceptor fieldInterceptor = null;
+		if ( entity instanceof PersistentAttributeInterceptable ) {
+			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+			if ( interceptor != null && interceptor instanceof LazyAttributeLoader ) {
+				lazyAttributeLoader = (LazyAttributeLoader) interceptor;
+			}
+		}
+		// Don't bother checking for FieldInterceptor if lazyAttributeLoader is non-null.
+		if ( lazyAttributeLoader == null && FieldInterceptionHelper.isInstrumented( entity ) ) {
+			fieldInterceptor = FieldInterceptionHelper.extractFieldInterceptor( entity );
+		}
 
 		for ( int j = 0; j < span; j++ ) {
 			NonIdentifierAttribute property = entityMetamodel.getProperties()[j];
-			if ( !property.isLazy() || interceptor == null || interceptor.isInitialized( property.getName() ) ) {
-				result[j] = getters[j].get( entity );
+			boolean isInitialized = true;
+			if ( property.isLazy() ) {
+				if ( lazyAttributeLoader != null ) {
+					isInitialized = lazyAttributeLoader.isAttributeLoaded( property.getName() );
+				}
+				else if ( fieldInterceptor != null ) {
+					isInitialized = fieldInterceptor.isInitialized( property.getName() );
+				}
 			}
-			else {
-				result[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
-			}
+			result[j] = isInitialized ? getters[j].get( entity ) : LazyPropertyInitializer.UNFETCHED_PROPERTY;
 		}
 		return result;
 	}

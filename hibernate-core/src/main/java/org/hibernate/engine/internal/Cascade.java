@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
@@ -84,6 +83,15 @@ public final class Cascade {
 				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
 			}
 
+			LazyAttributeLoadingInterceptor lazyAttributeLoader = null;
+			if ( parent instanceof PersistentAttributeInterceptable ) {
+				PersistentAttributeInterceptor interceptor =
+					( (PersistentAttributeInterceptable) parent ).$$_hibernate_getInterceptor();
+				if ( interceptor != null && interceptor instanceof LazyAttributeLoadingInterceptor ) {
+					lazyAttributeLoader = (LazyAttributeLoadingInterceptor) interceptor;
+				}
+			}
+
 			final Type[] types = persister.getPropertyTypes();
 			final String[] propertyNames = persister.getPropertyNames();
 			final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
@@ -97,7 +105,8 @@ public final class Cascade {
 					Object child;
 
 					if ( hasUninitializedLazyProperties &&
-							!Hibernate.isPropertyInitialized( parent, propertyName ) ) {
+							lazyAttributeLoader != null &&
+							!lazyAttributeLoader.isAttributeLoaded( propertyName ) ) {
 						// parent is a bytecode enhanced entity.
 						// cascading to an uninitialized, lazy value.
 						if ( types[i].isCollectionType() ) {
@@ -113,8 +122,7 @@ public final class Cascade {
 						else if ( action.performOnLazyProperty() ) {
 							// The (non-collection) attribute needs to be initialized so that
 							// the action can be performed on the initialized attribute.
-							LazyAttributeLoadingInterceptor interceptor = persister.getInstrumentationMetadata().extractInterceptor( parent );
-							child = interceptor.fetchAttribute( parent, propertyName );
+							child = lazyAttributeLoader.fetchAttribute( parent, propertyName );
 						}
 						else {
 							// Nothing to do, so just skip cascading to this lazy (non-collection) attribute.

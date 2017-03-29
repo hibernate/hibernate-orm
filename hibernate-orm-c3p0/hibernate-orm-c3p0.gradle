@@ -60,5 +60,5 @@ def osgiDescription() {
 }
 
 def getArtifactIdForRelocation(){
-    "hibernate-cp30"
+    "hibernate-c3p0"
 }

@@ -73,7 +73,7 @@ dependencies {
 
 	if (db.equalsIgnoreCase("sqlite")) {
 		dependencies {
-			testRuntime( libraries.oracle )
+			testRuntime( libraries.sqlite )
 		}
 	}
 

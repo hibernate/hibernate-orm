@@ -71,6 +71,12 @@ dependencies {
 	testRuntime( libraries.mariadb )
 	testRuntime( libraries.mssql )
 
+	if (db.equalsIgnoreCase("sqlite")) {
+		dependencies {
+			testRuntime( libraries.oracle )
+		}
+	}
+
 	if (db.equalsIgnoreCase("oracle")) {
 		dependencies {
 			testRuntime( libraries.oracle )

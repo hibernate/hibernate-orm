@@ -75,12 +75,12 @@ public class PreparedStatementSpyConnectionProvider
 					String sql = (String) statementInvocation.getArguments()[0];
 					executeStatements.add( sql );
 					return statementInvocation.callRealMethod();
-			    }).when( statementSpy ).execute( ArgumentMatchers.anyString() );
+				} ).when( statementSpy ).execute( ArgumentMatchers.anyString() );
 				Mockito.doAnswer( statementInvocation -> {
 					String sql = (String) statementInvocation.getArguments()[0];
 					executeUpdateStatements.add( sql );
 					return statementInvocation.callRealMethod();
-				}).when( statementSpy ).executeUpdate( ArgumentMatchers.anyString() );
+				} ).when( statementSpy ).executeUpdate( ArgumentMatchers.anyString() );
 				return statementSpy;
 			} ).when( connectionSpy ).createStatement();
 		}

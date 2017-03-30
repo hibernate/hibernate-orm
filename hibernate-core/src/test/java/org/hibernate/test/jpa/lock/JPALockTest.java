@@ -9,12 +9,16 @@ package org.hibernate.test.jpa.lock;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 import org.hibernate.test.jpa.MyEntity;
+import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -29,6 +33,23 @@ import static org.junit.Assert.fail;
  */
 @RequiresDialectFeature( DialectChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class )
 public class JPALockTest extends AbstractJPATest {
+
+	private SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();
+
+	@Override
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		if( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() )) {
+			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
+		}
+	}
+
+	@Override
+	protected void releaseSessionFactory() {
+		super.releaseSessionFactory();
+		connectionProvider.stop();
+	}
+
 	/**
 	 * Test the equivalent of EJB3 LockModeType.READ
 	 * <p/>
@@ -122,7 +143,7 @@ public class JPALockTest extends AbstractJPATest {
 	 * lock(entity, LockModeType.WRITE) on non-versioned objects will not be portable.
 	 * <p/>
 	 * Due to the requirement that LockModeType.WRITE needs to force a version increment,
-	 * a new Hibernate LockMode was added to support this behavior: {@link org.hibernate.LockMode#FORCE}.
+	 * a new Hibernate LockMode was added to support this behavior: {@link LockMode#FORCE}.
 	 */
 	@Test
 	public void testLockModeTypeWrite() {

@@ -14,11 +14,14 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 import org.hibernate.test.jpa.Part;
+import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 
@@ -34,6 +37,23 @@ import static org.junit.Assert.fail;
  */
 @RequiresDialectFeature( DialectChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class )
 public class RepeatableReadTest extends AbstractJPATest {
+
+	private SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();
+
+	@Override
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		if( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() )) {
+			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
+		}
+	}
+
+	@Override
+	protected void releaseSessionFactory() {
+		super.releaseSessionFactory();
+		connectionProvider.stop();
+	}
+
 	@Test
 	public void testStaleVersionedInstanceFoundInQueryResult() {
 		String check = "EJB3 Specification";

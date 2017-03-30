@@ -8,6 +8,9 @@ package org.hibernate.test.bytecode.enhancement;
 
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 
+import org.hibernate.bytecode.enhance.spi.UnloadedField;
+import org.hibernate.test.bytecode.enhancement.merge.MergeEnhancedEntityTestTask;
+import org.hibernate.test.bytecode.enhancement.merge.RefreshEnhancedEntityTestTask;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -40,6 +43,7 @@ import org.hibernate.test.bytecode.enhancement.lazy.HHH_10708.UnexpectedDeleteOn
 import org.hibernate.test.bytecode.enhancement.lazy.HHH_10708.UnexpectedDeleteThreeTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.HHH_10708.UnexpectedDeleteTwoTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyBasicFieldNotInitializedTestTask;
+import org.hibernate.test.bytecode.enhancement.lazy.LazyCollectionDeletedTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyCollectionLoadingTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyCollectionNoTransactionLoadingTestTask;
 import org.hibernate.test.bytecode.enhancement.lazy.LazyLoadingIntegrationTestTask;
@@ -95,6 +99,13 @@ public class EnhancerTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-11459" )
+	public void testMergeRefresh() {
+		EnhancerTestUtils.runEnhancerTestTask( MergeEnhancedEntityTestTask.class );
+		EnhancerTestUtils.runEnhancerTestTask( RefreshEnhancedEntityTestTask.class );
+	}
+
+	@Test
 	public void testEviction() {
 		EnhancerTestUtils.runEnhancerTestTask( EvictionTestTask.class );
 	}
@@ -125,6 +136,12 @@ public class EnhancerTest extends BaseUnitTestCase {
 
 		EnhancerTestUtils.runEnhancerTestTask( LazyBasicPropertyAccessTestTask.class );
 		EnhancerTestUtils.runEnhancerTestTask( LazyBasicFieldAccessTestTask.class );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11576")
+	public void testLazyCollectionDeleted() {
+		EnhancerTestUtils.runEnhancerTestTask( LazyCollectionDeletedTestTask.class );
 	}
 
 	@Test

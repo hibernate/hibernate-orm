@@ -17,6 +17,7 @@ import javax.persistence.Lob;
 import javax.persistence.Table;
 
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.ClobProxy;
 import org.hibernate.query.Query;
 
@@ -36,7 +37,8 @@ import static org.junit.Assert.fail;
 @TestForIssue(jiraKey = "HHH-11477")
 @SkipForDialect(Oracle8iDialect.class)
 public class LobStringTest extends BaseCoreFunctionalTestCase {
-	private static final int LONG_STRING_SIZE = 10000;
+	//SQL Server - VARCHAR(MAX) is limited to 8000 bytes only
+	private static final int LONG_STRING_SIZE = 3999;
 
 	private final String value1 = buildRecursively( LONG_STRING_SIZE, 'x' );
 	private final String value2 = buildRecursively( LONG_STRING_SIZE, 'y' );

@@ -28,7 +28,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

@@ -20,7 +20,7 @@ import org.hibernate.jpa.QueryHints;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;

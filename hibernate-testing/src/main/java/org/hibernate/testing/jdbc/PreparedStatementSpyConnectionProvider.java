@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.util.jdbc;
+package org.hibernate.testing.jdbc;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.internal.util.MockUtil;
 
@@ -59,27 +60,27 @@ public class PreparedStatementSpyConnectionProvider
 		}
 		Connection connectionSpy = Mockito.spy( connection );
 		try {
-			doAnswer( invocation -> {
+			Mockito.doAnswer( invocation -> {
 				PreparedStatement statement = (PreparedStatement) invocation.callRealMethod();
 				PreparedStatement statementSpy = Mockito.spy( statement );
 				String sql = (String) invocation.getArguments()[0];
 				preparedStatementMap.put( statementSpy, sql );
 				return statementSpy;
-			} ).when( connectionSpy ).prepareStatement( anyString() );
+			} ).when( connectionSpy ).prepareStatement( ArgumentMatchers.anyString() );
 
-			doAnswer( invocation -> {
+			Mockito.doAnswer( invocation -> {
 				Statement statement = (Statement) invocation.callRealMethod();
 				Statement statementSpy = Mockito.spy( statement );
-				doAnswer( statementInvocation -> {
+				Mockito.doAnswer( statementInvocation -> {
 					String sql = (String) statementInvocation.getArguments()[0];
 					executeStatements.add( sql );
 					return statementInvocation.callRealMethod();
-			    }).when( statementSpy ).execute( anyString() );
-				doAnswer( statementInvocation -> {
+			    }).when( statementSpy ).execute( ArgumentMatchers.anyString() );
+				Mockito.doAnswer( statementInvocation -> {
 					String sql = (String) statementInvocation.getArguments()[0];
 					executeUpdateStatements.add( sql );
 					return statementInvocation.callRealMethod();
-				}).when( statementSpy ).executeUpdate( anyString() );
+				}).when( statementSpy ).executeUpdate( ArgumentMatchers.anyString() );
 				return statementSpy;
 			} ).when( connectionSpy ).createStatement();
 		}

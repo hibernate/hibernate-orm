@@ -9,6 +9,9 @@ package org.hibernate.test.schemaupdate;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -26,6 +29,7 @@ import javax.persistence.Index;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -39,19 +43,22 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import org.jboss.logging.Logger;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -60,7 +67,10 @@ import static org.junit.Assert.assertThat;
  * @author Andrea Boriero
  */
 @RunWith(Parameterized.class)
-public class SchemaUpdateTest {
+@RequiresDialect(SQLServerDialect.class)
+public class SchemaUpdateSQLServerTest extends BaseUnitTestCase {
+
+	private static final Logger log = Logger.getLogger( SchemaUpdateSQLServerTest.class );
 
 	@Parameterized.Parameters
 	public static Collection<String> parameters() {
@@ -78,15 +88,35 @@ public class SchemaUpdateTest {
 
 	@Before
 	public void setUp() throws IOException {
-		if(SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+		if(!SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
 			return;
 		}
+
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
 		ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" )
 				.applySetting( AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, jdbcMetadataExtractorStrategy )
 				.build();
+
+		try (Connection connection = ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess().obtainConnection();
+			 Statement statement = connection.createStatement()) {
+			connection.setAutoCommit( true );
+			statement.executeUpdate( "DROP DATABASE hibernate_orm_test_collation" );
+		}
+		catch (SQLException e) {
+			log.debug( e.getMessage() );
+		}
+		try (Connection connection = ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess().obtainConnection();
+			 Statement statement = connection.createStatement()) {
+			connection.setAutoCommit( true );
+			statement.executeUpdate( "CREATE DATABASE hibernate_orm_test_collation COLLATE Latin1_General_CS_AS" );
+			statement.executeUpdate( "ALTER DATABASE [hibernate_orm_test_collation] SET AUTO_CLOSE OFF " );
+		}
+		catch (SQLException e) {
+			log.debug( e.getMessage() );
+		}
+
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( LowercaseTableNameEntity.class );
 		metadataSources.addAnnotatedClass( TestEntity.class );
@@ -103,9 +133,10 @@ public class SchemaUpdateTest {
 
 	@After
 	public void tearsDown() {
-		if(SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+		if(!SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
 			return;
 		}
+
 		new SchemaExport().setHaltOnError( true )
 				.setOutputFile( output.getAbsolutePath() )
 				.setFormat( false )
@@ -115,9 +146,10 @@ public class SchemaUpdateTest {
 
 	@Test
 	public void testSchemaUpdateAndValidation() throws Exception {
-		if(SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+		if(!SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
 			return;
 		}
+
 		new SchemaUpdate().setHaltOnError( true )
 				.execute( EnumSet.of( TargetType.DATABASE ), metadata );
 
@@ -133,7 +165,7 @@ public class SchemaUpdateTest {
 	}
 
 	@Entity(name = "TestEntity")
-	@Table(name = "`testentity`")
+	@Table(name = "`testentity`", catalog = "hibernate_orm_test_collation", schema = "dbo")
 	public static class LowercaseTableNameEntity {
 		@Id
 		long id;
@@ -144,6 +176,7 @@ public class SchemaUpdateTest {
 	}
 
 	@Entity(name = "TestEntity1")
+	@Table(name = "TestEntity1", catalog = "hibernate_orm_test_collation", schema = "dbo")
 	public static class TestEntity {
 		@Id
 		@Column(name = "`Id`")
@@ -151,6 +184,7 @@ public class SchemaUpdateTest {
 		String field1;
 
 		@ManyToMany
+		@JoinTable(catalog = "hibernate_orm_test_collation", schema = "dbo")
 		Set<LowercaseTableNameEntity> entities;
 
 		@OneToMany
@@ -162,7 +196,7 @@ public class SchemaUpdateTest {
 	}
 
 	@Entity(name = "TestEntity2")
-	@Table(name = "`TESTENTITY`")
+	@Table(name = "`TESTENTITY`", catalog = "hibernate_orm_test_collation", schema = "dbo")
 	public static class UppercaseTableNameEntity {
 		@Id
 		long id;
@@ -177,7 +211,8 @@ public class SchemaUpdateTest {
 	}
 
 	@Entity(name = "TestEntity3")
-	@Table(name = "`TESTentity`", indexes = {@Index(name = "index1", columnList = "`FieLd1`"), @Index(name = "Index2", columnList = "`FIELD_2`")})
+	@Table(name = "`TESTentity`", catalog = "hibernate_orm_test_collation", schema = "dbo",
+			indexes = {@Index(name = "index1", columnList = "`FieLd1`"), @Index(name = "Index2", columnList = "`FIELD_2`")})
 	public static class MixedCaseTableNameEntity {
 		@Id
 		long id;
@@ -195,17 +230,19 @@ public class SchemaUpdateTest {
 	}
 
 	@Entity(name = "Match")
+	@Table(name = "Match", catalog = "hibernate_orm_test_collation", schema = "dbo")
 	public static class Match {
 		@Id
 		long id;
 		String match;
 
 		@ElementCollection
- 		@CollectionTable
+ 		@CollectionTable(catalog = "hibernate_orm_test_collation", schema = "dbo")
  		private Map<Integer, Integer> timeline = new TreeMap<>();
 	}
 
 	@Entity(name = "InheritanceRootEntity")
+	@Table(name = "InheritanceRootEntity", catalog = "hibernate_orm_test_collation", schema = "dbo")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static class InheritanceRootEntity {
 		@Id
@@ -213,11 +250,13 @@ public class SchemaUpdateTest {
 	}
 
 	@Entity(name = "InheritanceChildEntity")
+	@Table(name = "InheritanceChildEntity", catalog = "hibernate_orm_test_collation", schema = "dbo")
 	@PrimaryKeyJoinColumn(name = "ID", foreignKey = @ForeignKey(name = "FK_ROOT"))
 	public static class InheritanceChildEntity extends InheritanceRootEntity {
 	}
 
 	@Entity(name = "InheritanceSecondChildEntity")
+	@Table(name = "InheritanceSecondChildEntity", catalog = "hibernate_orm_test_collation", schema = "dbo")
 	@PrimaryKeyJoinColumn(name = "ID")
 	public static class InheritanceSecondChildEntity extends InheritanceRootEntity {
 		@ManyToOne

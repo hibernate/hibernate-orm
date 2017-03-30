@@ -108,6 +108,8 @@ public abstract class Loader {
 
 	private final boolean referenceCachingEnabled;
 
+	private boolean isJdbc4 = true;
+
 	public Loader(SessionFactoryImplementor factory) {
 		this.factory = factory;
 		this.referenceCachingEnabled = factory.getSessionFactoryOptions().isDirectReferenceCacheEntriesEnabled();
@@ -1907,15 +1909,54 @@ public abstract class Loader {
 		sql = preprocessSQL( sql, queryParameters, getFactory().getDialect(), afterLoadActions );
 
 		final PreparedStatement st = prepareQueryStatement( sql, queryParameters, limitHandler, scroll, session );
-		return new SqlStatementWrapper(
-				st, getResultSet(
+
+		final ResultSet rs;
+
+		if( queryParameters.isCallable() && isTypeOf( st, CallableStatement.class ) ) {
+			final CallableStatement cs = st.unwrap( CallableStatement.class );
+
+			rs = getResultSet(
+					cs,
+					queryParameters.getRowSelection(),
+					limitHandler,
+					queryParameters.hasAutoDiscoverScalarTypes(),
+					session
+			);
+		}
+		else {
+			rs = getResultSet(
 				st,
 				queryParameters.getRowSelection(),
 				limitHandler,
 				queryParameters.hasAutoDiscoverScalarTypes(),
 				session
-		)
+			);
+		}
+
+		return new SqlStatementWrapper(
+			st,
+			rs
 		);
+
+	}
+
+	private boolean isTypeOf(final Statement statement, final Class<? extends Statement> type) {
+		if ( isJdbc4 ) {
+			try {
+				// This is "more correct" than #isInstance, but not always supported.
+				return statement.isWrapperFor( type );
+			}
+			catch (SQLException e) {
+				// No operation
+			}
+			catch (Throwable e) {
+				// No operation. Note that this catches more than just SQLException to
+				// cover edge cases where a driver might throw an UnsupportedOperationException, AbstractMethodError,
+				// etc.  If so, skip permanently.
+				isJdbc4 = false;
+			}
+		}
+		return type.isInstance( statement );
 	}
 
 	/**
@@ -2121,22 +2162,54 @@ public abstract class Loader {
 			final SharedSessionContractImplementor session) throws SQLException, HibernateException {
 		try {
 			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
-			rs = wrapResultSetIfEnabled( rs, session );
 
-			if ( !limitHandler.supportsLimitOffset() || !LimitHelper.useLimit( limitHandler, selection ) ) {
-				advance( rs, selection );
-			}
-
-			if ( autodiscovertypes ) {
-				autoDiscoverTypes( rs );
-			}
-			return rs;
+			return processResultSet(rs, selection, limitHandler, autodiscovertypes, session);
 		}
 		catch (SQLException | HibernateException e) {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 			session.getJdbcCoordinator().afterStatementExecution();
 			throw e;
 		}
+	}
+
+	/**
+	 * Execute given <tt>CallableStatement</tt>, advance to the first result and return SQL <tt>ResultSet</tt>.
+	 */
+	protected final ResultSet getResultSet(
+			final CallableStatement st,
+			final RowSelection selection,
+			final LimitHandler limitHandler,
+			final boolean autodiscovertypes,
+			final SharedSessionContractImplementor session) throws SQLException, HibernateException {
+		try {
+			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
+
+			return processResultSet(rs, selection, limitHandler, autodiscovertypes, session);
+		}
+		catch (SQLException | HibernateException e) {
+			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
+			session.getJdbcCoordinator().afterStatementExecution();
+			throw e;
+		}
+	}
+
+	private ResultSet processResultSet(
+			ResultSet rs,
+			final RowSelection selection,
+			final LimitHandler limitHandler,
+			final boolean autodiscovertypes,
+			final SharedSessionContractImplementor session
+	) throws SQLException, HibernateException {
+		rs = wrapResultSetIfEnabled( rs, session );
+
+		if ( !limitHandler.supportsLimitOffset() || !LimitHelper.useLimit( limitHandler, selection ) ) {
+			advance( rs, selection );
+		}
+
+		if ( autodiscovertypes ) {
+			autoDiscoverTypes( rs );
+		}
+		return rs;
 	}
 
 	protected void autoDiscoverTypes(ResultSet rs) {

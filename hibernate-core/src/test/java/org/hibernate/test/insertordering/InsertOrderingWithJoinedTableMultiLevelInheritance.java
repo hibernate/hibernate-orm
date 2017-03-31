@@ -130,16 +130,20 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance
 	protected void cleanupTestData() throws Exception {
 		Session session = openSession();
 		session.getTransaction().begin();
+		
 
-			session.createQuery( "delete Address" ).executeUpdate();
-			session.createQuery( "delete Person" ).executeUpdate();
-			session.createQuery( "delete SpecialPerson" ).executeUpdate();
-			session.createQuery( "delete AnotherPerson" ).executeUpdate();
-			session.createQuery( "delete Office" ).executeUpdate();
-			session.createQuery( "delete President" ).executeUpdate();
+		try {
+			session.createQuery("delete Address").executeUpdate();
+			session.createQuery("delete Person").executeUpdate();
+			session.createQuery("delete SpecialPerson").executeUpdate();
+			session.createQuery("delete AnotherPerson").executeUpdate();
+			session.createQuery("delete Office").executeUpdate();
+			session.createQuery("delete President").executeUpdate();
 
-		session.getTransaction().commit();
-		session.close();
+			session.getTransaction().commit();
+		} finally {
+			session.close();
+		}
 	}
 
 	@Entity(name = "Address")

@@ -168,12 +168,7 @@ subprojects { subProject ->
 		testRuntime( libraries.mariadb )
 		testRuntime( libraries.mssql )
 		testRuntime( libraries.informix )
-
-		if (db.equalsIgnoreCase("sqlite")) {
-			dependencies {
-				testRuntime( libraries.sqlite )
-			}
-		}
+		testRuntime( libraries.sqlite )
 
 		if (db.equalsIgnoreCase("oracle")) {
 			dependencies {

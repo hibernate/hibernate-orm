@@ -23,6 +23,7 @@ import javax.persistence.PessimisticLockException;
 import javax.persistence.Query;
 import javax.persistence.QueryTimeoutException;
 
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -40,6 +41,8 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
@@ -156,19 +159,23 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 		try {
 			Map<String, Object> properties = new HashMap<>();
-			properties.put( org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT, -2L );
+			properties.put( org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT, LockOptions.SKIP_LOCKED );
 			em2.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_READ, properties );
 
 			try {
 				doInJPA( this::entityManagerFactory, entityManager -> {
+					TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
 					entityManager.createNativeQuery( updateStatement() )
 							.setParameter( "name", "changed" )
 							.setParameter( "id", lock.getId() )
 							.executeUpdate();
 				} );
-				fail("Should throw LockTimeoutException");
+				fail("Should throw Exception");
 			}
-			catch (LockTimeoutException expected) {
+			catch (Exception e) {
+				if ( !ExceptionUtil.isSqlLockTimeout( e) ) {
+					fail( "Unknown exception thrown: " + e.getMessage() );
+				}
 			}
 		}
 		finally {
@@ -202,13 +209,16 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			try {
 				doInJPA( this::entityManagerFactory, entityManager -> {
 					try {
+						TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
 						entityManager.createNativeQuery( updateStatement() )
 								.setParameter( "name", "changed" )
 								.setParameter( "id", lock.getId() )
 								.executeUpdate();
 					}
-					catch (LockTimeoutException | PessimisticLockException expected) {
-						failureExpected.set( true );
+					catch (Exception e) {
+						if ( ExceptionUtil.isSqlLockTimeout( e ) ) {
+							failureExpected.set( true );
+						}
 					}
 				} );
 			}

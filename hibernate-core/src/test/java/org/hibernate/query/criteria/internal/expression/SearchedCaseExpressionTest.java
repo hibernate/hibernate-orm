@@ -9,6 +9,8 @@ package org.hibernate.query.criteria.internal.expression;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -16,6 +18,11 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,7 +36,8 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 public class SearchedCaseExpressionTest extends BaseCoreFunctionalTestCase {
 
     @Test
-    public void testCaseClause() {
+	@RequiresDialect(H2Dialect.class)
+	public void testCaseClause() {
 		doInHibernate( this::sessionFactory, session -> {
 			CriteriaBuilder cb = session.getCriteriaBuilder();
 
@@ -87,6 +95,7 @@ public class SearchedCaseExpressionTest extends BaseCoreFunctionalTestCase {
 		private Long id;
 
 		@Column
+		@Enumerated(EnumType.STRING)
 		private EventType type;
 
 		protected Event() {

@@ -6,6 +6,8 @@
  */
 package org.hibernate.testing.transaction;
 
+import java.sql.Statement;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -13,15 +15,24 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Vlad Mihalcea
  */
 public class TransactionUtil {
+
+	private static final Logger log = Logger.getLogger( TransactionUtil.class );
 
 	/**
 	 * Hibernate transaction function
@@ -322,4 +333,38 @@ public class TransactionUtil {
 			}
 		}
 	}
+
+	/**
+	 * Set Session or Statement timeout
+	 * @param session Hibernate Session
+	 */
+	public static void setJdbcTimeout(Session session) {
+		session.doWork( connection -> {
+			if ( Dialect.getDialect() instanceof PostgreSQL81Dialect ) {
+				try (Statement st = connection.createStatement()) {
+					st.execute( "SET statement_timeout TO 1000" );
+				}
+
+			}
+			else if( Dialect.getDialect() instanceof MySQLDialect ) {
+				try (Statement st = connection.createStatement()) {
+					st.execute( "SET GLOBAL innodb_lock_wait_timeout = 1" );
+				}
+			}
+			else if( Dialect.getDialect() instanceof H2Dialect ) {
+				try (Statement st = connection.createStatement()) {
+					st.execute( "SET LOCK_TIMEOUT 100" );
+				}
+			}
+			else {
+				try {
+					connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), 1000 );
+				}
+				catch (Throwable ignore) {
+					ignore.fillInStackTrace();
+				}
+			}
+		} );
+	}
+
 }

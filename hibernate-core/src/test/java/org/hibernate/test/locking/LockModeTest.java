@@ -7,19 +7,17 @@
 package org.hibernate.test.locking;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.PessimisticLockException;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.exception.GenericJDBCException;
-import org.hibernate.exception.LockAcquisitionException;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -164,43 +162,38 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		//			until the txn in the calling method completed.
 		// To be able to cater to the second type, we run this block in a separate thread to be able to "time it out"
 
-		executeSync( () -> {
-			doInHibernate( this::sessionFactory, _session -> {
-				_session.doWork( connection -> {
+		try {
+			executeSync( () -> {
+				doInHibernate( this::sessionFactory, _session -> {
+					TransactionUtil.setJdbcTimeout( _session );
 					try {
-						connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), 1000);
-					} catch (Throwable ignore) {
-						ignore.fillInStackTrace();
+						// load with write lock to deal with databases that block (wait indefinitely) direct attempts
+						// to write a locked row
+						A it = _session.get(
+								A.class,
+								id,
+								new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeOut( LockOptions.NO_WAIT )
+						);
+						_session.createNativeQuery( updateStatement() )
+								.setParameter( "value", "changed" )
+								.setParameter( "id", it.getId() )
+								.executeUpdate();
+						fail( "Pessimistic lock not obtained/held" );
+					}
+					catch ( Exception e ) {
+						if ( !ExceptionUtil.isSqlLockTimeout( e) ) {
+							fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
+						}
 					}
 				} );
-				try {
-					// load with write lock to deal with databases that block (wait indefinitely) direct attempts
-					// to write a locked row
-					A it = _session.get(
-							A.class,
-							id,
-							new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeOut( LockOptions.NO_WAIT )
-					);
-					_session.createNativeQuery( updateStatement() )
-							.setParameter( "value", "changed" )
-							.setParameter( "id", it.getId() )
-							.executeUpdate();
-					fail( "Pessimistic lock not obtained/held" );
-				}
-				catch ( Exception e ) {
-					// grr, exception can be any number of types based on database
-					// 		see HHH-6887
-					if ( LockAcquisitionException.class.isInstance( e )
-							|| GenericJDBCException.class.isInstance( e )
-							|| PessimisticLockException.class.isInstance( e ) ) {
-						// "ok"
-					}
-					else {
-						fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
-					}
-				}
 			} );
-		} );
+		}
+		catch (Exception e) {
+			//MariaDB throws a time out nd closes the underlying connection
+			if( !ExceptionUtil.isConnectionClose(e)) {
+				fail("Unknown exception thrown: " + e.getMessage());
+			}
+		}
 	}
 
 	protected String updateStatement() {

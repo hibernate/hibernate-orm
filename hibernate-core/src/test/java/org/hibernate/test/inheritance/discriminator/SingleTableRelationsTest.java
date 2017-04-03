@@ -6,11 +6,7 @@
  */
 package org.hibernate.test.inheritance.discriminator;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Test;
-
+import java.util.List;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.DiscriminatorValue;
@@ -23,7 +19,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import java.util.List;
+
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
@@ -34,7 +37,13 @@ public class SingleTableRelationsTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { PostTable.class, Category.class, Post.class };
+		return new Class<?>[] {PostTable.class, Category.class, Post.class};
+	}
+
+
+	@Override
+	protected void configure(Configuration configuration) {
+		configuration.setProperty( AvailableSettings.FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT, "true" );
 	}
 
 	private void createTestData() {
@@ -73,7 +82,10 @@ public class SingleTableRelationsTest extends BaseCoreFunctionalTestCase {
 	public void testJoinFetch() {
 		createTestData();
 		doInHibernate( this::sessionFactory, session -> {
-			Category category7 = session.createQuery( "SELECT c FROM " + Category.class.getName() + " c LEFT JOIN FETCH c.children WHERE c.id = :id", Category.class )
+			Category category7 = session.createQuery(
+					"SELECT c FROM " + Category.class.getName() + " c LEFT JOIN FETCH c.children WHERE c.id = :id",
+					Category.class
+			)
 					.setParameter( "id", 7 )
 					.getSingleResult();
 			// Must be empty because although Post and Category share the same column for their category relations,
@@ -114,11 +126,11 @@ public class SingleTableRelationsTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Category(Integer id) {
-			super(id);
+			super( id );
 		}
 
 		public Category(Integer id, Category category) {
-			super(id);
+			super( id );
 			this.category = category;
 		}
 	}
@@ -135,11 +147,11 @@ public class SingleTableRelationsTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public Post(Integer id) {
-			super(id);
+			super( id );
 		}
 
 		public Post(Integer id, Category category) {
-			super(id);
+			super( id );
 			this.category = category;
 		}
 	}

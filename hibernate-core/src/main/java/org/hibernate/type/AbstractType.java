@@ -175,7 +175,11 @@ public abstract class AbstractType implements Type {
 		else {
 			include = ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT==foreignKeyDirection;
 		}
-		return include ? replace(original, target, session, owner, copyCache) : target;
+
+		// Secondary condition necessary to ensure that @NotNull is respected in OneToMany relationships
+		return include || ( original != null && target == null )
+				? replace( original, target, session, owner, copyCache )
+				: target;
 	}
 
 	public void beforeAssemble(Serializable cached, SessionImplementor session) {}

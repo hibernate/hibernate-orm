@@ -70,12 +70,7 @@ dependencies {
 	testRuntime( libraries.mysql )
 	testRuntime( libraries.mariadb )
 	testRuntime( libraries.mssql )
-
-	if (db.equalsIgnoreCase("sqlite")) {
-		dependencies {
-			testRuntime( libraries.sqlite )
-		}
-	}
+	testRuntime( libraries.sqlite )
 
 	if (db.equalsIgnoreCase("oracle")) {
 		dependencies {

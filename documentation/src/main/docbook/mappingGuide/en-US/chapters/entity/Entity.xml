@@ -330,6 +330,6 @@
     <para>
         * dynamic models (hbm.xml)
             * Map mode
-            * proxy solutions (hibernate-core/src/test/java/org/hibernate/test/dynamicentity/tuplizer2)
+            * proxy solutions (hibernate-orm-core/src/test/java/org/hibernate/test/dynamicentity/tuplizer2)
     </para>
 </chapter>

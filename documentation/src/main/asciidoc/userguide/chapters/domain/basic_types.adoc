@@ -88,7 +88,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 
 [NOTE]
 ====
-To use these hibernate-spatial types, you must add the `hibernate-spatial` dependency to your classpath _and_ use a `org.hibernate.spatial.SpatialDialect` implementation.
+To use these hibernate-orm-spatial types, you must add the `hibernate-orm-spatial` dependency to your classpath _and_ use a `org.hibernate.spatial.SpatialDialect` implementation.
 See <<spatial>> for more details about spatial types.
 ====
 

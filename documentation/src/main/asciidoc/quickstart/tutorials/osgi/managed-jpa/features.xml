@@ -65,16 +65,16 @@
 
     <bundle>mvn:org.hibernate.common/hibernate-commons-annotations/4.0.5.Final</bundle>
 
-    <bundle>mvn:org.hibernate/hibernate-core/$version</bundle>
+    <bundle>mvn:org.hibernate.orm/hibernate-orm/$version</bundle>
 
     <!-- TODO: It seems that the persistence unit bundle needs to be started
-    before hibernate-osgi.  When the BundleActivator is started,
+    before hibernate-orm-osgi.  When the BundleActivator is started,
     the persistence unit is provided even though managed-jpa
     hasn't completely started yet.  If that happens, you'll get an "illegal
     bundle state" exception.  Is there a way for the activator to
     watch for bundles with PUs before registering the persistence provider? -->
     <bundle>mvn:org.hibernate.osgi/managed-jpa/1.0.0</bundle>
 
-    <bundle>mvn:org.hibernate/hibernate-osgi/$version</bundle>
+    <bundle>mvn:org.hibernate.orm/hibernate-orm-osgi/$version</bundle>
   </feature>
 </features>

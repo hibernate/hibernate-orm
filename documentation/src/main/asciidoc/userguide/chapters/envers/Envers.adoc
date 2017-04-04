@@ -6,7 +6,7 @@
 
 To audit changes that are performed on an entity, you only need two things:
 
-* the `hibernate-envers` jar on the classpath,
+* the `hibernate-orm-envers` jar on the classpath,
 * an `@Audited` annotation on the entity.
 
 [IMPORTANT]

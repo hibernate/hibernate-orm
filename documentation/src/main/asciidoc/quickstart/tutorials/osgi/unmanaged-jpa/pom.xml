@@ -34,8 +34,8 @@
       <version>2.3.0</version>
     </dependency>
     <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-core</artifactId>
+      <groupId>org.hibernate.orm</groupId>
+      <artifactId>hibernate-orm</artifactId>
       <version>$version</version>
     </dependency>
     <dependency>

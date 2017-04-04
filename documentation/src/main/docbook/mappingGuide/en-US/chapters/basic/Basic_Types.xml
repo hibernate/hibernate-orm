@@ -321,7 +321,7 @@
 
 
         <table>
-            <title>BasicTypes added by hibernate-java8</title>
+            <title>BasicTypes added by hibernate-orm-java8</title>
             <tgroup cols="4">
                 <thead>
                     <row>
@@ -384,14 +384,7 @@
             </tgroup>
         </table>
 
-        <note>
-            <para>
-                To use these hibernate-java8 types just add the hibernate-java8 jar to your classpath; Hibernate
-                will take care of the rest.  See <xref linkend="basic-datetime"/>
-            </para>
-        </note>
-
-        <!-- todo : document added hibernate-spatial types -->
+        <!-- todo : document added hibernate-orm-spatial types -->
 
         <para>
             These mappings are managed by a service inside Hibernate called the

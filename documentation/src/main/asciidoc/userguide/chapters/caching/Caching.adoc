@@ -524,7 +524,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-statistics-example]
 
 [NOTE]
 ====
-Use of the build-in integration for https://jcp.org/en/jsr/detail?id=107[JCache] requires that the `hibernate-jcache` module jar (and all of its dependencies) are on the classpath.
+Use of the build-in integration for https://jcp.org/en/jsr/detail?id=107[JCache] requires that the `hibernate-orm-jcache` module jar (and all of its dependencies) are on the classpath.
 In addition a JCache implementation needs to be added as well.
 A list of compatible implementations can be found https://jcp.org/aboutJava/communityprocess/implementations/jsr107/index.html[on the JCP website].
 An alternative source of compatible implementations can be found through https://github.com/cruftex/jsr107-test-zoo[the JSR-107 test zoo].
@@ -533,7 +533,7 @@ An alternative source of compatible implementations can be found through https:/
 [[caching-provider-jcache-region-factory]]
 ==== RegionFactory
 
-The `hibernate-jcache` module defines the following region factory: `JCacheRegionFactory`.
+The `hibernate-orm-jcache` module defines the following region factory: `JCacheRegionFactory`.
 
 To use the `JCacheRegionFactory`, you need to specify the following configuration property:
 
@@ -583,13 +583,13 @@ This integration covers Ehcache 2.x, in order to use Ehcache 3.x as second level
 
 [NOTE]
 ====
-Use of the build-in integration for http://www.ehcache.org/[Ehcache] requires that the `hibernate-ehcache` module jar (and all of its dependencies) are on the classpath.
+Use of the build-in integration for http://www.ehcache.org/[Ehcache] requires that the `hibernate-orm-ehcache` module jar (and all of its dependencies) are on the classpath.
 ====
 
 [[caching-provider-ehcache-region-factory]]
 ==== RegionFactory
 
-The hibernate-ehcache module defines two specific region factories: `EhCacheRegionFactory` and `SingletonEhCacheRegionFactory`.
+The hibernate-orm-ehcache module defines two specific region factories: `EhCacheRegionFactory` and `SingletonEhCacheRegionFactory`.
 
 [[caching-provider-ehcache-region-factory-shared]]
 ===== `EhCacheRegionFactory`
@@ -639,7 +639,7 @@ http://www.ehcache.org/documentation/2.8/integrations/hibernate#optional[Ehcache
 
 [NOTE]
 ====
-Use of the build-in integration for http://infinispan.org/[Infinispan] requires that the `hibernate-infinispan module` jar (and all of its dependencies) are on the classpath.
+Use of the build-in integration for http://infinispan.org/[Infinispan] requires that the `hibernate-orm-infinispan module` jar (and all of its dependencies) are on the classpath.
 ====
 
 How to configure Infinispan to be the second level cache provider varies slightly depending on the deployment scenario:

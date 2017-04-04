@@ -42,7 +42,7 @@ Otherwise, the no-arg form is used.
 
 [IMPORTANT]
 ====
-To use this integration, the application must include the hibernate-c3p0 module jar (as well as its dependencies) on the classpath.
+To use this integration, the application must include the hibernate-orm-c3p0 module jar (as well as its dependencies) on the classpath.
 ====
 
 Hibernate also provides support for applications to use http://www.mchange.com/projects/c3p0/[c3p0] connection pooling.
@@ -68,7 +68,7 @@ Any other settings prefixed with `c3p0.`:: Get passed to c3p0 as is. See http://
 
 [IMPORTANT]
 ====
-To use this integration, the application must include the hibernate-proxool module jar (as well as its dependencies) on the classpath.
+To use this integration, the application must include the hibernate-orm-proxool module jar (as well as its dependencies) on the classpath.
 ====
 
 Hibernate also provides support for applications to use http://proxool.sourceforge.net/[Proxool] connection pooling.
@@ -100,7 +100,7 @@ See http://proxool.sourceforge.net/configure.html[proxool  configuration].
 
 [IMPORTANT]
 ====
-To use this integration, the application must include the hibernate-hikari module jar (as well as its dependencies) on the classpath.
+To use this integration, the application must include the hibernate-orm-hikaricp module jar (as well as its dependencies) on the classpath.
 ====
 
 Hibernate also provides support for applications to use http://brettwooldridge.github.io/HikariCP/[Hikari] connection pool.

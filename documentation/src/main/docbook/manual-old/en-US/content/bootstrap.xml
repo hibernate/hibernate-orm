@@ -134,7 +134,7 @@
 
             <important>
                 <para>
-                    To use this integration, the application must include the hibernate-c3p0
+                    To use this integration, the application must include the hibernate-orm-c3p0
                     module jar (as well as its dependencies) on the classpath.
                 </para>
             </important>
@@ -253,7 +253,7 @@
 
             <important>
                 <para>
-                    To use this integration, the application must include the hibernate-proxool
+                    To use this integration, the application must include the hibernate-orm-proxool
                     module jar (as well as its dependencies) on the classpath.
                 </para>
             </important>
@@ -302,7 +302,7 @@
 
             <important>
                 <para>
-                    To use this integration, the application must include the hibernate-hikari
+                    To use this integration, the application must include the hibernate-orm-hikaricp
                     module jar (as well as its dependencies) on the classpath.
                 </para>
             </important>
@@ -593,12 +593,12 @@
                 <title>Ehcache</title>
                 <important>
                     <para>
-                        Use of the build-in integration for Ehcache requires that the hibernate-ehcache module
+                        Use of the build-in integration for Ehcache requires that the hibernate-orm-ehcache module
                         jar (and all of its dependencies) are on the classpath.
                     </para>
                 </important>
                 <para>
-                    The hibernate-ehcache module defines 2 specific providers:
+                    The hibernate-orm-ehcache module defines 2 specific providers:
                     <itemizedlist>
                         <listitem>
                             <para>
@@ -620,12 +620,12 @@
                 <title>Infinispan</title>
                 <important>
                     <para>
-                        Use of the build-in integration for Infinispan requires that the hibernate-infinispan module
+                        Use of the build-in integration for Infinispan requires that the hibernate-orm-infinispan module
                         jar (and all of its dependencies) are on the classpath.
                     </para>
                 </important>
                 <para>
-                    The hibernate-infinispan module defines 2 specific providers:
+                    The hibernate-orm-infinispan module defines 2 specific providers:
                     <itemizedlist>
                         <listitem>
                             <para>

@@ -8,38 +8,38 @@ if ( !JavaVersion.current().java8Compatible ) {
     throw new GradleException( "Gradle must be run with Java 8" )
 }
 
-include 'hibernate-core'
-include 'hibernate-entitymanager'
-include 'hibernate-testing'
-include 'hibernate-envers'
-include 'hibernate-spatial'
+include 'hibernate-orm'
+include 'hibernate-orm-entitymanager'
+include 'hibernate-orm-testing'
+include 'hibernate-orm-envers'
+include 'hibernate-orm-spatial'
 
-include 'hibernate-java8'
+include 'hibernate-orm-java8'
 
-include 'hibernate-osgi'
+include 'hibernate-orm-osgi'
 
-include 'hibernate-c3p0'
-include 'hibernate-proxool'
-include 'hibernate-hikaricp'
+include 'hibernate-orm-c3p0'
+include 'hibernate-orm-proxool'
+include 'hibernate-orm-hikaricp'
 
-include 'hibernate-jcache'
-include 'hibernate-ehcache'
-include 'hibernate-infinispan'
+include 'hibernate-orm-jcache'
+include 'hibernate-orm-ehcache'
+include 'hibernate-orm-infinispan'
 
-include 'hibernate-orm-modules'
+include 'hibernate-wildfly-modules'
 
 include 'documentation'
 include 'release'
 
 include 'metamodel-generator'
 project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")
-project(':metamodel-generator').name = 'hibernate-jpamodelgen'
+project(':metamodel-generator').name = 'hibernate-orm-jpamodelgen'
 
-include 'hibernate-gradle-plugin'
-project(':hibernate-gradle-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-gradle-plugin")
+include 'hibernate-orm-gradle-plugin'
+project(':hibernate-orm-gradle-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-orm-gradle-plugin")
 
-include 'hibernate-enhance-maven-plugin'
-project(':hibernate-enhance-maven-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-enhance-maven-plugin")
+include 'hibernate-orm-enhance-maven-plugin'
+project(':hibernate-orm-enhance-maven-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-orm-enhance-maven-plugin")
 
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"

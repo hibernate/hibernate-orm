@@ -4,7 +4,7 @@ ext {
 
 buildscript {
     dependencies {
-        classpath "org.hibernate:hibernate-gradle-plugin:$hibernateVersion"
+        classpath "org.hibernate.orm:hibernate-orm-gradle-plugin:$hibernateVersion"
     }
 }
 

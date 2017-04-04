@@ -32,8 +32,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-orm</artifactId>
             <version>$version</version>
         </dependency>
 

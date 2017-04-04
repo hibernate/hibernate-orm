@@ -27,8 +27,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-envers</artifactId>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-rom.envers</artifactId>
             <version>$version</version>
         </dependency>
     </dependencies>

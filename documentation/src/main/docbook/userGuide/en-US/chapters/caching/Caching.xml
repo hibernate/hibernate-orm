@@ -34,12 +34,12 @@
                 <title>Ehcache</title>
                 <important>
                     <para>
-                        Use of the build-in integration for Ehcache requires that the hibernate-ehcache module
+                        Use of the build-in integration for Ehcache requires that the hibernate-orm-ehcache module
                         jar (and all of its dependencies) are on the classpath.
                     </para>
                 </important>
                 <para>
-                    The hibernate-ehcache module defines 2 specific providers:
+                    The hibernate-orm-ehcache module defines 2 specific providers:
                     <itemizedlist>
                         <listitem>
                             <para>
@@ -61,12 +61,12 @@
                 <title>Infinispan</title>
                 <important>
                     <para>
-                        Use of the build-in integration for Infinispan requires that the hibernate-infinispan module
+                        Use of the build-in integration for Infinispan requires that the hibernate-orm-infinispan module
                         jar (and all of its dependencies) are on the classpath.
                     </para>
                 </important>
                 <para>
-                    The hibernate-infinispan module defines 2 specific providers:
+                    The hibernate-orm-infinispan module defines 2 specific providers:
                     <itemizedlist>
                         <listitem>
                             <para>

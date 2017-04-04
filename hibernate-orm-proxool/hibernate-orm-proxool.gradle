@@ -1,0 +1,24 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+dependencies {
+    compile project( ':hibernate-orm' )
+    compile( libraries.proxool )
+    testCompile project( ':hibernate-orm-testing' )
+}
+
+mavenPom {
+    name = 'Hibernate/Proxool Integration'
+    description = 'Integration for Proxool Connection pooling into Hibernate O/RM'
+}
+
+def osgiDescription() {
+	return mavenPom.description
+}
+
+def getArtifactIdForRelocation() {
+    'hibernate-proxool'
+}

@@ -101,7 +101,7 @@
 
             <important>
                 <para>
-                    To use this integration, the application must include the hibernate-c3p0
+                    To use this integration, the application must include the hibernate-orm-c3p0
                     module jar (as well as its dependencies) on the classpath.
                 </para>
             </important>
@@ -225,7 +225,7 @@
 
             <important>
                 <para>
-                    To use this integration, the application must include the hibernate-proxool
+                    To use this integration, the application must include the hibernate-orm-proxool
                     module jar (as well as its dependencies) on the classpath.
                 </para>
             </important>
@@ -278,7 +278,7 @@
 
             <important>
                 <para>
-                    To use this integration, the application must include the hibernate-hikari
+                    To use this integration, the application must include the hibernate-orm-hikaricp
                     module jar (as well as its dependencies) on the classpath.
                 </para>
             </important>

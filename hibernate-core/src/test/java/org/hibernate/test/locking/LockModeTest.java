@@ -12,9 +12,11 @@ import java.util.concurrent.Executors;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.Session;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.exception.GenericJDBCException;
+import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.exception.LockAcquisitionException;
 
 import org.hibernate.testing.SkipForDialect;
@@ -165,11 +167,14 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		// To be able to cater to the second type, we run this block in a separate thread to be able to "time it out"
 
 		executeSync( () -> {
-			doInHibernate( this::sessionFactory, _session -> {
+			Session _session = sessionFactory().openSession();
+			try {
+				_session.getTransaction().begin();
 				_session.doWork( connection -> {
 					try {
-						connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), 1000);
-					} catch (Throwable ignore) {
+						connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), 1000 );
+					}
+					catch (Throwable ignore) {
 						ignore.fillInStackTrace();
 					}
 				} );
@@ -185,22 +190,36 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 							.setParameter( "value", "changed" )
 							.setParameter( "id", it.getId() )
 							.executeUpdate();
+					_session.getTransaction().commit();
 					fail( "Pessimistic lock not obtained/held" );
 				}
-				catch ( Exception e ) {
+				catch (Exception e) {
 					// grr, exception can be any number of types based on database
 					// 		see HHH-6887
 					if ( LockAcquisitionException.class.isInstance( e )
 							|| GenericJDBCException.class.isInstance( e )
-							|| PessimisticLockException.class.isInstance( e ) ) {
+							|| PessimisticLockException.class.isInstance( e )
+							|| JDBCConnectionException.class.isInstance( e ) ) {
 						// "ok"
 					}
 					else {
-						fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
+						fail( "Unexpected error type testing pessimistic locking : " + e );
 					}
 				}
-			} );
-		} );
+
+			}
+			finally {
+				try {
+					if ( _session.getTransaction().isActive() ) {
+						_session.getTransaction().rollback();
+					}
+					_session.close();
+				}
+				catch (Exception e) {
+
+				}
+			}
+		});
 	}
 
 	protected String updateStatement() {

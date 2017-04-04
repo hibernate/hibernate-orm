@@ -415,12 +415,11 @@ public final class SessionImpl
 			}
 		}
 		else {
-
 			super.close();
-
-			if ( getFactory().getStatistics().isStatisticsEnabled() ) {
-				getFactory().getStatistics().closeSession();
-			}
+		}
+		
+		if ( getFactory().getStatistics().isStatisticsEnabled() ) {
+			getFactory().getStatistics().closeSession();
 		}
 	}
 

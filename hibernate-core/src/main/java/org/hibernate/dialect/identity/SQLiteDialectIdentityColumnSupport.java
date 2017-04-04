@@ -6,33 +6,28 @@
  */
 package org.hibernate.dialect.identity;
 
+/**
+* In SQLite, any "integer primary key" is automatically considered an IDENTITY column.
+* A keyword "autoincrement" can be added to avoid reuse indexes of deleted rows,
+* however this is not strictly required to be an IDENTITY column.
+* We get this purpose assuming a fake getIdentityColumnString() == "integer".
+*
+* @see https://sqlite.org/autoinc.html and 
+* https://github.com/nhibernate/nhibernate-core/blob/master/src/NHibernate/Dialect/SQLiteDialect.cs
+*/
+/*
+TODO check if and how SQlite supportsInsertSelectIdentity() 
+*/
 public class SQLiteDialectIdentityColumnSupport extends IdentityColumnSupportImpl {
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;
 	}
 
-  /*
-	public boolean supportsInsertSelectIdentity() {
-    return true; // As specified in NHibernate dialect
-  }
-  */
-
 	@Override
 	public boolean hasDataTypeInIdentityColumn() {
-		// As specified in NHibernate dialect
-		// FIXME true
 		return false;
 	}
-
-  /*
-	public String appendIdentitySelectToInsert(String insertString) {
-    return new StringBuffer(insertString.length()+30). // As specified in NHibernate dialect
-      append(insertString).
-      append("; ").append(getIdentitySelectString()).
-      toString();
-  }
-  */
 
 	@Override
 	public String getIdentitySelectString(String table, String column, int type) {
@@ -41,8 +36,6 @@ public class SQLiteDialectIdentityColumnSupport extends IdentityColumnSupportImp
 
 	@Override
 	public String getIdentityColumnString(int type) {
-		// return "integer primary key autoincrement";
-		// FIXME "autoincrement"
 		return "integer";
 	}
 }

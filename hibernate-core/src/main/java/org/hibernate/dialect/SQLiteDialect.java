@@ -91,6 +91,14 @@ public class SQLiteDialect extends Dialect {
 				return new SQLFunctionTemplate( StandardBasicTypes.STRING, "rtrim(?1, ?2)" );
 			}
 		} );
+		
+		registerFunction( "second", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "strftime('%S', ?1 )") );
+		registerFunction( "minute", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "strftime('%M', ?1 )") );
+		registerFunction( "hour", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "strftime('%H', ?1 )") );
+		registerFunction( "day", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "strftime('%d', ?1 )") );
+		registerFunction( "month", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "strftime('%m', ?1 )") );
+		registerFunction( "year", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "strftime('%Y', ?1 )") );
+		
 		uniqueDelegate = new SQLiteUniqueDelegate( this );
 	}
 

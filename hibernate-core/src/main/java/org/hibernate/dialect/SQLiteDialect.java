@@ -53,12 +53,15 @@ public class SQLiteDialect extends Dialect {
 		registerColumnType( Types.VARBINARY, "blob" );
 		registerColumnType( Types.LONGVARBINARY, "blob" );
 
+		getFunctions().remove("locate"); //unsupported
+		
 		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "||", "" ) );
 		registerFunction( "mod", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "?1 % ?2" ) );
 		registerFunction( "quote", new StandardSQLFunction( "quote", StandardBasicTypes.STRING ) );
 		registerFunction( "random", new NoArgSQLFunction( "random", StandardBasicTypes.INTEGER ) );
 		registerFunction( "round", new StandardSQLFunction( "round" ) );
-		registerFunction( "substr", new StandardSQLFunction( "substr", StandardBasicTypes.STRING ) );
+		registerFunction( "substring", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substr(?1, ?2, ?3)" ) );
+		registerFunction( "substr", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substr(?1, ?2, ?3)" ) );
 		registerFunction( "trim", new AbstractAnsiTrimEmulationFunction() {
 			protected SQLFunction resolveBothSpaceTrimFunction() {
 				return new SQLFunctionTemplate( StandardBasicTypes.STRING, "trim(?1)" );

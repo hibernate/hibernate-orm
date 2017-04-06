@@ -37,9 +37,8 @@ As always the "trigger" for Beta1 is (relatively) stable API.
 * [.line-through]#split concept of NavigablePath and NavigableRole (PropertyPath renamed).  NavigablePath
 	represents an ongoing path in a query; NavigableRole represents the static role of an attribute
 	in relation to a root entity#
-* keep `org.hibernate.loader.plan.spi.LoadPlan`, but deprecate it favor of
-	.
-* find all usage of `LoadPlan` and replace it with `org.hibernate.sql.convert.spi.SqlSelectPlan` / `org.hibernate.sql.exec.spi.JdbcSelect`, this will
+* find all usage of `LoadPlan` and replace it with
+	`org.hibernate.sql.convert.spi.SqlSelectPlan` / `org.hibernate.sql.exec.spi.JdbcSelect`.  This will
 	include the following (and more probably) replacements:
 	** `AssociationVisitationStrategy` -> `NavigableVisitationStrategy`
 	** `EntityDefinition` -> ? `EntityReference` or `EntityPersister`?

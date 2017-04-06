@@ -443,10 +443,10 @@ public abstract class AbstractLoadPlanBasedLoader {
 			}
 			return rs;
 		}
-		catch ( SQLException sqle ) {
+		catch (SQLException | HibernateException ex) {
 			session.getJdbcCoordinator().getResourceRegistry().release( st );
 			session.getJdbcCoordinator().afterStatementExecution();
-			throw sqle;
+			throw ex;
 		}
 	}
 

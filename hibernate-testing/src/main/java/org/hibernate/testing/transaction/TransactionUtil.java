@@ -6,10 +6,12 @@
  */
 package org.hibernate.testing.transaction;
 
+import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -445,32 +447,43 @@ public class TransactionUtil {
 			}
 		}
 	}
-
 	/**
 	 * Set Session or Statement timeout
 	 * @param session Hibernate Session
 	 */
 	public static void setJdbcTimeout(Session session) {
+		setJdbcTimeout( session, TimeUnit.SECONDS.toMillis( 1 ) );
+	}
+
+	/**
+	 * Set Session or Statement timeout
+	 * @param session Hibernate Session
+	 */
+	public static void setJdbcTimeout(Session session, long millis) {
+
 		session.doWork( connection -> {
 			if ( Dialect.getDialect() instanceof PostgreSQL81Dialect ) {
 				try (Statement st = connection.createStatement()) {
-					st.execute( "SET statement_timeout TO 1000" );
+					//Prepared Statements fail for SET commands
+					st.execute(String.format( "SET statement_timeout TO %d", millis / 10));
 				}
 
 			}
 			else if( Dialect.getDialect() instanceof MySQLDialect ) {
-				try (Statement st = connection.createStatement()) {
-					st.execute( "SET GLOBAL innodb_lock_wait_timeout = 1" );
+				try (PreparedStatement st = connection.prepareStatement("SET GLOBAL innodb_lock_wait_timeout = ?")) {
+					st.setLong( 1, TimeUnit.MILLISECONDS.toSeconds( millis ) );
+					st.execute();
 				}
 			}
 			else if( Dialect.getDialect() instanceof H2Dialect ) {
-				try (Statement st = connection.createStatement()) {
-					st.execute( "SET LOCK_TIMEOUT 100" );
+				try (PreparedStatement st = connection.prepareStatement("SET LOCK_TIMEOUT ?")) {
+					st.setLong( 1, millis / 10 );
+					st.execute();
 				}
 			}
 			else {
 				try {
-					connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), 1000 );
+					connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), (int) millis );
 				}
 				catch (Throwable ignore) {
 					ignore.fillInStackTrace();

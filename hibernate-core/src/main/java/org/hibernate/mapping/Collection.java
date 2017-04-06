@@ -22,7 +22,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.CollectionType;
+import org.hibernate.type.spi.CollectionType;
 import org.hibernate.type.spi.Type;
 
 /**

@@ -7,7 +7,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.CollectionType;
+import org.hibernate.type.spi.CollectionType;
 
 /**
  * A bag permits duplicates, so it has no primary key
@@ -21,7 +21,7 @@ public class Bag extends Collection {
 
 	public CollectionType getDefaultCollectionType() {
 		return getMetadata().getTypeConfiguration()
-				.bag( getRole(), getReferencedPropertyName() );
+				.bag( getRole());
 	}
 
 	void createPrimaryKey() {

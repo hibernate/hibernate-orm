@@ -8,6 +8,7 @@ package org.hibernate.type.spi;
 
 import java.io.Serializable;
 
+import org.hibernate.MappingException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
@@ -39,4 +40,33 @@ public interface CollectionType<O,C,E> extends Type<C> {
 	}
 
 	PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key);
+
+	/**
+	 * Instantiate an empty instance of the "underlying" collection (not a wrapper),
+	 * but with the given anticipated size (i.e. accounting for initial capacity
+	 * and perhaps load factor).
+	 *
+	 * @param anticipatedSize The anticipated size of the instaniated collection
+	 * afterQuery we are done populating it.
+	 * @return A newly instantiated collection to be wrapped.
+	 */
+	Object instantiate(int anticipatedSize);
+
+	/**
+	 * Wrap the naked collection instance in a wrapper, or instantiate a
+	 * holder. Callers <b>MUST</b> add the holder to the persistence context!
+	 *
+	 * @param session The session from which the request is originating.
+	 * @param collection The bare collection to be wrapped.
+	 * @return The wrapped collection.
+	 */
+	PersistentCollection wrap(SharedSessionContractImplementor session, Object collection);
+
+	/**
+	 * Get the Hibernate type of the collection elements
+	 *
+	 * @return The type of the collection elements
+	 * @throws MappingException Indicates the underlying persister could not be located.
+	 */
+	Type getElementType() throws MappingException;
 }

@@ -78,7 +78,7 @@ import org.hibernate.sqm.query.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.ArrayType;
-import org.hibernate.type.BagType;
+import org.hibernate.type.internal.BagType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CustomCollectionType;
@@ -1083,8 +1083,8 @@ public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObse
 		return new ListType( this, role, propertyRef );
 	}
 
-	public CollectionType bag(String role, String propertyRef) {
-		return new BagType( this, role, propertyRef );
+	public org.hibernate.type.spi.CollectionType bag(String role) {
+		return new BagType(  role );
 	}
 
 	public CollectionType idbag(String role, String propertyRef) {

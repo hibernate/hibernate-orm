@@ -39,13 +39,9 @@ import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.spi.EmbeddedType;
-import org.hibernate.type.IntegerType;
-import org.hibernate.type.LongType;
 import org.hibernate.type.PostgresUUIDType;
-import org.hibernate.type.StringType;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.UUIDBinaryType;
-import org.hibernate.type.UUIDCharType;
 
 /**
  * Base class implementing {@link org.hibernate.collection.spi.PersistentCollection}
@@ -711,7 +707,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			whereType = persister.getIndexType();
 		}
 		else {
-			whereType = persister.getElementType();
+			whereType = persister.getElementReference().getOrmType();
 		}
 		if ( whereType instanceof EmbeddedType ) {
 			EmbeddedType componentIndexType = (EmbeddedType) whereType;
@@ -1154,7 +1150,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 		public void replace(CollectionPersister persister, Map copyCache) {
 			if ( addedValue != null ) {
-				addedValue = getReplacement( persister.getElementType(), addedValue, copyCache );
+				addedValue = getReplacement( persister.getElementReference().getOrmType(), addedValue, copyCache );
 			}
 		}
 
@@ -1236,11 +1232,11 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	private static boolean mayUseIdDirect(Type idType) {
-		return idType == StringType.INSTANCE
-			|| idType == IntegerType.INSTANCE
-			|| idType == LongType.INSTANCE
-			|| idType == UUIDBinaryType.INSTANCE
-			|| idType == UUIDCharType.INSTANCE
+		return idType == StandardSpiBasicTypes.STRING
+			|| idType == StandardSpiBasicTypes.INTEGER
+			|| idType == StandardSpiBasicTypes.LONG
+			|| idType == StandardSpiBasicTypes.UUID_BINARY
+			|| idType == StandardSpiBasicTypes.UUID_CHAR
 			|| idType == PostgresUUIDType.INSTANCE;
 	}
 

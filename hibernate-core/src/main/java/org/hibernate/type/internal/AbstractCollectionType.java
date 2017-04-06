@@ -10,18 +10,25 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.CollectionType;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.Type;
@@ -31,18 +38,34 @@ import org.hibernate.type.spi.TypeConfigurationAware;
 /**
  * @author Steve Ebersole
  */
-public class CollectionTypeImpl extends AbstractTypeImpl implements CollectionType, TypeConfigurationAware {
+public abstract class AbstractCollectionType extends AbstractTypeImpl implements CollectionType, TypeConfigurationAware {
+	protected static final Size LEGACY_DICTATED_SIZE = new Size();
+	protected static final Size LEGACY_DEFAULT_SIZE = new Size( 19, 2, 255, Size.LobMultiplier.NONE ); // to match legacy behavior
+
 	private final String roleName;
 
 	private TypeConfiguration typeConfiguration;
+	private final ColumnMapping[] columnMappings;
 
-	public CollectionTypeImpl(
+	public AbstractCollectionType(
+			String roleName) {
+		this( roleName, null, null, CollectionComparator.INSTANCE );
+	}
+
+	public AbstractCollectionType(
 			String roleName,
 			JavaTypeDescriptor javaTypeDescriptor,
 			MutabilityPlan mutabilityPlan,
 			Comparator comparator) {
 		super( javaTypeDescriptor, mutabilityPlan, comparator );
 		this.roleName = roleName;
+		this.columnMappings = new ColumnMapping[] {
+				new ColumnMapping(
+						null,
+						LEGACY_DICTATED_SIZE,
+						LEGACY_DEFAULT_SIZE
+				)
+		};
 	}
 
 	@Override
@@ -56,21 +79,41 @@ public class CollectionTypeImpl extends AbstractTypeImpl implements CollectionTy
 	}
 
 	@Override
-	public <O, C, E> CollectionPersister<O, C, E> getCollectionPersister() {
-		return typeConfiguration.findCollectionPersister( roleName );
-	}
-
-	@Override
 	public ColumnMapping[] getColumnMappings() {
-		throw new NotYetImplementedException(  );
+		return columnMappings;
 	}
-
-
-
 
 	@Override
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
-		return null;
+
+		if ( value == null ) {
+			return "null";
+		}
+
+		if ( !getReturnedClass().isInstance( value ) && !PersistentCollection.class.isInstance( value ) ) {
+			// its most likely the collection-key
+			final CollectionPersister persister = getCollectionPersister();
+			if ( persister.getKeyType().getReturnedClass().isInstance( value ) ) {
+				return roleName + "#" + getCollectionPersister( ).getKeyType().toLoggableString( value, factory );
+			}
+			else {
+				// although it could also be the collection-id
+				if ( persister.getIdentifierType() != null
+						&& persister.getIdentifierType().getReturnedClass().isInstance( value ) ) {
+					return roleName + "#" + getCollectionPersister( ).getIdentifierType().toLoggableString(
+							value,
+							factory
+					);
+				}
+			}
+		}
+
+		if ( !Hibernate.isInitialized( value ) ) {
+			return "<uninitialized>";
+		}
+		else {
+			return renderLoggableString( value, factory );
+		}
 	}
 
 	@Override
@@ -132,22 +175,24 @@ public class CollectionTypeImpl extends AbstractTypeImpl implements CollectionTy
 
 	@Override
 	public boolean[] toColumnNullness(Object value) {
-		return new boolean[0];
+		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 
 	@Override
 	public boolean isSame(Object x, Object y) throws HibernateException {
-		return false;
+		return isEqual(x, y );
 	}
 
 	@Override
 	public boolean isEqual(Object x, Object y) throws HibernateException {
-		return false;
+		return x == y
+				|| ( x instanceof PersistentCollection && ( (PersistentCollection) x ).wasInitialized() && ( (PersistentCollection) x ).isWrapper( y ) )
+				|| ( y instanceof PersistentCollection && ( (PersistentCollection) y ).wasInitialized() && ( (PersistentCollection) y ).isWrapper( x ) );
 	}
 
 	@Override
 	public boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) throws HibernateException {
-		return false;
+		return isEqual(x, y );
 	}
 
 	@Override
@@ -157,7 +202,7 @@ public class CollectionTypeImpl extends AbstractTypeImpl implements CollectionTy
 
 	@Override
 	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
-		return null;
+		return value;
 	}
 
 	@Override
@@ -193,14 +238,18 @@ public class CollectionTypeImpl extends AbstractTypeImpl implements CollectionTy
 	@Override
 	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session)
 			throws HibernateException {
-		return false;
+		//collections don't dirty an unversioned parent entity
+
+		// TODO: I don't really like this implementation; it would be better if
+		// this was handled by searchForDirtyCollections()
+		return !isSame( old, current );
 	}
 
 	@Override
 	public boolean isDirty(
 			Object oldState, Object currentState, boolean[] checkable, SharedSessionContractImplementor session)
 			throws HibernateException {
-		return false;
+		return isDirty(oldState, currentState, session);
 	}
 
 	@Override
@@ -212,11 +261,45 @@ public class CollectionTypeImpl extends AbstractTypeImpl implements CollectionTy
 
 	@Override
 	public int getHashCode(Object value) throws HibernateException {
-		return 0;
+		throw new UnsupportedOperationException( "cannot doAfterTransactionCompletion lookups on collections" );
 	}
 
 	@Override
 	public int[] sqlTypes() throws MappingException {
-		return new int[0];
+		return ArrayHelper.EMPTY_INT_ARRAY;
+	}
+
+	@Override
+	public CollectionPersister getCollectionPersister() {
+		return typeConfiguration.findCollectionPersister( roleName );
+	}
+
+
+	@Override
+	public Type getElementType() throws MappingException {
+		return getCollectionPersister().getElementReference().getOrmType();
+	}
+
+	public static class CollectionComparator implements Comparator<Object> {
+		public static final CollectionComparator INSTANCE = new  CollectionComparator();
+
+		@Override
+		public int compare(Object x, Object y) {
+			return 0; // collections cannot be compared
+		}
+	}
+
+	protected String renderLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
+		final List<String> list = new ArrayList<>();
+		Type elemType = getElementType(  );
+		Iterator itr = getElementsIterator( value );
+		while ( itr.hasNext() ) {
+			list.add( elemType.toLoggableString( itr.next(), factory ) );
+		}
+		return list.toString();
+	}
+
+	protected Iterator getElementsIterator(Object collection) {
+		return ( (Collection) collection ).iterator();
 	}
 }

@@ -7,6 +7,7 @@
 package org.hibernate.envers.internal.revisioninfo;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 
@@ -31,7 +32,7 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 	private final RevisionListener listener;
 	private final Setter revisionTimestampSetter;
 	private final boolean timestampAsDate;
-	private final Class<?> revisionInfoClass;
+	private final Constructor<?> revisionInfoClassConstructor;
 	private final SessionCacheCleaner sessionCacheCleaner;
 
 	public DefaultRevisionInfoGenerator(
@@ -42,9 +43,9 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 			boolean timestampAsDate,
 			ServiceRegistry serviceRegistry) {
 		this.revisionInfoEntityName = revisionInfoEntityName;
-		this.revisionInfoClass = revisionInfoClass;
 		this.timestampAsDate = timestampAsDate;
 
+		revisionInfoClassConstructor = ReflectHelper.getDefaultConstructor( revisionInfoClass );
 		revisionTimestampSetter = ReflectionTools.getSetter( revisionInfoClass, revisionInfoTimestampData, serviceRegistry );
 
 		if ( !listenerClass.equals( RevisionListener.class ) ) {
@@ -80,7 +81,7 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 	public Object generate() {
 		Object revisionInfo;
 		try {
-			revisionInfo = ReflectHelper.getDefaultConstructor( revisionInfoClass ).newInstance();
+			revisionInfo = revisionInfoClassConstructor.newInstance();
 		}
 		catch (Exception e) {
 			throw new RuntimeException( e );

@@ -11,9 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -64,19 +62,12 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 			return null;
 		}
 
-		final Object ret;
-		try {
-			ret = ReflectHelper.getDefaultConstructor( compositeIdClass ).newInstance();
-		}
-		catch (Exception e) {
-			throw new AuditException( e );
-		}
-
+		final Object compositeId = instantiateCompositeId();
 		for ( SingleIdMapper mapper : ids.values() ) {
-			mapper.mapToEntityFromEntity( ret, data );
+			mapper.mapToEntityFromEntity( compositeId, data );
 		}
 
-		return ret;
+		return compositeId;
 	}
 
 	@Override

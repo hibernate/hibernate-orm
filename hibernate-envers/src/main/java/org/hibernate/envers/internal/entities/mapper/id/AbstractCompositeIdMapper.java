@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Map;
 
 import org.hibernate.envers.exception.AuditException;
@@ -40,20 +42,29 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
 			return null;
 		}
 
-		final Object ret;
-		try {
-			ret = ReflectHelper.getDefaultConstructor( compositeIdClass ).newInstance();
-		}
-		catch (Exception e) {
-			throw new AuditException( e );
-		}
-
+		final Object compositeId = instantiateCompositeId();
 		for ( SingleIdMapper mapper : ids.values() ) {
-			if ( !mapper.mapToEntityFromMap( ret, data ) ) {
+			if ( !mapper.mapToEntityFromMap( compositeId, data ) ) {
 				return null;
 			}
 		}
 
-		return ret;
+		return compositeId;
+	}
+
+	protected Object instantiateCompositeId() {
+		return AccessController.doPrivileged(
+				new PrivilegedAction<Object>() {
+					@Override
+					public Object run() {
+						try {
+							return ReflectHelper.getDefaultConstructor( compositeIdClass ).newInstance();
+						}
+						catch ( Exception e ) {
+							throw new AuditException( e );
+						}
+					}
+				}
+		);
 	}
 }

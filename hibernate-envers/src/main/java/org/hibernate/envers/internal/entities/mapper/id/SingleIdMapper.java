@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +45,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 	}
 
 	@Override
-	public boolean mapToEntityFromMap(Object obj, Map data) {
+	public boolean mapToEntityFromMap(final Object obj, Map data) {
 		if ( data == null || obj == null ) {
 			return false;
 		}
@@ -53,10 +55,20 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			return false;
 		}
 
-		final Setter setter = ReflectionTools.getSetter( obj.getClass(), propertyData, getServiceRegistry() );
-		setter.set( obj, value, null );
-
-		return true;
+		return AccessController.doPrivileged(
+				new PrivilegedAction<Boolean>() {
+					@Override
+					public Boolean run() {
+						final Setter setter = ReflectionTools.getSetter(
+								obj.getClass(),
+								propertyData,
+								getServiceRegistry()
+						);
+						setter.set( obj, value, null );
+						return true;
+					}
+				}
+		);
 	}
 
 	@Override
@@ -69,7 +81,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 	}
 
 	@Override
-	public Object mapToIdFromEntity(Object data) {
+	public Object mapToIdFromEntity(final Object data) {
 		if ( data == null ) {
 			return null;
 		}
@@ -79,8 +91,19 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			return hibernateProxy.getHibernateLazyInitializer().getIdentifier();
 		}
 		else {
-			final Getter getter = ReflectionTools.getGetter( data.getClass(), propertyData, getServiceRegistry() );
-			return getter.get( data );
+			return AccessController.doPrivileged(
+					new PrivilegedAction<Object>() {
+						@Override
+						public Object run() {
+							final Getter getter = ReflectionTools.getGetter(
+									data.getClass(),
+									propertyData,
+									getServiceRegistry()
+							);
+							return getter.get( data );
+						}
+					}
+			);
 		}
 	}
 
@@ -92,7 +115,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 	}
 
 	@Override
-	public void mapToMapFromEntity(Map<String, Object> data, Object obj) {
+	public void mapToMapFromEntity(Map<String, Object> data, final Object obj) {
 		if ( obj == null ) {
 			data.put( propertyData.getName(), null );
 		}
@@ -102,20 +125,50 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 				data.put( propertyData.getName(), hibernateProxy.getHibernateLazyInitializer().getIdentifier() );
 			}
 			else {
-				final Getter getter = ReflectionTools.getGetter( obj.getClass(), propertyData, getServiceRegistry() );
-				data.put( propertyData.getName(), getter.get( obj ) );
+				final Object value = AccessController.doPrivileged(
+						new PrivilegedAction<Object>() {
+							@Override
+							public Object run() {
+								final Getter getter = ReflectionTools.getGetter(
+										obj.getClass(),
+										propertyData,
+										getServiceRegistry()
+								);
+								return getter.get( obj );
+							}
+						}
+				);
+				data.put( propertyData.getName(), value );
 			}
 		}
 	}
 
-	public void mapToEntityFromEntity(Object objTo, Object objFrom) {
+	public void mapToEntityFromEntity(final Object objTo, final Object objFrom) {
 		if ( objTo == null || objFrom == null ) {
 			return;
 		}
 
-		final Getter getter = ReflectionTools.getGetter( objFrom.getClass(), propertyData, getServiceRegistry() );
-		final Setter setter = ReflectionTools.getSetter( objTo.getClass(), propertyData, getServiceRegistry() );
-		setter.set( objTo, getter.get( objFrom ), null );
+		AccessController.doPrivileged(
+				new PrivilegedAction<Object>() {
+					@Override
+					public Object run() {
+						final Getter getter = ReflectionTools.getGetter(
+								objFrom.getClass(),
+								propertyData,
+								getServiceRegistry()
+						);
+
+						final Setter setter = ReflectionTools.getSetter(
+								objTo.getClass(),
+								propertyData,
+								getServiceRegistry()
+						);
+
+						setter.set( objTo, getter.get( objFrom ), null );
+						return null;
+					}
+				}
+		);
 	}
 
 	@Override

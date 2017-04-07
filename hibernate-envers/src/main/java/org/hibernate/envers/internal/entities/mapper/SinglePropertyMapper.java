@@ -7,6 +7,8 @@
 package org.hibernate.envers.internal.entities.mapper;
 
 import java.io.Serializable;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.List;
 import java.util.Map;
 
@@ -82,9 +84,9 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 
 	@Override
 	public void mapToEntityFromMap(
-			EnversService enversService,
-			Object obj,
-			Map data,
+			final EnversService enversService,
+			final Object obj,
+			final Map data,
 			Object primaryKey,
 			AuditReaderImplementor versionsReader,
 			Number revision) {
@@ -92,12 +94,27 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 			return;
 		}
 
-		final Setter setter = ReflectionTools.getSetter( obj.getClass(), propertyData, enversService.getServiceRegistry() );
-		final Object value = data.get( propertyData.getName() );
-		// We only set a null value if the field is not primite. Otherwise, we leave it intact.
-		if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
-			setter.set( obj, value, null );
-		}
+		AccessController.doPrivileged(
+				new PrivilegedAction<Object>() {
+					@Override
+					public Object run() {
+						final Setter setter = ReflectionTools.getSetter(
+								obj.getClass(),
+								propertyData,
+								enversService.getServiceRegistry()
+						);
+
+						final Object value = data.get( propertyData.getName() );
+
+						// We only set a null value if the field is not primitive. Otherwise, we leave it intact.
+						if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
+							setter.set( obj, value, null );
+						}
+
+						return null;
+					}
+				}
+		);
 	}
 
 	private boolean isPrimitive(Setter setter, PropertyData propertyData, Class<?> cls) {

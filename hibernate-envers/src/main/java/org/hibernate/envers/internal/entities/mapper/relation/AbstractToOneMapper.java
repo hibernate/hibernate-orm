@@ -7,6 +7,8 @@
 package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.io.Serializable;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.List;
 import java.util.Map;
 
@@ -86,9 +88,22 @@ public abstract class AbstractToOneMapper implements PropertyMapper {
 		return new EntityInfo( entityClass, entityName, isRelationAudited );
 	}
 
-	protected void setPropertyValue(Object targetObject, Object value) {
-		final Setter setter = ReflectionTools.getSetter( targetObject.getClass(), propertyData, serviceRegistry );
-		setter.set( targetObject, value, null );
+	protected void setPropertyValue(final Object targetObject, final Object value) {
+		AccessController.doPrivileged(
+				new PrivilegedAction<Object>() {
+					@Override
+					public Object run() {
+						final Setter setter = ReflectionTools.getSetter(
+								targetObject.getClass(),
+								propertyData,
+								serviceRegistry
+						);
+						setter.set( targetObject, value, null );
+
+						return null;
+					}
+				}
+		);
 	}
 
 	/**

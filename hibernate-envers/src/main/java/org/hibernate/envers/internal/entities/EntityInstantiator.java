@@ -13,12 +13,10 @@ import java.util.Map;
 
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
@@ -78,20 +76,11 @@ public class EntityInstantiator {
 		}
 
 		// If it is not in the cache, creating a new entity instance
-		Object ret;
-		try {
-			EntityConfiguration entCfg = enversService.getEntitiesConfigurations().get( entityName );
-			if ( entCfg == null ) {
-				// a relation marked as RelationTargetAuditMode.NOT_AUDITED
-				entCfg = enversService.getEntitiesConfigurations().getNotVersionEntityConfiguration( entityName );
-			}
-
-			final Class<?> cls = ReflectionTools.loadClass( entCfg.getEntityClassName(), enversService.getClassLoaderService() );
-			ret = ReflectHelper.getDefaultConstructor( cls ).newInstance();
-		}
-		catch (Exception e) {
-			throw new AuditException( e );
-		}
+		Object ret = versionsReader.getSessionImplementor()
+					.getFactory()
+					.getEntityPersister( entityName )
+					.getEntityTuplizer()
+					.instantiate();
 
 		// Putting the newly created entity instance into the first level cache, in case a one-to-one bidirectional
 		// relation is present (which is eagerly loaded).

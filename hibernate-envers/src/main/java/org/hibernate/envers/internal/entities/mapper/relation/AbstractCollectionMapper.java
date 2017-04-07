@@ -9,6 +9,8 @@ package org.hibernate.envers.internal.entities.mapper.relation;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -237,44 +239,51 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 
 	@Override
 	public void mapToEntityFromMap(
-			EnversService enversService,
-			Object obj,
-			Map data,
-			Object primaryKey,
-			AuditReaderImplementor versionsReader,
-			Number revision) {
-		final Setter setter = ReflectionTools.getSetter(
-				obj.getClass(),
-				commonCollectionMapperData.getCollectionReferencingPropertyData(),
-				enversService.getServiceRegistry()
-		);
-		try {
-			setter.set(
-					obj,
-					proxyConstructor.newInstance(
-							getInitializor(
-									enversService,
-									versionsReader,
-									primaryKey,
-									revision,
-									RevisionType.DEL.equals(
-											data.get(
-													enversService.getAuditEntitiesConfiguration().getRevisionTypePropName()
+			final EnversService enversService,
+			final Object obj,
+			final Map data,
+			final Object primaryKey,
+			final AuditReaderImplementor versionsReader,
+			final Number revision) {
+		final String revisionTypePropertyName = enversService.getAuditEntitiesConfiguration().getRevisionTypePropName();
+		AccessController.doPrivileged(
+				new PrivilegedAction<Object>() {
+					@Override
+					public Object run() {
+						final Setter setter = ReflectionTools.getSetter(
+								obj.getClass(),
+								commonCollectionMapperData.getCollectionReferencingPropertyData(),
+								enversService.getServiceRegistry()
+						);
+
+						try {
+							setter.set(
+									obj,
+									proxyConstructor.newInstance(
+											getInitializor(
+													enversService,
+													versionsReader,
+													primaryKey,
+													revision,
+													RevisionType.DEL.equals( data.get( revisionTypePropertyName ) )
 											)
-									)
-							)
-					),
-					null
-			);
-		}
-		catch (InstantiationException e) {
-			throw new AuditException( e );
-		}
-		catch (IllegalAccessException e) {
-			throw new AuditException( e );
-		}
-		catch (InvocationTargetException e) {
-			throw new AuditException( e );
-		}
+									),
+									null
+							);
+						}
+						catch (InstantiationException e) {
+							throw new AuditException( e );
+						}
+						catch (IllegalAccessException e) {
+							throw new AuditException( e );
+						}
+						catch (InvocationTargetException e) {
+							throw new AuditException( e );
+						}
+
+						return null;
+					}
+				}
+		);
 	}
 }

@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,41 +41,61 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 	}
 
 	@Override
-	public void mapToMapFromEntity(Map<String, Object> data, Object obj) {
+	public void mapToMapFromEntity(Map<String, Object> data, final Object obj) {
 		if ( obj == null ) {
 			return;
 		}
 
-		final Getter getter = ReflectionTools.getGetter( obj.getClass(), idPropertyData, getServiceRegistry() );
-		mapToMapFromId( data, getter.get( obj ) );
+		final Object value = AccessController.doPrivileged(
+				new PrivilegedAction<Object>() {
+					@Override
+					public Object run() {
+						final Getter getter = ReflectionTools.getGetter(
+								obj.getClass(),
+								idPropertyData,
+								getServiceRegistry()
+						);
+						return getter.get( obj );
+					}
+				}
+		);
+
+		mapToMapFromId( data, value );
 	}
 
 	@Override
-	public boolean mapToEntityFromMap(Object obj, Map data) {
+	public boolean mapToEntityFromMap(final Object obj, final Map data) {
 		if ( data == null || obj == null ) {
 			return false;
 		}
 
-		final Getter getter = ReflectionTools.getGetter( obj.getClass(), idPropertyData, getServiceRegistry() );
-		final Setter setter = ReflectionTools.getSetter( obj.getClass(), idPropertyData, getServiceRegistry() );
+		return AccessController.doPrivileged(
+				new PrivilegedAction<Boolean>() {
+					@Override
+					public Boolean run() {
+						final Getter getter = ReflectionTools.getGetter( obj.getClass(), idPropertyData, getServiceRegistry() );
+						final Setter setter = ReflectionTools.getSetter( obj.getClass(), idPropertyData, getServiceRegistry() );
 
-		try {
-			final Object subObj = ReflectHelper.getDefaultConstructor( getter.getReturnType() ).newInstance();
+						try {
+							final Object subObj = ReflectHelper.getDefaultConstructor( getter.getReturnType() ).newInstance();
 
-			boolean ret = true;
-			for ( IdMapper idMapper : ids.values() ) {
-				ret &= idMapper.mapToEntityFromMap( subObj, data );
-			}
+							boolean ret = true;
+							for ( IdMapper idMapper : ids.values() ) {
+								ret &= idMapper.mapToEntityFromMap( subObj, data );
+							}
 
-			if ( ret ) {
-				setter.set( obj, subObj, null );
-			}
+							if ( ret ) {
+								setter.set( obj, subObj, null );
+							}
 
-			return ret;
-		}
-		catch (Exception e) {
-			throw new AuditException( e );
-		}
+							return ret;
+						}
+						catch (Exception e) {
+							throw new AuditException( e );
+						}
+					}
+				}
+		);
 	}
 
 	@Override
@@ -89,13 +111,24 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 	}
 
 	@Override
-	public Object mapToIdFromEntity(Object data) {
+	public Object mapToIdFromEntity(final Object data) {
 		if ( data == null ) {
 			return null;
 		}
 
-		final Getter getter = ReflectionTools.getGetter( data.getClass(), idPropertyData, getServiceRegistry() );
-		return getter.get( data );
+		return AccessController.doPrivileged(
+				new PrivilegedAction<Object>() {
+					@Override
+					public Object run() {
+						final Getter getter = ReflectionTools.getGetter(
+								data.getClass(),
+								idPropertyData,
+								getServiceRegistry()
+						);
+						return getter.get( data );
+					}
+				}
+		);
 	}
 
 	@Override

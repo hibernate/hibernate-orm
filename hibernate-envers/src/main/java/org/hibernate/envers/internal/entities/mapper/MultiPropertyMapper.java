@@ -7,6 +7,8 @@
 package org.hibernate.envers.internal.entities.mapper;
 
 import java.io.Serializable;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.List;
 import java.util.Map;
 
@@ -94,57 +96,94 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 
 	@Override
 	public boolean mapToMapFromEntity(
-			SessionImplementor session,
-			Map<String, Object> data,
-			Object newObj,
-			Object oldObj) {
-		boolean ret = false;
-		for ( PropertyData propertyData : properties.keySet() ) {
-			Getter getter;
-			if ( newObj != null ) {
-				getter = ReflectionTools.getGetter( newObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );
-			}
-			else if ( oldObj != null ) {
-				getter = ReflectionTools.getGetter( oldObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );
-			}
-			else {
-				return false;
-			}
+			final SessionImplementor session,
+			final Map<String, Object> data,
+			final Object newObj,
+			final Object oldObj) {
+		return AccessController.doPrivileged(
+				new PrivilegedAction<Boolean>() {
+					@Override
+					public Boolean run() {
+						boolean ret = false;
+						for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+							final PropertyData propertyData = entry.getKey();
+							final PropertyMapper propertyMapper = entry.getValue();
 
-			ret |= properties.get( propertyData ).mapToMapFromEntity(
-					session, data,
-					newObj == null ? null : getter.get( newObj ),
-					oldObj == null ? null : getter.get( oldObj )
-			);
-		}
+							Getter getter;
+							if ( newObj != null ) {
+								getter = ReflectionTools.getGetter(
+										newObj.getClass(),
+										propertyData,
+										session.getFactory().getServiceRegistry()
+								);
+							}
+							else if ( oldObj != null ) {
+								getter = ReflectionTools.getGetter(
+										oldObj.getClass(),
+										propertyData,
+										session.getFactory().getServiceRegistry()
+								);
+							}
+							else {
+								return false;
+							}
 
-		return ret;
+							ret |= propertyMapper.mapToMapFromEntity(
+									session, data,
+									newObj == null ? null : getter.get( newObj ),
+									oldObj == null ? null : getter.get( oldObj )
+							);
+						}
+						return ret;
+					}
+				}
+		);
 	}
 
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(
-			SessionImplementor session,
-			Map<String, Object> data,
-			Object newObj,
-			Object oldObj) {
-		for ( PropertyData propertyData : properties.keySet() ) {
-			Getter getter;
-			if ( newObj != null ) {
-				getter = ReflectionTools.getGetter( newObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );
-			}
-			else if ( oldObj != null ) {
-				getter = ReflectionTools.getGetter( oldObj.getClass(), propertyData, session.getFactory().getServiceRegistry() );
-			}
-			else {
-				return;
-			}
+			final SessionImplementor session,
+			final Map<String, Object> data,
+			final Object newObj,
+			final Object oldObj) {
+		AccessController.doPrivileged(
+				new PrivilegedAction<Object>() {
+					@Override
+					public Object run() {
+						for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+							final PropertyData propertyData = entry.getKey();
+							final PropertyMapper propertyMapper = entry.getValue();
 
-			properties.get( propertyData ).mapModifiedFlagsToMapFromEntity(
-					session, data,
-					newObj == null ? null : getter.get( newObj ),
-					oldObj == null ? null : getter.get( oldObj )
-			);
-		}
+							Getter getter;
+							if ( newObj != null ) {
+								getter = ReflectionTools.getGetter(
+										newObj.getClass(),
+										propertyData,
+										session.getFactory().getServiceRegistry()
+								);
+							}
+							else if ( oldObj != null ) {
+								getter = ReflectionTools.getGetter(
+										oldObj.getClass(),
+										propertyData,
+										session.getFactory().getServiceRegistry()
+								);
+							}
+							else {
+								break;
+							}
+
+							propertyMapper.mapModifiedFlagsToMapFromEntity(
+									session, data,
+									newObj == null ? null : getter.get( newObj ),
+									oldObj == null ? null : getter.get( oldObj )
+							);
+						}
+
+						return null;
+					}
+				}
+		);
 	}
 
 	@Override

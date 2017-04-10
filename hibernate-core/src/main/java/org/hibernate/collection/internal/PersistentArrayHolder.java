@@ -77,7 +77,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 //			final Object elt = (array==null) ? tempList.get( i ) : Array.get( array, i );
 			final Object elt = Array.get( array, i );
 			try {
-				Array.set( result, i, persister.getElementType().getMutabilityPlan().deepCopy( elt ) );
+				Array.set( result, i, getElementType( persister ).getMutabilityPlan().deepCopy( elt ) );
 			}
 			catch (IllegalArgumentException iae) {
 				LOG.invalidArrayElementType( iae.getMessage() );
@@ -116,7 +116,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 
 	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
-		final Type elementType = persister.getElementType();
+		final Type elementType = getElementType( persister );
 		final Serializable snapshot = getSnapshot();
 		final int xlen = Array.getLength( snapshot );
 		if ( xlen!= Array.getLength( array ) ) {
@@ -203,7 +203,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		array = Array.newInstance( persister.getElementClass(), cached.length );
 
 		for ( int i=0; i<cached.length; i++ ) {
-			Array.set( array, i, persister.getElementType().getMutabilityPlan().assemble( cached[i] ) );
+			Array.set( array, i, getElementType( persister ).getMutabilityPlan().assemble( cached[i] ) );
 		}
 	}
 
@@ -212,7 +212,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		final int length = Array.getLength( array );
 		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
-			result[i] = persister.getElementType().getMutabilityPlan().disassemble( Array.get( array,i ) );
+			result[i] = getElementType( persister ).getMutabilityPlan().disassemble( Array.get( array,i ) );
 		}
 
 		return result;

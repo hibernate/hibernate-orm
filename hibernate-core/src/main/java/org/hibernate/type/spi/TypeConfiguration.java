@@ -77,7 +77,7 @@ import org.hibernate.sqm.domain.SqmExpressableTypeEntity;
 import org.hibernate.sqm.query.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.type.ArrayType;
+import org.hibernate.type.internal.ArrayType;
 import org.hibernate.type.internal.BagType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -1075,8 +1075,8 @@ public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObse
 
 	// collection type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public CollectionType array(String role, String propertyRef, Class elementClass) {
-		return new ArrayType( this, role, propertyRef, elementClass );
+	public org.hibernate.type.spi.CollectionType array(String role, String propertyRef, Class elementClass) {
+		return new ArrayType( role, elementClass );
 	}
 
 	public org.hibernate.type.spi.CollectionType list(String role, String propertyRef) {

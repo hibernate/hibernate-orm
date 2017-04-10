@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.internal.entities;
 
-import org.hibernate.envers.ModificationStore;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.spi.Type;
 
@@ -18,13 +17,13 @@ public class RevisionTimestampData extends PropertyData {
 
 	private Type type;
 
-	public RevisionTimestampData(String name, String beanName, String accessType, ModificationStore store, Type type) {
-		super( name, beanName, accessType, store );
+	public RevisionTimestampData(String name, String beanName, String accessType, Type type) {
+		super( name, beanName, accessType );
 		this.type = type;
 	}
 
 	public RevisionTimestampData(RevisionTimestampData old, Type type) {
-		this( old.getName(), old.getBeanName(), old.getAccessType(), old.getStore(), type );
+		this( old.getName(), old.getBeanName(), old.getAccessType(), type );
 	}
 
 	public Type getType() {

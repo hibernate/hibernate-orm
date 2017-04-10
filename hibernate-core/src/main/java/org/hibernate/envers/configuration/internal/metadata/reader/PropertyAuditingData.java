@@ -12,7 +12,6 @@ import java.util.List;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
-import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.internal.entities.PropertyData;
 
@@ -23,7 +22,6 @@ import org.hibernate.envers.internal.entities.PropertyData;
 public class PropertyAuditingData {
 	private String name;
 	private String beanName;
-	private ModificationStore store;
 	private String mapKey;
 	private AuditJoinTable joinTable;
 	private String accessType;
@@ -40,14 +38,15 @@ public class PropertyAuditingData {
 	}
 
 	public PropertyAuditingData(
-			String name, String accessType, ModificationStore store,
+			String name,
+			String accessType,
 			RelationTargetAuditMode relationTargetAuditMode,
-			String auditMappedBy, String positionMappedBy,
+			String auditMappedBy,
+			String positionMappedBy,
 			boolean forceInsertable) {
 		this.name = name;
 		this.beanName = name;
 		this.accessType = accessType;
-		this.store = store;
 		this.relationTargetAuditMode = relationTargetAuditMode;
 		this.auditMappedBy = auditMappedBy;
 		this.positionMappedBy = positionMappedBy;
@@ -68,14 +67,6 @@ public class PropertyAuditingData {
 
 	public void setBeanName(String beanName) {
 		this.beanName = beanName;
-	}
-
-	public ModificationStore getStore() {
-		return store;
-	}
-
-	public void setStore(ModificationStore store) {
-		this.store = store;
 	}
 
 	public String getMapKey() {
@@ -104,8 +95,11 @@ public class PropertyAuditingData {
 
 	public PropertyData getPropertyData() {
 		return new PropertyData(
-				name, beanName, accessType, store,
-				usingModifiedFlag, modifiedFlagName
+				name,
+				beanName,
+				accessType,
+				usingModifiedFlag,
+				modifiedFlagName
 		);
 	}
 

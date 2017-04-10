@@ -9,7 +9,6 @@ package org.hibernate.envers.configuration.internal.metadata;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
-import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.IdMappingData;
@@ -197,16 +196,17 @@ public final class IdMetadataGenerator {
 	}
 
 	private PropertyData getIdPropertyData(Property property) {
-		return new PropertyData(
-				property.getName(), property.getName(), property.getPropertyAccessorName(),
-				ModificationStore.FULL
-		);
+		return new PropertyData( property.getName(), property.getName(), property.getPropertyAccessorName() );
 	}
 
 	private PropertyAuditingData getIdPersistentPropertyAuditingData(Property property) {
 		return new PropertyAuditingData(
-				property.getName(), property.getPropertyAccessorName(),
-				ModificationStore.FULL, RelationTargetAuditMode.AUDITED, null, null, false
+				property.getName(),
+				property.getPropertyAccessorName(),
+				RelationTargetAuditMode.AUDITED,
+				null,
+				null,
+				false
 		);
 	}
 }

@@ -13,7 +13,6 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.boot.spi.AuditMetadataBuildingOptions;
 import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
 
@@ -27,16 +26,12 @@ import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
 public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 
 	public ComponentAuditedPropertiesReader(
-			ModificationStore defaultStore,
 			PersistentPropertiesSource persistentPropertiesSource,
 			AuditedPropertiesHolder auditedPropertiesHolder,
 			AuditMetadataBuildingOptions options,
 			ReflectionManager reflectionManager,
 			String propertyNamePrefix) {
-		super(
-				defaultStore, persistentPropertiesSource, auditedPropertiesHolder,
-				options, reflectionManager, propertyNamePrefix
-		);
+		super( persistentPropertiesSource, auditedPropertiesHolder, options, reflectionManager, propertyNamePrefix );
 	}
 
 	@Override
@@ -68,12 +63,9 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 			XProperty property,
 			PropertyAuditingData propertyData, String propertyName,
 			Audited allClassAudited, String modifiedFlagSuffix) {
-		propertyData.setStore( ModificationStore.FULL );
-
 		// Checking if this property is explicitly audited or if all properties are.
 		final Audited aud = property.getAnnotation( Audited.class );
 		if ( aud != null ) {
-			propertyData.setStore( aud.modStore() );
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
 			if ( aud.modifiedColumnName() != null && !"".equals( aud.modifiedColumnName() ) ) {

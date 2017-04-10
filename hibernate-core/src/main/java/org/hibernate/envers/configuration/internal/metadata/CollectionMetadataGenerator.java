@@ -21,7 +21,6 @@ import javax.persistence.JoinColumn;
 import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.metadata.reader.AuditedPropertiesReader;
 import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditedPropertiesReader;
@@ -73,7 +72,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.type.BagType;
+import org.hibernate.type.Bagtype;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.ManyToOneType;
@@ -81,6 +80,7 @@ import org.hibernate.type.MapType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SortedMapType;
 import org.hibernate.type.SortedSetType;
+import org.hibernate.type.internal.BagType;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -252,7 +252,7 @@ public final class CollectionMetadataGenerator {
 					relMapper,
 					// The mapper will only be used to map from entity to map, so no need to provide other details
 					// when constructing the PropertyData.
-					new PropertyData( auditMappedBy, null, null, null ),
+					new PropertyData( auditMappedBy, null, null ),
 					referencingEntityName, false
 			);
 
@@ -262,7 +262,6 @@ public final class CollectionMetadataGenerator {
 				fakeBidirectionalRelationIndexMapper = new SinglePropertyMapper(
 						new PropertyData(
 								positionMappedBy,
-								null,
 								null,
 								null
 						)
@@ -594,7 +593,6 @@ public final class CollectionMetadataGenerator {
 			final ReflectionManager reflectionManager = mainGenerator.getMetadata().getBootstrapContext().getReflectionManager();
 
 			new ComponentAuditedPropertiesReader(
-					ModificationStore.FULL,
 					new AuditedPropertiesReader.ComponentPropertiesSource( reflectionManager, component ),
 					auditData,
 					mainGenerator.getOptions(),
@@ -655,7 +653,6 @@ public final class CollectionMetadataGenerator {
 					new PropertyAuditingData(
 							prefix,
 							"field",
-							ModificationStore.FULL,
 							RelationTargetAuditMode.AUDITED,
 							null,
 							null,

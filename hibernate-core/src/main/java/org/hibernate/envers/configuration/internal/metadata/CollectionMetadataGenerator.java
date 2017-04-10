@@ -77,10 +77,9 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.internal.ListType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.internal.MapType;
-import org.hibernate.type.SetType;
+import org.hibernate.type.internal.SetType;
 import org.hibernate.type.internal.SortedMapType;
-import org.hibernate.type.SortedSetType;
-import org.hibernate.type.internal.BagType;
+import org.hibernate.type.internal.SortedSetType;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;

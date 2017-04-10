@@ -77,7 +77,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
 		final HashMap clonedSet = new HashMap( set.size() );
 		for ( Object aSet : set ) {
-			final Object copied = persister.getElementType().getMutabilityPlan().deepCopy( aSet );
+			final Object copied = getElementType( persister ).getMutabilityPlan().deepCopy( aSet );
 			clonedSet.put( copied, copied );
 		}
 		return clonedSet;
@@ -91,7 +91,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
-		final Type elementType = persister.getElementType();
+		final Type elementType = getElementType( persister );
 		final java.util.Map sn = (java.util.Map) getSnapshot();
 		if ( sn.size()!=set.size() ) {
 			return false;
@@ -114,7 +114,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	@Override
 	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
-		this.set = (Set) persister.getCollectionType().instantiate( anticipatedSize );
+		this.set = (Set) persister.getOrmType().instantiate( anticipatedSize );
 	}
 
 	@Override
@@ -125,7 +125,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		final int size = array.length;
 		beforeInitialize( persister, size );
 		for ( Serializable arrayElement : array ) {
-			final Object assembledArrayElement = persister.getElementType().getMutabilityPlan().assemble( arrayElement );
+			final Object assembledArrayElement = getElementType( persister ).getMutabilityPlan().assemble( arrayElement );
 			if ( assembledArrayElement != null ) {
 				set.add( assembledArrayElement );
 			}
@@ -343,7 +343,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		final Iterator itr = set.iterator();
 		int i=0;
 		while ( itr.hasNext() ) {
-			result[i++] = persister.getElementType().getMutabilityPlan().disassemble( itr.next() );
+			result[i++] = getElementType( persister ).getMutabilityPlan().disassemble( itr.next() );
 		}
 		return result;
 	}
@@ -351,7 +351,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
-		final Type elementType = persister.getElementType();
+		final Type elementType = getElementType( persister );
 		final java.util.Map sn = (java.util.Map) getSnapshot();
 		final ArrayList deletes = new ArrayList( sn.size() );
 

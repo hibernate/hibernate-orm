@@ -90,10 +90,10 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.internal.MapType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.internal.OrderedMapType;
-import org.hibernate.type.OrderedSetType;
-import org.hibernate.type.SetType;
+import org.hibernate.type.internal.OrderedSetType;
+import org.hibernate.type.internal.SetType;
 import org.hibernate.type.internal.SortedMapType;
-import org.hibernate.type.SortedSetType;
+import org.hibernate.type.internal.SortedSetType;
 import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -1103,16 +1103,16 @@ public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObse
 		return new SortedMapType( role, comparator );
 	}
 
-	public CollectionType set(String role, String propertyRef) {
-		return new SetType( this, role, propertyRef );
+	public org.hibernate.type.spi.CollectionType set(String role, String propertyRef) {
+		return new SetType( role );
 	}
 
-	public CollectionType orderedSet(String role, String propertyRef) {
-		return new OrderedSetType( this, role, propertyRef );
+	public org.hibernate.type.spi.CollectionType orderedSet(String role, String propertyRef) {
+		return new OrderedSetType( role );
 	}
 
-	public CollectionType sortedSet(String role, String propertyRef, Comparator comparator) {
-		return new SortedSetType( this, role, propertyRef, comparator );
+	public org.hibernate.type.spi.CollectionType sortedSet(String role, String propertyRef, Comparator comparator) {
+		return new SortedSetType( role, comparator );
 	}
 
 	// component type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

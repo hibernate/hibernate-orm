@@ -4,31 +4,41 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type;
+package org.hibernate.type.internal;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.HashSet;
 
 import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.type.spi.TypeConfiguration;
 
-public class SetType extends CollectionType {
+/**
+ * @author Andrea Boriero
+ */
+public class SetType extends AbstractCollectionType {
+	public SetType(String roleName) {
+		super( roleName );
+	}
 
-	public SetType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
-		super( typeConfiguration, role, propertyRef );
+	public SetType(String roleName, Comparator comparator) {
+		super( roleName, comparator );
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
+	public PersistentCollection instantiate(
+			SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
 		return new PersistentSet( session );
 	}
 
 	@Override
-	public Class getReturnedClass() {
-		return java.util.Set.class;
+	public Object instantiate(int anticipatedSize) {
+		return anticipatedSize <= 0
+				? new HashSet()
+				: new HashSet( anticipatedSize + (int) ( anticipatedSize * .75f ), .75f );
+
 	}
 
 	@Override
@@ -37,10 +47,7 @@ public class SetType extends CollectionType {
 	}
 
 	@Override
-	public Object instantiate(int anticipatedSize) {
-		return anticipatedSize <= 0
-				? new HashSet()
-				: new HashSet( anticipatedSize + (int)( anticipatedSize * .75f ), .75f );
+	public Class getReturnedClass() {
+		return java.util.Set.class;
 	}
-	
 }

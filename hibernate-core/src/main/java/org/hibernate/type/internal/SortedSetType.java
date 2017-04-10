@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type;
+package org.hibernate.type.internal;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -14,20 +14,23 @@ import org.hibernate.collection.internal.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.type.spi.TypeConfiguration;
 
+/**
+ * @author Andrea Boriero
+ */
 public class SortedSetType extends SetType {
-	private final Comparator comparator;
 
-	public SortedSetType(TypeConfiguration typeConfiguration, String role, String propertyRef, Comparator comparator) {
-		super( typeConfiguration, role, propertyRef );
-		this.comparator = comparator;
+	public SortedSetType(String roleName, Comparator comparator) {
+		super( roleName, comparator );
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
-		PersistentSortedSet set = new PersistentSortedSet(session);
-		set.setComparator(comparator);
+	public PersistentCollection instantiate(
+			SharedSessionContractImplementor session,
+			CollectionPersister persister,
+			Serializable key) {
+		PersistentSortedSet set = new PersistentSortedSet( session );
+		set.setComparator( getComparator() );
 		return set;
 	}
 
@@ -35,9 +38,9 @@ public class SortedSetType extends SetType {
 		return java.util.SortedSet.class;
 	}
 
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	public Object instantiate(int anticipatedSize) {
-		return new TreeSet(comparator);
+		return new TreeSet( getComparator() );
 	}
 
 	@Override

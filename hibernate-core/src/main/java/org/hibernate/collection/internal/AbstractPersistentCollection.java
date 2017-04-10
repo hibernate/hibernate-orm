@@ -172,6 +172,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		return false;
 	}
 
+	protected Type getElementType(CollectionPersister persister) {
+		return persister.getElementReference().getOrmType();
+	}
+
 	/**
 	 * TBH not sure why this is public
 	 *

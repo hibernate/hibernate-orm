@@ -89,7 +89,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 				(i/2),
 				persister.getIdentifierType().getMutabilityPlan().assemble( array[i] )
 			);
-			values.add( persister.getElementType().getMutabilityPlan().assemble( array[i+1] ) );
+			values.add( super.getElementType( persister ).getMutabilityPlan().assemble( array[i+1] ) );
 		}
 	}
 
@@ -221,7 +221,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		for ( int j=0; j< values.size(); j++ ) {
 			final Object value = values.get( j );
 			result[i++] = persister.getIdentifierType().getMutabilityPlan().disassemble( identifiers.get( j ) );
-			result[i++] = persister.getElementType().getMutabilityPlan().disassemble( value );
+			result[i++] = super.getElementType( persister ).getMutabilityPlan().disassemble( value );
 		}
 		return result;
 	}
@@ -243,7 +243,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
-		final Type elementType = persister.getElementType();
+		final Type elementType = getElementType( persister );
 		final Map snap = (Map) getSnapshot();
 		if ( snap.size()!= values.size() ) {
 			return false;
@@ -351,7 +351,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 			final Object value = iter.next();
 			map.put(
 					identifiers.get( i++ ),
-					persister.getElementType().getMutabilityPlan().deepCopy( value )
+					getElementType( persister ).getMutabilityPlan().deepCopy( value )
 			);
 		}
 		return map;
@@ -487,5 +487,4 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 			int i) throws HibernateException {
 		//TODO: if we are using identity columns, fetch the identifier
 	}
-
 }

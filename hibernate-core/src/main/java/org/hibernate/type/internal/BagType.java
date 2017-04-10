@@ -39,4 +39,8 @@ public class BagType extends AbstractCollectionType {
 		return new PersistentBag( session, (Collection) collection );
 	}
 
+	@Override
+	public Class getReturnedClass() {
+		return java.util.Collection.class;
+	}
 }

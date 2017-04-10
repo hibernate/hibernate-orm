@@ -106,7 +106,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
-		final Type elementType = persister.getElementReference().getOrmType();
+		final Type elementType = getElementType( persister );
 		final List sn = (List) getSnapshot();
 		if ( sn.size() != bag.size() ) {
 			return false;
@@ -144,7 +144,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			throws HibernateException {
 		final ArrayList clonedList = new ArrayList( bag.size() );
 		for ( Object item : bag ) {
-			clonedList.add( persister.getElementReference().getOrmType().getMutabilityPlan().deepCopy( item ) );
+			clonedList.add( getElementType( persister ).getMutabilityPlan().deepCopy( item ) );
 		}
 		return clonedList;
 	}
@@ -161,7 +161,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		final int length = bag.size();
 		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
-			result[i] = persister.getElementReference().getOrmType().getMutabilityPlan().disassemble( bag.get( i ) );
+			result[i] = getElementType( persister ).getMutabilityPlan().disassemble( bag.get( i ) );
 		}
 		return result;
 	}
@@ -174,7 +174,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		final int size = array.length;
 		beforeInitialize( persister, size );
 		for ( Serializable item : array ) {
-			final Object element = persister.getElementReference().getOrmType().getMutabilityPlan().assemble( item );
+			final Object element = getElementType( persister ).getMutabilityPlan().assemble( item );
 			if ( element != null ) {
 				bag.add( element );
 			}
@@ -198,7 +198,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
-		final Type elementType = persister.getElementReference().getOrmType();
+		final Type elementType = getElementType( persister );
 		final ArrayList deletes = new ArrayList();
 		final List sn = (List) getSnapshot();
 		final Iterator olditer = sn.iterator();
@@ -560,4 +560,5 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			bag.add( getAddedInstance() );
 		}
 	}
+
 }

@@ -58,6 +58,10 @@ public abstract class AbstractCollectionType extends AbstractTypeImpl implements
 		this( roleName, null, null, CollectionComparator.INSTANCE );
 	}
 
+	public AbstractCollectionType(String roleName, Comparator comparator) {
+		this( roleName, null, null, comparator );
+	}
+
 	public AbstractCollectionType(
 			String roleName,
 			JavaTypeDescriptor javaTypeDescriptor,

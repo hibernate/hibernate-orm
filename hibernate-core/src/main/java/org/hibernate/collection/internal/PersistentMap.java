@@ -74,7 +74,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		final HashMap clonedMap = new HashMap( map.size() );
 		for ( Object o : map.entrySet() ) {
 			final Entry e = (Entry) o;
-			final Object copy = persister.getElementType().getMutabilityPlan().deepCopy( e.getValue() );
+			final Object copy = getElementType( persister ).getMutabilityPlan().deepCopy( e.getValue() );
 			clonedMap.put( e.getKey(), copy );
 		}
 		return clonedMap;
@@ -88,7 +88,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
-		final Type elementType = persister.getElementType();
+		final Type elementType = getElementType( persister );
 		final Map snapshotMap = (Map) getSnapshot();
 		if ( snapshotMap.size() != this.map.size() ) {
 			return false;
@@ -115,7 +115,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
-		this.map = (Map) persister.getCollectionType().instantiate( anticipatedSize );
+		this.map = (Map) persister.getOrmType().instantiate( anticipatedSize );
 	}
 
 	@Override
@@ -461,7 +461,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		for ( int i = 0; i < size; i+=2 ) {
 			map.put(
 					persister.getIndexType().getMutabilityPlan().assemble( array[i] ),
-					persister.getElementType().getMutabilityPlan().assemble( array[i+1] )
+					getElementType( persister ).getMutabilityPlan().assemble( array[i+1] )
 			);
 		}
 	}
@@ -475,7 +475,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		while ( itr.hasNext() ) {
 			final Map.Entry e = (Map.Entry) itr.next();
 			result[i++] = persister.getIndexType().getMutabilityPlan().disassemble( e.getKey() );
-			result[i++] = persister.getElementType().getMutabilityPlan().disassemble( e.getValue() );
+			result[i++] = getElementType( persister ).getMutabilityPlan().disassemble( e.getValue() );
 		}
 		return result;
 

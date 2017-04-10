@@ -87,12 +87,12 @@ import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.internal.IdentifierBagType;
 import org.hibernate.type.internal.ListType;
 import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.MapType;
+import org.hibernate.type.internal.MapType;
 import org.hibernate.type.OneToOneType;
-import org.hibernate.type.OrderedMapType;
+import org.hibernate.type.internal.OrderedMapType;
 import org.hibernate.type.OrderedSetType;
 import org.hibernate.type.SetType;
-import org.hibernate.type.SortedMapType;
+import org.hibernate.type.internal.SortedMapType;
 import org.hibernate.type.SortedSetType;
 import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.StandardBasicTypes;
@@ -1091,16 +1091,16 @@ public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObse
 		return new IdentifierBagType( role );
 	}
 
-	public CollectionType map(String role, String propertyRef) {
-		return new MapType( this, role, propertyRef );
+	public org.hibernate.type.spi.CollectionType map(String role, String propertyRef) {
+		return new MapType( role );
 	}
 
-	public CollectionType orderedMap(String role, String propertyRef) {
-		return new OrderedMapType( this, role, propertyRef );
+	public org.hibernate.type.spi.CollectionType orderedMap(String role, String propertyRef) {
+		return new OrderedMapType( role );
 	}
 
-	public CollectionType sortedMap(String role, String propertyRef, Comparator comparator) {
-		return new SortedMapType( this, role, propertyRef, comparator );
+	public org.hibernate.type.spi.CollectionType sortedMap(String role, String propertyRef, Comparator comparator) {
+		return new SortedMapType( role, comparator );
 	}
 
 	public CollectionType set(String role, String propertyRef) {

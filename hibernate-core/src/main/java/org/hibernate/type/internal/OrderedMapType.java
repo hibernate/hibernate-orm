@@ -4,18 +4,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type;
+package org.hibernate.type.internal;
+
 import java.util.LinkedHashMap;
 
-import org.hibernate.type.spi.TypeConfiguration;
-
 /**
- * A specialization of the map type, with (resultset-based) ordering.
+ * @author Andrea Boriero
  */
 public class OrderedMapType extends MapType {
 
-	public OrderedMapType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
-		super( typeConfiguration, role, propertyRef );
+	public OrderedMapType(String roleName) {
+		super( roleName );
 	}
 
 	@Override
@@ -24,5 +23,4 @@ public class OrderedMapType extends MapType {
 				? new LinkedHashMap( anticipatedSize )
 				: new LinkedHashMap();
 	}
-
 }

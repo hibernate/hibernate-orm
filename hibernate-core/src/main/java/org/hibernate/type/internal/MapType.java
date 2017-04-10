@@ -4,48 +4,35 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type;
+package org.hibernate.type.internal;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.hibernate.HibernateException;
 import org.hibernate.collection.internal.PersistentMap;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.type.spi.TypeConfiguration;
 
+/**
+ * @author Andrea Boriero
+ */
+public class MapType extends AbstractCollectionType {
+	public MapType(String roleName) {
+		super( roleName );
+	}
 
-public class MapType extends CollectionType {
-
-	public MapType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
-		super( typeConfiguration, role, propertyRef );
+	public MapType(String roleName, Comparator comparator) {
+		super( roleName, comparator );
 	}
 
 	@Override
 	public PersistentCollection instantiate(
-			SharedSessionContractImplementor session,
-			CollectionPersister persister,
-			Serializable key) {
+			SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
 		return new PersistentMap( session );
-	}
-
-	@Override
-	public Class getReturnedClass() {
-		return Map.class;
-	}
-
-	@Override
-	public Iterator getElementsIterator(Object collection) {
-		return ( (java.util.Map) collection ).values().iterator();
-	}
-
-	@Override
-	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
-		return new PersistentMap( session, (java.util.Map) collection );
 	}
 
 	@Override
@@ -56,13 +43,19 @@ public class MapType extends CollectionType {
 	}
 
 	@Override
-	public Object replaceElements(
-			final Object original,
-			final Object target,
-			final Object owner,
-			final java.util.Map copyCache,
-			final SharedSessionContractImplementor session) throws HibernateException {
-		CollectionPersister cp = session.getFactory().getMetamodel().collectionPersister( getRole() );
+	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
+		return new PersistentMap( session, (java.util.Map) collection );
+	}
+
+	@Override
+	public Iterator getElementsIterator(Object collection) {
+		return ( (java.util.Map) collection ).values().iterator();
+	}
+
+	@Override
+	protected Object replaceElements(
+			Object original, Object target, Object owner, Map copyCache, SharedSessionContractImplementor session) {
+		final CollectionPersister cp = getCollectionPersister();
 
 		java.util.Map result = (java.util.Map) target;
 		result.clear();
@@ -70,12 +63,17 @@ public class MapType extends CollectionType {
 		for ( Object o : ( (Map) original ).entrySet() ) {
 			Map.Entry me = (Map.Entry) o;
 			Object key = cp.getIndexType().replace( me.getKey(), null, session, owner, copyCache );
-			Object value = cp.getElementType().replace( me.getValue(), null, session, owner, copyCache );
+			Object value = cp.getElementReference().getOrmType().replace(
+					me.getValue(),
+					null,
+					session,
+					owner,
+					copyCache
+			);
 			result.put( key, value );
 		}
 
 		return result;
-
 	}
 
 	@Override
@@ -90,4 +88,8 @@ public class MapType extends CollectionType {
 		return null;
 	}
 
+	@Override
+	public Class getReturnedClass() {
+		return Map.class;
+	}
 }

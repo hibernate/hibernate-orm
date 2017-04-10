@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type;
+package org.hibernate.type.internal;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -14,22 +14,22 @@ import org.hibernate.collection.internal.PersistentSortedMap;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.type.spi.TypeConfiguration;
 
-
+/**
+ * @author Andrea Boriero
+ */
 public class SortedMapType extends MapType {
-
-	private final Comparator comparator;
-
-	public SortedMapType(TypeConfiguration typeConfiguration, String role, String propertyRef, Comparator comparator) {
-		super( typeConfiguration, role, propertyRef );
-		this.comparator = comparator;
+	public SortedMapType(String roleName, Comparator comparator) {
+		super( roleName, comparator );
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
-		PersistentSortedMap map = new PersistentSortedMap(session);
-		map.setComparator(comparator);
+	public PersistentCollection instantiate(
+			SharedSessionContractImplementor session,
+			CollectionPersister persister,
+			Serializable key) {
+		PersistentSortedMap map = new PersistentSortedMap( session );
+		map.setComparator( getComparator() );
 		return map;
 	}
 
@@ -37,9 +37,9 @@ public class SortedMapType extends MapType {
 		return java.util.SortedMap.class;
 	}
 
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	public Object instantiate(int anticipatedSize) {
-		return new TreeMap(comparator);
+		return new TreeMap( getComparator() );
 	}
 
 	@Override

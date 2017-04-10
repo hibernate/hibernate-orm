@@ -11,7 +11,7 @@ import java.util.Map;
 
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.type.BagType;
+import org.hibernate.type.internal.BagType;
 import org.hibernate.type.spi.Type;
 
 /**

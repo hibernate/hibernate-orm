@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.type.BagType;
+import org.hibernate.type.internal.BagType;
 
 /**
  * Uses the default mapping from property to result set column 

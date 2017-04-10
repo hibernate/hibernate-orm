@@ -41,7 +41,7 @@ public class Namespace {
 				database.getPhysicalNamingStrategy()
 						.toPhysicalCatalogName( name.getCatalog(), database.getJdbcEnvironment() ),
 				database.getPhysicalNamingStrategy()
-						.toPhysicalCatalogName( name.getSchema(), database.getJdbcEnvironment() )
+						.toPhysicalSchemaName( name.getSchema(), database.getJdbcEnvironment() )
 		);
 
 		log.debugf(

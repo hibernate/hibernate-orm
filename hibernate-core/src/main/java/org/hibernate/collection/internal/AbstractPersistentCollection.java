@@ -181,7 +181,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 *
 	 * @param <T> The java type of the return for this LazyInitializationWork
 	 */
-	public static interface LazyInitializationWork<T> {
+	public interface LazyInitializationWork<T> {
 		/**
 		 * Do the represented work and return the result.
 		 *

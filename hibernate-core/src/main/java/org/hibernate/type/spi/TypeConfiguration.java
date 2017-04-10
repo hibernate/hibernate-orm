@@ -85,7 +85,7 @@ import org.hibernate.type.CustomCollectionType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.internal.IdentifierBagType;
-import org.hibernate.type.ListType;
+import org.hibernate.type.internal.ListType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.OneToOneType;
@@ -1079,8 +1079,8 @@ public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObse
 		return new ArrayType( this, role, propertyRef, elementClass );
 	}
 
-	public CollectionType list(String role, String propertyRef) {
-		return new ListType( this, role, propertyRef );
+	public org.hibernate.type.spi.CollectionType list(String role, String propertyRef) {
+		return new ListType( role );
 	}
 
 	public org.hibernate.type.spi.CollectionType bag(String role) {

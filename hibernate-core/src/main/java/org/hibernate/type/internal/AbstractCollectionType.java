@@ -13,18 +13,24 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -209,7 +215,38 @@ public abstract class AbstractCollectionType extends AbstractTypeImpl implements
 	public Object replace(
 			Object original, Object target, SharedSessionContractImplementor session, Object owner, Map copyCache)
 			throws HibernateException {
-		return null;
+		if ( original == null ) {
+			return null;
+		}
+		if ( !Hibernate.isInitialized( original ) ) {
+			if ( ( (PersistentCollection) original ).hasQueuedOperations() ) {
+				final AbstractPersistentCollection pc = (AbstractPersistentCollection) original;
+				pc.replaceQueuedOperationValues( getCollectionPersister(), copyCache );
+			}
+			return target;
+		}
+
+		// for a null target, or a target which is the same as the original, we
+		// need to put the merged elements in a new collection
+		Object result = target == null || target == original ? instantiateResult( original ) : target;
+
+		//for arrays, replaceElements() may return a different reference, since
+		//the array length might not match
+		result = replaceElements( original, result, owner, copyCache, session );
+
+		if ( original == target ) {
+			// get the elements back into the target making sure to handle dirty flag
+			boolean wasClean = PersistentCollection.class.isInstance( target ) && !( ( PersistentCollection ) target ).isDirty();
+			//TODO: this is a little inefficient, don't need to do a whole
+			//      deep replaceElements() call
+			replaceElements( result, target, owner, copyCache, session );
+			if ( wasClean ) {
+				( ( PersistentCollection ) target ).clearDirty();
+			}
+			result = target;
+		}
+
+		return result;
 	}
 
 	@Override
@@ -220,7 +257,12 @@ public abstract class AbstractCollectionType extends AbstractTypeImpl implements
 			Object owner,
 			Map copyCache,
 			ForeignKeyDirection foreignKeyDirection) throws HibernateException {
-		return null;
+		if ( ForeignKeyDirection.TO_PARENT == foreignKeyDirection ) {
+			return replace( original, target, session, owner, copyCache );
+		}
+		else {
+			return target;
+		}
 	}
 
 	@Override
@@ -280,6 +322,12 @@ public abstract class AbstractCollectionType extends AbstractTypeImpl implements
 		return getCollectionPersister().getElementReference().getOrmType();
 	}
 
+	@Override
+	public Object indexOf(Object collection, Object element) {
+		throw new UnsupportedOperationException( "generic collections don't have indexes" );
+	}
+
+
 	public static class CollectionComparator implements Comparator<Object> {
 		public static final CollectionComparator INSTANCE = new  CollectionComparator();
 
@@ -301,5 +349,134 @@ public abstract class AbstractCollectionType extends AbstractTypeImpl implements
 
 	protected Iterator getElementsIterator(Object collection) {
 		return ( (Collection) collection ).iterator();
+	}
+
+	/**
+	 * Replace the elements of a collection with the elements of another collection.
+	 *
+	 * @param original The 'source' of the replacement elements (where we copy from)
+	 * @param target The target of the replacement elements (where we copy to)
+	 * @param owner The owner of the collection being merged
+	 * @param copyCache The map of elements already replaced.
+	 * @param session The session from which the merge event originated.
+	 * @return The merged collection.
+	 */
+	protected Object replaceElements(
+			Object original,
+			Object target,
+			Object owner,
+			Map copyCache,
+			SharedSessionContractImplementor session) {
+		// TODO: does not work for EntityMode.DOM4J yet!
+		java.util.Collection result = ( java.util.Collection ) target;
+		result.clear();
+
+		// copy elements into newly empty target collection
+		Type elemType = getElementType( );
+		Iterator iter = ( (java.util.Collection) original ).iterator();
+		while ( iter.hasNext() ) {
+			result.add( elemType.replace( iter.next(), null, session, owner, copyCache ) );
+		}
+
+		// if the original is a PersistentCollection, and that original
+		// was not flagged as dirty, then reset the target's dirty flag
+		// here afterQuery the copy operation.
+		// </p>
+		// One thing to be careful of here is a "bare" original collection
+		// in which case we should never ever ever reset the dirty flag
+		// on the target because we simply do not know...
+		if ( original instanceof PersistentCollection ) {
+			if ( result instanceof PersistentCollection ) {
+				final PersistentCollection originalPersistentCollection = (PersistentCollection) original;
+				final PersistentCollection resultPersistentCollection = (PersistentCollection) result;
+
+				preserveSnapshot( originalPersistentCollection, resultPersistentCollection, elemType, owner, copyCache, session );
+
+				if ( ! originalPersistentCollection.isDirty() ) {
+					resultPersistentCollection.clearDirty();
+				}
+			}
+		}
+
+		return result;
+	}
+
+	/**
+	 * Instantiate a new "underlying" collection exhibiting the same capacity
+	 * charactersitcs and the passed "original".
+	 *
+	 * @param original The original collection.
+	 * @return The newly instantiated collection.
+	 */
+	protected Object instantiateResult(Object original) {
+		// by default just use an unanticipated capacity since we don't
+		// know how to extract the capacity to use from original here...
+		return instantiate( -1 );
+	}
+
+	private void preserveSnapshot(
+			PersistentCollection original,
+			PersistentCollection result,
+			Type elemType,
+			Object owner,
+			Map copyCache,
+			SharedSessionContractImplementor session) {
+		final Serializable originalSnapshot = original.getStoredSnapshot();
+		final Serializable resultSnapshot = result.getStoredSnapshot();
+		Serializable targetSnapshot;
+
+		if ( originalSnapshot instanceof List ) {
+			targetSnapshot = new ArrayList(
+					( (List) originalSnapshot ).size() );
+			for ( Object obj : (List) originalSnapshot ) {
+				( (List) targetSnapshot ).add( elemType.replace( obj, null, session, owner, copyCache ) );
+			}
+		}
+		else if ( originalSnapshot instanceof Map ) {
+			if ( originalSnapshot instanceof SortedMap ) {
+				targetSnapshot = new TreeMap( ( (SortedMap) originalSnapshot ).comparator() );
+			}
+			else {
+				targetSnapshot = new HashMap(
+						CollectionHelper.determineProperSizing( ( (Map) originalSnapshot ).size() ),
+						CollectionHelper.LOAD_FACTOR
+				);
+			}
+
+			for ( Map.Entry<Object, Object> entry : ( (Map<Object, Object>) originalSnapshot ).entrySet() ) {
+				Object key = entry.getKey();
+				Object value = entry.getValue();
+				Object resultSnapshotValue = ( resultSnapshot == null )
+						? null
+						: ( (Map<Object, Object>) resultSnapshot ).get( key );
+
+				Object newValue = elemType.replace( value, resultSnapshotValue, session, owner, copyCache );
+
+				if ( key == value ) {
+					( (Map) targetSnapshot ).put( newValue, newValue );
+
+				}
+				else {
+					( (Map) targetSnapshot ).put( key, newValue );
+				}
+			}
+		}
+		else if ( originalSnapshot instanceof Object[] ) {
+			Object[] arr = (Object[]) originalSnapshot;
+			for ( int i = 0; i < arr.length; i++ ) {
+				arr[i] = elemType.replace( arr[i], null, session, owner, copyCache );
+			}
+			targetSnapshot = originalSnapshot;
+
+		}
+		else {
+			// retain the same snapshot
+			targetSnapshot = resultSnapshot;
+		}
+
+		final CollectionEntry ce = session.getPersistenceContext().getCollectionEntry( result );
+		if ( ce != null ) {
+			ce.resetStoredSnapshot( result, targetSnapshot );
+		}
 	}
 }

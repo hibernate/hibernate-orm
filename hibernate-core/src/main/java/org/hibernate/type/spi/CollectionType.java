@@ -69,4 +69,6 @@ public interface CollectionType<O,C,E> extends Type<C> {
 	 * @throws MappingException Indicates the underlying persister could not be located.
 	 */
 	Type getElementType() throws MappingException;
+
+	Object indexOf(Object collection, Object element);
 }

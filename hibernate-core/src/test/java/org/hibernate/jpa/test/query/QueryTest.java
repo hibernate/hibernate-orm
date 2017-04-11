@@ -37,13 +37,13 @@ import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Assert;
 import org.junit.Test;
-import junit.framework.Assert;
 
-import static junit.framework.Assert.assertNull;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -1451,4 +1451,5 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.close();
 		}
 	}
+
 }

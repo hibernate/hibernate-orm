@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -52,7 +53,7 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 
 	private boolean createSchema = true;
 
-	private ExecutorService executor = Executors.newFixedThreadPool( 2);
+	private ExecutorService executor = Executors.newFixedThreadPool( 2 );
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -95,7 +96,8 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 
 			final List<Throwable> errs = new CopyOnWriteArrayList<>();
 
-			final Semaphore semaphore = new Semaphore( 0, true );
+			CountDownLatch firstLatch = new CountDownLatch( 1 );
+			CountDownLatch secondLatch = new CountDownLatch( 1 );
 
 			Callable<Void> callable1 = () -> {
 				try {
@@ -109,8 +111,8 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 							session1.getTransaction().commit();
 						}
 					}
-					semaphore.release();
-					semaphore.acquire();
+					firstLatch.countDown();
+					secondLatch.await();
 					try {
 						session1.beginTransaction();
 						HibPerson p = new HibPerson();
@@ -129,7 +131,8 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 
 			Callable<Void> callable2 = () -> {
 				try {
-					semaphore.acquire();
+					firstLatch.await();
+					secondLatch.countDown();
 					try {
 						session2.beginTransaction();
 						HibPerson p = new HibPerson();
@@ -142,23 +145,21 @@ public class HiloOptimizerConcurrencyTest extends BaseNonConfigCoreFunctionalTes
 				catch (Throwable t) {
 					errs.add( t );
 				}
-				finally {
-					semaphore.release();
-				}
 
 				return null;
 			};
 
 			executor.invokeAll( Arrays.asList(
 				callable1, callable2
-			) ).forEach( c -> {
+			) , 30, TimeUnit.SECONDS).forEach( c -> {
 				try {
 					c.get();
 				}
 				catch (InterruptedException|ExecutionException e) {
+					Thread.interrupted();
 					fail(e.getMessage());
 				}
-			} );
+			});
 
 			for(Throwable ex : errs) {
 				fail(ex.getMessage());

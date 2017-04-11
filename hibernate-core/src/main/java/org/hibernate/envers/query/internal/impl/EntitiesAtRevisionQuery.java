@@ -13,7 +13,6 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
-import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.query.Query;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
@@ -68,34 +67,24 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
          * (only non-deleted entities)
          *     e.revision_type != DEL
          */
-		String revisionPropertyPath = versionsReader.getAuditService().getOptions().getRevisionNumberPath();
-		String originalIdPropertyName = versionsReader.getAuditService().getOptions().getOriginalIdPropName();
+		String revisionPropertyPath = getOptions().getRevisionNumberPath();
+		String originalIdPropertyName = getOptions().getOriginalIdPropName();
 
-		MiddleIdData referencedIdData;
-		if ( versionsReader.getAuditService().getEntityBindings().isVersioned( entityName ) ) {
-			referencedIdData = new MiddleIdData(
-					versionsReader.getAuditService().getEntityBindings().get( entityName ).getIdMappingData(),
-					null,
-					entityName,
-					versionsReader.getAuditService().getAuditEntityName( entityName )
-			);
-		}
-		else {
-			referencedIdData = new MiddleIdData(
-					versionsReader.getAuditService().getEntityBindings().get( entityName ).getIdMappingData(),
-					null,
-					entityName
-			);
-		}
+		MiddleIdData referencedIdData = new MiddleIdData(
+				getEntityConfiguration().getIdMappingData(),
+				null,
+				getEntityName(),
+				getAuditEntityName()
+		);
 
 		// (selecting e entities at revision :revision)
 		// --> based on auditStrategy (see above)
-		versionsReader.getAuditService().getOptions().getAuditStrategy().addEntityAtRevisionRestriction(
-				versionsReader.getAuditService().getOptions(),
-				qb,
-				qb.getRootParameters(),
+		getOptions().getAuditStrategy().addEntityAtRevisionRestriction(
+				getOptions(),
+				getQueryBuilder(),
+				getQueryBuilder().getRootParameters(),
 				revisionPropertyPath,
-				versionsReader.getAuditService().getOptions().getRevisionEndFieldName(),
+				getOptions().getRevisionEndFieldName(),
 				true,
 				referencedIdData,
 				revisionPropertyPath,
@@ -107,27 +96,15 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 
 		if ( !includeDeletions ) {
 			// e.revision_type != DEL
-			qb.getRootParameters().addWhereWithParam(
-					versionsReader.getAuditService().getOptions().getRevisionTypePropName(),
+			getQueryBuilder().getRootParameters().addWhereWithParam(
+					getOptions().getRevisionTypePropName(),
 					"<>",
 					RevisionType.DEL
 			);
 		}
 
 		// all specified conditions
-		for ( AuditCriterion criterion : criterions ) {
-			criterion.addToQuery(
-					versionsReader,
-					aliasToEntityNameMap,
-					QueryConstants.REFERENCED_ENTITY_ALIAS,
-					qb,
-					qb.getRootParameters()
-			);
-		}
-
-		for (final AuditAssociationQueryImpl<?> associationQuery : associationQueries) {
-			associationQuery.addCriterionsToQuery( versionsReader );
-		}
+		applyCriterions( QueryConstants.REFERENCED_ENTITY_ALIAS );
 
 		Query query = buildQuery();
 		// add named parameter (used for ValidityAuditStrategy and association queries)
@@ -135,6 +112,7 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 		if ( params.contains( REVISION_PARAMETER ) ) {
 			query.setParameter( REVISION_PARAMETER, revision );
 		}
+
 		List queryResult = query.list();
 		return applyProjections( queryResult, revision );
 	}

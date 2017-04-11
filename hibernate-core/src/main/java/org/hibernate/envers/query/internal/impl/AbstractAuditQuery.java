@@ -20,8 +20,10 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.envers.boot.spi.AuditServiceOptions;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.exception.NotAuditedException;
+import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -42,42 +44,51 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
  * @author Chris Cranford
  */
 public abstract class AbstractAuditQuery implements AuditQueryImplementor {
-	protected EntityInstantiator entityInstantiator;
-	protected List<AuditCriterion> criterions;
+	private final AuditReaderImplementor versionsReader;
+	private final EntityInstantiator entityInstantiator;
+	private final QueryBuilder qb;
+	private final String auditEntityName;
+	private final String entityName;
+	private final Class<?> entityClass;
+	private final List<AuditCriterion> criterions;
 
-	protected String entityName;
-	protected String entityClassName;
-	protected String versionsEntityName;
-	protected QueryBuilder qb;
-	protected final Map<String, String> aliasToEntityNameMap = new HashMap<>();
+	private final Map<String, String> aliasToEntityNameMap = new HashMap<>();
+	private final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<>();
+	private final Map<String, AuditAssociationQueryImpl<AuditQueryImplementor>> associationQueryMap = new HashMap<>();
+	private final List<Pair<String, AuditProjection>> projections = new ArrayList<>();
 
-	protected boolean hasOrder;
+	private Integer maxResults;
+	private Integer firstResult;
+	private Boolean cacheable;
+	private String cacheRegion;
+	private String comment;
+	private FlushMode flushMode;
+	private FlushModeType flushModeType;
+	private CacheMode cacheMode;
+	private Integer timeout;
+	private LockOptions lockOptions = new LockOptions( LockMode.NONE );
+	private boolean hasOrder;
 
-	protected final AuditReaderImplementor versionsReader;
-
-	protected final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<>();
-	protected final Map<String, AuditAssociationQueryImpl<AuditQueryImplementor>> associationQueryMap = new HashMap<>();
-	protected final List<Pair<String, AuditProjection>> projections = new ArrayList<>();
-
-	protected AbstractAuditQuery(AuditReaderImplementor versionsReader, Class<?> cls) {
-		this( versionsReader, cls, cls.getName() );
+	protected AbstractAuditQuery(AuditReaderImplementor versionsReader, Class<?> clazz) {
+		this( versionsReader, clazz, clazz.getName() );
 	}
 
-	protected AbstractAuditQuery(AuditReaderImplementor versionsReader, Class<?> cls, String entityName) {
-		this.versionsReader = versionsReader;
-
+	protected AbstractAuditQuery(AuditReaderImplementor versionsReader, Class<?> clazz, String entityName) {
 		criterions = new ArrayList<>();
-		entityInstantiator = new EntityInstantiator( versionsReader );
 
-		entityClassName = cls.getName();
+		this.versionsReader = versionsReader;
+		this.entityInstantiator = new EntityInstantiator( versionsReader );
+		this.entityClass = clazz;
 		this.entityName = entityName;
-		versionsEntityName = versionsReader.getAuditService().getAuditEntityName( entityName );
+
 		if ( !versionsReader.getAuditService().getEntityBindings().isVersioned( entityName ) ) {
 			throw new NotAuditedException( entityName, "Entity [" + entityName + "] is not versioned" );
 		}
+
 		aliasToEntityNameMap.put( REFERENCED_ENTITY_ALIAS, entityName );
 
-		qb = new QueryBuilder( versionsEntityName, REFERENCED_ENTITY_ALIAS );
+		this.auditEntityName = versionsReader.getAuditService().getAuditEntityName( entityName );
+		qb = new QueryBuilder( auditEntityName, REFERENCED_ENTITY_ALIAS );
 	}
 
 	@Override
@@ -196,17 +207,6 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	}
 
 	// Query properties
-
-	private Integer maxResults;
-	private Integer firstResult;
-	private Boolean cacheable;
-	private String cacheRegion;
-	private String comment;
-	private FlushMode flushMode;
-	private FlushModeType flushModeType;
-	private CacheMode cacheMode;
-	private Integer timeout;
-	private LockOptions lockOptions = new LockOptions( LockMode.NONE );
 
 	public AuditQuery setMaxResults(int maxResults) {
 		this.maxResults = maxResults;
@@ -339,5 +339,50 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 			entityInstantiator.addInstancesFromVersionsEntities( entityName, result, queryResult, revision );
 		}
 		return result;
+	}
+
+	protected void applyCriterions(String alias) {
+		for ( AuditCriterion criterion : criterions ) {
+			criterion.addToQuery(
+					versionsReader,
+					aliasToEntityNameMap,
+					alias,
+					qb,
+					qb.getRootParameters()
+			);
+		}
+
+		for ( final AuditAssociationQueryImpl<?> associationQuery : associationQueries ) {
+			associationQuery.addCriterionsToQuery( versionsReader );
+		}
+	}
+
+	protected EntityConfiguration getEntityConfiguration() {
+		return versionsReader.getAuditService().getEntityBindings().get( entityName );
+	}
+
+	protected EntityInstantiator getEntityInstantiator() {
+		return entityInstantiator;
+	}
+
+	protected String getEntityName() {
+		// todo: can this be replaced by a call to getEntityConfiguration#getEntityClassName()?
+		return entityName;
+	}
+
+	protected String getAuditEntityName() {
+		return auditEntityName;
+	}
+
+	protected boolean hasOrder() {
+		return hasOrder;
+	}
+
+	protected QueryBuilder getQueryBuilder() {
+		return qb;
+	}
+
+	protected AuditServiceOptions getOptions() {
+		return versionsReader.getAuditService().getOptions();
 	}
 }

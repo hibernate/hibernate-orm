@@ -7,19 +7,24 @@
 package org.hibernate.envers.query.internal.impl;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.criteria.JoinType;
 
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.query.AuditAssociationQuery;
 import org.hibernate.envers.query.AuditQuery;
-import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.proxy.HibernateProxy;
 
 /**
@@ -31,36 +36,45 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 	private final boolean selectEntitiesOnly;
 	private final boolean selectDeletedEntities;
 	private final boolean selectRevisionInfoOnly;
+	private final boolean includePropertyChanges;
+	private final RevisionInfoNumberReader revisionInfoNumberReader;
 
 	public RevisionsOfEntityQuery(
 			AuditReaderImplementor versionsReader,
-			Class<?> cls,
+			Class<?> clazz,
 			boolean selectEntitiesOnly,
 			boolean selectDeletedEntities,
-			boolean selectRevisionInfoOnly) {
-		super( versionsReader, cls );
+			boolean selectRevisionInfoOnly,
+			boolean includePropertyChanges) {
+		super( versionsReader, clazz );
 
 		this.selectEntitiesOnly = selectEntitiesOnly;
 		this.selectDeletedEntities = selectDeletedEntities;
 		this.selectRevisionInfoOnly = selectRevisionInfoOnly && !selectEntitiesOnly;
+		this.includePropertyChanges = includePropertyChanges;
+		this.revisionInfoNumberReader = versionsReader.getAuditService().getRevisionInfoNumberReader();
 	}
 
 	public RevisionsOfEntityQuery(
 			AuditReaderImplementor versionsReader,
-			Class<?> cls, String entityName,
+			Class<?> clazz,
+			String entityName,
 			boolean selectEntitiesOnly,
 			boolean selectDeletedEntities,
-			boolean selectRevisionInfoOnly) {
-		super( versionsReader, cls, entityName );
+			boolean selectRevisionInfoOnly,
+			boolean includePropertyChanges) {
+		super( versionsReader, clazz, entityName );
 
 		this.selectEntitiesOnly = selectEntitiesOnly;
 		this.selectDeletedEntities = selectDeletedEntities;
 		this.selectRevisionInfoOnly = selectRevisionInfoOnly && !selectEntitiesOnly;
+		this.includePropertyChanges = includePropertyChanges;
+		this.revisionInfoNumberReader = versionsReader.getAuditService().getRevisionInfoNumberReader();
 	}
 
 	private Number getRevisionNumber(Map versionsEntity) {
-		final String originalId = versionsReader.getAuditService().getOptions().getOriginalIdPropName();
-		String revisionPropertyName = versionsReader.getAuditService().getOptions().getRevisionFieldName();
+		final String originalId = getOptions().getOriginalIdPropName();
+		String revisionPropertyName = getOptions().getRevisionFieldName();
 
 		Object revisionInfoObject = ( (Map) versionsEntity.get( originalId ) ).get( revisionPropertyName );
 
@@ -69,7 +83,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		}
 		else {
 			// Not a proxy - must be read from cache or with a join
-			return versionsReader.getAuditService().getRevisionInfoNumberReader().getRevisionNumber( revisionInfoObject );
+			return revisionInfoNumberReader.getRevisionNumber( revisionInfoObject );
 		}
 	}
 
@@ -85,33 +99,25 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
          */
 		if ( !selectDeletedEntities ) {
 			// e.revision_type != DEL AND
-			qb.getRootParameters().addWhereWithParam(
-					versionsReader.getAuditService().getOptions().getRevisionTypePropName(),
+			getQueryBuilder().getRootParameters().addWhereWithParam(
+					getOptions().getRevisionTypePropName(),
 					"<>",
 					RevisionType.DEL
 			);
 		}
 
 		// all specified conditions, transformed
-		for ( AuditCriterion criterion : criterions ) {
-			criterion.addToQuery(
-					versionsReader,
-					aliasToEntityNameMap,
-					QueryConstants.REFERENCED_ENTITY_ALIAS,
-					qb,
-					qb.getRootParameters()
-			);
-		}
+		applyCriterions( QueryConstants.REFERENCED_ENTITY_ALIAS );
 
-		if ( !hasProjection() && !hasOrder ) {
-			String revisionPropertyPath = versionsReader.getAuditService().getOptions().getRevisionNumberPath();
-			qb.addOrder( QueryConstants.REFERENCED_ENTITY_ALIAS, revisionPropertyPath, true );
+		if ( !hasProjection() && !hasOrder() ) {
+			String revisionPropertyPath = getOptions().getRevisionNumberPath();
+			getQueryBuilder().addOrder( QueryConstants.REFERENCED_ENTITY_ALIAS, revisionPropertyPath, true );
 		}
 
 		if ( !selectEntitiesOnly ) {
-			qb.addFrom( versionsReader.getAuditService().getOptions().getRevisionInfoEntityName(), "r", true );
-			qb.getRootParameters().addWhere(
-					versionsReader.getAuditService().getOptions().getRevisionNumberPath(),
+			getQueryBuilder().addFrom( getOptions().getRevisionInfoEntityName(), "r", true );
+			getQueryBuilder().getRootParameters().addWhere(
+					getOptions().getRevisionNumberPath(),
 					true,
 					"=",
 					"r.id",
@@ -119,49 +125,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 			);
 		}
 
-		List<Object> queryResult = buildAndExecuteQuery();
-		if ( hasProjection() ) {
-			return queryResult;
-		}
-		else if ( selectRevisionInfoOnly ) {
-			return queryResult.stream().map( e -> ( (Object[]) e )[1] ).collect( Collectors.toList() );
-		}
-		else {
-			List entities = new ArrayList();
-			String revisionTypePropertyName = versionsReader.getAuditService().getOptions().getRevisionTypePropName();
-
-			for ( Object resultRow : queryResult ) {
-				Map versionsEntity;
-				Object revisionData;
-
-				if ( selectEntitiesOnly ) {
-					versionsEntity = (Map) resultRow;
-					revisionData = null;
-				}
-				else {
-					Object[] arrayResultRow = (Object[]) resultRow;
-					versionsEntity = (Map) arrayResultRow[0];
-					revisionData = arrayResultRow[1];
-				}
-
-				Number revision = getRevisionNumber( versionsEntity );
-
-				Object entity = entityInstantiator.createInstanceFromVersionsEntity(
-						entityName,
-						versionsEntity,
-						revision
-				);
-
-				if ( !selectEntitiesOnly ) {
-					entities.add( new Object[] {entity, revisionData, versionsEntity.get( revisionTypePropertyName )} );
-				}
-				else {
-					entities.add( entity );
-				}
-			}
-
-			return entities;
-		}
+		return getQueryResults();
 	}
 
 	@Override
@@ -169,4 +133,86 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		throw new UnsupportedOperationException( "Not yet implemented for revisions of entity queries" );
 	}
 
+	private boolean isEntityUsingModifiedFlags() {
+		// todo: merge HHH-8973 ModifiedFlagMapperSupport into 6.0 to get this behavior by default
+		final ExtendedPropertyMapper propertyMapper = getEntityConfiguration().getPropertyMapper();
+		for ( PropertyData propertyData : propertyMapper.getProperties().keySet() ) {
+			if ( propertyData.isUsingModifiedFlag() ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private Set<String> getChangedPropertyNames(Map<String, Object> dataMap, Object revisionType) {
+		final Set<String> changedPropertyNames = new HashSet<>();
+		// we're only interested in changed properties on modification rows.
+		if ( revisionType == RevisionType.MOD ) {
+			final String modifiedFlagSuffix = getOptions().getModifiedFlagSuffix();
+			for ( Map.Entry<String, Object> entry : dataMap.entrySet() ) {
+				final String key = entry.getKey();
+				if  ( key.endsWith( modifiedFlagSuffix ) ) {
+					if ( entry.getValue() != null && Boolean.parseBoolean( entry.getValue().toString() ) ) {
+						changedPropertyNames.add( key.substring( 0, key.length() - modifiedFlagSuffix.length() ) );
+					}
+				}
+			}
+		}
+		return changedPropertyNames;
+	}
+
+	private List getQueryResults() {
+		List<?> queryResults = buildAndExecuteQuery();
+		if ( hasProjection() ) {
+			return queryResults;
+		}
+		else if ( selectRevisionInfoOnly ) {
+			return queryResults.stream().map( e -> ( (Object[]) e )[1] ).collect( Collectors.toList() );
+		}
+		else {
+			List entities = new ArrayList();
+			if ( selectEntitiesOnly ) {
+				for ( Object row : queryResults ) {
+					final Map versionsEntity = (Map) row;
+					entities.add( getQueryResultRowValue( versionsEntity, null, getEntityName() ) );
+				}
+			}
+			else {
+				for ( Object row : queryResults ) {
+					final Object[] rowArray = (Object[]) row;
+					final Map versionsEntity = (Map) rowArray[ 0 ];
+					final Object revisionData = rowArray[ 1 ];
+					entities.add( getQueryResultRowValue( versionsEntity, revisionData, getEntityName() ) );
+				}
+			}
+			return entities;
+		}
+	}
+
+	private Object getQueryResultRowValue(Map versionsData, Object revisionData, String entityName) {
+		final Number revision = getRevisionNumber( versionsData );
+
+		final Object entity = getEntityInstantiator().createInstanceFromVersionsEntity( entityName, versionsData, revision );
+		if ( selectEntitiesOnly ) {
+			return entity;
+		}
+
+		Object revisionType = versionsData.get( getOptions().getRevisionTypePropName() );
+		if ( !includePropertyChanges ) {
+			return new Object[] { entity, revisionData, revisionType };
+		}
+
+		if ( !isEntityUsingModifiedFlags() ) {
+			throw new AuditException(
+					String.format(
+							Locale.ROOT,
+							"The specified entity [%s] does not support or use modified flags.",
+							getEntityConfiguration().getEntityClassName()
+					)
+			);
+		}
+
+		final Set<String> changedPropertyNames =  getChangedPropertyNames( versionsData, revisionType );
+		return new Object[] { entity, revisionData, revisionType, changedPropertyNames };
+	}
 }

@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
-import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.query.Query;
 
 /**
@@ -19,6 +18,7 @@ import org.hibernate.query.Query;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Chris Cranford
+ *
  * @see EntitiesAtRevisionQuery
  */
 public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
@@ -50,25 +50,13 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
          * (all specified conditions, transformed, on the "e" entity) AND
          * e.revision = :revision
          */
-		String revisionPropertyPath = versionsReader.getAuditService().getOptions().getRevisionNumberPath();
-		qb.getRootParameters().addWhereWithParam( revisionPropertyPath, "=", revision );
+		getQueryBuilder().getRootParameters().addWhereWithParam( getOptions().getRevisionNumberPath(), "=", revision );
 
 		// all specified conditions
-		for ( AuditCriterion criterion : criterions ) {
-			criterion.addToQuery(
-					versionsReader,
-					aliasToEntityNameMap,
-					QueryConstants.REFERENCED_ENTITY_ALIAS,
-					qb,
-					qb.getRootParameters()
-			);
-		}
-
-		for (final AuditAssociationQueryImpl<?> associationQuery : associationQueries) {
-			associationQuery.addCriterionsToQuery( versionsReader );
-		}
+		applyCriterions( QueryConstants.REFERENCED_ENTITY_ALIAS );
 
 		Query query = buildQuery();
+
 		List queryResult = query.list();
 		return applyProjections( queryResult, revision );
 	}

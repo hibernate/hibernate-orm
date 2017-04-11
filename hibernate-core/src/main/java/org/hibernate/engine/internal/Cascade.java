@@ -115,15 +115,6 @@ public final class Cascade {
 						}
 						else {
 							// Nothing to do, so just skip cascading to this lazy (non-collection) attribute.
-							if ( action.requiresNoCascadeChecking() ) {
-								action.noCascade(
-										eventSource,
-										parent,
-										persister,
-										types[ i ],
-										i
-								);
-							}
 							continue;
 						}
 					}

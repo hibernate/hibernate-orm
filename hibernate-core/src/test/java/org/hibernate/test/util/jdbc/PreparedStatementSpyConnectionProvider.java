@@ -39,10 +39,22 @@ public class PreparedStatementSpyConnectionProvider
 	private final List<String> executeUpdateStatements = new ArrayList<>();
 
 	private final List<Connection> acquiredConnections = new ArrayList<>( );
+	private final List<Connection> releasedConnections = new ArrayList<>( );
+
+	public PreparedStatementSpyConnectionProvider() {
+	}
+
+	public PreparedStatementSpyConnectionProvider(ConnectionProvider connectionProvider) {
+		super( connectionProvider );
+	}
+
+	protected Connection actualConnection() throws SQLException {
+		return super.getConnection();
+	}
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		Connection connection = spy( super.getConnection() );
+		Connection connection = spy( actualConnection() );
 		acquiredConnections.add( connection );
 		return connection;
 	}
@@ -50,7 +62,14 @@ public class PreparedStatementSpyConnectionProvider
 	@Override
 	public void closeConnection(Connection conn) throws SQLException {
 		acquiredConnections.remove( conn );
+		releasedConnections.add( conn );
 		super.closeConnection( conn );
+	}
+
+	@Override
+	public void stop() {
+		clear();
+		super.stop();
 	}
 
 	private Connection spy(Connection connection) {
@@ -94,6 +113,7 @@ public class PreparedStatementSpyConnectionProvider
 	 */
 	public void clear() {
 		acquiredConnections.clear();
+		releasedConnections.clear();
 		preparedStatementMap.keySet().forEach( Mockito::reset );
 		preparedStatementMap.clear();
 	}
@@ -166,5 +186,13 @@ public class PreparedStatementSpyConnectionProvider
 	 */
 	public List<Connection> getAcquiredConnections() {
 		return acquiredConnections;
+	}
+
+	/**
+	 * Get a list of current released Connections.
+	 * @return list of current released Connections
+	 */
+	public List<Connection> getReleasedConnections() {
+		return releasedConnections;
 	}
 }

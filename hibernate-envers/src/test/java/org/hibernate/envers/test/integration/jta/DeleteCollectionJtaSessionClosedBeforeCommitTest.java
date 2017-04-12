@@ -14,6 +14,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -108,6 +110,7 @@ public class DeleteCollectionJtaSessionClosedBeforeCommitTest extends BaseEnvers
 		private String name;
 
 		@OneToMany
+		@JoinTable(name = "LINK_TABLE", joinColumns = @JoinColumn(name = "ENTITY_ID"))
 		private List<OtherTestEntity> others = new ArrayList<>();
 
 		public TestEntity() {

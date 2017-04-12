@@ -171,7 +171,9 @@ subprojects { subProject ->
 
 		if (db.equalsIgnoreCase("oracle")) {
 			dependencies {
-				testRuntime( libraries.oracle )
+				testRuntime( libraries.oracle ) {
+					exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
+				}
 			}
 		}
 		// 6.6 gave me some NPE problems from within checkstyle...

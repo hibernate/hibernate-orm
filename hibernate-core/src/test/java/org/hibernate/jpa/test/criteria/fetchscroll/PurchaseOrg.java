@@ -47,7 +47,7 @@ public class PurchaseOrg implements Serializable {
 	}
 	
 	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(name = "purchase_organization_facilities",
+	@JoinTable(name = "PURCHASE_FACILITY",
 		joinColumns = @JoinColumn(name = "PURCHASE_ORG_ID"),
 		inverseJoinColumns = @JoinColumn(name = "FACILITY_ID"))
 	public List<Facility> getFacilities() {	

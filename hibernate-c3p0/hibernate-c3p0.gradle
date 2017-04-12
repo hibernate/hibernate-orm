@@ -20,7 +20,9 @@ dependencies {
 
     if (db.equalsIgnoreCase("oracle")) {
         dependencies {
-            testRuntime( libraries.oracle )
+            testRuntime( libraries.oracle ) {
+                exclude group: 'com.oracle.jdbc', module: 'xmlparserv2'
+            }
         }
     }
 

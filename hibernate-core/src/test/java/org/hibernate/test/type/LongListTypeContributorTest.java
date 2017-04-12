@@ -86,7 +86,7 @@ public class LongListTypeContributorTest extends BaseEntityManagerFunctionalTest
 		@Column(length = 30)
 		private String name;
 
-		@Column(columnDefinition = "text")
+		@Column(columnDefinition = "VARCHAR(255)")
 		private LongList longList;
 
 		public SpecialItem() {

@@ -54,6 +54,14 @@ Note that for backwards compatibility, if a https://docs.jboss.org/hibernate/orm
 |`hibernate.connection.isolation` | `REPEATABLE_READ` or
 `Connection.TRANSACTION_REPEATABLE_READ` | Names the JDBC connection transaction isolation level.
 |`hibernate.connection.autocommit` | `true` or `false` (default value) | Names the JDBC connection autocommit mode.
+|`hibernate.connection.skip_autocommit_check` | `true` or `false` (default value) |
+
+When using an external non-JTA `DataSource`, it might be that the underlying `DataSource` already disables the autocommit mode,
+so there is no need to check this `Connection` attribute upon starting a RESOURCE_LOCAL transaction.
+
+By setting it to `true`, the `Connection` acquisition can be delayed until the first SQL statement is needed to be executed.
+The connection acquisition delay allows you to reduce the database connection lease time, therefore allowing you to increase the transaction throughput.
+
 |`hibernate.connection.datasource` | |
 
 Either a `javax.sql.DataSource` instance or a JNDI name under which to locate the `DataSource`.

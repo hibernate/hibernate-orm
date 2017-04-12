@@ -15,6 +15,9 @@ import java.sql.SQLException;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.ResourceClosedException;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -43,6 +46,8 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	private transient Connection physicalConnection;
 	private boolean closed;
 
+	private boolean skipAutoCommitCheck;
+
 	public LogicalConnectionManagedImpl(
 			JdbcConnectionAccess jdbcConnectionAccess,
 			JdbcSessionContext jdbcSessionContext) {
@@ -70,6 +75,15 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		if ( connectionHandlingMode.getAcquisitionMode() == ConnectionAcquisitionMode.IMMEDIATELY ) {
 			acquireConnectionIfNeeded();
 		}
+
+		ConfigurationService configurationService = jdbcSessionContext.getServiceRegistry()
+			.getService( ConfigurationService.class );
+
+		this.skipAutoCommitCheck = configurationService.getSetting(
+			AvailableSettings.SKIP_AUTOCOMMIT_CHECK,
+			StandardConverters.BOOLEAN,
+		 	false
+		);
 	}
 
 	private PhysicalConnectionHandlingMode determineConnectionHandlingMode(
@@ -251,7 +265,8 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 	@Override
 	public void begin() {
-		initiallyAutoCommit = determineInitialAutoCommitMode( getConnectionForTransactionManagement() );
+		initiallyAutoCommit = !isSkipAutoCommitCheck() && determineInitialAutoCommitMode(
+				getConnectionForTransactionManagement() );
 		super.begin();
 	}
 
@@ -261,5 +276,10 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 		resetConnection( initiallyAutoCommit );
 		initiallyAutoCommit = false;
+	}
+
+	@Override
+	protected boolean isSkipAutoCommitCheck() {
+		return skipAutoCommitCheck;
 	}
 }

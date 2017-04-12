@@ -3,6 +3,7 @@ package org.hibernate.test.util;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.function.Supplier;
 
 /**
@@ -63,6 +64,22 @@ public class ReflectionUtil {
 	}
 
 	/**
+	 * Set target Object field to a certain value
+	 * @param target Object whose field is being set
+	 * @param fieldName Object field naem to set
+	 * @param value the new value for the given field
+	 */
+	public static void setField(Object target, String fieldName, Object value) {
+		try {
+			Field field = getField(target.getClass(), fieldName);
+			field.set( target, value );
+		}
+		catch ( IllegalAccessException e ) {
+			throw new IllegalArgumentException("Field " + fieldName + " could not be set",  e );
+		}
+	}
+
+	/**
 	 * New target Object instance using the given arguments
 	 * @param constructorSupplier constructor supplier
 	 * @param args Constructor arguments
@@ -80,18 +97,63 @@ public class ReflectionUtil {
 	}
 
 	/**
-	 * Set target Object field to a certain value
-	 * @param target Object whose field is being set
-	 * @param fieldName Object field naem to set
-	 * @param value the new value for the given field
+	 * New target Object instance using the given Class name
+	 * @param className class name
+	 * @return new Object instance
 	 */
-	public static void setField(Object target, String fieldName, Object value) {
+	public static <T> T newInstance(String className) {
 		try {
-			Field field = getField(target.getClass(), fieldName);
-			field.set( target, value );
+			return (T) Class.forName( className ).newInstance();
 		}
-		catch ( IllegalAccessException e ) {
-			throw new IllegalArgumentException("Field " + fieldName + " could not be set",  e );
+		catch ( ClassNotFoundException | IllegalAccessException | InstantiationException e ) {
+			throw new IllegalArgumentException("Constructor could not be called",  e );
+		}
+	}
+
+	/**
+	 * Get setter method
+	 *
+	 * @param target        target object
+	 * @param property      property
+	 * @param parameterType setter parameter type
+	 * @return setter method
+	 */
+	public static Method getSetter(Object target, String property, Class<?> parameterType) {
+		String setterMethodName = "set" + property.substring(0, 1).toUpperCase() + property.substring(1);
+		Method setter = getMethod(target, setterMethodName, parameterType);
+		setter.setAccessible(true);
+		return setter;
+	}
+
+	/**
+	 * Get target method
+	 *
+	 * @param target         target object
+	 * @param methodName     method name
+	 * @param parameterTypes method parameter types
+	 * @return return value
+	 */
+	public static Method getMethod(Object target, String methodName, Class... parameterTypes) {
+		try {
+			return target.getClass().getMethod(methodName, parameterTypes);
+		} catch (NoSuchMethodException e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
+
+	/**
+	 * Invoke setter method with the given parameter
+	 *
+	 * @param target    target object
+	 * @param property  property
+	 * @param parameter setter parameter
+	 */
+	public static void setProperty(Object target, String property, Object parameter) {
+		Method setter = getSetter( target, property, parameter.getClass());
+		try {
+			setter.invoke(target, parameter);
+		} catch (IllegalAccessException | InvocationTargetException e) {
+			throw new IllegalArgumentException(e);
 		}
 	}
 }

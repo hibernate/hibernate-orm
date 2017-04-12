@@ -343,6 +343,14 @@ public interface AvailableSettings {
 	String DATASOURCE ="hibernate.connection.datasource";
 
 	/**
+	 * Instructs Hibernate to skip the autocommit check for local transactions since
+	 * the underlying {@link javax.sql.DataSource} has already disabled autocommit.
+	 *
+	 * @since 5.2.10
+	 */
+	String SKIP_AUTOCOMMIT_CHECK ="hibernate.connection.skip_autocommit_check";
+
+	/**
 	 * Names a prefix used to define arbitrary JDBC connection properties.  These properties are passed along to
 	 * the {@literal JDBC} provider when creating a connection.
 	 */

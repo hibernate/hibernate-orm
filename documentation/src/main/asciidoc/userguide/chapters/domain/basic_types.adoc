@@ -1370,6 +1370,61 @@ include::{extrasdir}/basic/mapping-generated-CreationTimestamp-persist-example.s
 ----
 ====
 
+[[mapping-generated-UpdateTimestamp]]
+===== `@UpdateTimestamp` annotation
+
+The `@UpdateTimestamp` annotation instructs Hibernate to set the annotated entity attribute with the current timestamp value of the JVM
+when the entity is being persisted.
+
+The supported property types are:
+
+- `java.util.Date`
+- `java.util.Calendar`
+- `java.sql.Date`
+- `java.sql.Time`
+- `java.sql.Timestamp`
+
+[[mapping-generated-UpdateTimestamp-example]]
+.`@UpdateTimestamp` mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/UpdateTimestampTest.java[tags=mapping-generated-UpdateTimestamp-example]
+----
+====
+
+When the `Bid` entity is persisted, Hibernate is going to populate the underlying `updated_on` column with the current JVM timestamp value:
+
+[[mapping-generated-UpdateTimestamp-persist-example]]
+.`@UpdateTimestamp` persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/UpdateTimestampTest.java[tags=mapping-generated-UpdateTimestamp-persist-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-generated-UpdateTimestamp-persist-example.sql[]
+----
+====
+
+When updating the `Bid` entity, Hibernate is going to modify the `updated_on` column with the current JVM timestamp value:
+
+[[mapping-generated-UpdateTimestamp-update-example]]
+.`@UpdateTimestamp` update example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/generated/UpdateTimestampTest.java[tags=mapping-generated-UpdateTimestamp-update-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-generated-UpdateTimestamp-update-example.sql[]
+----
+====
+
 [[mapping-generated-ValueGenerationType]]
 ===== `@ValueGenerationType` meta-annotation
 

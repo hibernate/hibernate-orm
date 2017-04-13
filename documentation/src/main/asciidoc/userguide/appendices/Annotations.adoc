@@ -741,6 +741,8 @@ See the <<chapters/domain/entity.adoc#locking-optimistic-lock-type-dirty-example
 For reattachment of detached entities, the dynamic update is not possible without having the <<annotations-hibernate-selectbeforeupdate>> annotation as well.
 ====
 
+//TODO: Add example
+
 [[annotations-hibernate-entity]]
 ==== [line-through]#`@Entity`#
 
@@ -922,12 +924,16 @@ FALSE:: Eagerly load the association. This one is not needed since the JPA `Fetc
 NO_PROXY:: This option will fetch the association lazily while returning real entity object.
 PROXY:: This option will fetch the association lazily while returning a proxy instead.
 
+//TODO: Add example
+
 [[annotations-hibernate-listindexbase]]
 ==== `@ListIndexBase`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ListIndexBase.html[`@ListIndexBase`] annotation is used to specify the start value for a list index, as stored in the database.
 
 By default, `List` indexes are stored starting at zero. Generally used in conjunction with <<annotations-jpa-ordercolumn>>.
+
+//TODO: Add example
 
 [[annotations-hibernate-loader]]
 ==== `@Loader`
@@ -948,6 +954,8 @@ See the <<chapters/domain/basic_types.adoc#mapping-column-many-to-any, `@ManyToA
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MapKeyType.html[`@MapKeyType`] annotation is used to specify the map key type.
 
+//TODO: Add example
+
 [[annotations-hibernate-metavalue]]
 ==== `@MetaValue`
 
@@ -963,7 +971,18 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 [[annotations-hibernate-namednativequery]]
 ==== `@NamedNativeQuery`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQuery.html[`@NamedNativeQuery`] annotation extends the JPA <<annotations-jpa-namednativequery>> with Hibernate specific features.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQuery.html[`@NamedNativeQuery`] annotation extends the JPA <<annotations-jpa-namednativequery>> with Hibernate specific features, like:
+
+- flush mode for this particular query
+- if the query should be cached, and which cache region should be used
+- the selected entity `CacheModeType` strategy
+- the JDBC `Statement` fetch size
+- the JDBC `Statement` execution timeout
+- if the query is a `CallableStatement`, targeting a stored procedure or a database function
+- what SQL-level comment should be sent to the database
+- if the query is read-only, hence it does not store the resulted entities into the currently running Persistence Context
+
+//TODO: Add example
 
 [[annotations-hibernate-namedqueries]]
 ==== `@NamedQueries`
@@ -973,7 +992,18 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 [[annotations-hibernate-namedquery]]
 ==== `@NamedQuery`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation extends the JPA <<annotations-jpa-namedquery>> with Hibernate specific features.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation extends the JPA <<annotations-jpa-namedquery>> with Hibernate specific features, like:
+
+- flush mode for this particular query
+- if the query should be cached, and which cache region should be used
+- the selected entity `CacheModeType` strategy
+- the JDBC `Statement` fetch size
+- the JDBC `Statement` execution timeout
+- if the query is a `CallableStatement`, targeting a stored procedure or a database function
+- what SQL-level comment should be sent to the database
+- if the query is read-only, hence it does not store the resulted entities into the currently running Persistence Context
+
+//TODO: Add example
 
 [[annotations-hibernate-nationalized]]
 ==== `@Nationalized`
@@ -1019,10 +1049,14 @@ The two possible strategies are defined by the https://docs.jboss.org/hibernate/
 CASCADE:: Use the database FOREIGN KEY cascade capabilities.
 NO_ACTION:: Take no action.
 
+//TODO: Add example
+
 [[annotations-hibernate-optimisticlock]]
 ==== `@OptimisticLock`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLock.html[`@OptimisticLock`] annotation is used to specify if the current annotated attribute will trigger an entity version increment upon being modified.
+
+//TODO: Add example
 
 [[annotations-hibernate-optimisticlocking]]
 ==== `@OptimisticLocking`
@@ -1045,6 +1079,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 It differs from the JPA <<annotations-jpa-orderby>> annotation because the JPA annotation expects a JPQL order-by fragment, not an SQL directive.
 
+//TODO: Add example
+
 [[annotations-hibernate-paramdef]]
 ==== `@ParamDef`
 
@@ -1063,6 +1099,8 @@ like <<annotations-hibernate-collectiontype>>, <<annotations-hibernate-genericge
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Parent.html[`@Parent`] annotation is used to specify that the current annotated embeddable attribute references back the owning entity.
 
+//TODO: Add example
+
 [[annotations-hibernate-persister]]
 ==== `@Persister`
 
@@ -1071,6 +1109,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 For entities, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/entity/EntityPersister.html[`EntityPersister`] interface.
 
 For collections, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/collection/CollectionPersister.html[`CollectionPersister`] interface.
+
+//TODO: Add example
 
 [[annotations-hibernate-polymorphism]]
 ==== `@Polymorphism`
@@ -1082,10 +1122,14 @@ There are two possible `PolymorphismType` options:
 EXPLICIT:: The current annotated entity is retrieved only if explicitly asked.
 IMPLICIT:: The current annotated entity is retrieved if any of its super entity are retrieved. This is the default option.
 
+//TODO: Add example
+
 [[annotations-hibernate-proxy]]
 ==== `@Proxy`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`] annotation is used to specify a custom Proxy implementation for the current annotated entity.
+
+//TODO: Add example
 
 [[annotations-hibernate-rowid]]
 ==== `@RowId`
@@ -1094,6 +1138,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 For instance, Oracle defines the https://docs.oracle.com/cd/B19306_01/server.102/b14200/pseudocolumns008.htm[`ROWID` pseudocolumn] which provides the address of every table row.
 
 According to Oracle documentation, `ROWID` is the fastest way to access a single row from a table.
+
+//TODO: Add example
 
 [[annotations-hibernate-selectbeforeupdate]]
 ==== `@SelectBeforeUpdate`
@@ -1132,6 +1178,8 @@ The `SourceType` offers two options:
 DB:: Get the timestamp from the database.
 VM:: Get the timestamp from the current JVM.
 
+//TODO: Add example
+
 [[annotations-hibernate-sqldelete]]
 ==== `@SQLDelete`
 
@@ -1153,6 +1201,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The alias (e.g. `myAlias`) can then be used in the `@Filter` `condition` clause using the `{alias}` (e.g. `{myAlias}`) placeholder.
 
+//TODO: Add example
+
 [[annotations-hibernate-sqlinsert]]
 ==== `@SQLInsert`
 
@@ -1172,6 +1222,8 @@ See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Subselect.html[`@Subselect`] annotation is used to specify an immutable and read-only entity using a custom SQL `SELECT` statement.
 
+//TODO: Add example
+
 [[annotations-hibernate-synchronize]]
 ==== `@Synchronize`
 
@@ -1181,10 +1233,14 @@ With this information in place, Hibernate will properly trigger an entity flush 
 
 Therefore, the `@Synchronize` annotation prevents the derived entity from returning stale data when executing entity queries against the `@Subselect` entity.
 
+//TODO: Add example
+
 [[annotations-hibernate-table]]
 ==== `@Table`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Table.html[`@Table`] annotation is used to specify additional information to a JPA <<annotations-hibernate-table>> annotation, like custom `INSERT`, `UPDATE` or `DELETE` statements or a specific https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/FetchMode.html[`FetchMode`].
+
+//TODO: Add example
 
 [[annotations-hibernate-tables]]
 ==== `@Tables`
@@ -1196,6 +1252,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify an explicit target implementation when the current annotated association is using an interface type.
 
+//TODO: Add example
+
 [[annotations-hibernate-tuplizer]]
 ==== `@Tuplizer`
 
@@ -1204,6 +1262,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 For entities, the tupelizer must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/entity/EntityTuplizer.html[`EntityTuplizer`] interface.
 
 For embeddables, the tupelizer must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tuple/component/ComponentTuplizer.html[`ComponentTuplizer`] interface.
+
+//TODO: Add example
 
 [[annotations-hibernate-tuplizers]]
 ==== `@Tuplizers`
@@ -1222,6 +1282,8 @@ See the <<chapters/domain/basic_types.adoc#collections-comma-delimited-collectio
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TypeDef.html[`@TypeDef`] annotation is used to specify a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/Type.html[`@Type`] definition which can later be reused for multiple basic attribute mappings.
 
+//TODO: Add example
+
 [[annotations-hibernate-typedefs]]
 ==== `@TypeDefs`
 
@@ -1237,6 +1299,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 - `java.sql.Date`
 - `java.sql.Time`
 - `java.sql.Timestamp`
+
+See the <<chapters/domain/basic_types.adoc#mapping-generated-UpdateTimestamp,`@UpdateTimestamp` mapping>> section for more info.
 
 [[annotations-hibernate-valuegenerationtype]]
 ==== `@ValueGenerationType`
@@ -1256,3 +1320,5 @@ See the <<chapters/domain/basic_types.adoc#mapping-where-example,`@Where` mappin
 ==== `@WhereJoinTable`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/WhereJoinTable.html[`@WhereJoinTable`] annotation is used to specify a custom SQL `WHERE` clause used when fetching a join collection table.
+
+//TODO: Add example

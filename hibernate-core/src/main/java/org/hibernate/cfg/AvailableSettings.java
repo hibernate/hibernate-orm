@@ -324,9 +324,12 @@ public interface AvailableSettings {
 	String ISOLATION ="hibernate.connection.isolation";
 
 	/**
-	 * Names the {@literal JDBC} autocommit mode
+	 * Controls the autocommit mode of {@literal JDBC} Connections obtained
+	 * from a non-DataSource ConnectionProvider - assuming the ConnectionProvider
+	 * impl properly leverages this setting (the provided Hibernate impls all
+	 * do).
 	 */
-	String AUTOCOMMIT ="hibernate.connection.autocommit";
+	String AUTOCOMMIT = "hibernate.connection.autocommit";
 
 	/**
 	 * Maximum number of inactive connections for the built-in Hibernate connection pool.
@@ -343,12 +346,16 @@ public interface AvailableSettings {
 	String DATASOURCE ="hibernate.connection.datasource";
 
 	/**
-	 * Instructs Hibernate to skip the autocommit check for local transactions since
-	 * the underlying {@link javax.sql.DataSource} has already disabled autocommit.
+	 * Allows a user to tell Hibernate that the Connections we obtain from the configured
+	 * ConnectionProvider will already have auto-commit disabled when we acquire them from
+	 * the provider.  When we get connections already in auto-commit, this allows us to circumvent
+	 * some operations in the interest of performance.
+	 * <p/>
+	 * Default value is {@code false} - do not skip, aka call setAutocommit
 	 *
 	 * @since 5.2.10
 	 */
-	String SKIP_AUTOCOMMIT_CHECK ="hibernate.connection.skip_autocommit_check";
+	String CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT= "hibernate.connection.provider_disables_autocommit";
 
 	/**
 	 * Names a prefix used to define arbitrary JDBC connection properties.  These properties are passed along to

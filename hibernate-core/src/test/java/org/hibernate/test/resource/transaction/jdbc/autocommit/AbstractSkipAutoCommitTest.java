@@ -15,13 +15,9 @@ import javax.persistence.Id;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.jdbc.PreparedStatementSpyConnectionProvider;
-import org.hibernate.test.util.ReflectionUtil;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -51,7 +47,7 @@ public abstract class AbstractSkipAutoCommitTest extends BaseEntityManagerFuncti
 		Map config = super.getConfig();
 
 		config.put( AvailableSettings.DATASOURCE, dataSource() );
-		config.put( AvailableSettings.SKIP_AUTOCOMMIT_CHECK, Boolean.TRUE );
+		config.put( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, Boolean.TRUE );
 		config.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 
 		return config;

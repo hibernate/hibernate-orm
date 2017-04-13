@@ -121,6 +121,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean scrollableResultSetsEnabled;
 	private final boolean commentsEnabled;
 	private final PhysicalConnectionHandlingMode physicalConnectionHandlingMode;
+	private final boolean connectionProviderDisablesAutoCommit;
 	private final boolean wrapResultSetsEnabled;
 	private final TimeZone jdbcTimeZone;
 
@@ -192,6 +193,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 
 		this.schemaAutoTooling = state.getSchemaAutoTooling();
 		this.physicalConnectionHandlingMode = state.getPhysicalConnectionHandlingMode();
+		this.connectionProviderDisablesAutoCommit = state.connectionProviderDisablesAutoCommit();
 		this.getGeneratedKeysEnabled = state.isGetGeneratedKeysEnabled();
 		this.jdbcBatchSize = state.getJdbcBatchSize();
 		this.jdbcBatchVersionedData = state.isJdbcBatchVersionedData();
@@ -488,6 +490,11 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	@Override
 	public ConnectionReleaseMode getConnectionReleaseMode() {
 		return physicalConnectionHandlingMode.getReleaseMode();
+	}
+
+	@Override
+	public boolean doesConnectionProviderDisableAutoCommit() {
+		return connectionProviderDisablesAutoCommit;
 	}
 
 	@Override

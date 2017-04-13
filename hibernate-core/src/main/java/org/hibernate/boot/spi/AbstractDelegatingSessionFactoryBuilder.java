@@ -349,6 +349,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends Abstract
 	}
 
 	@Override
+	public SessionFactoryBuilder applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
+		delegate.applyConnectionProviderDisablesAutoCommit( providerDisablesAutoCommit );
+		return getThis();
+	}
+
+	@Override
 	public T applySqlComments(boolean enabled) {
 		delegate.applySqlComments( enabled );
 		return getThis();

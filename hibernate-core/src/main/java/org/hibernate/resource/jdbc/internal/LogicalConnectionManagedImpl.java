@@ -46,7 +46,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	private transient Connection physicalConnection;
 	private boolean closed;
 
-	private boolean skipAutoCommitCheck;
+	private boolean providerDisablesAutoCommit;
 
 	public LogicalConnectionManagedImpl(
 			JdbcConnectionAccess jdbcConnectionAccess,
@@ -76,14 +76,16 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			acquireConnectionIfNeeded();
 		}
 
-		ConfigurationService configurationService = jdbcSessionContext.getServiceRegistry()
-			.getService( ConfigurationService.class );
-
-		this.skipAutoCommitCheck = configurationService.getSetting(
-			AvailableSettings.SKIP_AUTOCOMMIT_CHECK,
-			StandardConverters.BOOLEAN,
-		 	false
-		);
+		this.providerDisablesAutoCommit = jdbcSessionContext.doesConnectionProviderDisableAutoCommit();
+		if ( providerDisablesAutoCommit ) {
+			log.debug(
+					"`hibernate.connection.provider_disables_autocommit` was enabled.  This setting should only be " +
+							"enabled when you are certain that the Connections given to Hibernate by the " +
+							"ConnectionProvider have auto-commit disabled.  Enabling this setting when the " +
+							"Connections do not have auto-commit disabled will lead to Hibernate executing " +
+							"SQL operations outside of any JDBC/SQL transaction."
+			);
+		}
 	}
 
 	private PhysicalConnectionHandlingMode determineConnectionHandlingMode(
@@ -265,7 +267,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 	@Override
 	public void begin() {
-		initiallyAutoCommit = !isSkipAutoCommitCheck() && determineInitialAutoCommitMode(
+		initiallyAutoCommit = !doConnectionsFromProviderHaveAutoCommitDisabled() && determineInitialAutoCommitMode(
 				getConnectionForTransactionManagement() );
 		super.begin();
 	}
@@ -279,7 +281,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	}
 
 	@Override
-	protected boolean isSkipAutoCommitCheck() {
-		return skipAutoCommitCheck;
+	protected boolean doConnectionsFromProviderHaveAutoCommitDisabled() {
+		return providerDisablesAutoCommit;
 	}
 }

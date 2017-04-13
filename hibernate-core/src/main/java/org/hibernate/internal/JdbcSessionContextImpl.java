@@ -61,6 +61,11 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 	}
 
 	@Override
+	public boolean doesConnectionProviderDisableAutoCommit() {
+		return settings().doesConnectionProviderDisableAutoCommit();
+	}
+
+	@Override
 	public ConnectionReleaseMode getConnectionReleaseMode() {
 		return connectionHandlingMode.getReleaseMode();
 	}

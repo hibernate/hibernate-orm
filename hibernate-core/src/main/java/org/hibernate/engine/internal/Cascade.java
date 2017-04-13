@@ -26,6 +26,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -87,21 +88,20 @@ public final class Cascade {
 			final boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent );
 			final int componentPathStackDepth = 0;
 			for ( int i = 0; i < types.length; i++) {
-				final CascadeStyle style = cascadeStyles[i];
-				final String propertyName = propertyNames[i];
+				final CascadeStyle style = cascadeStyles[ i ];
+				final String propertyName = propertyNames[ i ];
 
-				if ( style.doCascade( action ) ) {
-					Object child;
-
+				Object child = null;
+				if ( style.doCascade( action ) || action.deleteOrphans() ) {
 					if ( hasUninitializedLazyProperties &&
 							!persister.getInstrumentationMetadata().isAttributeLoaded( parent, propertyName ) ) {
 						// parent is a bytecode enhanced entity.
 						// cascading to an uninitialized, lazy value.
-						if ( types[i].isCollectionType() ) {
+						if ( types[ i ].isCollectionType() ) {
 							// The collection does not need to be loaded from the DB.
 							// CollectionType#resolve will return an uninitialized PersistentCollection.
 							// The action will initialize the collection later, if necessary.
-							child = types[i].resolve( LazyPropertyInitializer.UNFETCHED_PROPERTY, eventSource, parent );
+							child = types[ i ].resolve( LazyPropertyInitializer.UNFETCHED_PROPERTY, eventSource, parent );
 							// TODO: it would be nice to be able to set the attribute in parent using
 							// persister.setPropertyValue( parent, i, child ).
 							// Unfortunately, that would cause the uninitialized collection to be
@@ -121,7 +121,9 @@ public final class Cascade {
 					else {
 						child = persister.getPropertyValue( parent, i );
 					}
+				}
 
+				if ( style.doCascade( action ) ) {
 					cascadeProperty(
 							action,
 							cascadePoint,
@@ -129,7 +131,7 @@ public final class Cascade {
 							componentPathStackDepth,
 							parent,
 							child,
-							types[i],
+							types[ i ],
 							style,
 							propertyName,
 							anything,
@@ -141,9 +143,22 @@ public final class Cascade {
 							eventSource,
 							parent,
 							persister,
-							types[i],
+							types[ i ],
 							i
 					);
+					if ( action.deleteOrphans() ) {
+						cascadeLogicalOneToOneOrphanRemoval(
+								action,
+								eventSource,
+								componentPathStackDepth,
+								parent,
+								child,
+								types[ i ],
+								style,
+								propertyName,
+								false
+						);
+					}
 				}
 			}
 
@@ -200,7 +215,30 @@ public final class Cascade {
 				);
 			}
 		}
-		
+
+		cascadeLogicalOneToOneOrphanRemoval(
+				action,
+				eventSource,
+				componentPathStackDepth,
+				parent,
+				child,
+				type,
+				style,
+				propertyName,
+				isCascadeDeleteEnabled );
+	}
+
+	private static void cascadeLogicalOneToOneOrphanRemoval(
+			final CascadingAction action,
+			final EventSource eventSource,
+			final int componentPathStackDepth,
+			final Object parent,
+			final Object child,
+			final Type type,
+			final CascadeStyle style,
+			final String propertyName,
+			final boolean isCascadeDeleteEnabled) throws HibernateException {
+
 		// potentially we need to handle orphan deletes for one-to-ones here...
 		if ( isLogicalOneToOne( type ) ) {
 			// We have a physical or logical one-to-one.  See if the attribute cascade settings and action-type require
@@ -210,7 +248,7 @@ public final class Cascade {
 				// because it is currently null.
 				final EntityEntry entry = eventSource.getPersistenceContext().getEntry( parent );
 				if ( entry != null && entry.getStatus() != Status.SAVING ) {
-					final Object loadedValue;
+					Object loadedValue;
 					if ( componentPathStackDepth == 0 ) {
 						// association defined on entity
 						loadedValue = entry.getLoadedValue( propertyName );
@@ -232,15 +270,21 @@ public final class Cascade {
 //							final String getPropertyPath = composePropertyPath( entityType.getPropertyName() );
 						loadedValue = null;
 					}
-					
+
 					// orphaned if the association was nulled (child == null) or receives a new value while the
 					// entity is managed (without first nulling and manually flushing).
 					if ( child == null || ( loadedValue != null && child != loadedValue ) ) {
-						final EntityEntry valueEntry = eventSource
-								.getPersistenceContext().getEntry( 
+						EntityEntry valueEntry = eventSource
+								.getPersistenceContext().getEntry(
 										loadedValue );
-						// Need to check this in case the context has
-						// already been flushed.  See HHH-7829.
+
+						if ( valueEntry == null && loadedValue instanceof HibernateProxy ) {
+							// un-proxy and re-associate for cascade operation
+							// useful for @OneToOne defined as FetchType.LAZY
+							loadedValue = eventSource.getPersistenceContext().unproxyAndReassociate( loadedValue );
+							valueEntry = eventSource.getPersistenceContext().getEntry( loadedValue );
+						}
+
 						if ( valueEntry != null ) {
 							final String entityName = valueEntry.getPersister().getEntityName();
 							if ( LOG.isTraceEnabled() ) {
@@ -248,10 +292,10 @@ public final class Cascade {
 								final String description = MessageHelper.infoString( entityName, id );
 								LOG.tracev( "Deleting orphaned entity instance: {0}", description );
 							}
-							
-							if (type.isAssociationType() && ((AssociationType)type).getForeignKeyDirection().equals(
-											ForeignKeyDirection.TO_PARENT
-							)) {
+
+							if ( type.isAssociationType() && ( (AssociationType) type ).getForeignKeyDirection().equals(
+									ForeignKeyDirection.TO_PARENT
+							) ) {
 								// If FK direction is to-parent, we must remove the orphan *beforeQuery* the queued update(s)
 								// occur.  Otherwise, replacing the association on a managed entity, without manually
 								// nulling and flushing, causes FK constraint violations.

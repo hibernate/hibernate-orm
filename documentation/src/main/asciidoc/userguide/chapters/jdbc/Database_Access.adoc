@@ -163,7 +163,8 @@ If for some reason it is not able to determine the proper one or you want to use
 |Dialect (short name) |Remarks
 |Cache71 |Support for the Caché database, version 2007.1
 |CUBRID |Support for the CUBRID database, version 8.3. May work with later versions.
-|DB2 |Support for the DB2 database
+|DB2 |Support for the DB2 database, version 8.2.
+|DB297 |Support for the DB2 database, version 9.7.
 |DB2390 |Support for DB2 Universal Database for OS/390, also known as DB2/390.
 |DB2400 |Support for DB2 Universal Database for iSeries, also known as DB2/400.
 |DerbyTenFive |Support for the Derby database, version 10.5

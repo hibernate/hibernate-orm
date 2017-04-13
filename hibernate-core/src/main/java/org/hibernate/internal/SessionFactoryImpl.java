@@ -320,11 +320,16 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				final Map<String, HibernateException> errors = checkNamedQueries();
 				if ( !errors.isEmpty() ) {
 					StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
-					String sep = "";
+					String separator = System.lineSeparator();
+
 					for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
 						LOG.namedQueryError( entry.getKey(), entry.getValue() );
-						failingQueries.append( sep ).append( entry.getKey() );
-						sep = ", ";
+
+						failingQueries
+							.append( separator)
+							.append( entry.getKey() )
+							.append( " failed because of: " )
+							.append( entry.getValue() );
 					}
 					throw new HibernateException( failingQueries.toString() );
 				}

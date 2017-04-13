@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.resource.transaction.jdbc;
+package org.hibernate.test.hikaricp;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -40,7 +40,7 @@ public class HikariCPSkipAutoCommitTest extends BaseCoreFunctionalTestCase {
 				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider
 		);
-		configuration.getProperties().put( AvailableSettings.SKIP_AUTOCOMMIT_CHECK, Boolean.TRUE );
+		configuration.getProperties().put( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, Boolean.TRUE );
 		configuration.getProperties().put( "hibernate.hikari.autoCommit", Boolean.FALSE.toString() );
 	}
 

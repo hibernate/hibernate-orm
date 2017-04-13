@@ -53,14 +53,34 @@ Note that for backwards compatibility, if a https://docs.jboss.org/hibernate/orm
 |`hibernate.connection.password` or `javax.persistence.jdbc.password` | | Names the JDBC connection password.
 |`hibernate.connection.isolation` | `REPEATABLE_READ` or
 `Connection.TRANSACTION_REPEATABLE_READ` | Names the JDBC connection transaction isolation level.
-|`hibernate.connection.autocommit` | `true` or `false` (default value) | Names the JDBC connection autocommit mode.
-|`hibernate.connection.skip_autocommit_check` | `true` or `false` (default value) |
+|`hibernate.connection.autocommit` | `true` or `false` (default value) | Names the initial autocommit mode for JDBC Connections returned from a connection pool created in certain ConnectionProvider impl.  See discussion of `hibernate.transaction.skip_setautocommit` as well.
 
-When using an external non-JTA `DataSource`, it might be that the underlying `DataSource` already disables the autocommit mode,
-so there is no need to check this `Connection` attribute upon starting a RESOURCE_LOCAL transaction.
+|`hibernate.connection.provider_disables_autocommit` | `true` or `false` (default value) |
 
-By setting it to `true`, the `Connection` acquisition can be delayed until the first SQL statement is needed to be executed.
-The connection acquisition delay allows you to reduce the database connection lease time, therefore allowing you to increase the transaction throughput.
+Indicates a promise by the user that Connections that Hibernate obtains from the configured ConnectionProvider
+have auto-commit disabled when they are obtained from that provider, whether that provider is backed by
+a DataSource or some other Connection pooling mechanism.  Generally this occurs when:
+
+* Hibernate is configured to get Connections from an underlying DataSource, and that DataSource is already configured to disable auto-commit on its managed Connections
+* Hibernate is configured to get Connections from a non-DataSource connection pool and that connection pool is already configured to disable auto-commit.  For the
+	Hibernate provided impls this will depend on the value of {@link #AUTOCOMMIT} setting.
+
+Hibernate uses this assurance as an opportunity to opt-out of certain operations that may have a performance
+ 	impact (although this impact is general negligible).  Specifically, when a transaction is started via the
+ 	Hibernate or JPA transaction APIs Hibernate will generally immediately acquire a Connection from the
+ 	provider and:
+
+* check whether the Connection is initially in auto-commit mode via a call to `Connection#getAutocommit` to know how to clean up the Connection when released.
+* start a JDBC transaction by calling `Connection#setAutocommit(false)`
+
+We can skip both of those steps if we know that the ConnectionProvider will always return Connections with auto-commit disabled.
+	That is the purpose of this setting.  By setting it to `true`, the `Connection` acquisition can be delayed until the first
+	SQL statement is needed to be executed.  The connection acquisition delay allows you to reduce the database connection lease
+	time, therefore allowing you to increase the transaction throughput.
+
+Please note however that it is inappropriate to set this value to `true` when the Connections Hibernate gets
+	from the provider do not in fact have auto-commit disabled - doing so will lead to Hibernate executing SQL operations
+	outside of any JDBC/SQL transaction.
 
 |`hibernate.connection.datasource` | |
 
@@ -528,6 +548,7 @@ Examples of this include a JTA transaction timeout handled by a background reape
 The ability to handle this situation requires checking the Thread ID every time Session is called, so enabling this can certainly have a performance impact.
 
 |`hibernate.transaction.factory_class` | | This is a legacy setting that's been deprecated and you should use the `hibernate.transaction.jta.platform` instead.
+
 
 |===================================================================================================================================================================================================================================
 

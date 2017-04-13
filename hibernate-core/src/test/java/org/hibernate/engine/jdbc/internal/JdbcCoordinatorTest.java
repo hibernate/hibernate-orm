@@ -4,7 +4,6 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -12,7 +11,6 @@ import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -70,7 +68,7 @@ public class JdbcCoordinatorTest {
 		ConfigurationService configurationService = Mockito.mock( ConfigurationService.class );
 		when( serviceRegistry.getService( eq( ConfigurationService.class ) ) ).thenReturn(
 				configurationService );
-		when( configurationService.getSetting(eq( AvailableSettings.SKIP_AUTOCOMMIT_CHECK ), same( StandardConverters.BOOLEAN), eq( false )) )
+		when( configurationService.getSetting( eq( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT ), same( StandardConverters.BOOLEAN), eq( false )) )
 				.thenReturn( false );
 
 		SqlExceptionHelper sqlExceptionHelper = Mockito.mock( SqlExceptionHelper.class );

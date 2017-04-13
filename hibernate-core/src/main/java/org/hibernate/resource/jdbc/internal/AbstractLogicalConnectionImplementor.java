@@ -62,7 +62,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	@Override
 	public void begin() {
 		try {
-			if ( !isSkipAutoCommitCheck() ) {
+			if ( !doConnectionsFromProviderHaveAutoCommitDisabled() ) {
 				log.trace( "Preparing to begin transaction via JDBC Connection.setAutoCommit(false)" );
 				getConnectionForTransactionManagement().setAutoCommit( false );
 				log.trace( "Transaction begun via JDBC Connection.setAutoCommit(false)" );
@@ -139,7 +139,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 		return status;
 	}
 
-	protected boolean isSkipAutoCommitCheck() {
+	protected boolean doConnectionsFromProviderHaveAutoCommitDisabled() {
 		return false;
 	}
 }

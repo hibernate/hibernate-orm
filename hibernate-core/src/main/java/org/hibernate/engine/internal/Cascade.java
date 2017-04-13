@@ -90,11 +90,13 @@ public final class Cascade {
 			for ( int i = 0; i < types.length; i++) {
 				final CascadeStyle style = cascadeStyles[ i ];
 				final String propertyName = propertyNames[ i ];
+				final boolean isUninitializedProperty =
+						hasUninitializedLazyProperties &&
+						!persister.getInstrumentationMetadata().isAttributeLoaded( parent, propertyName );
 
-				Object child = null;
-				if ( style.doCascade( action ) || action.deleteOrphans() ) {
-					if ( hasUninitializedLazyProperties &&
-							!persister.getInstrumentationMetadata().isAttributeLoaded( parent, propertyName ) ) {
+				if ( style.doCascade( action ) ) {
+					final Object child;
+					if ( isUninitializedProperty  ) {
 						// parent is a bytecode enhanced entity.
 						// cascading to an uninitialized, lazy value.
 						if ( types[ i ].isCollectionType() ) {
@@ -121,9 +123,6 @@ public final class Cascade {
 					else {
 						child = persister.getPropertyValue( parent, i );
 					}
-				}
-
-				if ( style.doCascade( action ) ) {
 					cascadeProperty(
 							action,
 							cascadePoint,
@@ -138,21 +137,24 @@ public final class Cascade {
 							false
 					);
 				}
-				else if ( action.requiresNoCascadeChecking() ) {
-					action.noCascade(
-							eventSource,
-							parent,
-							persister,
-							types[ i ],
-							i
-					);
-					if ( action.deleteOrphans() ) {
+				else {
+					if ( action.requiresNoCascadeChecking() ) {
+						action.noCascade(
+								eventSource,
+								parent,
+								persister,
+								types[i],
+								i
+						);
+					}
+					// If the property is uninitialized, then there cannot be any orphans.
+					if ( action.deleteOrphans() && !isUninitializedProperty ) {
 						cascadeLogicalOneToOneOrphanRemoval(
 								action,
 								eventSource,
 								componentPathStackDepth,
 								parent,
-								child,
+								persister.getPropertyValue( parent, i ),
 								types[ i ],
 								style,
 								propertyName,

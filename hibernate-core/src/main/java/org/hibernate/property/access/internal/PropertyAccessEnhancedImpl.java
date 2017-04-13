@@ -6,13 +6,11 @@
  */
 package org.hibernate.property.access.internal;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.property.access.spi.EnhancedSetterImpl;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.property.access.spi.SetterFieldImpl;
+
+import java.lang.reflect.Field;
 
 /**
  * A PropertyAccess for byte code enhanced entities. Enhanced setter methods ( if available ) are used for
@@ -32,20 +30,6 @@ public class PropertyAccessEnhancedImpl extends PropertyAccessMixedImpl {
 
 	@Override
 	protected Setter fieldSetter(Class<?> containerJavaType, String propertyName, Field field) {
-		return resolveEnhancedSetterForField( containerJavaType, propertyName, field );
+		return new EnhancedSetterImpl( containerJavaType, propertyName, field );
 	}
-
-	private static Setter resolveEnhancedSetterForField(Class<?> containerClass, String propertyName, Field field) {
-		try {
-			String enhancedSetterName = EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + propertyName;
-			Method enhancedSetter = containerClass.getDeclaredMethod( enhancedSetterName, field.getType() );
-			enhancedSetter.setAccessible( true );
-			return new EnhancedSetterImpl( containerClass, propertyName, enhancedSetter );
-		}
-		catch (NoSuchMethodException e) {
-			// enhancedSetter = null --- field not enhanced: fallback to reflection using the field
-			return new SetterFieldImpl( containerClass, propertyName, field );
-		}
-	}
-
 }

@@ -22,7 +22,7 @@ import org.hibernate.dialect.MariaDBDialect;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
 import org.mockito.ArgumentCaptor;

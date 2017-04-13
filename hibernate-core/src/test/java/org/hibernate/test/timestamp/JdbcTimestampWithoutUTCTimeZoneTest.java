@@ -20,7 +20,7 @@ import org.hibernate.dialect.PostgreSQL82Dialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.jdbc.TimeZoneConnectionProvider;
+import org.hibernate.test.util.jdbc.TimeZoneConnectionProvider;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;

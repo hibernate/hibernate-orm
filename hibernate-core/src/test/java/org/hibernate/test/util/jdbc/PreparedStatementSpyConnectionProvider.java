@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.testing.jdbc;
+package org.hibernate.test.util.jdbc;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,12 +18,11 @@ import java.util.stream.Collectors;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
+import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
+
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.internal.util.MockUtil;
-
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doAnswer;
 
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider that would be used by default taken the current configuration properties, and it

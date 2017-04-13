@@ -4,11 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.testing.jdbc;
+package org.hibernate.test.util.jdbc;
 
 import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+
+import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
 
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider that would be used by default taken the current configuration properties, and it

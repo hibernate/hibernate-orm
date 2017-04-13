@@ -7,7 +7,7 @@
 package org.hibernate.test.insertordering;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;

@@ -44,6 +44,7 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.internal.ConfigurationServiceImpl;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
@@ -407,6 +408,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
+		this.options.connectionProviderDisablesAutoCommit = providerDisablesAutoCommit;
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder applySqlComments(boolean enabled) {
 		this.options.commentsEnabled = enabled;
 		return this;
@@ -553,6 +560,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean scrollableResultSetsEnabled;
 		private boolean commentsEnabled;
 		private PhysicalConnectionHandlingMode connectionHandlingMode;
+		private boolean connectionProviderDisablesAutoCommit;
 		private boolean wrapResultSetsEnabled;
 		private TimeZone jdbcTimeZone;
 		private boolean queryParametersValidationEnabled;
@@ -725,6 +733,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			this.jdbcFetchSize = ConfigurationHelper.getInteger( STATEMENT_FETCH_SIZE, configurationSettings );
 
 			this.connectionHandlingMode = interpretConnectionHandlingMode( configurationSettings, serviceRegistry );
+			this.connectionProviderDisablesAutoCommit = ConfigurationHelper.getBoolean(
+					AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT,
+					configurationSettings,
+					false
+			);
 
 			this.commentsEnabled = ConfigurationHelper.getBoolean( USE_SQL_COMMENTS, configurationSettings );
 
@@ -1155,6 +1168,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			return connectionHandlingMode;
 		}
 
+		public boolean connectionProviderDisablesAutoCommit() {
+			return connectionProviderDisablesAutoCommit;
+		}
+
 		@Override
 		public ConnectionReleaseMode getConnectionReleaseMode() {
 			return getPhysicalConnectionHandlingMode().getReleaseMode();
@@ -1476,6 +1493,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
 		return options.getPhysicalConnectionHandlingMode();
+	}
+
+	@Override
+	public boolean connectionProviderDisablesAutoCommit() {
+		return options.connectionProviderDisablesAutoCommit();
 	}
 
 	@Override

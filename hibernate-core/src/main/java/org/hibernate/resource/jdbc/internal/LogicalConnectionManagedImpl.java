@@ -15,6 +15,9 @@ import java.sql.SQLException;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.ResourceClosedException;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -43,6 +46,8 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	private transient Connection physicalConnection;
 	private boolean closed;
 
+	private boolean providerDisablesAutoCommit;
+
 	public LogicalConnectionManagedImpl(
 			JdbcConnectionAccess jdbcConnectionAccess,
 			JdbcSessionContext jdbcSessionContext) {
@@ -69,6 +74,17 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 		if ( connectionHandlingMode.getAcquisitionMode() == ConnectionAcquisitionMode.IMMEDIATELY ) {
 			acquireConnectionIfNeeded();
+		}
+
+		this.providerDisablesAutoCommit = jdbcSessionContext.doesConnectionProviderDisableAutoCommit();
+		if ( providerDisablesAutoCommit ) {
+			log.debug(
+					"`hibernate.connection.provider_disables_autocommit` was enabled.  This setting should only be " +
+							"enabled when you are certain that the Connections given to Hibernate by the " +
+							"ConnectionProvider have auto-commit disabled.  Enabling this setting when the " +
+							"Connections do not have auto-commit disabled will lead to Hibernate executing " +
+							"SQL operations outside of any JDBC/SQL transaction."
+			);
 		}
 	}
 
@@ -251,7 +267,8 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 	@Override
 	public void begin() {
-		initiallyAutoCommit = determineInitialAutoCommitMode( getConnectionForTransactionManagement() );
+		initiallyAutoCommit = !doConnectionsFromProviderHaveAutoCommitDisabled() && determineInitialAutoCommitMode(
+				getConnectionForTransactionManagement() );
 		super.begin();
 	}
 
@@ -261,5 +278,10 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 		resetConnection( initiallyAutoCommit );
 		initiallyAutoCommit = false;
+	}
+
+	@Override
+	protected boolean doConnectionsFromProviderHaveAutoCommitDisabled() {
+		return providerDisablesAutoCommit;
 	}
 }

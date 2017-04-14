@@ -181,6 +181,10 @@ public interface SessionFactoryOptions {
 
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
+	default boolean doesConnectionProviderDisableAutoCommit() {
+		return false;
+	}
+
 	/**
 	 * @deprecated Use {@link #getPhysicalConnectionHandlingMode()} instead
 	 */

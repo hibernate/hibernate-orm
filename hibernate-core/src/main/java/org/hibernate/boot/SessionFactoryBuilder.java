@@ -664,6 +664,13 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
 
 	/**
+	 * @see org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT
+	 */
+	default SessionFactoryBuilder applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
+		return this;
+	}
+
+	/**
 	 * Should Hibernate apply comments to SQL it generates?
 	 *
 	 * @param enabled {@code true} indicates comments should be applied; {@code false} indicates not.

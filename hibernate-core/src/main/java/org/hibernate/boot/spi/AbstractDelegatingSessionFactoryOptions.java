@@ -320,6 +320,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean doesConnectionProviderDisableAutoCommit() {
+		return delegate.doesConnectionProviderDisableAutoCommit();
+	}
+
+	@Override
 	@SuppressWarnings("deprecation")
 	public ConnectionReleaseMode getConnectionReleaseMode() {
 		return delegate.getConnectionReleaseMode();

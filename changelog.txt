@@ -3,6 +3,49 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.2.10.Final (April 14, 2017)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/28100
+
+** Bug
+    * [HHH-3628] - Hilo optimizer problem in case of multiple threads accessing the sequence table
+    * [HHH-8001] - Apply query timeouts to Oracle follow-on locking
+    * [HHH-9663] - Orphan removal does not work for OneToOne relations
+    * [HHH-10062] - ScrollableResults with join fetch reuses proxy rather than loading actual object.
+    * [HHH-10728] - NullPointerException when using CriteriaBuilder.selectCase with CriteriaBuilder.equal
+    * [HHH-11459] - Bytecode-enhanced Entity cannot be merged or refreshed
+    * [HHH-11557] - DB2 gets confused with numerical parameters in nullif function DB2Dialect
+    * [HHH-11575] - Multiple revisions are created during a single transaction with FlushMode COMMIT
+    * [HHH-11576] - Unloaded collections get deleted when entity is bytecode enhanced
+    * [HHH-11579] - Disable Query parameter validation when a Session is unwrapped from an EntityManager
+    * [HHH-11580] - EnversPreCollectionRemoveEventListener fails because EntityManager is closed when using JPA + JTA + Envers
+    * [HHH-11582] - Hibernate-Envers has incoherent behavior for modified flag when create new Entity
+    * [HHH-11591] - Nullable check should not be skipped for OneToOne annotated with @NotFound(action = NotFoundAction.IGNORE)
+    * [HHH-11592] - The Field org.hibernate.jpa.AvailableSettings.JDBC_PASSWORD is initialized with org.hibernate.cfg.AvailableSettings.JPA_JDBC_USER
+    * [HHH-11596] - @OneToOne association with @JoinTable ignores optional attribute
+    * [HHH-11601] - Fix tests failing on Oracle
+    * [HHH-11602] - Session close counter statistic not updated when using Hibernate in JPA mode
+    * [HHH-11609] - Cascade @OneToOne persist with enabled order_inserts generates statements in a wrong order
+    * [HHH-11612] - SINGLE_TABLE associated entity query missing restriction of DiscriminatorColumn - reverting HHH-11375
+    * [HHH-11616] - Refactor org.hibernate.jpa.test.lock.LockTest
+    * [HHH-11617] - Statement leak in case of "SQLGrammarException: could not extract ResultSet"
+    * [HHH-11625] - Namespace uses physicalNamingStrategy.toPhysicalCatalogName() for schema name.
+
+** New Feature
+    * [HHH-10654] - LockOptions.SKIP_LOCKED semantics implementation on MSSQL
+    * [HHH-10850] - SQLServerDialect doesRepeatableReadCauseReadersToBlockWriters impelmentation
+
+** Improvement
+    * [HHH-10831] - Hibernate method to un-proxy a javassist proxy
+    * [HHH-11409] - Bind registered collection types using their type handler
+    * [HHH-11499] - Add a new DB2 dialect that uses "cross join" for cross joins instead of ","
+    * [HHH-11542] - Allow the auto-commit resolution to be configurable for RESOURCE_LOCAL transactions
+    * [HHH-11569] - Return only distinct elements when query is hinted with EntityGraph
+    * [HHH-11584] - Made parameter names of Restrictions#between more readable
+    * [HHH-11585] - Batch ordering fails for bidirectional one-to-one associations
+    * [HHH-11593] - Fix test issues in SQL Server
+    * [HHH-11598] - Use the default catalog when scanning the tables for hbm2ddl schema migration
+
 
 Changes in 5.2.9.Final (March 16, 2017)
 ------------------------------------------------------------------------------------------------------------------------

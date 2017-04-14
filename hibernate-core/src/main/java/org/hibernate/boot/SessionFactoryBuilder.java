@@ -666,7 +666,9 @@ public interface SessionFactoryBuilder {
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT
 	 */
-	SessionFactoryBuilder applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit);
+	default SessionFactoryBuilder applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
+		return this;
+	}
 
 	/**
 	 * Should Hibernate apply comments to SQL it generates?

@@ -30,6 +30,7 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -52,6 +53,7 @@ import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.BasicTypeParameters;
+import org.hibernate.type.spi.BasicTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
@@ -570,9 +572,16 @@ public class SimpleValueBinder<T> {
 			// Name could refer to:
 			//		1) a registered TypeDef
 			//		2) basic type "resolution key"
-
-			// todo (6.0) : implement
-			throw new NotYetImplementedException(  );
+			//
+			final TypeDefinition typeDefinition = buildingContext.resolveTypeDefinition( name );
+			if ( typeDefinition != null ) {
+				return typeDefinition.resolveTypeResolver( parameters ).resolveBasicType();
+			}
+			else {
+				return buildingContext.getBootstrapContext().getTypeConfiguration()
+						.getBasicTypeRegistry()
+						.getBasicTypeForCast( name );
+			}
 		}
 	}
 

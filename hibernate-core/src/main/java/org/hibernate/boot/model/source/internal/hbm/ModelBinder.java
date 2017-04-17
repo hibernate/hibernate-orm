@@ -1474,10 +1474,7 @@ public class ModelBinder {
 		Map typeParameters = new HashMap();
 		if ( typeName != null ) {
 			// see if there is a corresponding type-def
-			final TypeDefinition typeDef = mappingDocument.getMetadataCollector()
-					.getBootstrapContext()
-					.getBasicTypeProducerRegistry()
-					.getTypeDefinition( typeName );
+			final TypeDefinition typeDef = mappingDocument.resolveTypeDefinition( typeName );
 			if ( typeDef != null ) {
 				typeName = typeDef.getTypeImplementorClass().getName();
 				if ( typeDef.getParameters() != null ) {

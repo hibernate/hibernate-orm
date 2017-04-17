@@ -10,7 +10,9 @@ import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -35,6 +37,7 @@ public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T
 	private final BasicTypeRegistry.Key registryKey;
 	private final JdbcLiteralFormatter jdbcLiteralFormatter;
 	private VersionSupport versionSupport;
+	private Map<String, String> parameters;
 
 	@SuppressWarnings("unchecked")
 	public BasicTypeImpl(BasicJavaDescriptor javaDescriptor, ColumnMapping columnMapping) {
@@ -66,6 +69,7 @@ public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T
 		this.registryKey = BasicTypeRegistry.Key.from( javaDescriptor, columnMapping.getSqlTypeDescriptor() );
 		this.jdbcLiteralFormatter = columnMapping.getSqlTypeDescriptor().getJdbcLiteralFormatter( getJavaTypeDescriptor() );
 		this.versionSupport = javaDescriptor.getVersionSupport();
+		this.parameters = Collections.emptyMap();
 	}
 
 	public BasicTypeImpl setVersionSupport(VersionSupport versionSupport){
@@ -210,4 +214,8 @@ public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T
 		return new int[] { getColumnMapping().getSqlTypeDescriptor().getSqlType() };
 	}
 
+	@Override
+	public void setParameters(Map<String, String> parameters) {
+		this.parameters = parameters;
+	}
 }

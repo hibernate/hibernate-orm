@@ -330,7 +330,7 @@ public abstract class CollectionBinder {
 		if ( typeAnnotation != null ) {
 			final String typeName = typeAnnotation.type();
 			// see if it names a type-def
-			final TypeDefinition typeDef = buildingContext.getMetadataCollector().getTypeDefinition( typeName );
+			final TypeDefinition typeDef = buildingContext.resolveTypeDefinition( typeName );
 			if ( typeDef != null ) {
 				result.explicitType = typeDef.getTypeImplementorClass().getName();
 				result.explicitTypeParameters.putAll( typeDef.getParameters() );
@@ -401,7 +401,7 @@ public abstract class CollectionBinder {
 
 		// set explicit type information
 		if ( explicitType != null ) {
-			final TypeDefinition typeDef = buildingContext.getMetadataCollector().getTypeDefinition( explicitType );
+			final TypeDefinition typeDef = buildingContext.resolveTypeDefinition( explicitType );
 			if ( typeDef == null ) {
 				collection.setTypeName( explicitType );
 				collection.setTypeParameters( explicitTypeParameters );

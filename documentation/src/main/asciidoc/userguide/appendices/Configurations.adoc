@@ -53,9 +53,10 @@ Note that for backwards compatibility, if a https://docs.jboss.org/hibernate/orm
 |`hibernate.connection.password` or `javax.persistence.jdbc.password` | | Names the JDBC connection password.
 |`hibernate.connection.isolation` | `REPEATABLE_READ` or
 `Connection.TRANSACTION_REPEATABLE_READ` | Names the JDBC connection transaction isolation level.
-|`hibernate.connection.autocommit` | `true` or `false` (default value) | Names the initial autocommit mode for JDBC Connections returned from a connection pool created in certain ConnectionProvider impl.  See discussion of `hibernate.transaction.skip_setautocommit` as well.
+|`hibernate.connection.autocommit` | `true` or `false` (default value) |
 
-|`hibernate.connection.provider_disables_autocommit` | `true` or `false` (default value) |
+Names the initial autocommit mode for JDBC Connections returned from a connection pool created in certain ConnectionProvider impl.  See discussion of `hibernate.connection.provider_disables_autocommit` as well.
+|`hibernate.connection.provider_disables_autocommit` | `true` or `false` (default value) a|
 
 Indicates a promise by the user that Connections that Hibernate obtains from the configured ConnectionProvider
 have auto-commit disabled when they are obtained from that provider, whether that provider is backed by
@@ -74,13 +75,16 @@ Hibernate uses this assurance as an opportunity to opt-out of certain operations
 * start a JDBC transaction by calling `Connection#setAutocommit(false)`
 
 We can skip both of those steps if we know that the ConnectionProvider will always return Connections with auto-commit disabled.
-	That is the purpose of this setting.  By setting it to `true`, the `Connection` acquisition can be delayed until the first
-	SQL statement is needed to be executed.  The connection acquisition delay allows you to reduce the database connection lease
-	time, therefore allowing you to increase the transaction throughput.
+That is the purpose of this setting.  By setting it to `true`, the `Connection` acquisition can be delayed until the first
+SQL statement is needed to be executed.  The connection acquisition delay allows you to reduce the database connection lease
+time, therefore allowing you to increase the transaction throughput.
 
-Please note however that it is inappropriate to set this value to `true` when the Connections Hibernate gets
-	from the provider do not in fact have auto-commit disabled - doing so will lead to Hibernate executing SQL operations
-	outside of any JDBC/SQL transaction.
+====
+It is *inappropriate* to set this value to `true` when the Connections Hibernate gets
+from the provider do not, in fact, have auto-commit disabled.
+
+Doing so will lead to Hibernate executing SQL operations outside of any JDBC/SQL transaction.
+====
 
 |`hibernate.connection.datasource` | |
 

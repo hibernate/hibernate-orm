@@ -97,7 +97,7 @@ public class HibernateUnproxyTest extends BaseEntityManagerFunctionalTestCase {
         }));
     }
 
-    @Entity
+    @Entity(name = "Parent")
     public static class Parent {
         @Id
         @GeneratedValue
@@ -135,7 +135,7 @@ public class HibernateUnproxyTest extends BaseEntityManagerFunctionalTestCase {
         }
     }
 
-    @Entity
+    @Entity(name = "Child")
     public static class Child {
         @Id
         @GeneratedValue

@@ -119,6 +119,6 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 	@Override
 	public void stop() {
-		hds.shutdown();
+		hds.close();
 	}
 }

@@ -75,7 +75,7 @@ public interface ScrollableResults extends AutoCloseable {
 	boolean first();
 
 	/**
-	 * Go to a location just beforeQuery first result,  This is the location of the cursor on a newly returned
+	 * Go to a location just before first result,  This is the location of the cursor on a newly returned
 	 * scrollable result.
 	 */
 	void beforeFirst();

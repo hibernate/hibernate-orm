@@ -38,7 +38,7 @@ public interface JdbcSessionOwner {
 	void afterTransactionBegin();
 
 	/**
-	 * A beforeQuery-completion callback to the owner.
+	 * A before-completion callback to the owner.
 	 */
 	void beforeTransactionCompletion();
 

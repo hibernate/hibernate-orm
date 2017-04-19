@@ -286,7 +286,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		final ExpandingEntityIdentifierDescription identifierDescription =
 				(ExpandingEntityIdentifierDescription) popFromStack();
 
-		// and then on the node beforeQuery it (which should be the entity that owns the identifier being described)
+		// and then on the node before it (which should be the entity that owns the identifier being described)
 		final ExpandingFetchSource entitySource = currentSource();
 		if ( ! EntityReference.class.isInstance( entitySource ) ) {
 			throw new WalkingException( "Unexpected state in FetchSource stack" );

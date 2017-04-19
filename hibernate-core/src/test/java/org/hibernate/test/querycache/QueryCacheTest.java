@@ -597,7 +597,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		interceptor.unblockOnLoad();
 
-		// the concurrent query was executed beforeQuery the data was amended so
+		// the concurrent query was executed before the data was amended so
 		// let's expect "Item1" to be returned as living in Washington
 		Item fetched = fetchedItem.get();
 		assertEquals("Item1", fetched.getName());

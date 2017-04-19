@@ -53,7 +53,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 		final Serializable requestedId = event.getRequestedId();
 
 		if ( requestedId != null ) {
-			//assign the requested id to the proxy, *beforeQuery*
+			//assign the requested id to the proxy, *before*
 			//reassociating the proxy
 			if ( object instanceof HibernateProxy ) {
 				( (HibernateProxy) object ).getHibernateLazyInitializer().setIdentifier( requestedId );

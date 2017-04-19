@@ -201,7 +201,7 @@ public class SelectStatementBuilder {
 
 		if ( isNotEmpty( whereClause ) || isNotEmpty( outerJoinsAfterWhere ) ) {
 			buf.append( " where " );
-			// the outerJoinsAfterWhere needs to come beforeQuery where clause to properly
+			// the outerJoinsAfterWhere needs to come before where clause to properly
 			// handle dynamic filters
 			if ( StringHelper.isNotEmpty( outerJoinsAfterWhere ) ) {
 				buf.append( outerJoinsAfterWhere );

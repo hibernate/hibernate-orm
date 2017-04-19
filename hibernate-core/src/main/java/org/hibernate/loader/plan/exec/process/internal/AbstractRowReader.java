@@ -188,7 +188,7 @@ public abstract class AbstractRowReader implements RowReader {
 	public void finishUp(ResultSetProcessingContextImpl context, List<AfterLoadAction> afterLoadActionList) {
 		final List<HydratedEntityRegistration> hydratedEntityRegistrations = context.getHydratedEntityRegistrationList();
 
-		// for arrays, we should end the collection load beforeQuery resolving the entities, since the
+		// for arrays, we should end the collection load before resolving the entities, since the
 		// actual array instances are not instantiated during loading
 		finishLoadingArrays( context );
 

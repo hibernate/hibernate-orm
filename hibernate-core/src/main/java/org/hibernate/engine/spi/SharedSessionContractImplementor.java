@@ -149,7 +149,7 @@ public interface SharedSessionContractImplementor
 	void markForRollbackOnly();
 
 	/**
-	 * System time beforeQuery the start of the transaction
+	 * System time before the start of the transaction
 	 */
 	long getTimestamp();
 

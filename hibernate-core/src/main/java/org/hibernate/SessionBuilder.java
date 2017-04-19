@@ -129,7 +129,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T flushMode(FlushMode flushMode);
 
 	/**
-	 * Should the session be automatically flushed during the "beforeQuery completion" phase of transaction handling.
+	 * Should the session be automatically flushed during the "before completion" phase of transaction handling.
 	 *
 	 * @param flushBeforeCompletion Should the session be automatically flushed
 	 *

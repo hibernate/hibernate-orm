@@ -165,7 +165,7 @@ public final class Nullability {
 		// check.  So the nullability check fails for transient entity elements with generated identifiers because
 		// the identifier is not yet generated/assigned (is null)
 		//
-		// The more correct fix would be to cascade saves of the many-to-any elements beforeQuery the Nullability checking
+		// The more correct fix would be to cascade saves of the many-to-any elements before the Nullability checking
 
 		if ( compositeType.isAnyType() ) {
 			return null;

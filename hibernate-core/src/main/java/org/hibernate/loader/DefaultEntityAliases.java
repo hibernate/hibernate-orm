@@ -14,7 +14,7 @@ import org.hibernate.persister.entity.Loadable;
 
 /**
  * EntityAliases which handles the logic of selecting user provided aliases (via return-property),
- * beforeQuery using the default aliases.
+ * before using the default aliases.
  *
  * @author max
  *

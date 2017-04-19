@@ -61,7 +61,7 @@ public class ManyToManyAssociationTestTask extends AbstractEnhancerTestTask {
 		user.setGroups( groups );
 
 		Assert.assertTrue( group.getUsers().size() == 1 );
-		// This happens (and is expected) because there was no snapshot taken beforeQuery remove
+		// This happens (and is expected) because there was no snapshot taken before remove
 		Assert.assertTrue( anotherGroup.getUsers().size() == 1 );
 	}
 

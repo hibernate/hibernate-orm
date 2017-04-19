@@ -250,9 +250,9 @@ public class ActionQueue {
 
 	private void addInsertAction(AbstractEntityInsertAction insert) {
 		if ( insert.isEarlyInsert() ) {
-			// For early inserts, must execute inserts beforeQuery finding non-nullable transient entities.
+			// For early inserts, must execute inserts before finding non-nullable transient entities.
 			// TODO: find out why this is necessary
-			LOG.tracev( "Executing inserts beforeQuery finding non-nullable transient entities for early insert: [{0}]", insert );
+			LOG.tracev( "Executing inserts before finding non-nullable transient entities for early insert: [{0}]", insert );
 			executeInserts();
 		}
 		NonNullableTransientDependencies nonNullableTransientDependencies = insert.findNonNullableTransientEntities();
@@ -274,7 +274,7 @@ public class ActionQueue {
 
 	private void addResolvedEntityInsertAction(AbstractEntityInsertAction insert) {
 		if ( insert.isEarlyInsert() ) {
-			LOG.trace( "Executing insertions beforeQuery resolved early-insert" );
+			LOG.trace( "Executing insertions before resolved early-insert" );
 			executeInserts();
 			LOG.debug( "Executing identity-insert immediately" );
 			execute( insert );
@@ -922,7 +922,7 @@ public class ActionQueue {
 	}
 
 	/**
-	 * Encapsulates behavior needed for beforeQuery transaction processing
+	 * Encapsulates behavior needed for before transaction processing
 	 */
 	private static class BeforeTransactionCompletionProcessQueue extends AbstractTransactionCompletionProcessQueue<BeforeTransactionCompletionProcess> {
 		private BeforeTransactionCompletionProcessQueue(SessionImplementor session) {

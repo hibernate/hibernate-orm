@@ -53,7 +53,7 @@ public class JoinedIterator<T> implements Iterator<T> {
 	}
 
 
-	// call this beforeQuery any Iterator method to make sure that the current Iterator
+	// call this before any Iterator method to make sure that the current Iterator
 	// is not exhausted
 	protected void updateCurrentIterator() {
 		if ( currentIterator == null ) {
@@ -64,7 +64,7 @@ public class JoinedIterator<T> implements Iterator<T> {
 				currentIterator = wrappedIterators[0];
 			}
 			// set last used iterator here, in case the user calls remove
-			// beforeQuery calling hasNext() or next() (although they shouldn't)
+			// before calling hasNext() or next() (although they shouldn't)
 			lastUsedIterator = currentIterator;
 		}
 

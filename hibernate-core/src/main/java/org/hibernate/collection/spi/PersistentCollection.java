@@ -92,7 +92,7 @@ public interface PersistentCollection {
 	Object getValue();
 
 	/**
-	 * Called just beforeQuery reading any rows from the JDBC result set
+	 * Called just before reading any rows from the JDBC result set
 	 */
 	void beginRead();
 
@@ -190,7 +190,7 @@ public interface PersistentCollection {
 	 *
 	 * @param entry The collection entry/element
 	 * @param i The assumed index
-	 * @param persister it was more elegant beforeQuery we added this...
+	 * @param persister it was more elegant before we added this...
 	 *
 	 * @return The index value
 	 */
@@ -217,7 +217,7 @@ public interface PersistentCollection {
 	Object getSnapshotElement(Object entry, int i);
 
 	/**
-	 * Called beforeQuery any elements are read into the collection,
+	 * Called before any elements are read into the collection,
 	 * allowing appropriate initializations to occur.
 	 *
 	 * @param persister The underlying collection persister.
@@ -415,7 +415,7 @@ public interface PersistentCollection {
 	void dirty();
 	
 	/**
-	 * Called beforeQuery inserting rows, to ensure that any surrogate keys
+	 * Called before inserting rows, to ensure that any surrogate keys
 	 * are fully generated
 	 *
 	 * @param persister The collection persister

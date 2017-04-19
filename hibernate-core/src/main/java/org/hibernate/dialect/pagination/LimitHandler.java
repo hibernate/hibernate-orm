@@ -45,7 +45,7 @@ public interface LimitHandler {
 	String processSql(String sql, RowSelection selection);
 
 	/**
-	 * Bind parameter values needed by the LIMIT clause beforeQuery original SELECT statement.
+	 * Bind parameter values needed by the LIMIT clause before original SELECT statement.
 	 *
      * @param selection the selection criteria for rows.
 	 * @param statement Statement to which to bind limit parameter values.

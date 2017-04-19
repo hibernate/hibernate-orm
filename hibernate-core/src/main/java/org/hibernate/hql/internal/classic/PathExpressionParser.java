@@ -344,7 +344,7 @@ public class PathExpressionParser implements Parser {
 		QueryableCollection collPersister = q.getCollectionPersister( collectionRole );
 
 		if ( !collPersister.hasIndex() ) {
-			throw new QueryException( "unindexed collection beforeQuery []: " + path );
+			throw new QueryException( "unindexed collection before []: " + path );
 		}
 
 		String[] indexCols = collPersister.getIndexColumnNames();

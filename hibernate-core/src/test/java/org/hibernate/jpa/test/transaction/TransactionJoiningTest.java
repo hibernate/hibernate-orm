@@ -72,7 +72,7 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 
 	@Test
 	public void testImplicitJoining() throws Exception {
-		// here the transaction is started beforeQuery the EM is opened...
+		// here the transaction is started before the EM is opened...
 
 		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
 

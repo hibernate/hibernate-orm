@@ -424,14 +424,14 @@ public final class QueryParameters {
 	/**
 	 * Should entities and proxies loaded by the Query be put in read-only mode? The
 	 * read-only/modifiable setting must be initialized via QueryParameters#setReadOnly(boolean)
-	 * beforeQuery calling this method.
+	 * before calling this method.
 	 *
 	 * @see QueryParameters#isReadOnlyInitialized()
 	 * @see QueryParameters#isReadOnly(SharedSessionContractImplementor)
 	 * @see QueryParameters#setReadOnly(boolean)
 	 *
 	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * query that existed in the session beforeQuery the query was executed.
+	 * query that existed in the session before the query was executed.
 	 *
 	 * @return true, entities and proxies loaded by the Query will be put in read-only mode
 	 *         false, entities and proxies loaded by the Query will be put in modifiable mode
@@ -451,7 +451,7 @@ public final class QueryParameters {
 	 * then the default read-only/modifiable setting for the persistence context is returned instead.
 	 * <p/>
 	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * query that existed in the session beforeQuery the query was executed.
+	 * query that existed in the session before the query was executed.
 	 *
 	 * @param session The originating session
 	 *
@@ -463,7 +463,7 @@ public final class QueryParameters {
 	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
 	 *
 	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * query that existed in the session beforeQuery the query was executed.
+	 * query that existed in the session before the query was executed.
 	 *
 	 */
 	public boolean isReadOnly(SharedSessionContractImplementor session) {
@@ -476,7 +476,7 @@ public final class QueryParameters {
 	 * Set the read-only/modifiable mode for entities and proxies loaded by the query.
 	 * <p/>
 	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * query that existed in the session beforeQuery the query was executed.
+	 * query that existed in the session before the query was executed.
 	 *
 	 * @param readOnly if {@code true}, entities and proxies loaded by the query will be put in read-only mode; if
 	 * {@code false}, entities and proxies loaded by the query will be put in modifiable mode

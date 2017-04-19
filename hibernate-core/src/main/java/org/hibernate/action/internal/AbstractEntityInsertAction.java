@@ -161,10 +161,10 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	}
 
 	/**
-	 * Handle sending notifications needed for natural-id beforeQuery saving
+	 * Handle sending notifications needed for natural-id before saving
 	 */
 	protected void handleNaturalIdPreSaveNotifications() {
-		// beforeQuery save, we need to add a local (transactional) natural id cross-reference
+		// before save, we need to add a local (transactional) natural id cross-reference
 		getSession().getPersistenceContext().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
 				getPersister(),
 				getId(),

@@ -1494,7 +1494,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	public void testCorrelatedSubselect1() throws Exception {
-		// The old translator generates the theta join beforeQuery the condition in the sub query.
+		// The old translator generates the theta join before the condition in the sub query.
 		// TODO: Decide if we want to bother generating the theta join in the same order (non simple).
 		assertTranslation( "from Animal a where exists (from a.offspring o where o.bodyWeight>10)" );
 	}

@@ -11,7 +11,7 @@ import org.hibernate.event.spi.PreDeleteEventListener;
 import org.hibernate.secure.spi.PermissibleAction;
 
 /**
- * Check security beforeQuery any deletion
+ * Check security before any deletion
  *
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  * @author Steve Ebersole

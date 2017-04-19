@@ -515,7 +515,7 @@ public interface PersistenceContext {
 	public int getCascadeLevel();
 	
 	/**
-	 * Called beforeQuery cascading
+	 * Called before cascading
 	 */
 	public int incrementCascadeLevel();
 
@@ -531,12 +531,12 @@ public interface PersistenceContext {
 	public boolean isFlushing();
 	
 	/**
-	 * Called beforeQuery and afterQuery the flushcycle
+	 * Called before and afterQuery the flushcycle
 	 */
 	public void setFlushing(boolean flushing);
 
 	/**
-	 * Call this beforeQuery begining a two-phase load
+	 * Call this before begining a two-phase load
 	 */
 	public void beforeLoad();
 

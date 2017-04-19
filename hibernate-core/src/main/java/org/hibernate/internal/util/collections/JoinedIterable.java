@@ -69,7 +69,7 @@ public class JoinedIterable<T> implements Iterable<T> {
 			lastUsedIterator.remove();
 		}
 
-		// call this beforeQuery any Iterator method to make sure that the current Iterator
+		// call this before any Iterator method to make sure that the current Iterator
 		// is not exhausted
 		@SuppressWarnings( {"unchecked"})
 		protected void updateCurrentIterator() {
@@ -82,7 +82,7 @@ public class JoinedIterable<T> implements Iterable<T> {
 					currentIterator = iterables.get( 0 ).iterator();
 				}
 				// set last used iterator here, in case the user calls remove
-				// beforeQuery calling hasNext() or next() (although they shouldn't)
+				// before calling hasNext() or next() (although they shouldn't)
 				lastUsedIterator = currentIterator;
 			}
 

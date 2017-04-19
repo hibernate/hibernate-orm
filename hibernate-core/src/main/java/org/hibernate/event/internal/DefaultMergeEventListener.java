@@ -197,7 +197,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final EventSource source = event.getSession();
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 
-		( (MergeContext) copyCache ).put( entity, entity, true );  //beforeQuery cascade!
+		( (MergeContext) copyCache ).put( entity, entity, true );  //before cascade!
 
 		cascadeOnMerge( source, persister, entity, copyCache );
 		copyValues( persister, entity, entity, source, copyCache );
@@ -222,12 +222,12 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			persister.setIdentifier( copyCache.get( entity ), id, source );
 		}
 		else {
-			( (MergeContext) copyCache ).put( entity, source.instantiate( persister, id ), true ); //beforeQuery cascade!
+			( (MergeContext) copyCache ).put( entity, source.instantiate( persister, id ), true ); //before cascade!
 		}
 		final Object copy = copyCache.get( entity );
 
 		// cascade first, so that all unsaved objects get their
-		// copy created beforeQuery we actually copy
+		// copy created before we actually copy
 		//cascadeOnMerge(event, persister, entity, copyCache, Cascades.CASCADE_BEFORE_MERGE);
 		super.cascadeBeforeSave( source, persister, entity, copyCache );
 		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.FROM_PARENT );
@@ -235,7 +235,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		saveTransientEntity( copy, entityName, event.getRequestedId(), source, copyCache );
 
 		// cascade first, so that all unsaved objects get their
-		// copy created beforeQuery we actually copy
+		// copy created before we actually copy
 		super.cascadeAfterSave( source, persister, entity, copyCache );
 		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.TO_PARENT );
 
@@ -301,7 +301,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			entityIsTransient( event, copyCache );
 		}
 		else {
-			( (MergeContext) copyCache ).put( entity, result, true ); //beforeQuery cascade!
+			( (MergeContext) copyCache ).put( entity, result, true ); //before cascade!
 
 			final Object target = source.getPersistenceContext().unproxy( result );
 			if ( target == entity ) {
@@ -323,7 +323,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			}
 
 			// cascade first, so that all unsaved objects get their
-			// copy created beforeQuery we actually copy
+			// copy created before we actually copy
 			cascadeOnMerge( source, persister, entity, copyCache );
 			copyValues( persister, entity, target, source, copyCache );
 

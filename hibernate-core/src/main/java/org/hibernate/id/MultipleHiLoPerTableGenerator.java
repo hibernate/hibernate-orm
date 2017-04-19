@@ -69,7 +69,7 @@ import org.hibernate.type.Type;
  * <li>value_column: hi value column name(default <tt>sequence_next_hi_value</tt>)</li>
  * <li>primary_key_value: key value for the current entity (default to the entity's primary table name)</li>
  * <li>primary_key_length: length of the key column in DB represented as a varchar (default to 255)</li>
- * <li>max_lo: max low value beforeQuery increasing hi (default to Short.MAX_VALUE)</li>
+ * <li>max_lo: max low value before increasing hi (default to Short.MAX_VALUE)</li>
  * </ul>
  *
  * @author Emmanuel Bernard

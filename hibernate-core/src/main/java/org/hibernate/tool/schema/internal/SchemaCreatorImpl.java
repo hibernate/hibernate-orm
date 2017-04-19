@@ -254,7 +254,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 		}
 
-		// next, create all "beforeQuery table" auxiliary objects
+		// next, create all "before table" auxiliary objects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
 				continue;

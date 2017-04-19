@@ -50,7 +50,7 @@ public interface Transaction extends EntityTransaction {
 	/**
 	 * Set the transaction timeout for any transaction started by a subsequent call to {@link #begin} on this instance.
 	 *
-	 * @param seconds The number of seconds beforeQuery a timeout.
+	 * @param seconds The number of seconds before a timeout.
 	 */
 	void setTimeout(int seconds);
 

@@ -297,7 +297,7 @@ public class SimpleValueBinder {
 
 		// implicit type will check basic types and Serializable classes
 		if ( columns == null ) {
-			throw new AssertionFailure( "SimpleValueBinder.setColumns should be set beforeQuery SimpleValueBinder.setType" );
+			throw new AssertionFailure( "SimpleValueBinder.setColumns should be set before SimpleValueBinder.setType" );
 		}
 
 		if ( BinderHelper.ANNOTATION_STRING_DEFAULT.equals( type ) ) {

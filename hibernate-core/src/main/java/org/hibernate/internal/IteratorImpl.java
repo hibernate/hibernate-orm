@@ -141,7 +141,7 @@ public final class IteratorImpl implements HibernateIterator {
 			throw new UnsupportedOperationException( "Not a single column hibernate query result set" );
 		}
 		if ( currentResult == null ) {
-			throw new IllegalStateException( "Called Iterator.remove() beforeQuery next()" );
+			throw new IllegalStateException( "Called Iterator.remove() before next()" );
 		}
 		if ( !( types[0] instanceof EntityType ) ) {
 			throw new UnsupportedOperationException( "Not an entity" );

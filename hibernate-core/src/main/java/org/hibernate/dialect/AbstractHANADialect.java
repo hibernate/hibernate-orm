@@ -568,7 +568,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		registerKeyword( "all" );
 		registerKeyword( "alter" );
 		registerKeyword( "as" );
-		registerKeyword( "beforeQuery" );
+		registerKeyword( "before" );
 		registerKeyword( "begin" );
 		registerKeyword( "both" );
 		registerKeyword( "case" );

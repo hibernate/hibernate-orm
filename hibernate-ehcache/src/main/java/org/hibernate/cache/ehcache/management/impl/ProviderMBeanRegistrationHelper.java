@@ -102,7 +102,7 @@ public class ProviderMBeanRegistrationHelper {
 			if ( sessionFactory == null ) {
 				LOG.debug(
 						"SessionFactory is probably still being initialized..."
-								+ " waiting for it to complete beforeQuery enabling hibernate statistics monitoring via JMX"
+								+ " waiting for it to complete before enabling hibernate statistics monitoring via JMX"
 				);
 				if ( System.currentTimeMillis() > startTime + (NUM_SECONDS * MILLIS_PER_SECOND) ) {
 					LOG.info( "Hibernate statistics monitoring through JMX is DISABLED." );

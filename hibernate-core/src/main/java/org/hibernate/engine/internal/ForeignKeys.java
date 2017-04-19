@@ -275,7 +275,7 @@ public final class ForeignKeys {
 				// deeper checks...
 				if ( isTransient( entityName, object, Boolean.FALSE, session ) ) {
 					throw new TransientObjectException(
-							"object references an unsaved transient instance - save the transient instance beforeQuery flushing: " +
+							"object references an unsaved transient instance - save the transient instance before flushing: " +
 									(entityName == null ? session.guessEntityName( object ) : entityName)
 					);
 				}

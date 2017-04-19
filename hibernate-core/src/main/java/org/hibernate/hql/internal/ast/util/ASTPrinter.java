@@ -184,7 +184,7 @@ public class ASTPrinter {
 		buf.append( "'" );
 		if ( ast instanceof DisplayableNode ) {
 			DisplayableNode displayableNode = (DisplayableNode) ast;
-			// Add a space beforeQuery the display text.
+			// Add a space before the display text.
 			buf.append( " " ).append( displayableNode.getDisplayText() );
 		}
 		return buf.toString();

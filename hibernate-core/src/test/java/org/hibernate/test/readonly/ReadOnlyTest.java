@@ -421,7 +421,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		while ( sr.next() ) {
 			dp = (DataPoint) sr.get(0);
 			if ( dp.getId() == dpLast.getId() ) {
-				//dpLast existed in the session beforeQuery executing the read-only query
+				//dpLast existed in the session before executing the read-only query
 				assertFalse( s.isReadOnly( dp ) );
 			}
 			else {
@@ -488,7 +488,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		while ( sr.next() ) {
 			dp = (DataPoint) sr.get(0);
 			if ( dp.getId() == dpLast.getId() ) {
-				//dpLast existed in the session beforeQuery executing the read-only query
+				//dpLast existed in the session before executing the read-only query
 				assertTrue( s.isReadOnly( dp ) );
 			}
 			else {

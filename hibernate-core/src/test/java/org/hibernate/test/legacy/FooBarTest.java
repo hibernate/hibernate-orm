@@ -3308,7 +3308,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( g.getStrings().size()==1 );
 		assertTrue( g.getProxyArray().length==1 );
 		assertTrue( g.getProxySet().size()==1 );
-		assertTrue( "versioned collection beforeQuery", g.getVersion() == 1 );
+		assertTrue( "versioned collection before", g.getVersion() == 1 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -3318,14 +3318,14 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( g.getStrings().get(0).equals("foo") );
 		assertTrue( g.getProxyArray()[0]==g );
 		assertTrue( g.getProxySet().iterator().next()==g );
-		assertTrue( "versioned collection beforeQuery", g.getVersion() == 1 );
+		assertTrue( "versioned collection before", g.getVersion() == 1 );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection beforeQuery", g.getVersion() == 1 );
+		assertTrue( "versioned collection before", g.getVersion() == 1 );
 		g.getStrings().add( "bar" );
 		s.getTransaction().commit();
 		s.close();
@@ -4018,7 +4018,7 @@ public class FooBarTest extends LegacyTestCase {
 		finally {
 			s.close();
 		}
-		assertTrue( "lazy collection should have blown in the beforeQuery trans completion", ok );
+		assertTrue( "lazy collection should have blown in the before trans completion", ok );
 
 		s = openSession();
 		s.beginTransaction();

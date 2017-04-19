@@ -736,7 +736,7 @@ public final class Template {
 	}
 
 	private static boolean isFunction(String lcToken, String nextToken, SQLFunctionRegistry functionRegistry) {
-		// checking for "(" is currently redundant because it is checked beforeQuery getting here;
+		// checking for "(" is currently redundant because it is checked before getting here;
 		// doing the check anyhow, in case that earlier check goes away;
 		if ( "(".equals( nextToken ) ) {
 			return true;

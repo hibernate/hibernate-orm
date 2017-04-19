@@ -27,7 +27,7 @@ public interface Executable {
 	Serializable[] getPropertySpaces();
 
 	/**
-	 * Called beforeQuery executing any actions.  Gives actions a chance to perform any preparation.
+	 * Called before executing any actions.  Gives actions a chance to perform any preparation.
 	 *
 	 * @throws HibernateException Indicates a problem during preparation.
 	 */
@@ -49,10 +49,10 @@ public interface Executable {
 	AfterTransactionCompletionProcess getAfterTransactionCompletionProcess();
 
 	/**
-	 * Get the beforeQuery-transaction-completion process, if any, for this action.
+	 * Get the before-transaction-completion process, if any, for this action.
 	 *
-	 * @return The beforeQuery-transaction-completion process, or null if we have no
-	 * beforeQuery-transaction-completion process
+	 * @return The before-transaction-completion process, or null if we have no
+	 * before-transaction-completion process
 	 */
 	BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess();
 	

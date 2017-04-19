@@ -37,7 +37,7 @@ import org.jboss.logging.Logger;
  * an unsaved transient entity, and the foreign key points to that
  * unsaved transient entity.
  *
- * These references must be resolved beforeQuery an insert action can be
+ * These references must be resolved before an insert action can be
  * executed.
  *
  * @author Gail Badner
@@ -117,7 +117,7 @@ public class UnresolvedEntityInsertActions {
 					nonNullableTransientDependencies.getNonNullableTransientPropertyPaths( firstTransientDependency ).iterator().next();
 
 			throw new TransientPropertyValueException(
-					"Not-null property references a transient value - transient instance must be saved beforeQuery current operation",
+					"Not-null property references a transient value - transient instance must be saved before current operation",
 					firstDependentAction.getSession().guessEntityName( firstTransientDependency ),
 					firstDependentAction.getEntityName(),
 					firstPropertyPath
@@ -203,7 +203,7 @@ public class UnresolvedEntityInsertActions {
 		final Set<AbstractEntityInsertAction> resolvedActions = new IdentitySet(  );
 		if ( traceEnabled  ) {
 			LOG.tracev(
-					"Unresolved inserts beforeQuery resolving [{0}]: [{1}]",
+					"Unresolved inserts before resolving [{0}]: [{1}]",
 					MessageHelper.infoString( entityEntry.getEntityName(), entityEntry.getId() ),
 					toString()
 			);

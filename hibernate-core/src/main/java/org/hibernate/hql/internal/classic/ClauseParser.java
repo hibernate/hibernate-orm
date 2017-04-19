@@ -71,7 +71,7 @@ public class ClauseParser implements Parser {
 			}
 			else if ( lcToken.equals( "by" ) ) {
 				if ( !byExpected ) {
-					throw new QueryException( "GROUP or ORDER expected beforeQuery BY" );
+					throw new QueryException( "GROUP or ORDER expected before BY" );
 				}
 				child.start( q );
 				byExpected = false;

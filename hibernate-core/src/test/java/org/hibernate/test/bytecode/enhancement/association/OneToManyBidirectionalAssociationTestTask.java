@@ -56,7 +56,7 @@ public class OneToManyBidirectionalAssociationTestTask extends AbstractEnhancerT
 		inventories.remove( customerInventory );
 		customer.setInventories( inventories );
 
-		// This happens (and is expected) because there was no snapshot taken beforeQuery remove
+		// This happens (and is expected) because there was no snapshot taken before remove
 		Assert.assertNotNull( customerInventory.getCustomer() );
 	}
 

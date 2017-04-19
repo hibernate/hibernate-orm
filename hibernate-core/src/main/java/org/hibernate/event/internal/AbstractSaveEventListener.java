@@ -191,7 +191,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 	}
 
 	protected boolean invokeSaveLifecycle(Object entity, EntityPersister persister, EventSource source) {
-		// Sub-insertions should occur beforeQuery containing insertion so
+		// Sub-insertions should occur before containing insertion so
 		// Try to do the callback now
 		if ( persister.implementsLifecycle() ) {
 			LOG.debug( "Calling onSave()" );
@@ -234,8 +234,8 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		boolean shouldDelayIdentityInserts = !inTxn && !requiresImmediateIdAccess;
 
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
-		// same object again. QUESTION: should this be done beforeQuery onSave() is called?
-		// likewise, should it be done beforeQuery onUpdate()?
+		// same object again. QUESTION: should this be done before onSave() is called?
+		// likewise, should it be done before onUpdate()?
 		EntityEntry original = source.getPersistenceContext().addEntry(
 				entity,
 				Status.SAVING,

@@ -443,7 +443,7 @@ public final class SessionImpl
 
 		if ( getActionQueue().hasBeforeTransactionActions() || getActionQueue().hasAfterTransactionActions() ) {
 			log.warn(
-					"On close, shared Session had beforeQuery/afterQuery transaction actions that have not yet been processed"
+					"On close, shared Session had before/afterQuery transaction actions that have not yet been processed"
 			);
 		}
 		return false;
@@ -619,7 +619,7 @@ public final class SessionImpl
 
 	private void checkNoUnresolvedActionsBeforeOperation() {
 		if ( persistenceContext.getCascadeLevel() == 0 && actionQueue.hasUnresolvedEntityInsertActions() ) {
-			throw new IllegalStateException( "There are delayed insert actions beforeQuery operation as cascade level 0." );
+			throw new IllegalStateException( "There are delayed insert actions before operation as cascade level 0." );
 		}
 	}
 
@@ -938,7 +938,7 @@ public final class SessionImpl
 			throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
 		if ( TRACE_ENABLED && persistenceContext.isRemovingOrphanBeforeUpates() ) {
-			logRemoveOrphanBeforeUpdates( "beforeQuery continuing", entityName, object );
+			logRemoveOrphanBeforeUpdates( "before continuing", entityName, object );
 		}
 		fireDelete(
 				new DeleteEvent(
@@ -978,7 +978,7 @@ public final class SessionImpl
 	private void logRemoveOrphanBeforeUpdates(String timing, String entityName, Object entity) {
 		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
 		log.tracef(
-				"%s remove orphan beforeQuery updates: [%s]",
+				"%s remove orphan before updates: [%s]",
 				timing,
 				entityEntry == null ? entityName : MessageHelper.infoString( entityName, entityEntry.getId() )
 		);
@@ -2225,7 +2225,7 @@ public final class SessionImpl
 
 	private void throwTransientObjectException(Object object) throws HibernateException {
 		throw new TransientObjectException(
-				"object references an unsaved transient instance - save the transient instance beforeQuery flushing: " +
+				"object references an unsaved transient instance - save the transient instance before flushing: " +
 						guessEntityName( object )
 		);
 	}
@@ -3894,7 +3894,7 @@ public final class SessionImpl
 		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();
 
 		// LoadQueryInfluencers.getEnabledFilters() tries to validate each enabled
-		// filter, which will fail when called beforeQuery FilterImpl.afterDeserialize( factory );
+		// filter, which will fail when called before FilterImpl.afterDeserialize( factory );
 		// Instead lookup the filter by name and then call FilterImpl.afterDeserialize( factory ).
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
 			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) ).afterDeserialize( getFactory() );

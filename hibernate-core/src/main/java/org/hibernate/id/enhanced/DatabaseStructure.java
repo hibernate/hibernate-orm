@@ -52,7 +52,7 @@ public interface DatabaseStructure extends ExportableProducer {
 
 	/**
 	 * Prepare this structure for use.  Called sometime afterQuery instantiation,
-	 * but beforeQuery first use.
+	 * but before first use.
 	 *
 	 * @param optimizer The optimizer being applied to the generator.
 	 */

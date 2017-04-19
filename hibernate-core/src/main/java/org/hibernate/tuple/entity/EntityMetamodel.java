@@ -830,7 +830,7 @@ public class EntityMetamodel implements Serializable {
 		// insert-generated identifier.  That wont work if the natural-id is also insert-generated.
 		//
 		// Assumptions:
-		//		* That code checks that there is a natural identifier beforeQuery making this call, so we assume the same here
+		//		* That code checks that there is a natural identifier before making this call, so we assume the same here
 		// 		* That code assumes a non-composite natural-id, so we assume the same here
 		final InDatabaseValueGenerationStrategy strategy = inDatabaseValueGenerationStrategies[ naturalIdPropertyNumbers[0] ];
 		return strategy != null && strategy.getGenerationTiming() != GenerationTiming.NEVER;

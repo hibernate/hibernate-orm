@@ -1534,7 +1534,7 @@ public final class AnnotationBinder {
 
 		/*
 		 * put element annotated by @Id in front
-		 * since it has to be parsed beforeQuery any association by Hibernate
+		 * since it has to be parsed before any association by Hibernate
 		 */
 		final XAnnotatedElement element = propertyAnnotatedElement.getProperty();
 		if ( element.isAnnotationPresent( Id.class ) || element.isAnnotationPresent( EmbeddedId.class ) ) {
@@ -2299,7 +2299,7 @@ public final class AnnotationBinder {
 			}
 		}
 		//init index
-		//process indexes afterQuery everything: in second pass, many to one has to be done beforeQuery indexes
+		//process indexes afterQuery everything: in second pass, many to one has to be done before indexes
 		Index index = property.getAnnotation( Index.class );
 		if ( index != null ) {
 			if ( joinColumns != null ) {

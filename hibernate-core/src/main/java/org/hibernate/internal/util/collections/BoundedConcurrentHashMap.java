@@ -144,7 +144,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 	/**
 	 * Number of unsynchronized retries in size and containsValue
-	 * methods beforeQuery resorting to locking. This is used to avoid
+	 * methods before resorting to locking. This is used to avoid
 	 * unbounded retries if tables undergo continuous modification
 	 * which would make it impossible to obtain an accurate result.
 	 */
@@ -796,7 +796,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		/**
-		 * Inserts this entry beforeQuery the specified existing entry in the stack.
+		 * Inserts this entry before the specified existing entry in the stack.
 		 */
 		private void addToStackBefore(LIRSHashEntry<K, V> existingEntry) {
 			previousInStack = existingEntry.previousInStack;
@@ -843,7 +843,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		/**
-		 * Inserts this entry beforeQuery the specified existing entry in the queue.
+		 * Inserts this entry before the specified existing entry in the queue.
 		 */
 		private void addToQueueBefore(LIRSHashEntry<K, V> existingEntry) {
 			previousInQueue = existingEntry.previousInQueue;
@@ -1763,7 +1763,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			}
 		}
 		// If mcsum happens to be zero, then we know we got a snapshot
-		// beforeQuery any modifications at all were made.  This is
+		// before any modifications at all were made.  This is
 		// probably common enough to bother tracking.
 		if ( mcsum != 0 ) {
 			for ( int i = 0; i < segments.length; ++i ) {

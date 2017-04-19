@@ -290,7 +290,7 @@ public final class TwoPhaseLoad {
 	}
 	
 	/**
-	 * PostLoad cannot occur during initializeEntity, as that call occurs *beforeQuery*
+	 * PostLoad cannot occur during initializeEntity, as that call occurs *before*
 	 * the Set collections are added to the persistence context by Loader.
 	 * Without the split, LazyInitializationExceptions can occur in the Entity's
 	 * postLoad if it acts upon the collection.
@@ -335,7 +335,7 @@ public final class TwoPhaseLoad {
 
 	/**
 	 * Add an uninitialized instance of an entity class, as a placeholder to ensure object
-	 * identity. Must be called beforeQuery <tt>postHydrate()</tt>.
+	 * identity. Must be called before <tt>postHydrate()</tt>.
 	 *
 	 * Create a "temporary" entry for a newly instantiated entity. The entity is uninitialized,
 	 * but we need the mapping from id to instance in order to guarantee uniqueness.

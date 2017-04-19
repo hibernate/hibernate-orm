@@ -403,7 +403,7 @@ public interface Criteria extends CriteriaSpecification {
 	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
 	 *
 	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
-	 * Criteria that existed in the session beforeQuery the Criteria was executed.
+	 * Criteria that existed in the session before the Criteria was executed.
 	 *
 	 * @return true, entities and proxies loaded by the criteria will be put in read-only mode
 	 *         false, entities and proxies loaded by the criteria will be put in modifiable mode
@@ -433,7 +433,7 @@ public interface Criteria extends CriteriaSpecification {
 	 * proxy has, regardless of the session's current setting.
 	 *
 	 * The read-only/modifiable setting has no impact on entities/proxies
-	 * returned by the criteria that existed in the session beforeQuery the criteria was executed.
+	 * returned by the criteria that existed in the session before the criteria was executed.
 	 *
 	 * @param readOnly true, entities and proxies loaded by the criteria will be put in read-only mode
 	 *                 false, entities and proxies loaded by the criteria will be put in modifiable mode

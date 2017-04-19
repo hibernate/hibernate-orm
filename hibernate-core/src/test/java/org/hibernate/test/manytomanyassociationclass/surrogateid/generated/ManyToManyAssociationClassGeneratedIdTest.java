@@ -45,12 +45,12 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 		try {
 			// The new membership is transient (it has a null surrogate ID), so
 			// Hibernate assumes that it should be added to the collection.
-			// Inserts are done beforeQuery deletes, so a ConstraintViolationException
+			// Inserts are done before deletes, so a ConstraintViolationException
 			// will be thrown on the insert because the unique constraint on the
 			// user and group IDs in the join table is violated. See HHH-2801.
 			s.merge( getUser() );
 			s.getTransaction().commit();
-			fail( "should have failed because inserts are beforeQuery deletes");
+			fail( "should have failed because inserts are before deletes");
 		}
 		catch (PersistenceException e) {
 			s.getTransaction().rollback();
@@ -74,12 +74,12 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 		try {
 			// The new membership is transient (it has a null surrogate ID), so
 			// Hibernate assumes that it should be added to the collection.
-			// Inserts are done beforeQuery deletes, so a ConstraintViolationException
+			// Inserts are done before deletes, so a ConstraintViolationException
 			// will be thrown on the insert because the unique constraint on the
 			// user and group IDs in the join table is violated. See HHH-2801.
 			s.merge( getUser() );
 			s.getTransaction().commit();
-			fail( "should have failed because inserts are beforeQuery deletes");
+			fail( "should have failed because inserts are before deletes");
 		}
 		catch (PersistenceException e) {
 			s.getTransaction().rollback();
@@ -103,12 +103,12 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 		try {
 			// The new membership is transient (it has a null surrogate ID), so
 			// Hibernate assumes that it should be added to the collection.
-			// Inserts are done beforeQuery deletes, so a ConstraintViolationException
+			// Inserts are done before deletes, so a ConstraintViolationException
 			// will be thrown on the insert because the unique constraint on the
 			// user and group IDs in the join table is violated. See HHH-2801.
 			s.merge( getUser() );
 			s.getTransaction().commit();
-			fail( "should have failed because inserts are beforeQuery deletes");
+			fail( "should have failed because inserts are before deletes");
 		}
 		catch (PersistenceException e) {
 			s.getTransaction().rollback();

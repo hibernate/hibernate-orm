@@ -67,7 +67,7 @@ public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy {
 	NaturalIdRegion getRegion();
 
 	/**
-	 * Called afterQuery an item has been inserted (beforeQuery the transaction completes),
+	 * Called afterQuery an item has been inserted (before the transaction completes),
 	 * instead of calling evict().
 	 * This method is used by "synchronous" concurrency strategies.
 	 *
@@ -93,7 +93,7 @@ public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy {
 	boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value) throws CacheException;
 
 	/**
-	 * Called afterQuery an item has been updated (beforeQuery the transaction completes),
+	 * Called afterQuery an item has been updated (before the transaction completes),
 	 * instead of calling evict(). This method is used by "synchronous" concurrency
 	 * strategies.
 	 *

@@ -250,7 +250,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 				propTypes
 		);
 
-		// beforeQuery any callbacks, etc, so subdeletions see that this deletion happened first
+		// before any callbacks, etc, so subdeletions see that this deletion happened first
 		persistenceContext.setEntryStatus( entityEntry, Status.DELETED );
 		final EntityKey key = session.generateEntityKey( entityEntry.getId(), persister );
 
@@ -277,7 +277,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			);
 		}
 		else {
-			// Ensures that containing deletions happen beforeQuery sub-deletions
+			// Ensures that containing deletions happen before sub-deletions
 			session.getActionQueue().addAction(
 					new EntityDeleteAction(
 							entityEntry.getId(),

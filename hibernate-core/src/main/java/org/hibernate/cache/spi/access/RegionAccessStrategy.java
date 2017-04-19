@@ -114,7 +114,7 @@ public interface RegionAccessStrategy {
 	void unlockRegion(SoftLock lock) throws CacheException;
 
 	/**
-	 * Called afterQuery an item has become stale (beforeQuery the transaction completes).
+	 * Called afterQuery an item has become stale (before the transaction completes).
 	 * This method is used by "synchronous" concurrency strategies.
 	 *
 	 * @param session

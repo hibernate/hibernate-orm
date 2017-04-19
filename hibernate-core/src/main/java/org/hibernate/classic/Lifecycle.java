@@ -15,10 +15,10 @@ import org.hibernate.Session;
  * Persistent classes <b>may</b> implement this interface but they are not
  * required to.<br>
  * <br>
- * <b>onSave:</b> called just beforeQuery the object is saved<br>
- * <b>onUpdate:</b> called just beforeQuery an object is updated,
+ * <b>onSave:</b> called just before the object is saved<br>
+ * <b>onUpdate:</b> called just before an object is updated,
  * ie. when <tt>Session.update()</tt> is called<br>
- * <b>onDelete:</b> called just beforeQuery an object is deleted<br>
+ * <b>onDelete:</b> called just before an object is deleted<br>
  * <b>onLoad:</b> called just afterQuery an object is loaded<br>
  * <br>
  * <tt>onLoad()</tt> may be used to initialize transient properties of the

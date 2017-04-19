@@ -179,7 +179,7 @@ public class StatsTest extends BaseUnitTestCase {
 		assertEquals( "unexpected execution count", 3, continentStats.getExecutionCount() );
 		assertEquals( "unexpected row count", results, continentStats.getExecutionRowCount() );
 		// scroll through data because SybaseASE15Dialect throws NullPointerException
-		// if data is not read beforeQuery closing the ResultSet
+		// if data is not read before closing the ResultSet
 		while ( scrollableResults.next() ) {
 			// do nothing
 		}

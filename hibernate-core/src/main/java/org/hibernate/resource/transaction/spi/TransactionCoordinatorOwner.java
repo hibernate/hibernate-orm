@@ -34,7 +34,7 @@ public interface TransactionCoordinatorOwner {
 	void afterTransactionBegin();
 
 	/**
-	 * A beforeQuery-completion callback from the coordinator to its owner.
+	 * A before-completion callback from the coordinator to its owner.
 	 */
 	void beforeTransactionCompletion();
 
@@ -51,7 +51,7 @@ public interface TransactionCoordinatorOwner {
 	/**
 	 * Set the effective transaction timeout period for the current transaction, in seconds.
 	 *
-	 * @param seconds The number of seconds beforeQuery a time out should occur.
+	 * @param seconds The number of seconds before a time out should occur.
 	 */
 	void setTransactionTimeOut(int seconds);
 

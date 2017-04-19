@@ -174,7 +174,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 		}
 
-		// Create beforeQuery-table AuxiliaryDatabaseObjects
+		// Create before-table AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				applySqlStrings(

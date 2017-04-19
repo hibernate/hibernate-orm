@@ -90,7 +90,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 		assertNull( "expecting removed entity to be returned as null from get()", item2 );
 
 		s.persist( item );
-		assertEquals( "expecting session to be as it was beforeQuery", sessionAsString, s.toString() );
+		assertEquals( "expecting session to be as it was before", sessionAsString, s.toString() );
 
 		item.setName("Rescued");
 		item = ( Item ) s.get( Item.class, id );

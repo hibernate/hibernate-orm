@@ -341,7 +341,7 @@ public abstract class AbstractLoadPlanBasedLoader {
 	 * <p/>
 	 * Positional parameters are those specified by JDBC-style ? parameters
 	 * in the source query.  It is (currently) expected that these come
-	 * beforeQuery any named parameters in the source query.
+	 * before any named parameters in the source query.
 	 *
 	 * @param statement The JDBC prepared statement
 	 * @param queryParameters The encapsulation of the parameter values to be bound.

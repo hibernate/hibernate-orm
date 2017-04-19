@@ -90,7 +90,7 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 
 	/**
 	 * Force this session to flush. Must be called at the end of a
-	 * unit of work, beforeQuery committing the transaction and closing the
+	 * unit of work, before committing the transaction and closing the
 	 * session (depending on {@link #setFlushMode(FlushMode)},
 	 * {@link Transaction#commit()} calls this method).
 	 * <p/>

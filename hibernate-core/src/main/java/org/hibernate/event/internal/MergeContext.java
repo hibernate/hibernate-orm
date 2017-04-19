@@ -21,7 +21,7 @@ import org.jboss.logging.Logger;
 /**
  * MergeContext is a Map implementation that is intended to be used by a merge
  * event listener to keep track of each entity being merged and their corresponding
- * managed result. Entities to be merged may to be added to the MergeContext beforeQuery
+ * managed result. Entities to be merged may to be added to the MergeContext before
  * the merge operation has cascaded to that entity.
  *
  * "Merge entity" and "mergeEntity" method parameter refer to an entity that is (or will be)

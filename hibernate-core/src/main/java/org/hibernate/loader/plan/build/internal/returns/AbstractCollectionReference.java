@@ -64,7 +64,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 			this.allowIndexJoin = false;
 		}
 
-		// All other fields must be initialized beforeQuery building this.index and this.element.
+		// All other fields must be initialized before building this.index and this.element.
 		this.index = buildIndexGraph();
 		this.element = buildElementGraph();
 	}

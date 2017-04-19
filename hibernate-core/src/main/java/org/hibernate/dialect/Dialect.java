@@ -1452,6 +1452,22 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Command used to alter a table.
+	 *
+	 * @param tableName The name of the table to alter
+	 * @return The command used to alter a table.
+	 * @since 5.2.11
+	 */
+	public String getAlterTableString(String tableName) {
+		final StringBuilder sb = new StringBuilder( "alter table " );
+		if ( supportsIfExistsAfterAlterTable() ) {
+			sb.append( "if exists " );
+		}
+		sb.append( tableName );
+		return sb.toString();
+	}
+
+	/**
 	 * Slight variation on {@link #getCreateTableString}.  Here, we have the
 	 * command used to create a table when there is no primary key and
 	 * duplicate rows are expected.
@@ -2238,6 +2254,16 @@ public abstract class Dialect implements ConversionContext {
 	 * @return {@code true} if the "if exists" can be applied after the constraint name
 	 */
 	public boolean supportsIfExistsAfterConstraintName() {
+		return false;
+	}
+
+	/**
+	 * For an "alter table", can the phrase "if exists" be applied?
+	 *
+	 * @return {@code true} if the "if exists" can be applied after ALTER TABLE
+	 * @since 5.2.11
+	 */
+	public boolean supportsIfExistsAfterAlterTable() {
 		return false;
 	}
 

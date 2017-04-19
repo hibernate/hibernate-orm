@@ -19,6 +19,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -70,7 +71,8 @@ public class UniqueConstraintGenerationTest {
 					isCreateUniqueIndexGenerated("test_entity_item", "item"),
 					is(true)
 			);
-		} else {
+		}
+		else {
 			assertThat(
 					"The test_entity_item table unique constraint has not been generated",
 					isUniqueConstraintGenerated("test_entity_item", "item"),
@@ -87,7 +89,7 @@ public class UniqueConstraintGenerationTest {
 
 	private boolean isUniqueConstraintGenerated(String tableName, String columnName) throws IOException {
 		boolean matches = false;
-		final String regex = "alter table " + tableName + " add constraint uk_(.)* unique \\(" + columnName + "\\)";
+		final String regex = "alter table (?:if exists) " + tableName + " add constraint uk_(.)* unique \\(" + columnName + "\\)";
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );

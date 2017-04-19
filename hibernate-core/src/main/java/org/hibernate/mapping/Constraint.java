@@ -165,10 +165,11 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
 		if ( isGenerated( dialect ) ) {
+			final String tableName = getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema );
 			return String.format(
 					Locale.ROOT,
-					"alter table %s drop constraint %s",
-					getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ),
+					"%s drop constraint %s",
+					dialect.getAlterTableString( tableName ),
 					dialect.quote( getName() )
 			);
 		}
@@ -184,8 +185,8 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 			// empty string.  Prevent blank "alter table" statements.
 			String constraintString = sqlConstraintString( dialect, getName(), defaultCatalog, defaultSchema );
 			if ( !StringHelper.isEmpty( constraintString ) ) {
-				return "alter table " + getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema )
-						+ constraintString;
+				final String tableName = getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema );
+				return dialect.getAlterTableString( tableName ) + " " + constraintString;
 			}
 		}
 		return null;

@@ -100,8 +100,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 				dialect
 		);
 
-		final StringBuilder buffer = new StringBuilder( "alter table " )
-				.append( sourceTableName )
+		final StringBuilder buffer = new StringBuilder( dialect.getAlterTableString( sourceTableName ) )
 				.append(
 						foreignKey.getKeyDefinition() != null ?
 								dialect.getAddForeignKeyConstraintString(
@@ -146,7 +145,8 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 				dialect
 		);
 		return new String[] {
-				"alter table " + sourceTableName + dialect.getDropForeignKeyString() + foreignKey.getName()
+				dialect.getAlterTableString( sourceTableName )
+						+ dialect.getDropForeignKeyString() + foreignKey.getName()
 		};
 	}
 }

@@ -22,4 +22,10 @@ public class PostgreSQL92Dialect extends PostgreSQL91Dialect {
 		super();
 		this.registerColumnType( Types.JAVA_OBJECT, "json" );
 	}
+
+	@Override
+	public boolean supportsIfExistsAfterAlterTable() {
+		return true;
+	}
+
 }

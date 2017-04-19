@@ -78,8 +78,7 @@ public class JoinedInheritanceForeignKeyTest extends BaseUnitTestCase {
 		final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
 		boolean found = false;
 		for ( String line : sqlLines ) {
-			if ( line.contains( expectedAlterTableStatement ) ) {
-				found = true;
+			if ( line.matches( expectedAlterTableStatement ) ) {
 				return;
 			}
 		}
@@ -104,7 +103,7 @@ public class JoinedInheritanceForeignKeyTest extends BaseUnitTestCase {
 		}
 
 		public String toSQL() {
-			return "alter table " + tableName + " add constraint " + fkConstraintName + " foreign key (" + fkColumnName + ") references " + referenceTableName;
+			return "alter table (?:if exists) " + tableName + " add constraint " + fkConstraintName + " foreign key \\(" + fkColumnName + "\\) references " + referenceTableName;
 		}
 	}
 

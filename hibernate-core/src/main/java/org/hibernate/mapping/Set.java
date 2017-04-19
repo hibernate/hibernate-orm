@@ -11,7 +11,7 @@ import java.util.Iterator;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.type.CollectionType;
+import org.hibernate.type.spi.CollectionType;
 
 /**
  * A set with no nullable element columns. It will have a primary key

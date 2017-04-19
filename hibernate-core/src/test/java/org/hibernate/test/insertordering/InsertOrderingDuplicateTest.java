@@ -71,12 +71,13 @@ public class InsertOrderingDuplicateTest
 	public void testBatching() throws SQLException {
 
 		doInHibernate( this::sessionFactory, session -> {
+			SaleDocumentItem saleDocumentItem = new SaleDocumentItem();
+			session.persist( saleDocumentItem );
+
 			SaleDocumentSummary saleDocumentsummary = new SaleDocumentSummary();
 			session.persist(saleDocumentsummary);
 
-			SaleDocumentItem saleDocumentItem = new SaleDocumentItem();
 			saleDocumentsummary.addItem( saleDocumentItem );
-			session.persist( saleDocumentItem );
 
 			Product product = new Product();
 			session.persist(product);

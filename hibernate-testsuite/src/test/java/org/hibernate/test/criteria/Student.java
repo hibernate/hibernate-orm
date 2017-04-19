@@ -2,6 +2,7 @@
 package org.hibernate.test.criteria;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -13,6 +14,7 @@ public class Student {
 	private CityState cityState;
 	private Course preferredCourse;
 	private Set enrolments = new HashSet();
+	private List studyAbroads;
 
 	public String getName() {
 		return name;
@@ -52,5 +54,13 @@ public class Student {
 
 	public void setEnrolments(Set employments) {
 		this.enrolments = employments;
+	}
+
+	public List getStudyAbroads() {
+	    	return studyAbroads;
+	}
+
+	public void setStudyAbroads(List studyAbroads) {
+	    	this.studyAbroads = studyAbroads;
 	}
 }

@@ -1099,7 +1099,7 @@ like <<annotations-hibernate-collectiontype>>, <<annotations-hibernate-genericge
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Parent.html[`@Parent`] annotation is used to specify that the current annotated embeddable attribute references back the owning entity.
 
-//TODO: Add example
+See the <<chapters/domain/basic_types.adoc#mapping-Parent,`@Parent` mapping>> section for more info.
 
 [[annotations-hibernate-persister]]
 ==== `@Persister`

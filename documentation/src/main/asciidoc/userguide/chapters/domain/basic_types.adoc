@@ -2069,7 +2069,7 @@ include::{sourcedir}/basic/TargetTest.java[tags=mapping-Target-persist-example]
 When fetching the `City` entity, the `coordinates` property is mapped by the `@Target` expression:
 
 [[mapping-Target-fetching-example]]
-.`@Target` mapping usage
+.`@Target` fetching example
 ====
 [source, JAVA, indent=0]
 ----
@@ -2083,3 +2083,41 @@ include::{extrasdir}/basic/mapping-Target-fetching-example.sql[]
 ====
 
 Therefore, the `@Target` annotation is used to define a custom join association between the parent-child association.
+
+[[mapping-Parent]]
+==== `@Parent` mapping
+
+The Hibernate-specific `@Parent` annotation allows you to reference the owner entity from within an embeddable.
+
+[[mapping-Parent-example]]
+.`@Parent` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ParentTest.java[tags=mapping-Parent-example]
+----
+====
+
+Assuming we have persisted the following `City` entity:
+
+[[mapping-Parent-persist-example]]
+.`@Parent` persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ParentTest.java[tags=mapping-Parent-persist-example]
+----
+====
+
+When fetching the `City` entity, the `city` property of the embeddable type acts as a back reference to the owning parent entity:
+
+[[mapping-Parent-fetching-example]]
+.`@Parent` fetching example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ParentTest.java[tags=mapping-Parent-fetching-example]
+----
+====
+
+Therefore, the `@Parent` annotation is used to define the association between an embeddable type and the owning entity.

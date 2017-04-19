@@ -12,6 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.Target;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -19,11 +20,12 @@ import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 /**
  * @author Vlad Mihalcea
  */
-public class TargetTest extends BaseEntityManagerFunctionalTestCase {
+public class ParentTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -34,7 +36,7 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void testLifecycle() {
-		//tag::mapping-Target-persist-example[]
+		//tag::mapping-Parent-persist-example[]
 		doInJPA( this::entityManagerFactory, entityManager -> {
 
 			City cluj = new City();
@@ -43,32 +45,30 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 
 			entityManager.persist( cluj );
 		} );
-		//end::mapping-Target-persist-example[]
+		//end::mapping-Parent-persist-example[]
 
 
-		//tag::mapping-Target-fetching-example[]
+		//tag::mapping-Parent-fetching-example[]
 		doInJPA( this::entityManagerFactory, entityManager -> {
 
 			City cluj = entityManager.find( City.class, 1L );
 
-			assertEquals( 46.77120, cluj.getCoordinates().x(), 0.00001 );
-			assertEquals( 23.62360, cluj.getCoordinates().y(), 0.00001 );
+			assertSame( cluj, cluj.getCoordinates().getCity() );
 		} );
-		//end::mapping-Target-fetching-example[]
+		//end::mapping-Parent-fetching-example[]
 	}
 
-	//tag::mapping-Target-example[]
-	public interface Coordinates {
-		double x();
-		double y();
-	}
+	//tag::mapping-Parent-example[]
 
 	@Embeddable
-	public static class GPS implements Coordinates {
+	public static class GPS {
 
 		private double latitude;
 
 		private double longitude;
+
+		@Parent
+		private City city;
 
 		private GPS() {
 		}
@@ -78,14 +78,20 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 			this.longitude = longitude;
 		}
 
-		@Override
-		public double x() {
+		public double getLatitude() {
 			return latitude;
 		}
 
-		@Override
-		public double y() {
+		public double getLongitude() {
 			return longitude;
+		}
+
+		public City getCity() {
+			return city;
+		}
+
+		public void setCity(City city) {
+			this.city = city;
 		}
 	}
 
@@ -100,11 +106,11 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Embedded
 		@Target( GPS.class )
-		private Coordinates coordinates;
+		private GPS coordinates;
 
 		//Getters and setters omitted for brevity
 
-	//end::mapping-Target-example[]
+	//end::mapping-Parent-example[]
 		
 		public Long getId() {
 			return id;
@@ -118,14 +124,14 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 			this.name = name;
 		}
 
-		public Coordinates getCoordinates() {
+		public GPS getCoordinates() {
 			return coordinates;
 		}
 
-		public void setCoordinates(Coordinates coordinates) {
+		public void setCoordinates(GPS coordinates) {
 			this.coordinates = coordinates;
 		}
-	//tag::mapping-Target-example[]
+	//tag::mapping-Parent-example[]
 	}
-	//end::mapping-Target-example[]
+	//end::mapping-Parent-example[]
 }

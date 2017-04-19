@@ -64,7 +64,7 @@ public interface Filter {
 
 	/**
 	 * Perform validation of the filter state.  This is used to verify the
-	 * state of the filter afterQuery its enablement and beforeQuery its use.
+	 * state of the filter after its enablement and before its use.
 	 *
 	 * @throws HibernateException If the state is not currently valid.
 	 */

@@ -2284,7 +2284,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testLoadSnapshotWithCustomColumnReadAndWrite() {
-		// Exercises entity snapshot load when select-beforeQuery-update is true.
+		// Exercises entity snapshot load when select-before-update is true.
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		final double SIZE_IN_KB = 1536d;

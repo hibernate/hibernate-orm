@@ -9,7 +9,7 @@ package org.hibernate.event.spi;
 import java.io.Serializable;
 
 /**
- * Occurs afterQuery an an entity instance is fully loaded.
+ * Occurs after an an entity instance is fully loaded.
  *
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  */

@@ -421,7 +421,7 @@ public final class HqlParser extends HqlBaseParser {
 				}
 				break;
 			default:
-				// Case 2: The current token is afterQuery FROM and beforeQuery '.'.
+				// Case 2: The current token is after FROM and before '.'.
 				if ( LA( 0 ) == FROM && t != IDENT && LA( 2 ) == DOT ) {
 					HqlToken hqlToken = (HqlToken) LT( 1 );
 					if ( hqlToken.isPossibleID() ) {

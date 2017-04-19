@@ -76,7 +76,7 @@ public class GlobalTemporaryTableBulkIdStrategy
 		super( idTableSupport );
 		this.afterUseAction = afterUseAction;
 		if ( afterUseAction == AfterUseAction.DROP ) {
-			throw new IllegalArgumentException( "DROP not supported as a afterQuery-use action for global temp table strategy" );
+			throw new IllegalArgumentException( "DROP not supported as a after-use action for global temp table strategy" );
 		}
 	}
 

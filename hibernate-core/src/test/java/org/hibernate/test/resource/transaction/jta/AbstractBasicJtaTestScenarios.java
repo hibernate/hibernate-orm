@@ -51,7 +51,7 @@ public abstract class AbstractBasicJtaTestScenarios {
 	@Before
 	@After
 	public void resetJtaPlatform() throws SystemException {
-		// make sure the JTA platform is reset back to no active transactions beforeQuery and afterQuery each test
+		// make sure the JTA platform is reset back to no active transactions before and after each test
 		JtaPlatformStandardTestingImpl.INSTANCE.reset();
 	}
 

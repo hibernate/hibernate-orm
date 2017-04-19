@@ -731,7 +731,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 				fromElement.setIncludeSubclasses( true ); // Tell the destination fromElement to 'includeSubclasses'.
 				if ( useThetaStyleImplicitJoins ) {
 					fromElement.getJoinSequence().setUseThetaStyle( true );    // Use theta style (for regression)
-					// Move the node up, afterQuery the origin node.
+					// Move the node up, after the origin node.
 					FromElement origin = fromElement.getOrigin();
 					if ( origin != null ) {
 						ASTUtil.makeSiblingOfParent( origin, fromElement );

@@ -402,7 +402,7 @@ public class SequenceStyleGenerator
 	 * @param forceTableUse Should a table be used even if the dialect supports sequences?
 	 * @param sequenceName The name to use for the sequence or table.
 	 * @param initialValue The initial value.
-	 * @param incrementSize the increment size to use (afterQuery any adjustments).
+	 * @param incrementSize the increment size to use (after any adjustments).
 	 *
 	 * @return An abstraction for the actual database structure in use (table vs. sequence).
 	 */

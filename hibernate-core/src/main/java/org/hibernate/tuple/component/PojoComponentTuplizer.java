@@ -68,7 +68,7 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 		else {
 			// TODO: here is why we need to make bytecode provider global :(
-			// TODO : again, fix this afterQuery HHH-1907 is complete
+			// TODO : again, fix this after HHH-1907 is complete
 			optimizer = Environment.getBytecodeProvider().getReflectionOptimizer(
 					componentClass, getterNames, setterNames, propTypes
 			);

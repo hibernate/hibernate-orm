@@ -105,7 +105,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 			LOG.debugf( "Using processed WHERE-fragment [%s]", fragment.getText() );
 		}
 
-		// Filter conditions need to be inserted beforeQuery the HQL where condition and the
+		// Filter conditions need to be inserted before the HQL where condition and the
 		// theta join node.  This is because org.hibernate.loader.Loader binds the filter parameters first,
 		// then it binds all the HQL query parameters, see org.hibernate.loader.Loader.processFilterParameters().
 		if ( fragment.getFromElement().isFilter() || fragment.hasFilterCondition() ) {
@@ -114,7 +114,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 				AST where = query.getWhereClause();
 				// Create a new FILTERS node as a parent of all filters
 				filters = create( FILTERS, "{filter conditions}" );
-				// Put the FILTERS node beforeQuery the HQL condition and theta joins
+				// Put the FILTERS node before the HQL condition and theta joins
 				ASTUtil.insertChild( where, filters );
 			}
 
@@ -127,7 +127,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 				AST where = query.getWhereClause();
 				// Create a new THETA_JOINS node as a parent of all filters
 				thetaJoins = create( THETA_JOINS, "{theta joins}" );
-				// Put the THETA_JOINS node beforeQuery the HQL condition, afterQuery the filters.
+				// Put the THETA_JOINS node before the HQL condition, after the filters.
 				if ( filters == null ) {
 					ASTUtil.insertChild( where, thetaJoins );
 				}

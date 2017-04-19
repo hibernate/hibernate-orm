@@ -26,7 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Repeatable(NamedNativeQueries.class)
 public @interface NamedNativeQuery {
 	/**
-	 * The name.  It is a named query afterQuery all :)
+	 * The name.  It is a named query after all :)
 	 */
 	String name();
 

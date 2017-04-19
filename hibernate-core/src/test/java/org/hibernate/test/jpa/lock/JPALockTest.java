@@ -58,11 +58,11 @@ public class JPALockTest extends AbstractJPATest {
 	 * If transaction T1 calls lock(entity, LockModeType.READ) on a versioned object, the entity
 	 * manager must ensure that neither of the following phenomena can occur:<ul>
 	 * <li>P1 (Dirty read): Transaction T1 modifies a row. Another transaction T2 then reads that row and
-	 * obtains the modified value, beforeQuery T1 has committed or rolled back. Transaction T2 eventually
+	 * obtains the modified value, before T1 has committed or rolled back. Transaction T2 eventually
 	 * commits successfully; it does not matter whether T1 commits or rolls back and whether it does
-	 * so beforeQuery or afterQuery T2 commits.
+	 * so before or after T2 commits.
 	 * <li>P2 (Non-repeatable read): Transaction T1 reads a row. Another transaction T2 then modifies or
-	 * deletes that row, beforeQuery T1 has committed. Both transactions eventually commit successfully.
+	 * deletes that row, before T1 has committed. Both transactions eventually commit successfully.
 	 * <p/>
 	 * This will generally be achieved by the entity manager acquiring a lock on the underlying database row.
 	 * Any such lock may be obtained immediately (so long as it is retained until commit completes), or the
@@ -131,7 +131,7 @@ public class JPALockTest extends AbstractJPATest {
 	 * If transaction T1 calls lock(entity, LockModeType.WRITE) on a versioned object, the entity
 	 * manager must avoid the phenomena P1 and P2 (as with LockModeType.READ) and must also force
 	 * an update (increment) to the entity's version column. A forced version update may be performed immediately,
-	 * or may be deferred until a flush or commit. If an entity is removed beforeQuery a deferred version
+	 * or may be deferred until a flush or commit. If an entity is removed before a deferred version
 	 * update was to have been applied, the forced version update is omitted, since the underlying database
 	 * row no longer exists.
 	 * <p/>

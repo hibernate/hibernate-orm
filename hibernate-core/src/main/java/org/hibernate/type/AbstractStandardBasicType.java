@@ -39,7 +39,7 @@ public abstract class AbstractStandardBasicType<T>
 	private static final Size DEFAULT_SIZE = new Size( 19, 2, 255, Size.LobMultiplier.NONE ); // to match legacy behavior
 	private final Size dictatedSize = new Size();
 
-	// Don't use final here.  Need to initialize afterQuery-the-fact
+	// Don't use final here.  Need to initialize after-the-fact
 	// by DynamicParameterizedTypes.
 	private SqlTypeDescriptor sqlTypeDescriptor;
 	private JavaTypeDescriptor<T> javaTypeDescriptor;

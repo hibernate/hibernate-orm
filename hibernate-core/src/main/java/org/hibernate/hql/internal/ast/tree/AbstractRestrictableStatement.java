@@ -48,7 +48,7 @@ public abstract class AbstractRestrictableStatement extends AbstractStatement im
 			if ( whereClause == null ) {
 				getLog().debug( "getWhereClause() : Creating a new WHERE clause..." );
 				whereClause = getWalker().getASTFactory().create( HqlSqlTokenTypes.WHERE, "WHERE" );
-				// inject the WHERE afterQuery the parent
+				// inject the WHERE after the parent
 				AST parent = ASTUtil.findTypeInChildren( this, getWhereClauseParentTokenType() );
 				whereClause.setNextSibling( parent.getNextSibling() );
 				parent.setNextSibling( whereClause );

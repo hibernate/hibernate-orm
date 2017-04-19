@@ -63,7 +63,7 @@ public class SynchronizationTypeTest extends BaseEntityManagerFunctionalTestCase
 
 	@Test
 	public void testImplicitJoining() throws Exception {
-		// here the transaction is started beforeQuery the EM is opened.  Because the SynchronizationType is UNSYNCHRONIZED
+		// here the transaction is started before the EM is opened.  Because the SynchronizationType is UNSYNCHRONIZED
 		// though, it should not auto join the transaction
 
 		assertFalse( "setup problem", JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );

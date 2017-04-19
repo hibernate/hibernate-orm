@@ -18,7 +18,7 @@ public interface RevisionListener {
 	 * Called when a new revision is created.
 	 *
 	 * @param revisionEntity An instance of the entity annotated with {@link RevisionEntity}, which will be persisted
-	 * afterQuery this method returns. All properties on this entity that are to be persisted should be set by this method.
+	 * after this method returns. All properties on this entity that are to be persisted should be set by this method.
 	 */
 	void newRevision(Object revisionEntity);
 }

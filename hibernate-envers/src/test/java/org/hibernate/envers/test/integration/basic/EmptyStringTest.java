@@ -52,7 +52,7 @@ public class EmptyStringTest extends BaseEnversJPAFunctionalTestCase {
 		em.close();
 		em = getEntityManager();
 
-		// Should not generate revision afterQuery NULL to "" modification and vice versa on Oracle.
+		// Should not generate revision after NULL to "" modification and vice versa on Oracle.
 		em.getTransaction().begin();
 		emptyEntity = em.find( StrTestEntity.class, emptyId );
 		emptyEntity.setStr( null );

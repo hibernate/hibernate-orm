@@ -35,9 +35,9 @@ import org.junit.runners.model.Statement;
  * This is mostly copy-paste from {@link Parameterized} since the methods could not be overridden.
  *
  * The static {@link org.junit.BeforeClass} and {@link org.junit.AfterClass} methods will be executed
- * only once beforeQuery and afterQuery all tests (since these should prepare static members).
+ * only once before and after all tests (since these should prepare static members).
  * Hibernate-specific {@link org.hibernate.testing.BeforeClassOnce} and {@link org.hibernate.testing.AfterClassOnce}
- * will be executed beforeQuery and afterQuery each set of tests with given parameters.
+ * will be executed before and after each set of tests with given parameters.
  *
  * Class can override the parameters list (annotated by {@link org.junit.runners.Parameterized.Parameters}
  * by defining static method of the same name in inheriting class (this works although usually static

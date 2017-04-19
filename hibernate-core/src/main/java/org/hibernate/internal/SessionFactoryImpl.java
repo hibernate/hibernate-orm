@@ -330,7 +330,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				}
 			}
 
-			// this needs to happen afterQuery persisters are all ready to go...
+			// this needs to happen after persisters are all ready to go...
 			this.fetchProfiles = new HashMap<>();
 			for ( org.hibernate.mapping.FetchProfile mappingProfile : metadata.getFetchProfiles() ) {
 				final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
@@ -719,7 +719,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * </ol>
 	 *
 	 * Note: Be aware that the sessionFactory instance still can
-	 * be a "heavy" object memory wise afterQuery close() has been called.  Thus
+	 * be a "heavy" object memory wise after close() has been called.  Thus
 	 * it is important to not keep referencing the instance to let the garbage
 	 * collector release the memory.
 	 * @throws HibernateException

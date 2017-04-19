@@ -46,7 +46,7 @@ import org.jboss.logging.Logger;
  * </ol>
  * And so on...
  * <p/>
- * Note, 'value' always (afterQuery init) holds the next value to return
+ * Note, 'value' always (after init) holds the next value to return
  *
  * @author Steve Ebersole
  */

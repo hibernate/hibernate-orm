@@ -293,7 +293,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
             log.warn("You left an open transaction! Fix your test case. For now, we are closing it for you.");
 		}
 		if ( em.isOpen() ) {
-			// as we open an EM beforeQuery the test runs, it will still be open if the test uses a custom EM.
+			// as we open an EM before the test runs, it will still be open if the test uses a custom EM.
 			// or, the person may have forgotten to close. So, do not raise a "fail", but log the fact.
 			em.close();
             log.warn("The EntityManager is not closed. Closing it.");

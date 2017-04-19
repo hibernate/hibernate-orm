@@ -60,7 +60,7 @@ public class EntityDeleteAction extends EntityAction {
 		this.isCascadeDeleteEnabled = isCascadeDeleteEnabled;
 		this.state = state;
 
-		// beforeQuery remove we need to remove the local (transactional) natural id cross-reference
+		// before remove we need to remove the local (transactional) natural id cross-reference
 		naturalIdValues = session.getPersistenceContext().getNaturalIdHelper().removeLocalNaturalIdCrossReference(
 				getPersister(),
 				getId(),

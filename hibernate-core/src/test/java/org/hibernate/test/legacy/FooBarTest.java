@@ -3308,7 +3308,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( g.getStrings().size()==1 );
 		assertTrue( g.getProxyArray().length==1 );
 		assertTrue( g.getProxySet().size()==1 );
-		assertTrue( "versioned collection beforeQuery", g.getVersion() == 1 );
+		assertTrue( "versioned collection before", g.getVersion() == 1 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -3318,14 +3318,14 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( g.getStrings().get(0).equals("foo") );
 		assertTrue( g.getProxyArray()[0]==g );
 		assertTrue( g.getProxySet().iterator().next()==g );
-		assertTrue( "versioned collection beforeQuery", g.getVersion() == 1 );
+		assertTrue( "versioned collection before", g.getVersion() == 1 );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection beforeQuery", g.getVersion() == 1 );
+		assertTrue( "versioned collection before", g.getVersion() == 1 );
 		g.getStrings().add( "bar" );
 		s.getTransaction().commit();
 		s.close();
@@ -3333,8 +3333,8 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection afterQuery", g.getVersion()==2 );
-		assertTrue( "versioned collection afterQuery", g.getStrings().size() == 2 );
+		assertTrue( "versioned collection after", g.getVersion()==2 );
+		assertTrue( "versioned collection after", g.getStrings().size() == 2 );
 		g.setProxyArray( null );
 		s.getTransaction().commit();
 		s.close();
@@ -3342,8 +3342,8 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection afterQuery", g.getVersion()==3 );
-		assertTrue( "versioned collection afterQuery", g.getProxyArray().length == 0 );
+		assertTrue( "versioned collection after", g.getVersion()==3 );
+		assertTrue( "versioned collection after", g.getProxyArray().length == 0 );
 		g.setFooComponents( new ArrayList() );
 		g.setProxyArray( null );
 		s.getTransaction().commit();
@@ -3352,7 +3352,7 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection afterQuery", g.getVersion()==4 );
+		assertTrue( "versioned collection after", g.getVersion()==4 );
 		s.delete(g);
 		s.flush();
 		assertTrue( s.createQuery( "from java.lang.Object" ).list().size()==0 );
@@ -4018,7 +4018,7 @@ public class FooBarTest extends LegacyTestCase {
 		finally {
 			s.close();
 		}
-		assertTrue( "lazy collection should have blown in the beforeQuery trans completion", ok );
+		assertTrue( "lazy collection should have blown in the before trans completion", ok );
 
 		s = openSession();
 		s.beginTransaction();

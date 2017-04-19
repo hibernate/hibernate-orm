@@ -109,7 +109,7 @@ public class SelectParser implements Parser {
 				q.appendScalarSelectToken( token );
 			}
 			else {
-				throw new QueryException( "aggregate function expected beforeQuery ( in SELECT" );
+				throw new QueryException( "aggregate function expected before ( in SELECT" );
 			}
 			ready = true;
 		}
@@ -127,7 +127,7 @@ public class SelectParser implements Parser {
 				}
 			}
 			else {
-				throw new QueryException( "( expected beforeQuery ) in select" );
+				throw new QueryException( "( expected before ) in select" );
 			}
 		}
 		else if ( COUNT_MODIFIERS.contains( lctoken ) ) {
@@ -143,7 +143,7 @@ public class SelectParser implements Parser {
 		else if ( getFunction( lctoken, q ) != null && token.equals( q.unalias( token ) ) ) {
 			// the name of an SQL function
 			if ( !ready ) {
-				throw new QueryException( ", expected beforeQuery aggregate function in SELECT: " + token );
+				throw new QueryException( ", expected before aggregate function in SELECT: " + token );
 			}
 			aggregate = true;
 			aggregateAddSelectScalar = true;
@@ -167,7 +167,7 @@ public class SelectParser implements Parser {
 		else if ( aggregate ) {
 			boolean constantToken = false;
 			if ( !ready ) {
-				throw new QueryException( "( expected afterQuery aggregate function in SELECT" );
+				throw new QueryException( "( expected after aggregate function in SELECT" );
 			}
 			try {
 				ParserHelper.parse( aggregatePathExpressionParser, q.unalias( token ), ParserHelper.PATH_SEPARATORS, q );

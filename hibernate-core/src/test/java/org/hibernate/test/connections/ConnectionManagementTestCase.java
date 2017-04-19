@@ -49,7 +49,7 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	}
 
 	/**
-	 * Used to cleanup the environment afterQuery testing (e.g., ending a JTA
+	 * Used to cleanup the environment after testing (e.g., ending a JTA
 	 * transaction or closing a user-supplied connection).
 	 *
 	 * @throws Throwable indicates problems cleaning up
@@ -96,8 +96,8 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	protected abstract void reconnect(Session session) throws Throwable;
 
 	/**
-	 * Check the state of a fixture session afterQuery serialization, as well
-	 * as validate the environmental state afterQuery session serialization.
+	 * Check the state of a fixture session after serialization, as well
+	 * as validate the environmental state after session serialization.
 	 *
 	 * @param session The fixture session that was serialized.
 	 */
@@ -105,8 +105,8 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	}
 
 	/**
-	 * Check the state of a fixture session afterQuery deserialization, as well
-	 * as validate the environmental state afterQuery session deserialization.
+	 * Check the state of a fixture session after deserialization, as well
+	 * as validate the environmental state after session deserialization.
 	 *
 	 * @param session The fixture session that was deserialized.
 	 */

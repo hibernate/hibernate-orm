@@ -144,7 +144,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 				session, instance
 		);
 
-		//persister.setIdentifier(instance, id); //beforeQuery calling interceptor, for consistency with normal load
+		//persister.setIdentifier(instance, id); //before calling interceptor, for consistency with normal load
 
 		//TODO: reuse the PreLoadEvent
 		final PreLoadEvent preLoadEvent = new PreLoadEvent( session )

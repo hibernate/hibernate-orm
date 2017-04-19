@@ -12,7 +12,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 /**
- * Called beforeQuery injecting property values into a newly loaded entity instance.
+ * Called before injecting property values into a newly loaded entity instance.
  *
  * @author Gavin King
  */

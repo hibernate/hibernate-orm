@@ -404,7 +404,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertEquals( "hit count should go up since data is not transformed until afterQuery it is cached", qs.getCacheHitCount(), 2 );
+		assertEquals( "hit count should go up since data is not transformed until after it is cached", qs.getCacheHitCount(), 2 );
 		assertEquals( qs.getCacheMissCount(), 2 );
 		assertEquals( qs.getCachePutCount(), 2 );
 
@@ -418,7 +418,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertEquals( "hit count should go up since data is not transformed until afterQuery it is cachedr", qs.getCacheHitCount(), 3 );
+		assertEquals( "hit count should go up since data is not transformed until after it is cachedr", qs.getCacheHitCount(), 3 );
 		assertEquals( qs.getCacheMissCount(), 2 );
 		assertEquals( qs.getCachePutCount(), 2 );
 
@@ -597,7 +597,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		interceptor.unblockOnLoad();
 
-		// the concurrent query was executed beforeQuery the data was amended so
+		// the concurrent query was executed before the data was amended so
 		// let's expect "Item1" to be returned as living in Washington
 		Item fetched = fetchedItem.get();
 		assertEquals("Item1", fetched.getName());

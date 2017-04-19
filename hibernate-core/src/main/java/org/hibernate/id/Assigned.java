@@ -31,7 +31,7 @@ public class Assigned implements IdentifierGenerator, Configurable {
 		final Serializable id = session.getEntityPersister( entityName, obj ).getIdentifier( obj, session );
 		if ( id == null ) {
 			throw new IdentifierGenerationException(
-					"ids for this class must be manually assigned beforeQuery calling save(): " + entityName
+					"ids for this class must be manually assigned before calling save(): " + entityName
 			);
 		}
 		

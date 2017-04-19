@@ -30,7 +30,7 @@ public interface RegionAccessStrategy {
 	Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException;
 
 	/**
-	 * Attempt to cache an object, afterQuery loading from the database.
+	 * Attempt to cache an object, after loading from the database.
 	 *
 	 * @param session Current session.
 	 * @param key The item key
@@ -48,7 +48,7 @@ public interface RegionAccessStrategy {
 			Object version) throws CacheException;
 
 	/**
-	 * Attempt to cache an object, afterQuery loading from the database, explicitly
+	 * Attempt to cache an object, after loading from the database, explicitly
 	 * specifying the minimalPut behavior.
 	 *
 	 * @param session Current session.
@@ -94,7 +94,7 @@ public interface RegionAccessStrategy {
 
 	/**
 	 * Called when we have finished the attempted update/delete (which may or
-	 * may not have been successful), afterQuery transaction completion.  This method
+	 * may not have been successful), after transaction completion.  This method
 	 * is used by "asynchronous" concurrency strategies.
 	 *
 	 * @param session Current session.
@@ -105,7 +105,7 @@ public interface RegionAccessStrategy {
 	void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException;
 
 	/**
-	 * Called afterQuery we have finished the attempted invalidation of the entire
+	 * Called after we have finished the attempted invalidation of the entire
 	 * region
 	 *
 	 * @param lock The lock previously obtained from {@link #lockRegion}
@@ -114,7 +114,7 @@ public interface RegionAccessStrategy {
 	void unlockRegion(SoftLock lock) throws CacheException;
 
 	/**
-	 * Called afterQuery an item has become stale (beforeQuery the transaction completes).
+	 * Called after an item has become stale (before the transaction completes).
 	 * This method is used by "synchronous" concurrency strategies.
 	 *
 	 * @param session

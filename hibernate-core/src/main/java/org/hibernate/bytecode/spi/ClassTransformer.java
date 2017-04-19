@@ -14,7 +14,7 @@ import java.security.ProtectionDomain;
  * to the PersistenceUnitInfo.addTransformer method.
  * The supplied transformer instance will get called to transform
  * entity class files when they are loaded and redefined.  The transformation
- * occurs beforeQuery the class is defined by the JVM
+ * occurs before the class is defined by the JVM
  *
  * @author <a href="mailto:bill@jboss.org">Bill Burke</a>
  * @author Emmanuel Bernard

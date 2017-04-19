@@ -352,7 +352,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 * Set the read-only/modifiable setting that should be put in affect when it is
 	 * attached to a session.
 	 * <p/>
-	 * This method should only be called during deserialization, beforeQuery associating
+	 * This method should only be called during deserialization, before associating
 	 * the proxy with a session.
 	 *
 	 * @param readOnlyBeforeAttachedToSession, the read-only/modifiable setting to use when

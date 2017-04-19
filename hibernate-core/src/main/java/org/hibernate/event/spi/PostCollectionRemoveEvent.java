@@ -10,7 +10,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
- * An event that occurs afterQuery a collection is removed
+ * An event that occurs after a collection is removed
  *
  * @author Gail Badner
  */

@@ -1082,7 +1082,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	protected AST generatePositionalParameter(AST inputNode) throws SemanticException {
 		if ( namedParameters.size() > 0 ) {
 			throw new SemanticException(
-					"cannot define positional parameter afterQuery any named parameters have been defined"
+					"cannot define positional parameter after any named parameters have been defined"
 			);
 		}
 		LOG.warnf(

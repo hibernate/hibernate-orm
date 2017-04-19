@@ -34,7 +34,7 @@ public class ClauseParser implements Parser {
 		}
 
 		if ( byExpected && !lcToken.equals( "by" ) ) {
-			throw new QueryException( "BY expected afterQuery GROUP or ORDER: " + token );
+			throw new QueryException( "BY expected after GROUP or ORDER: " + token );
 		}
 
 		boolean isClauseStart = parenCount == 0; //ignore subselect keywords
@@ -71,7 +71,7 @@ public class ClauseParser implements Parser {
 			}
 			else if ( lcToken.equals( "by" ) ) {
 				if ( !byExpected ) {
-					throw new QueryException( "GROUP or ORDER expected beforeQuery BY" );
+					throw new QueryException( "GROUP or ORDER expected before BY" );
 				}
 				child.start( q );
 				byExpected = false;

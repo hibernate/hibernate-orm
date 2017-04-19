@@ -174,7 +174,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 		}
 
-		// Create beforeQuery-table AuxiliaryDatabaseObjects
+		// Create before-table AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				applySqlStrings(
@@ -234,7 +234,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 		}
 
-		//NOTE : Foreign keys must be created *afterQuery* all tables of all namespaces for cross namespace fks. see HHH-10420
+		//NOTE : Foreign keys must be created *after* all tables of all namespaces for cross namespace fks. see HHH-10420
 		for ( Namespace namespace : database.getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				final NameSpaceTablesInformation nameSpaceTablesInformation = tablesInformation.get( namespace );
@@ -249,7 +249,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 		}
 
-		// Create afterQuery-table AuxiliaryDatabaseObjects
+		// Create after-table AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect )) {
 				applySqlStrings(

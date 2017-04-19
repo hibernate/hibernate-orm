@@ -44,20 +44,20 @@ public interface AuditReader {
 
 	/**
 	 * Find an entity by primary key on the given date.  The date specifies restricting
-	 * the result to any entity created on or beforeQuery the date with the highest revision
+	 * the result to any entity created on or before the date with the highest revision
 	 * number.
 	 *  
 	 * @param cls Class of the entity.
 	 * @param primaryKey Primary key of the entity.
 	 * @param date Date for which to get entity revision.
 	 * 
-	 * @return The found entity instance at created on or beforeQuery the specified date with the highest
-	 *         revision number or null, if an entity with the id had not be created on or beforeQuery the
+	 * @return The found entity instance at created on or before the specified date with the highest
+	 *         revision number or null, if an entity with the id had not be created on or before the
 	 *         specified date.
 	 *         
 	 * @throws IllegalArgumentException if cls, primaryKey, or date is null.
 	 * @throws NotAuditedException When entities of the given class are not audited.
-	 * @throws RevisionDoesNotExistException If the given date is beforeQuery the first revision.
+	 * @throws RevisionDoesNotExistException If the given date is before the first revision.
 	 * @throws IllegalStateException If the associated entity manager is closed.
 	 */
 	<T> T find(Class<T> cls, Object primaryKey, Date date) throws
@@ -159,7 +159,7 @@ public interface AuditReader {
 
 	/**
 	 * Gets the revision number, that corresponds to the given date. More precisely, returns
-	 * the number of the highest revision, which was created on or beforeQuery the given date. So:
+	 * the number of the highest revision, which was created on or before the given date. So:
 	 * <code>getRevisionDate(getRevisionNumberForDate(date)) <= date</code> and
 	 * <code>getRevisionDate(getRevisionNumberForDate(date)+1) > date</code>.
 	 *
@@ -168,7 +168,7 @@ public interface AuditReader {
 	 * @return Revision number corresponding to the given date.
 	 *
 	 * @throws IllegalStateException If the associated entity manager is closed.
-	 * @throws RevisionDoesNotExistException If the given date is beforeQuery the first revision.
+	 * @throws RevisionDoesNotExistException If the given date is before the first revision.
 	 * @throws IllegalArgumentException If <code>date</code> is <code>null</code>.
 	 */
 	Number getRevisionNumberForDate(Date date) throws IllegalStateException, RevisionDoesNotExistException,
@@ -234,7 +234,7 @@ public interface AuditReader {
 	 * Creates an audit query
 	 *
 	 * @return A query creator, associated with this AuditReader instance, with which queries can be
-	 *         created and later executed. Shouldn't be used afterQuery the associated Session or EntityManager
+	 *         created and later executed. Shouldn't be used after the associated Session or EntityManager
 	 *         is closed.
 	 */
 	AuditQueryCreator createQuery();

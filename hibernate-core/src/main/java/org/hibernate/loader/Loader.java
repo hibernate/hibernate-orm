@@ -577,8 +577,8 @@ public abstract class Loader {
 
 			EntityKey keyToRead = null;
 			// This check is needed since processing leaves the cursor
-			// afterQuery the last physical row for the current logical row;
-			// thus if we are afterQuery the last physical row, this might be
+			// after the last physical row for the current logical row;
+			// thus if we are after the last physical row, this might be
 			// caused by either:
 			//      1) scrolling to the last logical row
 			//      2) scrolling past the last logical row
@@ -601,7 +601,7 @@ public abstract class Loader {
 			}
 			else {
 				// Since the result set cursor is always left at the first
-				// physical row afterQuery the "last processed", we need to jump
+				// physical row after the "last processed", we need to jump
 				// back one position to get the key value we are interested
 				// in skipping
 				resultSet.previous();
@@ -1117,7 +1117,7 @@ public abstract class Loader {
 		if ( collectionPersisters != null ) {
 			for ( CollectionPersister collectionPersister : collectionPersisters ) {
 				if ( collectionPersister.isArray() ) {
-					//for arrays, we should end the collection load beforeQuery resolving
+					//for arrays, we should end the collection load before resolving
 					//the entities, since the actual array instances are not instantiated
 					//during loading
 					//TODO: or we could do this polymorphically, and have two
@@ -1150,7 +1150,7 @@ public abstract class Loader {
 		if ( collectionPersisters != null ) {
 			for ( CollectionPersister collectionPersister : collectionPersisters ) {
 				if ( !collectionPersister.isArray() ) {
-					//for sets, we should end the collection load afterQuery resolving
+					//for sets, we should end the collection load after resolving
 					//the entities, since we might call hashCode() on the elements
 					//TODO: or we could do this polymorphically, and have two
 					//      different operations implemented differently for arrays
@@ -1160,7 +1160,7 @@ public abstract class Loader {
 		}
 
 		// Until this entire method is refactored w/ polymorphism, postLoad was
-		// split off from initializeEntity.  It *must* occur afterQuery
+		// split off from initializeEntity.  It *must* occur after
 		// endCollectionLoad to ensure the collection is in the
 		// persistence context.
 		if ( hydratedObjects != null ) {
@@ -1172,7 +1172,7 @@ public abstract class Loader {
 						if ( entityEntry == null ) {
 							// big problem
 							throw new HibernateException(
-									"Could not locate EntityEntry immediately afterQuery two-phase load"
+									"Could not locate EntityEntry immediately after two-phase load"
 							);
 						}
 						afterLoadAction.afterLoad( session, hydratedObject, (Loadable) entityEntry.getPersister() );
@@ -1210,7 +1210,7 @@ public abstract class Loader {
 	}
 
 	/**
-	 * Are rows transformed immediately afterQuery being read from the ResultSet?
+	 * Are rows transformed immediately after being read from the ResultSet?
 	 *
 	 * @return true, if getResultColumnOrRow() transforms the results; false, otherwise
 	 */
@@ -2028,7 +2028,7 @@ public abstract class Loader {
 	 * <p/>
 	 * Positional parameters are those specified by JDBC-style ? parameters
 	 * in the source query.  It is (currently) expected that these come
-	 * beforeQuery any named parameters in the source query.
+	 * before any named parameters in the source query.
 	 *
 	 * @param statement The JDBC prepared statement
 	 * @param queryParameters The encapsulation of the parameter values to be bound.
@@ -2743,7 +2743,7 @@ public abstract class Loader {
 
 	/**
 	 * Calculate and cache select-clause suffixes. Must be
-	 * called by subclasses afterQuery instantiation.
+	 * called by subclasses after instantiation.
 	 */
 	protected void postInstantiate() {
 	}

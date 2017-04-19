@@ -54,7 +54,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	/**
-	 * Reconnect to session afterQuery deserialization...
+	 * Reconnect to session after deserialization...
 	 *
 	 * @param session The session being deserialized
 	 */
@@ -72,7 +72,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 
 	@Override
 	public final void beforeExecutions() throws CacheException {
-		// we need to obtain the lock beforeQuery any actions are executed, since this may be an inverse="true"
+		// we need to obtain the lock before any actions are executed, since this may be an inverse="true"
 		// bidirectional association and it is one of the earlier entity actions which actually updates
 		// the database (this action is responsible for second-level cache invalidation only)
 		if ( persister.hasCache() ) {

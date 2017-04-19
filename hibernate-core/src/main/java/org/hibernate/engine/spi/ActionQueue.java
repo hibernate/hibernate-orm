@@ -250,9 +250,9 @@ public class ActionQueue {
 
 	private void addInsertAction(AbstractEntityInsertAction insert) {
 		if ( insert.isEarlyInsert() ) {
-			// For early inserts, must execute inserts beforeQuery finding non-nullable transient entities.
+			// For early inserts, must execute inserts before finding non-nullable transient entities.
 			// TODO: find out why this is necessary
-			LOG.tracev( "Executing inserts beforeQuery finding non-nullable transient entities for early insert: [{0}]", insert );
+			LOG.tracev( "Executing inserts before finding non-nullable transient entities for early insert: [{0}]", insert );
 			executeInserts();
 		}
 		NonNullableTransientDependencies nonNullableTransientDependencies = insert.findNonNullableTransientEntities();
@@ -274,7 +274,7 @@ public class ActionQueue {
 
 	private void addResolvedEntityInsertAction(AbstractEntityInsertAction insert) {
 		if ( insert.isEarlyInsert() ) {
-			LOG.trace( "Executing insertions beforeQuery resolved early-insert" );
+			LOG.trace( "Executing insertions before resolved early-insert" );
 			executeInserts();
 			LOG.debug( "Executing identity-insert immediately" );
 			execute( insert );
@@ -409,7 +409,7 @@ public class ActionQueue {
 	/**
 	 * Throws {@link org.hibernate.PropertyValueException} if there are any unresolved entity insert actions that depend
 	 * on non-nullable associations with a transient entity. This method should be called on completion of an operation
-	 * (afterQuery all cascades are completed) that saves an entity.
+	 * (after all cascades are completed) that saves an entity.
 	 * 
 	 * @throws org.hibernate.PropertyValueException if there are any unresolved entity insert actions;
 	 * {@link org.hibernate.PropertyValueException#getEntityName()} and
@@ -607,7 +607,7 @@ public class ActionQueue {
 		finally {
 			if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 				// Strictly speaking, only a subset of the list may have been processed if a RuntimeException occurs.
-				// We still invalidate all spaces. I don't see this as a big deal - afterQuery all, RuntimeExceptions are
+				// We still invalidate all spaces. I don't see this as a big deal - after all, RuntimeExceptions are
 				// unexpected.
 				Set<Serializable> propertySpaces = list.getQuerySpaces();
 				invalidateSpaces( propertySpaces.toArray( new Serializable[propertySpaces.size()] ) );
@@ -922,7 +922,7 @@ public class ActionQueue {
 	}
 
 	/**
-	 * Encapsulates behavior needed for beforeQuery transaction processing
+	 * Encapsulates behavior needed for before transaction processing
 	 */
 	private static class BeforeTransactionCompletionProcessQueue extends AbstractTransactionCompletionProcessQueue<BeforeTransactionCompletionProcess> {
 		private BeforeTransactionCompletionProcessQueue(SessionImplementor session) {
@@ -945,7 +945,7 @@ public class ActionQueue {
 	}
 
 	/**
-	 * Encapsulates behavior needed for afterQuery transaction processing
+	 * Encapsulates behavior needed for after transaction processing
 	 */
 	private static class AfterTransactionCompletionProcessQueue extends AbstractTransactionCompletionProcessQueue<AfterTransactionCompletionProcess> {
 		private Set<String> querySpacesToInvalidate = new HashSet<String>();

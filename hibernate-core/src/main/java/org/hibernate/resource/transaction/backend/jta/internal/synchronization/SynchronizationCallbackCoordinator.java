@@ -21,7 +21,7 @@ public interface SynchronizationCallbackCoordinator extends Synchronization {
 
 	/**
 	 * Called by the TransactionCoordinator to allow the SynchronizationCallbackCoordinator to process any
-	 * afterQuery-completion handling that it may have delayed due to thread affinity
+	 * after-completion handling that it may have delayed due to thread affinity
 	 */
 	public void processAnyDelayedAfterCompletion();
 }

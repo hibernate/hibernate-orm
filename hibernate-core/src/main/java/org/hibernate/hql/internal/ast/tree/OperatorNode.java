@@ -18,7 +18,7 @@ import antlr.SemanticException;
 public interface OperatorNode {
 	/**
 	 * Called by the tree walker during hql-sql semantic analysis
-	 * afterQuery the operator sub-tree is completely built.
+	 * after the operator sub-tree is completely built.
 	 */
 	public abstract void initialize() throws SemanticException;
 

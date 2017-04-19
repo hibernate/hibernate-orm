@@ -57,7 +57,7 @@ import static org.junit.Assert.fail;
  * In this test we verify that  it is possible to bootstrap Hibernate/JPA from
  * various bundles (war, par, ...) using {@code Persistence.createEntityManagerFactory()}
  * <p/>
- * Each test will beforeQuery its run build the required bundle and place them into the classpath.
+ * Each test will before its run build the required bundle and place them into the classpath.
  *
  * @author Gavin King
  * @author Hardy Ferentschik

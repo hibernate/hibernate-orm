@@ -23,8 +23,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface SelectBeforeUpdate {
 	/**
 	 * {@code true} (which is the default when this annotation is present) indicates that
-	 * {@code select-beforeQuery-update} processing should occur.  {@code false} indicates
-	 * {@code select-beforeQuery-update} processing should not occur.
+	 * {@code select-before-update} processing should occur.  {@code false} indicates
+	 * {@code select-before-update} processing should not occur.
 	 */
 	boolean value() default true;
 }

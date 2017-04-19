@@ -23,12 +23,12 @@ public class Parent implements Serializable {
 	public int age;
 
 	public int hashCode() {
-		//a NPE can occurs, but I don't expect hashcode to be used beforeQuery pk is set
+		//a NPE can occurs, but I don't expect hashcode to be used before pk is set
 		return id.hashCode();
 	}
 
 	public boolean equals(Object obj) {
-		//a NPE can occurs, but I don't expect equals to be used beforeQuery pk is set
+		//a NPE can occurs, but I don't expect equals to be used before pk is set
 		if ( obj != null && obj instanceof Parent ) {
 			return id.equals( ( (Parent) obj ).id );
 		}

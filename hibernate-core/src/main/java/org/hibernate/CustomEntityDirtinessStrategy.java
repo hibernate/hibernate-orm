@@ -47,7 +47,7 @@ public interface CustomEntityDirtinessStrategy {
 
 	/**
 	 * Callback used by Hibernate to signal that the entity dirty flag should be cleared.  Generally this
-	 * happens afterQuery previous dirty changes were written to the database.
+	 * happens after previous dirty changes were written to the database.
 	 *
 	 * @param entity The entity to reset
 	 * @param persister The persister corresponding to the given entity

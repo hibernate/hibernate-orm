@@ -61,7 +61,7 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 		// Due to the complexity in initializing the SelectClause, do not generate one here.
 		// If it is not found; simply return null...
 		//
-		// Also, do not cache since it gets generated well afterQuery we are created.
+		// Also, do not cache since it gets generated well after we are created.
 		return (SelectClause) ASTUtil.findTypeInChildren( this, SqlTokenTypes.SELECT_CLAUSE );
 	}
 

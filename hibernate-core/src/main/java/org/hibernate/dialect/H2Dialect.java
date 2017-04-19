@@ -432,7 +432,7 @@ public class H2Dialect extends Dialect {
 	
 	@Override
 	public boolean dropConstraints() {
-		// We don't need to drop constraints beforeQuery dropping tables, that just leads to error
+		// We don't need to drop constraints before dropping tables, that just leads to error
 		// messages about missing tables when we don't have a schema in the database
 		return false;
 	}

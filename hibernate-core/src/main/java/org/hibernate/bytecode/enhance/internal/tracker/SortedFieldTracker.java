@@ -38,7 +38,7 @@ public final class SortedFieldTracker implements DirtyTracker {
 				insert = middle;
 			}
 			else if( compare < 0 ) {
-				// top half: lower bound in (middle + 1) and insert position afterQuery middle
+				// top half: lower bound in (middle + 1) and insert position after middle
 				insert = low = middle + 1;
 			}
 			else {
@@ -62,7 +62,7 @@ public final class SortedFieldTracker implements DirtyTracker {
 				high = middle - 1;
 			}
 			else if( compare < 0 ) {
-				// top half: lower bound in (middle + 1) and insert position afterQuery middle
+				// top half: lower bound in (middle + 1) and insert position after middle
 				low = middle + 1;
 			}
 			else {

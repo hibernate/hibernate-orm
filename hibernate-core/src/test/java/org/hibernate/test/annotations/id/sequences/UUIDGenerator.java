@@ -18,7 +18,7 @@ import org.hibernate.id.IdentifierGenerator;
  * Unlike Hibernate's UUID generator.  This avoids 
  * meaningless synchronization and has less
  * than a chance of an asteroid hitting you on the head
- * even afterQuery trillions of rows are inserted.  I know
+ * even after trillions of rows are inserted.  I know
  * this to be true because it says so in Wikipedia(haha).
  * http://en.wikipedia.org/wiki/UUID#Random_UUID_probability_of_duplicates
  */

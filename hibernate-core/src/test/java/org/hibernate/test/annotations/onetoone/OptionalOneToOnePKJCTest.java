@@ -60,7 +60,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 		person.setPersonAddress( null );
 		person.setId( 1 );
 		try {
-			// Hibernate resets the ID to null beforeQuery executing the foreign generator
+			// Hibernate resets the ID to null before executing the foreign generator
 			s.persist( person );
 			s.flush();
 			fail( "should have thrown IdentifierGenerationException.");

@@ -78,7 +78,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 
 	/**
 	 * Callback to let us know that a flush is beginning.  We use this fact
-	 * to temporarily circumvent aggressive connection releasing until afterQuery
+	 * to temporarily circumvent aggressive connection releasing until after
 	 * the flush cycle is complete {@link #flushEnding()}
 	 */
 	void flushBeginning();
@@ -101,7 +101,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	/**
 	 * Signals the end of transaction.
 	 * <p/>
-	 * Intended for use from the transaction coordinator, afterQuery local transaction completion.  Used to conditionally
+	 * Intended for use from the transaction coordinator, after local transaction completion.  Used to conditionally
 	 * release the JDBC connection aggressively if the configured release mode indicates.
 	 */
 	void afterTransaction();
@@ -128,7 +128,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	void cancelLastQuery();
 
     /**
-	 * Calculate the amount of time, in seconds, still remaining beforeQuery transaction timeout occurs.
+	 * Calculate the amount of time, in seconds, still remaining before transaction timeout occurs.
 	 *
 	 * @return The number of seconds remaining until until a transaction timeout occurs.  A negative value indicates
 	 * no timeout was requested.

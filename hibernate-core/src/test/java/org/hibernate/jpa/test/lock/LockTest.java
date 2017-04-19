@@ -494,7 +494,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 						log.debug( "The background thread was blocked" );
 						boolean backgroundThreadHasReadNewValue = bgTask.get();
 						assertTrue(
-								"Background thread should read the new value afterQuery being unblocked",
+								"Background thread should read the new value after being unblocked",
 								backgroundThreadHasReadNewValue
 						);
 					}
@@ -508,7 +508,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish beforeQuery deleting entity
+			t.join(); // wait for background thread to finish before deleting entity
 
 			doInJPA( this::entityManagerFactory, em -> {
 				Lock _lock = em.getReference( Lock.class, lock.getId() );
@@ -595,7 +595,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish beforeQuery deleting entity
+			t.join(); // wait for background thread to finish before deleting entity
 
 			doInJPA( this::entityManagerFactory, em -> {
 				Lock _lock = em.getReference( Lock.class, lock.getId() );
@@ -680,7 +680,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish beforeQuery deleting entity
+			t.join(); // wait for background thread to finish before deleting entity
 
 			doInJPA( this::entityManagerFactory, em -> {
 				Lock _lock = em.getReference( Lock.class, lock.getId() );
@@ -765,7 +765,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish beforeQuery deleting entity
+			t.join(); // wait for background thread to finish before deleting entity
 
 			doInJPA( this::entityManagerFactory, em -> {
 				Lock _lock = em.getReference( Lock.class, lock.getId() );
@@ -855,7 +855,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish beforeQuery deleting entity
+			t.join(); // wait for background thread to finish before deleting entity
 
 			doInJPA( this::entityManagerFactory, em -> {
 				Lock _lock = em.getReference( Lock.class, lock.getId() );
@@ -946,7 +946,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish beforeQuery deleting entity
+			t.join(); // wait for background thread to finish before deleting entity
 
 			doInJPA( this::entityManagerFactory, em -> {
 				Lock _lock = em.getReference( Lock.class, lock.getId() );
@@ -1032,7 +1032,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			} );
 		}
 		finally {
-			t.join(); // wait for background thread to finish beforeQuery deleting entity
+			t.join(); // wait for background thread to finish before deleting entity
 
 			doInJPA( this::entityManagerFactory, em -> {
 				Lock _lock = em.getReference( Lock.class, lock.getId() );

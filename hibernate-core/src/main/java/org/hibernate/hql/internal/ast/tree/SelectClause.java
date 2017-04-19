@@ -121,7 +121,7 @@ public class SelectClause extends SelectExpressionList {
 		ArrayList queryReturnTypeList = new ArrayList();
 
 		// First, collect all of the select expressions.
-		// NOTE: This must be done *beforeQuery* invoking setScalarColumnText() because setScalarColumnText()
+		// NOTE: This must be done *before* invoking setScalarColumnText() because setScalarColumnText()
 		// changes the AST!!!
 		SelectExpression[] selectExpressions = collectSelectExpressions();
 
@@ -176,7 +176,7 @@ public class SelectClause extends SelectExpressionList {
 			}
 		}
 
-		//init the aliases, afterQuery initing the constructornode
+		//init the aliases, after initing the constructornode
 		initAliases( selectExpressions );
 
 		if ( !getWalker().isShallowQuery() ) {

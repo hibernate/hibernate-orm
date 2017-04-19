@@ -52,7 +52,7 @@ import static org.jboss.logging.Logger.Level.WARN;
  * The jboss-logging {@link MessageLogger} for the hibernate-core module.  It reserves message ids ranging from
  * 00001 to 10000 inclusively.
  * <p/>
- * New messages must be added afterQuery the last message defined to ensure message codes are unique.
+ * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger(projectCode = "HHH")
 public interface CoreMessageLogger extends BasicLogger {
@@ -738,7 +738,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void schemaUpdateComplete();
 
 	@LogMessage(level = WARN)
-	@Message(value = "Scoping types to session factory %s afterQuery already scoped %s", id = 233)
+	@Message(value = "Scoping types to session factory %s after already scoped %s", id = 233)
 	void scopingTypesToSessionFactoryAfterAlreadyScoped(
 			SessionFactoryImplementor factory,
 			SessionFactoryImplementor factory2);
@@ -930,7 +930,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToCleanUpPreparedStatement(@Cause SQLException e);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to cleanup temporary id table afterQuery use [%s]", id = 283)
+	@Message(value = "Unable to cleanup temporary id table after use [%s]", id = 283)
 	void unableToCleanupTemporaryIdTable(Throwable t);
 
 	@LogMessage(level = ERROR)
@@ -1061,11 +1061,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Could not determine transaction status", id = 312)
 	String unableToDetermineTransactionStatus();
 
-	@Message(value = "Could not determine transaction status afterQuery commit", id = 313)
+	@Message(value = "Could not determine transaction status after commit", id = 313)
 	String unableToDetermineTransactionStatusAfterCommit();
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to drop temporary id table afterQuery use [%s]", id = 314)
+	@Message(value = "Unable to drop temporary id table after use [%s]", id = 314)
 	void unableToDropTemporaryIdTable(String message);
 
 	@LogMessage(level = ERROR)
@@ -1600,7 +1600,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(
 			value = "Encountered request for locking however dialect reports that database prefers locking be done in a " +
-					"separate select (follow-on locking); results will be locked afterQuery initial query executes",
+					"separate select (follow-on locking); results will be locked after initial query executes",
 			id = 444
 	)
 	void usingFollowOnLocking();

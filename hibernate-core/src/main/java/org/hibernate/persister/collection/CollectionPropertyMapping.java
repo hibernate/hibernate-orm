@@ -27,7 +27,7 @@ public class CollectionPropertyMapping implements PropertyMapping {
 		}
 		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_INDICES) ) {
 			if ( !memberPersister.hasIndex() ) {
-				throw new QueryException("unindexed collection beforeQuery indices()");
+				throw new QueryException("unindexed collection before indices()");
 			}
 			return memberPersister.getIndexType();
 		}

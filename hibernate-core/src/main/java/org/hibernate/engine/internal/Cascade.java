@@ -298,13 +298,13 @@ public final class Cascade {
 							if ( type.isAssociationType() && ( (AssociationType) type ).getForeignKeyDirection().equals(
 									ForeignKeyDirection.TO_PARENT
 							) ) {
-								// If FK direction is to-parent, we must remove the orphan *beforeQuery* the queued update(s)
+								// If FK direction is to-parent, we must remove the orphan *before* the queued update(s)
 								// occur.  Otherwise, replacing the association on a managed entity, without manually
 								// nulling and flushing, causes FK constraint violations.
 								eventSource.removeOrphanBeforeUpdates( entityName, loadedValue );
 							}
 							else {
-								// Else, we must delete afterQuery the updates.
+								// Else, we must delete after the updates.
 								eventSource.delete( entityName, loadedValue, isCascadeDeleteEnabled, new HashSet() );
 							}
 						}

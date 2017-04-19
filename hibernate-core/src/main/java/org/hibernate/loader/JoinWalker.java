@@ -218,7 +218,7 @@ public class JoinWalker {
 		Joinable joinable = type.getAssociatedJoinable( getFactory() );
 
 		// important to generate alias based on size of association collection
-		// *beforeQuery* adding this join to that collection
+		// *before* adding this join to that collection
 		String subalias = generateTableAlias( associations.size() + 1, path, joinable );
 
 		// NOTE : it should be fine to continue to pass only filters below

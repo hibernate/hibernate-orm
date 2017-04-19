@@ -165,7 +165,7 @@ public class BufferedXMLEventReader extends BaseXMLEventReader {
 	}
 
 	/**
-	 * If reading from the buffer afterQuery a {@link #reset()} call an {@link IllegalStateException} will be thrown.
+	 * If reading from the buffer after a {@link #reset()} call an {@link IllegalStateException} will be thrown.
 	 */
 	@Override
 	public void remove() {

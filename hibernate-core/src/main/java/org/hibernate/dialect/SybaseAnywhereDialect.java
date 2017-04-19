@@ -28,7 +28,7 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	/**
-	 * ASA does not require to drop constraint beforeQuery dropping tables, so disable it.
+	 * ASA does not require to drop constraint before dropping tables, so disable it.
 	 * <p/>
 	 * NOTE : Also, the DROP statement syntax used by Hibernate to drop constraints is 
 	 * not compatible with ASA.

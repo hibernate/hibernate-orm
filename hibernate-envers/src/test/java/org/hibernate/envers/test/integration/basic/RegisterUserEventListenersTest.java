@@ -48,7 +48,7 @@ public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase
 		session.getTransaction().commit();
 		session.close();
 
-		// Post insert listener invoked three times - beforeQuery/afterQuery insertion of original data,
+		// Post insert listener invoked three times - before/after insertion of original data,
 		// revision entity and audit row.
 		Assert.assertEquals( 3, listener.getBeforeCount() );
 		Assert.assertEquals( 3, listener.getAfterCount() );

@@ -186,7 +186,7 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 	}
 	
 	/**
-	 * For entities, orderings added by, for example, Criteria#addOrder need to come beforeQuery the associations' @OrderBy
+	 * For entities, orderings added by, for example, Criteria#addOrder need to come before the associations' @OrderBy
 	 * values.  However, other sub-classes of JoinWalker (BasicCollectionJoinWalker, OneToManyJoinWalker, etc.)
 	 * still need the other way around.  So, override here instead.  See HHH-7116.
 	 */

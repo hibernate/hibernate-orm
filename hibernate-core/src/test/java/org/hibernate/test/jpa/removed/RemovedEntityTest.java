@@ -90,7 +90,7 @@ public class RemovedEntityTest extends AbstractJPATest {
 		assertNull( "expecting removed entity to be returned as null from get()", item2 );
 
 		s.persist( item );
-		assertEquals( "expecting session to be as it was beforeQuery", sessionAsString, s.toString() );
+		assertEquals( "expecting session to be as it was before", sessionAsString, s.toString() );
 
 		item.setName("Rescued");
 		item = ( Item ) s.get( Item.class, id );
@@ -130,13 +130,13 @@ public class RemovedEntityTest extends AbstractJPATest {
 
 		// delete cascades to part also
 		s.delete( item );
-		assertFalse( "the item is contained in the session afterQuery deletion", s.contains( item ) );
-		assertFalse( "the part is contained in the session afterQuery deletion", s.contains( part ) );
+		assertFalse( "the item is contained in the session after deletion", s.contains( item ) );
+		assertFalse( "the part is contained in the session after deletion", s.contains( part ) );
 
 		// now try to persist again as a "unschedule removal" operation
 		s.persist( item );
-		assertTrue( "the item is contained in the session afterQuery deletion", s.contains( item ) );
-		assertTrue( "the part is contained in the session afterQuery deletion", s.contains( part ) );
+		assertTrue( "the item is contained in the session after deletion", s.contains( item ) );
+		assertTrue( "the part is contained in the session after deletion", s.contains( part ) );
 
 		s.getTransaction().commit();
 		s.close();

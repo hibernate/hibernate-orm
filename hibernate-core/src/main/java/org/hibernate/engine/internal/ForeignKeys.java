@@ -234,7 +234,7 @@ public final class ForeignKeys {
 			return assumed;
 		}
 
-		// hit the database, afterQuery checking the session cache for a snapshot
+		// hit the database, after checking the session cache for a snapshot
 		final Object[] snapshot = session.getPersistenceContext().getDatabaseSnapshot(
 				persister.getIdentifier( entity, session ),
 				persister
@@ -275,7 +275,7 @@ public final class ForeignKeys {
 				// deeper checks...
 				if ( isTransient( entityName, object, Boolean.FALSE, session ) ) {
 					throw new TransientObjectException(
-							"object references an unsaved transient instance - save the transient instance beforeQuery flushing: " +
+							"object references an unsaved transient instance - save the transient instance before flushing: " +
 									(entityName == null ? session.guessEntityName( object ) : entityName)
 					);
 				}

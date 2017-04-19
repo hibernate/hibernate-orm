@@ -38,7 +38,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 			source.getEventListenerManager().partialFlushStart();
 
 			if ( flushMightBeNeeded(source) ) {
-				// Need to get the number of collection removals beforeQuery flushing to executions
+				// Need to get the number of collection removals before flushing to executions
 				// (because flushing to executions can add collection removal actions to the action queue).
 				final int oldSize = source.getActionQueue().numberOfCollectionRemovals();
 				flushEverythingToExecutions(event);

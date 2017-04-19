@@ -24,7 +24,7 @@ public class RevisionDoesNotExistException extends AuditException {
 	}
 
 	public RevisionDoesNotExistException(Date date) {
-		super( "There is no revision beforeQuery or at " + date + "." );
+		super( "There is no revision before or at " + date + "." );
 		this.date = date;
 		this.revision = null;
 	}

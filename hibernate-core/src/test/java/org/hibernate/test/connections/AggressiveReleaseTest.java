@@ -125,7 +125,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		}
 
 		// getting the first row only because SybaseASE15Dialect throws NullPointerException
-		// if data is not read beforeQuery closing the ResultSet
+		// if data is not read before closing the ResultSet
 		sr.next();
 
 		// Closing the ScrollableResults does currently force batching to

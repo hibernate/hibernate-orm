@@ -24,7 +24,7 @@ import antlr.collections.AST;
 public abstract class AbstractNullnessCheckNode extends UnaryLogicOperatorNode {
 	@Override
 	public void initialize() {
-		// TODO : this really needs to be delayed unitl afterQuery we definitively know the operand node type;
+		// TODO : this really needs to be delayed until after we definitively know the operand node type;
 		// where this is currently a problem is parameters for which where we cannot unequivocally
 		// resolve an expected type
 		Type operandType = extractDataType( getOperand() );

@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Called afterQuery deleting an item from the datastore
+ * Called after deleting an item from the datastore
  * 
  * @author Gavin King
  */

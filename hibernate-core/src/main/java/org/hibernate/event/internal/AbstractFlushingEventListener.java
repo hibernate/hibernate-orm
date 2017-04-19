@@ -331,7 +331,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		try {
 			session.getJdbcCoordinator().flushBeginning();
 			session.getPersistenceContext().setFlushing( true );
-			// we need to lock the collection caches beforeQuery executing entity inserts/updates in order to
+			// we need to lock the collection caches before executing entity inserts/updates in order to
 			// account for bi-directional associations
 			session.getActionQueue().prepareActions();
 			session.getActionQueue().executeActions();

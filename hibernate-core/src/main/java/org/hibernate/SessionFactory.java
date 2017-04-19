@@ -115,7 +115,7 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	 * connection pools, etc).
 	 * <p/>
 	 * It is the responsibility of the application to ensure that there are no
-	 * open {@link Session sessions} beforeQuery calling this method as the impact
+	 * open {@link Session sessions} before calling this method as the impact
 	 * on those {@link Session sessions} is indeterminate.
 	 * <p/>
 	 * No-ops if already {@link #isClosed closed}.

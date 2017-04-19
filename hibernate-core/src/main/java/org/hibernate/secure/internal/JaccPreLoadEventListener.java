@@ -11,7 +11,7 @@ import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.secure.spi.PermissibleAction;
 
 /**
- * Check security beforeQuery any load
+ * Check security before any load
  *
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  * @author Steve Ebersole

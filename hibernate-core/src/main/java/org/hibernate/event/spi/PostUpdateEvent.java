@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Occurs afterQuery the datastore is updated
+ * Occurs after the datastore is updated
  * 
  * @author Gavin King
  */

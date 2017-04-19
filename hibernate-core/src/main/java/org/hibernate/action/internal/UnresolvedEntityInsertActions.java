@@ -37,7 +37,7 @@ import org.jboss.logging.Logger;
  * an unsaved transient entity, and the foreign key points to that
  * unsaved transient entity.
  *
- * These references must be resolved beforeQuery an insert action can be
+ * These references must be resolved before an insert action can be
  * executed.
  *
  * @author Gail Badner
@@ -91,7 +91,7 @@ public class UnresolvedEntityInsertActions {
 	 * Throws {@link org.hibernate.PropertyValueException} if there are any unresolved
 	 * entity insert actions that depend on non-nullable associations with
 	 * a transient entity. This method should be called on completion of
-	 * an operation (afterQuery all cascades are completed) that saves an entity.
+	 * an operation (after all cascades are completed) that saves an entity.
 	 *
 	 * @throws org.hibernate.PropertyValueException if there are any unresolved entity
 	 * insert actions; {@link org.hibernate.PropertyValueException#getEntityName()}
@@ -117,7 +117,7 @@ public class UnresolvedEntityInsertActions {
 					nonNullableTransientDependencies.getNonNullableTransientPropertyPaths( firstTransientDependency ).iterator().next();
 
 			throw new TransientPropertyValueException(
-					"Not-null property references a transient value - transient instance must be saved beforeQuery current operation",
+					"Not-null property references a transient value - transient instance must be saved before current operation",
 					firstDependentAction.getSession().guessEntityName( firstTransientDependency ),
 					firstDependentAction.getEntityName(),
 					firstPropertyPath
@@ -203,7 +203,7 @@ public class UnresolvedEntityInsertActions {
 		final Set<AbstractEntityInsertAction> resolvedActions = new IdentitySet(  );
 		if ( traceEnabled  ) {
 			LOG.tracev(
-					"Unresolved inserts beforeQuery resolving [{0}]: [{1}]",
+					"Unresolved inserts before resolving [{0}]: [{1}]",
 					MessageHelper.infoString( entityEntry.getEntityName(), entityEntry.getId() ),
 					toString()
 			);
@@ -233,7 +233,7 @@ public class UnresolvedEntityInsertActions {
 		}
 		if ( traceEnabled  ) {
 			LOG.tracev(
-					"Unresolved inserts afterQuery resolving [{0}]: [{1}]",
+					"Unresolved inserts after resolving [{0}]: [{1}]",
 					MessageHelper.infoString( entityEntry.getEntityName(), entityEntry.getId() ),
 					toString()
 			);

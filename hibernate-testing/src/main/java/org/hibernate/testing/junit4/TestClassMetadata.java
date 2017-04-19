@@ -210,7 +210,7 @@ public class TestClassMetadata {
 	public void performAfterClassCallbacks(Object target) {
 		performCallbacks( afterClassOnceMethods, target );
 		if ( SessionFactoryRegistry.INSTANCE.hasRegistrations() ) {
-			log.warnf( "Open SessionFactory instances found afterQuery completion of test class [%s]; closing them", testClass.getName() );
+			log.warnf( "Open SessionFactory instances found after completion of test class [%s]; closing them", testClass.getName() );
 			SessionFactoryRegistry.INSTANCE.clearRegistrations();
 		}
 	}

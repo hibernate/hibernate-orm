@@ -192,7 +192,7 @@ public class Helper {
 				}
 			}
 			catch( Exception e ) {
-				log.warn( "unable to drop temporary id table afterQuery use [" + e.getMessage() + "]" );
+				log.warn( "unable to drop temporary id table after use [" + e.getMessage() + "]" );
 			}
 		}
 	}

@@ -51,7 +51,7 @@ public class ByteCodeHelper {
 				final byte[] temp = new byte[ classBytes.length + buffer.length ];
 				// copy any previously read bytes into the temp array
 				System.arraycopy( classBytes, 0, temp, 0, classBytes.length );
-				// copy the just read bytes into the temp array (afterQuery the previously read)
+				// copy the just read bytes into the temp array (after the previously read)
 				System.arraycopy( buffer, 0, temp, classBytes.length, buffer.length );
 				classBytes = temp;
 				// read the next set of bytes into buffer
@@ -61,7 +61,7 @@ public class ByteCodeHelper {
 				final byte[] temp = new byte[ classBytes.length + r ];
 				// copy any previously read bytes into the temp array
 				System.arraycopy( classBytes, 0, temp, 0, classBytes.length );
-				// copy the just read bytes into the temp array (afterQuery the previously read)
+				// copy the just read bytes into the temp array (after the previously read)
 				System.arraycopy( buffer, 0, temp, classBytes.length, r );
 				classBytes = temp;
 			}

@@ -533,7 +533,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	@Override
 	public boolean afterInitialize() {
 		setInitialized();
-		//do this bit afterQuery setting initialized to true or it will recurse
+		//do this bit after setting initialized to true or it will recurse
 		if ( operationQueue != null ) {
 			performQueuedOperations();
 			operationQueue = null;

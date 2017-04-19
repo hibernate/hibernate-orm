@@ -81,7 +81,7 @@ public class HasChangedNullProperties extends AbstractModifiedFlagsEntityTest {
 				BasicTestEntity1.class,
 				id2, "str1"
 		);
-		// str1 property was null beforeQuery insert and afterQuery insert so in a way it didn't change - is it a good way to go?
+		// str1 property was null before insert and after insert so in a way it didn't change - is it a good way to go?
 		assertEquals( 1, list.size() );
 		assertEquals( makeList( 4 ), extractRevisionNumbers( list ) );
 

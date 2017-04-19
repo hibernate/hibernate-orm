@@ -1031,7 +1031,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Does the <tt>LIMIT</tt> clause come at the start of the
 	 * <tt>SELECT</tt> statement, rather than at the end?
 	 *
-	 * @return true if limit parameters should come beforeQuery other parameters
+	 * @return true if limit parameters should come before other parameters
 	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
 	 */
 	@Deprecated
@@ -2045,7 +2045,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Do we need to drop constraints beforeQuery dropping tables in this dialect?
+	 * Do we need to drop constraints before dropping tables in this dialect?
 	 *
 	 * @return True if constraints must be dropped prior to dropping
 	 * the table; false otherwise.
@@ -2198,44 +2198,44 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * For dropping a table, can the phrase "if exists" be applied beforeQuery the table name?
+	 * For dropping a table, can the phrase "if exists" be applied before the table name?
 	 * <p/>
 	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsAfterTableName} should return true
 	 *
-	 * @return {@code true} if the "if exists" can be applied beforeQuery the table name
+	 * @return {@code true} if the "if exists" can be applied before the table name
 	 */
 	public boolean supportsIfExistsBeforeTableName() {
 		return false;
 	}
 
 	/**
-	 * For dropping a table, can the phrase "if exists" be applied afterQuery the table name?
+	 * For dropping a table, can the phrase "if exists" be applied after the table name?
 	 * <p/>
 	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsBeforeTableName} should return true
 	 *
-	 * @return {@code true} if the "if exists" can be applied afterQuery the table name
+	 * @return {@code true} if the "if exists" can be applied after the table name
 	 */
 	public boolean supportsIfExistsAfterTableName() {
 		return false;
 	}
 
 	/**
-	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied beforeQuery the constraint name?
+	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied before the constraint name?
 	 * <p/>
 	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsAfterConstraintName} should return true
 	 *
-	 * @return {@code true} if the "if exists" can be applied beforeQuery the constraint name
+	 * @return {@code true} if the "if exists" can be applied before the constraint name
 	 */
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return false;
 	}
 
 	/**
-	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied afterQuery the constraint name?
+	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied after the constraint name?
 	 * <p/>
 	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsBeforeConstraintName} should return true
 	 *
-	 * @return {@code true} if the "if exists" can be applied afterQuery the constraint name
+	 * @return {@code true} if the "if exists" can be applied after the constraint name
 	 */
 	public boolean supportsIfExistsAfterConstraintName() {
 		return false;

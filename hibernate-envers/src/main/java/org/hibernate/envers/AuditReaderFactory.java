@@ -28,7 +28,7 @@ public class AuditReaderFactory {
 	 * @param session An open session.
 	 *
 	 * @return An audit reader associated with the given sesison. It shouldn't be used
-	 *         afterQuery the session is closed.
+	 *         after the session is closed.
 	 *
 	 * @throws AuditException When the given required listeners aren't installed.
 	 */
@@ -53,7 +53,7 @@ public class AuditReaderFactory {
 	 * @param entityManager An open entity manager.
 	 *
 	 * @return An audit reader associated with the given entity manager. It shouldn't be used
-	 *         afterQuery the entity manager is closed.
+	 *         after the entity manager is closed.
 	 *
 	 * @throws AuditException When the given entity manager is not based on Hibernate, or if the required
 	 * listeners aren't installed.

@@ -47,7 +47,7 @@ public class CacheableResultTransformer implements ResultTransformer {
 	 * tuples to a value(s) that can be cached.
 	 *
 	 * @param transformer - result transformer that will ultimately be
-	 *        be used (afterQuery caching results)
+	 *        be used (after caching results)
 	 * @param aliases - the aliases that correspond to the tuple;
 	 *        if it is non-null, its length must equal the number
 	 *        of true elements in includeInTuple[]

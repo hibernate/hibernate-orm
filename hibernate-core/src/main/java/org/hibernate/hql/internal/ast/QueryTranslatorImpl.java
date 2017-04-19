@@ -526,7 +526,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 
 		// This is not strictly true.  We actually just need to make sure that
-		// it is ordered by root-entity PK and that that order-by comes beforeQuery
+		// it is ordered by root-entity PK and that that order-by comes before
 		// any non-root-entity ordering...
 
 		AST primaryOrdering = query.getOrderByClause().getFirstChild();

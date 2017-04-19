@@ -105,7 +105,7 @@ public interface PersistenceContext {
 	public void setEntryStatus(EntityEntry entry, Status status);
 
 	/**
-	 * Called afterQuery transactions end
+	 * Called after transactions end
 	 */
 	public void afterTransactionCompletion();
 
@@ -425,7 +425,7 @@ public interface PersistenceContext {
 
 	/**
 	 * Register a <tt>PersistentCollection</tt> object for an array.
-	 * Associates a holder with an array - MUST be called afterQuery loading
+	 * Associates a holder with an array - MUST be called after loading
 	 * array, since the array instance is not created until endLoad().
 	 */
 	public void addCollectionHolder(PersistentCollection holder);
@@ -515,12 +515,12 @@ public interface PersistenceContext {
 	public int getCascadeLevel();
 	
 	/**
-	 * Called beforeQuery cascading
+	 * Called before cascading
 	 */
 	public int incrementCascadeLevel();
 
 	/**
-	 * Called afterQuery cascading
+	 * Called after cascading
 	 */
 	public int decrementCascadeLevel();
 
@@ -531,17 +531,17 @@ public interface PersistenceContext {
 	public boolean isFlushing();
 	
 	/**
-	 * Called beforeQuery and afterQuery the flushcycle
+	 * Called before and after the flushcycle
 	 */
 	public void setFlushing(boolean flushing);
 
 	/**
-	 * Call this beforeQuery begining a two-phase load
+	 * Call this before begining a two-phase load
 	 */
 	public void beforeLoad();
 
 	/**
-	 * Call this afterQuery finishing a two-phase load
+	 * Call this after finishing a two-phase load
 	 */
 	public void afterLoad();
 	
@@ -845,7 +845,7 @@ public interface PersistenceContext {
 		 * when natural-id values were found to have changed.  Also responsible for tracking the old values 
 		 * as no longer valid until the next flush because otherwise going to the database would just re-pull
 		 * the old values as valid.  In this last responsibility, {@link #cleanupFromSynchronizations} is
-		 * the inverse process called afterQuery flush to clean up those entries.
+		 * the inverse process called after flush to clean up those entries.
 		 *
 		 * @param persister The persister representing the entity type.
 		 * @param pk The primary key

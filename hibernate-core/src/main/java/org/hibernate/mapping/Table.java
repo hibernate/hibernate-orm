@@ -714,7 +714,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 			}
 
 			// NOTE : if the name is null, we will generate an implicit name during second pass processing
-			// afterQuery we know the referenced table name (which might not be resolved yet).
+			// after we know the referenced table name (which might not be resolved yet).
 			fk.setName( keyName );
 
 			foreignKeys.put( key, fk );

@@ -19,7 +19,7 @@ import javax.xml.stream.events.XMLEvent;
 /**
  * Base class for {@link XMLEventReader}s that want to modify or remove events from the reader stream.
  * If a {@link StartElement} event is removed the subclass's {@link #filterEvent(XMLEvent, boolean)} will
- * not see any events until afterQuery the matching {@link EndElement} event.
+ * not see any events until after the matching {@link EndElement} event.
  *
  * Note, copied from the uPortal project by permission of author.  See
  * https://github.com/Jasig/uPortal/blob/master/uportal-war/src/main/java/org/jasig/portal/xml/stream/FilteringXMLEventReader.java

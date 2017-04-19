@@ -20,7 +20,7 @@ import org.hibernate.event.spi.EventSource;
  */
 public class SessionCacheCleaner {
 	/**
-	 * Schedules audit data removal from session level cache afterQuery transaction completion. The operation is performed
+	 * Schedules audit data removal from session level cache after transaction completion. The operation is performed
 	 * regardless of commit success.
 	 *
 	 * @param session Active Hibernate session.

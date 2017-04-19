@@ -912,7 +912,7 @@ public interface AvailableSettings {
 	String C3P0_ACQUIRE_INCREMENT = "hibernate.c3p0.acquire_increment";
 
 	/**
-	 * Idle time beforeQuery a C3P0 pooled connection is validated
+	 * Idle time before a C3P0 pooled connection is validated
 	 */
 	String C3P0_IDLE_TEST_PERIOD = "hibernate.c3p0.idle_test_period";
 
@@ -1292,7 +1292,7 @@ public interface AvailableSettings {
 	/**
 	 * Comma-separated names of the optional files containing SQL DML statements executed
 	 * during the SessionFactory creation.
-	 * File order matters, the statements of a give file are executed beforeQuery the statements of the
+	 * File order matters, the statements of a give file are executed before the statements of the
 	 * following files.
 	 * <p/>
 	 * These statements are only executed if the schema is created ie if <tt>hibernate.hbm2ddl.auto</tt>

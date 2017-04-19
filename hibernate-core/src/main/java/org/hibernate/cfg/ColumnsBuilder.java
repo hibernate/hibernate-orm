@@ -185,7 +185,7 @@ class ColumnsBuilder {
 	}
 
 	Ejb3JoinColumn[] buildExplicitJoinColumns(XProperty property, PropertyData inferredData) {
-		//process @JoinColumn(s) beforeQuery @Column(s) to handle collection of entities properly
+		//process @JoinColumn(s) before @Column(s) to handle collection of entities properly
 		JoinColumn[] joinColumnAnnotations = null;
 
 		if ( property.isAnnotationPresent( JoinColumn.class ) ) {

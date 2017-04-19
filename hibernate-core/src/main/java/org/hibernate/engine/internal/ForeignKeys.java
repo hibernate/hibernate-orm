@@ -234,7 +234,7 @@ public final class ForeignKeys {
 			return assumed;
 		}
 
-		// hit the database, afterQuery checking the session cache for a snapshot
+		// hit the database, after checking the session cache for a snapshot
 		final Object[] snapshot = session.getPersistenceContext().getDatabaseSnapshot(
 				persister.getIdentifier( entity, session ),
 				persister

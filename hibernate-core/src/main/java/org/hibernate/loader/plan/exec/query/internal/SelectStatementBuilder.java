@@ -82,7 +82,7 @@ public class SelectStatementBuilder {
 	}
 
 	/**
-	 * Appends the specified restrictions afterQuery "cleaning" the specified value
+	 * Appends the specified restrictions after "cleaning" the specified value
 	 * (by trimming and removing 'and ' from beginning and ' and' from the end).
 	 * If the where clause already exists, this method ensure that ' and '
 	 * prefixes the cleaned restrictions.

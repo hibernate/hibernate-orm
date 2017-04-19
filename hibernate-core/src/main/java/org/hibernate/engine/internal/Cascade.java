@@ -304,7 +304,7 @@ public final class Cascade {
 								eventSource.removeOrphanBeforeUpdates( entityName, loadedValue );
 							}
 							else {
-								// Else, we must delete afterQuery the updates.
+								// Else, we must delete after the updates.
 								eventSource.delete( entityName, loadedValue, isCascadeDeleteEnabled, new HashSet() );
 							}
 						}

@@ -167,7 +167,7 @@ public class SelectParser implements Parser {
 		else if ( aggregate ) {
 			boolean constantToken = false;
 			if ( !ready ) {
-				throw new QueryException( "( expected afterQuery aggregate function in SELECT" );
+				throw new QueryException( "( expected after aggregate function in SELECT" );
 			}
 			try {
 				ParserHelper.parse( aggregatePathExpressionParser, q.unalias( token ), ParserHelper.PATH_SEPARATORS, q );

@@ -493,7 +493,7 @@ public class WhereParser implements Parser {
 
 		PathExpressionParser.CollectionElement element = pathExpressionParser.lastCollectionElement();
 
-		if ( token.startsWith( "." ) ) { // the path expression continues afterQuery a ]
+		if ( token.startsWith( "." ) ) { // the path expression continues after a ]
 
 			doPathExpression( getElementName( element, q ) + token, q ); // careful with this!
 

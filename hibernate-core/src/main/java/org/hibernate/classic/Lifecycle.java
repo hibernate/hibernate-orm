@@ -19,7 +19,7 @@ import org.hibernate.Session;
  * <b>onUpdate:</b> called just before an object is updated,
  * ie. when <tt>Session.update()</tt> is called<br>
  * <b>onDelete:</b> called just before an object is deleted<br>
- * <b>onLoad:</b> called just afterQuery an object is loaded<br>
+ * <b>onLoad:</b> called just after an object is loaded<br>
  * <br>
  * <tt>onLoad()</tt> may be used to initialize transient properties of the
  * object from its persistent state. It may <b>not</b> be used to load
@@ -35,7 +35,7 @@ import org.hibernate.Session;
  * <tt>CallbackException</tt> is thrown, the operation is vetoed and the
  * exception is passed back to the application.<br>
  * <br>
- * Note that <tt>onSave()</tt> is called afterQuery an identifier is assigned
+ * Note that <tt>onSave()</tt> is called after an identifier is assigned
  * to the object, except when identity column key generation is used.
  *
  * @see CallbackException
@@ -80,7 +80,7 @@ public interface Lifecycle {
 	public boolean onDelete(Session s) throws CallbackException;
 
 	/**
-	 * Called afterQuery an entity is loaded. <em>It is illegal to
+	 * Called after an entity is loaded. <em>It is illegal to
 	 * access the <tt>Session</tt> from inside this method.</em>
 	 * However, the object may keep a reference to the session
 	 * for later use.

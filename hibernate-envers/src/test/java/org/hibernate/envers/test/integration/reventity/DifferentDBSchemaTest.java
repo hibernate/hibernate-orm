@@ -35,7 +35,7 @@ public class DifferentDBSchemaTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
-		// Creates new schema afterQuery establishing connection
+		// Creates new schema after establishing connection
 		options.putAll( Environment.getProperties() );
 		options.put( EnversSettings.DEFAULT_SCHEMA, SCHEMA_NAME );
 	}

@@ -293,7 +293,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 
 		cascadeAfterDelete( session, persister, entity, transientEntities );
 
-		// the entry will be removed afterQuery the flush, and will no longer
+		// the entry will be removed after the flush, and will no longer
 		// override the stale snapshot
 		// This is now handled by removeEntity() in EntityDeleteAction
 		//persistenceContext.removeDatabaseSnapshot(key);

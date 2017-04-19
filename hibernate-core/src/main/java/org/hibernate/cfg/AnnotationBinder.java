@@ -474,7 +474,7 @@ public final class AnnotationBinder {
 	}
 
 	/**
-	 * Bind a class having JSR175 annotations. Subclasses <b>have to</b> be bound afterQuery its parent class.
+	 * Bind a class having JSR175 annotations. Subclasses <b>have to</b> be bound after its parent class.
 	 *
 	 * @param clazzToProcess entity to bind as {@code XClass} instance
 	 * @param inheritanceStatePerClass Meta data about the inheritance relationships for all mapped classes
@@ -1277,7 +1277,7 @@ public final class AnnotationBinder {
 			//check if superclass is not a potential persistent class
 			if ( inheritanceState.hasParents() ) {
 				throw new AssertionFailure(
-						"Subclass has to be binded afterQuery it's mother class: "
+						"Subclass has to be binded after it's mother class: "
 								+ superEntityState.getClazz().getName()
 				);
 			}
@@ -2299,7 +2299,7 @@ public final class AnnotationBinder {
 			}
 		}
 		//init index
-		//process indexes afterQuery everything: in second pass, many to one has to be done before indexes
+		//process indexes after everything: in second pass, many to one has to be done before indexes
 		Index index = property.getAnnotation( Index.class );
 		if ( index != null ) {
 			if ( joinColumns != null ) {

@@ -12,7 +12,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used to mark a method which should be run once afterQuery the last
+ * Annotation used to mark a method which should be run once after the last
  * test execution for the given class.  Much like JUnit's own {@link org.junit.AfterClass},
  * except this annotation need not be attached to a static method
  *

@@ -161,7 +161,7 @@ public final class Nullability {
 		// IMPL NOTE : we currently skip checking "any" and "many to any" mappings.
 		//
 		// This is not the best solution.  But atm there is a mismatch between AnyType#getPropertyNullability
-		// and the fact that cascaded-saves for "many to any" mappings are not performed until afterQuery this nullability
+		// and the fact that cascaded-saves for "many to any" mappings are not performed until after this nullability
 		// check.  So the nullability check fails for transient entity elements with generated identifiers because
 		// the identifier is not yet generated/assigned (is null)
 		//

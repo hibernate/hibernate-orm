@@ -116,7 +116,7 @@ public class GetLoadTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		assertNull( "get did not return null afterQuery delete", emp );
+		assertNull( "get did not return null after delete", emp );
 	}
 
 	private void clearCounts() {

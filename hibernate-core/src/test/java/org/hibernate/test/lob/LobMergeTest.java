@@ -56,9 +56,9 @@ public class LobMergeTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		entity = (LobHolder) s.get( LobHolder.class, entity.getId() );
-		assertEquals( "blob sizes did not match afterQuery merge", LOB_SIZE, entity.getBlobLocator().length() );
+		assertEquals( "blob sizes did not match after merge", LOB_SIZE, entity.getBlobLocator().length() );
 		assertTrue(
-				"blob contents did not match afterQuery merge",
+				"blob contents did not match after merge",
 				Arrays.equals( updated, BlobLocatorTest.extractData( entity.getBlobLocator() ) )
 		);
 		s.delete( entity );
@@ -92,9 +92,9 @@ public class LobMergeTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		entity = (LobHolder) s.get( LobHolder.class, entity.getId() );
-		assertEquals( "clob sizes did not match afterQuery merge", LOB_SIZE, entity.getClobLocator().length() );
+		assertEquals( "clob sizes did not match after merge", LOB_SIZE, entity.getClobLocator().length() );
 		assertEquals(
-				"clob contents did not match afterQuery merge",
+				"clob contents did not match after merge",
 				updated,
 				ClobLocatorTest.extractData( entity.getClobLocator() )
 		);

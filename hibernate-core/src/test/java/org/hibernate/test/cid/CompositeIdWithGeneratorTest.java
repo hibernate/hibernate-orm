@@ -378,7 +378,7 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		// show that the persistent object was changed only afterQuery the session flush
+		// show that the persistent object was changed only after the session flush
 		assertEquals( timestamp2, persistent.getTimestamp() );
 		
 		// show that the persistent store was updated - not just the in-memory object

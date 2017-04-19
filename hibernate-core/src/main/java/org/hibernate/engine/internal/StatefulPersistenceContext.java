@@ -1107,7 +1107,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	/**
-	 * Call this afterQuery finishing a two-phase load
+	 * Call this after finishing a two-phase load
 	 */
 	@Override
 	public void afterLoad() {

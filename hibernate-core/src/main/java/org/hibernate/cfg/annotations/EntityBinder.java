@@ -163,7 +163,7 @@ public class EntityBinder {
 
 	/**
 	 * For the most part, this is a simple delegation to {@link PersistentClass#isPropertyDefinedInHierarchy},
-	 * afterQuery verifying that PersistentClass is indeed set here.
+	 * after verifying that PersistentClass is indeed set here.
 	 *
 	 * @param name The name of the property to check
 	 *
@@ -702,8 +702,8 @@ public class EntityBinder {
 
 	public void finalSecondaryTableBinding(PropertyHolder propertyHolder) {
 		/*
-		 * Those operations has to be done afterQuery the id definition of the persistence class.
-		 * ie afterQuery the properties parsing
+		 * Those operations has to be done after the id definition of the persistence class.
+		 * ie after the properties parsing
 		 */
 		Iterator joins = secondaryTables.values().iterator();
 		Iterator joinColumns = secondaryTableJoins.values().iterator();

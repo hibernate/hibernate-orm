@@ -34,7 +34,7 @@ package org.hibernate.procedure;
  * </code>
  * <p/>
  * Finally output parameters can be accessed using the overloaded {@link ProcedureResult#getOutputParameterValue} methods.
- * For portability amongst databases, it is advised to access the output parameters afterQuery all returns have been
+ * For portability amongst databases, it is advised to access the output parameters after all returns have been
  * processed.
  *
  * @see org.hibernate.Session#createStoredProcedureCall(String)

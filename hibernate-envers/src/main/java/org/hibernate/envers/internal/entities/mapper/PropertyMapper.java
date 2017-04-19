@@ -56,7 +56,7 @@ public interface PropertyMapper extends ModifiedFlagMapperSupport {
 	 *
 	 * @param session The current session.
 	 * @param referencingPropertyName Name of the field, which holds the collection in the entity.
-	 * @param newColl New collection, afterQuery updates.
+	 * @param newColl New collection, after updates.
 	 * @param oldColl Old collection, before updates.
 	 * @param id Id of the object owning the collection.
 	 *

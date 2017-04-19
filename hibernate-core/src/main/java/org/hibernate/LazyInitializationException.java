@@ -13,7 +13,7 @@ import org.jboss.logging.Logger;
 /**
  * Indicates an attempt to access not-yet-fetched data outside of a session context.
  *
- * For example, when an uninitialized proxy or collection is accessed afterQuery the session was closed.
+ * For example, when an uninitialized proxy or collection is accessed after the session was closed.
  *
  * @see Hibernate#initialize(java.lang.Object)
  * @see Hibernate#isInitialized(java.lang.Object)

@@ -333,7 +333,7 @@ public class QueryLoader extends BasicLoader {
 		}
 
 		//		there are other conditions we might want to add here, such as checking the result types etc
-		//		but those are better served afterQuery we have redone the SQL generation to use ASTs.
+		//		but those are better served after we have redone the SQL generation to use ASTs.
 
 
 		// we need both the set of locks and the columns to reference in locks

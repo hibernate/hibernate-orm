@@ -3292,7 +3292,7 @@ public abstract class AbstractEntityPersister
 				getIdentifierType().nullSafeSet( delete, id, index, session );
 				index += getIdentifierColumnSpan();
 
-				// We should use the _current_ object state (ie. afterQuery any updates that occurred during flush)
+				// We should use the _current_ object state (ie. after any updates that occurred during flush)
 
 				if ( useVersion ) {
 					getVersionType().nullSafeSet( delete, version, index, session );
@@ -3884,8 +3884,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	/**
-	 * Post-construct is a callback for AbstractEntityPersister subclasses to call afterQuery they are all done with their
-	 * constructor processing.  It allows AbstractEntityPersister to extend its construction afterQuery all subclass-specific
+	 * Post-construct is a callback for AbstractEntityPersister subclasses to call after they are all done with their
+	 * constructor processing.  It allows AbstractEntityPersister to extend its construction after all subclass-specific
 	 * details have been handled.
 	 *
 	 * @param mapping The mapping

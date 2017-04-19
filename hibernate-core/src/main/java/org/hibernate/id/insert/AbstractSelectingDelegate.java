@@ -17,7 +17,7 @@ import org.hibernate.pretty.MessageHelper;
 
 /**
  * Abstract InsertGeneratedIdentifierDelegate implementation where the
- * underlying strategy requires an subsequent select afterQuery the insert
+ * underlying strategy requires an subsequent select after the insert
  * to determine the generated identifier.
  *
  * @author Steve Ebersole
@@ -84,7 +84,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 		catch (SQLException sqle) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
-					"could not retrieve generated id afterQuery insert: " + MessageHelper.infoString( persister ),
+					"could not retrieve generated id after insert: " + MessageHelper.infoString( persister ),
 					insertSQL
 			);
 		}

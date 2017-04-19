@@ -443,7 +443,7 @@ public final class SessionImpl
 
 		if ( getActionQueue().hasBeforeTransactionActions() || getActionQueue().hasAfterTransactionActions() ) {
 			log.warn(
-					"On close, shared Session had before/afterQuery transaction actions that have not yet been processed"
+					"On close, shared Session had before/after transaction actions that have not yet been processed"
 			);
 		}
 		return false;
@@ -545,7 +545,7 @@ public final class SessionImpl
 	/**
 	 * Check if there is a Hibernate or JTA transaction in progress and,
 	 * if there is not, flush if necessary, make sure the connection has
-	 * been committed (if it is not in autocommit mode) and run the afterQuery
+	 * been committed (if it is not in autocommit mode) and run the after
 	 * completion processing
 	 *
 	 * @param success Was the operation a success
@@ -951,7 +951,7 @@ public final class SessionImpl
 				transientEntities
 		);
 		if ( TRACE_ENABLED && persistenceContext.isRemovingOrphanBeforeUpates() ) {
-			logRemoveOrphanBeforeUpdates( "afterQuery continuing", entityName, object );
+			logRemoveOrphanBeforeUpdates( "after continuing", entityName, object );
 		}
 	}
 
@@ -1733,7 +1733,7 @@ public final class SessionImpl
 					getLoadQueryInfluencers().getEnabledFilters()
 			);
 			if ( autoFlushIfRequired( plan.getQuerySpaces() ) ) {
-				// might need to run a different filter entirely afterQuery the flush
+				// might need to run a different filter entirely after the flush
 				// because the collection role may have changed
 				entry = persistenceContext.getCollectionEntryOrNull( collection );
 				CollectionPersister roleAfterFlush = ( entry == null ) ? null : entry.getLoadedPersister();

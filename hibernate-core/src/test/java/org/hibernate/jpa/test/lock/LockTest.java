@@ -494,7 +494,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 						log.debug( "The background thread was blocked" );
 						boolean backgroundThreadHasReadNewValue = bgTask.get();
 						assertTrue(
-								"Background thread should read the new value afterQuery being unblocked",
+								"Background thread should read the new value after being unblocked",
 								backgroundThreadHasReadNewValue
 						);
 					}

@@ -56,7 +56,7 @@ public interface LimitHandler {
 	int bindLimitParametersAtStartOfQuery(RowSelection selection, PreparedStatement statement, int index) throws SQLException;
 
 	/**
-	 * Bind parameter values needed by the LIMIT clause afterQuery original SELECT statement.
+	 * Bind parameter values needed by the LIMIT clause after original SELECT statement.
 	 *
      * @param selection the selection criteria for rows.
 	 * @param statement Statement to which to bind limit parameter values.

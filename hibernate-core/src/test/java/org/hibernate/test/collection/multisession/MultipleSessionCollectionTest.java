@@ -113,7 +113,7 @@ public class MultipleSessionCollectionTest extends BaseCoreFunctionalTestCase {
 		s1.saveOrUpdate( p );
 		s1.flush();
 
-		// try to save the same entity in a new session afterQuery flushing the first session
+		// try to save the same entity in a new session after flushing the first session
 
 		Session s2 = openSession();
 		s2.getTransaction().begin();
@@ -300,7 +300,7 @@ public class MultipleSessionCollectionTest extends BaseCoreFunctionalTestCase {
 		s1.persist( p );
 		s1.flush();
 
-		// Copy p.children into a different Parent afterQuery flush and try to save in new session.
+		// Copy p.children into a different Parent after flush and try to save in new session.
 
 		Parent pWithSameChildren = new Parent();
 		pWithSameChildren.children = p.children;
@@ -506,7 +506,7 @@ public class MultipleSessionCollectionTest extends BaseCoreFunctionalTestCase {
 		s1.flush();
 		s1.getTransaction().commit();
 
-		// need to commit afterQuery flushing; otherwise, will get lock failure when try to move the collection below
+		// need to commit after flushing; otherwise, will get lock failure when try to move the collection below
 
 		assertNull( ( (SessionImplementor) s1 ).getPersistenceContext().getEntry( p1 ) );
 		CollectionEntry ceChildren = ( (SessionImplementor) s1 ).getPersistenceContext().getCollectionEntry( (PersistentCollection) p1.children );
@@ -549,7 +549,7 @@ public class MultipleSessionCollectionTest extends BaseCoreFunctionalTestCase {
 		s1.flush();
 		s1.getTransaction().commit();
 
-		// need to commit afterQuery flushing; otherwise, will get lock failure when try to move the collection below
+		// need to commit after flushing; otherwise, will get lock failure when try to move the collection below
 
 		assertNull( ( (SessionImplementor) s1 ).getPersistenceContext().getEntry( p1 ) );
 		CollectionEntry ceChildren = ( (SessionImplementor) s1 ).getPersistenceContext().getCollectionEntry( (PersistentCollection) p1.children );

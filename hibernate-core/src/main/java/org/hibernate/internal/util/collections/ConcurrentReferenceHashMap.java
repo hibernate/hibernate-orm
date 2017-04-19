@@ -489,7 +489,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 				 *     it is 0.
 				 *
 				 *   - All (synchronized) write operations should write to
-				 *     the "count" field afterQuery structurally changing any bin.
+				 *     the "count" field after structurally changing any bin.
 				 *     The operations must not take any action that could even
 				 *     momentarily cause a concurrent read operation to see
 				 *     inconsistent data. This is made easier by the nature of

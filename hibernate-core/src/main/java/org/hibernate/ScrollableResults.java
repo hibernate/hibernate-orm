@@ -81,7 +81,7 @@ public interface ScrollableResults extends AutoCloseable {
 	void beforeFirst();
 
 	/**
-	 * Go to a location just afterQuery the last result.
+	 * Go to a location just after the last result.
 	 */
 	void afterLast();
 

@@ -17,7 +17,7 @@ import java.io.Serializable;
  */
 public interface EntityTrackingRevisionListener extends RevisionListener {
 	/**
-	 * Called afterQuery audited entity data has been persisted.
+	 * Called after audited entity data has been persisted.
 	 *
 	 * @param entityClass Audited entity class.
 	 * @param entityName Name of the audited entity. May be useful when Java class is mapped multiple times,

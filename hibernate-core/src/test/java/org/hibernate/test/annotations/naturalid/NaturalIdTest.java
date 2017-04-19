@@ -149,7 +149,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "NaturalId Cache Queries", 0, stats.getNaturalIdQueryExecutionCount() );
 
 		
-		//Try NaturalIdLoadAccess afterQuery insert
+		//Try NaturalIdLoadAccess after insert
 		
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -195,7 +195,7 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		
-		//Try NaturalIdLoadAccess afterQuery load
+		//Try NaturalIdLoadAccess after load
 		
 		s = openSession();
 		tx = s.beginTransaction();

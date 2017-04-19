@@ -175,7 +175,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	}
 
 	/**
-	 * Handle sending notifications needed for natural-id afterQuery saving
+	 * Handle sending notifications needed for natural-id after saving
 	 *
 	 * @param generatedId The generated entity identifier
 	 */
@@ -190,7 +190,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 					CachedNaturalIdValueSource.INSERT
 			);
 		}
-		// afterQuery save, we need to manage the shared cache entries
+		// after save, we need to manage the shared cache entries
 		getSession().getPersistenceContext().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
 				getPersister(),
 				generatedId,

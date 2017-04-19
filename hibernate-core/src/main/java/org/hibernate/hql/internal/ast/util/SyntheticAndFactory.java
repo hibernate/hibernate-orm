@@ -127,7 +127,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 				AST where = query.getWhereClause();
 				// Create a new THETA_JOINS node as a parent of all filters
 				thetaJoins = create( THETA_JOINS, "{theta joins}" );
-				// Put the THETA_JOINS node before the HQL condition, afterQuery the filters.
+				// Put the THETA_JOINS node before the HQL condition, after the filters.
 				if ( filters == null ) {
 					ASTUtil.insertChild( where, thetaJoins );
 				}

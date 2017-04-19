@@ -112,7 +112,7 @@ import org.jboss.logging.Logger;
  * <tr>
  *   <td><tt>hibernate.jdbc.use_getGeneratedKeys</tt></td>
  *   <td>enable use of JDBC3 PreparedStatement.getGeneratedKeys() to retrieve
- *   natively generated keys afterQuery insert. Requires JDBC3+ driver and JRE1.4+</td>
+ *   natively generated keys after insert. Requires JDBC3+ driver and JRE1.4+</td>
  * </tr>
  * <tr>
  *   <td><tt>hibernate.hbm2ddl.auto</tt></td>

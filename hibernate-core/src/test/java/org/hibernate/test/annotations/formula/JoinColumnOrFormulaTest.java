@@ -55,7 +55,7 @@ public class JoinColumnOrFormulaTest extends BaseUnitTestCase {
 				.addAnnotatedClass( D.class )
 				.buildMetadata();
 
-		// Binding to the mapping model works afterQuery the simple change for HHH-9897
+		// Binding to the mapping model works after the simple change for HHH-9897
 		// But building the SessionFactory fails in the collection persister trying to
 		// use the formula (it expects Columns too)
 		metadata.buildSessionFactory().close();

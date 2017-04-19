@@ -32,7 +32,7 @@ public abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessSt
 
 	/**
 	 * Returns <code>null</code> if the item is not readable.  Locked items are not readable, nor are items created
-	 * afterQuery the start of this transaction.
+	 * after the start of this transaction.
 	 */
 	@Override
 	public final Object get(SharedSessionContractImplementor session, Object key, long txTimestamp) throws CacheException {

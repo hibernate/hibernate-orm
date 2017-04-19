@@ -121,7 +121,7 @@ public class QueryHintSQLServer2012Test extends BaseCoreFunctionalTestCase {
 	/**
 	 * Since the query hint is added to the SQL during Loader's executeQueryStatement -> preprocessSQL, rather than
 	 * early on during the QueryTranslator or QueryLoader initialization, there's not an easy way to check the full SQL
-	 * afterQuery completely processing it. Instead, use this ridiculous hack to ensure Loader actually calls Dialect. TODO:
+	 * after completely processing it. Instead, use this ridiculous hack to ensure Loader actually calls Dialect. TODO:
 	 * This is terrible. Better ideas?
 	 */
 	public static class QueryHintTestSQLServer2012Dialect extends SQLServer2012Dialect {

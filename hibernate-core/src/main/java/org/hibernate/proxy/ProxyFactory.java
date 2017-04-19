@@ -22,7 +22,7 @@ import org.hibernate.type.CompositeType;
 public interface ProxyFactory {
 
 	/**
-	 * Called immediately afterQuery instantiation of this factory.
+	 * Called immediately after instantiation of this factory.
 	 * <p/>
 	 * Essentially equivalent to constructor injection, but contracted
 	 * here via interface.

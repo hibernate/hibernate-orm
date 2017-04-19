@@ -41,10 +41,10 @@ public interface Executable {
 	void execute() throws HibernateException;
 
 	/**
-	 * Get the afterQuery-transaction-completion process, if any, for this action.
+	 * Get the after-transaction-completion process, if any, for this action.
 	 *
-	 * @return The afterQuery-transaction-completion process, or null if we have no
-	 * afterQuery-transaction-completion process
+	 * @return The after-transaction-completion process, or null if we have no
+	 * after-transaction-completion process
 	 */
 	AfterTransactionCompletionProcess getAfterTransactionCompletionProcess();
 
@@ -57,7 +57,7 @@ public interface Executable {
 	BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess();
 	
 	/**
-	 * Reconnect to session afterQuery deserialization
+	 * Reconnect to session after deserialization
 	 *
 	 * @param session The session being deserialized
 	 */

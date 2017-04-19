@@ -2209,11 +2209,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * For dropping a table, can the phrase "if exists" be applied afterQuery the table name?
+	 * For dropping a table, can the phrase "if exists" be applied after the table name?
 	 * <p/>
 	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsBeforeTableName} should return true
 	 *
-	 * @return {@code true} if the "if exists" can be applied afterQuery the table name
+	 * @return {@code true} if the "if exists" can be applied after the table name
 	 */
 	public boolean supportsIfExistsAfterTableName() {
 		return false;
@@ -2231,11 +2231,11 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied afterQuery the constraint name?
+	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied after the constraint name?
 	 * <p/>
 	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsBeforeConstraintName} should return true
 	 *
-	 * @return {@code true} if the "if exists" can be applied afterQuery the constraint name
+	 * @return {@code true} if the "if exists" can be applied after the constraint name
 	 */
 	public boolean supportsIfExistsAfterConstraintName() {
 		return false;

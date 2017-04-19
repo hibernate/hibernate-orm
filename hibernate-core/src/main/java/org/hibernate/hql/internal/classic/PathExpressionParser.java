@@ -111,12 +111,12 @@ public class PathExpressionParser implements Parser {
 		String alias = q.getPathAlias( path.toString() );
 		if ( alias != null ) {
 			reset( q ); //reset the dotcount (but not the path)
-			currentName = alias; //afterQuery reset!
+			currentName = alias; //after reset!
 			currentPropertyMapping = q.getPropertyMapping( currentName );
 			if ( !ignoreInitialJoin ) {
 				JoinSequence ojf = q.getPathJoin( path.toString() );
 				try {
-					joinSequence.addCondition( ojf.toJoinFragment( q.getEnabledFilters(), true ).toWhereFragmentString() ); //afterQuery reset!
+					joinSequence.addCondition( ojf.toJoinFragment( q.getEnabledFilters(), true ).toWhereFragmentString() ); //after reset!
 				}
 				catch ( MappingException me ) {
 					throw new QueryException( me );

@@ -52,7 +52,7 @@ public class EntityHierarchyBuilder {
 	}
 
 	/**
-	 * To be called afterQuery all mapping documents have been processed (via {@link #indexMappingDocument})
+	 * To be called after all mapping documents have been processed (via {@link #indexMappingDocument})
 	 *
 	 * @return The built hierarchies
 	 *

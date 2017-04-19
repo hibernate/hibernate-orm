@@ -102,7 +102,7 @@ public class StoreProcedureRefCursorOutParameterByPositionTest extends BaseEntit
 					conn.commit();
 				}
 				catch (SQLException e) {
-					System.out.println( "Unable to commit transaction afterQuery creating creating procedures" );
+					System.out.println( "Unable to commit transaction after creating creating procedures" );
 					fail();
 				}
 

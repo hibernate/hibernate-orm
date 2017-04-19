@@ -71,7 +71,7 @@ public class BatchFetchQueue {
 	/**
 	 * Clears all entries from this fetch queue.
 	 * <p/>
-	 * Called afterQuery flushing or clearing the session.
+	 * Called after flushing or clearing the session.
 	 */
 	public void clear() {
 		batchLoadableEntityKeys.clear();
@@ -106,7 +106,7 @@ public class BatchFetchQueue {
 	/**
 	 * After evicting or deleting an entity, we don't need to
 	 * know the query that was used to load it anymore (don't
-	 * call this afterQuery loading the entity, since we might still
+	 * call this after loading the entity, since we might still
 	 * need to load its collections)
 	 */
 	public void removeSubselect(EntityKey key) {
@@ -166,7 +166,7 @@ public class BatchFetchQueue {
 
 	/**
 	 * Get a batch of unloaded identifiers for this class, using a slightly
-	 * complex algorithm that tries to grab keys registered immediately afterQuery
+	 * complex algorithm that tries to grab keys registered immediately after
 	 * the given key.
 	 *
 	 * @param persister The persister for the entities being loaded.
@@ -191,7 +191,7 @@ public class BatchFetchQueue {
 		if ( set != null ) {
 			for ( EntityKey key : set ) {
 				if ( checkForEnd && i == end ) {
-					//the first id found afterQuery the given id
+					//the first id found after the given id
 					return ids;
 				}
 				if ( persister.getIdentifierType().isEqual( id, key.getIdentifier() ) ) {
@@ -300,7 +300,7 @@ public class BatchFetchQueue {
 				}
 
 				if ( checkForEnd && i == end ) {
-					return keys; //the first key found afterQuery the given key
+					return keys; //the first key found after the given key
 				}
 
 				final boolean isEqual = collectionPersister.getKeyType().isEqual(

@@ -176,7 +176,7 @@ public class SelectClause extends SelectExpressionList {
 			}
 		}
 
-		//init the aliases, afterQuery initing the constructornode
+		//init the aliases, after initing the constructornode
 		initAliases( selectExpressions );
 
 		if ( !getWalker().isShallowQuery() ) {

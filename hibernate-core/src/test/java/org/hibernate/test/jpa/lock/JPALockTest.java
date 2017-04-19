@@ -60,7 +60,7 @@ public class JPALockTest extends AbstractJPATest {
 	 * <li>P1 (Dirty read): Transaction T1 modifies a row. Another transaction T2 then reads that row and
 	 * obtains the modified value, before T1 has committed or rolled back. Transaction T2 eventually
 	 * commits successfully; it does not matter whether T1 commits or rolls back and whether it does
-	 * so before or afterQuery T2 commits.
+	 * so before or after T2 commits.
 	 * <li>P2 (Non-repeatable read): Transaction T1 reads a row. Another transaction T2 then modifies or
 	 * deletes that row, before T1 has committed. Both transactions eventually commit successfully.
 	 * <p/>

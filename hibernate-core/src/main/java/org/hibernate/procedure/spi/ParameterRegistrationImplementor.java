@@ -55,7 +55,7 @@ public interface ParameterRegistrationImplementor<T> extends ParameterRegistrati
 	int[] getSqlTypes();
 
 	/**
-	 * Extract value from the statement afterQuery execution (used for OUT/INOUT parameters).
+	 * Extract value from the statement after execution (used for OUT/INOUT parameters).
 	 *
 	 * @param statement The callable statement
 	 *

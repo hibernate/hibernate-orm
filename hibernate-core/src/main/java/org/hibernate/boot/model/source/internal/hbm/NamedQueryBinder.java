@@ -156,7 +156,7 @@ public class NamedQueryBinder {
 			// returns it defines.  But binding for those entities may have not been
 			// completed yet.  For "normal" ResultSet mappings, this is already handled by
 			// the fact that MetadataSourceProcessor#processResultSetMappings() is called
-			// afterQuery all entity hierarchies have been processed.  However, here we are in
+			// after all entity hierarchies have been processed.  However, here we are in
 			// the middle of processing named-queries (either top-level or entity-level)
 			// and have no guarantee that any entity bindings we may need here are bound.
 			// So we add the second-pass to bind the implicit resultSet mapping.

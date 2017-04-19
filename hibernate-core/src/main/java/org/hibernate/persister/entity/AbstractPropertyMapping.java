@@ -176,7 +176,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			else {
 				String foreignKeyProperty = actype.getLHSPropertyName();
 				if ( foreignKeyProperty != null && !path.equals( foreignKeyProperty ) ) {
-					//TODO: this requires that the collection is defined afterQuery the
+					//TODO: this requires that the collection is defined after the
 					//      referenced property in the mapping file (ok?)
 					columns = columnsByPropertyPath.get( foreignKeyProperty );
 					if ( columns == null ) {

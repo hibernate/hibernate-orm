@@ -38,9 +38,9 @@ import org.jboss.logging.Logger;
  * session by the current thread of execution.  Unlike the JTA counterpart, threads do not give us a nice
  * hook to perform any type of cleanup making it questionable for this impl to actually generate Session
  * instances.  In the interest of usability, it was decided to have this default impl actually generate
- * a session upon first request and then clean it up afterQuery the {@link org.hibernate.Transaction}
+ * a session upon first request and then clean it up after the {@link org.hibernate.Transaction}
  * associated with that session is committed/rolled-back.  In order for ensuring that happens, the
- * sessions generated here are unusable until afterQuery {@link Session#beginTransaction()} has been
+ * sessions generated here are unusable until after {@link Session#beginTransaction()} has been
  * called. If <tt>close()</tt> is called on a session managed by this class, it will be automatically
  * unbound.
  *

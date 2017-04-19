@@ -186,7 +186,7 @@ public interface SharedSessionContractImplementor
 	Interceptor getInterceptor();
 
 	/**
-	 * Enable/disable automatic cache clearing from afterQuery transaction
+	 * Enable/disable automatic cache clearing from after transaction
 	 * completion (for EJB3)
 	 */
 	void setAutoClear(boolean enabled);

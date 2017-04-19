@@ -107,7 +107,7 @@ public class ProviderMBeanRegistrationHelper {
 				if ( System.currentTimeMillis() > startTime + (NUM_SECONDS * MILLIS_PER_SECOND) ) {
 					LOG.info( "Hibernate statistics monitoring through JMX is DISABLED." );
 					LOG.info(
-							"Failed to look up SessionFactory afterQuery " + NUM_SECONDS + " seconds using session-factory properties '"
+							"Failed to look up SessionFactory after " + NUM_SECONDS + " seconds using session-factory properties '"
 									+ properties + "'"
 					);
 					this.cancel();

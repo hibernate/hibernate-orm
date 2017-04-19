@@ -186,7 +186,7 @@ public interface EntityTuplizer extends Tuplizer {
 	Object getPropertyValue(Object entity, String propertyName) throws HibernateException;
 
     /**
-     * Called just afterQuery the entities properties have been initialized.
+     * Called just after the entities properties have been initialized.
      *
      * @param entity The entity being initialized.
      * @param session The session initializing this entity.

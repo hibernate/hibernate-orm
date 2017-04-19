@@ -268,7 +268,7 @@ public class SessionFactoryHelper {
 	 */
 	public JoinSequence createJoinSequence(boolean implicit, AssociationType associationType, String tableAlias, JoinType joinType, String[] columns) {
 		JoinSequence joinSequence = createJoinSequence();
-		joinSequence.setUseThetaStyle( implicit );    // Implicit joins use theta style (WHERE pk = fk), explicit joins use JOIN (afterQuery from)
+		joinSequence.setUseThetaStyle( implicit );    // Implicit joins use theta style (WHERE pk = fk), explicit joins use JOIN (after from)
 		joinSequence.addJoin( associationType, tableAlias, joinType, columns );
 		return joinSequence;
 	}

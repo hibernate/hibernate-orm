@@ -73,7 +73,7 @@ import org.hibernate.stat.SessionStatistics;
  * <br>
  * If the <tt>Session</tt> throws an exception, the transaction must be rolled back
  * and the session discarded. The internal state of the <tt>Session</tt> might not
- * be consistent with the database afterQuery the exception occurs.
+ * be consistent with the database after the exception occurs.
  *
  * @see SessionFactory
  *
@@ -601,8 +601,8 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * For example
 	 * <ul>
 	 * <li>where a database trigger alters the object state upon insert or update
-	 * <li>afterQuery executing direct SQL (eg. a mass update) in the same session
-	 * <li>afterQuery inserting a <tt>Blob</tt> or <tt>Clob</tt>
+	 * <li>after executing direct SQL (eg. a mass update) in the same session
+	 * <li>after inserting a <tt>Blob</tt> or <tt>Clob</tt>
 	 * </ul>
 	 *
 	 * @param object a persistent or detached instance
@@ -616,8 +616,8 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * For example
 	 * <ul>
 	 * <li>where a database trigger alters the object state upon insert or update
-	 * <li>afterQuery executing direct SQL (eg. a mass update) in the same session
-	 * <li>afterQuery inserting a <tt>Blob</tt> or <tt>Clob</tt>
+	 * <li>after executing direct SQL (eg. a mass update) in the same session
+	 * <li>after inserting a <tt>Blob</tt> or <tt>Clob</tt>
 	 * </ul>
 	 *
 	 * @param entityName a persistent class

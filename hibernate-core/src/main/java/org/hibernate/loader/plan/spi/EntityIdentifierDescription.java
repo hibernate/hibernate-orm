@@ -16,7 +16,7 @@ public interface EntityIdentifierDescription {
 	 * Can this EntityIdentifierDescription be treated as a FetchSource and if so does it have any
 	 * fetches?
 	 *
-	 * @return {@code true} iff {@code this} can be cast to {@link FetchSource} and (afterQuery casting) it returns
+	 * @return {@code true} iff {@code this} can be cast to {@link FetchSource} and (after casting) it returns
 	 * non-empty results for {@link FetchSource#getFetches()}
 	 */
 	public boolean hasFetches();
@@ -25,7 +25,7 @@ public interface EntityIdentifierDescription {
 	 * Can this EntityIdentifierDescription be treated as a FetchSource and if so does it have any
 	 * bidirectional entity references?
 	 *
-	 * @return {@code true} iff {@code this} can be cast to {@link FetchSource} and (afterQuery casting) it returns
+	 * @return {@code true} iff {@code this} can be cast to {@link FetchSource} and (after casting) it returns
 	 * non-empty results for {@link FetchSource#getBidirectionalEntityReferences()}
 	 */
 	public boolean hasBidirectionalEntityReferences();

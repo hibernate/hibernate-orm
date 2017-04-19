@@ -25,7 +25,7 @@ import org.jboss.logging.Logger;
 
 /**
  * An implementation of {@link org.hibernate.context.spi.CurrentSessionContext} which scopes the notion
- * of a current session to a JTA transaction.  Because JTA gives us a nice tie-in to clean up afterQuery
+ * of a current session to a JTA transaction.  Because JTA gives us a nice tie-in to clean up after
  * ourselves, this implementation will generate Sessions as needed provided a JTA transaction is in
  * effect.  If a session is not already associated with the current JTA transaction at the time
  * {@link #currentSession()} is called, a new session will be opened and it will be associated with that
@@ -36,7 +36,7 @@ import org.jboss.logging.Logger;
  * {@link org.hibernate.cfg.Environment#AUTO_CLOSE_SESSION auto-close} attributes set to true, meaning
  * that the Session will be automatically flushed and closed as part of the lifecycle for the JTA
  * transaction to which it is associated.  Additionally, it will also be configured to aggressively
- * release JDBC connections afterQuery each statement is executed.  These settings are governed by the
+ * release JDBC connections after each statement is executed.  These settings are governed by the
  * {@link #isAutoFlushEnabled()}, {@link #isAutoCloseEnabled()}, and {@link #getConnectionReleaseMode()}
  * methods; these are provided (along with the {@link #buildOrObtainSession()} method) for easier
  * subclassing for custom JTA-based session tracking logic (like maybe long-session semantics).
@@ -118,7 +118,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 	}
 
 	/**
-	 * Builds a {@link org.hibernate.context.internal.JTASessionContext.CleanupSync} capable of cleaning up the the current session map as an afterQuery transaction
+	 * Builds a {@link org.hibernate.context.internal.JTASessionContext.CleanupSync} capable of cleaning up the the current session map as an after transaction
 	 * callback.
 	 *
 	 * @param transactionIdentifier The transaction identifier under which the current session is registered.

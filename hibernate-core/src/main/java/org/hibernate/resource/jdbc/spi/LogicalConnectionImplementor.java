@@ -51,7 +51,7 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	Connection manualDisconnect();
 
 	/**
-	 * Manually reconnect the underlying JDBC Connection.  Should be called at some point afterQuery manualDisconnect().
+	 * Manually reconnect the underlying JDBC Connection.  Should be called at some point after manualDisconnect().
 	 *
 	 * @param suppliedConnection For user supplied connection strategy the user needs to hand us the connection
 	 * with which to reconnect.  It is an error to pass a connection in the other strategies.

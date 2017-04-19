@@ -545,7 +545,7 @@ public abstract class CollectionType extends AbstractType implements Association
 
 		// if the original is a PersistentCollection, and that original
 		// was not flagged as dirty, then reset the target's dirty flag
-		// here afterQuery the copy operation.
+		// here after the copy operation.
 		// </p>
 		// One thing to be careful of here is a "bare" original collection
 		// in which case we should never ever ever reset the dirty flag
@@ -656,7 +656,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * and perhaps load factor).
 	 *
 	 * @param anticipatedSize The anticipated size of the instaniated collection
-	 * afterQuery we are done populating it.
+	 * after we are done populating it.
 	 * @return A newly instantiated collection to be wrapped.
 	 */
 	public abstract Object instantiate(int anticipatedSize);

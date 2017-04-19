@@ -97,14 +97,14 @@ public interface PersistentCollection {
 	void beginRead();
 
 	/**
-	 * Called afterQuery reading all rows from the JDBC result set
+	 * Called after reading all rows from the JDBC result set
 	 *
 	 * @return Whether to end the read.
 	 */
 	boolean endRead();
 	
 	/**
-	 * Called afterQuery initializing from cache
+	 * Called after initializing from cache
 	 *
 	 * @return ??
 	 */
@@ -221,7 +221,7 @@ public interface PersistentCollection {
 	 * allowing appropriate initializations to occur.
 	 *
 	 * @param persister The underlying collection persister.
-	 * @param anticipatedSize The anticipated size of the collection afterQuery initialization is complete.
+	 * @param anticipatedSize The anticipated size of the collection after initialization is complete.
 	 */
 	void beforeInitialize(CollectionPersister persister, int anticipatedSize);
 
@@ -388,7 +388,7 @@ public interface PersistentCollection {
 	
 	/**
 	 * Is the collection dirty? Note that this is only
-	 * reliable during the flush cycle, afterQuery the
+	 * reliable during the flush cycle, after the
 	 * collection elements are dirty checked against
 	 * the snapshot.
 	 *
@@ -397,7 +397,7 @@ public interface PersistentCollection {
 	boolean isDirty();
 	
 	/**
-	 * Clear the dirty flag, afterQuery flushing changes
+	 * Clear the dirty flag, after flushing changes
 	 * to the database.
 	 */
 	void clearDirty();
@@ -423,7 +423,7 @@ public interface PersistentCollection {
 	void preInsert(CollectionPersister persister);
 
 	/**
-	 * Called afterQuery inserting a row, to fetch the natively generated id
+	 * Called after inserting a row, to fetch the natively generated id
 	 *
 	 * @param persister The collection persister
 	 * @param entry The collection element just inserted

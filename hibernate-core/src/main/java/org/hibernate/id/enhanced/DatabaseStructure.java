@@ -51,7 +51,7 @@ public interface DatabaseStructure extends ExportableProducer {
 	AccessCallback buildCallback(SharedSessionContractImplementor session);
 
 	/**
-	 * Prepare this structure for use.  Called sometime afterQuery instantiation,
+	 * Prepare this structure for use.  Called sometime after instantiation,
 	 * but before first use.
 	 *
 	 * @param optimizer The optimizer being applied to the generator.

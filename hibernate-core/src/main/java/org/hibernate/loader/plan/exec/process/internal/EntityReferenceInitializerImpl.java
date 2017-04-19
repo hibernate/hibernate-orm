@@ -133,7 +133,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 		// Look for the hydrated form
 		final Object identifierHydratedForm = processingState.getIdentifierHydratedForm();
 		if ( identifierHydratedForm == null ) {
-			// we need to register the missing identifier, but that happens later afterQuery all readers have had a chance
+			// we need to register the missing identifier, but that happens later after all readers have had a chance
 			// to resolve its EntityKey
 			return;
 		}

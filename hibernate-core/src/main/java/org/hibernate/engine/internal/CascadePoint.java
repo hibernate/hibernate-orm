@@ -13,25 +13,25 @@ package org.hibernate.engine.internal;
  */
 public enum CascadePoint {
 	/**
-	 * A cascade point that occurs just afterQuery the insertion of the parent entity and
+	 * A cascade point that occurs just after the insertion of the parent entity and
 	 * just before deletion
 	 */
 	AFTER_INSERT_BEFORE_DELETE,
 
 	/**
 	 * A cascade point that occurs just before the insertion of the parent entity and
-	 * just afterQuery deletion
+	 * just after deletion
 	 */
 	BEFORE_INSERT_AFTER_DELETE,
 
 	/**
-	 * A cascade point that occurs just afterQuery the insertion of the parent entity and
+	 * A cascade point that occurs just after the insertion of the parent entity and
 	 * just before deletion, inside a collection
 	 */
 	AFTER_INSERT_BEFORE_DELETE_VIA_COLLECTION,
 
 	/**
-	 * A cascade point that occurs just afterQuery update of the parent entity
+	 * A cascade point that occurs just after update of the parent entity
 	 */
 	AFTER_UPDATE,
 
@@ -41,19 +41,19 @@ public enum CascadePoint {
 	BEFORE_FLUSH,
 
 	/**
-	 * A cascade point that occurs just afterQuery eviction of the parent entity from the
+	 * A cascade point that occurs just after eviction of the parent entity from the
 	 * session cache
 	 */
 	AFTER_EVICT,
 
 	/**
-	 * A cascade point that occurs just afterQuery locking a transient parent entity into the
+	 * A cascade point that occurs just after locking a transient parent entity into the
 	 * session cache
 	 */
 	BEFORE_REFRESH,
 
 	/**
-	 * A cascade point that occurs just afterQuery refreshing a parent entity
+	 * A cascade point that occurs just after refreshing a parent entity
 	 */
 	AFTER_LOCK,
 

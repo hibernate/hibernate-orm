@@ -89,7 +89,7 @@ public class CustomVersionOneStrategy implements UUIDGenerationStrategy {
 			loBits[0] &= 0x3f;
 			loBits[0] |= ((byte)2 << (byte)6);
 
-			System.out.println( "    afterQuery bit setting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+			System.out.println( "    after bit setting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 			System.out.println( "       loBits[0] : " + BytesHelper.toBinaryString( loBits[0] ) );
 			long leastSignificantBits = BytesHelper.asLong( loBits );
 			System.out.println( "             lsb : " + BytesHelper.toBinaryString( leastSignificantBits ) );

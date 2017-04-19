@@ -84,7 +84,7 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	 * must be called for all entity persisters before calling this method.
 	 * <p/>
 	 * Called only once per {@link org.hibernate.SessionFactory} lifecycle,
-	 * afterQuery all entity persisters have been instantiated.
+	 * after all entity persisters have been instantiated.
 	 *
 	 * @throws org.hibernate.MappingException Indicates an issue in the metadata.
 	 */
@@ -597,12 +597,12 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Called just afterQuery the entities properties have been initialized
+	 * Called just after the entities properties have been initialized
 	 */
 	void afterInitialize(Object entity, SharedSessionContractImplementor session);
 
 	/**
-	 * Called just afterQuery the entity has been reassociated with the session
+	 * Called just after the entity has been reassociated with the session
 	 */
 	void afterReassociate(Object entity, SharedSessionContractImplementor session);
 

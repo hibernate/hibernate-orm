@@ -404,7 +404,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertEquals( "hit count should go up since data is not transformed until afterQuery it is cached", qs.getCacheHitCount(), 2 );
+		assertEquals( "hit count should go up since data is not transformed until after it is cached", qs.getCacheHitCount(), 2 );
 		assertEquals( qs.getCacheMissCount(), 2 );
 		assertEquals( qs.getCachePutCount(), 2 );
 
@@ -418,7 +418,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertEquals( "hit count should go up since data is not transformed until afterQuery it is cachedr", qs.getCacheHitCount(), 3 );
+		assertEquals( "hit count should go up since data is not transformed until after it is cachedr", qs.getCacheHitCount(), 3 );
 		assertEquals( qs.getCacheMissCount(), 2 );
 		assertEquals( qs.getCachePutCount(), 2 );
 

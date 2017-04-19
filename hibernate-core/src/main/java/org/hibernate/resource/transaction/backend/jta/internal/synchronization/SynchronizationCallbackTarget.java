@@ -49,7 +49,7 @@ public interface SynchronizationCallbackTarget {
 	void beforeCompletion();
 
 	/**
-	 * Callback of afterQuery-completion.
+	 * Callback of after-completion.
 	 *
 	 * @param successful Was the transaction successful?
 	 *

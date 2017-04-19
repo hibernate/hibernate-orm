@@ -282,7 +282,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		Transaction tx1 = TestingJtaPlatformImpl.INSTANCE.getTransactionManager().suspend();
 
 		// open a new TX and run query again
-		// this TX is committed afterQuery query
+		// this TX is committed after query
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s2 = openSession();
 		List r2 = s2.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )

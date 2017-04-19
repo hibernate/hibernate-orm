@@ -107,7 +107,7 @@ public class EntityInstantiator {
 		);
 		idMapper.mapToEntityFromMap( ret, originalId );
 
-		// Put entity on entityName cache afterQuery mapping it from the map representation
+		// Put entity on entityName cache after mapping it from the map representation
 		versionsReader.getFirstLevelCache().putOnEntityNameCache( primaryKey, revision, ret, entityName );
 
 		return ret;

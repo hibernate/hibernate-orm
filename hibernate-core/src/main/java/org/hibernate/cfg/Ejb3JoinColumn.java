@@ -955,7 +955,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				currentJoinColumn.setMappedBy( mappedBy );
 				currentJoinColumn.setJoinAnnotation( annJoin, propertyName );
 				currentJoinColumn.setNullable( false ); //I break the spec, but it's for good
-				//done afterQuery the annotation to override it
+				//done after the annotation to override it
 				currentJoinColumn.bind();
 				joinColumns[index] = currentJoinColumn;
 			}

@@ -34,7 +34,7 @@ public class ClauseParser implements Parser {
 		}
 
 		if ( byExpected && !lcToken.equals( "by" ) ) {
-			throw new QueryException( "BY expected afterQuery GROUP or ORDER: " + token );
+			throw new QueryException( "BY expected after GROUP or ORDER: " + token );
 		}
 
 		boolean isClauseStart = parenCount == 0; //ignore subselect keywords

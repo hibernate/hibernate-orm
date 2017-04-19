@@ -199,7 +199,7 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 
 	protected File buildExplicitPar() {
 		// explicitpar/persistence.xml references externaljar.jar so build that from here.
-		// this is the reason for tests failing afterQuery clean at least on my (Steve) local system
+		// this is the reason for tests failing after clean at least on my (Steve) local system
 		buildExternalJar();
 
 		String fileName = "explicitpar.par";
@@ -226,7 +226,7 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 
 	protected File buildExplicitPar2() {
 		// explicitpar/persistence.xml references externaljar.jar so build that from here.
-		// this is the reason for tests failing afterQuery clean at least on my (Steve) local system
+		// this is the reason for tests failing after clean at least on my (Steve) local system
 		File jar = buildExternalJar2();
 
 		String fileName = "explicitpar2.par";

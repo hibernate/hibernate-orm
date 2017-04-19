@@ -234,7 +234,7 @@ public interface AuditReader {
 	 * Creates an audit query
 	 *
 	 * @return A query creator, associated with this AuditReader instance, with which queries can be
-	 *         created and later executed. Shouldn't be used afterQuery the associated Session or EntityManager
+	 *         created and later executed. Shouldn't be used after the associated Session or EntityManager
 	 *         is closed.
 	 */
 	AuditQueryCreator createQuery();

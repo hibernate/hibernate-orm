@@ -3333,8 +3333,8 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection afterQuery", g.getVersion()==2 );
-		assertTrue( "versioned collection afterQuery", g.getStrings().size() == 2 );
+		assertTrue( "versioned collection after", g.getVersion()==2 );
+		assertTrue( "versioned collection after", g.getStrings().size() == 2 );
 		g.setProxyArray( null );
 		s.getTransaction().commit();
 		s.close();
@@ -3342,8 +3342,8 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection afterQuery", g.getVersion()==3 );
-		assertTrue( "versioned collection afterQuery", g.getProxyArray().length == 0 );
+		assertTrue( "versioned collection after", g.getVersion()==3 );
+		assertTrue( "versioned collection after", g.getProxyArray().length == 0 );
 		g.setFooComponents( new ArrayList() );
 		g.setProxyArray( null );
 		s.getTransaction().commit();
@@ -3352,7 +3352,7 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection afterQuery", g.getVersion()==4 );
+		assertTrue( "versioned collection after", g.getVersion()==4 );
 		s.delete(g);
 		s.flush();
 		assertTrue( s.createQuery( "from java.lang.Object" ).list().size()==0 );

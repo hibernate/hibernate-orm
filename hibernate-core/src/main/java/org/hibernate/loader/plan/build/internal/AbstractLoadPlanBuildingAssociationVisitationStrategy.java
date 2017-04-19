@@ -61,7 +61,7 @@ import org.jboss.logging.MDC;
  * LoadPlanBuildingAssociationVisitationStrategy is also a AssociationVisitationStrategy, which is used in
  * conjunction with visiting associations via walking metamodel definitions.
  * <p/>
- * So this strategy defines a AssociationVisitationStrategy that walks the metamodel-defined associations afterQuery
+ * So this strategy defines a AssociationVisitationStrategy that walks the metamodel-defined associations after
  * which is can then build a LoadPlan based on the visited associations. {@link #determineFetchStrategy} is the
  * main decision point that determines if an association is walked.
  *

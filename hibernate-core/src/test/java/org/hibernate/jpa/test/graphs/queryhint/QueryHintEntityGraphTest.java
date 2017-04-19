@@ -147,7 +147,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		assertFalse( Hibernate.isInitialized( companyResult.employees ) );
 		assertFalse( Hibernate.isInitialized( companyResult.location ) );
 		// initialize and check zip
-		// TODO: must have getters to access lazy entity afterQuery being initialized (why?)
+		// TODO: must have getters to access lazy entity after being initialized (why?)
 		//assertEquals( 11234, companyResult.location.zip );
 		assertEquals( 11234, companyResult.getLocation().getZip() );
 		assertTrue( Hibernate.isInitialized( companyResult.markets ) );
@@ -161,7 +161,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		assertFalse( Hibernate.isInitialized( companyResult.employees ) );
 		assertFalse( Hibernate.isInitialized( companyResult.location ) );
 		// initialize and check zip
-		// TODO: must have getters to access lazy entity afterQuery being initialized (why?)
+		// TODO: must have getters to access lazy entity after being initialized (why?)
 		//assertEquals( 12345, companyResult.location.zip );
 		assertEquals( 12345, companyResult.getLocation().getZip() );
 		assertTrue( Hibernate.isInitialized( companyResult.markets ) );

@@ -55,7 +55,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		// the changed name is still in the session
 		assertEquals( "node-name", node.getName() );
 		s.refresh( node );
-		// afterQuery refresh, the name reverts to the original value
+		// after refresh, the name reverts to the original value
 		assertEquals( "node", node.getName() );
 		node = ( VersionedNode ) s.get( VersionedNode.class, node.getId() );
 		assertEquals( "node", node.getName() );

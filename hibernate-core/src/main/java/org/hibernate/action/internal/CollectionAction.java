@@ -54,7 +54,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	/**
-	 * Reconnect to session afterQuery deserialization...
+	 * Reconnect to session after deserialization...
 	 *
 	 * @param session The session being deserialized
 	 */

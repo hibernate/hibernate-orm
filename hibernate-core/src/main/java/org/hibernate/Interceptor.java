@@ -14,7 +14,7 @@ import org.hibernate.type.Type;
 /**
  * Allows user code to inspect and/or change property values.
  *
- * Inspection occurs before property values are written and afterQuery they are read
+ * Inspection occurs before property values are written and after they are read
  * from the database.
  *
  * There might be a single instance of <tt>Interceptor</tt> for a <tt>SessionFactory</tt>, or a new instance
@@ -153,7 +153,7 @@ public interface Interceptor {
 	void preFlush(Iterator entities) throws CallbackException;
 
 	/**
-	 * Called afterQuery a flush that actually ends in execution of the SQL statements required to synchronize
+	 * Called after a flush that actually ends in execution of the SQL statements required to synchronize
 	 * in-memory state with the database.
 	 *
 	 * @param entities The entities that were flushed.
@@ -257,7 +257,7 @@ public interface Interceptor {
 	void beforeTransactionCompletion(Transaction tx);
 
 	/**
-	 * Called afterQuery a transaction is committed or rolled back.
+	 * Called after a transaction is committed or rolled back.
 	 *
 	 * @param tx The Hibernate transaction facade object
 	 */

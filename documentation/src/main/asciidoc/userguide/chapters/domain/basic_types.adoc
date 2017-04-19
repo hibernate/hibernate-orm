@@ -2001,7 +2001,7 @@ The `country` association in the `User` entity is mapped by the `language` prope
 Considering we have the following entities:
 
 [[mapping-JoinColumnOrFormula-persistence-example]]
-.`@JoinColumnOrFormula` mapping usage
+.`@JoinColumnOrFormula` persist example
 ====
 [source, JAVA, indent=0]
 ----
@@ -2012,7 +2012,7 @@ include::{sourcedir}/basic/JoinColumnOrFormulaTest.java[tags=mapping-JoinColumnO
 When fetching the `User` entities, the `country` property is mapped by the `@JoinColumnOrFormula` expression:
 
 [[mapping-JoinColumnOrFormula-fetching-example]]
-.`@JoinColumnOrFormula` mapping usage
+.`@JoinColumnOrFormula` fetching example
 ====
 [source, JAVA, indent=0]
 ----
@@ -2026,3 +2026,60 @@ include::{extrasdir}/basic/mapping-JoinColumnOrFormula-fetching-example.sql[]
 ====
 
 Therefore, the `@JoinColumnOrFormula` annotation is used to define a custom join association between the parent-child association.
+
+[[mapping-Target]]
+==== `@Target` mapping
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify the implementation class of a given association that is mapped via an interface.
+The
+http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html[`@ManyToOne`],
+http://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html[`@OneToOne`],
+http://docs.oracle.com/javaee/7/api/javax/persistence/OneToMany.html[`@OneToMany`], and
+http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToMany.html[`@ManyToMany`]
+feature a http://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html#targetEntity--[`targetEntity`] attribute to specify the actual class of the entiity association when an interface is used for the mapping.
+
+The http://docs.oracle.com/javaee/7/api/javax/persistence/ElementCollection.html[`@ElementCollection`] association has a http://docs.oracle.com/javaee/7/api/javax/persistence/ElementCollection.html#targetClass--[`targetClass`] attribute for the same purpose.
+
+However, for simple embeddable types, there is no such construct and so you need to use the Hibernate-specific `@Target` annotation instead.
+
+[[mapping-Target-example]]
+.`@Target` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/TargetTest.java[tags=mapping-Target-example]
+----
+====
+
+The `coordinates` embeddable type is mapped as the `Coordinates` interface.
+However, Hibernate needs to know the actual implementation tye, which is `GPS` in this case,
+hence the `@Target` annotation is used to provide this information.
+
+Assuming we have persisted the following `City` entity:
+
+[[mapping-Target-persist-example]]
+.`@Target` persist example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/TargetTest.java[tags=mapping-Target-persist-example]
+----
+====
+
+When fetching the `City` entity, the `coordinates` property is mapped by the `@Target` expression:
+
+[[mapping-Target-fetching-example]]
+.`@Target` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/TargetTest.java[tags=mapping-Target-fetching-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/mapping-Target-fetching-example.sql[]
+----
+====
+
+Therefore, the `@Target` annotation is used to define a custom join association between the parent-child association.

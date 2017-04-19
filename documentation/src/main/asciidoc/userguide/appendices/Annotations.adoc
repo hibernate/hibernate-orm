@@ -1252,7 +1252,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify an explicit target implementation when the current annotated association is using an interface type.
 
-//TODO: Add example
+See the <<chapters/domain/basic_types.adoc#mapping-Target,`@Target` mapping>> section for more info.
 
 [[annotations-hibernate-tuplizer]]
 ==== `@Tuplizer`

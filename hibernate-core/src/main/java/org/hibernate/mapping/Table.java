@@ -447,13 +447,12 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		
 		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
 
-		StringBuilder root = new StringBuilder( "alter table " )
-				.append( 
-						jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-								tableInfo.getName(),
-								dialect
-						) 
-				)
+		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				tableInfo.getName(),
+				dialect
+		);
+
+		StringBuilder root = new StringBuilder( dialect.getAlterTableString( tableName ) )
 				.append( ' ' )
 				.append( dialect.getAddColumnString() );
 

@@ -173,8 +173,8 @@ public class ForeignKey extends Constraint {
 	}
 	
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		final StringBuilder buf = new StringBuilder( "alter table " );
-		buf.append( getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
+		String tableName = getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema );
+		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString( tableName ) );
 		buf.append( dialect.getDropForeignKeyString() );
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
 			buf.append( "if exists " );

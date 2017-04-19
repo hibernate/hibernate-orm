@@ -12,12 +12,14 @@ import java.sql.Blob;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Arrays;
+import java.util.Comparator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.ArrayMutabilityPlan;
+import org.hibernate.type.descriptor.spi.IncomparableComparator;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -163,5 +165,10 @@ public class ByteArrayJavaDescriptor extends AbstractBasicJavaDescriptor<Byte[]>
 			result[i] = bytes[i];
 		}
 		return result;
+	}
+
+	@Override
+	public Comparator<Byte[]> getComparator() {
+		return IncomparableComparator.INSTANCE;
 	}
 }

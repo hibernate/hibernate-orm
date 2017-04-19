@@ -10,6 +10,7 @@ import java.util.Comparator;
 import javax.persistence.metamodel.BasicType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
@@ -31,7 +32,9 @@ public abstract class AbstractBasicJavaDescriptor<T>
 	 */
 	@SuppressWarnings({ "unchecked" })
 	protected AbstractBasicJavaDescriptor(Class<T> type) {
-		this( type, (MutabilityPlan<T>) ImmutableMutabilityPlan.INSTANCE, null );
+		this( type, (MutabilityPlan<T>) ImmutableMutabilityPlan.INSTANCE, Comparable.class.isAssignableFrom( type )
+				? (Comparator<T>) ComparableComparator.INSTANCE
+				: null );
 	}
 
 	/**
@@ -42,7 +45,9 @@ public abstract class AbstractBasicJavaDescriptor<T>
 	 */
 	@SuppressWarnings({ "unchecked" })
 	protected AbstractBasicJavaDescriptor(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
-		this( type, mutabilityPlan, null );
+		this( type, mutabilityPlan, Comparable.class.isAssignableFrom( type )
+				? (Comparator<T>) ComparableComparator.INSTANCE
+				: null );
 	}
 
 	/**

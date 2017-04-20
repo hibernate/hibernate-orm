@@ -52,6 +52,11 @@ import org.hibernate.type.Type;
 public final class QueryParameters {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryParameters.class.getName());
 
+	/**
+	 * Symbols used to split SQL string into tokens in {@link #processFilters(String, Map, SessionFactoryImplementor)}.
+	 */
+    private static final String SYMBOLS = ParserHelper.HQL_SEPARATORS.replace( "'", "" );
+
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;
 	private Map<String,TypedValue> namedParameters;
@@ -471,12 +476,7 @@ public final class QueryParameters {
 			processedSQL = sql;
 		}
 		else {
-			final Dialect dialect = factory.getDialect();
-			String symbols = new StringBuilder().append( ParserHelper.HQL_SEPARATORS )
-					.append( dialect.openQuote() )
-					.append( dialect.closeQuote() )
-					.toString();
-			StringTokenizer tokens = new StringTokenizer( sql, symbols, true );
+			StringTokenizer tokens = new StringTokenizer( sql, SYMBOLS, true );
 			StringBuilder result = new StringBuilder();
 
 			List parameters = new ArrayList();

@@ -734,7 +734,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 By default, Hibernate uses a cached `UPDATE` statement that sets all table columns.
 When the entity is annotated with the `@DynamicUpdate` annotation, the `PreparedStatement` is going to include only the columns whose values have been changed.
 
-See the <<chapters/domain/entity.adoc#locking-optimistic-lock-type-dirty-example, `OptimisticLockType.DIRTY` mapping>> section for more info on how `@DynamicUpdate` works.
+See the <<chapters/pc/PersistenceContext.adoc#pc-managed-state-dynamic-update,`@DynamicUpdate`>> section for more info.
 
 [NOTE]
 ====

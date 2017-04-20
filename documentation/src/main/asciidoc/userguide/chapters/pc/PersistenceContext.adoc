@@ -251,6 +251,83 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-managed-state-native-ex
 ----
 ====
 
+By default, when you modify an entity, all columns but the identifier are being set during update.
+
+Therefore, considering you have the following `Product` entity mapping:
+
+[[pc-managed-state-update-mapping-example]]
+.`Product` entity mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-mapping-example]
+----
+====
+
+If you persist the following `Product` entity:
+
+[[pc-managed-state-update-persist-example]]
+.Persisting a `Product` entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-persist-example]
+----
+====
+
+When you modify the `Product` entity, Hibernate generates the following SQL UPDATE statement:
+
+[[pc-managed-state-update-example]]
+.Modifying the `Product` entity
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-managed-state-update-example.sql[]
+----
+====
+
+The default UPDATE statement containing all columns has two advantages:
+
+- it allows you to better benefit from JDBC Statement caching.
+- it allows you to enable batch updates even if multiple entities modify different properties.
+
+However, there is also one downside to including all columns in the SQL UPDATE statement.
+If you have multiple indexes, the database might update those redundantly even if you don't actually modify all column values.
+
+To fix this issue, you can use dynamic updates.
+
+[[pc-managed-state-dynamic-update]]
+==== Dynamic updates
+
+To enable dynamic updates, you need to annotate the entity with the `@DynamicUpdate` annotation:
+
+[[pc-managed-state-dynamic-update-mapping-example]]
+.`Product` entity mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/DynamicUpdateTest.java[tags=pc-managed-state-dynamic-update-mapping-example]
+----
+====
+
+This time, when reruning the previous test case, Hibernate generates the following SQL UPDATE statement:
+
+[[pc-managed-state-dynamic-update-example]]
+.Modifying the `Product` entity with a dynamic update
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-managed-state-dynamic-update-example.sql[]
+----
+====
+
+The dynamic update allows you to set just the columns sthat were modified in the associated entity.
+
 [[pc-refresh]]
 === Refresh entity state
 

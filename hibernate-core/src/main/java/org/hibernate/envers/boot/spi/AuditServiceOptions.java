@@ -27,6 +27,8 @@ public interface AuditServiceOptions {
 
 	boolean isGlobalWithModifiedFlagEnabled();
 
+	boolean isGlobalLegacyRelationTargetNotFoundEnabled();
+
 	boolean hasGlobalWithModifiedFlag();
 
 	boolean isUseRevisionEntityWithNativeIdEnabled();

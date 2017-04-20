@@ -13,11 +13,13 @@ import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.RelationTargetAuditMode;
+import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.internal.entities.PropertyData;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public class PropertyAuditingData {
 	private String name;
@@ -27,6 +29,7 @@ public class PropertyAuditingData {
 	private String accessType;
 	private final List<AuditOverride> auditJoinTableOverrides = new ArrayList<>( 0 );
 	private RelationTargetAuditMode relationTargetAuditMode;
+	private RelationTargetNotFoundAction relationTargetNotFoundAction;
 	private String auditMappedBy;
 	private String relationMappedBy;
 	private String positionMappedBy;
@@ -44,10 +47,30 @@ public class PropertyAuditingData {
 			String auditMappedBy,
 			String positionMappedBy,
 			boolean forceInsertable) {
+		this(
+				name,
+				accessType,
+				relationTargetAuditMode,
+				RelationTargetNotFoundAction.ERROR,
+				auditMappedBy,
+				positionMappedBy,
+				forceInsertable
+		);
+	}
+
+	public PropertyAuditingData(
+			String name,
+			String accessType,
+			RelationTargetAuditMode relationTargetAuditMode,
+			RelationTargetNotFoundAction relationTargetNotFoundAction,
+			String auditMappedBy,
+			String positionMappedBy,
+			boolean forceInsertable) {
 		this.name = name;
 		this.beanName = name;
 		this.accessType = accessType;
 		this.relationTargetAuditMode = relationTargetAuditMode;
+		this.relationTargetNotFoundAction = relationTargetNotFoundAction;
 		this.auditMappedBy = auditMappedBy;
 		this.positionMappedBy = positionMappedBy;
 		this.forceInsertable = forceInsertable;
@@ -197,4 +220,11 @@ public class PropertyAuditingData {
 		this.relationTargetAuditMode = relationTargetAuditMode;
 	}
 
+	public RelationTargetNotFoundAction getRelationTargetNotFoundAction() {
+		return relationTargetNotFoundAction;
+	}
+
+	public void setRelationTargetNotFoundAction(RelationTargetNotFoundAction relationTargetNotFoundAction) {
+		this.relationTargetNotFoundAction = relationTargetNotFoundAction;
+	}
 }

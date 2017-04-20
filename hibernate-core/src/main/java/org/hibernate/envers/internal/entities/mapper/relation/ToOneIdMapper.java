@@ -100,10 +100,17 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			}
 			else {
 				final EntityInfo referencedEntity = getEntityInfo( versionsReader, referencedEntityName );
-				boolean ignoreNotFound = false;
-				if ( !referencedEntity.isAudited() ) {
-					final String referencingEntityName = versionsReader.getAuditService().getEntityBindings()
-							.getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
+
+				final String referencingEntityName = versionsReader.getAuditService().getEntityBindings()
+						.getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
+
+				final boolean ignoreNotFound;
+				if ( referencingEntityName == null && primaryKey == null ) {
+					/// HHH-11215 - Fix for NPE when Embeddable with ManyToOne inside ElementCollection
+					// An embeddable in an element-collection
+					ignoreNotFound = true;
+				}
+				else {
 					ignoreNotFound = versionsReader.getAuditService().getEntityBindings()
 							.getRelationDescription( referencingEntityName, getPropertyData().getName() )
 							.isIgnoreNotFound();

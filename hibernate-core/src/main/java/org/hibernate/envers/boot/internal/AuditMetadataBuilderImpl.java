@@ -134,6 +134,7 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 		private final String defaultCatalogName;
 		private final boolean globalWithModifiedFlag;
 		private final boolean hasGlobalSettingForWithModifiedFlag;
+		private final boolean globalLegacyRelationTargetNotFound;
 		private final String modifiedFlagSuffix;
 		private final boolean useRevisionEntityWithNativeId;
 		private final boolean cascadeDeleteRevision;
@@ -220,6 +221,12 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 					EnversSettings.GLOBAL_WITH_MODIFIED_FLAG,
 					properties,
 					false
+			);
+
+			this.globalLegacyRelationTargetNotFound = ConfigurationHelper.getBoolean(
+					EnversSettings.GLOBAL_RELATION_NOT_FOUND_LEGACY_FLAG,
+					properties,
+					true
 			);
 
 			this.modifiedFlagSuffix = ConfigurationHelper.getString(
@@ -354,6 +361,11 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 		@Override
 		public boolean isGlobalWithModifiedFlagEnabled() {
 			return globalWithModifiedFlag;
+		}
+
+		@Override
+		public boolean isGlobalLegacyRelationTargetNotFoundEnabled() {
+			return globalLegacyRelationTargetNotFound;
 		}
 
 		@Override

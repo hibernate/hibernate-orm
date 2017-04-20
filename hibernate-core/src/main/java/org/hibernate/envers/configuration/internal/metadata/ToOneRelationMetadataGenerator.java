@@ -7,6 +7,7 @@
 package org.hibernate.envers.configuration.internal.metadata;
 
 import org.hibernate.MappingException;
+import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.IdMappingData;
@@ -28,6 +29,7 @@ import org.dom4j.Element;
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public final class ToOneRelationMetadataGenerator {
 	private final AuditMetadataGenerator mainGenerator;
@@ -60,8 +62,11 @@ public final class ToOneRelationMetadataGenerator {
 
 		// Storing information about this relation
 		mainGenerator.getEntitiesConfigurations().get( entityName ).addToOneRelation(
-				propertyAuditingData.getName(), referencedEntityName, relMapper,
-				insertable, MappingTools.ignoreNotFound( value )
+				propertyAuditingData.getName(),
+				referencedEntityName,
+				relMapper,
+				insertable,
+				shouldIgnoreNotFoundRelation( propertyAuditingData, value )
 		);
 
 		// If the property isn't insertable, checking if this is not a "fake" bidirectional many-to-one relationship,
@@ -135,8 +140,11 @@ public final class ToOneRelationMetadataGenerator {
 
 		// Storing information about this relation
 		mainGenerator.getEntitiesConfigurations().get( entityName ).addToOneNotOwningRelation(
-				propertyAuditingData.getName(), owningReferencePropertyName, referencedEntityName,
-				ownedIdMapper, MappingTools.ignoreNotFound( value )
+				propertyAuditingData.getName(),
+				owningReferencePropertyName,
+				referencedEntityName,
+				ownedIdMapper,
+				MappingTools.ignoreNotFound( value )
 		);
 
 		// Adding mapper for the id
@@ -176,7 +184,10 @@ public final class ToOneRelationMetadataGenerator {
 
 		// Storing information about this relation
 		mainGenerator.getEntitiesConfigurations().get( entityName ).addToOneRelation(
-				propertyAuditingData.getName(), referencedEntityName, relMapper, insertable,
+				propertyAuditingData.getName(),
+				referencedEntityName,
+				relMapper,
+				insertable,
 				MappingTools.ignoreNotFound( value )
 		);
 
@@ -191,5 +202,21 @@ public final class ToOneRelationMetadataGenerator {
 						mainGenerator.getServiceRegistry()
 				)
 		);
+	}
+
+	private boolean shouldIgnoreNotFoundRelation(PropertyAuditingData propertyAuditingData, Value value) {
+		final RelationTargetNotFoundAction action = propertyAuditingData.getRelationTargetNotFoundAction();
+		if ( mainGenerator.getOptions().isGlobalLegacyRelationTargetNotFoundEnabled() ) {
+			// When legacy is enabled, the user must explicitly specify IGNORE for it to be ignored or
+			// be using the Hibernate annotation @NotFound
+			return MappingTools.ignoreNotFound( value )
+					|| RelationTargetNotFoundAction.IGNORE.equals( action );
+		}
+		else {
+			// For non-legacy behavior, users must be explicit about using ERROR in order for Envers to
+			// throw an exception.  By default, its considered ignored.  We don't check for the Hibernate ORM
+			// @NotFound annotation here because we default to IGNORE anyway except under this specific case.
+			return !RelationTargetNotFoundAction.ERROR.equals( action );
+		}
 	}
 }

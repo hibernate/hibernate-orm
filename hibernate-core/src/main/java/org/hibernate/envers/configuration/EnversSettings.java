@@ -54,6 +54,19 @@ public interface EnversSettings {
 	String GLOBAL_WITH_MODIFIED_FLAG = "org.hibernate.envers.global_with_modified_flag";
 
 	/**
+	 * Globally defines whether legacy relation not-found behavior should be used or not.
+	 * Defaults to {@code true}.
+	 *
+	 * By specifying {@code true}, any {@code EntityNotFoundException} will be thrown unless the containing
+	 * class or property explicitly specifies that use case to be ignored.  Conversely, when specifying the
+	 * value {@code false}, the inverse applies an requires explicitly specifying the use case as error so
+	 * that the exception is thrown.
+	 *
+	 * @since 6.0
+	 */
+	String GLOBAL_RELATION_NOT_FOUND_LEGACY_FLAG = "org.hibernate.envers.global_relation_not_found_legacy_flag";
+
+	/**
 	 * Suffix of modified flag columns. Defaults to {@literal _MOD}.
 	 */
 	String MODIFIED_FLAG_SUFFIX = "org.hibernate.envers.modified_flag_suffix";

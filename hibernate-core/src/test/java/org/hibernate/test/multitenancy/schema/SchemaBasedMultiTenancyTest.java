@@ -30,6 +30,7 @@ import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -38,6 +39,10 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Steve Ebersole
@@ -262,6 +267,35 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		session.delete( john );
 		session.getTransaction().commit();
 		session.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11651")
+	public void testUnwrappingConnectionProvider() {
+		final MultiTenantConnectionProvider multiTenantConnectionProvider = serviceRegistry.getService(
+				MultiTenantConnectionProvider.class );
+		final ConnectionProvider connectionProvider = multiTenantConnectionProvider.unwrap( ConnectionProvider.class );
+		assertThat( connectionProvider, is( notNullValue() ) );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11651")
+	public void testUnwrappingAbstractMultiTenantConnectionProvider() {
+		final MultiTenantConnectionProvider multiTenantConnectionProvider = serviceRegistry.getService(
+				MultiTenantConnectionProvider.class );
+		final AbstractMultiTenantConnectionProvider connectionProvider = multiTenantConnectionProvider.unwrap(
+				AbstractMultiTenantConnectionProvider.class );
+		assertThat( connectionProvider, is( notNullValue() ) );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11651")
+	public void testUnwrappingMultiTenantConnectionProvider() {
+		final MultiTenantConnectionProvider multiTenantConnectionProvider = serviceRegistry.getService(
+				MultiTenantConnectionProvider.class );
+		final MultiTenantConnectionProvider connectionProvider = multiTenantConnectionProvider.unwrap(
+				MultiTenantConnectionProvider.class );
+		assertThat( connectionProvider, is( notNullValue() ) );
 	}
 
 	@Test

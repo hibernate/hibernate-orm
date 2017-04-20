@@ -47,15 +47,19 @@ public abstract class AbstractDataSourceBasedMultiTenantConnectionProviderImpl i
 
 	@Override
 	public boolean isUnwrappableAs(Class unwrapType) {
-		return MultiTenantConnectionProvider.class.equals( unwrapType ) ||
-				AbstractMultiTenantConnectionProvider.class.isAssignableFrom( unwrapType );
+		return
+			DataSource.class.isAssignableFrom( unwrapType ) ||
+			MultiTenantConnectionProvider.class.isAssignableFrom( unwrapType );
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( isUnwrappableAs( unwrapType ) ) {
+		if ( MultiTenantConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
 			return (T) this;
+		}
+		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+			return (T) selectAnyDataSource();
 		}
 		else {
 			throw new UnknownUnwrapTypeException( unwrapType );

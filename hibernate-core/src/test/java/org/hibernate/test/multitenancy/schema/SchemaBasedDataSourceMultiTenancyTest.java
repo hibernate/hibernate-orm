@@ -6,10 +6,11 @@
  */
 package org.hibernate.test.multitenancy.schema;
 
+import javax.sql.DataSource;
+
 import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
-import org.hibernate.engine.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.spi.AbstractDataSourceBasedMultiTenantConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 
 import org.hibernate.testing.RequiresDialectFeature;
@@ -22,28 +23,28 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
 /**
- * @author Steve Ebersole
+ * @author Vlad Mihalcea
  */
 @RequiresDialectFeature( value = ConnectionProviderBuilder.class )
-public class SchemaBasedMultiTenancyTest extends AbstractSchemaBasedMultiTenancyTest<
-		AbstractMultiTenantConnectionProvider, DriverManagerConnectionProviderImpl> {
+public class SchemaBasedDataSourceMultiTenancyTest  extends AbstractSchemaBasedMultiTenancyTest<
+		AbstractDataSourceBasedMultiTenantConnectionProviderImpl, DatasourceConnectionProviderImpl> {
 
-	protected AbstractMultiTenantConnectionProvider buildMultiTenantConnectionProvider() {
-		acmeProvider = ConnectionProviderBuilder.buildConnectionProvider( "acme" );
-		jbossProvider = ConnectionProviderBuilder.buildConnectionProvider( "jboss" );
-		return new AbstractMultiTenantConnectionProvider() {
+	protected AbstractDataSourceBasedMultiTenantConnectionProviderImpl buildMultiTenantConnectionProvider() {
+		acmeProvider = ConnectionProviderBuilder.buildDataSourceConnectionProvider( "acme" );
+		jbossProvider = ConnectionProviderBuilder.buildDataSourceConnectionProvider( "jboss" );
+		return new AbstractDataSourceBasedMultiTenantConnectionProviderImpl() {
 			@Override
-			protected ConnectionProvider getAnyConnectionProvider() {
-				return acmeProvider;
+			protected DataSource selectAnyDataSource() {
+				return acmeProvider.unwrap( DataSource.class );
 			}
 
 			@Override
-			protected ConnectionProvider selectConnectionProvider(String tenantIdentifier) {
+			protected DataSource selectDataSource(String tenantIdentifier) {
 				if ( "acme".equals( tenantIdentifier ) ) {
-					return acmeProvider;
+					return acmeProvider.unwrap( DataSource.class );
 				}
 				else if ( "jboss".equals( tenantIdentifier ) ) {
-					return jbossProvider;
+					return jbossProvider.unwrap( DataSource.class );
 				}
 				throw new HibernateException( "Unknown tenant identifier" );
 			}
@@ -55,8 +56,8 @@ public class SchemaBasedMultiTenancyTest extends AbstractSchemaBasedMultiTenancy
 	public void testUnwrappingConnectionProvider() {
 		final MultiTenantConnectionProvider multiTenantConnectionProvider = serviceRegistry.getService(
 				MultiTenantConnectionProvider.class );
-		final ConnectionProvider connectionProvider = multiTenantConnectionProvider.unwrap( ConnectionProvider.class );
-		assertThat( connectionProvider, is( notNullValue() ) );
+		final DataSource dataSource = multiTenantConnectionProvider.unwrap( DataSource.class );
+		assertThat( dataSource, is( notNullValue() ) );
 	}
 
 	@Test
@@ -64,9 +65,9 @@ public class SchemaBasedMultiTenancyTest extends AbstractSchemaBasedMultiTenancy
 	public void testUnwrappingAbstractMultiTenantConnectionProvider() {
 		final MultiTenantConnectionProvider multiTenantConnectionProvider = serviceRegistry.getService(
 				MultiTenantConnectionProvider.class );
-		final AbstractMultiTenantConnectionProvider connectionProvider = multiTenantConnectionProvider.unwrap(
-				AbstractMultiTenantConnectionProvider.class );
-		assertThat( connectionProvider, is( notNullValue() ) );
+		final AbstractDataSourceBasedMultiTenantConnectionProviderImpl dataSourceBasedMultiTenantConnectionProvider = multiTenantConnectionProvider.unwrap(
+				AbstractDataSourceBasedMultiTenantConnectionProviderImpl.class );
+		assertThat( dataSourceBasedMultiTenantConnectionProvider, is( notNullValue() ) );
 	}
 
 	@Test

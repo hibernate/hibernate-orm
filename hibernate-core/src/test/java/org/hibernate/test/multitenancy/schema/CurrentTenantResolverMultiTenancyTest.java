@@ -7,6 +7,7 @@
 package org.hibernate.test.multitenancy.schema;
 
 import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -35,13 +36,14 @@ public class CurrentTenantResolverMultiTenancyTest extends SchemaBasedMultiTenan
 	}
 
 	@Override
-	protected Session getNewSession(String tenant) {
+	protected SessionBuilder newSession(String tenant) {
 		currentTenantResolver.currentTenantIdentifier = tenant;
-		Session session = sessionFactory.openSession();
-		Assert.assertEquals( tenant, session.getTenantIdentifier() );
-		return session;
+		SessionBuilder sessionBuilder = sessionFactory.withOptions();
+		try(Session session = sessionBuilder.openSession()) {
+			Assert.assertEquals( tenant, session.getTenantIdentifier() );
+		}
+		return sessionBuilder;
 	}
-
 
 	private static class TestCurrentTenantIdentifierResolver implements CurrentTenantIdentifierResolver {
 		private String currentTenantIdentifier;

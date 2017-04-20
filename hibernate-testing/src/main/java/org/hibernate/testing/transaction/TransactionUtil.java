@@ -349,6 +349,73 @@ public class TransactionUtil {
 	}
 
 	/**
+	 * Execute function in a Hibernate transaction without return value and for a given tenant
+	 *
+	 * @param factorySupplier SessionFactory supplier
+	 * @param tenant tenant
+	 * @param function function
+	 */
+	public static void doInHibernate(
+			Supplier<SessionFactory> factorySupplier,
+			String tenant,
+			Consumer<Session> function) {
+		Session session = null;
+		Transaction txn = null;
+		try {
+			session = factorySupplier.get()
+					.withOptions()
+					.tenantIdentifier( tenant )
+					.openSession();
+			txn = session.getTransaction();
+			txn.begin();
+			function.accept(session);
+			txn.commit();
+		} catch (Throwable e) {
+			if ( txn != null ) txn.rollback();
+			throw e;
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+	}
+
+	/**
+	 * Execute function in a Hibernate transaction for a given tenant and return a value
+	 *
+	 * @param factorySupplier SessionFactory supplier
+	 * @param tenant tenant
+	 * @param function function
+	 *
+	 * @return result
+	 */
+	public static <R> R doInHibernate(
+			Supplier<SessionFactory> factorySupplier,
+		 	String tenant,
+		 	Function<Session, R> function) {
+		Session session = null;
+		Transaction txn = null;
+		try {
+			session = factorySupplier.get()
+					.withOptions()
+					.tenantIdentifier( tenant )
+					.openSession();
+			txn = session.getTransaction();
+			txn.begin();
+			R returnValue = function.apply(session);
+			txn.commit();
+			return returnValue;
+		} catch (Throwable e) {
+			if ( txn != null ) txn.rollback();
+			throw e;
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+	}
+
+	/**
 	 * Execute function in a Hibernate transaction
 	 *
 	 * @param sessionBuilderSupplier SessionFactory supplier

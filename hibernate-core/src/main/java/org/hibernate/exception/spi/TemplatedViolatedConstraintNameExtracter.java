@@ -58,7 +58,7 @@ public abstract class TemplatedViolatedConstraintNameExtracter implements Violat
 		}
 
 		int start = templateStartPosition + templateStart.length();
-		int end = message.indexOf( templateEnd, start );
+		int end = message.lastIndexOf( templateEnd, start );
 		if ( end < 0 ) {
 			end = message.length();
 		}

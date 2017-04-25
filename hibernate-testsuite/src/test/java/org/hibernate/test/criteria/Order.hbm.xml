@@ -17,6 +17,17 @@
     </id>
     <many-to-one name="order" column="order_id" class="Order" />
     <property name="articleId" column="article_id" type="string" />
+    <set name="subLines" cascade="all-delete-orphan" access="field" inverse="true" fetch="select">
+      <key column="order_line_id" />
+      <one-to-many class="SubLine" />
+    </set>
+  </class>
+  <class name="SubLine" table="sub_line">
+    <id name="subId" column="sub_line_id" type="int" unsaved-value="0" access="field" >
+      <generator class="identity" />
+    </id>
+    <many-to-one name="orderLine" column="order_line_id" class="OrderLine" />
+    <property name="subProperty" column="sub_property" type="string" />
   </class>
 </hibernate-mapping>
 

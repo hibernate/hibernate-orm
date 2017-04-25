@@ -16,7 +16,7 @@ package org.hibernate.dialect;
 public class MySQLMyISAMDialect extends MySQLDialect {
 	@Override
 	public String getTableTypeString() {
-		return " type=MyISAM";
+		return " ENGINE=MyISAM";
 	}
 
 	@Override

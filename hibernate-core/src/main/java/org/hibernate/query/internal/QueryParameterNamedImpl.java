@@ -8,7 +8,7 @@
 package org.hibernate.query.internal;
 
 import org.hibernate.persister.common.spi.TypeExporter;
-import org.hibernate.sqm.query.SqmParameter;
+import org.hibernate.query.sqm.tree.SqmParameter;
 import org.hibernate.type.spi.Type;
 
 /**

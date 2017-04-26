@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.ast.expression;
 
-import org.hibernate.sql.ast.from.ColumnBinding;
+import org.hibernate.sql.ast.from.ColumnReference;
 import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.convert.ConversionException;
 import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
@@ -17,9 +17,9 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  */
 public class ColumnBindingExpression implements Expression {
-	private final ColumnBinding columnBinding;
+	private final ColumnReference columnBinding;
 
-	public ColumnBindingExpression(ColumnBinding columnBinding) {
+	public ColumnBindingExpression(ColumnReference columnBinding) {
 		this.columnBinding = columnBinding;
 	}
 
@@ -38,7 +38,7 @@ public class ColumnBindingExpression implements Expression {
 		walker.visitColumnBindingExpression( this );
 	}
 
-	public ColumnBinding getColumnBinding() {
+	public ColumnReference getColumnBinding() {
 		return columnBinding;
 	}
 }

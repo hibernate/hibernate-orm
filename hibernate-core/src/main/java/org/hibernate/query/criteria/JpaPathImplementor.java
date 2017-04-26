@@ -9,7 +9,7 @@ package org.hibernate.query.criteria;
 import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.Incubating;
-import org.hibernate.sqm.parser.criteria.tree.path.JpaPath;
+import org.hibernate.query.sqm.produce.spi.criteria.path.JpaPath;
 
 /**
  * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.Path}

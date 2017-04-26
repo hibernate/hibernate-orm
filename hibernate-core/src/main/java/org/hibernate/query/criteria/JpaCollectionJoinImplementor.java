@@ -11,7 +11,7 @@ import javax.persistence.criteria.Predicate;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
-import org.hibernate.sqm.parser.criteria.tree.from.JpaCollectionJoin;
+import org.hibernate.query.sqm.produce.spi.criteria.from.JpaCollectionJoin;
 
 /**
  * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.CollectionJoin}

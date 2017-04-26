@@ -9,7 +9,6 @@ package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaBuilder.Case;
 import javax.persistence.criteria.Expression;
 
@@ -18,9 +17,9 @@ import org.hibernate.query.criteria.JpaPredicateImplementor;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
-import org.hibernate.sqm.query.expression.CaseSearchedSqmExpression;
-import org.hibernate.sqm.query.expression.SqmExpression;
+import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
+import org.hibernate.query.sqm.tree.expression.CaseSearchedSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * Models what ANSI SQL terms a <tt>searched case expression</tt>.  This is a <tt>CASE</tt> expression

@@ -24,6 +24,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
+import org.hibernate.Metamodel;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -49,14 +50,13 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryInterpretations;
+import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.sqm.domain.SqmDomainMetamodel;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -402,7 +402,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 
 	@Override
 	public Iterable<EntityNameResolver> iterateEntityNameResolvers() {
-		return delegate.iterateEntityNameResolvers();
+		return delegate.getTypeConfiguration().getEntityNameResolvers();
 	}
 
 	@Override
@@ -496,7 +496,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public MetamodelImplementor getMetamodel() {
+	public Metamodel getMetamodel() {
 		return delegate.getMetamodel();
 	}
 
@@ -521,17 +521,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public SqmDomainMetamodel getDomainMetamodel() {
-		return delegate.getDomainMetamodel();
-	}
-
-	@Override
-	public Class classByName(String name) throws ClassNotFoundException {
-		return delegate.classByName( name );
-	}
-
-	@Override
-	public boolean useStrictJpaCompliance() {
-		return delegate.useStrictJpaCompliance();
+	public SemanticQueryProducer getSemanticQueryProducer() {
+		return delegate.getSemanticQueryProducer();
 	}
 }

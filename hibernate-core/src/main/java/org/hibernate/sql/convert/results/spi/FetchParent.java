@@ -8,7 +8,7 @@ package org.hibernate.sql.convert.results.spi;
 
 import java.util.List;
 
-import org.hibernate.sql.ast.expression.domain.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.exec.results.process.spi.InitializerParent;
 
 /**

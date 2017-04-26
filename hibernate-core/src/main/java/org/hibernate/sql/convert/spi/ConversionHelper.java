@@ -17,7 +17,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.expression.NamedParameter;
 import org.hibernate.sql.ast.expression.PositionalParameter;
-import org.hibernate.sqm.query.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
@@ -86,7 +86,7 @@ public class ConversionHelper {
 		}
 
 		// assume the fact that the attribute/type are entity has already been validated
-		final EntityType entityType = (EntityType) ( ( SingularPersistentAttribute) joinedFromElement.getAttributeBinding().getBoundNavigable() ).getOrmType();
+		final EntityType entityType = (EntityType) ( ( SingularPersistentAttribute) joinedFromElement.getAttributeBinding().getReferencedNavigable() ).getOrmType();
 		final String entityName = entityType.getAssociatedEntityName();
 		return factory.getTypeConfiguration().resolveEntityPersister( entityName );
 	}

@@ -8,7 +8,7 @@ package org.hibernate.query.criteria;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
-import org.hibernate.sqm.parser.criteria.tree.from.JpaFrom;
+import org.hibernate.query.sqm.produce.spi.criteria.from.JpaFrom;
 
 /**
  * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.From}

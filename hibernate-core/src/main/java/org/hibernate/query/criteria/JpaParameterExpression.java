@@ -10,7 +10,7 @@ import javax.persistence.criteria.ParameterExpression;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.sqm.parser.criteria.tree.JpaExpression;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaExpression;
 
 /**
  * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.ParameterExpression}

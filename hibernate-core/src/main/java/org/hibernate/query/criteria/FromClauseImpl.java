@@ -11,9 +11,9 @@ import java.util.Set;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.internal.path.RootImpl;
-import org.hibernate.sqm.parser.criteria.tree.from.JpaFrom;
-import org.hibernate.sqm.parser.criteria.tree.from.JpaFromClause;
-import org.hibernate.sqm.parser.criteria.tree.from.JpaRoot;
+import org.hibernate.query.sqm.produce.spi.criteria.from.JpaFrom;
+import org.hibernate.query.sqm.produce.spi.criteria.from.JpaFromClause;
+import org.hibernate.query.sqm.produce.spi.criteria.from.JpaRoot;
 
 /**
  * Models a grouping of "FROM elements" in a JPA CriteriaQuery.

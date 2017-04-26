@@ -9,8 +9,8 @@ package org.hibernate.sql.ast.expression.domain;
 
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Table;
-import org.hibernate.sql.ast.from.ColumnBinding;
-import org.hibernate.sql.ast.from.TableBinding;
+import org.hibernate.sql.ast.from.ColumnReference;
+import org.hibernate.sql.ast.from.TableReference;
 import org.hibernate.sql.ast.from.TableGroup;
 
 /**
@@ -22,6 +22,6 @@ import org.hibernate.sql.ast.from.TableGroup;
 public interface ColumnBindingSource {
 	TableGroup getTableGroup();
 
-	TableBinding locateTableBinding(Table table);
-	ColumnBinding resolveColumnBinding(Column column);
+	TableReference locateTableBinding(Table table);
+	ColumnReference resolveColumnBinding(Column column);
 }

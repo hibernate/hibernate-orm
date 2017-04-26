@@ -17,7 +17,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.sqm.NotYetImplementedException;
+import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.spi.ColumnMapping;

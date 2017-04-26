@@ -24,8 +24,8 @@ import org.hibernate.sql.ast.expression.domain.ColumnBindingGroup;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingGroupEmptyImpl;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingGroupImpl;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
-import org.hibernate.sql.ast.expression.domain.NavigablePath;
-import org.hibernate.sql.ast.from.ColumnBinding;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.sql.ast.from.ColumnReference;
 import org.hibernate.sql.convert.results.internal.ReturnEntityImpl;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
@@ -147,14 +147,14 @@ public class SelectableEntityTypeImpl implements Selectable {
 		}
 
 		final SqlSelectionGroupImpl sqlSelectionGroup = new SqlSelectionGroupImpl();
-		for ( ColumnBinding columnBinding : columnBindingGroup.getColumnBindings() ) {
+		for ( ColumnReference columnBinding : columnBindingGroup.getColumnBindings() ) {
 			sqlSelectionGroup.addSqlSelection( resolutionContext.resolveSqlSelection( columnBinding ) );
 		}
 		return sqlSelectionGroup;
 	}
 
-	public List<ColumnBinding> getColumnBinding() {
-		List<ColumnBinding> columnBindings = null;
+	public List<ColumnReference> getColumnBinding() {
+		List<ColumnReference> columnBindings = null;
 
 		for ( ColumnBindingGroup columnBindingGroup : columnBindingGroupMap.values() ) {
 			if ( columnBindingGroup.getColumnBindings().isEmpty() ) {

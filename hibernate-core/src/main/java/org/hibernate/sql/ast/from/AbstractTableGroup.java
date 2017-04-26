@@ -13,11 +13,11 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
-import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.common.spi.UnionSubclassTable;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Table;
+import org.hibernate.persister.common.spi.UnionSubclassTable;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -31,12 +31,12 @@ public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSou
 	private final TableSpace tableSpace;
 	private final String uid;
 	private final String aliasBase;
-	private final PropertyPath propertyPath;
+	private final NavigablePath propertyPath;
 
-	private TableBinding rootTableBinding;
+	private TableReference rootTableBinding;
 	private List<TableJoin> tableJoins;
 
-	public AbstractTableGroup(TableSpace tableSpace, String uid, String aliasBase, PropertyPath propertyPath) {
+	public AbstractTableGroup(TableSpace tableSpace, String uid, String aliasBase, NavigablePath propertyPath) {
 		this.tableSpace = tableSpace;
 		this.uid = uid;
 		this.aliasBase = aliasBase;
@@ -58,11 +58,11 @@ public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSou
 		return aliasBase;
 	}
 
-	public TableBinding getRootTableBinding() {
+	public TableReference getRootTableBinding() {
 		return rootTableBinding;
 	}
 
-	public void setRootTableBinding(TableBinding rootTableBinding) {
+	public void setRootTableBinding(TableReference rootTableBinding) {
 		log.tracef(
 				"Setting root TableSpecification for group [%s] : %s (was %s)",
 				this.toString(),
@@ -87,12 +87,12 @@ public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSou
 	}
 
 	@Override
-	public PropertyPath getNavigablePath() {
+	public NavigablePath getNavigablePath() {
 		return propertyPath;
 	}
 
 	@Override
-	public TableBinding locateTableBinding(Table table) {
+	public TableReference locateTableBinding(Table table) {
 		if ( table == getRootTableBinding().getTable() ) {
 			return getRootTableBinding();
 		}
@@ -120,7 +120,7 @@ public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSou
 		tableJoins.add( join );
 	}
 
-	private final SortedMap<Column,ColumnBinding> columnBindingMap = new TreeMap<>(
+	private final SortedMap<Column,ColumnReference> columnBindingMap = new TreeMap<>(
 			(column1, column2) -> {
 				// Sort primarily on table expression
 				final int tableSort = column1.getSourceTable().getTableExpression().compareTo( column2.getSourceTable().getTableExpression() );
@@ -134,20 +134,20 @@ public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSou
 	);
 
 	@Override
-	public ColumnBinding resolveColumnBinding(Column column) {
-		final ColumnBinding existing = columnBindingMap.get( column );
+	public ColumnReference resolveColumnBinding(Column column) {
+		final ColumnReference existing = columnBindingMap.get( column );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final TableBinding tableBinding = locateTableBinding( column.getSourceTable() );
+		final TableReference tableBinding = locateTableBinding( column.getSourceTable() );
 		if ( tableBinding == null ) {
 			throw new HibernateException(
 					"Problem resolving Column(" + column.toLoggableString() +
 							") to ColumnBinding via TableGroup [" + this + "]"
 			);
 		}
-		final ColumnBinding columnBinding = new ColumnBinding( column, tableBinding );
+		final ColumnReference columnBinding = new ColumnReference( column, tableBinding );
 		columnBindingMap.put( column, columnBinding );
 		return columnBinding;
 	}

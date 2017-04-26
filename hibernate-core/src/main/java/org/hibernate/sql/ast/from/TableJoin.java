@@ -8,19 +8,19 @@ package org.hibernate.sql.ast.from;
 
 import org.hibernate.sql.ast.predicate.Predicate;
 import org.hibernate.sql.convert.IllegalJoinSpecificationException;
-import org.hibernate.sqm.query.SqmJoinType;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 
 /**
- * Represents a join to a {@link TableBinding}; roughly equivalent to a SQL join.
+ * Represents a join to a {@link TableReference}; roughly equivalent to a SQL join.
  *
  * @author Steve Ebersole
  */
 public class TableJoin {
 	private final SqmJoinType joinType;
-	private final TableBinding joinedTableBinding;
+	private final TableReference joinedTableBinding;
 	private final Predicate predicate;
 
-	public TableJoin(SqmJoinType joinType, TableBinding joinedTableBinding, Predicate predicate) {
+	public TableJoin(SqmJoinType joinType, TableReference joinedTableBinding, Predicate predicate) {
 		this.joinType = joinType;
 		this.joinedTableBinding = joinedTableBinding;
 		this.predicate = predicate;
@@ -36,7 +36,7 @@ public class TableJoin {
 		return joinType;
 	}
 
-	public TableBinding getJoinedTableBinding() {
+	public TableReference getJoinedTableBinding() {
 		return joinedTableBinding;
 	}
 

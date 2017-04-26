@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.envers.internal.AuditReaderFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.stat.Statistics;
 
 /**
@@ -43,6 +44,12 @@ public interface SessionFactory extends EntityManagerFactory, AuditReaderFactory
 	 * @return The special options used to build the factory.
 	 */
 	SessionFactoryOptions getSessionFactoryOptions();
+
+	@Override
+	HibernateCriteriaBuilder getCriteriaBuilder();
+
+	@Override
+	Metamodel getMetamodel();
 
 	/**
 	 * Obtain a {@link Session} builder.

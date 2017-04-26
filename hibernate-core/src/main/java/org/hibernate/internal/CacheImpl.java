@@ -23,7 +23,6 @@ import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
-import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
@@ -54,7 +53,7 @@ public class CacheImpl implements CacheImplementor {
 	private final transient RegionFactory regionFactory;
 	private final String cacheRegionPrefix;
 
-	private final transient ConcurrentHashMap<String, Region> allRegionsMap = new ConcurrentHashMap<>();
+//	private final transient ConcurrentHashMap<String, Region> allRegionsMap = new ConcurrentHashMap<>();
 
 	private final transient ConcurrentHashMap<String, EntityRegionAccessStrategy> entityRegionAccessStrategyMap = new ConcurrentHashMap<>();
 	private final transient ConcurrentHashMap<String, CollectionRegionAccessStrategy> collectionRegionAccessStrategyMap = new ConcurrentHashMap<>();
@@ -118,7 +117,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public boolean containsEntity(String entityName, Serializable identifier) {
-		EntityPersister p = sessionFactory.getMetamodel().entityPersister( entityName );
+		EntityPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
 		if ( p.hasCache() ) {
 			EntityRegionAccessStrategy cache = p.getCacheAccessStrategy();
 			Object key = cache.generateCacheKey( identifier, p, sessionFactory, null ); // have to assume non tenancy
@@ -136,7 +135,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictEntity(String entityName, Serializable identifier) {
-		EntityPersister p = sessionFactory.getMetamodel().entityPersister( entityName );
+		EntityPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
 		if ( p.hasCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
@@ -157,7 +156,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictEntityRegion(String entityName) {
-		EntityPersister p = sessionFactory.getMetamodel().entityPersister( entityName );
+		EntityPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
 		if ( p.hasCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Evicting second-level cache: %s", p.getEntityName() );
@@ -168,7 +167,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictEntityRegions() {
-		sessionFactory.getMetamodel().entityPersisters().keySet().forEach( this::evictEntityRegion );
+		sessionFactory.getMetamodel().getTypeConfiguration().getEntityPersisterMap().keySet().forEach( this::evictEntityRegion );
 	}
 
 	@Override
@@ -178,7 +177,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictNaturalIdRegion(String entityName) {
-		EntityPersister p = sessionFactory.getMetamodel().entityPersister( entityName );
+		EntityPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
 		if ( p.hasNaturalIdCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Evicting natural-id cache: %s", p.getEntityName() );
@@ -189,12 +188,12 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictNaturalIdRegions() {
-		sessionFactory.getMetamodel().entityPersisters().keySet().forEach( this::evictNaturalIdRegion );
+		sessionFactory.getMetamodel().getTypeConfiguration().getEntityPersisterMap().keySet().forEach( this::evictNaturalIdRegion );
 	}
 
 	@Override
 	public boolean containsCollection(String role, Serializable ownerIdentifier) {
-		CollectionPersister p = sessionFactory.getMetamodel().collectionPersister( role );
+		CollectionPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findCollectionPersister( role );
 		if ( p.hasCache() ) {
 			CollectionRegionAccessStrategy cache = p.getCacheAccessStrategy();
 			Object key = cache.generateCacheKey( ownerIdentifier, p, sessionFactory, null ); // have to assume non tenancy
@@ -207,7 +206,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictCollection(String role, Serializable ownerIdentifier) {
-		CollectionPersister p = sessionFactory.getMetamodel().collectionPersister( role );
+		CollectionPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findCollectionPersister( role );
 		if ( p.hasCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
@@ -223,7 +222,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictCollectionRegion(String role) {
-		CollectionPersister p = sessionFactory.getMetamodel().collectionPersister( role );
+		CollectionPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findCollectionPersister( role );
 		if ( p.hasCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Evicting second-level cache: %s", p.getRole() );
@@ -234,7 +233,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictCollectionRegions() {
-		sessionFactory.getMetamodel().collectionPersisters().keySet().forEach( this::evictCollectionRegion );
+		sessionFactory.getMetamodel().getTypeConfiguration().getCollectionPersisterMap().keySet().forEach( this::evictCollectionRegion );
 	}
 
 	@Override

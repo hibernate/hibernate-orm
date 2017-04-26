@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.convert.results.spi;
 
-import org.hibernate.sql.ast.expression.domain.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.select.SqlSelectable;
 import org.hibernate.sql.ast.select.SqlSelection;
 

@@ -20,6 +20,8 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public class QuerySpec {
+	private final boolean isRoot;
+
 	private final FromClause fromClause = new FromClause();
 	private final SelectClause selectClause = new SelectClause();
 
@@ -30,6 +32,19 @@ public class QuerySpec {
 	private Expression offsetClauseExpression;
 
 	// where clause, etc
+
+
+	public QuerySpec(boolean isRoot) {
+		this.isRoot = isRoot;
+	}
+
+	/**
+	 * Does this QuerySpec map to the statement's root query (as
+	 * opposed to one of its sub-queries)?
+	 */
+	public boolean isRoot() {
+		return isRoot;
+	}
 
 	public FromClause getFromClause() {
 		return fromClause;

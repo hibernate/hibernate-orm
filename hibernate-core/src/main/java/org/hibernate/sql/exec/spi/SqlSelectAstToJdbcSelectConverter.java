@@ -41,9 +41,9 @@ import org.hibernate.sql.ast.expression.domain.PluralAttributeIndexReferenceExpr
 import org.hibernate.sql.ast.expression.domain.SingularAttributeReferenceExpression;
 import org.hibernate.sql.ast.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.expression.instantiation.DynamicInstantiationArgument;
-import org.hibernate.sql.ast.from.ColumnBinding;
+import org.hibernate.sql.ast.from.ColumnReference;
 import org.hibernate.sql.ast.from.FromClause;
-import org.hibernate.sql.ast.from.TableBinding;
+import org.hibernate.sql.ast.from.TableReference;
 import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.ast.from.TableGroupJoin;
 import org.hibernate.sql.ast.from.TableJoin;
@@ -65,7 +65,7 @@ import org.hibernate.sql.ast.sort.SortSpecification;
 import org.hibernate.sql.convert.spi.ConversionHelper;
 import org.hibernate.sql.convert.spi.SqlSelectPlan;
 import org.hibernate.sql.exec.internal.JdbcSelectImpl;
-import org.hibernate.sqm.query.order.SqmSortOrder;
+import org.hibernate.query.sqm.tree.order.SqmSortOrder;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -296,7 +296,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		}
 	}
 
-	public void visitTableBinding(TableBinding tableBinding) {
+	public void visitTableBinding(TableReference tableBinding) {
 		appendSql( tableBinding.getTable().getTableExpression() + " as " + tableBinding.getIdentificationVariable() );
 	}
 
@@ -312,12 +312,12 @@ public class SqlSelectAstToJdbcSelectConverter {
 		renderColumnBindings( attributeExpression.getColumnBindings() );
 	}
 
-	private void renderColumnBindings(List<ColumnBinding> columnBindings) {
+	private void renderColumnBindings(List<ColumnReference> columnBindings) {
 		if ( currentlyInPredicate && columnBindings.size() > 1 ) {
 			appendSql( "(" );
 		}
 
-		for ( ColumnBinding columnBinding : columnBindings ) {
+		for ( ColumnReference columnBinding : columnBindings ) {
 			appendSql( columnBinding.getColumn().render( columnBinding.getIdentificationVariable() ) );
 		}
 
@@ -339,7 +339,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		renderColumnBindings( indexExpression.getColumnBindings() );
 	}
 
-	public void visitColumnBinding(ColumnBinding columnBinding) {
+	public void visitColumnBinding(ColumnReference columnBinding) {
 		appendSql( columnBinding.getColumn().render( columnBinding.getIdentificationVariable() ) );
 	}
 
@@ -386,7 +386,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 
 	public void visitColumnBindingExpression(ColumnBindingExpression columnBindingExpression) {
 		// need to find a better way to do this
-		final ColumnBinding columnBinding = columnBindingExpression.getColumnBinding();
+		final ColumnReference columnBinding = columnBindingExpression.getColumnBinding();
 		appendSql( columnBinding.getColumn().render( columnBinding.getIdentificationVariable() ) );
 	}
 

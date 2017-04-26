@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.EntityNameResolver;
-import org.hibernate.MappingException;
 import org.hibernate.Metamodel;
 import org.hibernate.internal.util.collections.streams.StreamUtils;
 import org.hibernate.persister.collection.spi.CollectionPersister;
@@ -20,7 +19,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @deprecated Was designed as an SPI extension to the JPA {@link javax.persistence.metamodel.Metamodel}
- * however, most of that functionality has been moved to TypeConfiguration instead.
+ * however, most of that functionality has been moved to {@link TypeConfiguration} instead.
  */
 @Deprecated
 public interface MetamodelImplementor extends Metamodel {
@@ -33,7 +32,6 @@ public interface MetamodelImplementor extends Metamodel {
 	default Collection<EntityNameResolver> getEntityNameResolvers() {
 		return getTypeConfiguration().getEntityNameResolvers();
 	}
-
 
 	/**
 	 * Get all entity persisters as a Map, keyed by the entity-name.

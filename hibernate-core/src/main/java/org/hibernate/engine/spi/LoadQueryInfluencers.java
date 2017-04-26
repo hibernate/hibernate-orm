@@ -16,15 +16,24 @@ import javax.persistence.EntityGraph;
 import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.internal.FilterImpl;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.spi.Type;
 
 /**
- * Centralize all options which can influence the SQL query needed to load an
- * entity.  Currently such influencers are defined as:<ul>
- * <li>filters</li>
- * <li>fetch profiles</li>
- * <li>internal fetch profile (merge profile, etc)</li>
+ * Centralize all options which can be enabled on the Session in order to
+ * influence the SQL query needed to load an entity.  Currently such
+ * influencers are defined as:<ul>
+ *     <li>filters</li>
+ *     <li>fetch profiles</li>
+ *     <li>internal fetch profile (see {@link InternalFetchProfileType})</li>
+ *     <li>(non default) entity graph</li>
  * </ul>
+ *
+ * todo (6.0) consider using the paradigm of an "adjuster"
+ * 		- each potential influencer would define its own adjuster impl
+ * 		- resolution regarding which of these would follow some precedence order tbd
+ * 		- would affect (1) SQL AST and (2) Loader internals (possibly different impls based on these).
+ * 				^^ however need to account for possibility of multiple of these being in effect.
  *
  * @author Steve Ebersole
  */
@@ -37,7 +46,7 @@ public class LoadQueryInfluencers implements Serializable {
 	public static final LoadQueryInfluencers NONE = new LoadQueryInfluencers();
 
 	private final SessionFactoryImplementor sessionFactory;
-	private String internalFetchProfile;
+	private InternalFetchProfileType enabledInternalFetchProfileType;
 	private final Map<String,Filter> enabledFilters;
 	private final Set<String> enabledFetchProfileNames;
 	private EntityGraph fetchGraph;
@@ -48,7 +57,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {
-		this( sessionFactory, new HashMap<String,Filter>(), new HashSet<String>() );
+		this( sessionFactory, new HashMap<>(), new HashSet<>() );
 	}
 
 	private LoadQueryInfluencers(SessionFactoryImplementor sessionFactory, Map<String,Filter> enabledFilters, Set<String> enabledFetchProfileNames) {
@@ -64,17 +73,68 @@ public class LoadQueryInfluencers implements Serializable {
 
 	// internal fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public String getInternalFetchProfile() {
-		return internalFetchProfile;
+	public enum InternalFetchProfileType {
+		MERGE( "merge" ),
+		REFRESH( "refresh" );
+
+		private final String legacyName;
+
+		InternalFetchProfileType(String legacyName) {
+			this.legacyName = legacyName;
+		}
+
+		public String getLegacyName() {
+			return legacyName;
+		}
+
+		public static InternalFetchProfileType fromLegacyName(String legacyName) {
+			if ( StringHelper.isEmpty( legacyName ) ) {
+				return null;
+			}
+
+			if ( MERGE.legacyName.equalsIgnoreCase( legacyName ) ) {
+				return MERGE;
+			}
+
+			if ( REFRESH.legacyName.equalsIgnoreCase( legacyName ) ) {
+				return REFRESH;
+			}
+
+			throw new IllegalArgumentException(
+					"Passed name [" + legacyName + "] not recognized as a legacy internal fetch profile name; " +
+							"supported values include: 'merge' and 'refresh'"
+			);
+		}
 	}
 
-	public void setInternalFetchProfile(String internalFetchProfile) {
+	public InternalFetchProfileType getEnabledInternalFetchProfileType() {
+		return enabledInternalFetchProfileType;
+	}
+
+	public void setEnabledInternalFetchProfileType(InternalFetchProfileType enabledInternalFetchProfileType) {
 		if ( sessionFactory == null ) {
 			// thats the signal that this is the immutable, context-less
 			// variety
 			throw new IllegalStateException( "Cannot modify context-less LoadQueryInfluencers" );
 		}
-		this.internalFetchProfile = internalFetchProfile;
+
+		this.enabledInternalFetchProfileType = enabledInternalFetchProfileType;
+	}
+
+	/**
+	 * @deprecated Use {@link #getEnabledInternalFetchProfileType} instead
+	 */
+	@Deprecated
+	public String getInternalFetchProfile() {
+		return getEnabledInternalFetchProfileType().legacyName;
+	}
+
+	/**
+	 * @deprecated Use {@link #setEnabledInternalFetchProfileType} instead
+	 */
+	@Deprecated
+	public void setInternalFetchProfile(String internalFetchProfile) {
+		setEnabledInternalFetchProfileType( InternalFetchProfileType.fromLegacyName( internalFetchProfile ) );
 	}
 
 

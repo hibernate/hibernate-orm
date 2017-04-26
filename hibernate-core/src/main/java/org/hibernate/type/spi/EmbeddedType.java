@@ -14,8 +14,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.common.NavigableRole;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
-import org.hibernate.sqm.domain.type.SqmDomainTypeEmbeddable;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface EmbeddedType<J> extends ManagedType<J>, SqmDomainTypeEmbeddable, TypeConfigurationAware {
+public interface EmbeddedType<J> extends ManagedType<J>, ExpressableType, TypeConfigurationAware {
 	NavigableRole getNavigableRole();
 
 	default String getRoleName() {

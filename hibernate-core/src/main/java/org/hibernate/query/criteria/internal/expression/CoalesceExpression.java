@@ -16,8 +16,8 @@ import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaExpressionImplementor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
-import org.hibernate.sqm.query.expression.SqmExpression;
+import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * Models an ANSI SQL <tt>COALESCE</tt> expression.  <tt>COALESCE</tt> is a specialized <tt>CASE</tt> statement.

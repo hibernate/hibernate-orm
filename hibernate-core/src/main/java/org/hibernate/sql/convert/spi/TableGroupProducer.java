@@ -11,7 +11,7 @@ import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.ast.from.TableSpace;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
-import org.hibernate.sqm.query.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
  * @author Steve Ebersole

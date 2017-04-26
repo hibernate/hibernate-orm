@@ -27,11 +27,11 @@ import org.hibernate.query.criteria.FromClauseImpl;
 import org.hibernate.query.criteria.JpaFromImplementor;
 import org.hibernate.query.criteria.SelectClauseImpl;
 import org.hibernate.query.criteria.internal.path.RootImpl;
-import org.hibernate.sqm.parser.criteria.tree.JpaExpression;
-import org.hibernate.sqm.parser.criteria.tree.JpaOrder;
-import org.hibernate.sqm.parser.criteria.tree.JpaPredicate;
-import org.hibernate.sqm.parser.criteria.tree.JpaQuerySpec;
-import org.hibernate.sqm.parser.criteria.tree.JpaSubquery;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaExpression;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaOrder;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaPredicate;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaQuerySpec;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaSubquery;
 
 /**
  * Models basic query structure.  Used as a delegate in implementing both

@@ -15,9 +15,8 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.JpaPathSourceImplementor;
-import org.hibernate.sqm.parser.criteria.tree.path.JpaSingularAttributePath;
+import org.hibernate.query.sqm.produce.spi.criteria.path.JpaSingularAttributePath;
 
 /**
  * Models a path for a {@link SingularAttribute} generally obtained from a

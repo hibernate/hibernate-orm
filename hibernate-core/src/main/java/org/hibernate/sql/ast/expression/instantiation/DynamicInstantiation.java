@@ -28,7 +28,7 @@ import org.hibernate.sql.exec.results.internal.instantiation.ReturnAssemblerList
 import org.hibernate.sql.exec.results.internal.instantiation.ReturnAssemblerMapImpl;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
 import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.sqm.query.expression.Compatibility;
+import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;

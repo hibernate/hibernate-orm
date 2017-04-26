@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.convert.internal;
 
 import java.util.HashMap;
@@ -12,11 +11,10 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.PersistentAttribute;
-import org.hibernate.sqm.domain.AttributeReference;
-import org.hibernate.sqm.domain.DomainReference;
-import org.hibernate.sqm.domain.EntityReference;
-import org.hibernate.sqm.query.from.SqmFrom;
+import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
@@ -35,24 +33,22 @@ public class SqlAliasBaseManager {
 	private Map<String,Integer> acronymCountMap = new HashMap<>();
 
 	public String getSqlAliasBase(SqmFrom fromElement) {
-		String aliasBase = fromElementAliasMap.get( fromElement );
-		if ( aliasBase == null ) {
-			aliasBase = generateAliasBase( fromElement.getDomainReferenceBinding().getBoundDomainReference() );
-			fromElementAliasMap.put( fromElement, aliasBase );
-		}
-		return aliasBase;
+		return fromElementAliasMap.computeIfAbsent(
+				fromElement,
+				e -> generateAliasBase( e.getBinding().getReferencedNavigable() )
+		);
 	}
 
-	private String generateAliasBase(DomainReference domainReference) {
+	private String generateAliasBase(Navigable domainReference) {
 		final String acronym;
-		if ( domainReference instanceof EntityReference ) {
-			acronym = determineAcronym( (EntityReference) domainReference );
+		if ( domainReference instanceof EntityValuedExpressableType ) {
+			acronym = determineAcronym( (EntityValuedExpressableType) domainReference );
 		}
-		else if ( domainReference instanceof AttributeReference ) {
-			acronym = determineAcronym( (AttributeReference) domainReference );
+		else if ( domainReference instanceof PersistentAttribute ) {
+			acronym = determineAcronym( (PersistentAttribute) domainReference );
 		}
 		else {
-			throw new IllegalArgumentException( "Unexpected DomainReference type : " + domainReference );
+			throw new IllegalArgumentException( "Unexpected Navigable type : " + domainReference );
 		}
 
 		Integer acronymCount = acronymCountMap.get( acronym );
@@ -65,13 +61,11 @@ public class SqlAliasBaseManager {
 		return acronym + acronymCount;
 	}
 
-	private String determineAcronym(EntityReference entityRef) {
-		String acronym = nameAcronymMap.get( entityRef.getEntityName() );
-		if ( acronym == null ) {
-			acronym = entityNameToAcronym( entityRef.getEntityName() );
-			nameAcronymMap.put( entityRef.getEntityName(), acronym );
-		}
-		return acronym;
+	private String determineAcronym(EntityValuedExpressableType entityRef) {
+		return nameAcronymMap.computeIfAbsent(
+				entityRef.getEntityName(),
+				k -> entityNameToAcronym( entityRef.getEntityName() )
+		);
 	}
 
 	private String entityNameToAcronym(String entityName) {
@@ -96,9 +90,9 @@ public class SqlAliasBaseManager {
 		return simpleName;
 	}
 
-	private String determineAcronym(AttributeReference attrRef) {
+	private String determineAcronym(PersistentAttribute attrRef) {
 		final String acronymBase;
-		final Type attrType = ( (PersistentAttribute) attrRef ).getOrmType();
+		final Type attrType = attrRef.getOrmType();
 		if ( attrType.isEntityType() && !attrType.isAnyType() ) {
 			// use the entity name as the base
 			acronymBase = toSimpleEntityName( ( (EntityType) attrType ).getAssociatedEntityName() );
@@ -107,12 +101,10 @@ public class SqlAliasBaseManager {
 			acronymBase = attrRef.getAttributeName();
 		}
 
-		String acronym = nameAcronymMap.get( acronymBase );
-		if ( acronym == null ) {
-			// see note above, again for now just use the first letter
-			acronym = Character.toString( Character.toLowerCase( acronymBase.charAt( 0 ) ) );
-			nameAcronymMap.put( acronymBase, acronym );
-		}
-		return acronym;
+		// see note above, again for now just use the first letter
+		return nameAcronymMap.computeIfAbsent(
+				acronymBase,
+				b -> Character.toString( Character.toLowerCase( b.charAt( 0 ) ) )
+		);
 	}
 }

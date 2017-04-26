@@ -7,8 +7,8 @@
 package org.hibernate.query.criteria;
 
 import org.hibernate.Incubating;
-import org.hibernate.sqm.parser.criteria.tree.path.JpaPath;
-import org.hibernate.sqm.parser.criteria.tree.path.JpaPathSource;
+import org.hibernate.query.sqm.produce.spi.criteria.path.JpaPath;
+import org.hibernate.query.sqm.produce.spi.criteria.path.JpaPathSource;
 
 /**
  * Implementation contract for things which can be the source (parent, left-hand-side, etc) of a path

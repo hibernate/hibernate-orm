@@ -8,12 +8,39 @@ package org.hibernate.persister.common.spi;
 
 import java.util.List;
 
-import org.hibernate.sqm.domain.SqmSingularAttribute;
+import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.query.sqm.domain.SqmSingularAttribute;
 
 /**
  * @author Steve Ebersole
  */
-public interface SingularPersistentAttribute<O,T> extends SqmSingularAttribute, PersistentAttribute<O,T>, javax.persistence.metamodel.SingularAttribute<O,T> {
+public interface SingularPersistentAttribute<O,T>
+		extends PersistentAttribute<O,T>, ExpressableType<T>, javax.persistence.metamodel.SingularAttribute<O,T> {
+
+	/**
+	 * Classifications of the singularity
+	 */
+	enum SingularAttributeClassification {
+		BASIC,
+		EMBEDDED,
+		ANY,
+		ONE_TO_ONE,
+		MANY_TO_ONE
+	}
+
+	/**
+	 * Obtain the classification enum for the attribute.
+	 *
+	 * @return The classification
+	 */
+	SingularAttributeClassification getAttributeTypeClassification();
+
+	/**
+	 * Describes the "disposition" of the singular attribute.  This is
+	 * basically identifying whether the attribute serves as a "normal"
+	 * singular attribute or as a special singular attribute such as an
+	 * identifier or a version
+	 */
 	enum Disposition {
 		ID,
 		VERSION,

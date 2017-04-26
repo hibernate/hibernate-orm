@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.from;
 
 import org.hibernate.sql.ast.predicate.Predicate;
-import org.hibernate.sqm.query.SqmJoinType;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 
 /**
  * @author Steve Ebersole

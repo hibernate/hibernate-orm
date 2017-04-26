@@ -17,7 +17,7 @@ import org.hibernate.persister.collection.spi.CollectionIndex;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.DomainReferenceImplementor;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.from.ColumnBinding;
+import org.hibernate.sql.ast.from.ColumnReference;
 import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.ast.select.SelectableBasicTypeImpl;
@@ -35,7 +35,7 @@ public class PluralAttributeIndexReferenceExpression implements NavigableReferen
 	private final ColumnBindingSource columnBindingSource;
 	private final PropertyPath propertyPath;
 
-	private final List<ColumnBinding> columnBindings;
+	private final List<ColumnReference> columnBindings;
 	private final Selectable selectable;
 
 	public PluralAttributeIndexReferenceExpression(
@@ -48,10 +48,10 @@ public class PluralAttributeIndexReferenceExpression implements NavigableReferen
 
 		// todo : why are these casts to Column needed?  indexReference.getColumns() returns List<Column>
 
-		final CollectionIndex indexReference = collectionPersister.getIndexReference();
+		final CollectionIndex indexReference = collectionPersister.getIndexDescriptor();
 		switch ( indexReference.getClassification() ) {
 			case BASIC: {
-				final ColumnBinding columnBinding = columnBindingSource.resolveColumnBinding( (Column) indexReference.getColumns().get( 0 ) );
+				final ColumnReference columnBinding = columnBindingSource.resolveColumnBinding( (Column) indexReference.getColumns().get( 0 ) );
 				this.columnBindings = Collections.singletonList( columnBinding );
 				this.selectable = new SelectableBasicTypeImpl(
 						this,
@@ -96,12 +96,12 @@ public class PluralAttributeIndexReferenceExpression implements NavigableReferen
 
 	@Override
 	public DomainReferenceImplementor getNavigable() {
-		return collectionPersister.getIndexReference();
+		return collectionPersister.getIndexDescriptor();
 	}
 
 	@Override
 	public Type getType() {
-		return collectionPersister.getIndexReference().getOrmType();
+		return collectionPersister.getIndexDescriptor().getOrmType();
 	}
 
 	@Override
@@ -120,7 +120,7 @@ public class PluralAttributeIndexReferenceExpression implements NavigableReferen
 	}
 
 	@Override
-	public List<ColumnBinding> getColumnBindings() {
+	public List<ColumnReference> getColumnBindings() {
 		return columnBindings;
 	}
 }

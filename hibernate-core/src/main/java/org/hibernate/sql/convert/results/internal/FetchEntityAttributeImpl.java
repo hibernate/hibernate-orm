@@ -11,7 +11,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.expression.domain.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.convert.results.spi.EntityIdentifierReference;
 import org.hibernate.sql.convert.results.spi.FetchEntityAttribute;
 import org.hibernate.sql.convert.results.spi.FetchParent;

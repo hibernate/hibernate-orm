@@ -18,7 +18,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sqm.domain.type.SqmDomainType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -33,7 +32,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @since 6.0
  */
-public interface Type<T> extends org.hibernate.type.Type<T>, SqmDomainType {
+public interface Type<T> extends org.hibernate.type.Type<T> {
 	@Override
 	JavaTypeDescriptor<T> getJavaTypeDescriptor();
 

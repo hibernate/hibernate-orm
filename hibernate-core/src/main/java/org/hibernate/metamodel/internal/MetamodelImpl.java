@@ -8,12 +8,9 @@ package org.hibernate.metamodel.internal;
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import javax.persistence.EntityGraph;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
@@ -121,35 +118,12 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public Set<EntityType<?>> getEntities() {
-		return getTypeConfiguration().getEntityPersisters().stream().collect( Collectors.toSet() );
+		return new HashSet<>( getTypeConfiguration().getEntityPersisters() );
 	}
 
 	@Override
 	public Set<EmbeddableType<?>> getEmbeddables() {
-		return getTypeConfiguration().getEmbeddablePersisters().stream().collect( Collectors.toSet() );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <X> EntityType<X> entity(String entityName) {
-		return getTypeConfiguration().findEntityPersister( entityName );
-	}
-
-	@Override
-	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
-		getTypeConfiguration().addNamedEntityGraph( graphName, entityGraph );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T> EntityGraph<T> findEntityGraphByName(String name) {
-		return getTypeConfiguration().findEntityGraphByName( name );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
-		return getTypeConfiguration().findEntityGraphsByType( entityClass );
+		return new HashSet<>( getTypeConfiguration().getEmbeddablePersisters() );
 	}
 
 	@Override

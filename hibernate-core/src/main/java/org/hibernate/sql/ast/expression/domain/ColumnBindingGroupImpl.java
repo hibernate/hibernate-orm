@@ -11,25 +11,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.sql.ast.from.ColumnBinding;
+import org.hibernate.sql.ast.from.ColumnReference;
 
 /**
  * @author Steve Ebersole
  */
 public class ColumnBindingGroupImpl implements ColumnBindingGroup {
-	private List<ColumnBinding> columnBindings;
+	private List<ColumnReference> columnBindings;
 
 	public ColumnBindingGroupImpl() {
 	}
 
-	public void addColumnBinding(ColumnBinding columnBinding) {
+	public void addColumnBinding(ColumnReference columnBinding) {
 		if ( columnBindings == null ) {
 			columnBindings = new ArrayList<>();
 		}
 		columnBindings.add( columnBinding );
 	}
 
-	public List<ColumnBinding> getColumnBindings() {
+	public List<ColumnReference> getColumnBindings() {
 		return columnBindings == null ? Collections.emptyList() : Collections.unmodifiableList( columnBindings );
 	}
 }

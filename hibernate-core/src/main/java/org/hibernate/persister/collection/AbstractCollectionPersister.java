@@ -108,7 +108,7 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.from.CollectionTableGroup;
-import org.hibernate.sql.ast.from.TableBinding;
+import org.hibernate.sql.ast.from.TableReference;
 import org.hibernate.sql.ast.from.TableSpace;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
@@ -120,8 +120,8 @@ import org.hibernate.sql.ordering.antlr.OrderByTranslation;
 import org.hibernate.sql.ordering.antlr.SqlValueReference;
 import org.hibernate.sqm.domain.PluralAttributeElementReference;
 import org.hibernate.sqm.query.JoinType;
-import org.hibernate.sqm.query.from.SqmAttributeJoin;
-import org.hibernate.sqm.query.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.BasicType;
@@ -907,14 +907,14 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 		fromClauseIndex.crossReference( sqmFrom, group );
 
 		if ( separateCollectionTable != null ) {
-			group.setRootTableBinding( new TableBinding( separateCollectionTable, group.getAliasBase() ) );
+			group.setRootTableBinding( new TableReference( separateCollectionTable, group.getAliasBase() ) );
 		}
 
-		if ( getElementReference() instanceof CollectionElementEntity ) {
+		if ( getElementDescriptor() instanceof CollectionElementEntity ) {
 			java.util.List<org.hibernate.persister.common.spi.Column> fkColumns = null;
 			java.util.List<org.hibernate.persister.common.spi.Column> fkTargetColumns = null;
 
-			final CollectionElementEntity elementEntity = (CollectionElementEntity) getElementReference();
+			final CollectionElementEntity elementEntity = (CollectionElementEntity) getElementDescriptor();
 			final EntityPersister elementPersister = elementEntity.getElementPersister();
 
 			if ( separateCollectionTable != null ) {
@@ -976,12 +976,12 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 	}
 
 	@Override
-	public CollectionElement getElementReference() {
+	public CollectionElement getElementDescriptor() {
 		return elementDescriptor;
 	}
 
 	@Override
-	public CollectionIndex getIndexReference() {
+	public CollectionIndex getIndexDescriptor() {
 		return indexDescriptor;
 	}
 

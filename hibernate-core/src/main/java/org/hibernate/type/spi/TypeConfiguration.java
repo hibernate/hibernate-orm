@@ -6,6 +6,8 @@
  */
 package org.hibernate.type.spi;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,24 +63,23 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.internal.DatabaseModelImpl;
-import org.hibernate.persister.common.internal.PolymorphicEntityReferenceImpl;
 import org.hibernate.persister.common.spi.DatabaseModel;
 import org.hibernate.persister.common.spi.DerivedTable;
 import org.hibernate.persister.common.spi.PhysicalTable;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.entity.spi.EntityReference;
+import org.hibernate.persister.queryable.internal.PolymorphicEntityValuedExpressableTypeImpl;
+import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.persister.queryable.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
-import org.hibernate.sqm.domain.SqmDomainMetamodel;
-import org.hibernate.sqm.domain.SqmExpressableTypeBasic;
-import org.hibernate.sqm.domain.SqmExpressableTypeEntity;
-import org.hibernate.sqm.query.expression.BinaryArithmeticSqmExpression;
+import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralSqmExpression;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.internal.ArrayType;
-import org.hibernate.type.internal.BagType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CustomCollectionType;
@@ -101,6 +102,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.java.spi.MappedSuperclassJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.internal.BagType;
 import org.hibernate.usertype.ParameterizedType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -125,7 +127,7 @@ import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.det
  * @since 6.0
  */
 @Incubating
-public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObserver {
+public class TypeConfiguration implements SessionFactoryObserver {
 	private static final CoreMessageLogger log = messageLogger( Scope.class );
 
 	// todo : (
@@ -147,7 +149,7 @@ public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObse
 	private final Map<String,String> importMap = new ConcurrentHashMap<>();
 	private final Set<EntityNameResolver> entityNameResolvers = ConcurrentHashMap.newKeySet();
 
-	private final Map<Class, PolymorphicEntityReferenceImpl> polymorphicEntityReferenceMap = new HashMap<>();
+	private final Map<Class, PolymorphicEntityValuedExpressableType<?>> polymorphicEntityReferenceMap = new HashMap<>();
 	private final Map<JavaTypeDescriptor,String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
 	private final Map<String,Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
 	private final Map<EmbeddableJavaDescriptor<?>,Set<String>> embeddedRolesByEmbeddableType = new ConcurrentHashMap<>();
@@ -377,8 +379,8 @@ public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObse
 	//		- everything within this "block" of methods relates to SQM
 	// 			interpretation of queries and implements its calls accordingly
 
-	@Override
-	public SqmExpressableTypeEntity resolveEntityReference(String entityName) {
+	@SuppressWarnings("unchecked")
+	public <T> EntityValuedExpressableType<T> resolveEntityReference(String entityName) {
 		if ( importMap.containsKey( entityName ) ) {
 			entityName = importMap.get( entityName );
 		}
@@ -405,29 +407,31 @@ public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObse
 		}
 	}
 
-	@Override
-	public SqmExpressableTypeEntity resolveEntityReference(Class javaType) {
+	@SuppressWarnings("unchecked")
+	public <T> EntityValuedExpressableType<T> resolveEntityReference(Class<T> javaType) {
 		// see if we know of this Class by name as an EntityPersister key
 		if ( getEntityPersisterMap().containsKey( javaType.getName() ) ) {
 			// and if so, return that persister
-			return getEntityPersisterMap().get( javaType.getName() );
+			return (EntityValuedExpressableType<T>) getEntityPersisterMap().get( javaType.getName() );
 		}
 
+		final JavaTypeDescriptor<T> jtd = getJavaTypeDescriptorRegistry().getDescriptor( javaType );
+
 		// next check entityProxyInterfaceMap
-		final String proxyEntityName = entityProxyInterfaceMap.get( javaType );
+		final String proxyEntityName = entityProxyInterfaceMap.get( jtd );
 		if ( proxyEntityName != null ) {
-			return getEntityPersisterMap().get( proxyEntityName );
+			return (EntityValuedExpressableType<T>) getEntityPersisterMap().get( proxyEntityName );
 		}
 
 		// otherwise, trye to handle it as a polymorphic reference
 		if ( polymorphicEntityReferenceMap.containsKey( javaType ) ) {
-			return polymorphicEntityReferenceMap.get( javaType );
+			return (EntityValuedExpressableType<T>) polymorphicEntityReferenceMap.get( javaType );
 		}
 
 		final Set<EntityPersister<?>> implementors = getImplementors( javaType );
 		if ( !implementors.isEmpty() ) {
-			final PolymorphicEntityReferenceImpl entityReference = new PolymorphicEntityReferenceImpl(
-					javaType.getName(),
+			final PolymorphicEntityValuedExpressableTypeImpl entityReference = new PolymorphicEntityValuedExpressableTypeImpl(
+					javaType,
 					implementors
 			);
 			polymorphicEntityReferenceMap.put( javaType, entityReference );
@@ -462,33 +466,6 @@ public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObse
 		}
 
 		return matchingPersisters;
-	}
-
-	@Override
-	public SqmExpressableTypeBasic resolveBasicType(Class javaType) {
-		return null;
-	}
-//
-//	@Override
-//	public <T> SqmExpressableTypeBasic<T> resolveBasicType(Class<T> javaType) {
-//		return getBasicTypeRegistry().getBasicType( javaType );
-//	}
-
-	@Override
-	public SqmExpressableTypeBasic resolveArithmeticType(
-			SqmExpressableTypeBasic firstType,
-			SqmExpressableTypeBasic secondType,
-			BinaryArithmeticSqmExpression.Operation operation) {
-		return null;
-	}
-
-	@Override
-	public SqmExpressableTypeBasic resolveSumFunctionType(SqmExpressableTypeBasic argumentType) {
-		return null;
-	}
-
-	public BasicType resolveCastTargetType(String name) {
-		throw new NotYetImplementedException(  );
 	}
 
 
@@ -763,6 +740,159 @@ public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObse
 		throw new NotYetImplementedException(  );
 	}
 
+	// todo (6.0) - have this algorithm be extendable by users.
+	// 		I have received at least one user request for this, and I can completely see the
+	// 		benefit of this as they described it.  Basically consider a query containing
+	// 		`p.x + p.y`.  If `y` is a standard integer type, but `x` is a custom (user) integral
+	// 		type, then what is the type of the arithmetic expression?  From the HipChat discussion:
+	//
+	//		[8:18 AM] Steve Ebersole: btw... what got me started thinking about this is thinking of ways to allow custom hooks into the types of literals recognized (and how) and the types of validation checks we do
+	//		[8:18 AM] Steve Ebersole: allowing custom literal types becomes easy(er) if we follow the escape-like syntax
+	//		[8:19 AM] Steve Ebersole: {[something] ...}
+	//		[8:20 AM] Steve Ebersole: where `{[something]` triggers recognition of a literal
+	//		[8:20 AM] Steve Ebersole: and `[something]` is a key to some registered resolver
+	//		[8:21 AM] Steve Ebersole: e.g. for `{ts '2017-04-26 ...'}` we'd grab the timestamp literal handler
+	//		[8:21 AM] Steve Ebersole: because of the `ts`
+	//
+	interface CustomExpressionTypeResolver {
+		BasicValuedExpressableType resolveArithmeticType(
+				BasicValuedExpressableType firstType,
+				BasicValuedExpressableType secondType,
+				boolean isDivision);
+
+		BasicValuedExpressableType resolveSumFunctionType(BasicValuedExpressableType argumentType);
+
+		BasicType resolveCastTargetType(String name);
+	}
+	//
+	// A related discussion is recognition of a literal in the HQL, specifically for custom types.  From the same HipChat discussion:
+	//		- allowing custom literal types becomes	easy(er) if we follow the escape-like syntax:
+	//		- `{[something] ...}`
+	//		- where `{` triggers recognition of a literal (by convention)
+	//		- and `[something]` is a key to a registered (custom) resolver
+	//
+	interface HqlLiteralResolver {
+		String getKey();
+
+		<T> LiteralSqmExpression<T> resolveLiteral(String literal);
+	}
+	//
+	//		I say related because both deal with custom user types as used in a SQM.
+
+	public BasicValuedExpressableType resolveArithmeticType(
+			BasicValuedExpressableType firstType,
+			BasicValuedExpressableType secondType,
+			org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression.Operation operation) {
+		return resolveArithmeticType( firstType, secondType, operation == BinaryArithmeticSqmExpression.Operation.DIVIDE );
+	}
+
+	/**
+	 * Determine the result type of an arithmetic operation as defined by the
+	 * rules in section 6.5.7.1.
+	 * <p/>
+	 *
+	 *
+	 * @return The operation result type
+	 */
+	public BasicValuedExpressableType resolveArithmeticType(
+			BasicValuedExpressableType firstType,
+			BasicValuedExpressableType secondType,
+			boolean isDivision) {
+
+		if ( isDivision ) {
+			// covered under the note in 6.5.7.1 discussing the unportable
+			// "semantics of the SQL division operation"..
+			return getBasicTypeRegistry().getBasicType( Number.class );
+		}
+
+
+		// non-division
+
+		if ( matchesJavaType( firstType, Double.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, Double.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, Float.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, Float.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, BigDecimal.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, BigDecimal.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, BigInteger.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, BigInteger.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, Long.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, Long.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, Integer.class ) ) {
+			return firstType;
+		}
+		else if ( matchesJavaType( secondType, Integer.class ) ) {
+			return secondType;
+		}
+		else if ( matchesJavaType( firstType, Short.class ) ) {
+			return getBasicTypeRegistry().getBasicType( Integer.class );
+		}
+		else if ( matchesJavaType( secondType, Short.class ) ) {
+			return getBasicTypeRegistry().getBasicType( Integer.class );
+		}
+		else {
+			return getBasicTypeRegistry().getBasicType( Number.class );
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static boolean matchesJavaType(BasicValuedExpressableType type, Class javaType) {
+		assert javaType != null;
+		return type != null && javaType.isAssignableFrom( type.getJavaType() );
+	}
+
+	public BasicValuedExpressableType resolveSumFunctionType(BasicValuedExpressableType argumentType) {
+			if ( matchesJavaType( argumentType, Double.class ) ) {
+				return argumentType;
+			}
+			else if ( matchesJavaType( argumentType, Float.class ) ) {
+				return argumentType;
+			}
+			else if ( matchesJavaType( argumentType, BigDecimal.class ) ) {
+				return argumentType;
+			}
+			else if ( matchesJavaType( argumentType, BigInteger.class ) ) {
+				return argumentType;
+			}
+			else if ( matchesJavaType( argumentType, Long.class ) ) {
+				return argumentType;
+			}
+			else if ( matchesJavaType( argumentType, Integer.class ) ) {
+				return argumentType;
+			}
+			else if ( matchesJavaType( argumentType, Short.class ) ) {
+				return getBasicTypeRegistry().getBasicType( Integer.class );
+			}
+			else {
+				return getBasicTypeRegistry().getBasicType( Number.class );
+			}
+
+	}
+
+	public BasicType resolveCastTargetType(String name) {
+		throw new NotYetImplementedException(  );
+	}
+
 	/**
 	 * Encapsulation of lifecycle concerns for a TypeConfiguration, mainly in regards to
 	 * eventually being associated with a SessionFactory.  Goes through the following stages:<ol>
@@ -948,9 +1078,9 @@ public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObse
 	public void register(CollectionPersister collectionPersister) {
 		collectionPersisterMap.put( collectionPersister.getRoleName(), collectionPersister );
 
-		if ( collectionPersister.getIndexReference() != null
-				&& collectionPersister.getIndexReference() instanceof EntityReference ) {
-			final String entityName = ( (EntityReference) collectionPersister.getIndexReference() ).getEntityName();
+		if ( collectionPersister.getIndexDescriptor() != null
+				&& collectionPersister.getIndexDescriptor() instanceof EntityValuedExpressableType ) {
+			final String entityName = ( (EntityValuedExpressableType) collectionPersister.getIndexDescriptor() ).getEntityName();
 			final Set<String> roles = collectionRolesByEntityParticipant.computeIfAbsent(
 					entityName,
 					k -> new HashSet<>()
@@ -958,8 +1088,8 @@ public class TypeConfiguration implements SqmDomainMetamodel, SessionFactoryObse
 			roles.add( collectionPersister.getRoleName() );
 		}
 
-		if ( collectionPersister.getElementReference() instanceof EntityReference ) {
-			final String entityName = ( (EntityReference) collectionPersister.getElementReference() ).getEntityName();
+		if ( collectionPersister.getElementDescriptor() instanceof EntityValuedExpressableType ) {
+			final String entityName = ( (EntityValuedExpressableType) collectionPersister.getElementDescriptor() ).getEntityName();
 			final Set<String> roles = collectionRolesByEntityParticipant.computeIfAbsent(
 					entityName,
 					k -> new HashSet<>()

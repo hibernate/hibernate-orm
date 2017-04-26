@@ -7,7 +7,7 @@
 package org.hibernate.sql.convert.results.spi;
 
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
-import org.hibernate.sql.ast.expression.domain.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole

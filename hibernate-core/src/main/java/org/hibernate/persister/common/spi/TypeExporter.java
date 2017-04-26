@@ -10,6 +10,8 @@ package org.hibernate.persister.common.spi;
 import org.hibernate.type.spi.Type;
 
 /**
+ * todo (6.0) : get rid of
+ *
  * @author Steve Ebersole
  */
 public interface TypeExporter<T> {

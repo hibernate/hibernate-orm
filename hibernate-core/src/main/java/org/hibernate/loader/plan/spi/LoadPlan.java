@@ -37,7 +37,7 @@ import org.hibernate.sql.ast.SelectQuery;
  *
  * @author Steve Ebersole
  *
- * @deprecated In favor of org.hibernate.sql.ast.SelectQuery
+ * @deprecated In favor of org.hibernate.sql.tree.SelectQuery
  */
 @Deprecated
 public interface LoadPlan {

@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.sqm.domain.type.SqmDomainType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -61,16 +60,6 @@ public abstract class AbstractCollectionElement<J,T extends Type<J>> implements 
 	@Override
 	public Class<J> getJavaType() {
 		return ormType.getJavaType();
-	}
-
-	@Override
-	public String getNavigableName() {
-		return NAVIGABLE_NAME;
-	}
-
-	@Override
-	public SqmDomainType getExportedDomainType() {
-		return getOrmType();
 	}
 
 	@Override

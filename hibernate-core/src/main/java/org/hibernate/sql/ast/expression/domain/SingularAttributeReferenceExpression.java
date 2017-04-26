@@ -10,13 +10,13 @@ package org.hibernate.sql.ast.expression.domain;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.from.ColumnBinding;
+import org.hibernate.sql.ast.from.ColumnReference;
 import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.ast.select.SelectableBasicTypeImpl;
 import org.hibernate.sql.ast.select.SelectableEmbeddedTypeImpl;
@@ -35,7 +35,7 @@ public class SingularAttributeReferenceExpression implements NavigableReferenceE
 	private final NavigablePath navigablePath;
 
 	private final Selectable selectable;
-	private List<ColumnBinding> columnBindings;
+	private List<ColumnReference> columnBindings;
 
 	public SingularAttributeReferenceExpression(
 			ColumnBindingSource columnBindingSource,
@@ -111,15 +111,15 @@ public class SingularAttributeReferenceExpression implements NavigableReferenceE
 	}
 
 	@Override
-	public List<ColumnBinding> getColumnBindings() {
+	public List<ColumnReference> getColumnBindings() {
 		if ( columnBindings == null ) {
 			columnBindings = resolveNonSelectColumnBindings();
 		}
 		return columnBindings;
 	}
 
-	private List<ColumnBinding> resolveNonSelectColumnBindings() {
-		final List<ColumnBinding> columnBindings = new ArrayList<>();
+	private List<ColumnReference> resolveNonSelectColumnBindings() {
+		final List<ColumnReference> columnBindings = new ArrayList<>();
 		for ( Column column : getReferencedAttribute().getColumns() ) {
 			columnBindings.add( columnBindingSource.resolveColumnBinding( column ) );
 		}

@@ -17,7 +17,7 @@ import org.hibernate.persister.collection.spi.CollectionElementEntity;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.from.ColumnBinding;
+import org.hibernate.sql.ast.from.ColumnReference;
 import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.ast.select.SelectableBasicTypeImpl;
@@ -37,7 +37,7 @@ public class PluralAttributeElementReferenceExpression implements NavigableRefer
 	private final PropertyPath propertyPath;
 
 	private final Selectable selectable;
-	private final List<ColumnBinding> columnBindings;
+	private final List<ColumnReference> columnBindings;
 
 	public PluralAttributeElementReferenceExpression(
 			CollectionPersister collectionPersister,
@@ -50,11 +50,11 @@ public class PluralAttributeElementReferenceExpression implements NavigableRefer
 
 		// todo : why are these casts to Column needed? elementReference.getColumns() returns List<Column>
 
-		final CollectionElement elementReference = collectionPersister.getElementReference();
+		final CollectionElement elementReference = collectionPersister.getElementDescriptor();
 		switch ( elementReference.getClassification() ) {
 			case BASIC: {
 				final Column column = (Column) elementReference.getColumns().get( 0 );
-				final ColumnBinding columnBinding = columnBindingSource.resolveColumnBinding( column );
+				final ColumnReference columnBinding = columnBindingSource.resolveColumnBinding( column );
 				this.columnBindings = Collections.singletonList( columnBinding );
 				this.selectable = new SelectableBasicTypeImpl(
 						this,
@@ -78,7 +78,7 @@ public class PluralAttributeElementReferenceExpression implements NavigableRefer
 			}
 			case ONE_TO_MANY:
 			case MANY_TO_MANY: {
-				final CollectionElementEntity<?> entityElement = (CollectionElementEntity<?>) collectionPersister.getElementReference();
+				final CollectionElementEntity<?> entityElement = (CollectionElementEntity<?>) collectionPersister.getElementDescriptor();
 				this.columnBindings = new ArrayList<>();
 				for ( Column column : entityElement.getColumns() ) {
 					this.columnBindings.add( columnBindingSource.resolveColumnBinding( column ) );
@@ -87,7 +87,7 @@ public class PluralAttributeElementReferenceExpression implements NavigableRefer
 						this,
 						getNavigablePath(),
 						columnBindingSource,
-						( (CollectionElementEntity) collectionPersister.getElementReference() ).getEntityPersister(),
+						( (CollectionElementEntity) collectionPersister.getElementDescriptor() ).getEntityPersister(),
 						isShallow
 				);
 				break;
@@ -123,13 +123,13 @@ public class PluralAttributeElementReferenceExpression implements NavigableRefer
 	}
 
 	@Override
-	public List<ColumnBinding> getColumnBindings() {
+	public List<ColumnReference> getColumnBindings() {
 		return columnBindings;
 	}
 
 	@Override
 	public CollectionElement getNavigable() {
-		return collectionPersister.getElementReference();
+		return collectionPersister.getElementDescriptor();
 	}
 
 

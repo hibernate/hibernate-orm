@@ -14,8 +14,8 @@ import javax.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.internal.expression.AbstractTupleElement;
-import org.hibernate.sqm.parser.criteria.tree.JpaExpression;
-import org.hibernate.sqm.parser.criteria.tree.select.JpaCompoundSelection;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaExpression;
+import org.hibernate.query.sqm.produce.spi.criteria.select.JpaCompoundSelection;
 
 /**
  * @author Steve Ebersole

@@ -28,7 +28,6 @@ import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.SynchronizationType;
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.AssertionFailure;
@@ -40,6 +39,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
+import org.hibernate.Metamodel;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
@@ -51,7 +51,6 @@ import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -105,14 +104,16 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.internal.MetamodelImpl;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
-import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.spi.QueryInterpretations;
+import org.hibernate.query.sqm.produce.internal.SemanticQueryProducerImpl;
+import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
@@ -125,7 +126,6 @@ import org.hibernate.secure.spi.JaccService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
-import org.hibernate.sqm.domain.SqmDomainMetamodel;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
@@ -183,14 +183,16 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient TypeConfiguration typeConfiguration;
 	private final transient MetamodelImpl metamodel;
 	private final transient CriteriaBuilderImpl criteriaBuilder;
-	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
+	private final transient PersistenceUnitUtil jpaPersistenceUnitUtil;
 	private final transient CacheImplementor cacheAccess;
+
+	private final transient SemanticQueryProducer semanticQueryProducer;
 	private final transient org.hibernate.query.spi.NamedQueryRepository namedQueryRepository;
 	private final transient QueryPlanCache queryPlanCache;
 
 	private final transient CurrentSessionContext currentSessionContext;
 
-	private DelayedDropAction delayedDropAction;
+	private transient DelayedDropAction delayedDropAction;
 
 	// todo : move to MetamodelImpl
 	private final transient Map<String,IdentifierGenerator> identifierGenerators;
@@ -384,6 +386,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 					this,
 					serviceRegistry.getService( JndiService.class )
 			);
+
+			// for now
+			this.semanticQueryProducer = new SemanticQueryProducerImpl( this );
 		}
 		catch (Exception e) {
 			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
@@ -588,7 +593,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
-		return getMetamodel().findEntityGraphsByType( entityClass );
+		return getMetamodel().getTypeConfiguration().findEntityGraphsByType( entityClass );
 	}
 
 
@@ -658,13 +663,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public CriteriaBuilder getCriteriaBuilder() {
+	public HibernateCriteriaBuilder getCriteriaBuilder() {
 		validateNotClosed();
 		return criteriaBuilder;
 	}
 
 	@Override
-	public MetamodelImplementor getMetamodel() {
+	public Metamodel getMetamodel() {
 		return metamodel;
 	}
 
@@ -675,7 +680,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public EntityGraph findEntityGraphByName(String name) {
-		return getMetamodel().findEntityGraphByName( name );
+		return getMetamodel().getTypeConfiguration().findEntityGraphByName( name );
 	}
 
 	@Override
@@ -711,10 +716,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 
 	public Type getIdentifierType(String className) throws MappingException {
-		return getMetamodel().entityPersister( className ).getIdentifierType();
+		return getMetamodel().getTypeConfiguration().findEntityPersister( className ).getIdentifierType();
 	}
+
 	public String getIdentifierPropertyName(String className) throws MappingException {
-		return getMetamodel().entityPersister( className ).getIdentifierPropertyName();
+		return getMetamodel().getTypeConfiguration().findEntityPersister( className ).getIdentifierPropertyName();
 	}
 
 	public Type[] getReturnTypes(String queryString) throws HibernateException {
@@ -734,11 +740,11 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public CollectionMetadata getCollectionMetadata(String roleName) throws HibernateException {
-		return (CollectionMetadata) getMetamodel().collectionPersister( roleName );
+		return (CollectionMetadata) getMetamodel().getTypeConfiguration().findCollectionPersister( roleName );
 	}
 
 	public ClassMetadata getClassMetadata(String entityName) throws HibernateException {
-		return (ClassMetadata) getMetamodel().entityPersister( entityName );
+		return (ClassMetadata) getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
 	}
 
 	@Override
@@ -752,7 +758,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public Type getReferencedPropertyType(String className, String propertyName)
 		throws MappingException {
-		return getMetamodel().entityPersister( className ).getPropertyType( propertyName );
+		return getMetamodel().getTypeConfiguration().findEntityPersister( className ).getPropertyType( propertyName );
 	}
 
 	/**
@@ -939,7 +945,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
-		getMetamodel().addNamedEntityGraph( graphName, entityGraph );
+		getMetamodel().getTypeConfiguration().addNamedEntityGraph( graphName, entityGraph );
 	}
 
 	public boolean isClosed() {
@@ -1057,7 +1063,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		boolean serializable = type != null && type.equals( StandardSpiBasicTypes.SERIALIZABLE );
 		if ( type == null || serializable ) {
 			try {
-				getMetamodel().entityPersister( clazz.getName() );
+				getTypeConfiguration().findEntityPersister( clazz.getName() );
 			}
 			catch (MappingException me) {
 				if ( serializable ) {
@@ -1108,25 +1114,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public SqmDomainMetamodel getDomainMetamodel() {
-		return getMetamodel();
+	public SemanticQueryProducer getSemanticQueryProducer() {
+		return semanticQueryProducer;
 	}
 
-	@Override
-	public Class classByName(String name) throws ClassNotFoundException {
-		final String resolvedName = getMetamodel().getTypeConfiguration().getImportedClassName( name );
-		try {
-			return getServiceRegistry().getService( ClassLoaderService.class ).classForName( resolvedName );
-		}
-		catch (ClassLoadingException e) {
-			throw new ClassNotFoundException( "Unable to locate Class for name [" + name + " (" + resolvedName + ")]" );
-		}
-	}
-
-	@Override
-	public boolean useStrictJpaCompliance() {
-		return getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance();
-	}
 
 	static class SessionBuilderImpl<T extends SessionBuilder> implements SessionBuilderImplementor<T>, SessionCreationOptions {
 		private static final Logger log = CoreLogging.logger( SessionBuilderImpl.class );

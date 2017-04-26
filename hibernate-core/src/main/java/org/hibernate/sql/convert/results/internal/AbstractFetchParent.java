@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.hibernate.sql.ast.expression.domain.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.convert.results.spi.Fetch;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.exec.results.process.spi.InitializerCollector;

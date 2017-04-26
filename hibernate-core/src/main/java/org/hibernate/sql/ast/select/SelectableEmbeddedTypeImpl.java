@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.sql.ast.expression.Expression;
-import org.hibernate.sql.ast.from.ColumnBinding;
+import org.hibernate.sql.ast.from.ColumnReference;
 import org.hibernate.sql.convert.results.internal.ReturnCompositeImpl;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
@@ -22,12 +22,12 @@ import org.hibernate.type.spi.EmbeddedType;
  */
 public class SelectableEmbeddedTypeImpl implements Selectable {
 	private final Expression selectedExpression;
-	private final List<ColumnBinding> columnBindings;
+	private final List<ColumnReference> columnBindings;
 	private final EmbeddedType embeddedType;
 
 	public SelectableEmbeddedTypeImpl(
 			Expression selectedExpression,
-			List<ColumnBinding> columnBindings,
+			List<ColumnReference> columnBindings,
 			EmbeddedType embeddedType) {
 		this.selectedExpression = selectedExpression;
 		this.columnBindings = columnBindings;
@@ -43,7 +43,7 @@ public class SelectableEmbeddedTypeImpl implements Selectable {
 	public Return toQueryReturn(ReturnResolutionContext returnResolutionContext, String resultVariable) {
 		// todo : not sure what we will need here yet...
 		final List<SqlSelection> sqlSelections = new ArrayList<>();
-		for ( ColumnBinding columnBinding : columnBindings ) {
+		for ( ColumnReference columnBinding : columnBindings ) {
 			sqlSelections.add(
 					returnResolutionContext.resolveSqlSelection( columnBinding )
 			);

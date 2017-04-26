@@ -9,11 +9,11 @@ package org.hibernate.sql.ast.expression.domain;
 
 import java.util.List;
 
-import org.hibernate.sql.ast.from.ColumnBinding;
+import org.hibernate.sql.ast.from.ColumnReference;
 
 /**
  * @author Steve Ebersole
  */
 public interface ColumnBindingGroup {
-	List<ColumnBinding> getColumnBindings();
+	List<ColumnReference> getColumnBindings();
 }

@@ -58,7 +58,7 @@ allprojects {
 
 ext {
 	hibernateTargetVersion = '6.0.0-SNAPSHOT'
-	expectedGradleVersion = '3.0-milestone-1'
+	expectedGradleVersion = '3.5'
 	baselineJavaVersion = '1.8'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )

@@ -7,7 +7,7 @@
 package org.hibernate.sql.convert.results.spi;
 
 import org.hibernate.persister.common.spi.PersistentAttribute;
-import org.hibernate.sql.ast.expression.domain.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * Models a fetch that is specifically for an attribute.

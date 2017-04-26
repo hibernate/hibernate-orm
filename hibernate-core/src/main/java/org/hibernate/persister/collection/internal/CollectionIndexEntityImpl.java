@@ -9,6 +9,7 @@ package org.hibernate.persister.collection.internal;
 import java.util.List;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.persister.collection.spi.AbstractCollectionIndex;
 import org.hibernate.persister.collection.spi.CollectionIndexEntity;
@@ -26,8 +27,8 @@ import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.type.spi.EntityType;
-import org.hibernate.sqm.domain.SqmNavigable;
-import org.hibernate.sqm.domain.SqmPluralAttributeIndex;
+import org.hibernate.query.sqm.domain.SqmNavigable;
+import org.hibernate.query.sqm.domain.SqmPluralAttributeIndex;
 
 /**
  * @author Steve Ebersole
@@ -93,18 +94,18 @@ public class CollectionIndexEntityImpl<J>
 	@Override
 	public TableGroup buildTableGroup(
 			TableSpace tableSpace, SqlAliasBaseManager sqlAliasBaseManager, FromClauseIndex fromClauseIndex) {
-		return null;
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override
 	public Return generateReturn(
 			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup) {
-		return null;
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override
 	public Fetch generateFetch(
 			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
-		return null;
+		throw new NotYetImplementedException(  );
 	}
 }

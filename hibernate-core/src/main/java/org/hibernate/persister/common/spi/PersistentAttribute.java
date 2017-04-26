@@ -6,8 +6,6 @@
  */
 package org.hibernate.persister.common.spi;
 
-import org.hibernate.type.spi.Type;
-
 /**
  * @author Steve Ebersole
  */
@@ -20,7 +18,7 @@ public interface PersistentAttribute<O,T>
 
 	@Override
 	default String getName() {
-		return getNavigableName();
+		return getNavigableRole().getNavigableName();
 	}
 
 	@Override
@@ -29,13 +27,8 @@ public interface PersistentAttribute<O,T>
 	}
 
 	@Override
-	default Type getExportedDomainType() {
-		return getOrmType();
-	}
-
-	@Override
 	@SuppressWarnings("unchecked")
 	default Class<T> getJavaType() {
-		return (Class<T>) getExportedDomainType().getJavaTypeDescriptor().getJavaType();
+		return (Class<T>) getJavaTypeDescriptor().getJavaType();
 	}
 }

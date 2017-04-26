@@ -44,7 +44,7 @@ import org.hibernate.sql.exec.results.process.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
 import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.sqm.query.expression.Compatibility;
+import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.type.spi.BasicType;
 
 import org.jboss.logging.Logger;

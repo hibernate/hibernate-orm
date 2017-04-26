@@ -14,7 +14,7 @@ import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
 import org.hibernate.sql.ast.expression.domain.NavigableReferenceExpression;
 
 /**
- * Group together related {@link TableBinding} references (generally related by EntityPersister or CollectionPersister),
+ * Group together related {@link TableReference} references (generally related by EntityPersister or CollectionPersister),
  *
  * @author Steve Ebersole
  */
@@ -22,9 +22,9 @@ public interface TableGroup extends ColumnBindingSource, NavigableReferenceExpre
 	TableSpace getTableSpace();
 	String getUid();
 	String getAliasBase();
-	TableBinding getRootTableBinding();
+	TableReference getRootTableBinding();
 	List<TableJoin> getTableJoins();
 
-	TableBinding locateTableBinding(Table table);
-	ColumnBinding resolveColumnBinding(Column column);
+	TableReference locateTableBinding(Table table);
+	ColumnReference resolveColumnBinding(Column column);
 }

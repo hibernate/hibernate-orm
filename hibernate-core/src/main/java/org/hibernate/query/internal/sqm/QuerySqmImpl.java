@@ -37,11 +37,11 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.sqm.QuerySplitter;
-import org.hibernate.sqm.query.SqmNonSelectStatement;
-import org.hibernate.sqm.query.SqmParameter;
-import org.hibernate.sqm.query.SqmSelectStatement;
-import org.hibernate.sqm.query.SqmStatement;
+import org.hibernate.query.sqm.consume.spi.QuerySplitter;
+import org.hibernate.query.sqm.tree.SqmNonSelectStatement;
+import org.hibernate.query.sqm.tree.SqmParameter;
+import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
  * {@link Query} implementation based on an SQM

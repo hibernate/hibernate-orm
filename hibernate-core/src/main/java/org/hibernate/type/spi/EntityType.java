@@ -8,7 +8,7 @@ package org.hibernate.type.spi;
 
 import org.hibernate.MappingException;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.sqm.domain.type.SqmDomainTypeEntity;
+import org.hibernate.query.sqm.domain.type.SqmDomainTypeEntity;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**

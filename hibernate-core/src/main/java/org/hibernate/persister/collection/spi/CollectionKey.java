@@ -104,7 +104,7 @@ public class CollectionKey implements TypeExporter {
 		}
 		else {
 			// otherwise we just need to resolve the column names in the element table(s) (as the "collection table")
-			final EntityPersister elementPersister = ( (CollectionElementEntity) collectionPersister.getElementReference() ).getEntityPersister();
+			final EntityPersister elementPersister = ( (CollectionElementEntity) collectionPersister.getElementDescriptor() ).getEntityPersister();
 
 			for ( int i = 0; i < columnNames.length; i++ ) {
 				// it is conceivable that the column already exists

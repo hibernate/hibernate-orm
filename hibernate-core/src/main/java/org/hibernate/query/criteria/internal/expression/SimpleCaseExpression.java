@@ -16,9 +16,9 @@ import org.hibernate.query.criteria.JpaExpressionImplementor;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
-import org.hibernate.sqm.query.expression.CaseSimpleSqmExpression;
-import org.hibernate.sqm.query.expression.SqmExpression;
+import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
+import org.hibernate.query.sqm.tree.expression.CaseSimpleSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * Models what ANSI SQL terms a simple case statement.  This is a <tt>CASE</tt> expression in the form<pre>

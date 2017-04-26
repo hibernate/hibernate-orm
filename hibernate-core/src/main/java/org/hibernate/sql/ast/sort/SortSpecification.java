@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.sort;
 
 import org.hibernate.sql.ast.expression.Expression;
-import org.hibernate.sqm.query.order.SqmSortOrder;
+import org.hibernate.query.sqm.tree.order.SqmSortOrder;
 
 /**
  * @author Steve Ebersole

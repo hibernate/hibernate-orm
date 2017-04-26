@@ -22,6 +22,8 @@ import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.LoadQueryInfluencers.InternalFetchProfileType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.RefreshEvent;
@@ -166,10 +168,19 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		evictCachedCollections( persister, id, source );
 
-		String previousFetchProfile = source.getLoadQueryInfluencers().getInternalFetchProfile();
-		source.getLoadQueryInfluencers().setInternalFetchProfile( "refresh" );
-		Object result = persister.load( id, object, event.getLockOptions(), source );
-		// Keep the same read-only/modifiable setting for the entity that it had beforeQuery refreshing;
+		final InternalFetchProfileType previouslyEnabledInternalFetchProfileType =
+				source.getLoadQueryInfluencers().getEnabledInternalFetchProfileType();
+		source.getLoadQueryInfluencers().setEnabledInternalFetchProfileType( InternalFetchProfileType.REFRESH );
+
+		final Object result;
+		try {
+			result = persister.load( id, object, event.getLockOptions(), source );
+		}
+		finally {
+			source.getLoadQueryInfluencers().setEnabledInternalFetchProfileType( previouslyEnabledInternalFetchProfileType );
+		}
+
+		// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
 		// If it was transient, then set it to the default for the source.
 		if ( result != null ) {
 			if ( !persister.isMutable() ) {
@@ -180,10 +191,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				source.setReadOnly( result, ( e == null ? source.isDefaultReadOnly() : e.isReadOnly() ) );
 			}
 		}
-		source.getLoadQueryInfluencers().setInternalFetchProfile( previousFetchProfile );
 
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
-
 	}
 
 	private void evictCachedCollections(EntityPersister persister, Serializable id, EventSource source) {

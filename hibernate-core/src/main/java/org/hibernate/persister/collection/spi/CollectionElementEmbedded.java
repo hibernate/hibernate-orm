@@ -6,13 +6,13 @@
  */
 package org.hibernate.persister.collection.spi;
 
-import org.hibernate.persister.embedded.spi.EmbeddedReference;
+import org.hibernate.persister.embedded.spi.EmbeddedValuedNavigable;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
  */
-public interface CollectionElementEmbedded<J> extends CollectionElement<J,EmbeddedType<J>>, EmbeddedReference<J> {
+public interface CollectionElementEmbedded<J> extends CollectionElement<J,EmbeddedType<J>>, EmbeddedValuedNavigable<J> {
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;

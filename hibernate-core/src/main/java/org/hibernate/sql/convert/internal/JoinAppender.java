@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.convert.internal;
 
-import org.hibernate.sql.ast.from.TableBinding;
+import org.hibernate.sql.ast.from.TableReference;
 import org.hibernate.sqm.query.JoinType;
 
 /**
@@ -18,5 +18,5 @@ public interface JoinAppender {
 		void appendJoinPredicate();
 	}
 
-	JoinPredicateAppender appendJoin(TableBinding tableBinding, JoinType joinType);
+	JoinPredicateAppender appendJoin(TableReference tableBinding, JoinType joinType);
 }

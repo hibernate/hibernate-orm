@@ -11,16 +11,25 @@ import java.util.List;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.TypeExporter;
-import org.hibernate.sqm.domain.SqmPluralAttributeIndex;
 import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
 public interface CollectionIndex<J,T extends Type<J>>
-		extends TypeExporter<J>, Navigable<J>, SqmPluralAttributeIndex {
+		extends TypeExporter<J>, Navigable<J> {
 
 	String NAVIGABLE_NAME = "{index}";
+
+	enum IndexClassification {
+		BASIC,
+		EMBEDDABLE,
+		ANY,
+		ONE_TO_MANY,
+		MANY_TO_MANY
+	}
+
+	IndexClassification getClassification();
 
 	List<Column> getColumns();
 

@@ -22,7 +22,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
-import org.hibernate.sqm.NotYetImplementedException;
+import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;

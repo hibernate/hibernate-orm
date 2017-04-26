@@ -56,6 +56,7 @@ import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.sql.ast.QuerySpec;
 import org.hibernate.sql.ast.SelectQuery;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.ast.from.TableSpace;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
@@ -101,7 +102,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	// todo (6.0) : would also be good to share as much as possible with SqmSelectToSqlAstConverter
 
 	// essentially this needs to combine the ideas from SqmSelectToSqlAstConverter and the LoadPlan
-	// 		builders.  May also need ideas from org.hibernate.sqm.parser.hql.internal.SemanticQueryBuilder
+	// 		builders.  May also need ideas from SemanticQueryBuilder
 	//		from SQM (QuerySpecProcessingState, stacks, etc)
 
 	// todo (6.0) : do we need a stack of QuerySpecs?
@@ -1063,6 +1064,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	public static class PropertyPathStack {
 		private ArrayDeque<PropertyPath> internalStack = new ArrayDeque<>();
 
+		NavigablePath
 		public void push(Navigable navigable) {
 			assert navigable != null;
 

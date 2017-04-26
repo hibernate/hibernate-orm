@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.convert.results.spi;
 
-import org.hibernate.sql.ast.expression.domain.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * Further defines a first-level Return that is a reference to an entity

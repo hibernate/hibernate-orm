@@ -23,10 +23,10 @@ import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.IdentifierDescriptor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl;
 import org.hibernate.sql.ast.expression.Expression;
-import org.hibernate.sql.ast.expression.domain.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.expression.domain.NavigableReferenceExpression;
 import org.hibernate.sql.ast.expression.domain.SingularAttributeReferenceExpression;
-import org.hibernate.sql.ast.from.ColumnBinding;
+import org.hibernate.sql.ast.from.ColumnReference;
 import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.ast.from.TableSpace;
 import org.hibernate.sql.ast.select.Selectable;
@@ -227,7 +227,7 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 		}
 
 		@Override
-		public List<ColumnBinding> getColumnBindings() {
+		public List<ColumnReference> getColumnBindings() {
 			return expressionDelegate.getColumnBindings();
 		}
 	}

@@ -323,7 +323,7 @@ public abstract class AbstractCollectionType extends AbstractTypeImpl implements
 
 	@Override
 	public Type getElementType() throws MappingException {
-		return getCollectionPersister().getElementReference().getOrmType();
+		return getCollectionPersister().getElementDescriptor().getOrmType();
 	}
 
 	@Override

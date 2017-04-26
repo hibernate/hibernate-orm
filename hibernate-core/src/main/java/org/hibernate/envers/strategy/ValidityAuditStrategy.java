@@ -32,7 +32,6 @@ import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.property.access.spi.Getter;
@@ -174,7 +173,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		}
 
 		final SessionFactoryImplementor sessionFactory = ( (SessionImplementor) session ).getFactory();
-		final Type propertyType = sessionFactory.getMetamodel().entityPersister( entityName ).getPropertyType( propertyName );
+		final Type propertyType = sessionFactory.getTypeConfiguration().findEntityPersister( entityName ).getPropertyType( propertyName );
 		if ( propertyType.isCollectionType() ) {
 			CollectionType collectionPropertyType = (CollectionType) propertyType;
 			// Handling collection of components.
@@ -374,7 +373,6 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			Object revision) {
 
 		final SessionFactoryImplementor sessionFactory = session.getSessionFactory();
-		final MetamodelImplementor metamodel = sessionFactory.getMetamodel();
 
 		final Queryable entityQueryable = getQueryable( entityName, session );
 		final Queryable rootEntityQueryable = getQueryable( entityQueryable.getRootEntityName(), session );
@@ -399,7 +397,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SET REVEND = ?
 		final Number revisionNumber = auditService.getRevisionInfoNumberReader().getRevisionNumber( revision );
-		final Type revisionNumberType = metamodel.entityPersister( options.getRevisionInfoEntityName() ).getIdentifierType();
+		final Type revisionNumberType = sessionFactory.getTypeConfiguration().findEntityPersister( options.getRevisionInfoEntityName() ).getIdentifierType();
 		update.addColumn( rootAuditedEntityQueryable.toColumns( options.getRevisionEndFieldName() )[0] );
 		update.bind( revisionNumber, revisionNumberType );
 
@@ -429,7 +427,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	}
 
 	private Queryable getQueryable(String entityName, SessionImplementor sessionImplementor) {
-		return (Queryable) sessionImplementor.getFactory().getMetamodel().entityPersister( entityName );
+		return (Queryable) sessionImplementor.getFactory().getTypeConfiguration().findEntityPersister( entityName );
 	}
 
 	/**

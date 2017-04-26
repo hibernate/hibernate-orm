@@ -51,11 +51,11 @@ public class CollectionTableGroup extends AbstractTableGroup {
 	@Override
 	public DomainReferenceImplementor getNavigable() {
 		// todo : element?
-		return persister.getElementReference();
+		return persister.getElementDescriptor();
 	}
 
 	@Override
-	public List<ColumnBinding> getColumnBindings() {
+	public List<ColumnReference> getColumnBindings() {
 		throw new NotYetImplementedException(  );
 	}
 }

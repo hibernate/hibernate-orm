@@ -21,7 +21,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.JpaPathSourceImplementor;
-import org.hibernate.sqm.parser.criteria.tree.path.JpaPluralAttributePath;
+import org.hibernate.query.sqm.produce.spi.criteria.path.JpaPluralAttributePath;
 
 /**
  * Models a path for a {@link PluralAttribute} generally obtained from a

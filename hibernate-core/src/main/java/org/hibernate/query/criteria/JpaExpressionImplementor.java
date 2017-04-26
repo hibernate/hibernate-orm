@@ -12,7 +12,7 @@ import java.util.Collection;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.Incubating;
-import org.hibernate.sqm.parser.criteria.tree.JpaExpression;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaExpression;
 
 /**
  * Hibernate ORM specialization of the JPA {@link Expression} contract.

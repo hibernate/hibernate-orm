@@ -224,15 +224,19 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			final Object ck = cache.generateCacheKey( id, persister, getFactory(), getTenantIdentifier() );
 			cache.evict( ck );
 		}
-		String previousFetchProfile = this.getLoadQueryInfluencers().getInternalFetchProfile();
-		Object result = null;
+
+		final LoadQueryInfluencers.InternalFetchProfileType previouslyEnabledInternalFetchProfileType =
+				getLoadQueryInfluencers().getEnabledInternalFetchProfileType();
+		getLoadQueryInfluencers().setEnabledInternalFetchProfileType( LoadQueryInfluencers.InternalFetchProfileType.REFRESH );
+
+		final Object result;
 		try {
-			this.getLoadQueryInfluencers().setInternalFetchProfile( "refresh" );
 			result = persister.load( id, entity, getNullSafeLockMode( lockMode ), this );
 		}
 		finally {
-			this.getLoadQueryInfluencers().setInternalFetchProfile( previousFetchProfile );
+			getLoadQueryInfluencers().setEnabledInternalFetchProfileType( previouslyEnabledInternalFetchProfileType );
 		}
+
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 	}
 

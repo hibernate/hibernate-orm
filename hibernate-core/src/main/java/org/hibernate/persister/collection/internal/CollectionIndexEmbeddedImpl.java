@@ -25,8 +25,8 @@ import org.hibernate.sql.convert.results.spi.Fetch;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
-import org.hibernate.sqm.domain.SqmNavigable;
-import org.hibernate.sqm.domain.SqmPluralAttributeIndex;
+import org.hibernate.query.sqm.domain.SqmNavigable;
+import org.hibernate.query.sqm.domain.SqmPluralAttributeIndex;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**

@@ -11,11 +11,11 @@ import java.util.List;
 import javax.persistence.Tuple;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.sqm.parser.ParsingException;
-import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
-import org.hibernate.sqm.parser.criteria.tree.JpaExpression;
-import org.hibernate.sqm.query.select.SqmAliasedExpressionContainer;
-import org.hibernate.sqm.query.select.SqmSelectClause;
+import org.hibernate.query.sqm.ParsingException;
+import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaExpression;
+import org.hibernate.query.sqm.tree.select.SqmAliasedExpressionContainer;
+import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 
 /**
  * @author Steve Ebersole

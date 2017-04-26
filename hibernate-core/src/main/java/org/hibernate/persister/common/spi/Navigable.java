@@ -7,6 +7,7 @@
 package org.hibernate.persister.common.spi;
 
 import org.hibernate.persister.common.NavigableRole;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.ast.from.TableSpace;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
@@ -15,7 +16,7 @@ import org.hibernate.sql.convert.results.spi.Fetch;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
-import org.hibernate.sqm.domain.SqmNavigable;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Models a "piece" of the application's domain model that can be navigated
@@ -23,13 +24,24 @@ import org.hibernate.sqm.domain.SqmNavigable;
  *
  * @author Steve Ebersole
  */
-public interface Navigable<T> extends SqmNavigable, ExpressableType<T> {
-	@Override
+public interface Navigable<T> extends ExpressableType<T> {
 	NavigableSource getSource();
 
 	NavigableRole getNavigableRole();
 
+	JavaTypeDescriptor getJavaTypeDescriptor();
+
+	/**
+	 * Obtain a loggable representation.
+	 *
+	 * @return The loggable representation of this reference
+	 */
+	String asLoggableText();
+
 	void visitNavigable(NavigableVisitationStrategy visitor);
+
+	// todo (6.0) - this should get removed.
+	//		but I think we may still need a way for resolving the TableGroup for a Navigable.
 
 	TableGroup buildTableGroup(
 			TableSpace tableSpace,

@@ -33,9 +33,9 @@ import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.sqm.parser.criteria.tree.JpaCriteriaQuery;
-import org.hibernate.sqm.parser.criteria.tree.from.JpaRoot;
-import org.hibernate.sqm.parser.criteria.tree.select.JpaCompoundSelection;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaCriteriaQuery;
+import org.hibernate.query.sqm.produce.spi.criteria.from.JpaRoot;
+import org.hibernate.query.sqm.produce.spi.criteria.select.JpaCompoundSelection;
 
 /**
  * Hibernate extensions to the JPA CriteriaBuilder.

@@ -13,8 +13,8 @@ import java.util.function.Consumer;
 import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.mapping.ManagedTypeMapping;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 

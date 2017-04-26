@@ -23,8 +23,8 @@ import org.hibernate.sqm.domain.SingularAttributeReference;
 import org.hibernate.sqm.query.expression.domain.DomainReferenceBinding;
 import org.hibernate.sqm.query.expression.domain.SingularAttributeBinding;
 import org.hibernate.sqm.query.from.AbstractFrom;
-import org.hibernate.sqm.query.from.SqmAttributeJoin;
-import org.hibernate.sqm.query.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import org.jboss.logging.Logger;
 

@@ -24,7 +24,6 @@ import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.hql.internal.ast.tree.OrderByClause;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
 import org.hibernate.persister.common.spi.Column;
@@ -32,7 +31,7 @@ import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
 import org.hibernate.persister.common.spi.PluralPersistentAttribute;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
-import org.hibernate.persister.embedded.spi.EmbeddedReference;
+import org.hibernate.persister.embedded.spi.EmbeddedValuedNavigable;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.NotYetImplementedException;
@@ -58,7 +57,7 @@ import org.hibernate.sql.ast.expression.PositionalParameter;
 import org.hibernate.sql.ast.expression.QueryLiteral;
 import org.hibernate.sql.ast.expression.SumFunction;
 import org.hibernate.sql.ast.expression.UnaryOperationExpression;
-import org.hibernate.sql.ast.expression.domain.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.from.EntityTableGroup;
 import org.hibernate.sql.ast.from.TableGroup;
@@ -94,74 +93,73 @@ import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnDynamicInstantiation;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sql.exec.results.process.internal.SqlSelectionImpl;
-import org.hibernate.sqm.BaseSemanticQueryWalker;
-import org.hibernate.sqm.domain.SqmExpressableType;
-import org.hibernate.sqm.query.SqmDeleteStatement;
-import org.hibernate.sqm.query.SqmInsertSelectStatement;
-import org.hibernate.sqm.query.SqmQuerySpec;
-import org.hibernate.sqm.query.SqmSelectStatement;
-import org.hibernate.sqm.query.SqmUpdateStatement;
-import org.hibernate.sqm.query.expression.BinaryArithmeticSqmExpression;
-import org.hibernate.sqm.query.expression.CaseSearchedSqmExpression;
-import org.hibernate.sqm.query.expression.CaseSimpleSqmExpression;
-import org.hibernate.sqm.query.expression.CoalesceSqmExpression;
-import org.hibernate.sqm.query.expression.ConcatSqmExpression;
-import org.hibernate.sqm.query.expression.ConstantEnumSqmExpression;
-import org.hibernate.sqm.query.expression.ConstantFieldSqmExpression;
-import org.hibernate.sqm.query.expression.LiteralBigDecimalSqmExpression;
-import org.hibernate.sqm.query.expression.LiteralBigIntegerSqmExpression;
-import org.hibernate.sqm.query.expression.LiteralCharacterSqmExpression;
-import org.hibernate.sqm.query.expression.LiteralDoubleSqmExpression;
-import org.hibernate.sqm.query.expression.LiteralFalseSqmExpression;
-import org.hibernate.sqm.query.expression.LiteralFloatSqmExpression;
-import org.hibernate.sqm.query.expression.LiteralIntegerSqmExpression;
-import org.hibernate.sqm.query.expression.LiteralLongSqmExpression;
-import org.hibernate.sqm.query.expression.LiteralNullSqmExpression;
-import org.hibernate.sqm.query.expression.LiteralStringSqmExpression;
-import org.hibernate.sqm.query.expression.LiteralTrueSqmExpression;
-import org.hibernate.sqm.query.expression.NamedParameterSqmExpression;
-import org.hibernate.sqm.query.expression.NullifSqmExpression;
-import org.hibernate.sqm.query.expression.PositionalParameterSqmExpression;
-import org.hibernate.sqm.query.expression.SqmExpression;
-import org.hibernate.sqm.query.expression.UnaryOperationSqmExpression;
-import org.hibernate.sqm.query.expression.domain.SqmAttributeBinding;
-import org.hibernate.sqm.query.expression.domain.SqmEntityBinding;
-import org.hibernate.sqm.query.expression.domain.SqmPluralAttributeBinding;
-import org.hibernate.sqm.query.expression.domain.SqmSingularAttributeBinding;
-import org.hibernate.sqm.query.expression.function.AvgFunctionSqmExpression;
-import org.hibernate.sqm.query.expression.function.CountFunctionSqmExpression;
-import org.hibernate.sqm.query.expression.function.CountStarFunctionSqmExpression;
-import org.hibernate.sqm.query.expression.function.MaxFunctionSqmExpression;
-import org.hibernate.sqm.query.expression.function.MinFunctionSqmExpression;
-import org.hibernate.sqm.query.expression.function.SumFunctionSqmExpression;
-import org.hibernate.sqm.query.from.SqmAttributeJoin;
-import org.hibernate.sqm.query.from.SqmCrossJoin;
-import org.hibernate.sqm.query.from.SqmEntityJoin;
-import org.hibernate.sqm.query.from.SqmFromClause;
-import org.hibernate.sqm.query.from.SqmFromElementSpace;
-import org.hibernate.sqm.query.from.SqmJoin;
-import org.hibernate.sqm.query.from.SqmRoot;
-import org.hibernate.sqm.query.order.SqmOrderByClause;
-import org.hibernate.sqm.query.order.SqmSortSpecification;
-import org.hibernate.sqm.query.paging.SqmLimitOffsetClause;
-import org.hibernate.sqm.query.predicate.AndSqmPredicate;
-import org.hibernate.sqm.query.predicate.BetweenSqmPredicate;
-import org.hibernate.sqm.query.predicate.GroupedSqmPredicate;
-import org.hibernate.sqm.query.predicate.InListSqmPredicate;
-import org.hibernate.sqm.query.predicate.InSubQuerySqmPredicate;
-import org.hibernate.sqm.query.predicate.LikeSqmPredicate;
-import org.hibernate.sqm.query.predicate.NegatedSqmPredicate;
-import org.hibernate.sqm.query.predicate.NullnessSqmPredicate;
-import org.hibernate.sqm.query.predicate.OrSqmPredicate;
-import org.hibernate.sqm.query.predicate.RelationalPredicateOperator;
-import org.hibernate.sqm.query.predicate.RelationalSqmPredicate;
-import org.hibernate.sqm.query.predicate.SqmWhereClause;
-import org.hibernate.sqm.query.select.SqmDynamicInstantiation;
-import org.hibernate.sqm.query.select.SqmDynamicInstantiationArgument;
-import org.hibernate.sqm.query.select.SqmDynamicInstantiationTarget;
-import org.hibernate.sqm.query.select.SqmSelectClause;
-import org.hibernate.sqm.query.select.SqmSelection;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.query.sqm.consume.spi.BaseSemanticQueryWalker;
+import org.hibernate.query.sqm.domain.SqmExpressableType;
+import org.hibernate.query.sqm.tree.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
+import org.hibernate.query.sqm.tree.expression.CaseSearchedSqmExpression;
+import org.hibernate.query.sqm.tree.expression.CaseSimpleSqmExpression;
+import org.hibernate.query.sqm.tree.expression.CoalesceSqmExpression;
+import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
+import org.hibernate.query.sqm.tree.expression.ConstantEnumSqmExpression;
+import org.hibernate.query.sqm.tree.expression.ConstantFieldSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralBigDecimalSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralBigIntegerSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralCharacterSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralDoubleSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralFalseSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralFloatSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralIntegerSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralLongSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralNullSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralStringSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralTrueSqmExpression;
+import org.hibernate.query.sqm.tree.expression.NamedParameterSqmExpression;
+import org.hibernate.query.sqm.tree.expression.NullifSqmExpression;
+import org.hibernate.query.sqm.tree.expression.PositionalParameterSqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.UnaryOperationSqmExpression;
+import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
+import org.hibernate.query.sqm.tree.expression.function.AvgFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.CountFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.CountStarFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.MaxFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.MinFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.SumFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.order.SqmOrderByClause;
+import org.hibernate.query.sqm.tree.order.SqmSortSpecification;
+import org.hibernate.query.sqm.tree.paging.SqmLimitOffsetClause;
+import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.BetweenSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.GroupedSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.InListSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.InSubQuerySqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.LikeSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.NegatedSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.NullnessSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.OrSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.RelationalPredicateOperator;
+import org.hibernate.query.sqm.tree.predicate.RelationalSqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
+import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
+import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
+import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
+import org.hibernate.query.sqm.tree.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
@@ -289,7 +287,7 @@ public class SqmSelectToSqlAstConverter
 
 	@Override
 	public QuerySpec visitQuerySpec(SqmQuerySpec querySpec) {
-		final QuerySpec astQuerySpec = new QuerySpec();
+		final QuerySpec astQuerySpec = new QuerySpec( querySpecStack.isEmpty() );
 		querySpecStack.push( astQuerySpec );
 		querySpecDepth++;
 
@@ -397,8 +395,8 @@ public class SqmSelectToSqlAstConverter
 			return resolvedTableGroup;
 		}
 
-		final SqmEntityBinding binding = sqmRoot.getBinding();
-		final EntityPersister entityPersister = (EntityPersister) binding.getBoundNavigable();
+		final SqmEntityReference binding = sqmRoot.getBinding();
+		final EntityPersister entityPersister = (EntityPersister) binding.getReferencedNavigable();
 		final EntityTableGroup group = entityPersister.buildTableGroup(
 				sqmRoot,
 				tableSpace,
@@ -424,11 +422,11 @@ public class SqmSelectToSqlAstConverter
 		);
 
 		final TableGroup ownerTableGroup = fromClauseIndex.findResolvedTableGroup(
-				joinedFromElement.getAttributeBinding().getSourceBinding().getExportedFromElement()
+				joinedFromElement.getAttributeBinding().getSourceReference().getExportedFromElement()
 		);
 		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
 
-		final JoinablePersistentAttribute<?,?> joinableAttribute = (JoinablePersistentAttribute) joinedFromElement.getAttributeBinding().getBoundNavigable();
+		final JoinablePersistentAttribute<?,?> joinableAttribute = (JoinablePersistentAttribute) joinedFromElement.getAttributeBinding().getReferencedNavigable();
 		for ( JoinColumnMapping joinColumnMapping : joinableAttribute.getJoinColumnMappings() ) {
 			// if the joinedAttribute ois a collection, we need to flip the JoinColumnMapping..
 			//		this has to do with "foreign-key directionality"
@@ -464,16 +462,16 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	private TableGroupProducer resolveTableGroupProducer(SqmAttributeJoin joinedFromElement) {
-		if ( joinedFromElement.getAttributeBinding().getBoundNavigable() instanceof CollectionPersister ) {
-			return (CollectionPersister) joinedFromElement.getAttributeBinding().getBoundNavigable();
+		if ( joinedFromElement.getAttributeBinding().getReferencedNavigable() instanceof CollectionPersister ) {
+			return (CollectionPersister) joinedFromElement.getAttributeBinding().getReferencedNavigable();
 		}
 
-		if ( joinedFromElement.getAttributeBinding().getBoundNavigable() instanceof SingularPersistentAttributeEntity ) {
-			return ( (SingularPersistentAttributeEntity) joinedFromElement.getAttributeBinding().getBoundNavigable() ).getAssociatedEntityPersister();
+		if ( joinedFromElement.getAttributeBinding().getReferencedNavigable() instanceof SingularPersistentAttributeEntity ) {
+			return ( (SingularPersistentAttributeEntity) joinedFromElement.getAttributeBinding().getReferencedNavigable() ).getAssociatedEntityPersister();
 		}
 
-		if ( joinedFromElement.getAttributeBinding().getBoundNavigable() instanceof EmbeddedReference ) {
-			return ( (EmbeddedReference) joinedFromElement.getAttributeBinding().getBoundNavigable() ).resolveTableGroupProducer();
+		if ( joinedFromElement.getAttributeBinding().getReferencedNavigable() instanceof EmbeddedValuedNavigable ) {
+			return ( (EmbeddedValuedNavigable) joinedFromElement.getAttributeBinding().getReferencedNavigable() ).resolveTableGroupProducer();
 		}
 		// otherwise - we have an exception condition
 
@@ -594,7 +592,7 @@ public class SqmSelectToSqlAstConverter
 
 
 		for ( SqmAttributeJoin fetchedJoin : fetchedJoins ) {
-			final SqmAttributeBinding fetchedAttributeBinding = fetchedJoin.getAttributeBinding();
+			final SqmAttributeReference fetchedAttributeBinding = fetchedJoin.getAttributeBinding();
 			// todo  : need this method added to EntityGraphImplementor
 			//final String attributeName = fetchedAttributeBinding.getAttribute().getAttributeName();
 			//final AttributeNodeImplementor attributeNode = entityGraphImplementor.findAttributeNode( attributeName );
@@ -604,9 +602,9 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	private void applyFetchesAndEntityGraph(FetchParent fetchParent, SqmAttributeJoin attributeJoin, AttributeNodeImplementor attributeNode) {
-		if ( attributeJoin.getAttributeBinding() instanceof SqmPluralAttributeBinding ) {
+		if ( attributeJoin.getAttributeBinding() instanceof SqmPluralAttributeReference ) {
 			// apply the plural attribute fetch join
-			final SqmPluralAttributeBinding pluralAttributeBinding = (SqmPluralAttributeBinding) attributeJoin.getAttributeBinding();
+			final SqmPluralAttributeReference pluralAttributeBinding = (SqmPluralAttributeReference) attributeJoin.getAttributeBinding();
 
 			// todo : work out how to model collection fetches...
 			//		mainly... do we need a "grouping" fetch?  And if so, should
@@ -614,10 +612,10 @@ public class SqmSelectToSqlAstConverter
 			// 		does it represent each by itself?
 
 		}
-		else if ( attributeJoin.getAttributeBinding() instanceof SqmSingularAttributeBinding ) {
+		else if ( attributeJoin.getAttributeBinding() instanceof SqmSingularAttributeReference ) {
 			// apply the singular attribute fetch join
-			final SqmSingularAttributeBinding attributeBinding = (SqmSingularAttributeBinding) attributeJoin.getAttributeBinding();
-			final SingularPersistentAttribute boundAttribute = (SingularPersistentAttribute) attributeBinding.getBoundNavigable();
+			final SqmSingularAttributeReference attributeBinding = (SqmSingularAttributeReference) attributeJoin.getAttributeBinding();
+			final SingularPersistentAttribute boundAttribute = (SingularPersistentAttribute) attributeBinding.getReferencedNavigable();
 
 			switch ( boundAttribute.getAttributeTypeClassification() ) {
 				case ANY:
@@ -639,7 +637,7 @@ public class SqmSelectToSqlAstConverter
 					final SingularPersistentAttributeEntity boundAttributeAsEntity = (SingularPersistentAttributeEntity) boundAttribute;
 					final FetchEntityAttributeImpl fetch = new FetchEntityAttributeImpl(
 							fetchParent,
-							currentNavigablePath().append( attributeBinding.getBoundNavigable().getNavigableName() ),
+							currentNavigablePath().append( attributeBinding.getReferencedNavigable().getNavigableName() ),
 							attributeJoin.getUniqueIdentifier(),
 							boundAttributeAsEntity,
 							boundAttributeAsEntity.getAssociatedEntityPersister(),

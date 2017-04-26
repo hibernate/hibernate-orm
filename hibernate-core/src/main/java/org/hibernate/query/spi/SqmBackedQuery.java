@@ -8,7 +8,7 @@
 package org.hibernate.query.spi;
 
 import org.hibernate.query.ParameterMetadata;
-import org.hibernate.sqm.query.SqmStatement;
+import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
  * @author Steve Ebersole

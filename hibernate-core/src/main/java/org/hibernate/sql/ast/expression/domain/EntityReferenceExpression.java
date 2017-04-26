@@ -8,9 +8,9 @@ package org.hibernate.sql.ast.expression.domain;
 
 import java.util.List;
 
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.sql.ast.from.ColumnBinding;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.sql.ast.from.ColumnReference;
 import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.ast.select.SelectableEntityTypeImpl;
 import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
@@ -23,14 +23,14 @@ import org.hibernate.type.spi.Type;
 public class EntityReferenceExpression implements NavigableReferenceExpression {
 	private final ColumnBindingSource columnBindingSource;
 	private final EntityPersister entityPersister;
-	private final PropertyPath propertyPath;
+	private final NavigablePath propertyPath;
 
 	private final SelectableEntityTypeImpl selectable;
 
 	public EntityReferenceExpression(
 			ColumnBindingSource columnBindingSource,
 			EntityPersister entityPersister,
-			PropertyPath propertyPath,
+			NavigablePath propertyPath,
 			boolean isShallow) {
 		this.columnBindingSource = columnBindingSource;
 		this.entityPersister = entityPersister;
@@ -65,12 +65,12 @@ public class EntityReferenceExpression implements NavigableReferenceExpression {
 	}
 
 	@Override
-	public PropertyPath getNavigablePath() {
+	public NavigablePath getNavigablePath() {
 		return propertyPath;
 	}
 
 	@Override
-	public List<ColumnBinding> getColumnBindings() {
+	public List<ColumnReference> getColumnBindings() {
 		return selectable.getColumnBinding();
 	}
 

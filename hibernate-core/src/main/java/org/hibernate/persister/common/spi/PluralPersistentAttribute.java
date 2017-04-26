@@ -7,13 +7,12 @@
 package org.hibernate.persister.common.spi;
 
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.sqm.domain.SqmPluralAttribute;
 
 /**
  * @author Steve Ebersole
  */
 public interface PluralPersistentAttribute<O,C,E>
-		extends PersistentAttribute<O,C>, NavigableSource<C>, TypeExporter<C>, javax.persistence.metamodel.PluralAttribute<O,C,E>, SqmPluralAttribute {
+		extends PersistentAttribute<O,C>, NavigableSource<C>, TypeExporter<C>, javax.persistence.metamodel.PluralAttribute<O,C,E> {
 	@Override
 	org.hibernate.type.spi.CollectionType<O,C,E> getOrmType();
 

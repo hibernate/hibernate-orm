@@ -99,10 +99,10 @@ import org.hibernate.query.criteria.internal.predicate.NullnessPredicate;
 import org.hibernate.query.criteria.internal.selection.ArrayJpaSelectionImpl;
 import org.hibernate.query.criteria.internal.selection.DynamicInstantiationImpl;
 import org.hibernate.query.criteria.internal.selection.TupleJpaSelectionImpl;
-import org.hibernate.sqm.parser.criteria.tree.JpaCriteriaQuery;
-import org.hibernate.sqm.parser.criteria.tree.JpaExpression;
-import org.hibernate.sqm.parser.criteria.tree.from.JpaRoot;
-import org.hibernate.sqm.parser.criteria.tree.select.JpaCompoundSelection;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaCriteriaQuery;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaExpression;
+import org.hibernate.query.sqm.produce.spi.criteria.from.JpaRoot;
+import org.hibernate.query.sqm.produce.spi.criteria.select.JpaCompoundSelection;
 
 /**
  * Hibernate implementation of the JPA {@link CriteriaBuilder} contract.

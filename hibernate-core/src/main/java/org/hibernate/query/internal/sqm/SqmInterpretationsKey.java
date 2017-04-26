@@ -8,15 +8,13 @@ package org.hibernate.query.internal.sqm;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.Limit;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sqm.query.SqmStatement;
+import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
  * @author Steve Ebersole

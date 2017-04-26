@@ -8,13 +8,12 @@ package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
 
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpressionImplementor;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.sqm.domain.DomainReference;
-import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
-import org.hibernate.sqm.query.expression.SqmExpression;
+import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * Represents a literal expression.
@@ -49,7 +48,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> implements JpaEx
 	}
 
 	@Override
-	public DomainReference getExpressionSqmType() {
+	public ExpressableType getExpressionType() {
 		return null;
 	}
 
@@ -72,7 +71,7 @@ public class LiteralExpression<T> extends AbstractExpression<T> implements JpaEx
 	@SuppressWarnings("unchecked")
 	private <X> Object convert(X literal, Class<T> javaType) {
 		// todo : convert the literal value based on the Java type.  This requires access to Session though
-		return ( (MetamodelImplementor) criteriaBuilder().getEntityManagerFactory().getMetamodel() ).getTypeConfiguration()
+		return criteriaBuilder().getEntityManagerFactory().getMetamodel().getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( (Class<X>) literal.getClass() )
 				.unwrap( literal, javaType, null );

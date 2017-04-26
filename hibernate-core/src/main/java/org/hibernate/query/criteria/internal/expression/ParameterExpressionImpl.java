@@ -11,8 +11,8 @@ import java.io.Serializable;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
-import org.hibernate.sqm.query.expression.SqmExpression;
+import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * Defines a parameter specification, or the information about a parameter (where it occurs, what is

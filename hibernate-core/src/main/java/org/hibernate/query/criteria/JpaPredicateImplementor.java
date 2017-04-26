@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria;
 
-import org.hibernate.sqm.parser.criteria.tree.JpaPredicate;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaPredicate;
 
 /**
  * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.Predicate}

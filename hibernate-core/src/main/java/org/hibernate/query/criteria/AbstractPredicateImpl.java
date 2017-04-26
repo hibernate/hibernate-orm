@@ -13,8 +13,8 @@ import javax.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.internal.expression.AbstractExpression;
 import org.hibernate.query.criteria.internal.predicate.NegatedPredicateWrapper;
-import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
-import org.hibernate.sqm.query.expression.SqmExpression;
+import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * Basic template support for {@link Predicate} implementors providing

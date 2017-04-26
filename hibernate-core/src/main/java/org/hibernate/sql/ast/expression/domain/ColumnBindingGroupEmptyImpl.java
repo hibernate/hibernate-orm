@@ -10,7 +10,7 @@ package org.hibernate.sql.ast.expression.domain;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.sql.ast.from.ColumnBinding;
+import org.hibernate.sql.ast.from.ColumnReference;
 
 /**
  * @author Steve Ebersole
@@ -22,7 +22,7 @@ public class ColumnBindingGroupEmptyImpl implements ColumnBindingGroup {
 	public static final ColumnBindingGroupEmptyImpl INSTANCE = new ColumnBindingGroupEmptyImpl();
 
 	@Override
-	public List<ColumnBinding> getColumnBindings() {
+	public List<ColumnReference> getColumnBindings() {
 		return Collections.emptyList();
 	}
 }

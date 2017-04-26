@@ -32,7 +32,7 @@ As always the "trigger" for Beta1 is (relatively) stable API.
 === Alpha1
 
 * Drop `Query#iterate` support (shallow queries)?
-* [.line-through]#Determine how to deal with `org.hibernate.sqm.parser.criteria.tree.JpaExpression#getExpressionSqmType`.
+* [.line-through]#Determine how to deal with `JpaExpression#getExpressionSqmType`.
 	It is only used in "basic contexts" (function return types, arithmetic results, etc)#
 * [.line-through]#split concept of NavigablePath and NavigableRole (PropertyPath renamed).  NavigablePath
 	represents an ongoing path in a query; NavigableRole represents the static role of an attribute
@@ -56,6 +56,8 @@ As always the "trigger" for Beta1 is (relatively) stable API.
 * need to investigate the impact on counter-parts for "result assembly".
 * be sure to test bi-directional "key-many-to-one" references.  That is something LoadPlan code does a lot of
 	work to handle properly.  Need to find the test that Gail wrote for this.
+* prior to release, look at the Alpha2 list and see if there is any "low-hanging fruit" we could
+* Make Byte Buddy the default bytecode provider
 
 
 === Alpha2
@@ -95,8 +97,11 @@ As always the "trigger" for Beta1 is (relatively) stable API.
 
 === Beta1
 
+* Find deprecations and evaluate for removal.  This should not be done in an Alpha in order to make it easier for early
+ 	adopters to try out the release using as much of their 5-based code as possible.  Should be done in the first
+ 	Beta however.
 * Find incubations and evaluate for promotion
-
+* Remove the Javassist bytecode provider (Byte Buddy was already made the default in Alpha1)
 
 
 == Should
@@ -105,7 +110,6 @@ As always the "trigger" for Beta1 is (relatively) stable API.
 6.x release as resources dictate.  As we move along development for 6.0, these items will get
 scheduled appropriately.
 
-* Find deprecations and evaluate for removal.  This should be done asap to allow for adopter feedback.
 * Move `org.hibernate.secure` to `org.hibernate.resource.jacc`? - https://hibernate.atlassian.net/browse/HHH-11478
 * Move `org.hibernate.jmx` to `org.hibernate.resource.jmx`? - https://hibernate.atlassian.net/browse/HHH-11478
 * Remove HQLQueryPlan and current QueryPlanCache - see `org.hibernate.query.spi.SelectQueryPlan`
@@ -201,3 +205,10 @@ Unresolved/undecided design questions.
 	 Although WrapperOptions does come into play.
 * Should we drop `JTD#areEquals`?  That is really the same thing as `JTD#getComparator().compare() == 0`.
  	*Assuming JTD comparator is never used for identity-based comparison*.
+* Allow controlling "JPA strict compliance" per-query (hint)?
+
+
+== Misc
+
+* Test (and possibly implement) the combination stuff discussed on a hibernate-semantic-query repo PR submitted by Gunnar,
+ 		as outlined in the following comment : https://github.com/hibernate/hibernate-semantic-query/pull/3#issuecomment-145553684

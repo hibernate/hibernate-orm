@@ -7,11 +7,12 @@
 package org.hibernate.persister.common;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * A representation of the static "Navigable" path relative to some "root entity".
  *
- * @see org.hibernate.sql.ast.expression.domain.NavigablePath
+ * @see NavigablePath
  *
  * @author Steve Ebersole
  */

@@ -27,7 +27,8 @@ import org.hibernate.type.spi.EmbeddedType;
  * @author Steve Ebersole
  */
 public interface EmbeddedPersister<T>
-		extends ManagedTypeImplementor<T>, TypeExporter, EmbeddedContainer<T>, EmbeddableType<T>, EmbeddedReference<T> {
+		extends ManagedTypeImplementor<T>, TypeExporter, EmbeddedContainer<T>, EmbeddableType<T>,
+		EmbeddedValuedNavigable<T> {
 	Class[] STANDARD_CTOR_SIGNATURE = new Class[] {
 			Component.class,
 			EmbeddedContainer.class,

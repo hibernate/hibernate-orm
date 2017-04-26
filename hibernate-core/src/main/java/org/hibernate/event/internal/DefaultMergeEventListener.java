@@ -23,6 +23,8 @@ import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.LoadQueryInfluencers.InternalFetchProfileType;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -282,14 +284,21 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			}
 		}
 
-		String previousFetchProfile = source.getLoadQueryInfluencers().getInternalFetchProfile();
-		source.getLoadQueryInfluencers().setInternalFetchProfile( "merge" );
-		//we must clone embedded composite identifiers, or
-		//we will get back the same instance that we pass in
-		final Serializable clonedIdentifier = (Serializable) persister.getIdentifierType()
-				.getMutabilityPlan().deepCopy( id );
-		final Object result = source.get( entityName, clonedIdentifier );
-		source.getLoadQueryInfluencers().setInternalFetchProfile( previousFetchProfile );
+		final InternalFetchProfileType previouslyEnabledInternalFetchProfileType =
+				source.getLoadQueryInfluencers().getEnabledInternalFetchProfileType();
+
+		final Object result;
+		try {
+			source.getLoadQueryInfluencers().setEnabledInternalFetchProfileType( InternalFetchProfileType.MERGE );
+			//we must clone embedded composite identifiers, or
+			//we will get back the same instance that we pass in
+			final Serializable clonedIdentifier = (Serializable) persister.getIdentifierType()
+					.getMutabilityPlan().deepCopy( id );
+			result = source.get( entityName, clonedIdentifier );
+		}
+		finally {
+			source.getLoadQueryInfluencers().setEnabledInternalFetchProfileType( previouslyEnabledInternalFetchProfileType );
+		}
 
 		if ( result == null ) {
 			//TODO: we should throw an exception if we really *know* for sure

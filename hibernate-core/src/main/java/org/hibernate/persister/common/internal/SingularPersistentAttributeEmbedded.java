@@ -10,6 +10,7 @@ package org.hibernate.persister.common.internal;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
@@ -19,7 +20,7 @@ import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
-import org.hibernate.persister.embedded.spi.EmbeddedReference;
+import org.hibernate.persister.embedded.spi.EmbeddedValuedNavigable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.ast.from.TableSpace;
@@ -29,7 +30,7 @@ import org.hibernate.sql.convert.results.spi.Fetch;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
-import org.hibernate.sqm.domain.SqmNavigable;
+import org.hibernate.query.sqm.domain.SqmNavigable;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**
@@ -37,7 +38,7 @@ import org.hibernate.type.spi.EmbeddedType;
  */
 public class SingularPersistentAttributeEmbedded<O,J>
 		extends AbstractSingularPersistentAttribute<O,J,EmbeddedType<J>>
-		implements SingularPersistentAttribute<O,J>, EmbeddedReference<J>, JoinablePersistentAttribute<O,J> {
+		implements SingularPersistentAttribute<O,J>, EmbeddedValuedNavigable<J>, JoinablePersistentAttribute<O,J> {
 
 	private final EmbeddedPersister<?> embeddablePersister;
 
@@ -114,18 +115,18 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	@Override
 	public TableGroup buildTableGroup(
 			TableSpace tableSpace, SqlAliasBaseManager sqlAliasBaseManager, FromClauseIndex fromClauseIndex) {
-		return null;
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override
 	public Return generateReturn(
 			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup) {
-		return null;
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override
 	public Fetch generateFetch(
 			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
-		return null;
+		throw new NotYetImplementedException(  );
 	}
 }

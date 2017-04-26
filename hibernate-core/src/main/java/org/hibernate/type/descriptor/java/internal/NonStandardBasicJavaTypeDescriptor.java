@@ -6,7 +6,7 @@
  */
 package org.hibernate.type.descriptor.java.internal;
 
-import org.hibernate.sqm.domain.type.SqmDomainTypeBasic;
+import org.hibernate.query.sqm.domain.type.SqmDomainTypeBasic;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;

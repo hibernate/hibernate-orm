@@ -11,11 +11,10 @@ import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
 import org.hibernate.query.criteria.JpaFromImplementor;
 import org.hibernate.query.criteria.JpaPathSourceImplementor;
-import org.hibernate.sqm.parser.criteria.tree.from.JpaRoot;
+import org.hibernate.query.sqm.produce.spi.criteria.from.JpaRoot;
 
 /**
  * Hibernate implementation of the JPA {@link Root} contract

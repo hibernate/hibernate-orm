@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria;
 
-import org.hibernate.sqm.parser.criteria.tree.select.JpaSelection;
+import org.hibernate.query.sqm.produce.spi.criteria.select.JpaSelection;
 
 /**
  * Hibernate ORM specialization of the JPA {@link javax.persistence.criteria.Selection}

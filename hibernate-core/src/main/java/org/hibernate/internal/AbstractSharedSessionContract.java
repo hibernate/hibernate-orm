@@ -78,8 +78,8 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.sqm.SemanticQueryInterpreter;
-import org.hibernate.sqm.query.SqmStatement;
+import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
+import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
  * Base class for SharedSessionContract/SharedSessionContractImplementor
@@ -577,7 +577,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		delayedAfterCompletion();
 
 		try {
-			final SqmStatement sqm = SemanticQueryInterpreter.interpret( queryString, getFactory() );
+			final SqmStatement sqm = SemanticQueryProducer.interpret( queryString, getFactory() );
 
 			final QuerySqmImpl query = new QuerySqmImpl(
 					queryString,
@@ -629,7 +629,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
 	protected <T> QueryImplementor<T> buildNamedQuery(NamedQueryDefinition namedQueryDefinition, Class<T> resultType) {
 		final String queryString = namedQueryDefinition.getQueryString();
-		final SqmStatement sqm = SemanticQueryInterpreter.interpret( queryString, getFactory() );
+		final SqmStatement sqm = SemanticQueryProducer.interpret( queryString, getFactory() );
 		final QuerySqmImpl query = new QuerySqmImpl(
 				queryString,
 				sqm,

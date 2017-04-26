@@ -8,7 +8,7 @@
 /**
  * Models the concepts in the SQL {@code <from clause>}.
  * <p/>
- * The lowest level of this modeling is the {@link org.hibernate.sql.ast.from.TableBinding}
+ * The lowest level of this modeling is the {@link org.hibernate.sql.ast.from.TableReference}
  * contract which models a table as known to the Hibernate persisters.  This might be a physical table
  * or a derived table (Hibernate subselect mapping).
  * <p/>

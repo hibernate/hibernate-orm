@@ -6,12 +6,12 @@
  */
 package org.hibernate.persister.collection.spi;
 
-import org.hibernate.persister.embedded.spi.EmbeddedReference;
+import org.hibernate.persister.embedded.spi.EmbeddedValuedNavigable;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
  */
-public interface CollectionIndexEmbedded<J> extends CollectionIndex<J,EmbeddedType<J>>, EmbeddedReference<J> {
+public interface CollectionIndexEmbedded<J> extends CollectionIndex<J,EmbeddedType<J>>, EmbeddedValuedNavigable<J> {
 
 }

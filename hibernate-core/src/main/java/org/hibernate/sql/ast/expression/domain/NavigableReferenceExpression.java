@@ -9,8 +9,9 @@ package org.hibernate.sql.ast.expression.domain;
 import java.util.List;
 
 import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.expression.Expression;
-import org.hibernate.sql.ast.from.ColumnBinding;
+import org.hibernate.sql.ast.from.ColumnReference;
 
 /**
  * An expression that is a reference to some part of the application domain model.
@@ -27,5 +28,5 @@ public interface NavigableReferenceExpression extends Expression {
 
 	NavigablePath getNavigablePath();
 
-	List<ColumnBinding> getColumnBindings();
+	List<ColumnReference> getColumnBindings();
 }

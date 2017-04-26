@@ -54,6 +54,7 @@ import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.Metamodel;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.ObjectDeletedException;
@@ -147,7 +148,6 @@ import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.MultiLoadOptions;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -169,7 +169,6 @@ import org.hibernate.resource.transaction.backend.jta.internal.synchronization.E
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-import org.hibernate.sqm.SemanticQueryInterpreter;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 
@@ -1060,7 +1059,7 @@ public final class SessionImpl
 	@Override
 	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
 		if ( log.isDebugEnabled() ) {
-			EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
+			EntityPersister persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
 			log.debugf( "Initializing proxy: %s", MessageHelper.infoString( persister, id, getFactory() ) );
 		}
 		LoadEvent event = loadEvent;
@@ -1558,7 +1557,7 @@ public final class SessionImpl
 
 	@Override
 	public Object instantiate(String entityName, Serializable id) throws HibernateException {
-		return instantiate( getFactory().getMetamodel().entityPersister( entityName ), id );
+		return instantiate( getFactory().getTypeConfiguration().findEntityPersister( entityName ), id );
 	}
 
 	/**
@@ -1584,7 +1583,7 @@ public final class SessionImpl
 	public EntityPersister getEntityPersister(final String entityName, final Object object) {
 		checkOpenOrWaitingForAutoClose();
 		if ( entityName == null ) {
-			return getFactory().getMetamodel().entityPersister( guessEntityName( object ) );
+			return getFactory().getTypeConfiguration().findEntityPersister( guessEntityName( object ) );
 		}
 		else {
 			// try block is a hack around fact that currently tuplizers are not
@@ -1593,7 +1592,7 @@ public final class SessionImpl
 			// influence this decision if we were not able to based on the
 			// given entityName
 			try {
-				return getFactory().getMetamodel().entityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
+				return getFactory().getTypeConfiguration().findEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
 			}
 			catch (HibernateException e) {
 				try {
@@ -1876,7 +1875,7 @@ public final class SessionImpl
 		}
 
 		final String entityName = criteria.getEntityOrClassName();
-		final EntityPersister entityPersister = getFactory().getMetamodel().entityPersister( entityName );
+		final EntityPersister entityPersister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
 
 		// Verify the entity actually has a natural id, needed for legacy support as NaturalIdentifier criteria
 		// queries did no natural id validation
@@ -1923,7 +1922,7 @@ public final class SessionImpl
 	}
 
 	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
-		EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
+		EntityPersister persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
 		if ( !( persister instanceof OuterJoinLoadable ) ) {
 			throw new MappingException( "class persister is not OuterJoinLoadable: " + entityName );
 		}
@@ -1974,7 +1973,7 @@ public final class SessionImpl
 						if ( entityName == null ) {
 							throw new IllegalArgumentException( "Could not resolve entity-name [" + object + "]" );
 						}
-						getSessionFactory().getMetamodel().entityPersister( object.getClass() );
+						getSessionFactory().getTypeConfiguration().findEntityPersister( object.getClass() );
 					}
 					catch (HibernateException e) {
 						throw new IllegalArgumentException( "Not an entity [" + object.getClass() + "]", e );
@@ -2007,7 +2006,7 @@ public final class SessionImpl
 			if ( !HibernateProxy.class.isInstance( object ) && persistenceContext.getEntry( object ) == null ) {
 				// check if it is an entity -> if not throw an exception (per JPA)
 				try {
-					getSessionFactory().getMetamodel().entityPersister( entityName );
+					getSessionFactory().getTypeConfiguration().findEntityPersister( entityName );
 				}
 				catch (HibernateException e) {
 					throw new IllegalArgumentException( "Not an entity [" + entityName + "] : " + object );
@@ -3508,7 +3507,7 @@ public final class SessionImpl
 		try {
 			return new QuerySqmImpl<>(
 					"<criteria>",
-					SemanticQueryInterpreter.interpret( criteriaQuery, getSessionFactory() ),
+					getSessionFactory().getSemanticQueryProducer().interpret( criteriaQuery ),
 					criteriaQuery.getResultType(),
 					this
 			);
@@ -3524,7 +3523,7 @@ public final class SessionImpl
 		try {
 			return new QuerySqmImpl<>(
 					"<criteria>",
-					SemanticQueryInterpreter.interpret( criteriaUpdate, getSessionFactory() ),
+					getSessionFactory().getSemanticQueryProducer().interpret( criteriaUpdate ),
 					null,
 					this
 			);
@@ -3540,7 +3539,7 @@ public final class SessionImpl
 		try {
 			return new QuerySqmImpl<>(
 					"<criteria>",
-					SemanticQueryInterpreter.interpret( criteriaDelete, getSessionFactory() ),
+					getSessionFactory().getSemanticQueryProducer().interpret( criteriaDelete ),
 					null,
 					this
 			);
@@ -3726,7 +3725,7 @@ public final class SessionImpl
 	}
 
 	@Override
-	public MetamodelImplementor getMetamodel() {
+	public Metamodel getMetamodel() {
 		return getFactory().getMetamodel();
 	}
 

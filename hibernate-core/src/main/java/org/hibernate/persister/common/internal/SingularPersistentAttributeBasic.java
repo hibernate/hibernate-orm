@@ -15,7 +15,7 @@ import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.ConvertibleNavigable;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.sqm.domain.SqmSingularAttribute;
+import org.hibernate.query.sqm.domain.SqmSingularAttribute;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.BasicType;
 

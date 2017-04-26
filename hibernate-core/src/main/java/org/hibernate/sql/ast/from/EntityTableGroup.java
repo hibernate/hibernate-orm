@@ -9,11 +9,11 @@ package org.hibernate.sql.ast.from;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.DomainReferenceImplementor;
+import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.ast.expression.domain.EntityReferenceExpression;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.select.Selectable;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
@@ -28,28 +28,28 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	private final EntityPersister persister;
 
 	private EntityReferenceExpression selectableExpression;
-	private List<ColumnBinding> identifierColumnBindings;
+	private List<ColumnReference> identifierColumnBindings;
 
 	public EntityTableGroup(
 			TableSpace tableSpace,
 			String uid,
 			String aliasBase,
 			EntityPersister persister,
-			PropertyPath propertyPath) {
+			NavigablePath propertyPath) {
 		super( tableSpace, uid, aliasBase, propertyPath );
 
 		this.persister = persister;
 	}
 
-	public List<ColumnBinding> resolveIdentifierColumnBindings() {
+	public List<ColumnReference> resolveIdentifierColumnBindings() {
 		if ( identifierColumnBindings == null ) {
 			identifierColumnBindings = buildIdentifierColumnBindings();
 		}
 		return identifierColumnBindings;
 	}
 
-	private List<ColumnBinding> buildIdentifierColumnBindings() {
-		final List<ColumnBinding> bindings = new ArrayList<>();
+	private List<ColumnReference> buildIdentifierColumnBindings() {
+		final List<ColumnReference> bindings = new ArrayList<>();
 
 		for ( Column column : persister.getHierarchy().getIdentifierDescriptor().getColumns() ) {
 			bindings.add( resolveColumnBinding( column ) );
@@ -76,8 +76,13 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	}
 
 	@Override
-	public DomainReferenceImplementor getNavigable() {
+	public Navigable getNavigable() {
 		return persister;
+	}
+
+	@Override
+	public NavigablePath getNavigablePath() {
+		return super.getNavigablePath();
 	}
 
 	@Override
@@ -95,7 +100,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	}
 
 	@Override
-	public List<ColumnBinding> getColumnBindings() {
+	public List<ColumnReference> getColumnBindings() {
 		return getSelectedExpression().getColumnBindings();
 	}
 

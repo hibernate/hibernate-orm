@@ -17,7 +17,7 @@ import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.sql.exec.results.process.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.exec.results.process.spi.RowProcessingState;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
-import org.hibernate.sqm.query.expression.Compatibility;
+import org.hibernate.query.sqm.tree.expression.Compatibility;
 
 /**
  * @author Steve Ebersole

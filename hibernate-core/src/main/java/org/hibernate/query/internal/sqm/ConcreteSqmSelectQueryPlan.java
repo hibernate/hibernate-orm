@@ -36,8 +36,8 @@ import org.hibernate.sql.exec.internal.TupleElementImpl;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.RowTransformer;
 import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.sqm.query.SqmSelectStatement;
-import org.hibernate.sqm.query.select.SqmSelection;
+import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 /**
  * @author Steve Ebersole

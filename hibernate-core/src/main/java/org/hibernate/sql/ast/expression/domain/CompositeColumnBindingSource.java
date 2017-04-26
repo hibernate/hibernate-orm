@@ -12,8 +12,8 @@ import java.util.List;
 
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Table;
-import org.hibernate.sql.ast.from.ColumnBinding;
-import org.hibernate.sql.ast.from.TableBinding;
+import org.hibernate.sql.ast.from.ColumnReference;
+import org.hibernate.sql.ast.from.TableReference;
 import org.hibernate.sql.ast.from.TableGroup;
 
 /**
@@ -38,9 +38,9 @@ public class CompositeColumnBindingSource implements ColumnBindingSource {
 	}
 
 	@Override
-	public TableBinding locateTableBinding(Table table) {
+	public TableReference locateTableBinding(Table table) {
 		for ( ColumnBindingSource component : components ) {
-			final TableBinding tableBinding = component.locateTableBinding( table );
+			final TableReference tableBinding = component.locateTableBinding( table );
 			if ( tableBinding != null ) {
 				return tableBinding;
 			}
@@ -50,9 +50,9 @@ public class CompositeColumnBindingSource implements ColumnBindingSource {
 	}
 
 	@Override
-	public ColumnBinding resolveColumnBinding(Column column) {
+	public ColumnReference resolveColumnBinding(Column column) {
 		for ( ColumnBindingSource component : components ) {
-			final ColumnBinding columnBinding = component.resolveColumnBinding( column );
+			final ColumnReference columnBinding = component.resolveColumnBinding( column );
 			if ( columnBinding != null ) {
 				return columnBinding;
 			}

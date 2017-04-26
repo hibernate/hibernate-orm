@@ -6,7 +6,7 @@
  */
 package org.hibernate.type.descriptor.java.internal;
 
-import org.hibernate.sqm.NotYetImplementedException;
+import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.type.descriptor.java.spi.AbstractManagedJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;

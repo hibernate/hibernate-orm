@@ -11,6 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
+import javax.persistence.metamodel.PluralAttribute;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
@@ -23,21 +25,21 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.common.NavigableRole;
-import org.hibernate.persister.common.spi.ExpressableType;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.PluralPersistentAttribute;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.exec.spi.CollectionLoader;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.sql.ast.from.CollectionTableGroup;
 import org.hibernate.sql.ast.from.TableSpace;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sql.convert.spi.TableGroupProducer;
-import org.hibernate.sqm.query.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -91,7 +93,7 @@ public interface CollectionPersister<O,C,E>
 			PersisterCreationContext.class
 	};
 
-	// todo : in terms of org.hibernate.sqm.domain.SqmNavigableSource.findNavigable() impl, be sure to only recognize:
+	// todo : in terms of SqmNavigableSource.findNavigable() impl, be sure to only recognize:
 	//			1) key
 	//			2) index
 	//			3) element
@@ -100,6 +102,31 @@ public interface CollectionPersister<O,C,E>
 	//			6) indices
 
 	void finishInitialization(Collection collectionBinding, PersisterCreationContext creationContext);
+
+
+	/**
+	 * Classifications of the plurality.  See {@link CollectionElement.ElementClassification}
+	 * and {@link CollectionIndex.IndexClassification} for classification of the element and
+	 * index/key, respectively.
+	 */
+	enum CollectionClassification {
+		SET( PluralAttribute.CollectionType.SET ),
+		LIST( PluralAttribute.CollectionType.LIST ),
+		MAP( PluralAttribute.CollectionType.MAP ),
+		BAG( PluralAttribute.CollectionType.COLLECTION );
+
+		private final PluralAttribute.CollectionType jpaClassification;
+
+		CollectionClassification(PluralAttribute.CollectionType jpaClassification) {
+			this.jpaClassification = jpaClassification;
+		}
+
+		public PluralAttribute.CollectionType toJpaClassification() {
+			return jpaClassification;
+		}
+	}
+
+	CollectionClassification getCollectionClassification();
 
 	NavigableRole getNavigableRole();
 
@@ -111,14 +138,38 @@ public interface CollectionPersister<O,C,E>
 		return getNavigableRole().getFullPath();
 	}
 
+	@Override
+	default CollectionPersister<O, C, E> getCollectionPersister() {
+		return this;
+	}
+
+	/**
+	 * Access information about the FK mapping to the "owner" of this collection
+	 */
 	CollectionKey getForeignKeyDescriptor();
+
+	/**
+	 * Access to the collection identifier, if it has one (idbag).  If not, will
+	 * return {@code null}.
+	 */
 	CollectionId getIdDescriptor();
 
-	@Override
-	CollectionElement getElementReference();
+	/**
+	 * Access to information about the collection's elements
+	 */
+	CollectionElement getElementDescriptor();
 
-	@Override
-	CollectionIndex getIndexReference();
+	/**
+	 * Access to information about the collection's index (list/array) or key (map).
+	 * Will return {@code null} if the collection is not indexed (is not a map, list
+	 * or array).
+	 */
+	CollectionIndex getIndexDescriptor();
+
+	/**
+	 * @todo (6.0) what args?
+	 */
+	CollectionLoader getLoader();
 
 	@Override
 	org.hibernate.type.spi.CollectionType<O,C,E> getOrmType();

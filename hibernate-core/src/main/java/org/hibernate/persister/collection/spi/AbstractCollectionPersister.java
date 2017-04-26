@@ -43,7 +43,7 @@ import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.sqm.domain.SqmPluralAttributeElement.ElementClassification;
+import org.hibernate.query.sqm.domain.SqmPluralAttributeElement.ElementClassification;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;

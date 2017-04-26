@@ -6,8 +6,7 @@
  */
 package org.hibernate.query.criteria;
 
-import org.hibernate.query.criteria.internal.ValueHandlerFactory;
-import org.hibernate.sqm.parser.criteria.tree.JpaTupleElement;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaTupleElement;
 
 /**
  * Hibernate ORM specialization of the JPA {@link javax.persistence.TupleElement}

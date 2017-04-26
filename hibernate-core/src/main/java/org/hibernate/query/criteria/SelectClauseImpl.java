@@ -7,8 +7,8 @@
 package org.hibernate.query.criteria;
 
 import org.hibernate.Incubating;
-import org.hibernate.sqm.parser.criteria.tree.select.JpaSelectClause;
-import org.hibernate.sqm.parser.criteria.tree.select.JpaSelection;
+import org.hibernate.query.sqm.produce.spi.criteria.select.JpaSelectClause;
+import org.hibernate.query.sqm.produce.spi.criteria.select.JpaSelection;
 
 /**
  * Models a grouping of selections in a JPA CriteriaQuery.

@@ -15,9 +15,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.persister.common.spi.ExpressableType;
+import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
-import org.hibernate.sqm.domain.type.SqmDomainTypeBasic;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
@@ -31,7 +31,8 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  *
  * @since 6.0
  */
-public interface BasicType<T> extends Type<T>, SqmDomainTypeBasic, ExpressableType<T>, ParameterizedType, javax.persistence.metamodel.BasicType<T> {
+public interface BasicType<T>
+		extends Type<T>, ExpressableType<T>, ParameterizedType, javax.persistence.metamodel.BasicType<T>, BasicValuedExpressableType<T> {
 	BasicTypeRegistry.Key getRegistryKey();
 
 	@Override
@@ -77,11 +78,6 @@ public interface BasicType<T> extends Type<T>, SqmDomainTypeBasic, ExpressableTy
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;
-	}
-
-	@Override
-	default SqmDomainTypeBasic getExportedDomainType() {
-		return this;
 	}
 
 	@Override

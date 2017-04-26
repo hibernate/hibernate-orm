@@ -14,7 +14,6 @@ import java.util.stream.Stream;
 import javax.persistence.EntityGraph;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
@@ -23,7 +22,6 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
@@ -44,15 +42,14 @@ import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.collections.streams.StreamUtils;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
+import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.sqm.ConsumerContext;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -68,7 +65,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface SessionFactoryImplementor
-		extends Mapping, SessionFactory, QueryParameterBindingTypeResolver, ConsumerContext {
+		extends Mapping, SessionFactory, QueryParameterBindingTypeResolver {
 	/**
 	 * Get the UUID for this SessionFactory.  The value is generated as a {@link java.util.UUID}, but kept
 	 * as a String.
@@ -165,14 +162,6 @@ public interface SessionFactoryImplementor
 	 * @todo make a Service ?
 	 */
 	CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
-
-	/**
-	 * @deprecated (since 5.2) use {@link #getMetamodel()} -> {@link MetamodelImplementor#getEntityNameResolvers()}
-	 */
-	@Deprecated
-	default Iterable<EntityNameResolver> iterateEntityNameResolvers() {
-		return getMetamodel().getEntityNameResolvers();
-	}
 
 	QueryInterpretations getQueryInterpretations();
 
@@ -334,9 +323,10 @@ public interface SessionFactoryImplementor
 	@SuppressWarnings("deprecation")
 	Settings getSettings();
 
+	SemanticQueryProducer getSemanticQueryProducer();
 
 	@Override
-	MetamodelImplementor getMetamodel();
+	Metamodel getMetamodel();
 
 
 

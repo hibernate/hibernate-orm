@@ -10,9 +10,9 @@ package org.hibernate.sql.ast.predicate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.sql.ast.expression.Expression;
 import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.sqm.Helper;
 
 /**
  * @author Steve Ebersole
@@ -31,7 +31,7 @@ public class InListPredicate implements Predicate {
 	}
 
 	public InListPredicate(Expression testExpression, Expression... listExpressions) {
-		this( testExpression, Helper.toExpandableList( listExpressions ) );
+		this( testExpression, ArrayHelper.toExpandableList( listExpressions ) );
 	}
 
 	public InListPredicate(

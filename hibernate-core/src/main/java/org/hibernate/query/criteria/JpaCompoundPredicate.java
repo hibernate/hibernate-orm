@@ -16,8 +16,8 @@ import javax.persistence.criteria.Predicate;
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
-import org.hibernate.sqm.parser.criteria.tree.CriteriaVisitor;
-import org.hibernate.sqm.query.predicate.SqmPredicate;
+import org.hibernate.query.sqm.produce.spi.criteria.CriteriaVisitor;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
 /**
  * Represents a grouping of JPA {@link Predicate} nodes as either a

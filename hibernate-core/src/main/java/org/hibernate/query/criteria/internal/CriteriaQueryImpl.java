@@ -22,8 +22,8 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.sqm.parser.criteria.tree.JpaCriteriaQuery;
-import org.hibernate.sqm.parser.criteria.tree.JpaQuerySpec;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaCriteriaQuery;
+import org.hibernate.query.sqm.produce.spi.criteria.JpaQuerySpec;
 
 import org.jboss.logging.Logger;
 

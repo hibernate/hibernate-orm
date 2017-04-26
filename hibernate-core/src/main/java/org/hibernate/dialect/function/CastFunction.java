@@ -46,7 +46,7 @@ public class CastFunction implements SQLFunction {
 		}
 		final String type = (String) args.get( 1 );
 		final int jdbcTypeCode = factory.getMetamodel().getTypeConfiguration().resolveCastTargetType( type ).getColumnMapping().getSqlTypeDescriptor().getSqlType();
-		String sqlType = factory.getDialect().getCastTypeName( jdbcTypeCode );
+		String sqlType = factory.getJdbcServices().getJdbcEnvironment().getDialect().getCastTypeName( jdbcTypeCode );
 		if ( sqlType == null ) {
 			//TODO: never reached, since getExplicitHibernateTypeName() actually throws an exception!
 			sqlType = type;

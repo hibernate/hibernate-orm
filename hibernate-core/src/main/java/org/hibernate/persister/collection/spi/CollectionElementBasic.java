@@ -8,7 +8,7 @@ package org.hibernate.persister.collection.spi;
 
 import org.hibernate.persister.common.spi.ConvertibleNavigable;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.sqm.domain.SqmPluralAttributeElementBasic;
+import org.hibernate.query.sqm.domain.SqmPluralAttributeElementBasic;
 
 /**
  * @author Steve Ebersole

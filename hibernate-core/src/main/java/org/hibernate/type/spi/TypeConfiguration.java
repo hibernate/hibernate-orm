@@ -1105,7 +1105,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 				embeddablePersister.getJavaTypeDescriptor(),
 				k -> ConcurrentHashMap.newKeySet()
 		);
-		roles.add( embeddablePersister.getNavigableName() );
+		roles.add( embeddablePersister.getNavigableRole().getNavigableName() );
 	}
 
 	private void registerEntityNameResolvers(EntityPersister persister) {

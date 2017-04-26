@@ -14,9 +14,9 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Access to Hibernate's runtime metamodel (domain model mapping) information,
- * as an extension to the JPA {@link javax.persistence.metamodel.Metamodel}
- * contract.
+ * Hibernate's extension to the JPA {@link javax.persistence.metamodel.Metamodel}
+ * contract.  Most calls simply get delegated in some form to {@link TypeConfiguration}
+ * via {@link #getTypeConfiguration()}
  *
  * @author Steve Ebersole
  */

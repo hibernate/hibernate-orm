@@ -33,7 +33,7 @@ ext {
             ant:            'org.apache.ant:ant:1.8.2',
 
             // Antlr
-            antlr:          'antlr:antlr:2.7.7',
+            antlr:          'org.antlr:antlr4:4.5.2',
 
             // Annotations
             commons_annotations: 'org.hibernate.common:hibernate-commons-annotations:5.0.1.Final',

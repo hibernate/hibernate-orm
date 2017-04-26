@@ -25,7 +25,8 @@ import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Hibernate implementation of the JPA {@link javax.persistence.metamodel.Metamodel} contract.
+ * Standard implementation of Hibernate's extension to the JPA
+ * {@link javax.persistence.metamodel.Metamodel} contract.
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard

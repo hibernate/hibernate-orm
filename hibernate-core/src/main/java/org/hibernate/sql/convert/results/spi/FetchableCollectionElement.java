@@ -6,14 +6,12 @@
  */
 package org.hibernate.sql.convert.results.spi;
 
-import org.hibernate.loader.plan.spi.CollectionFetchableElement;
-
 /**
  * A collection element which is a fetchable and is therefore also a {@link FetchParent}.
  *
  * @author Steve Ebersole
  */
-public interface FetchableCollectionElement extends FetchParent, CollectionFetchableElement {
+public interface FetchableCollectionElement extends FetchParent {
 	/**
 	 * Reference back to the collection to which this element belongs
 	 *

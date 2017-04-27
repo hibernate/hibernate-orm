@@ -35,7 +35,7 @@ public class EntityReturnReader implements ReturnReader {
 			throw new AssertionFailure(
 					String.format(
 							"Could not locate EntityReferenceProcessingState for root entity return [%s (%s)]",
-							entityReturn.getPropertyPath().getFullPath(),
+							entityReturn.getNavigablePath().getFullPath(),
 							entityReturn.getEntityPersister().getEntityName()
 					)
 			);

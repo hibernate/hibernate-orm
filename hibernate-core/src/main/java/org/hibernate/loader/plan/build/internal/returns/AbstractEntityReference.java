@@ -67,7 +67,7 @@ public abstract class AbstractEntityReference extends AbstractExpandingFetchSour
 				this,
 				compositeQuerySpace,
 				(EmbeddedType) getEntityPersister().getIdentifierType(),
-				getPropertyPath().append( EntityPersister.ENTITY_ID )
+				getNavigablePath().append( EntityPersister.ENTITY_ID )
 		);
 	}
 
@@ -77,7 +77,7 @@ public abstract class AbstractEntityReference extends AbstractExpandingFetchSour
 				this,
 				compositeQuerySpace,
 				(EmbeddedType) getEntityPersister().getIdentifierType(),
-				getPropertyPath().append( EntityPersister.ENTITY_ID )
+				getNavigablePath().append( EntityPersister.ENTITY_ID )
 		);
 	}
 

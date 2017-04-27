@@ -28,7 +28,7 @@ public class AnyAttributeFetchImpl extends AbstractAnyReference implements AnyAt
 			FetchSource fetchSource,
 			AssociationAttributeDefinition fetchedAttribute,
 			FetchStrategy fetchStrategy) {
-		super( fetchSource.getPropertyPath().append( fetchedAttribute.getName() ) );
+		super( fetchSource.getNavigablePath().append( fetchedAttribute.getName() ) );
 
 		this.fetchSource = fetchSource;
 		this.fetchedAttribute = fetchedAttribute;

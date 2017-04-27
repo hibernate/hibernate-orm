@@ -29,7 +29,7 @@ public class NestedCompositeAttributeFetchImpl extends AbstractCompositeFetch im
 		super(
 				compositeQuerySpace,
 				allowCollectionFetches,
-				source.getPropertyPath().append( fetchedAttributeDefinition.getName() )
+				source.getNavigablePath().append( fetchedAttributeDefinition.getName() )
 		);
 		this.source = source;
 		this.fetchedAttributeDefinition = fetchedAttributeDefinition;

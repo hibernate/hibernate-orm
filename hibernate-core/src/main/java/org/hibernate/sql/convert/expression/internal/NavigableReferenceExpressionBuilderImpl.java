@@ -7,33 +7,32 @@
 
 package org.hibernate.sql.convert.expression.internal;
 
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
-import org.hibernate.persister.common.spi.SingularOrmAttribute;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
 import org.hibernate.sql.ast.expression.domain.CompositeColumnBindingSource;
-import org.hibernate.sql.ast.expression.domain.NavigableReferenceExpression;
 import org.hibernate.sql.ast.expression.domain.EntityReferenceExpression;
+import org.hibernate.sql.ast.expression.domain.NavigableReferenceExpression;
 import org.hibernate.sql.ast.expression.domain.PluralAttributeElementReferenceExpression;
 import org.hibernate.sql.ast.expression.domain.SingularAttributeReferenceExpression;
 import org.hibernate.sql.ast.from.CollectionTableGroup;
 import org.hibernate.sql.ast.from.TableGroup;
-import org.hibernate.sql.convert.expression.spi.DomainReferenceExpressionBuilder;
-import org.hibernate.sqm.query.expression.domain.PluralAttributeBinding;
-import org.hibernate.sqm.query.expression.domain.PluralAttributeElementBinding;
-import org.hibernate.sqm.query.expression.domain.SingularAttributeBinding;
+import org.hibernate.sql.convert.expression.spi.NavigableReferenceExpressionBuilder;
 
 /**
  * @author Steve Ebersole
  */
-public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpressionBuilder {
+public class NavigableReferenceExpressionBuilderImpl implements NavigableReferenceExpressionBuilder {
 	private final boolean shallow;
 
-	public DomainReferenceExpressionBuilderImpl(boolean shallow) {
+	public NavigableReferenceExpressionBuilderImpl(boolean shallow) {
 		this.shallow = shallow;
 	}
 
@@ -47,11 +46,11 @@ public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpr
 			BuildingContext buildingContext,
 			ColumnBindingSource columnBindingSource,
 			EntityPersister entityPersister,
-			PropertyPath propertyPath) {
+			NavigablePath navigablePath) {
 		return new EntityReferenceExpression(
 				columnBindingSource,
 				entityPersister,
-				propertyPath,
+				navigablePath,
 				shallow
 		);
 	}
@@ -59,11 +58,11 @@ public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpr
 	@Override
 	public NavigableReferenceExpression buildSingularAttributeExpression(
 			BuildingContext buildingContext,
-			SingularAttributeBinding singularAttributeBinding) {
-		final PropertyPath propertyPath = PersisterHelper.convert( singularAttributeBinding.getPropertyPath() );
+			SqmSingularAttributeReference singularAttributeBinding) {
+		final NavigablePath propertyPath = singularAttributeBinding.getNavigablePath();
 
-		if ( singularAttributeBinding.getAttribute() instanceof SingularPersistentAttributeEntity ) {
-			final SingularPersistentAttributeEntity entityTypedAttribute = (SingularPersistentAttributeEntity) singularAttributeBinding.getAttribute();
+		if ( singularAttributeBinding.getReferencedNavigable() instanceof SingularPersistentAttributeEntity ) {
+			final SingularPersistentAttributeEntity entityTypedAttribute = (SingularPersistentAttributeEntity) singularAttributeBinding.getReferencedNavigable();
 			if ( singularAttributeBinding.getFromElement() == null ) {
 				throw new IllegalStateException( "entity-typed SingularAttributeBinding did not contain SqmFrom element" );
 			}
@@ -75,7 +74,7 @@ public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpr
 			);
 		}
 		else {
-			final SingularOrmAttribute singularAttribute = (SingularOrmAttribute) singularAttributeBinding.getAttribute();
+			final SingularPersistentAttribute singularAttribute = singularAttributeBinding.getReferencedNavigable();
 			final TableGroup tableGroup = buildingContext.getFromClauseIndex().findResolvedTableGroup( singularAttributeBinding.getLhs() );
 
 			if ( singularAttributeBinding.getFromElement() == null ) {
@@ -101,11 +100,11 @@ public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpr
 	@Override
 	public NavigableReferenceExpression buildPluralAttributeExpression(
 			BuildingContext buildingContext,
-			PluralAttributeBinding attributeBinding) {
+			SqmPluralAttributeReference pluralAttributeReference) {
 
 		CollectionTableGroup tableGroup = null;
-		if ( attributeBinding.getFromElement() != null ) {
-			tableGroup = (CollectionTableGroup) buildingContext.getFromClauseIndex().findResolvedTableGroup( attributeBinding.getFromElement() );
+		if ( pluralAttributeReference.getFromElement() != null ) {
+			tableGroup = (CollectionTableGroup) buildingContext.getFromClauseIndex().findResolvedTableGroup( pluralAttributeReference.getFromElement() );
 		}
 
 		if ( tableGroup == null ) {
@@ -118,14 +117,16 @@ public class DomainReferenceExpressionBuilderImpl implements DomainReferenceExpr
 
 	@Override
 	public NavigableReferenceExpression buildPluralAttributeElementReferenceExpression(
-			PluralAttributeElementBinding binding,
+			SqmCollectionElementReference collectionElementReference,
 			TableGroup resolvedTableGroup,
-			PropertyPath propertyPath) {
-		final CollectionPersister collectionPersister = (CollectionPersister) binding.getPluralAttributeReference();
+			NavigablePath navigablePath) {
+		final CollectionPersister collectionPersister = collectionElementReference.getSourceReference()
+				.getReferencedNavigable()
+				.getCollectionPersister();
 		return new PluralAttributeElementReferenceExpression(
 				collectionPersister,
 				resolvedTableGroup,
-				propertyPath,
+				navigablePath,
 				isShallow()
 		);
 	}

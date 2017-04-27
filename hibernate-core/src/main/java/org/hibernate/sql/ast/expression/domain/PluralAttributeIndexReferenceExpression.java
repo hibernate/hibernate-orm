@@ -11,11 +11,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.collection.spi.CollectionIndex;
+import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.DomainReferenceImplementor;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.from.ColumnReference;
 import org.hibernate.sql.ast.from.TableGroup;
@@ -33,7 +32,7 @@ import org.hibernate.type.spi.Type;
 public class PluralAttributeIndexReferenceExpression implements NavigableReferenceExpression {
 	private final CollectionPersister collectionPersister;
 	private final ColumnBindingSource columnBindingSource;
-	private final PropertyPath propertyPath;
+	private final NavigablePath navigablePath;
 
 	private final List<ColumnReference> columnBindings;
 	private final Selectable selectable;
@@ -41,10 +40,10 @@ public class PluralAttributeIndexReferenceExpression implements NavigableReferen
 	public PluralAttributeIndexReferenceExpression(
 			CollectionPersister collectionPersister,
 			TableGroup columnBindingSource,
-			PropertyPath propertyPath) {
+			NavigablePath navigablePath) {
 		this.collectionPersister = collectionPersister;
 		this.columnBindingSource = columnBindingSource;
-		this.propertyPath = propertyPath;
+		this.navigablePath = navigablePath;
 
 		// todo : why are these casts to Column needed?  indexReference.getColumns() returns List<Column>
 
@@ -95,7 +94,7 @@ public class PluralAttributeIndexReferenceExpression implements NavigableReferen
 
 
 	@Override
-	public DomainReferenceImplementor getNavigable() {
+	public CollectionIndex getNavigable() {
 		return collectionPersister.getIndexDescriptor();
 	}
 
@@ -115,8 +114,8 @@ public class PluralAttributeIndexReferenceExpression implements NavigableReferen
 	}
 
 	@Override
-	public PropertyPath getNavigablePath() {
-		return propertyPath;
+	public NavigablePath getNavigablePath() {
+		return navigablePath;
 	}
 
 	@Override

@@ -29,7 +29,7 @@ public class CompositeAttributeFetchImpl extends AbstractCompositeFetch implemen
 		super(
 				compositeQuerySpace,
 				allowCollectionFetches,
-				source.getPropertyPath().append( attributeDefinition.getName() )
+				source.getNavigablePath().append( attributeDefinition.getName() )
 		);
 		this.source = source;
 		this.fetchedAttribute = attributeDefinition;

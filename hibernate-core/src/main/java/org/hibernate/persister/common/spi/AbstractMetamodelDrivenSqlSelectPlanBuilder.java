@@ -292,7 +292,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 
 	private void pushToStack(ExpandingFetchSource fetchSource) {
 		log.trace( "Pushing fetch source to stack : " + fetchSource );
-		propertyPathStack.push( fetchSource.getPropertyPath() );
+		propertyPathStack.push( fetchSource.getNavigablePath() );
 		fetchSourceStack.addFirst( fetchSource );
 	}
 
@@ -917,7 +917,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		}
 //
 //		@Override
-//		public PropertyPath getPropertyPath() {
+//		public PropertyPath getNavigablePath() {
 //			return null;  //To change body of implemented methods use File | Settings | File Templates.
 //		}
 //

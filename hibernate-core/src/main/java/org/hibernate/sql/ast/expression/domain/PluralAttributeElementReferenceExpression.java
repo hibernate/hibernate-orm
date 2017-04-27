@@ -11,11 +11,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.spi.CollectionElement;
 import org.hibernate.persister.collection.spi.CollectionElementEntity;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.from.ColumnReference;
 import org.hibernate.sql.ast.from.TableGroup;
@@ -34,7 +34,7 @@ import org.hibernate.type.spi.Type;
 public class PluralAttributeElementReferenceExpression implements NavigableReferenceExpression {
 	private final CollectionPersister collectionPersister;
 	private final ColumnBindingSource columnBindingSource;
-	private final PropertyPath propertyPath;
+	private final NavigablePath navigablePath;
 
 	private final Selectable selectable;
 	private final List<ColumnReference> columnBindings;
@@ -42,11 +42,11 @@ public class PluralAttributeElementReferenceExpression implements NavigableRefer
 	public PluralAttributeElementReferenceExpression(
 			CollectionPersister collectionPersister,
 			TableGroup columnBindingSource,
-			PropertyPath propertyPath,
+			NavigablePath navigablePath,
 			boolean isShallow) {
 		this.collectionPersister = collectionPersister;
 		this.columnBindingSource = columnBindingSource;
-		this.propertyPath = propertyPath;
+		this.navigablePath = navigablePath;
 
 		// todo : why are these casts to Column needed? elementReference.getColumns() returns List<Column>
 
@@ -118,8 +118,8 @@ public class PluralAttributeElementReferenceExpression implements NavigableRefer
 	}
 
 	@Override
-	public PropertyPath getNavigablePath() {
-		return propertyPath;
+	public NavigablePath getNavigablePath() {
+		return navigablePath;
 	}
 
 	@Override

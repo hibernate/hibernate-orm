@@ -66,7 +66,7 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 	}
 
 	@Override
-	public final PropertyPath getPropertyPath() {
+	public final PropertyPath getNavigablePath() {
 		return propertyPath;
 	}
 

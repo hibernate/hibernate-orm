@@ -33,7 +33,7 @@ public class BidirectionalEntityReferenceImpl implements BidirectionalEntityRefe
 			AssociationAttributeDefinition fetchedAttribute,
 			EntityReference targetEntityReference) {
 		this.targetEntityReference = targetEntityReference;
-		this.propertyPath = fetchSource.getPropertyPath().append( fetchedAttribute.getName() );
+		this.propertyPath = fetchSource.getNavigablePath().append( fetchedAttribute.getName() );
 	}
 
 	public EntityReference getTargetEntityReference() {
@@ -41,7 +41,7 @@ public class BidirectionalEntityReferenceImpl implements BidirectionalEntityRefe
 	}
 
 	@Override
-	public PropertyPath getPropertyPath() {
+	public PropertyPath getNavigablePath() {
 		return propertyPath;
 	}
 

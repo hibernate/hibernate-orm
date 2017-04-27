@@ -30,6 +30,6 @@ public interface FetchAttribute extends Fetch {
 	 */
 	@Override
 	default NavigablePath getNavigablePath() {
-		return getFetchParent().getNavigablePath().append( getFetchedAttributeDescriptor().getNavigableName() );
+		return getFetchParent().getNavigablePath().append( getFetchedAttributeDescriptor().getAttributeName() );
 	}
 }

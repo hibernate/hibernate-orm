@@ -30,7 +30,7 @@ public class EntityAttributeFetchImpl extends AbstractEntityReference implements
 			ExpandingEntityQuerySpace entityQuerySpace) {
 		super(
 				entityQuerySpace,
-				fetchSource.getPropertyPath().append( fetchedAttribute.getName() )
+				fetchSource.getNavigablePath().append( fetchedAttribute.getName() )
 		);
 
 		this.fetchSource = fetchSource;

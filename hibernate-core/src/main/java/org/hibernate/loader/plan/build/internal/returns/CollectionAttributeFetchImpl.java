@@ -31,7 +31,7 @@ public class CollectionAttributeFetchImpl extends AbstractCollectionReference im
 			ExpandingCollectionQuerySpace collectionQuerySpace) {
 		super(
 				collectionQuerySpace,
-				fetchSource.getPropertyPath().append( fetchedAttribute.getName() ),
+				fetchSource.getNavigablePath().append( fetchedAttribute.getName() ),
 				QuerySpaceHelper.INSTANCE.shouldIncludeJoin( fetchStrategy )
 
 		);
@@ -106,7 +106,7 @@ public class CollectionAttributeFetchImpl extends AbstractCollectionReference im
 //				// should not happen
 //				throw new IllegalStateException(
 //						"Could not locate owner's EntityKey during attempt to read collection element fro JDBC row : " +
-//								getPropertyPath().getFullPath()
+//								getNavigablePath().getFullPath()
 //				);
 //			}
 //

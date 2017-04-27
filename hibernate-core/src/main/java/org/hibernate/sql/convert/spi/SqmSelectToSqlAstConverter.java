@@ -82,8 +82,8 @@ import org.hibernate.sql.ast.select.SqlSelection;
 import org.hibernate.sql.ast.sort.SortSpecification;
 import org.hibernate.sql.convert.ConversionException;
 import org.hibernate.sql.convert.SyntaxException;
-import org.hibernate.sql.convert.expression.internal.DomainReferenceExpressionBuilderImpl;
-import org.hibernate.sql.convert.expression.spi.DomainReferenceExpressionBuilder;
+import org.hibernate.sql.convert.expression.internal.NavigableReferenceExpressionBuilderImpl;
+import org.hibernate.sql.convert.expression.spi.NavigableReferenceExpressionBuilder;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sql.convert.internal.SqlSelectPlanImpl;
@@ -175,7 +175,7 @@ import org.jboss.logging.Logger;
 @SuppressWarnings("unchecked")
 public class SqmSelectToSqlAstConverter
 		extends BaseSemanticQueryWalker
-		implements DomainReferenceExpressionBuilder.BuildingContext, ReturnResolutionContext {
+		implements NavigableReferenceExpressionBuilder.BuildingContext, ReturnResolutionContext {
 	private static final Logger log = Logger.getLogger( SqmSelectToSqlAstConverter.class );
 
 	private final Stack<NavigablePath> navigablePathStack = new Stack<>();
@@ -213,7 +213,7 @@ public class SqmSelectToSqlAstConverter
 
 	private final FromClauseIndex fromClauseIndex = new FromClauseIndex();
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
-	private final Stack<DomainReferenceExpressionBuilder> domainExpressionBuilderStack = new Stack<>();
+	private final Stack<NavigableReferenceExpressionBuilder> domainExpressionBuilderStack = new Stack<>();
 	private final Stack<Clause> currentClauseStack = new Stack<>();
 	private final Stack<QuerySpec> querySpecStack = new Stack<>();
 	private int querySpecDepth = 0;
@@ -868,7 +868,7 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	private void pushDomainExpressionBuilder(boolean shallow) {
-		domainExpressionBuilderStack.push( new DomainReferenceExpressionBuilderImpl( shallow ) );
+		domainExpressionBuilderStack.push( new NavigableReferenceExpressionBuilderImpl( shallow ) );
 	}
 
 	@Override
@@ -1088,7 +1088,7 @@ public class SqmSelectToSqlAstConverter
 //		return getCurrentDomainReferenceExpressionBuilder().buildPluralAttributeElementReferenceExpression(
 //				binding,
 //				resolvedTableGroup,
-//				PersisterHelper.convert( binding.getPropertyPath() )
+//				PersisterHelper.convert( binding.getNavigablePath() )
 //		);
 //	}
 
@@ -1219,7 +1219,7 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public DomainReferenceExpressionBuilder getCurrentDomainReferenceExpressionBuilder() {
+	public NavigableReferenceExpressionBuilder getCurrentDomainReferenceExpressionBuilder() {
 		return domainExpressionBuilderStack.getCurrent();
 	}
 

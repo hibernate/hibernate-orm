@@ -110,7 +110,7 @@ public class ReturnGraphTreePrinter {
 				entityReference.getClass().getSimpleName(),
 				entityReference.getEntityPersister().getEntityName(),
 				entityReference.getQuerySpaceUid(),
-				entityReference.getPropertyPath().getFullPath()
+				entityReference.getNavigablePath().getFullPath()
 		);
 	}
 
@@ -131,7 +131,7 @@ public class ReturnGraphTreePrinter {
 				compositeFetch.getClass().getSimpleName(),
 				compositeFetch.getFetchedType().getReturnedClass().getName(),
 				compositeFetch.getQuerySpaceUid(),
-				compositeFetch.getPropertyPath().getFullPath()
+				compositeFetch.getNavigablePath().getFullPath()
 		);
 	}
 

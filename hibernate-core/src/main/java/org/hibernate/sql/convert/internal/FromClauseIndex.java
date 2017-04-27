@@ -16,6 +16,8 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.sql.ast.from.FromClause;
 import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.convert.ConversionException;
@@ -136,7 +138,7 @@ public class FromClauseIndex {
 		tableGroupBySqmFromXref.put( binding.getFromElement(), group );
 	}
 
-	public TableGroup findResolvedTableGroup(DomainReferenceBinding binding) {
+	public TableGroup findResolvedTableGroup(SqmNavigableReference binding) {
 		if ( binding == null ) {
 			// todo : or error?
 			return null;
@@ -144,10 +146,10 @@ public class FromClauseIndex {
 
 		TableGroup tableGroup = findResolvedTableGroup( binding.getFromElement() );
 		if ( tableGroup == null ) {
-			if ( binding instanceof SingularAttributeBinding ) {
+			if ( binding instanceof SqmSingularAttributeReference ) {
 				// it might be a composite...
-				final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) binding;
-				final SingularAttributeReference.SingularAttributeClassification classification = singularAttributeBinding
+				final SqmSingularAttributeReference singularAttributeBinding = (SqmSingularAttributeReference) binding;
+				final SqmSingularAttributeReference.SingularAttributeClassification classification = singularAttributeBinding
 						.getAttribute()
 						.getAttributeTypeClassification();
 				if ( classification == SingularAttributeReference.SingularAttributeClassification.EMBEDDED ) {

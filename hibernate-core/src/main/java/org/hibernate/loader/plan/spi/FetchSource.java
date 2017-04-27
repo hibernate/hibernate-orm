@@ -9,6 +9,7 @@ package org.hibernate.loader.plan.spi;
 import java.util.List;
 
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * Contract for a FetchSource (aka, the thing that owns the fetched attribute).
@@ -24,14 +25,14 @@ public interface FetchSource {
 	 *
 	 * @return The property path
 	 */
-	public PropertyPath getPropertyPath();
+	NavigablePath getNavigablePath();
 
 	/**
 	 * Get the UID for this fetch source's query space.
 	 *
 	 * @return The query space UID.
 	 */
-	public String getQuerySpaceUid();
+	String getQuerySpaceUid();
 
 	/**
 	 * Retrieve the fetches owned by this fetch source.
@@ -45,7 +46,7 @@ public interface FetchSource {
 	 *
 	 * @return The owned bidirectional entity references.
 	 */
-	public BidirectionalEntityReference[] getBidirectionalEntityReferences();
+	BidirectionalEntityReference[] getBidirectionalEntityReferences();
 
 	/**
 	 * Resolve the "current" {@link EntityReference}, or null if none.
@@ -60,5 +61,5 @@ public interface FetchSource {
 	 * .
 	 * @see org.hibernate.loader.plan.spi.Fetch#getSource().
 	 */
-	public EntityReference resolveEntityReference();
+	EntityReference resolveEntityReference();
 }

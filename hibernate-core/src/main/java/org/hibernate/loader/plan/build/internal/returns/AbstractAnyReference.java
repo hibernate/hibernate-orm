@@ -33,7 +33,7 @@ public abstract class AbstractAnyReference implements FetchSource {
 	}
 
 	@Override
-	public PropertyPath getPropertyPath() {
+	public PropertyPath getNavigablePath() {
 		return propertyPath;
 	}
 

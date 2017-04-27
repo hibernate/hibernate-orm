@@ -6,8 +6,8 @@
  */
 package org.hibernate.sql.convert.results.spi;
 
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -25,7 +25,7 @@ public interface FetchCollectionAttribute extends FetchAttribute, CollectionRefe
 	CollectionType getFetchedType();
 
 	@Override
-	default PropertyPath getNavigablePath() {
-		return getSource().getPropertyPath().append( getFetchedAttributeDescriptor().getAttributeName() );
+	default NavigablePath getNavigablePath() {
+		return getSource().getNavigablePath().append( getFetchedAttributeDescriptor().getAttributeName() );
 	}
 }

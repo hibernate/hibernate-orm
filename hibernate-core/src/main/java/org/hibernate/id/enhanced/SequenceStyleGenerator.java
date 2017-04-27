@@ -362,15 +362,35 @@ public class SequenceStyleGenerator
 	 * @return The adjusted increment size.
 	 */
 	protected int determineAdjustedIncrementSize(String optimizationStrategy, int incrementSize) {
-		if ( incrementSize > 1 && StandardOptimizerDescriptor.NONE.getExternalName().equals( optimizationStrategy ) ) {
-			LOG.honoringOptimizerSetting(
-					StandardOptimizerDescriptor.NONE.getExternalName(),
-					INCREMENT_PARAM,
-					incrementSize
-			);
-			incrementSize = 1;
+		final int resolvedIncrementSize;
+		if ( Math.abs( incrementSize ) > 1 &&
+				StandardOptimizerDescriptor.NONE.getExternalName().equals( optimizationStrategy ) ) {
+			if ( incrementSize < -1 ) {
+				resolvedIncrementSize = -1;
+				LOG.honoringOptimizerSetting(
+						StandardOptimizerDescriptor.NONE.getExternalName(),
+						INCREMENT_PARAM,
+						incrementSize,
+						"negative",
+						resolvedIncrementSize
+				);
+			}
+			else {
+				// incrementSize > 1
+				resolvedIncrementSize = 1;
+				LOG.honoringOptimizerSetting(
+						StandardOptimizerDescriptor.NONE.getExternalName(),
+						INCREMENT_PARAM,
+						incrementSize,
+						"positive",
+						resolvedIncrementSize
+				);
+			}
 		}
-		return incrementSize;
+		else {
+			resolvedIncrementSize = incrementSize;
+		}
+		return resolvedIncrementSize;
 	}
 
 	/**

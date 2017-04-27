@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.query.spi;
 
 import java.util.Collections;
@@ -15,7 +14,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
@@ -145,8 +143,8 @@ public class NamedQueryRepository {
 		this.procedureCallMementoMap = Collections.unmodifiableMap( copy );
 	}
 
-	public Map<String,HibernateException> checkNamedQueries(QueryPlanCache queryPlanCache) {
-		Map<String,HibernateException> errors = new HashMap<String,HibernateException>();
+	public Map<String,HibernateException> checkNamedQueries(QueryEngine queryPlanCache) {
+		Map<String,HibernateException> errors = new HashMap<>();
 
 		// Check named HQL queries
 		log.debugf( "Checking %s named HQL queries", namedQueryDefinitionMap.size() );

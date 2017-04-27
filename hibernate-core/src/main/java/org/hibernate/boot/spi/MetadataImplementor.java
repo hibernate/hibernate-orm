@@ -12,6 +12,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.mapping.MappedSuperclass;
@@ -37,7 +38,7 @@ public interface MetadataImplementor extends Metadata, Mapping {
 
 	TypeConfiguration getTypeConfiguration();
 
-	NamedQueryRepository buildNamedQueryRepository(SessionFactoryImpl sessionFactory);
+	NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory);
 
 	void validate() throws MappingException;
 

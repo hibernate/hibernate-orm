@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.query.spi;
 
 import java.util.Iterator;
@@ -24,14 +23,16 @@ public interface SelectQueryPlan<R> {
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings);
 
-	Iterator<R> performIterate(
-			SharedSessionContractImplementor persistenceContext,
-			QueryOptions queryOptions,
-			QueryParameterBindings inputParameterBindings);
-
 	ScrollableResultsImplementor performScroll(
 			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings,
 			ScrollMode scrollMode);
+
+	// todo (6.0) : drop support for Query#iterate per team consensus
+
+	Iterator<R> performIterate(
+			SharedSessionContractImplementor persistenceContext,
+			QueryOptions queryOptions,
+			QueryParameterBindings inputParameterBindings);
 }

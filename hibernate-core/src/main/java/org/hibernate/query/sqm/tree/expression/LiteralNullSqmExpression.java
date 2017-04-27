@@ -6,16 +6,15 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.type.SqmDomainTypeBasic;
-import org.hibernate.query.sqm.domain.type.SqmDomainType;
-import org.hibernate.query.sqm.domain.SqmExpressableType;
 
 /**
  * @author Steve Ebersole
  */
 public class LiteralNullSqmExpression implements LiteralSqmExpression<Void> {
-	private SqmExpressableType injectedExpressionType;
+	private ExpressableType injectedExpressionType;
 
 	public LiteralNullSqmExpression() {
 		injectedExpressionType = NULL_TYPE;
@@ -27,12 +26,12 @@ public class LiteralNullSqmExpression implements LiteralSqmExpression<Void> {
 	}
 
 	@Override
-	public SqmExpressableType getExpressionType() {
+	public ExpressableType getExpressionType() {
 		return injectedExpressionType;
 	}
 
 	@Override
-	public SqmExpressableType getInferableType() {
+	public ExpressableType getInferableType() {
 		return getExpressionType();
 	}
 
@@ -46,9 +45,14 @@ public class LiteralNullSqmExpression implements LiteralSqmExpression<Void> {
 		return "<literal-null>";
 	}
 
-	private static SqmDomainTypeBasic NULL_TYPE = new SqmDomainTypeBasic() {
+	private static BasicValuedExpressableType NULL_TYPE = new BasicValuedExpressableType() {
 		@Override
-		public SqmDomainTypeBasic getExportedDomainType() {
+		public String getTypeName() {
+			return "<null-type>";
+		}
+
+		@Override
+		public PersistenceType getPersistenceType() {
 			return null;
 		}
 
@@ -56,20 +60,10 @@ public class LiteralNullSqmExpression implements LiteralSqmExpression<Void> {
 		public Class getJavaType() {
 			return void.class;
 		}
-
-		@Override
-		public String asLoggableText() {
-			return "NULL";
-		}
 	};
 
 	@Override
-	public SqmDomainType getExportedDomainType() {
-		return injectedExpressionType.getExportedDomainType();
-	}
-
-	@Override
-	public void impliedType(SqmExpressableType type) {
+	public void impliedType(ExpressableType type) {
 		injectedExpressionType = type;
 	}
 }

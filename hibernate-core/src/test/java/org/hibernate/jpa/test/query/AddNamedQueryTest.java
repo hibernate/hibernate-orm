@@ -69,12 +69,12 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 		// first, lets check the underlying stored query def
 		SessionFactoryImplementor sfi = entityManagerFactory().unwrap( SessionFactoryImplementor.class );
-		NamedQueryDefinition def = sfi.getNamedQueryRepository().getNamedQueryDefinition( name );
+		NamedQueryDefinition def = sfi.getQueryEngine().getNamedQueryRepository().getNamedQueryDefinition( name );
 		assertEquals( LockMode.OPTIMISTIC, def.getLockOptions().getLockMode() );
 
 		// then lets create a query by name and check its setting
 		q = em.createNamedQuery( name );
-		assertEquals( LockMode.OPTIMISTIC, q.unwrap( org.hibernate.Query.class ).getLockOptions().getLockMode() );
+		assertEquals( LockMode.OPTIMISTIC, q.unwrap( org.hibernate.query.Query.class ).getLockOptions().getLockMode() );
 		assertEquals( LockModeType.OPTIMISTIC, q.getLockMode() );
 
 		em.getTransaction().commit();
@@ -96,12 +96,12 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 		// first, lets check the underlying stored query def
 		SessionFactoryImplementor sfi = entityManagerFactory().unwrap( SessionFactoryImplementor.class );
-		NamedQueryDefinition def = sfi.getNamedQueryRepository().getNamedQueryDefinition( name );
+		NamedQueryDefinition def = sfi.getQueryEngine().getNamedQueryRepository().getNamedQueryDefinition( name );
 		assertEquals( FlushMode.COMMIT, def.getFlushMode() );
 
 		// then lets create a query by name and check its setting
 		q = em.createNamedQuery( name );
-		assertEquals( FlushMode.COMMIT, q.unwrap( org.hibernate.Query.class ).getHibernateFlushMode() );
+		assertEquals( FlushMode.COMMIT, q.unwrap( org.hibernate.query.Query.class ).getHibernateFlushMode() );
 		assertEquals( FlushModeType.COMMIT, q.getFlushMode() );
 
 		em.getTransaction().commit();

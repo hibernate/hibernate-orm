@@ -17,10 +17,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.SynchronizationType;
-import javax.persistence.criteria.CriteriaBuilder;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
@@ -43,7 +41,6 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
-import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
@@ -53,9 +50,9 @@ import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.NamedQueryRepository;
-import org.hibernate.query.spi.QueryInterpretations;
-import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.spi.Type;
@@ -226,13 +223,13 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Interceptor getInterceptor() {
-		return delegate.getInterceptor();
+	public QueryEngine getQueryEngine() {
+		return delegate.getQueryEngine();
 	}
 
 	@Override
-	public QueryPlanCache getQueryPlanCache() {
-		return delegate.getQueryPlanCache();
+	public Interceptor getInterceptor() {
+		return delegate.getInterceptor();
 	}
 
 	@Override
@@ -401,16 +398,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Iterable<EntityNameResolver> iterateEntityNameResolvers() {
-		return delegate.getTypeConfiguration().getEntityNameResolvers();
-	}
-
-	@Override
-	public QueryInterpretations getQueryInterpretations() {
-		return delegate.getQueryInterpretations();
-	}
-
-	@Override
 	public EntityPersister locateEntityPersister(Class byClass) {
 		return delegate.locateEntityPersister( byClass );
 	}
@@ -491,7 +478,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public CriteriaBuilder getCriteriaBuilder() {
+	public HibernateCriteriaBuilder getCriteriaBuilder() {
 		return delegate.getCriteriaBuilder();
 	}
 
@@ -518,10 +505,5 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public AuditReader openAuditReader() {
 		return delegate.openAuditReader();
-	}
-
-	@Override
-	public SemanticQueryProducer getSemanticQueryProducer() {
-		return delegate.getSemanticQueryProducer();
 	}
 }

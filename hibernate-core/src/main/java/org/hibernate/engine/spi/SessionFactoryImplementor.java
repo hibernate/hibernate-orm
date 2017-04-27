@@ -46,6 +46,7 @@ import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.NamedQueryRepository;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
@@ -118,19 +119,19 @@ public interface SessionFactoryImplementor
 	@Deprecated
 	Interceptor getInterceptor();
 
-	/**
-	 * Access to the cachres of HQL/JPQL and native query plans.
-	 *
-	 * @return The query plan cache
-	 */
-	QueryPlanCache getQueryPlanCache();
+	QueryEngine getQueryEngine();
 
 	/**
-	 * Provides access to the named query repository
-	 *
-	 * @return The repository for named query definitions
+	 * @deprecated Use {@link #getQueryEngine()} -> {@link QueryEngine#getNamedQueryRepository()}
+	 * instead
 	 */
-	NamedQueryRepository getNamedQueryRepository();
+	@Deprecated
+	default NamedQueryRepository getNamedQueryRepository() {
+		return getQueryEngine().getNamedQueryRepository();
+	}
+	//
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 	/**
 	 * Retrieve fetch profile by name.
@@ -162,8 +163,6 @@ public interface SessionFactoryImplementor
 	 * @todo make a Service ?
 	 */
 	CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
-
-	QueryInterpretations getQueryInterpretations();
 
 	/**
 	 * Contract for resolving this SessionFactory on deserialization
@@ -229,7 +228,7 @@ public interface SessionFactoryImplementor
 	 */
 	@Deprecated
 	default NamedQueryDefinition getNamedQuery(String queryName) {
-		return getNamedQueryRepository().getNamedQueryDefinition( queryName );
+		return getQueryEngine().getNamedQueryRepository().getNamedQueryDefinition( queryName );
 	}
 
 	/**
@@ -237,7 +236,7 @@ public interface SessionFactoryImplementor
 	 */
 	@Deprecated
 	default void registerNamedQueryDefinition(String name, NamedQueryDefinition definition) {
-		getNamedQueryRepository().registerNamedQueryDefinition( name, definition );
+		getQueryEngine().getNamedQueryRepository().registerNamedQueryDefinition( name, definition );
 	}
 
 	/**
@@ -245,7 +244,7 @@ public interface SessionFactoryImplementor
 	 */
 	@Deprecated
 	default NamedSQLQueryDefinition getNamedSQLQuery(String queryName) {
-		return getNamedQueryRepository().getNamedSQLQueryDefinition( queryName );
+		return getQueryEngine().getNamedQueryRepository().getNamedSQLQueryDefinition( queryName );
 	}
 
 	/**
@@ -253,7 +252,7 @@ public interface SessionFactoryImplementor
 	 */
 	@Deprecated
 	default void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition) {
-		getNamedQueryRepository().registerNamedSQLQueryDefinition( name, definition );
+		getQueryEngine().getNamedQueryRepository().registerNamedSQLQueryDefinition( name, definition );
 	}
 
 	/**
@@ -261,7 +260,7 @@ public interface SessionFactoryImplementor
 	 */
 	@Deprecated
 	default ResultSetMappingDefinition getResultSetMapping(String name) {
-		return getNamedQueryRepository().getResultSetMappingDefinition( name );
+		return getQueryEngine().getNamedQueryRepository().getResultSetMappingDefinition( name );
 	}
 
 	/**
@@ -322,8 +321,6 @@ public interface SessionFactoryImplementor
 	@Deprecated
 	@SuppressWarnings("deprecation")
 	Settings getSettings();
-
-	SemanticQueryProducer getSemanticQueryProducer();
 
 	@Override
 	Metamodel getMetamodel();

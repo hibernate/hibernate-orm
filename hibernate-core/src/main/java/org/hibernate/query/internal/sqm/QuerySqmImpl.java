@@ -225,7 +225,7 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 		if ( queryOptions.getEntityGraphQueryHint() != null ) {
 			hints.put(
 					queryOptions.getEntityGraphQueryHint().getHintName(),
-					queryOptions.getEntityGraphQueryHint().getOriginEntityGraph()
+					queryOptions.getEntityGraphQueryHint().getHintedGraph()
 			);
 		}
 	}

@@ -77,7 +77,7 @@ public class NamedProcedureCallDefinition {
 	}
 
 	public ProcedureCallMemento toMemento(
-			final SessionFactoryImpl sessionFactory,
+			final SessionFactoryImplementor sessionFactory,
 			final Map<String,ResultSetMappingDefinition> resultSetMappingDefinitions) {
 		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<NativeSQLQueryReturn>();
 		final Set<String> collectedQuerySpaces = new HashSet<String>();
@@ -174,7 +174,7 @@ public class NamedProcedureCallDefinition {
 			return parameterStrategy;
 		}
 
-		public List<ParameterMemento> toMementos(SessionFactoryImpl sessionFactory) {
+		public List<ParameterMemento> toMementos(SessionFactoryImplementor sessionFactory) {
 			final List<ParameterMemento> mementos = new ArrayList<ParameterMemento>();
 			for ( ParameterDefinition definition : parameterDefinitions ) {
 				mementos.add(definition.toMemento( sessionFactory ));
@@ -231,8 +231,8 @@ public class NamedProcedureCallDefinition {
 			this.explicitPassNullSetting = explicitPassNullSetting;
 		}
 
-		@SuppressWarnings("UnnecessaryUnboxing")
-		public ParameterMemento toMemento(SessionFactoryImpl sessionFactory) {
+		@SuppressWarnings({"UnnecessaryUnboxing", "unchecked"})
+		public ParameterMemento toMemento(SessionFactoryImplementor sessionFactory) {
 			final boolean initialPassNullSetting = explicitPassNullSetting != null
 					? explicitPassNullSetting.booleanValue()
 					: sessionFactory.getSessionFactoryOptions().isProcedureParameterNullPassingEnabled();
@@ -242,7 +242,7 @@ public class NamedProcedureCallDefinition {
 					name,
 					parameterMode,
 					type,
-					sessionFactory.getTypeResolver().heuristicType( type.getName() ),
+					sessionFactory.getTypeConfiguration().getBasicTypeRegistry().getBasicType( type ),
 					initialPassNullSetting
 			);
 		}

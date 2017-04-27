@@ -33,6 +33,7 @@ import org.hibernate.persister.common.spi.PluralPersistentAttribute;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.embedded.spi.EmbeddedValuedNavigable;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.Clause;
@@ -94,7 +95,6 @@ import org.hibernate.sql.convert.results.spi.ReturnDynamicInstantiation;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sql.exec.results.process.internal.SqlSelectionImpl;
 import org.hibernate.query.sqm.consume.spi.BaseSemanticQueryWalker;
-import org.hibernate.query.sqm.domain.SqmExpressableType;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.SqmQuerySpec;
@@ -563,7 +563,7 @@ public class SqmSelectToSqlAstConverter
 			return null;
 		}
 		else {
-			return (EntityGraphImplementor) queryOptions.getEntityGraphQueryHint().getOriginEntityGraph();
+			return (EntityGraphImplementor) queryOptions.getEntityGraphQueryHint().getHintedGraph();
 		}
 	}
 
@@ -637,7 +637,7 @@ public class SqmSelectToSqlAstConverter
 					final SingularPersistentAttributeEntity boundAttributeAsEntity = (SingularPersistentAttributeEntity) boundAttribute;
 					final FetchEntityAttributeImpl fetch = new FetchEntityAttributeImpl(
 							fetchParent,
-							currentNavigablePath().append( attributeBinding.getReferencedNavigable().getNavigableName() ),
+							currentNavigablePath().append( attributeBinding.getReferencedNavigable().getName() ),
 							attributeJoin.getUniqueIdentifier(),
 							boundAttributeAsEntity,
 							boundAttributeAsEntity.getAssociatedEntityPersister(),
@@ -713,7 +713,7 @@ public class SqmSelectToSqlAstConverter
 		);
 	}
 
-	private Type extractOrmType(SqmExpressableType expressableType, Type fallbackType) {
+	private Type extractOrmType(ExpressableType expressableType, Type fallbackType) {
 		final Type resolvedType = extractOrmType( expressableType );
 		if ( resolvedType != null ) {
 			return resolvedType;
@@ -722,7 +722,7 @@ public class SqmSelectToSqlAstConverter
 	}
 
 
-	private Type extractOrmType(SqmExpressableType expressableType) {
+	private Type extractOrmType(ExpressableType expressableType) {
 		return (Type) expressableType.getExportedDomainType();
 	}
 

@@ -22,6 +22,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
@@ -44,7 +45,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	// covariant overrides
 
 	@Override
-	QueryProducerImplementor getSession();
+	SharedSessionContractImplementor getSession();
 
 	@Override
 	QueryImplementor<R> setHibernateFlushMode(FlushMode flushMode);

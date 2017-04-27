@@ -3507,7 +3507,7 @@ public final class SessionImpl
 		try {
 			return new QuerySqmImpl<>(
 					"<criteria>",
-					getSessionFactory().getSemanticQueryProducer().interpret( criteriaQuery ),
+					getSessionFactory().getQueryEngine().getSemanticQueryProducer().interpret( criteriaQuery ),
 					criteriaQuery.getResultType(),
 					this
 			);
@@ -3523,7 +3523,7 @@ public final class SessionImpl
 		try {
 			return new QuerySqmImpl<>(
 					"<criteria>",
-					getSessionFactory().getSemanticQueryProducer().interpret( criteriaUpdate ),
+					getSessionFactory().getQueryEngine().getSemanticQueryProducer().interpret( criteriaUpdate ),
 					null,
 					this
 			);
@@ -3539,7 +3539,7 @@ public final class SessionImpl
 		try {
 			return new QuerySqmImpl<>(
 					"<criteria>",
-					getSessionFactory().getSemanticQueryProducer().interpret( criteriaDelete ),
+					getSessionFactory().getQueryEngine().getSemanticQueryProducer().interpret( criteriaDelete ),
 					null,
 					this
 			);
@@ -3610,7 +3610,7 @@ public final class SessionImpl
 	public StoredProcedureQuery createNamedStoredProcedureQuery(String name) {
 		checkOpen();
 		try {
-			final ProcedureCallMemento memento = getFactory().getNamedQueryRepository().getNamedProcedureCallMemento( name );
+			final ProcedureCallMemento memento = getFactory().getQueryEngine().getNamedQueryRepository().getNamedProcedureCallMemento( name );
 			if ( memento == null ) {
 				throw new IllegalArgumentException( "No @NamedStoredProcedureQuery was found with that name : " + name );
 			}

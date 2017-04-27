@@ -43,8 +43,6 @@ import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
@@ -71,6 +69,7 @@ import org.hibernate.query.internal.sqm.QuerySqmImpl;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
@@ -78,8 +77,6 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
-import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
  * Base class for SharedSessionContract/SharedSessionContractImplementor
@@ -577,7 +574,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		delayedAfterCompletion();
 
 		try {
-			final SqmStatement sqm = SemanticQueryProducer.interpret( queryString, getFactory() );
+			final SqmStatement sqm = getFactory().getQueryEngine().getSemanticQueryProducer().interpret( queryString );
 
 			final QuerySqmImpl query = new QuerySqmImpl(
 					queryString,
@@ -613,12 +610,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		// todo : apply stored setting at the JPA Query level too
 
-		final NamedQueryDefinition namedQueryDefinition = getFactory().getNamedQueryRepository().getNamedQueryDefinition( queryName );
+		final NamedQueryDefinition namedQueryDefinition = getFactory().getQueryEngine().getNamedQueryRepository().getNamedQueryDefinition( queryName );
 		if ( namedQueryDefinition != null ) {
 			return buildNamedQuery( namedQueryDefinition, resultType );
 		}
 
-		final NamedSQLQueryDefinition nativeQueryDefinition = getFactory().getNamedQueryRepository().getNamedSQLQueryDefinition( queryName );
+		final NamedSQLQueryDefinition nativeQueryDefinition = getFactory().getQueryEngine().getNamedQueryRepository().getNamedSQLQueryDefinition( queryName );
 		if ( nativeQueryDefinition != null ) {
 			return createNativeQuery( nativeQueryDefinition, resultType );
 		}
@@ -629,7 +626,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
 	protected <T> QueryImplementor<T> buildNamedQuery(NamedQueryDefinition namedQueryDefinition, Class<T> resultType) {
 		final String queryString = namedQueryDefinition.getQueryString();
-		final SqmStatement sqm = SemanticQueryProducer.interpret( queryString, getFactory() );
+		final SqmStatement sqm = getFactory().getQueryEngine().getSemanticQueryProducer().interpret( queryString );
 		final QuerySqmImpl query = new QuerySqmImpl(
 				queryString,
 				sqm,
@@ -693,7 +690,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		checkTransactionSynchStatus();
 		delayedAfterCompletion();
 
-		final NamedSQLQueryDefinition nativeQueryDefinition = factory.getNamedQueryRepository().getNamedSQLQueryDefinition( name );
+		final NamedSQLQueryDefinition nativeQueryDefinition = factory.getQueryEngine().getNamedQueryRepository().getNamedSQLQueryDefinition( name );
 		if ( nativeQueryDefinition != null ) {
 			return buildNamedNativeQuery( nativeQueryDefinition );
 		}
@@ -712,14 +709,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		applyQuerySettingsAndHints( query );
 
 		return query;
-	}
-
-	protected HQLQueryPlan getQueryPlan(String query, boolean shallow) throws HibernateException {
-		return getFactory().getQueryPlanCache().getHQLQueryPlan( query, shallow, getLoadQueryInfluencers().getEnabledFilters() );
-	}
-
-	protected NativeSQLQueryPlan getNativeQueryPlan(NativeSQLQuerySpecification spec) throws HibernateException {
-		return getFactory().getQueryPlanCache().getNativeSQLQueryPlan( spec );
 	}
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
@@ -751,7 +740,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			queryReturns = namedQueryDefinition.getQueryReturns();
 		}
 		else if ( namedQueryDefinition.getResultSetRef() != null ) {
-			final ResultSetMappingDefinition rsMapping = getFactory().getNamedQueryRepository().getResultSetMappingDefinition( namedQueryDefinition.getResultSetRef() );
+			final ResultSetMappingDefinition rsMapping = getFactory().getQueryEngine().getNamedQueryRepository().getResultSetMappingDefinition( namedQueryDefinition.getResultSetRef() );
 			queryReturns = rsMapping.getQueryReturns();
 		}
 		else {
@@ -856,7 +845,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public ProcedureCall getNamedProcedureCall(String name) {
 		checkOpen();
 
-		final ProcedureCallMemento memento = factory.getNamedQueryRepository().getNamedProcedureCallMemento( name );
+		final ProcedureCallMemento memento = factory.getQueryEngine().getNamedQueryRepository().getNamedProcedureCallMemento( name );
 		if ( memento == null ) {
 			throw new IllegalArgumentException(
 					"Could not find named stored procedure call with that registration name : " + name

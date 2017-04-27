@@ -137,6 +137,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 			SharedSessionContractImplementor session) {
 		if ( queryDef.getResultSetRef() != null ) {
 			ResultSetMappingDefinition definition = session.getFactory()
+					.getQueryEngine()
 					.getNamedQueryRepository()
 					.getResultSetMappingDefinition( queryDef.getResultSetRef() );
 			if ( definition == null ) {
@@ -218,7 +219,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 
 	@Override
 	public NativeQuery<R> setResultSetMapping(String name) {
-		ResultSetMappingDefinition mapping = getSession().getFactory().getNamedQueryRepository().getResultSetMappingDefinition( name );
+		ResultSetMappingDefinition mapping = getSession().getFactory().getQueryEngine().getNamedQueryRepository().getResultSetMappingDefinition( name );
 		if ( mapping == null ) {
 			throw new MappingException( "Unknown SqlResultSetMapping [" + name + "]" );
 		}
@@ -351,13 +352,13 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 
 		final QueryInterpretations.Key cacheKey = NativeInterpretationsKey.generateFrom( this );
 		if ( cacheKey != null ) {
-			queryPlan = getSession().getFactory().getQueryInterpretations().getSelectQueryPlan( cacheKey );
+			queryPlan = getSession().getFactory().getQueryEngine().getQueryInterpretations().getSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			queryPlan = new SelectQueryPlanImpl<>( this );
 			if ( cacheKey != null ) {
-				getSession().getFactory().getQueryInterpretations().cacheSelectQueryPlan( cacheKey, queryPlan );
+				getSession().getFactory().getQueryEngine().getQueryInterpretations().cacheSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}
 
@@ -399,13 +400,13 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 
 		final QueryInterpretations.Key cacheKey = NativeInterpretationsKey.generateFrom( this );
 		if ( cacheKey != null ) {
-			queryPlan = getSession().getFactory().getQueryInterpretations().getNonSelectQueryPlan( cacheKey );
+			queryPlan = getSession().getFactory().getQueryEngine().getQueryInterpretations().getNonSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			queryPlan = new NonSelectQueryPlanImpl( this );
 			if ( cacheKey != null ) {
-				getSession().getFactory().getQueryInterpretations().cacheNonSelectQueryPlan( cacheKey, queryPlan );
+				getSession().getFactory().getQueryEngine().getQueryInterpretations().cacheNonSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}
 

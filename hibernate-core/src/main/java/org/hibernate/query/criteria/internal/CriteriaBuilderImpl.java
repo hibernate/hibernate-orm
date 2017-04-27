@@ -110,9 +110,9 @@ import org.hibernate.query.sqm.produce.spi.criteria.select.JpaCompoundSelection;
  * @author Steve Ebersole
  */
 public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializable {
-	private final SessionFactoryImpl sessionFactory;
+	private final SessionFactoryImplementor sessionFactory;
 
-	public CriteriaBuilderImpl(SessionFactoryImpl sessionFactory) {
+	public CriteriaBuilderImpl(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 	}
 

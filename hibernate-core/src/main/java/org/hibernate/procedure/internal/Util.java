@@ -23,10 +23,11 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.select.SqlSelectable;
@@ -44,7 +45,6 @@ import org.hibernate.sql.exec.results.process.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
 import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.type.spi.BasicType;
 
 import org.jboss.logging.Logger;
@@ -198,7 +198,7 @@ public class Util {
 							false,
 							// todo : SqlSelection map
 							null,
-							new PropertyPath( resultClass.getName() ),
+							new NavigablePath( persister.getEntityName() ),
 							null
 
 					)
@@ -255,17 +255,13 @@ public class Util {
 				else if ( nativeQueryReturn instanceof NativeSQLQueryCollectionReturn ) {
 					final NativeSQLQueryCollectionReturn rtn = (NativeSQLQueryCollectionReturn) nativeQueryReturn;
 					final String role = rtn.getOwnerEntityName() + '.' + rtn.getOwnerProperty();
-					final CollectionPersister persister = context.getSessionFactory()
-							.getTypeConfiguration()
-							.findCollectionPersister( role );
+					final CollectionPersister persister = context.getSessionFactory().getTypeConfiguration().findCollectionPersister( role );
 					//context.addQueryReturns( ... );
 					throw new NotYetImplementedException( "Collection Returns not yet implemented" );
 				}
 				else if ( nativeQueryReturn instanceof NativeSQLQueryRootReturn ) {
 					final NativeSQLQueryRootReturn rtn = (NativeSQLQueryRootReturn) nativeQueryReturn;
-					final EntityPersister persister = context.getSessionFactory()
-							.getTypeConfiguration()
-							.findEntityPersister( rtn.getReturnEntityName() );
+					final EntityPersister persister = context.getSessionFactory().getTypeConfiguration().findEntityPersister( rtn.getReturnEntityName() );
 					final ReturnEntityImpl entityReturn = new ReturnEntityImpl(
 							null,
 							persister,
@@ -273,7 +269,7 @@ public class Util {
 							false,
 							// todo : SqlSelections
 							null,
-							new PropertyPath( rtn.getReturnEntityName() ),
+							new NavigablePath( persister.getEntityName() ),
 							null
 					);
 					context.addQueryReturns( entityReturn );

@@ -153,7 +153,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			}
 		};
 
-		// todo : SelectStatementInterpreter needs to account for the EntityGraph hint
+		// todo : SqmSelectToSqlAstConverter needs to account for the EntityGraph hint
 		final SqlSelectPlan interpretation = SqmSelectToSqlAstConverter.interpret(
 				sqm,
 				persistenceContext,
@@ -216,7 +216,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			}
 		};
 
-		// todo : SelectStatementInterpreter needs to account for the EntityGraph hint
+		// todo : SqmSelectToSqlAstConverter needs to account for the EntityGraph hint
 		final SqlSelectPlan interpretation = SqmSelectToSqlAstConverter.interpret(
 				sqm,
 				persistenceContext,

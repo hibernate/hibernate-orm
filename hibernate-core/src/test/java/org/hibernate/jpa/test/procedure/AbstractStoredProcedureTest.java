@@ -28,7 +28,7 @@ public abstract class AbstractStoredProcedureTest extends BaseEntityManagerFunct
 	public void testNamedStoredProcedureBinding() {
 		EntityManager em = getOrCreateEntityManager();
 		SessionFactoryImplementor sf = em.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
-		final ProcedureCallMementoImpl m1 = (ProcedureCallMementoImpl) sf.getNamedQueryRepository()
+		final ProcedureCallMementoImpl m1 = (ProcedureCallMementoImpl) sf.getQueryEngine().getNamedQueryRepository()
 				.getNamedProcedureCallMemento( "s1" );
 		assertNotNull( m1 );
 		assertEquals( "p1", m1.getProcedureName() );
@@ -49,7 +49,7 @@ public abstract class AbstractStoredProcedureTest extends BaseEntityManagerFunct
 
 
 
-		final ProcedureCallMementoImpl m2 = (ProcedureCallMementoImpl) sf.getNamedQueryRepository()
+		final ProcedureCallMementoImpl m2 = (ProcedureCallMementoImpl) sf.getQueryEngine().getNamedQueryRepository()
 				.getNamedProcedureCallMemento( "s2" );
 		assertNotNull( m2 );
 		assertEquals( "p2", m2.getProcedureName() );

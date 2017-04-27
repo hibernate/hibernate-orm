@@ -185,7 +185,7 @@ public class ProcedureCallImpl<R>
 
 					@Override
 					public ResultSetMappingDefinition findResultSetMapping(String name) {
-						return session.getFactory().getNamedQueryRepository().getResultSetMappingDefinition( name );
+						return session.getFactory().getQueryEngine().getNamedQueryRepository().getResultSetMappingDefinition( name );
 					}
 
 					@Override
@@ -238,11 +238,6 @@ public class ProcedureCallImpl<R>
 		for ( Map.Entry<String, Object> entry : memento.getHintsMap().entrySet() ) {
 			setHint( entry.getKey(), entry.getValue() );
 		}
-	}
-
-
-	public SharedSessionContractImplementor getSession() {
-		return (SharedSessionContractImplementor) super.getSession();
 	}
 
 	@Override

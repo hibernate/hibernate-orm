@@ -38,7 +38,7 @@ public class OnUpdateVisitor extends ReattachVisitor {
 		}
 
 		EventSource session = getSession();
-		CollectionPersister persister = session.getFactory().getCollectionPersister( type.getRole() );
+		CollectionPersister persister = session.getFactory().getTypeConfiguration().findCollectionPersister( type.getRole() );
 
 		final Serializable collectionKey = extractCollectionKeyFromOwner( persister );
 		if ( collection!=null && (collection instanceof PersistentCollection) ) {

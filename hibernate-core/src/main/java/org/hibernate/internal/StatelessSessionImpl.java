@@ -46,6 +46,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Gavin King
@@ -94,7 +95,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean substitute = Versioning.seedVersion(
 					state,
 					persister.getVersionProperty(),
-					persister.getVersionSupport(),
+					( (BasicType) persister.getVersionType() ).getVersionSupport(),
 					this
 			);
 			if ( substitute ) {
@@ -147,7 +148,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		Object oldVersion;
 		if ( persister.isVersioned() ) {
 			oldVersion = persister.getVersion( entity );
-			Object newVersion = Versioning.increment( oldVersion, persister.getVersionSupport(), this );
+			Object newVersion = Versioning
+					.increment( oldVersion, ( (BasicType) persister.getVersionType() ).getVersionSupport(), this );
 			Versioning.setVersion( state, newVersion, persister );
 			persister.setPropertyValues( entity, state );
 		}
@@ -179,7 +181,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object get(String entityName, Serializable id, LockMode lockMode) {
 		checkOpen();
 
-		Object result = getFactory().getMetamodel().entityPersister( entityName )
+		Object result = getFactory().getTypeConfiguration().findEntityPersister( entityName )
 				.load( id, null, getNullSafeLockMode( lockMode ), this );
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
@@ -258,7 +260,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			String entityName,
 			Serializable id) throws HibernateException {
 		checkOpen();
-		return getFactory().getMetamodel().entityPersister( entityName ).instantiate( id, this );
+		return getFactory().getTypeConfiguration().findEntityPersister( entityName ).instantiate( id, this );
 	}
 
 	@Override
@@ -268,7 +270,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean eager,
 			boolean nullable) throws HibernateException {
 		checkOpen();
-		EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
+		EntityPersister persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
 		// first, try to load it from the temp PC associated to this SS
 		Object loaded = temporaryPersistenceContext.getEntity( generateEntityKey( id, persister ) );
 		if ( loaded != null ) {
@@ -407,10 +409,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			throws HibernateException {
 		checkOpen();
 		if ( entityName == null ) {
-			return getFactory().getMetamodel().entityPersister( guessEntityName( object ) );
+			return getFactory().getTypeConfiguration().findEntityPersister( guessEntityName( object ) );
 		}
 		else {
-			return getFactory().getMetamodel().entityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
+			return getFactory().getTypeConfiguration().findEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
 		}
 	}
 
@@ -526,7 +528,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
 
 		checkOpen();
-		String[] implementors = getFactory().getMetamodel().getImplementors( criteriaImpl.getEntityOrClassName() );
+		String[] implementors = getFactory().getImplementors( criteriaImpl.getEntityOrClassName() );
 		int size = implementors.length;
 
 		CriteriaLoader[] loaders = new CriteriaLoader[size];
@@ -559,7 +561,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
-		EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
+		EntityPersister persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
 		if ( !( persister instanceof OuterJoinLoadable ) ) {
 			throw new MappingException( "class persister is not OuterJoinLoadable: " + entityName );
 		}

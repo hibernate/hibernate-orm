@@ -45,7 +45,7 @@ public class ResultSetProcessorHelper {
 				entityPersister = session.getEntityPersister( optionalEntityName, optionalObject );
 			}
 			else {
-				entityPersister = session.getFactory().getMetamodel().entityPersister( optionalEntityName );
+				entityPersister = session.getFactory().getTypeConfiguration().findEntityPersister( optionalEntityName );
 			}
 			if ( entityPersister.isInstance( optionalId )
 					&& !entityPersister.getEntityMetamodel().getIdentifierProperty().isVirtual()

@@ -272,7 +272,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 		final Serializable id = entityKey.getIdentifier();
 
 		// Get the persister for the _subclass_
-		final Loadable concreteEntityPersister = (Loadable) context.getSession().getFactory().getMetamodel().entityPersister( concreteEntityTypeName );
+		final Loadable concreteEntityPersister = (Loadable) context.getSession().getFactory().getTypeConfiguration().findEntityPersister( concreteEntityTypeName );
 
 		if ( log.isTraceEnabled() ) {
 			log.tracev(
@@ -296,9 +296,10 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 				context.getSession()
 		);
 
-		final EntityPersister rootEntityPersister = context.getSession().getFactory().getMetamodel().entityPersister(
-				concreteEntityPersister.getRootEntityName()
-		);
+		final EntityPersister rootEntityPersister = context.getSession()
+				.getFactory()
+				.getTypeConfiguration()
+				.findEntityPersister( concreteEntityPersister.getRootEntityName() );
 		final Object[] values;
 		try {
 			values = concreteEntityPersister.hydrate(

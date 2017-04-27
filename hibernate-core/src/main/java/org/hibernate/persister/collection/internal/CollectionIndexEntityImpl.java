@@ -38,7 +38,6 @@ public class CollectionIndexEntityImpl<J>
 		implements CollectionIndexEntity<J> {
 	public CollectionIndexEntityImpl(
 			CollectionPersister persister,
-			IndexedCollection mappingBinding,
 			EntityType<J> ormType,
 			List<Column> columns) {
 		super( persister, ormType, columns );

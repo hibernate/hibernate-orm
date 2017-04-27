@@ -37,7 +37,7 @@ public class SizeExpression implements Criterion {
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		final String entityName =criteriaQuery.getEntityName( criteria, propertyName );
 		final String role = entityName + '.' + criteriaQuery.getPropertyName( propertyName );
-		final QueryableCollection cp = (QueryableCollection) criteriaQuery.getFactory().getCollectionPersister( role );
+		final QueryableCollection cp = (QueryableCollection) criteriaQuery.getFactory().getTypeConfiguration().findCollectionPersister( role );
 
 		final String[] fk = cp.getKeyColumnNames();
 		final String[] pk = ( (Loadable) cp.getOwnerEntityPersister() ).getIdentifierColumnNames();

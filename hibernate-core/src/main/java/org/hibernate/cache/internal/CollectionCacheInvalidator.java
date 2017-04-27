@@ -105,7 +105,7 @@ public class CollectionCacheInvalidator
 				return;
 			}
 			for ( String role : collectionRoles ) {
-				final CollectionPersister collectionPersister = factory.getMetamodel().collectionPersister( role );
+				final CollectionPersister collectionPersister = factory.getTypeConfiguration().findCollectionPersister( role );
 				if ( !collectionPersister.hasCache() ) {
 					// ignore collection if no caching is used
 					continue;
@@ -157,7 +157,7 @@ public class CollectionCacheInvalidator
 		if ( obj != null ) {
 			id = session.getContextEntityIdentifier( obj );
 			if ( id == null ) {
-				id = session.getSessionFactory().getMetamodel().entityPersister( obj.getClass() ).getIdentifier( obj, session );
+				id = session.getSessionFactory().getTypeConfiguration().findEntityPersister( obj.getClass() ).getIdentifier( obj, session );
 			}
 		}
 		return id;

@@ -353,7 +353,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 					final String entityName = getImportedClassName( mappingFetch.getEntity() );
 					final EntityPersister owner = entityName == null
 							? null
-							: metamodel.entityPersister( entityName );
+							: typeConfiguration.findEntityPersister( entityName );
 					if ( owner == null ) {
 						throw new HibernateException(
 								"Unable to resolve entity reference [" + mappingFetch.getEntity()

@@ -141,7 +141,7 @@ public class CustomLoader extends Loader {
 			}
 			else if ( rtn instanceof RootReturn ) {
 				RootReturn rootRtn = (RootReturn) rtn;
-				Queryable persister = (Queryable) factory.getMetamodel().entityPersister( rootRtn.getEntityName() );
+				Queryable persister = (Queryable) factory.getTypeConfiguration().findEntityPersister( rootRtn.getEntityName() );
 				entityPersisters.add( persister );
 				lockModes.add( ( rootRtn.getLockMode() ) );
 				resultColumnProcessors.add( new NonScalarResultColumnProcessor( returnableCounter++ ) );
@@ -156,7 +156,7 @@ public class CustomLoader extends Loader {
 			else if ( rtn instanceof CollectionReturn ) {
 				CollectionReturn collRtn = (CollectionReturn) rtn;
 				String role = collRtn.getOwnerEntityName() + "." + collRtn.getOwnerProperty();
-				QueryableCollection persister = (QueryableCollection) factory.getMetamodel().collectionPersister( role );
+				QueryableCollection persister = (QueryableCollection) factory.getTypeConfiguration().findCollectionPersister( role );
 				collectionPersisters.add( persister );
 				lockModes.add( collRtn.getLockMode() );
 				resultColumnProcessors.add( new NonScalarResultColumnProcessor( returnableCounter++ ) );
@@ -166,7 +166,7 @@ public class CustomLoader extends Loader {
 				specifiedAliases.add( collRtn.getAlias() );
 				collectionAliases.add( collRtn.getCollectionAliases() );
 				// determine if the collection elements are entities...
-				Type elementType = persister.getElementType();
+				Type elementType = persister.getElementDescriptor().getOrmType();
 				if ( elementType.getClassification().equals( Type.Classification.ENTITY ) ) {
 					Queryable elementPersister = (Queryable) ( (EntityType) elementType ).getAssociatedJoinable( factory );
 					entityPersisters.add( elementPersister );
@@ -184,8 +184,8 @@ public class CustomLoader extends Loader {
 				lockModes.add( fetchRtn.getLockMode() );
 				Queryable ownerPersister = determineAppropriateOwnerPersister( ownerDescriptor );
 				EntityType fetchedType = (EntityType) ownerPersister.getPropertyType( fetchRtn.getOwnerProperty() );
-				String entityName = fetchedType.getAssociatedEntityName( getFactory() );
-				Queryable persister = (Queryable) factory.getMetamodel().entityPersister( entityName );
+				String entityName = fetchedType.getAssociatedEntityName( );
+				Queryable persister = (Queryable) factory.getTypeConfiguration().findEntityPersister( entityName );
 				entityPersisters.add( persister );
 				nonScalarReturnList.add( rtn );
 				specifiedAliases.add( fetchRtn.getAlias() );
@@ -201,13 +201,13 @@ public class CustomLoader extends Loader {
 				lockModes.add( fetchRtn.getLockMode() );
 				Queryable ownerPersister = determineAppropriateOwnerPersister( ownerDescriptor );
 				String role = ownerPersister.getEntityName() + '.' + fetchRtn.getOwnerProperty();
-				QueryableCollection persister = (QueryableCollection) factory.getMetamodel().collectionPersister( role );
+				QueryableCollection persister = (QueryableCollection) factory.getTypeConfiguration().findCollectionPersister( role );
 				collectionPersisters.add( persister );
 				nonScalarReturnList.add( rtn );
 				specifiedAliases.add( fetchRtn.getAlias() );
 				collectionAliases.add( fetchRtn.getCollectionAliases() );
 				// determine if the collection elements are entities...
-				Type elementType = persister.getElementType();
+				Type elementType = persister.getElementDescriptor().getOrmType();
 				if ( elementType.getClassification().equals( Type.Classification.ENTITY ) ) {
 					Queryable elementPersister = (Queryable) ( (EntityType) elementType ).getAssociatedJoinable( factory );
 					entityPersisters.add( elementPersister );
@@ -266,21 +266,21 @@ public class CustomLoader extends Loader {
 		else if ( ownerDescriptor instanceof CollectionReturn ) {
 			CollectionReturn collRtn = (CollectionReturn) ownerDescriptor;
 			String role = collRtn.getOwnerEntityName() + "." + collRtn.getOwnerProperty();
-			CollectionPersister persister = getFactory().getMetamodel().collectionPersister( role );
+			CollectionPersister persister = getFactory().getTypeConfiguration().findCollectionPersister( role );
 			EntityType ownerType = (EntityType) persister.getElementType();
-			entityName = ownerType.getAssociatedEntityName( getFactory() );
+			entityName = ownerType.getAssociatedEntityName();
 		}
 		else if ( ownerDescriptor instanceof FetchReturn ) {
 			FetchReturn fetchRtn = (FetchReturn) ownerDescriptor;
 			Queryable persister = determineAppropriateOwnerPersister( fetchRtn.getOwner() );
 			Type ownerType = persister.getPropertyType( fetchRtn.getOwnerProperty() );
 			if ( ownerType.getClassification().equals( Type.Classification.ENTITY ) ) {
-				entityName = ( (EntityType) ownerType ).getAssociatedEntityName( getFactory() );
+				entityName = ( (EntityType) ownerType ).getAssociatedEntityName();
 			}
 			else if ( ownerType.getClassification().equals( Type.Classification.COLLECTION ) ) {
 				Type ownerCollectionElementType = ( (CollectionType) ownerType ).getElementType( getFactory() );
 				if ( ownerCollectionElementType.getClassification().equals( Type.Classification.ENTITY ) ) {
-					entityName = ( (EntityType) ownerCollectionElementType ).getAssociatedEntityName( getFactory() );
+					entityName = ( (EntityType) ownerCollectionElementType ).getAssociatedEntityName();
 				}
 			}
 		}
@@ -289,7 +289,7 @@ public class CustomLoader extends Loader {
 			throw new HibernateException( "Could not determine fetch owner : " + ownerDescriptor );
 		}
 
-		return (Queryable) getFactory().getMetamodel().entityPersister( entityName );
+		return (Queryable) getFactory().getTypeConfiguration().findEntityPersister( entityName );
 	}
 
 	@Override

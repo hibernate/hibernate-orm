@@ -66,7 +66,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getMetamodel().collectionPersister( collectionRole );
+			this.persister = session.getFactory().getTypeConfiguration().findCollectionPersister( collectionRole );
 		}
 	}
 

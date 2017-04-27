@@ -76,7 +76,7 @@ public abstract class AbstractEmptinessExpression implements Criterion {
 
 		final String role = ( (CollectionType) type ).getRole();
 		try {
-			return (QueryableCollection) factory.getCollectionPersister( role );
+			return (QueryableCollection) factory.getTypeConfiguration().findCollectionPersister( role );
 		}
 		catch ( ClassCastException cce ) {
 			throw new QueryException( "collection role is not queryable: " + role );

@@ -173,7 +173,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	protected Type getElementType(CollectionPersister persister) {
-		return persister.getElementReference().getOrmType();
+		return persister.getOrmType();
 	}
 
 	/**
@@ -238,7 +238,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			}
 
 			session.getPersistenceContext().addUninitializedDetachedCollection(
-					session.getFactory().getCollectionPersister( getRole() ),
+					session.getFactory().getTypeConfiguration().findCollectionPersister( getRole() ),
 					this
 			);
 		}

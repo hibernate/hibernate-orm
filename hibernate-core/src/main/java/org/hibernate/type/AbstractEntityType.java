@@ -222,7 +222,7 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 			return ReflectHelper.classForName( entityName );
 		}
 		catch (ClassNotFoundException cnfe) {
-			return typeConfiguration.getSessionFactory().getMetamodel().entityPersister( entityName ).
+			return typeConfiguration.getSessionFactory().getTypeConfiguration().findEntityPersister( entityName ).
 					getEntityTuplizer().getMappedClass();
 		}
 	}
@@ -424,7 +424,7 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 		//form it returns the local variable to avoid a second volatile read: associatedEntityPersister
 		//needs to be volatile as the initialization might happen by a different thread than the readers.
 		if ( persister == null ) {
-			associatedEntityPersister = factory.getMetamodel().entityPersister( getAssociatedEntityName() );
+			associatedEntityPersister = factory.getTypeConfiguration().findEntityPersister( getAssociatedEntityName() );
 			return associatedEntityPersister;
 		}
 		else {
@@ -627,7 +627,7 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 			Object key,
 			SharedSessionContractImplementor session) throws HibernateException {
 		final SessionFactoryImplementor factory = session.getFactory();
-		UniqueKeyLoadable persister = (UniqueKeyLoadable) factory.getMetamodel().entityPersister( entityName );
+		UniqueKeyLoadable persister = (UniqueKeyLoadable) factory.getTypeConfiguration().findEntityPersister( entityName );
 
 		//TODO: implement caching?! proxies?!
 

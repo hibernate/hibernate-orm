@@ -157,7 +157,7 @@ public final class Collections {
 		}
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		final CollectionPersister persister = factory.getMetamodel().collectionPersister( type.getRole() );
+		final CollectionPersister persister = factory.getTypeConfiguration().findCollectionPersister( type.getRole() );
 
 		ce.setCurrentPersister( persister );
 		//TODO: better to pass the id in as an argument?

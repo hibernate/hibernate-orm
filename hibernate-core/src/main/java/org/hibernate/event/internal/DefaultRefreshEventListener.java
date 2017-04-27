@@ -22,7 +22,6 @@ import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.LoadQueryInfluencers.InternalFetchProfileType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -203,7 +202,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			throws HibernateException {
 		for ( Type type : types ) {
 			if ( type.getClassification().equals( Type.Classification.COLLECTION ) ) {
-				CollectionPersister collectionPersister = source.getFactory().getMetamodel().collectionPersister( ( (CollectionType) type ).getRole() );
+				CollectionPersister collectionPersister = source.getFactory().getTypeConfiguration().findCollectionPersister( ( (CollectionType) type ).getRole() );
 				if ( collectionPersister.hasCache() ) {
 					final CollectionRegionAccessStrategy cache = collectionPersister.getCacheAccessStrategy();
 					final Object ck = cache.generateCacheKey(

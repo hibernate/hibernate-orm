@@ -77,7 +77,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 		// needs to be a Session for the #save and #contains calls below...
 		final Session session = ( Session ) sessionImplementor;
 
-		final EntityPersister persister = sessionImplementor.getFactory().getMetamodel().entityPersister( entityName );
+		final EntityPersister persister = sessionImplementor.getFactory().getTypeConfiguration().findEntityPersister( entityName );
 		Object associatedObject = persister.getPropertyValue( object, propertyName );
 		if ( associatedObject == null ) {
 			throw new IdentifierGenerationException(

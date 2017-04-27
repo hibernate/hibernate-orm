@@ -7,8 +7,6 @@
 package org.hibernate.query.spi;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.log.DeprecationLogger;
 
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
@@ -23,6 +21,8 @@ import static org.jboss.logging.Logger.Level.ERROR;
  * Consolidated message-logging regarding query processing.
  *
  * @author Steve Ebersole
+ *
+ * todo (6.0) : fix ids
  */
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90000001, max = 90001000 )

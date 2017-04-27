@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.persister.collection.spi.CollectionElementBasic;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.SqmExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -19,12 +19,12 @@ public class SqmMinElementReferenceBasic extends AbstractSpecificSqmElementRefer
 	}
 
 	@Override
-	public SqmExpressableType getExpressionType() {
-		return getPluralAttributeBinding().getReferencedNavigable().getElementDescriptor();
+	public CollectionElementBasic getExpressionType() {
+		return (CollectionElementBasic) getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getElementDescriptor();
 	}
 
 	@Override
-	public SqmExpressableType getInferableType() {
+	public CollectionElementBasic getInferableType() {
 		return getExpressionType();
 	}
 

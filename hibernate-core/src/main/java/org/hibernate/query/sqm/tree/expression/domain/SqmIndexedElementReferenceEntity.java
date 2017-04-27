@@ -6,9 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEntity;
-import org.hibernate.query.sqm.domain.type.SqmDomainTypeEntity;
+import org.hibernate.persister.collection.spi.CollectionElementEntity;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
@@ -31,28 +29,18 @@ public class SqmIndexedElementReferenceEntity
 	}
 
 	@Override
-	public SqmPluralAttributeReference getSourceReference() {
-		return super.getSourceReference();
+	public CollectionElementEntity getReferencedNavigable() {
+		return (CollectionElementEntity) super.getReferencedNavigable();
 	}
 
 	@Override
-	public Navigable getReferencedNavigable() {
-		return (SqmExpressableTypeEntity) super.getReferencedNavigable();
+	public CollectionElementEntity getExpressionType() {
+		return getReferencedNavigable();
 	}
 
 	@Override
-	public SqmExpressableTypeEntity getExpressionType() {
-		return (SqmExpressableTypeEntity) getPluralAttributeBinding().getReferencedNavigable().getElementDescriptor();
-	}
-
-	@Override
-	public SqmExpressableTypeEntity getInferableType() {
+	public CollectionElementEntity getInferableType() {
 		return getExpressionType();
-	}
-
-	@Override
-	public SqmDomainTypeEntity getExportedDomainType() {
-		return (SqmDomainTypeEntity) getExpressionType().getExportedDomainType();
 	}
 
 	@Override

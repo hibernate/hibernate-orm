@@ -6,9 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.type.SqmDomainType;
-import org.hibernate.query.sqm.domain.SqmExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -21,12 +20,12 @@ public class ParameterizedEntityTypeSqmExpression implements SqmExpression {
 	}
 
 	@Override
-	public SqmExpressableType getExpressionType() {
+	public ExpressableType getExpressionType() {
 		return parameterExpression.getExpressionType();
 	}
 
 	@Override
-	public SqmExpressableType getInferableType() {
+	public ExpressableType getInferableType() {
 		return parameterExpression.getExpressionType();
 	}
 
@@ -38,10 +37,5 @@ public class ParameterizedEntityTypeSqmExpression implements SqmExpression {
 	@Override
 	public String asLoggableText() {
 		return "TYPE(" + parameterExpression.asLoggableText() + ")";
-	}
-
-	@Override
-	public SqmDomainType getExportedDomainType() {
-		return getExpressionType().getExportedDomainType();
 	}
 }

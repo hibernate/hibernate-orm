@@ -11,15 +11,11 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.internal.QueryInterpretationsImpl;
 import org.hibernate.query.sqm.produce.internal.SemanticQueryProducerImpl;
 import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
-
-import org.jboss.logging.Logger;
 
 /**
  * Aggregation and encapsulation of the components Hibernate uses
@@ -28,8 +24,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class QueryEngine {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( QueryEngine.class );
-
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final NamedQueryRepository namedQueryRepository;

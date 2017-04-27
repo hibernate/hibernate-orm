@@ -7,10 +7,9 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.common.spi.PluralPersistentAttribute;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.query.sqm.domain.SqmExpressableType;
-import org.hibernate.query.sqm.domain.SqmPluralAttribute;
-import org.hibernate.query.sqm.domain.type.SqmDomainType;
 
 /**
  * @author Steve Ebersole
@@ -18,7 +17,7 @@ import org.hibernate.query.sqm.domain.type.SqmDomainType;
 public abstract class AbstractSqmCollectionElementReference extends AbstractSqmNavigableReference implements
 		SqmCollectionElementReference {
 	private final SqmPluralAttributeReference attributeBinding;
-	private final SqmPluralAttribute pluralAttributeReference;
+	private final PluralPersistentAttribute pluralAttributeReference;
 	private final NavigablePath propertyPath;
 
 	public AbstractSqmCollectionElementReference(SqmPluralAttributeReference pluralAttributeBinding) {
@@ -39,12 +38,7 @@ public abstract class AbstractSqmCollectionElementReference extends AbstractSqmN
 
 	@Override
 	public Navigable getReferencedNavigable() {
-		return getPluralAttributeBinding().getReferencedNavigable().getElementDescriptor();
-	}
-
-	@Override
-	public SqmDomainType getExportedDomainType() {
-		return getReferencedNavigable().getExportedDomainType();
+		return getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getElementDescriptor();
 	}
 
 	@Override
@@ -58,12 +52,12 @@ public abstract class AbstractSqmCollectionElementReference extends AbstractSqmN
 	}
 
 	@Override
-	public SqmExpressableType getExpressionType() {
+	public ExpressableType getExpressionType() {
 		return getPluralAttributeBinding().getReferencedNavigable();
 	}
 
 	@Override
-	public SqmExpressableType getInferableType() {
+	public ExpressableType getInferableType() {
 		return getExpressionType();
 	}
 }

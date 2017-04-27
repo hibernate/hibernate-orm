@@ -10,9 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.SqmExpressableType;
-import org.hibernate.query.sqm.domain.type.SqmDomainType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import org.jboss.logging.Logger;
@@ -57,12 +56,12 @@ public class SqmDynamicInstantiation
 	}
 
 	@Override
-	public SqmExpressableType getExpressionType() {
+	public ExpressableType getExpressionType() {
 		return null;
 	}
 
 	@Override
-	public SqmExpressableType getInferableType() {
+	public ExpressableType getInferableType() {
 		return null;
 	}
 
@@ -122,11 +121,6 @@ public class SqmDynamicInstantiation
 
 	public SqmDynamicInstantiation makeShallowCopy() {
 		return new SqmDynamicInstantiation( getInstantiationTarget() );
-	}
-
-	@Override
-	public SqmDomainType getExportedDomainType() {
-		return null;
 	}
 
 	private static class DynamicInstantiationTargetImpl implements SqmDynamicInstantiationTarget {

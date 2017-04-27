@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import org.hibernate.query.sqm.domain.SqmExpressableType;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 
 /**
  * Describes a parameter declared in the query.
@@ -52,5 +52,5 @@ public interface SqmParameter {
 	 *
 	 * @return The anticipated Type.
 	 */
-	SqmExpressableType getAnticipatedType();
+	ExpressableType getAnticipatedType();
 }

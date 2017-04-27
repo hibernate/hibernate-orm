@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface Navigable<T> extends ExpressableType<T> {
+public interface Navigable<T> extends ExpressableType<T>, TypeExporter<T> {
 	NavigableSource getSource();
 
 	NavigableRole getNavigableRole();

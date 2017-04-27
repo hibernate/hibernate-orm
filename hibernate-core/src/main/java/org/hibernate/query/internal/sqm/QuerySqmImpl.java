@@ -258,13 +258,13 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 		final QueryInterpretations.Key cacheKey = SqmInterpretationsKey.generateFrom( this );
 		if ( cacheKey != null ) {
-			queryPlan = getSession().getFactory().getQueryInterpretations().getSelectQueryPlan( cacheKey );
+			queryPlan = getSession().getFactory().getQueryEngine().getQueryInterpretations().getSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			queryPlan = buildSelectQueryPlan();
 			if ( cacheKey != null ) {
-				getSession().getFactory().getQueryInterpretations().cacheSelectQueryPlan( cacheKey, queryPlan );
+				getSession().getFactory().getQueryEngine().getQueryInterpretations().cacheSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}
 
@@ -358,13 +358,13 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 
 		final QueryInterpretations.Key cacheKey = SqmInterpretationsKey.generateFrom( this );
 		if ( cacheKey != null ) {
-			queryPlan = getSession().getFactory().getQueryInterpretations().getNonSelectQueryPlan( cacheKey );
+			queryPlan = getSession().getFactory().getQueryEngine().getQueryInterpretations().getNonSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			queryPlan = buildNonSelectQueryPlan();
 			if ( cacheKey != null ) {
-				getSession().getFactory().getQueryInterpretations().cacheNonSelectQueryPlan( cacheKey, queryPlan );
+				getSession().getFactory().getQueryEngine().getQueryInterpretations().cacheNonSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}
 

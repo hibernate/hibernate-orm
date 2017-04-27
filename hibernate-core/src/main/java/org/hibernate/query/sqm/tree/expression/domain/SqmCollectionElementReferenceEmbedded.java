@@ -6,11 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.collection.spi.CollectionElementEmbedded;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEmbedded;
-import org.hibernate.query.sqm.domain.type.SqmDomainTypeEmbeddable;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
@@ -24,13 +22,8 @@ public class SqmCollectionElementReferenceEmbedded
 	}
 
 	@Override
-	public Navigable getReferencedNavigable() {
-		return (SqmExpressableTypeEmbedded) super.getReferencedNavigable();
-	}
-
-	@Override
-	public SqmDomainTypeEmbeddable getExportedDomainType() {
-		return (SqmDomainTypeEmbeddable) super.getExportedDomainType();
+	public CollectionElementEmbedded getReferencedNavigable() {
+		return (CollectionElementEmbedded) super.getReferencedNavigable();
 	}
 
 	@Override

@@ -19,20 +19,18 @@ import org.hibernate.type.spi.Type;
 public abstract class AbstractPersistentAttribute<O,T> implements PersistentAttribute<O,T> {
 	private final ManagedTypeImplementor<O> container;
 	private final String name;
+	private final Type<T> ormType;
 	private final PropertyAccess access;
 
 	public AbstractPersistentAttribute(
 			ManagedTypeImplementor<O> container,
 			String name,
+			Type<T> ormType,
 			PropertyAccess access) {
 		this.container = container;
 		this.name = name;
+		this.ormType = ormType;
 		this.access = access;
-	}
-
-	@Override
-	public Type getExportedDomainType() {
-		return null;
 	}
 
 	@Override
@@ -46,8 +44,8 @@ public abstract class AbstractPersistentAttribute<O,T> implements PersistentAttr
 	}
 
 	@Override
-	public String getNavigableName() {
-		return getAttributeName();
+	public Type<T> getOrmType() {
+		return ormType;
 	}
 
 	@Override

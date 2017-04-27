@@ -6,10 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEntity;
-import org.hibernate.query.sqm.domain.SqmPluralAttributeIndexEntity;
-import org.hibernate.query.sqm.domain.type.SqmDomainTypeEntity;
+import org.hibernate.persister.collection.spi.CollectionIndexEntity;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import org.jboss.logging.Logger;
@@ -29,23 +26,18 @@ public class SqmMaxIndexReferenceEntity extends AbstractSpecificSqmCollectionInd
 	}
 
 	@Override
-	public SqmExpressableTypeEntity getExpressionType() {
-		return (SqmExpressableTypeEntity) super.getExpressionType();
+	public CollectionIndexEntity getExpressionType() {
+		return (CollectionIndexEntity) super.getExpressionType();
 	}
 
 	@Override
-	public SqmExpressableTypeEntity getInferableType() {
+	public CollectionIndexEntity getInferableType() {
 		return getExpressionType();
 	}
 
 	@Override
-	public Navigable getReferencedNavigable() {
-		return (SqmPluralAttributeIndexEntity ) super.getReferencedNavigable();
-	}
-
-	@Override
-	public SqmDomainTypeEntity getExportedDomainType() {
-		return (SqmDomainTypeEntity) super.getExportedDomainType();
+	public CollectionIndexEntity getReferencedNavigable() {
+		return (CollectionIndexEntity ) super.getReferencedNavigable();
 	}
 
 	@Override

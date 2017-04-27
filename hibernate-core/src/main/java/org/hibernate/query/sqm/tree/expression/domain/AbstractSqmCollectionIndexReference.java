@@ -6,11 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.persister.collection.spi.CollectionPersister.CollectionClassification;
 import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.common.spi.PluralPersistentAttribute;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.SqmExpressableType;
-import org.hibernate.query.sqm.domain.SqmPluralAttribute;
 
 /**
  * @author Steve Ebersole
@@ -18,15 +19,15 @@ import org.hibernate.query.sqm.domain.SqmPluralAttribute;
 public abstract class AbstractSqmCollectionIndexReference extends AbstractSqmNavigableReference implements
 		SqmCollectionIndexReference {
 	private final SqmPluralAttributeReference attributeBinding;
-	private final SqmPluralAttribute pluralAttributeReference;
+	private final PluralPersistentAttribute pluralAttributeReference;
 	private final NavigablePath propertyPath;
 
 	public AbstractSqmCollectionIndexReference(SqmPluralAttributeReference pluralAttributeBinding) {
 		this.attributeBinding = pluralAttributeBinding;
 		this.pluralAttributeReference = pluralAttributeBinding.getReferencedNavigable();
 
-		assert pluralAttributeReference.getCollectionClassification() == SqmPluralAttribute.CollectionClassification.MAP
-				|| pluralAttributeReference.getCollectionClassification() == SqmPluralAttribute.CollectionClassification.LIST;
+		assert pluralAttributeReference.getCollectionPersister().getCollectionClassification() == CollectionClassification.MAP
+				|| pluralAttributeReference.getCollectionPersister().getCollectionClassification() == CollectionClassification.LIST;
 
 		this.propertyPath = pluralAttributeBinding.getNavigablePath().append( "{keys}" );
 	}
@@ -36,12 +37,12 @@ public abstract class AbstractSqmCollectionIndexReference extends AbstractSqmNav
 	}
 
 	@Override
-	public SqmExpressableType getExpressionType() {
-		return getPluralAttributeBinding().getReferencedNavigable().getIndexDescriptor();
+	public ExpressableType getExpressionType() {
+		return getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getIndexDescriptor();
 	}
 
 	@Override
-	public SqmExpressableType getInferableType() {
+	public ExpressableType getInferableType() {
 		return getExpressionType();
 	}
 
@@ -52,7 +53,7 @@ public abstract class AbstractSqmCollectionIndexReference extends AbstractSqmNav
 
 	@Override
 	public Navigable getReferencedNavigable() {
-		return pluralAttributeReference.getIndexDescriptor();
+		return pluralAttributeReference.getCollectionPersister().getIndexDescriptor();
 	}
 
 	@Override

@@ -6,8 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.query.sqm.domain.type.SqmDomainTypeEmbeddable;
+import org.hibernate.persister.embedded.spi.EmbeddedValuedNavigable;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 
 /**
@@ -15,10 +14,5 @@ import org.hibernate.query.sqm.tree.from.SqmFromExporter;
  */
 public interface SqmEmbeddableTypedReference extends SqmNavigableSourceReference, SqmFromExporter {
 	@Override
-	Navigable getReferencedNavigable();
-
-	@Override
-	default SqmDomainTypeEmbeddable getExportedDomainType() {
-		return getReferencedNavigable().getExportedDomainType();
-	}
+	EmbeddedValuedNavigable getReferencedNavigable();
 }

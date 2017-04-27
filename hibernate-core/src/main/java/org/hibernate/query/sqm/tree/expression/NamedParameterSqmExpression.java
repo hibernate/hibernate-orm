@@ -6,9 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.type.SqmDomainType;
-import org.hibernate.query.sqm.domain.SqmExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -16,31 +15,31 @@ import org.hibernate.query.sqm.domain.SqmExpressableType;
 public class NamedParameterSqmExpression implements ParameterSqmExpression {
 	private final String name;
 	private final boolean canBeMultiValued;
-	private SqmExpressableType expressableType;
+	private ExpressableType expressableType;
 
 	public NamedParameterSqmExpression(String name, boolean canBeMultiValued) {
 		this.name = name;
 		this.canBeMultiValued = canBeMultiValued;
 	}
 
-	public NamedParameterSqmExpression(String name, boolean canBeMultiValued, SqmExpressableType expressableType) {
+	public NamedParameterSqmExpression(String name, boolean canBeMultiValued, ExpressableType expressableType) {
 		this.name = name;
 		this.canBeMultiValued = canBeMultiValued;
 		this.expressableType = expressableType;
 	}
 
 	@Override
-	public SqmExpressableType getExpressionType() {
+	public ExpressableType getExpressionType() {
 		return expressableType;
 	}
 
 	@Override
-	public SqmExpressableType getInferableType() {
+	public ExpressableType getInferableType() {
 		return getExpressionType();
 	}
 
 	@Override
-	public void impliedType(SqmExpressableType expressableType) {
+	public void impliedType(ExpressableType expressableType) {
 		if ( expressableType != null ) {
 			this.expressableType = expressableType;
 		}
@@ -72,12 +71,7 @@ public class NamedParameterSqmExpression implements ParameterSqmExpression {
 	}
 
 	@Override
-	public SqmExpressableType getAnticipatedType() {
+	public ExpressableType getAnticipatedType() {
 		return getExpressionType();
-	}
-
-	@Override
-	public SqmDomainType getExportedDomainType() {
-		return getExpressionType().getExportedDomainType();
 	}
 }

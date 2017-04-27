@@ -86,7 +86,7 @@ public class AliasRegistry {
 		}
 		final SqmNavigableReference binding = navigableBindingsByAlias.get( alias );
 		if ( binding != null ) {
-			if ( !selection.getExpression().getExpressionType().equals( binding.getReferencedNavigable().getExportedDomainType() ) ) {
+			if ( !selection.getExpression().getExpressionType().equals( binding.getExpressionType() ) ) {
 				throw new AliasCollisionException(
 						String.format(
 								Locale.ENGLISH,

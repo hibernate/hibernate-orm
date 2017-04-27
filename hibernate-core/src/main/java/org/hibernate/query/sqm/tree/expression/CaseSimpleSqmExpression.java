@@ -9,9 +9,8 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.type.SqmDomainType;
-import org.hibernate.query.sqm.domain.SqmExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -21,8 +20,8 @@ public class CaseSimpleSqmExpression implements SqmExpression, ImpliedTypeSqmExp
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private SqmExpression otherwise;
 
-	private SqmExpressableType expressableType;
-	private SqmExpressableType impliedType;
+	private ExpressableType expressableType;
+	private ExpressableType impliedType;
 
 	public CaseSimpleSqmExpression(SqmExpression fixture) {
 		this.fixture = fixture;
@@ -51,37 +50,18 @@ public class CaseSimpleSqmExpression implements SqmExpression, ImpliedTypeSqmExp
 	}
 
 	@Override
-	public void impliedType(SqmExpressableType type) {
+	public void impliedType(ExpressableType type) {
 		this.impliedType = type;
 		// todo : visit whenFragments and elseExpression
 	}
 
 	@Override
-	public SqmDomainType getExportedDomainType() {
-		if ( impliedType != null ) {
-			return impliedType.getExportedDomainType();
-		}
-
-		if ( otherwise != null ) {
-			return otherwise.getExpressionType().getExportedDomainType();
-		}
-
-		for ( WhenFragment whenFragment : whenFragments ) {
-			if ( whenFragment.result.getExpressionType() != null ) {
-				return whenFragment.result.getExpressionType().getExportedDomainType();
-			}
-		}
-
-		return null;
-	}
-
-	@Override
-	public SqmExpressableType getExpressionType() {
+	public ExpressableType getExpressionType() {
 		return expressableType;
 	}
 
 	@Override
-	public SqmExpressableType getInferableType() {
+	public ExpressableType getInferableType() {
 		if ( otherwise != null ) {
 			return otherwise.getInferableType();
 		}

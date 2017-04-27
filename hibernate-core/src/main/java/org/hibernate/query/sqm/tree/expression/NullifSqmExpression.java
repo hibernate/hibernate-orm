@@ -6,9 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.type.SqmDomainType;
-import org.hibernate.query.sqm.domain.SqmExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -31,12 +30,12 @@ public class NullifSqmExpression implements SqmExpression {
 	}
 
 	@Override
-	public SqmExpressableType getExpressionType() {
+	public ExpressableType getExpressionType() {
 		return first.getExpressionType();
 	}
 
 	@Override
-	public SqmExpressableType getInferableType() {
+	public ExpressableType getInferableType() {
 		return getExpressionType();
 	}
 
@@ -48,10 +47,5 @@ public class NullifSqmExpression implements SqmExpression {
 	@Override
 	public String asLoggableText() {
 		return "NULLIF(" + first.asLoggableText() + ", " + second.asLoggableText() + ")";
-	}
-
-	@Override
-	public SqmDomainType getExportedDomainType() {
-		return first.getExportedDomainType();
 	}
 }

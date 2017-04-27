@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEntity;
+import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
 /**
@@ -27,16 +27,16 @@ public class SqmSingularAttributeReferenceEntity extends AbstractSqmSingularAttr
 
 	@Override
 	public SingularPersistentAttributeEntity getReferencedNavigable() {
-		return (SingularPersistentAttributeEntity) super.getReferencedNavigable();
+		return (SingularPersistentAttributeEntity) super.getExpressionType();
 	}
 
 	@Override
-	public SqmExpressableTypeEntity getExpressionType() {
-		return (SqmExpressableTypeEntity) super.getExpressionType();
+	public EntityValuedExpressableType getExpressionType() {
+		return (EntityValuedExpressableType) super.getExpressionType();
 	}
 
 	@Override
-	public SqmExpressableTypeEntity getInferableType() {
+	public EntityValuedExpressableType getInferableType() {
 		return getExpressionType();
 	}
 }

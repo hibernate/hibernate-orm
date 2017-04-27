@@ -6,11 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.collection.spi.CollectionElementEntity;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEntity;
-import org.hibernate.query.sqm.domain.type.SqmDomainTypeEntity;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import org.jboss.logging.Logger;
@@ -30,22 +28,17 @@ public class SqmMaxElementReferenceEntity
 	}
 
 	@Override
-	public Navigable getReferencedNavigable() {
-		return (SqmExpressableTypeEntity) super.getReferencedNavigable();
+	public CollectionElementEntity getReferencedNavigable() {
+		return (CollectionElementEntity) super.getReferencedNavigable();
 	}
 
 	@Override
-	public SqmDomainTypeEntity getExportedDomainType() {
-		return (SqmDomainTypeEntity) super.getExportedDomainType();
+	public CollectionElementEntity getExpressionType() {
+		return (CollectionElementEntity) getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getElementDescriptor();
 	}
 
 	@Override
-	public SqmExpressableTypeEntity getExpressionType() {
-		return (SqmExpressableTypeEntity) getPluralAttributeBinding().getReferencedNavigable().getElementDescriptor();
-	}
-
-	@Override
-	public SqmExpressableTypeEntity getInferableType() {
+	public CollectionElementEntity getInferableType() {
 		return getExpressionType();
 	}
 

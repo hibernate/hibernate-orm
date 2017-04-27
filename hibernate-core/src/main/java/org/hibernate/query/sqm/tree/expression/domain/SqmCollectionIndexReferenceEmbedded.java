@@ -6,9 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.collection.spi.CollectionIndexEmbedded;
 import org.hibernate.query.sqm.NotYetImplementedException;
-import org.hibernate.query.sqm.domain.SqmPluralAttributeIndexEmbedded;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
@@ -21,8 +20,8 @@ public class SqmCollectionIndexReferenceEmbedded extends AbstractSqmCollectionIn
 	}
 
 	@Override
-	public Navigable getReferencedNavigable() {
-		return (SqmPluralAttributeIndexEmbedded ) super.getReferencedNavigable();
+	public CollectionIndexEmbedded getReferencedNavigable() {
+		return (CollectionIndexEmbedded ) super.getReferencedNavigable();
 	}
 
 	@Override

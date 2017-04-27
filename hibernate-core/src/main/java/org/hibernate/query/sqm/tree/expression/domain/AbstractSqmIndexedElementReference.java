@@ -6,11 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.persister.collection.spi.CollectionElement;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.SqmExpressableType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -37,16 +37,16 @@ public abstract class AbstractSqmIndexedElementReference
 
 	@Override
 	public Navigable getReferencedNavigable() {
-		return getPluralAttributeBinding().getReferencedNavigable().getElementDescriptor();
+		return getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getElementDescriptor();
 	}
 
 	@Override
-	public SqmExpressableType getExpressionType() {
-		return getReferencedNavigable();
+	public CollectionElement getExpressionType() {
+		return (CollectionElement) getReferencedNavigable();
 	}
 
 	@Override
-	public SqmExpressableType getInferableType() {
+	public CollectionElement getInferableType() {
 		return getExpressionType();
 	}
 

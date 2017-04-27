@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEntity;
+import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.produce.internal.hql.navigable.TreatedNavigableReference;
 import org.hibernate.query.sqm.tree.from.SqmDowncast;
 
@@ -19,10 +19,10 @@ import org.hibernate.query.sqm.tree.from.SqmDowncast;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmNavigableReference implements SqmNavigableReference {
-	private Map<SqmExpressableTypeEntity,SqmDowncast> downcastMap;
+	private Map<EntityValuedExpressableType,SqmDowncast> downcastMap;
 
 	@Override
-	public SqmNavigableReference treatAs(SqmExpressableTypeEntity target) {
+	public SqmNavigableReference treatAs(EntityValuedExpressableType target) {
 		SqmDowncast downcast = null;
 		if ( downcastMap == null ) {
 			downcastMap = new HashMap<>();

@@ -6,21 +6,17 @@
  */
 package org.hibernate.persister.embedded.spi;
 
-import org.hibernate.persister.queryable.spi.ExpressableType;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEmbedded;
-import org.hibernate.type.spi.EmbeddedType;
+import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.queryable.spi.EmbeddedValueExpressableType;
 
 /**
  * Describes parts of the domain model that can be composite values.
  *
  * @author Steve Ebersole
  */
-public interface EmbeddedValuedNavigable<J> extends SqmExpressableTypeEmbedded, ExpressableType<J> {
+public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType<J>, NavigableSource<J> {
 	@Override
 	EmbeddedContainer getSource();
-
-	@Override
-	EmbeddedType getExportedDomainType();
 
 	EmbeddedPersister getEmbeddablePersister();
 }

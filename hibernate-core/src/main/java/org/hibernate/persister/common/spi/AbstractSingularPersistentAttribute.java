@@ -15,26 +15,19 @@ import org.hibernate.type.spi.Type;
 public abstract class AbstractSingularPersistentAttribute<O,J, T extends Type<J>>
 		extends AbstractPersistentAttribute<O,J>
 		implements SingularPersistentAttribute<O,J> {
-	private final T ormType;
 	private final boolean nullable;
 	private final Disposition disposition;
 
 	public AbstractSingularPersistentAttribute(
-			ManagedTypeImplementor attributeContainer,
+			ManagedTypeImplementor<O> attributeContainer,
 			String name,
 			PropertyAccess propertyAccess,
 			T ormType,
 			Disposition disposition,
 			boolean nullable) {
-		super( attributeContainer, name, propertyAccess );
-		this.ormType = ormType;
+		super( attributeContainer, name, ormType, propertyAccess );
 		this.disposition = disposition;
 		this.nullable = nullable;
-	}
-
-	@Override
-	public T getOrmType() {
-		return ormType;
 	}
 
 	@Override

@@ -6,12 +6,12 @@
  */
 package org.hibernate.query.sqm.produce.spi.criteria.path;
 
-import org.hibernate.query.sqm.domain.SqmPluralAttribute;
+import org.hibernate.persister.common.spi.PluralPersistentAttribute;
 
 /**
  * @author Steve Ebersole
  */
 public interface JpaPluralAttributePath<C> extends JpaAttributePath<C> {
 	@Override
-	SqmPluralAttribute getNavigable();
+	PluralPersistentAttribute getNavigable();
 }

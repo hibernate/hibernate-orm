@@ -6,12 +6,12 @@
  */
 package org.hibernate.query.sqm.produce.spi.criteria.path;
 
-import org.hibernate.query.sqm.domain.SqmAttribute;
+import org.hibernate.persister.common.spi.PersistentAttribute;
 
 /**
  * @author Steve Ebersole
  */
 public interface JpaAttributePath<T> extends JpaPath<T> {
 	@Override
-	SqmAttribute getNavigable();
+	PersistentAttribute<?,T> getNavigable();
 }

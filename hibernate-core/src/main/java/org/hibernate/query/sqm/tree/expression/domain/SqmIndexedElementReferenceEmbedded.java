@@ -6,10 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.collection.spi.CollectionElementEmbedded;
 import org.hibernate.query.sqm.NotYetImplementedException;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEmbedded;
-import org.hibernate.query.sqm.domain.type.SqmDomainTypeEmbeddable;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
@@ -26,23 +24,18 @@ public class SqmIndexedElementReferenceEmbedded
 	}
 
 	@Override
-	public SqmExpressableTypeEmbedded getExpressionType() {
-		return (SqmExpressableTypeEmbedded) getPluralAttributeBinding().getReferencedNavigable().getElementDescriptor();
+	public CollectionElementEmbedded getReferencedNavigable() {
+		return (CollectionElementEmbedded) getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getElementDescriptor();
 	}
 
 	@Override
-	public SqmExpressableTypeEmbedded getInferableType() {
+	public CollectionElementEmbedded getExpressionType() {
+		return getReferencedNavigable();
+	}
+
+	@Override
+	public CollectionElementEmbedded getInferableType() {
 		return getExpressionType();
-	}
-
-	@Override
-	public SqmDomainTypeEmbeddable getExportedDomainType() {
-		return getExpressionType().getExportedDomainType();
-	}
-
-	@Override
-	public Navigable getReferencedNavigable() {
-		return (SqmExpressableTypeEmbedded) super.getReferencedNavigable();
 	}
 
 	@Override

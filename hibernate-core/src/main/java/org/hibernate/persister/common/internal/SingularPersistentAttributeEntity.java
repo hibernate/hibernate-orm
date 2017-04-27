@@ -16,8 +16,11 @@ import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
+import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.entity.spi.EntityValuedNavigable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.ast.from.TableSpace;
@@ -27,14 +30,16 @@ import org.hibernate.sql.convert.results.spi.Fetch;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.EntityType;
 
 
 /**
  * @author Steve Ebersole
  */
-public class SingularPersistentAttributeEntity<O,J> extends AbstractSingularPersistentAttribute<O,J,EntityType<J>>
-		implements JoinablePersistentAttribute<O,J> {
+public class SingularPersistentAttributeEntity<O,J>
+		extends AbstractSingularPersistentAttribute<O,J,EntityType<J>>
+		implements JoinablePersistentAttribute<O,J>, EntityValuedNavigable<J> {
 	private final SingularAttributeClassification classification;
 	private final EntityPersister entityPersister;
 	private final List<Column> columns;
@@ -70,6 +75,46 @@ public class SingularPersistentAttributeEntity<O,J> extends AbstractSingularPers
 	public PersistentAttributeType getPersistentAttributeType() {
 		// assume ManyToOne for now
 		return PersistentAttributeType.MANY_TO_ONE;
+	}
+
+	@Override
+	public EntityPersister<J> getEntityPersister() {
+		return entityPersister;
+	}
+
+	@Override
+	public String getJpaEntityName() {
+		return entityPersister.getJpaEntityName();
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return entityPersister.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public <N> Navigable<N> findNavigable(String navigableName) {
+		return entityPersister.findNavigable( navigableName );
+	}
+
+	@Override
+	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
+		return entityPersister.findDeclaredNavigable( navigableName );
+	}
+
+	@Override
+	public void visitNavigables(NavigableVisitationStrategy visitor) {
+		entityPersister.visitNavigables( visitor );
+	}
+
+	@Override
+	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
+		entityPersister.visitNavigables( visitor );
+	}
+
+	@Override
+	public List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute) {
+		return null;
 	}
 
 	@Override

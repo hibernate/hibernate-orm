@@ -6,11 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.persister.collection.spi.CollectionElementEntity;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEntity;
-import org.hibernate.query.sqm.domain.type.SqmDomainTypeEntity;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import org.jboss.logging.Logger;
 
@@ -28,23 +26,18 @@ public class SqmMinElementReferenceEntity extends AbstractSpecificSqmElementRefe
 	}
 
 	@Override
-	public SqmExpressableTypeEntity getExpressionType() {
+	public CollectionElementEntity getExpressionType() {
 		return getReferencedNavigable();
 	}
 
 	@Override
-	public SqmExpressableTypeEntity getInferableType() {
+	public CollectionElementEntity getInferableType() {
 		return getExpressionType();
 	}
 
 	@Override
-	public Navigable getReferencedNavigable() {
-		return (SqmExpressableTypeEntity) getPluralAttributeBinding().getReferencedNavigable().getElementDescriptor();
-	}
-
-	@Override
-	public SqmDomainTypeEntity getExportedDomainType() {
-		return (SqmDomainTypeEntity) super.getExportedDomainType();
+	public CollectionElementEntity getReferencedNavigable() {
+		return (CollectionElementEntity) getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getElementDescriptor();
 	}
 
 	@Override

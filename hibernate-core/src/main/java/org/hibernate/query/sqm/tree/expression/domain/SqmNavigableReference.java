@@ -9,8 +9,8 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import java.util.Collection;
 
 import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEntity;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmDowncast;
 
@@ -46,7 +46,7 @@ public interface SqmNavigableReference extends SqmExpression {
 
 	// JPA downcast (TREAT .. AS ..) support
 
-	SqmNavigableReference treatAs(SqmExpressableTypeEntity target);
+	SqmNavigableReference treatAs(EntityValuedExpressableType target);
 
 	void addDowncast(SqmDowncast downcast);
 

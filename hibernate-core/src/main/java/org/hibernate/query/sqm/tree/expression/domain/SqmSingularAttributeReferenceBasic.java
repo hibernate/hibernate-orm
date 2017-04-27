@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.persister.common.internal.SingularPersistentAttributeBasic;
-import org.hibernate.query.sqm.domain.type.SqmDomainTypeBasic;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
 /**
@@ -27,10 +26,5 @@ public class SqmSingularAttributeReferenceBasic extends AbstractSqmSingularAttri
 	@Override
 	public SingularPersistentAttributeBasic getReferencedNavigable() {
 		return (SingularPersistentAttributeBasic) super.getReferencedNavigable();
-	}
-
-	@Override
-	public SqmDomainTypeBasic getExportedDomainType() {
-		return (SqmDomainTypeBasic) getReferencedNavigable().getExportedDomainType();
 	}
 }

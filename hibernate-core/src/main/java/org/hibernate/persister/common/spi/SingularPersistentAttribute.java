@@ -9,7 +9,6 @@ package org.hibernate.persister.common.spi;
 import java.util.List;
 
 import org.hibernate.persister.queryable.spi.ExpressableType;
-import org.hibernate.query.sqm.domain.SqmSingularAttribute;
 
 /**
  * @author Steve Ebersole

@@ -6,15 +6,14 @@
  */
 package org.hibernate.persister.collection.spi;
 
+import org.hibernate.persister.common.BasicValuedNavigable;
 import org.hibernate.persister.common.spi.ConvertibleNavigable;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.query.sqm.domain.SqmPluralAttributeElementBasic;
 
 /**
  * @author Steve Ebersole
  */
 public interface CollectionElementBasic<J>
-		extends CollectionElement<J,BasicType<J>>, ConvertibleNavigable<J>, SqmPluralAttributeElementBasic {
-	@Override
-	BasicType<J> getExportedDomainType();
+		extends CollectionElement<J,BasicType<J>>, ConvertibleNavigable<J>, BasicValuedNavigable<J> {
+
 }

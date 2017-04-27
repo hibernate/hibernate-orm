@@ -6,9 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEntity;
-import org.hibernate.query.sqm.domain.SqmPluralAttributeIndexEntity;
+import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import org.jboss.logging.Logger;
@@ -28,17 +26,17 @@ public class SqmMinIndexReferenceEntity extends AbstractSpecificSqmCollectionInd
 	}
 
 	@Override
-	public Navigable getReferencedNavigable() {
-		return (SqmPluralAttributeIndexEntity) super.getReferencedNavigable();
+	public EntityValuedExpressableType getReferencedNavigable() {
+		return (EntityValuedExpressableType) super.getReferencedNavigable();
 	}
 
 	@Override
-	public SqmExpressableTypeEntity getExpressionType() {
+	public EntityValuedExpressableType getExpressionType() {
 		return getReferencedNavigable();
 	}
 
 	@Override
-	public SqmExpressableTypeEntity getInferableType() {
+	public EntityValuedExpressableType getInferableType() {
 		return getReferencedNavigable();
 	}
 

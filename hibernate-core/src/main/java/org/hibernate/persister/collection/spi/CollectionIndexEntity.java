@@ -6,13 +6,11 @@
  */
 package org.hibernate.persister.collection.spi;
 
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.persister.entity.spi.EntityValuedNavigable;
 import org.hibernate.type.spi.EntityType;
 
 /**
  * @author Steve Ebersole
  */
-public interface CollectionIndexEntity<J> extends CollectionIndex<J,EntityType<J>>, EntityValuedExpressableType<J> {
-	@Override
-	EntityType getExportedDomainType();
+public interface CollectionIndexEntity<J> extends CollectionIndex<J,EntityType<J>>, EntityValuedNavigable<J> {
 }

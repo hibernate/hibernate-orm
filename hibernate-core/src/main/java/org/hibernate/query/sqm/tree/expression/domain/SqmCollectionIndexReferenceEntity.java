@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEntity;
-import org.hibernate.query.sqm.domain.SqmPluralAttributeIndexEntity;
+import org.hibernate.persister.collection.spi.CollectionIndexEntity;
+import org.hibernate.persister.entity.spi.EntityValuedNavigable;
+import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import org.jboss.logging.Logger;
@@ -28,17 +28,17 @@ public class SqmCollectionIndexReferenceEntity
 	}
 
 	@Override
-	public SqmExpressableTypeEntity getExpressionType() {
+	public EntityValuedNavigable getReferencedNavigable() {
+		return (CollectionIndexEntity) getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getIndexDescriptor();
+	}
+
+	@Override
+	public EntityValuedExpressableType getExpressionType() {
 		return getReferencedNavigable();
 	}
 
 	@Override
-	public Navigable getReferencedNavigable() {
-		return (SqmPluralAttributeIndexEntity) getPluralAttributeBinding().getReferencedNavigable().getIndexDescriptor();
-	}
-
-	@Override
-	public SqmExpressableTypeEntity getInferableType() {
+	public EntityValuedExpressableType getInferableType() {
 		return getExpressionType();
 	}
 

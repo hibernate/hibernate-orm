@@ -6,9 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.type.SqmDomainType;
-import org.hibernate.query.sqm.domain.SqmExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -16,26 +15,26 @@ import org.hibernate.query.sqm.domain.SqmExpressableType;
 public class PositionalParameterSqmExpression implements ParameterSqmExpression {
 	private final int position;
 	private final boolean canBeMultiValued;
-	private SqmExpressableType expressableType;
+	private ExpressableType expressableType;
 
 	public PositionalParameterSqmExpression(int position, boolean canBeMultiValued) {
 		this.position = position;
 		this.canBeMultiValued = canBeMultiValued;
 	}
 
-	public PositionalParameterSqmExpression(int position, boolean canBeMultiValued, SqmExpressableType expressableType) {
+	public PositionalParameterSqmExpression(int position, boolean canBeMultiValued, ExpressableType expressableType) {
 		this.position = position;
 		this.canBeMultiValued = canBeMultiValued;
 		this.expressableType = expressableType;
 	}
 
 	@Override
-	public SqmExpressableType getExpressionType() {
+	public ExpressableType getExpressionType() {
 		return expressableType;
 	}
 
 	@Override
-	public SqmExpressableType getInferableType() {
+	public ExpressableType getInferableType() {
 		return getExpressionType();
 	}
 
@@ -60,7 +59,7 @@ public class PositionalParameterSqmExpression implements ParameterSqmExpression 
 	}
 
 	@Override
-	public void impliedType(SqmExpressableType expressableType) {
+	public void impliedType(ExpressableType expressableType) {
 		if ( expressableType != null ) {
 			this.expressableType = expressableType;
 		}
@@ -72,12 +71,7 @@ public class PositionalParameterSqmExpression implements ParameterSqmExpression 
 	}
 
 	@Override
-	public SqmExpressableType getAnticipatedType() {
+	public ExpressableType getAnticipatedType() {
 		return getExpressionType();
-	}
-
-	@Override
-	public SqmDomainType getExportedDomainType() {
-		return getExpressionType().getExportedDomainType();
 	}
 }

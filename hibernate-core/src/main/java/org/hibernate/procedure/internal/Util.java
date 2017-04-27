@@ -188,7 +188,7 @@ public class Util {
 			Class... resultClasses) {
 		int i = 0;
 		for ( Class resultClass : resultClasses ) {
-			final EntityPersister persister = context.getSessionFactory().getMetamodel().entityPersister( resultClass.getName() );
+			final EntityPersister persister = context.getSessionFactory().getTypeConfiguration().findEntityPersister( resultClass.getName() );
 			context.addQuerySpaces( (String[]) persister.getQuerySpaces() );
 			context.addQueryReturns(
 					new ReturnEntityImpl(
@@ -255,13 +255,17 @@ public class Util {
 				else if ( nativeQueryReturn instanceof NativeSQLQueryCollectionReturn ) {
 					final NativeSQLQueryCollectionReturn rtn = (NativeSQLQueryCollectionReturn) nativeQueryReturn;
 					final String role = rtn.getOwnerEntityName() + '.' + rtn.getOwnerProperty();
-					final CollectionPersister persister = context.getSessionFactory().getMetamodel().collectionPersister( role );
+					final CollectionPersister persister = context.getSessionFactory()
+							.getTypeConfiguration()
+							.findCollectionPersister( role );
 					//context.addQueryReturns( ... );
 					throw new NotYetImplementedException( "Collection Returns not yet implemented" );
 				}
 				else if ( nativeQueryReturn instanceof NativeSQLQueryRootReturn ) {
 					final NativeSQLQueryRootReturn rtn = (NativeSQLQueryRootReturn) nativeQueryReturn;
-					final EntityPersister persister = context.getSessionFactory().getMetamodel().entityPersister( rtn.getReturnEntityName() );
+					final EntityPersister persister = context.getSessionFactory()
+							.getTypeConfiguration()
+							.findEntityPersister( rtn.getReturnEntityName() );
 					final ReturnEntityImpl entityReturn = new ReturnEntityImpl(
 							null,
 							persister,

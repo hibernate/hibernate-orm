@@ -61,7 +61,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.CollectionType;
+import org.hibernate.type.spi.CollectionType;
 
 import org.jboss.logging.Logger;
 
@@ -373,7 +373,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	private EntityPersister locateProperPersister(EntityPersister persister) {
-		return session.getFactory().getMetamodel().entityPersister( persister.getRootEntityName() );
+		return session.getFactory().getTypeConfiguration().findEntityPersister( persister.getRootEntityName() );
 	}
 
 	@Override
@@ -600,7 +600,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	private void reassociateProxy(LazyInitializer li, HibernateProxy proxy) {
 		if ( li.getSession() != this.getSession() ) {
-			final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( li.getEntityName() );
+			final EntityPersister persister = session.getFactory().getTypeConfiguration().findEntityPersister( li.getEntityName() );
 			final EntityKey key = session.generateEntityKey( li.getIdentifier(), persister );
 		  	// any earlier proxy takes precedence
 			proxiesByKey.putIfAbsent( key, proxy );
@@ -741,7 +741,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			return getEntity( session.generateEntityKey( owenerId, ownerPersister ) );
 		}
 
-		final CollectionType collectionType = collectionPersister.getCollectionType();
+		final CollectionType collectionType = collectionPersister.getOrmType();
 
 		//		2) The incoming key is most likely the collection key which we need to resolve to the owner key
 		//			find the corresponding owner instance
@@ -816,7 +816,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 		// TODO: an alternative is to check if the owner has changed; if it hasn't then
 		// get the ID from collection.getOwner()
-		return ce.getLoadedPersister().getCollectionType().getIdOfOwnerOrNull( ce.getLoadedKey(), session );
+		return ce.getLoadedPersister().getOrmType().getIdOfOwnerOrNull( ce.getLoadedKey(), session );
 	}
 
 	@Override
@@ -1133,8 +1133,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Serializable getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap) {
 		final String collectionRole = entityName + '.' + propertyName;
-		final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( entityName );
-		final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister( collectionRole );
+		final EntityPersister persister = session.getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		final CollectionPersister collectionPersister = session.getFactory().getTypeConfiguration().findCollectionPersister( collectionRole );
 
 	    // try cache lookup first
 		final Object parent = parentsByChild.get( childEntity );
@@ -1247,13 +1247,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final Object collection = persister.getPropertyValue( potentialParent, property );
 		return collection != null
 				&& Hibernate.isInitialized( collection )
-				&& collectionPersister.getCollectionType().contains( collection, childEntity, session );
+				&& collectionPersister.getOrmType().contains( collection, childEntity );
 	}
 
 	@Override
 	public Object getIndexInOwner(String entity, String property, Object childEntity, Map mergeMap) {
-		final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( entity );
-		final CollectionPersister cp = session.getFactory().getMetamodel().collectionPersister( entity + '.' + property );
+		final EntityPersister persister = session.getFactory().getTypeConfiguration().findEntityPersister( entity );
+		final CollectionPersister cp = session.getFactory().getTypeConfiguration().findCollectionPersister( entity + '.' + property );
 
 	    // try cache lookup first
 		final Object parent = parentsByChild.get( childEntity );
@@ -1319,7 +1319,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			Object potentialParent){
 		final Object collection = persister.getPropertyValue( potentialParent, property );
 		if ( collection != null && Hibernate.isInitialized( collection ) ) {
-			return collectionPersister.getCollectionType().indexOf( collection, childEntity );
+			return collectionPersister.getOrmType().indexOf( collection, childEntity );
 		}
 		else {
 			return null;

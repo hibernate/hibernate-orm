@@ -417,7 +417,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 					final String associatedEntityName = ( (EntityType) virtualPropertyType ).getAssociatedEntityName();
 					final EntityKey entityKey = session.generateEntityKey(
 							(Serializable) extractedValues[i],
-							session.getFactory().getMetamodel().entityPersister( associatedEntityName )
+							session.getFactory().getTypeConfiguration().findEntityPersister( associatedEntityName )
 					);
 					// it is conceivable there is a proxy, so check that first
 					Object association = persistenceContext.getProxy( entityKey );

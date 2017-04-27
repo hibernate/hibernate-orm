@@ -65,8 +65,8 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	protected void reattachCollection(PersistentCollection collection, CollectionType type)
 	throws HibernateException {
 		if ( collection.wasInitialized() ) {
-			CollectionPersister collectionPersister = getSession().getFactory()
-			.getCollectionPersister( type.getRole() );
+			CollectionPersister collectionPersister = getSession().getFactory().getTypeConfiguration()
+			.findCollectionPersister( type.getRole() );
 			getSession().getPersistenceContext()
 				.addInitializedDetachedCollection( collectionPersister, collection );
 		}
@@ -74,8 +74,8 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 			if ( !isCollectionSnapshotValid(collection) ) {
 				throw new HibernateException( "could not reassociate uninitialized transient collection" );
 			}
-			CollectionPersister collectionPersister = getSession().getFactory()
-					.getCollectionPersister( collection.getRole() );
+			CollectionPersister collectionPersister = getSession().getFactory().getTypeConfiguration()
+					.findCollectionPersister( collection.getRole() );
 			getSession().getPersistenceContext()
 				.addUninitializedDetachedCollection( collectionPersister, collection );
 		}

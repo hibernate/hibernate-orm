@@ -756,9 +756,6 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 				final EntityType indexTypeEntity = (EntityType) getIndexType();
 				this.indexDescriptor = new CollectionIndexEntityImpl(
 						this,
-						creationContext.getSessionFactory().getMetamodel().entityPersister(
-								indexTypeEntity.getAssociatedEntityName( creationContext.getSessionFactory() )
-						),
 						indexTypeEntity,
 						columns
 				);

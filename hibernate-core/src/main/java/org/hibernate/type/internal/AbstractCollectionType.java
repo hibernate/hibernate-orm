@@ -32,6 +32,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
@@ -329,6 +331,27 @@ public abstract class AbstractCollectionType extends AbstractTypeImpl implements
 	@Override
 	public Object indexOf(Object collection, Object element) {
 		throw new UnsupportedOperationException( "generic collections don't have indexes" );
+	}
+
+	@Override
+	public boolean contains(Object collection, Object childObject) {
+		// we do not have to worry about queued additions to uninitialized
+		// collections, since they can only occur for inverse collections!
+		Iterator elems = getElementsIterator( collection );
+		while ( elems.hasNext() ) {
+			Object element = elems.next();
+			// worrying about proxies is perhaps a little bit of overkill here...
+			if ( element instanceof HibernateProxy ) {
+				LazyInitializer li = ( (HibernateProxy) element ).getHibernateLazyInitializer();
+				if ( !li.isUninitialized() ) {
+					element = li.getImplementation();
+				}
+			}
+			if ( element == childObject ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 

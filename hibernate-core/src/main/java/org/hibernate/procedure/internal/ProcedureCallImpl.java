@@ -536,7 +536,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> addSynchronizedEntityName(String entityName) {
-		addSynchronizedQuerySpaces( getSession().getFactory().getMetamodel().entityPersister( entityName ) );
+		addSynchronizedQuerySpaces( getSession().getFactory().getTypeConfiguration().findEntityPersister( entityName ) );
 		return this;
 	}
 
@@ -546,7 +546,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> addSynchronizedEntityClass(Class entityClass) {
-		addSynchronizedQuerySpaces( getSession().getFactory().getMetamodel().entityPersister( entityClass.getName() ) );
+		addSynchronizedQuerySpaces( getSession().getFactory().getTypeConfiguration().findEntityPersister( entityClass.getName() ) );
 		return this;
 	}
 

@@ -77,7 +77,7 @@ public class LazyAttributeLoadingInterceptor
 				new LazyInitializationWork() {
 					@Override
 					public Object doWork(SharedSessionContractImplementor session, boolean isTemporarySession) {
-						final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( getEntityName() );
+						final EntityPersister persister = session.getFactory().getTypeConfiguration().findEntityPersister( getEntityName() );
 
 						if ( isTemporarySession ) {
 							final Serializable id = persister.getIdentifier( target, null );
@@ -325,14 +325,14 @@ public class LazyAttributeLoadingInterceptor
 			return;
 		}
 		if ( initializedLazyFields == null ) {
-			initializedLazyFields = new HashSet<String>();
+			initializedLazyFields = new HashSet<>();
 		}
 		initializedLazyFields.add( name );
 	}
 
 	@Override
 	public Set<String> getInitializedLazyAttributeNames() {
-		return initializedLazyFields == null ? Collections.<String>emptySet() : initializedLazyFields;
+		return initializedLazyFields == null ? Collections.emptySet() : initializedLazyFields;
 	}
 
 }

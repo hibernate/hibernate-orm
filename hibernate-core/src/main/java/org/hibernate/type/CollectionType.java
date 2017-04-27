@@ -312,7 +312,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	private CollectionPersister getPersister(SessionFactoryImplementor factory) {
-		return factory.getMetamodel().collectionPersister( role );
+		return factory.getTypeConfiguration().findCollectionPersister( role );
 	}
 
 	@Override

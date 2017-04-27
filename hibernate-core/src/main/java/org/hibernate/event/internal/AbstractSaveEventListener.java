@@ -402,7 +402,7 @@ public abstract class AbstractSaveEventListener
 			substitute = Versioning.seedVersion(
 					values,
 					persister.getVersionProperty(),
-					((BasicType)persister.getVersionType()).getVersionSupport(),
+					( (BasicType) persister.getVersionType() ).getVersionSupport(),
 					source
 			) || substitute;
 		}

@@ -71,4 +71,6 @@ public interface CollectionType<O,C,E> extends Type<C> {
 	Type getElementType() throws MappingException;
 
 	Object indexOf(Object collection, Object element);
+
+	boolean contains(Object collection, Object childObject);
 }

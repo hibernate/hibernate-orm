@@ -56,7 +56,7 @@ public abstract class SubqueryExpression implements Criterion {
 
 		final SessionFactoryImplementor factory = criteriaQuery.getFactory();
 		final OuterJoinLoadable persister =
-				(OuterJoinLoadable) factory.getMetamodel().entityPersister( criteriaImpl.getEntityOrClassName() );
+				(OuterJoinLoadable) factory.getTypeConfiguration().findEntityPersister( criteriaImpl.getEntityOrClassName() );
 
 		createAndSetInnerQuery( criteriaQuery, factory );
 		criteriaImpl.setSession( deriveRootSession( criteria ) );

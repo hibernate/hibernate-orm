@@ -182,7 +182,7 @@ public class MapKeyHelpers {
 
 			String guessedRoleName = determineRole( attribute );
 			SessionFactoryImplementor sfi = criteriaBuilder.getEntityManagerFactory();
-			mapPersister = sfi.getMetamodel().collectionPersister( guessedRoleName );
+			mapPersister = sfi.getTypeConfiguration().findCollectionPersister( guessedRoleName );
 			if ( mapPersister == null ) {
 				throw new IllegalStateException( "Could not locate collection persister [" + guessedRoleName + "]" );
 			}

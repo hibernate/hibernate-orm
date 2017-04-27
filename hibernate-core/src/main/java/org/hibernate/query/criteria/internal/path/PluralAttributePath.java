@@ -44,7 +44,7 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements JpaPl
 
 	private CollectionPersister resolvePersister(CriteriaBuilderImpl criteriaBuilder, PluralAttribute attribute) {
 		SessionFactoryImplementor sfi = criteriaBuilder.getEntityManagerFactory();
-		return sfi.getMetamodel().collectionPersister( resolveRole( attribute ) );
+		return sfi.getTypeConfiguration().findCollectionPersister( resolveRole( attribute ) );
 	}
 
 	private String resolveRole(PluralAttribute attribute) {

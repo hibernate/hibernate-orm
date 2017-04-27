@@ -2564,7 +2564,7 @@ public abstract class Loader {
 	}
 
 	private EntityPersister getEntityPersister(EntityType entityType) {
-		return factory.getMetamodel().entityPersister( entityType.getAssociatedEntityName() );
+		return factory.getTypeConfiguration().findEntityPersister( entityType.getAssociatedEntityName() );
 	}
 
 	protected void putResultInQueryCache(

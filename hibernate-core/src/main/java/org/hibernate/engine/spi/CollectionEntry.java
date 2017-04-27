@@ -120,7 +120,7 @@ public final class CollectionEntry implements Serializable {
 		ignore = false;
 
 		loadedKey = collection.getKey();
-		setLoadedPersister( factory.getMetamodel().collectionPersister( collection.getRole() ) );
+		setLoadedPersister( factory.getTypeConfiguration().findCollectionPersister( collection.getRole() ) );
 
 		snapshot = collection.getStoredSnapshot();
 	}
@@ -154,7 +154,7 @@ public final class CollectionEntry implements Serializable {
 				!collection.isDirty() && //optimization
 				getLoadedPersister() != null &&
 				getLoadedPersister().isMutable() && //optimization
-				( collection.isDirectlyAccessible() || getLoadedPersister().getElementType().getMutabilityPlan().isMutable() ) && //optimization
+				( collection.isDirectlyAccessible() || getLoadedPersister().getOrmType().getMutabilityPlan().isMutable() ) && //optimization
 				!collection.equalsSnapshot( getLoadedPersister() );
 
 		if ( forceDirty ) {
@@ -278,7 +278,7 @@ public final class CollectionEntry implements Serializable {
 	}
 
 	void afterDeserialize(SessionFactoryImplementor factory) {
-		loadedPersister = ( factory == null ? null : factory.getMetamodel().collectionPersister( role ) );
+		loadedPersister = ( factory == null ? null : factory.getTypeConfiguration().findCollectionPersister( role ) );
 	}
 
 	public boolean wasDereferenced() {

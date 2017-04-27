@@ -239,16 +239,16 @@ public class AttributeFactory {
 		final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
 		if ( persistenceType == Type.PersistenceType.ENTITY ) {
 			return context.getSessionFactory()
-					.getMetamodel()
-					.entityPersister( ownerType.getTypeName() )
+					.getTypeConfiguration()
+					.findEntityPersister( ownerType.getTypeName() )
 					.getEntityMetamodel();
 		}
 		else if ( persistenceType == Type.PersistenceType.MAPPED_SUPERCLASS ) {
 			PersistentClass persistentClass =
 					context.getPersistentClassHostingProperties( (MappedSuperclassTypeImpl<?>) ownerType );
 			return context.getSessionFactory()
-					.getMetamodel()
-					.entityPersister( persistentClass.getClassName() )
+					.getTypeConfiguration()
+					.findEntityPersister( persistentClass.getClassName() )
 					.getEntityMetamodel();
 		}
 		else {

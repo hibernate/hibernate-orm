@@ -2239,7 +2239,7 @@ public abstract class AbstractEntityPersister<T>
 			LoadQueryInfluencers loadQueryInfluencers) {
 		if ( uniqueKeyType.isEntityType() ) {
 			String className = ( (EntityType) uniqueKeyType ).getAssociatedEntityName();
-			uniqueKeyType = getFactory().getMetamodel().entityPersister( className ).getIdentifierType();
+			uniqueKeyType = getFactory().getTypeConfiguration().findEntityPersister( className ).getIdentifierType();
 		}
 		return new EntityLoader(
 				this,

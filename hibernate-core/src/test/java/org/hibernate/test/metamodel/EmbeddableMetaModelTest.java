@@ -20,7 +20,7 @@ public class EmbeddableMetaModelTest extends BaseEntityManagerFunctionalTestCase
 
     @Test
     @TestForIssue(jiraKey = "HHH-11111")
-    public void test() {
+    public void testEmbeddableCanBeResolvedWhenUsedAsInterface() {
         EntityManager entityManager = getOrCreateEntityManager();
         assertNotNull(entityManager.getMetamodel().embeddable(LocalizedValue.class));
     }

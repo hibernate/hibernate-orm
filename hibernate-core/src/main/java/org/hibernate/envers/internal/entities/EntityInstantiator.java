@@ -141,8 +141,8 @@ public class EntityInstantiator {
 							key,
 							versionsReader.getSessionImplementor()
 									.getFactory()
-									.getMetamodel()
-									.entityPersister( entityName )
+									.getTypeConfiguration()
+									.findEntityPersister( entityName )
 									.createProxy( entityId, delegate )
 					);
 				}

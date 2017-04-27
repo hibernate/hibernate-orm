@@ -55,8 +55,8 @@ public final class ToOneEntityLoader {
 			boolean removed) {
 		final EntityPersister persister = versionsReader.getSessionImplementor()
 				.getFactory()
-				.getMetamodel()
-				.entityPersister( entityName );
+				.getTypeConfiguration()
+				.findEntityPersister( entityName );
 		return persister.createProxy(
 				(Serializable) entityId,
 				new ToOneDelegateSessionImplementor( versionsReader, entityClass, entityId, revision, removed )
@@ -76,8 +76,8 @@ public final class ToOneEntityLoader {
 			boolean removed) {
 		final EntityPersister persister = versionsReader.getSessionImplementor()
 				.getFactory()
-				.getMetamodel()
-				.entityPersister( entityName );
+				.getTypeConfiguration()
+				.findEntityPersister( entityName );
 		if ( persister.hasProxy() ) {
 			return createProxy( versionsReader, entityClass, entityName, entityId, revision, removed );
 		}

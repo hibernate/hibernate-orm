@@ -82,7 +82,8 @@ public abstract class CriteriaTools {
 		final AuditService auditService = versionsReader.getAuditService();
 
 		if ( AuditId.IDENTIFIER_PLACEHOLDER.equals( propertyName ) ) {
-			final String identifierPropertyName = sessionFactory.getMetamodel().entityPersister( entityName ).getIdentifierPropertyName();
+			final String identifierPropertyName = sessionFactory.getTypeConfiguration()
+					.findEntityPersister( entityName ).getIdentifierPropertyName();
 			propertyName = auditService.getOptions().getOriginalIdPropName() + "." + identifierPropertyName;
 		}
 		else {
@@ -102,12 +103,13 @@ public abstract class CriteriaTools {
 	 * @return List of property names representing entity identifier.
 	 */
 	private static List<String> identifierPropertyNames(SessionFactoryImplementor sessionFactory, String entityName) {
-		final String identifierPropertyName = sessionFactory.getMetamodel().entityPersister( entityName ).getIdentifierPropertyName();
+		final String identifierPropertyName = sessionFactory.getTypeConfiguration()
+				.findEntityPersister( entityName ).getIdentifierPropertyName();
 		if ( identifierPropertyName != null ) {
 			// Single id.
 			return Arrays.asList( identifierPropertyName );
 		}
-		final Type identifierType = sessionFactory.getMetamodel().entityPersister( entityName ).getIdentifierType();
+		final Type identifierType = sessionFactory.getTypeConfiguration().findEntityPersister( entityName ).getIdentifierType();
 		if ( identifierType instanceof EmbeddedComponentType ) {
 			// Multiple ids.
 			final EmbeddedComponentType embeddedComponentType = (EmbeddedComponentType) identifierType;

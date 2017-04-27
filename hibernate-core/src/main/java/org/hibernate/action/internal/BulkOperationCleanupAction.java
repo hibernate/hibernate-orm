@@ -71,7 +71,8 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			final Set<String> roles = factory.getTypeConfiguration().getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( roles != null ) {
 				for ( String role : roles ) {
-					final CollectionPersister collectionPersister = factory.getMetamodel().collectionPersister( role );
+					final CollectionPersister collectionPersister = factory.getTypeConfiguration()
+							.findCollectionPersister( role );
 					if ( collectionPersister.hasCache() ) {
 						collectionCleanups.add( new CollectionCleanup( collectionPersister.getCacheAccessStrategy() ) );
 					}
@@ -100,7 +101,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		spacesList.addAll( tableSpaces );
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		for ( EntityPersister persister : factory.getMetamodel().entityPersisters().values() ) {
+		for ( EntityPersister persister : factory.getTypeConfiguration().getEntityPersisters() ) {
 			final String[] entitySpaces = (String[]) persister.getQuerySpaces();
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
 				spacesList.addAll( Arrays.asList( entitySpaces ) );
@@ -115,7 +116,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				final Set<String> roles = session.getFactory().getTypeConfiguration().getCollectionRolesByEntityParticipant( persister.getEntityName() );
 				if ( roles != null ) {
 					for ( String role : roles ) {
-						final CollectionPersister collectionPersister = factory.getMetamodel().collectionPersister( role );
+						final CollectionPersister collectionPersister = factory.getTypeConfiguration().findCollectionPersister( role );
 						if ( collectionPersister.hasCache() ) {
 							collectionCleanups.add(
 									new CollectionCleanup( collectionPersister.getCacheAccessStrategy() )

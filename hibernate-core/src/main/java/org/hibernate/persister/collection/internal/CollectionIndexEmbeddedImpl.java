@@ -15,6 +15,7 @@ import org.hibernate.persister.collection.spi.AbstractCollectionIndex;
 import org.hibernate.persister.collection.spi.CollectionIndexEmbedded;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.sql.ast.from.TableGroup;
@@ -25,8 +26,6 @@ import org.hibernate.sql.convert.results.spi.Fetch;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
-import org.hibernate.query.sqm.domain.SqmNavigable;
-import org.hibernate.query.sqm.domain.SqmPluralAttributeIndex;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**
@@ -60,13 +59,13 @@ public class CollectionIndexEmbeddedImpl<J>
 	}
 
 	@Override
-	public SqmNavigable findNavigable(String navigableName) {
+	public Navigable findNavigable(String navigableName) {
 		return getEmbeddablePersister().findNavigable( navigableName );
 	}
 
 	@Override
-	public SqmPluralAttributeIndex.IndexClassification getClassification() {
-		return SqmPluralAttributeIndex.IndexClassification.EMBEDDABLE;
+	public IndexClassification getClassification() {
+		return IndexClassification.EMBEDDABLE;
 	}
 
 	@Override

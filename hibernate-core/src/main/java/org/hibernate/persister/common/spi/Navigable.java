@@ -29,6 +29,8 @@ public interface Navigable<T> extends ExpressableType<T>, TypeExporter<T> {
 
 	NavigableRole getNavigableRole();
 
+	String getNavigableName();
+
 	JavaTypeDescriptor getJavaTypeDescriptor();
 
 	/**

@@ -6,10 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.SqmExpressableType;
-import org.hibernate.query.sqm.domain.type.SqmDomainType;
+import org.hibernate.type.spi.Type;
 
 /**
  * Represents the ENTRY() function for obtaining the map entries from a {@code Map}-typed association.
@@ -29,12 +29,12 @@ public class SqmMapEntryBinding implements SqmExpression {
 	}
 
 	@Override
-	public SqmExpressableType getExpressionType() {
+	public ExpressableType getExpressionType() {
 		return null;
 	}
 
 	@Override
-	public SqmExpressableType getInferableType() {
+	public ExpressableType getInferableType() {
 		return null;
 	}
 
@@ -46,10 +46,5 @@ public class SqmMapEntryBinding implements SqmExpression {
 	@Override
 	public String asLoggableText() {
 		return "ENTRY(" + attributeBinding.asLoggableText() + ")";
-	}
-
-	@Override
-	public SqmDomainType getExportedDomainType() {
-		return null;
 	}
 }

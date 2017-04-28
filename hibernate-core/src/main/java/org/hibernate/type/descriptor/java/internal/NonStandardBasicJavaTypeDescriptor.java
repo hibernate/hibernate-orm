@@ -6,7 +6,6 @@
  */
 package org.hibernate.type.descriptor.java.internal;
 
-import org.hibernate.query.sqm.domain.type.SqmDomainTypeBasic;
 import org.hibernate.type.descriptor.java.spi.AbstractBasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
@@ -16,8 +15,7 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public class NonStandardBasicJavaTypeDescriptor<T>
-		extends AbstractBasicJavaDescriptor<T>
-		implements SqmDomainTypeBasic {
+		extends AbstractBasicJavaDescriptor<T> {
 	public NonStandardBasicJavaTypeDescriptor(Class<T> type) {
 		super( type );
 	}
@@ -48,13 +46,8 @@ public class NonStandardBasicJavaTypeDescriptor<T>
 		return null;
 	}
 
-	@Override
 	public String asLoggableText() {
 		return "{non-standard-basic-type(" + getJavaType().getName() + "}";
 	}
 
-	@Override
-	public SqmDomainTypeBasic getExportedDomainType() {
-		return this;
-	}
 }

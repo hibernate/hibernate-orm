@@ -15,6 +15,7 @@ import org.hibernate.persister.collection.spi.AbstractCollectionElement;
 import org.hibernate.persister.collection.spi.CollectionElementEntity;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.ast.from.TableGroup;
@@ -25,7 +26,6 @@ import org.hibernate.sql.convert.results.spi.Fetch;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
-import org.hibernate.query.sqm.domain.SqmNavigable;
 import org.hibernate.type.spi.EntityType;
 
 /**
@@ -48,12 +48,6 @@ public class CollectionElementEntityImpl<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public EntityType<J> getExportedDomainType() {
-		return (EntityType<J>) super.getExportedDomainType();
-	}
-
-	@Override
 	public EntityType<J> getOrmType() {
 		return super.getOrmType();
 	}
@@ -64,7 +58,7 @@ public class CollectionElementEntityImpl<J>
 	}
 
 	@Override
-	public SqmNavigable findNavigable(String navigableName) {
+	public Navigable findNavigable(String navigableName) {
 		return getEntityPersister().findNavigable( navigableName );
 	}
 

@@ -21,10 +21,6 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeRefere
 import org.hibernate.sql.ast.from.FromClause;
 import org.hibernate.sql.ast.from.TableGroup;
 import org.hibernate.sql.convert.ConversionException;
-import org.hibernate.sqm.domain.SingularAttributeReference;
-import org.hibernate.sqm.query.expression.domain.DomainReferenceBinding;
-import org.hibernate.sqm.query.expression.domain.SingularAttributeBinding;
-import org.hibernate.sqm.query.from.AbstractFrom;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 

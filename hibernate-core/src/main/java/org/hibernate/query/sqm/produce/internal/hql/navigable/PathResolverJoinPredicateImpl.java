@@ -6,17 +6,18 @@
  */
 package org.hibernate.query.sqm.produce.internal.hql.navigable;
 
-import org.hibernate.query.sqm.domain.SqmAttribute;
-import org.hibernate.query.sqm.domain.SqmPluralAttribute;
-import org.hibernate.query.sqm.domain.SqmPluralAttributeElement.ElementClassification;
-import org.hibernate.query.sqm.domain.SqmSingularAttribute;
-import org.hibernate.query.sqm.domain.SqmSingularAttribute.SingularAttributeClassification;
+import org.hibernate.persister.common.spi.PersistentAttribute;
+import org.hibernate.persister.common.spi.PluralPersistentAttribute;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
+import org.hibernate.persister.common.spi.SingularPersistentAttribute.SingularAttributeClassification;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.spi.ResolutionContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableSourceReference;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
+
+import static org.hibernate.persister.collection.spi.CollectionElement.*;
 
 /**
  * PathResolver implementation for paths found in a join predicate.
@@ -51,14 +52,13 @@ public class PathResolverJoinPredicateImpl extends PathResolverBasicImpl {
 		}
 	}
 
-	@Override
 	protected void validateIntermediateAttributeJoin(
 			SqmNavigableSourceReference sourceBinding,
-			SqmAttribute joinedAttribute) {
+			PersistentAttribute joinedAttribute) {
 		super.validateIntermediateAttributeJoin( sourceBinding, joinedAttribute );
 
-		if ( SqmSingularAttribute.class.isInstance( joinedAttribute ) ) {
-			final SqmSingularAttribute attrRef = (SqmSingularAttribute) joinedAttribute;
+		if ( SingularPersistentAttribute.class.isInstance( joinedAttribute ) ) {
+			final SingularPersistentAttribute attrRef = (SingularPersistentAttribute) joinedAttribute;
 			if ( attrRef.getAttributeTypeClassification() == SingularAttributeClassification.ANY
 					|| attrRef.getAttributeTypeClassification() == SingularAttributeClassification.MANY_TO_ONE
 					| attrRef.getAttributeTypeClassification() == SingularAttributeClassification.ONE_TO_ONE ) {
@@ -69,10 +69,10 @@ public class PathResolverJoinPredicateImpl extends PathResolverBasicImpl {
 			}
 		}
 		else {
-			final SqmPluralAttribute attrRef = (SqmPluralAttribute) joinedAttribute;
-			if ( attrRef.getElementDescriptor().getClassification() == ElementClassification.ANY
-					|| attrRef.getElementDescriptor().getClassification() == ElementClassification.ONE_TO_MANY
-					|| attrRef.getElementDescriptor().getClassification() == ElementClassification.MANY_TO_MANY ) {
+			final PluralPersistentAttribute attrRef = (PluralPersistentAttribute) joinedAttribute;
+			if ( attrRef.getCollectionPersister().getElementDescriptor().getClassification() == ElementClassification.ANY
+					|| attrRef.getCollectionPersister().getElementDescriptor().getClassification() == ElementClassification.ONE_TO_MANY
+					|| attrRef.getCollectionPersister().getElementDescriptor().getClassification() == ElementClassification.MANY_TO_MANY ) {
 				throw new SemanticException(
 						"On-clause predicate of a qualified join cannot contain implicit collection joins : " +
 								joinedAttribute.getAttributeName()

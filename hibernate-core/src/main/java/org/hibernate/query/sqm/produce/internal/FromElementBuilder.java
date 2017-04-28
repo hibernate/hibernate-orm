@@ -6,9 +6,8 @@
  */
 package org.hibernate.query.sqm.produce.internal;
 
+import org.hibernate.persister.embedded.spi.EmbeddedValuedNavigable;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEmbedded;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEntity;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.spi.AliasRegistry;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
@@ -191,7 +190,7 @@ public class FromElementBuilder {
 			parsingContext.registerFromElementByUniqueId( join );
 			registerAlias( join );
 
-			if ( !SqmExpressableTypeEmbedded.class.isInstance( attributeBinding.getReferencedNavigable() ) ) {
+			if ( !EmbeddedValuedNavigable.class.isInstance( attributeBinding.getReferencedNavigable() ) ) {
 				// it's a composite-valued navigable, create a join but do not register it
 				//		as
 

@@ -7,16 +7,12 @@
 package org.hibernate.persister.collection.spi;
 
 import org.hibernate.persister.common.spi.ConvertibleNavigable;
-import org.hibernate.query.sqm.domain.SqmPluralAttributeIndexBasic;
 import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
-public interface CollectionIndexBasic<T> extends CollectionIndex<T,BasicType<T>>, ConvertibleNavigable<T>, SqmPluralAttributeIndexBasic {
+public interface CollectionIndexBasic<T> extends CollectionIndex<T,BasicType<T>>, ConvertibleNavigable<T> {
 	@Override
 	BasicType<T> getOrmType();
-
-	@Override
-	BasicType<T> getExportedDomainType();
 }

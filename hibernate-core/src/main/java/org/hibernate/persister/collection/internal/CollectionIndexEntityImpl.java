@@ -16,6 +16,7 @@ import org.hibernate.persister.collection.spi.CollectionIndexEntity;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.ast.from.TableGroup;
@@ -27,8 +28,6 @@ import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.type.spi.EntityType;
-import org.hibernate.query.sqm.domain.SqmNavigable;
-import org.hibernate.query.sqm.domain.SqmPluralAttributeIndex;
 
 /**
  * @author Steve Ebersole
@@ -38,13 +37,14 @@ public class CollectionIndexEntityImpl<J>
 		implements CollectionIndexEntity<J> {
 	public CollectionIndexEntityImpl(
 			CollectionPersister persister,
+			IndexedCollection mappingBinding,
 			EntityType<J> ormType,
 			List<Column> columns) {
 		super( persister, ormType, columns );
 	}
 
 	@Override
-	public SqmNavigable findNavigable(String navigableName) {
+	public Navigable findNavigable(String navigableName) {
 		return getEntityPersister().findNavigable( navigableName );
 	}
 
@@ -70,9 +70,9 @@ public class CollectionIndexEntityImpl<J>
 	}
 
 	@Override
-	public SqmPluralAttributeIndex.IndexClassification getClassification() {
+	public IndexClassification getClassification() {
 		// todo : distinguish between OneToMany and ManyToMany
-		return SqmPluralAttributeIndex.IndexClassification.ONE_TO_MANY;
+		return IndexClassification.ONE_TO_MANY;
 	}
 
 	@Override

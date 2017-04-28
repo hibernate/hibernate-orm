@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.produce.internal.hql.navigable;
 
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEntity;
-import org.hibernate.query.sqm.domain.SqmNavigable;
+import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.spi.ResolutionContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -60,14 +60,14 @@ public class PathResolverJoinAttributeImpl extends PathResolverBasicImpl {
 	protected SqmNavigableReference resolveTerminalAttributeBinding(
 			SqmNavigableSourceReference sourceBinding,
 			String terminalName) {
-		final SqmNavigable attribute = resolveNavigable( sourceBinding, terminalName );
+		final Navigable attribute = resolveNavigable( sourceBinding, terminalName );
 		return resolveTerminal( sourceBinding, attribute, null );
 	}
 
 	private SqmAttributeReference resolveTerminal(
 			SqmNavigableSourceReference sourceBinding,
-			SqmNavigable navigable,
-			SqmExpressableTypeEntity subclassIndicator) {
+			Navigable navigable,
+			EntityValuedExpressableType subclassIndicator) {
 		final SqmAttributeReference attributeBinding = (SqmAttributeReference) context().getParsingContext()
 				.findOrCreateNavigableBinding(
 						sourceBinding,
@@ -96,8 +96,8 @@ public class PathResolverJoinAttributeImpl extends PathResolverBasicImpl {
 			ResolutionContext context,
 			SqmNavigableSourceReference sourceBinding,
 			String terminalName,
-			SqmExpressableTypeEntity subclassIndicator) {
-		final SqmNavigable attribute = resolveNavigable( sourceBinding, terminalName );
+			EntityValuedExpressableType subclassIndicator) {
+		final Navigable attribute = resolveNavigable( sourceBinding, terminalName );
 		return resolveTerminal( sourceBinding, attribute, subclassIndicator );
 	}
 

@@ -45,7 +45,6 @@ import org.hibernate.sql.ast.from.EntityTableGroup;
 import org.hibernate.sql.ast.from.TableGroupJoin;
 import org.hibernate.sql.ast.from.TableSpace;
 import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
-import org.hibernate.query.sqm.domain.type.SqmDomainTypeEntity;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataPojoImpl;
@@ -57,7 +56,7 @@ import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
  */
 public abstract class AbstractEntityPersister<T>
 		extends AbstractIdentifiableType<T>
-		implements EntityPersister<T>, SqmDomainTypeEntity {
+		implements EntityPersister<T> {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractEntityPersister.class );
 
 	private final SessionFactoryImplementor factory;
@@ -161,11 +160,6 @@ public abstract class AbstractEntityPersister<T>
 	@Override
 	public Class<T> getBindableJavaType() {
 		return getJavaType();
-	}
-
-	@Override
-	public SqmDomainTypeEntity getExportedDomainType() {
-		return this;
 	}
 
 	@Override

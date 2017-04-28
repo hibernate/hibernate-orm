@@ -6,12 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.query.sqm.domain.SqmEntityIdentifier;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEmbedded;
+import org.hibernate.persister.embedded.spi.EmbeddedValuedNavigable;
+import org.hibernate.persister.entity.spi.IdentifierDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmEntityIdentifierEmbedded extends SqmEntityIdentifier, SqmExpressableTypeEmbedded {
+public interface SqmEntityIdentifierEmbedded extends IdentifierDescriptor, EmbeddedValuedNavigable {
 
 }

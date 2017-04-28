@@ -17,6 +17,7 @@ import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
@@ -30,7 +31,6 @@ import org.hibernate.sql.convert.results.spi.Fetch;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
-import org.hibernate.query.sqm.domain.SqmNavigable;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**
@@ -55,11 +55,6 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	@Override
 	public ManagedTypeImplementor getSource() {
 		return super.getSource();
-	}
-
-	@Override
-	public EmbeddedType getExportedDomainType() {
-		return (EmbeddedType) super.getExportedDomainType();
 	}
 
 	public EmbeddedPersister getEmbeddablePersister() {
@@ -98,7 +93,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	}
 
 	@Override
-	public SqmNavigable findNavigable(String navigableName) {
+	public Navigable findNavigable(String navigableName) {
 		return getEmbeddablePersister().findNavigable( navigableName );
 	}
 

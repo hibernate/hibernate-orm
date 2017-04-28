@@ -6,11 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.query.sqm.domain.SqmEntityIdentifier;
+import org.hibernate.persister.entity.spi.IdentifierDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmEntityIdentifierBasic extends SqmEntityIdentifier {
+public interface SqmEntityIdentifierBasic extends IdentifierDescriptor {
 
 }

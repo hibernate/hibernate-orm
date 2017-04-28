@@ -97,8 +97,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		final MetadataImplementor mappingMetadata = (MetadataImplementor) metadata;
 		final MetamodelImpl metamodel = new MetamodelImpl(
 				sfi,
-				mappingMetadata.getTypeResolver(),
-				mappingMetadata.getTypeDescriptorRegistryAccess()
+				mappingMetadata.getTypeConfiguration()
 		);
 		metamodel.initialize( mappingMetadata, JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED );
 		sfi.close();

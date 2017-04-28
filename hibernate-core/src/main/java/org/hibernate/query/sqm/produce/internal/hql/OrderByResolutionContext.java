@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.produce.internal.hql;
 
-import org.hibernate.query.sqm.domain.SqmNavigable;
-import org.hibernate.query.sqm.domain.SqmNavigableSource;
+import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.common.spi.NavigableSource;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.internal.FromElementBuilder;
 import org.hibernate.query.sqm.produce.spi.FromElementLocator;
@@ -71,9 +71,9 @@ public class OrderByResolutionContext implements ResolutionContext, FromElementL
 	}
 
 	private boolean exposesAttribute(SqmFrom sqmFrom, String attributeName) {
-		final SqmNavigable navigable = sqmFrom.getBinding().getReferencedNavigable();
-		return SqmNavigableSource.class.isInstance( navigable )
-				&& ( (SqmNavigableSource) navigable ).findNavigable( attributeName ) != null;
+		final Navigable navigable = sqmFrom.getBinding().getReferencedNavigable();
+		return NavigableSource.class.isInstance( navigable )
+				&& ( (NavigableSource) navigable ).findNavigable( attributeName ) != null;
 	}
 
 	@Override

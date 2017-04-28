@@ -14,6 +14,7 @@ import org.hibernate.persister.collection.spi.AbstractCollectionElement;
 import org.hibernate.persister.collection.spi.CollectionElementEmbedded;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.sql.ast.from.TableGroup;
@@ -24,7 +25,6 @@ import org.hibernate.sql.convert.results.spi.Fetch;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
-import org.hibernate.query.sqm.domain.SqmNavigable;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**
@@ -47,12 +47,7 @@ public class CollectionElementEmbeddedImpl<J>
 	}
 
 	@Override
-	public EmbeddedType<J> getExportedDomainType() {
-		return getOrmType();
-	}
-
-	@Override
-	public SqmNavigable findNavigable(String navigableName) {
+	public Navigable findNavigable(String navigableName) {
 		return getEmbeddablePersister().findNavigable( navigableName );
 	}
 

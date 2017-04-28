@@ -20,7 +20,6 @@ import org.hibernate.persister.entity.spi.IdentifierDescriptorSimple;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.ParsingException;
-import org.hibernate.query.sqm.domain.SqmPluralAttributeIndex;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReferenceBasic;
@@ -265,7 +264,7 @@ public class NavigableBindingHelper {
 	public static SqmCollectionIndexReference createCollectionIndexBinding(
 			CollectionPartBindingType bindingType,
 			SqmNavigableSourceReference source,
-			SqmPluralAttributeIndex indexDescriptor) {
+			CollectionIndex indexDescriptor) {
 		assert source instanceof SqmPluralAttributeReference;
 		final SqmPluralAttributeReference pluralAttributeBinding = (SqmPluralAttributeReference) source;
 

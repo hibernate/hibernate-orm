@@ -10,8 +10,6 @@ import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEmbedded;
-import org.hibernate.query.sqm.domain.type.SqmDomainTypeEmbeddable;
 
 import org.jboss.logging.Logger;
 
@@ -31,12 +29,7 @@ public class SqmMaxElementReferenceEmbedded
 
 	@Override
 	public Navigable getReferencedNavigable() {
-		return (SqmExpressableTypeEmbedded) super.getReferencedNavigable();
-	}
-
-	@Override
-	public SqmDomainTypeEmbeddable getExportedDomainType() {
-		return (SqmDomainTypeEmbeddable) super.getExportedDomainType();
+		return super.getReferencedNavigable();
 	}
 
 	@Override

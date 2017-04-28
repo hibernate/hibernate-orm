@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.query.sqm.domain.SqmPluralAttributeIndexEmbedded;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import org.jboss.logging.Logger;
@@ -28,7 +27,7 @@ public class SqmMaxIndexReferenceEmbedded extends AbstractSpecificSqmCollectionI
 
 	@Override
 	public Navigable getReferencedNavigable() {
-		return (SqmPluralAttributeIndexEmbedded) super.getReferencedNavigable();
+		return super.getReferencedNavigable();
 	}
 
 	@Override

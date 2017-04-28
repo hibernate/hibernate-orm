@@ -9,11 +9,11 @@ package org.hibernate.query.sqm.produce.internal;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.persister.embedded.spi.EmbeddedValuedNavigable;
+import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.produce.spi.AliasRegistry;
 import org.hibernate.query.sqm.produce.spi.FromElementLocator;
 import org.hibernate.query.sqm.produce.spi.ParsingContext;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEmbedded;
-import org.hibernate.query.sqm.domain.SqmExpressableTypeEntity;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.spi.AbstractQuerySpecProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -131,7 +131,7 @@ public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessing
 
 		@Override
 		public SqmCrossJoin makeCrossJoinedFromElement(
-				SqmFromElementSpace fromElementSpace, String uid, SqmExpressableTypeEntity entityType, String alias) {
+				SqmFromElementSpace fromElementSpace, String uid, EntityValuedExpressableType entityType, String alias) {
 			throw new ParsingException( "DML from-clause cannot define joins" );
 		}
 
@@ -139,7 +139,7 @@ public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessing
 		public SqmEntityJoin buildEntityJoin(
 				SqmFromElementSpace fromElementSpace,
 				String alias,
-				SqmExpressableTypeEntity entityType,
+				EntityValuedExpressableType entityType,
 				SqmJoinType joinType) {
 			throw new ParsingException( "DML from-clause cannot define joins" );
 		}
@@ -148,11 +148,11 @@ public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessing
 		public SqmAttributeJoin buildAttributeJoin(
 				SqmAttributeReference attributeBinding,
 				String alias,
-				SqmExpressableTypeEntity subclassIndicator,
+				EntityValuedExpressableType subclassIndicator,
 				SqmJoinType joinType,
 				boolean fetched,
 				boolean canReuseImplicitJoins) {
-			if ( SqmExpressableTypeEmbedded.class.isInstance( attributeBinding.getReferencedNavigable() ) ) {
+			if ( EmbeddedValuedNavigable.class.isInstance( attributeBinding.getReferencedNavigable() ) ) {
 				return super.buildAttributeJoin(
 						attributeBinding,
 						alias,

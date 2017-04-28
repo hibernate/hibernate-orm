@@ -49,11 +49,6 @@ public abstract class AbstractCollectionIndex<J, T extends Type<J>> implements C
 	}
 
 	@Override
-	public T getExportedDomainType() {
-		return getOrmType();
-	}
-
-	@Override
 	public Class<J> getJavaType() {
 		return getOrmType().getJavaType();
 	}

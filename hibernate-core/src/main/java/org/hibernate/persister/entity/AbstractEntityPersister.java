@@ -35,6 +35,7 @@ import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.InterceptorImplementor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeDescriptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
@@ -122,7 +123,6 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
-import org.hibernate.query.sqm.domain.type.SqmDomainTypeEntity;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
@@ -147,7 +147,7 @@ import org.hibernate.type.spi.VersionSupport;
  */
 public abstract class AbstractEntityPersister<T>
 		extends AbstractIdentifiableType<T>
-		implements EntityPersister<T>, SqmDomainTypeEntity<T> {
+		implements EntityPersister<T> {
 //		implements OuterJoinLoadable, Queryable, ClassMetadata, UniqueKeyLoadable,
 //				SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable {
 

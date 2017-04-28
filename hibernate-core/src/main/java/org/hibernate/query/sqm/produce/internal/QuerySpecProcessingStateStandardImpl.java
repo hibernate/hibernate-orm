@@ -6,10 +6,10 @@
  */
 package org.hibernate.query.sqm.produce.internal;
 
+import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.query.sqm.produce.spi.AliasRegistry;
 import org.hibernate.query.sqm.produce.spi.FromElementLocator;
 import org.hibernate.query.sqm.produce.spi.ParsingContext;
-import org.hibernate.query.sqm.domain.SqmNavigable;
 import org.hibernate.query.sqm.produce.spi.AbstractQuerySpecProcessingState;
 import org.hibernate.query.sqm.produce.spi.QuerySpecProcessingState;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
@@ -100,12 +100,12 @@ public class QuerySpecProcessingStateStandardImpl extends AbstractQuerySpecProce
 			return false;
 		}
 
-		final SqmNavigable navigable = ( (SqmNavigableSourceReference) sourceBinding ).getReferencedNavigable().findNavigable( name );
+		final Navigable navigable = ( (SqmNavigableSourceReference) sourceBinding ).getReferencedNavigable().findNavigable( name );
 		return navigable != null;
 	}
 
 	private boolean definesAttribute(SqmNavigableSourceReference sourceBinding, String name) {
-		final SqmNavigable navigable = sourceBinding.getReferencedNavigable().findNavigable( name );
+		final Navigable navigable = sourceBinding.getReferencedNavigable().findNavigable( name );
 		return navigable != null;
 	}
 

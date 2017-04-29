@@ -75,7 +75,7 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 
 		// test historic sequence behavior, where the initial values start at 1...
 		SourceMock sequence = new SourceMock( 1 );
-		Optimizer optimizer = buildHiloOptimizer( -1, incremepnt );
+		Optimizer optimizer = buildHiloOptimizer( -1, increment );
 		for ( int i = 1; i <= increment; i++ ) {
 			next = ( Long ) optimizer.generate( sequence );
 			assertEquals( i, next.intValue() );

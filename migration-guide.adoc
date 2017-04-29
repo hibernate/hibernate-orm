@@ -100,3 +100,4 @@ dialects remain unchanged, e.g. SQLServer2005Dialect.
 * Setting `hibernate.listeners.envers.autoRegister` has been deprecated in favor of
   `hibernate.envers.autoRegisterListeners`.
 * AuditReader#getCurrentRevision has been deprecated in favor of `org.hibernate.envers.RevisionListener`.
+* As of 5.2.11, NoopOptimizer#generate will no longer skip negative values and 0 when it has a positive increment size; instead it will return the value obtained from the database.  

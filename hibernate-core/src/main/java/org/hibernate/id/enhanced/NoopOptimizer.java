@@ -55,6 +55,9 @@ public final class NoopOptimizer extends AbstractOptimizer {
 
 	@Override
 	public boolean applyIncrementSizeToSourceValues() {
-		return false;
+		// We allow the increment size to be 0 for backward-compatibility with legacy
+		// ID generators; we don't apply a value of 0, so the default will be used instead.
+		// We don't apply an increment size of 1, since it is already the default.
+		return getIncrementSize() != 0 && getIncrementSize() != 1;
 	}
 }

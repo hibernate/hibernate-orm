@@ -359,11 +359,14 @@ public interface CoreMessageLogger extends BasicLogger {
 	void hibernateConnectionPoolSize(int poolSize, int minSize);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Config specified explicit optimizer of [%s], but [%s=%s; honoring optimizer setting", id = 116)
+	@Message(value = "Config specified explicit optimizer of [%s], but [%s=%s]; using optimizer [%s] increment default of [%s].", id = 116)
 	void honoringOptimizerSetting(
 			String none,
 			String incrementParam,
-			int incrementSize);
+			int incrementSize,
+			String positiveOrNegative,
+			int defaultIncrementSize
+	);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "HQL: %s, time: %sms, rows: %s", id = 117)

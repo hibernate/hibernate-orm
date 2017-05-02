@@ -293,6 +293,49 @@ public class NegativeValueSequenceTest {
 		}
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-11709" )
+	public void testNegativeTwoDecrementAllocationSizePooledOptimizer() {
+		ServiceRegistryImplementor serviceRegistry = null;
+		SessionFactoryImplementor sessionFactory = null;
+		Session session = null;
+		try {
+			serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
+					.build();
+			Metadata metadata = new MetadataSources( serviceRegistry )
+					.addAnnotatedClass( NegativeTwoDecrementSize.class )
+					.buildMetadata();
+
+			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+
+			assertOptimizer( sessionFactory, NegativeTwoDecrementSize.class, NoopOptimizer.class );
+
+			session = sessionFactory.openSession();
+			session.getTransaction().begin();
+
+			// initial value is 5; sequence should be decremented by 1
+			// (since NoopOptimizer positive default allocationSize is 1)
+			for ( Integer i = 5; i <= -5; i-- ) {
+				NegativeTwoDecrementSize theEntity = new NegativeTwoDecrementSize();
+				session.persist( theEntity );
+				assertEquals( i, theEntity.id );
+			}
+		}
+		finally {
+			if ( session != null ) {
+				session.getTransaction().rollback();
+				session.close();
+			}
+			if ( sessionFactory != null ) {
+				sessionFactory.close();
+			}
+			if ( serviceRegistry != null ) {
+				serviceRegistry.destroy();
+			}
+		}
+	}
+
 	private void assertOptimizer(
 			SessionFactoryImplementor sessionFactory,
 			Class<?> entityClass,
@@ -343,6 +386,15 @@ public class NegativeValueSequenceTest {
 		@Id
 		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ID_GENERATOR")
 		@SequenceGenerator(name = "ID_GENERATOR", sequenceName = "POS_TWO_SEQ", initialValue= -5, allocationSize = 2)
+		public Integer id;
+	}
+
+	@Entity( name = "NegativeTwoDecrementSize" )
+	@Table( name = "NegativeTwoDecrementSize" )
+	public static class NegativeTwoDecrementSize {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ID_GENERATOR")
+		@SequenceGenerator(name = "ID_GENERATOR", sequenceName = "POS_TWO_SEQ", initialValue= 5, allocationSize = -2)
 		public Integer id;
 	}
 }

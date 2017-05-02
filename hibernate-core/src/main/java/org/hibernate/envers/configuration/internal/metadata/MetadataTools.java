@@ -10,6 +10,7 @@ import java.util.Iterator;
 import javax.persistence.JoinColumn;
 
 import org.hibernate.envers.internal.tools.StringTools;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Selectable;
@@ -22,6 +23,7 @@ import org.dom4j.Element;
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public final class MetadataTools {
 	private MetadataTools() {
@@ -159,24 +161,38 @@ public final class MetadataTools {
 		if ( length != null ) {
 			columnMapping.addAttribute( "length", length.toString() );
 		}
+
 		if ( scale != null ) {
 			columnMapping.addAttribute( "scale", Integer.toString( scale ) );
 		}
+
 		if ( precision != null ) {
 			columnMapping.addAttribute( "precision", Integer.toString( precision ) );
 		}
+
 		if ( !StringTools.isEmpty( sqlType ) ) {
-			columnMapping.addAttribute( "sql-type", sqlType );
+			columnMapping.addAttribute( "sql-type", getColumnSqlTypeFromColumnDefinition( sqlType ) );
 		}
 
 		if ( !StringTools.isEmpty( customRead ) ) {
 			columnMapping.addAttribute( "read", customRead );
 		}
+
 		if ( !StringTools.isEmpty( customWrite ) ) {
 			columnMapping.addAttribute( "write", customWrite );
 		}
 
 		return columnMapping;
+	}
+
+	private static String getColumnSqlTypeFromColumnDefinition(String sqlType) {
+		if ( !StringTools.isEmpty( sqlType ) ) {
+			String[] tokens = StringHelper.split( " ", sqlType );
+			if ( tokens.length >= 1 ) {
+				return tokens[ 0 ];
+			}
+		}
+		return null;
 	}
 
 	private static Element createEntityCommon(

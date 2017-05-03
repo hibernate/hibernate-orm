@@ -17,7 +17,16 @@ import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
 import com.vividsolutions.jts.geom.Coordinate;
+//tag::spatial-types-mapping-example[]
+//importing the JTS Point class
+
 import com.vividsolutions.jts.geom.Point;
+
+// other imports omitted
+
+//end::spatial-types-mapping-example[]
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 
@@ -30,6 +39,8 @@ import static org.hibernate.userguide.util.TransactionUtil.doInJPA;
  */
 @RequiresDialect(PostgisDialect.class)
 public class SpatialTest extends BaseEntityManagerFunctionalTestCase {
+
+    GeometryFactory geometryFactory = new GeometryFactory();
 
     @Override
     protected Class<?>[] getAnnotatedClasses() {
@@ -46,7 +57,8 @@ public class SpatialTest extends BaseEntityManagerFunctionalTestCase {
                 Event event = new Event();
                 event.setId( 1L);
                 event.setName( "Hibernate ORM presentation");
-                event.setLocation( (Point) new WKTReader().read( "POINT(10 5)"));
+                Point point = geometryFactory.createPoint( new Coordinate( 10, 5 ) );
+                event.setLocation( point );
 
                 entityManager.persist( event );
                 //end::spatial-types-point-creation-example[]
@@ -65,12 +77,17 @@ public class SpatialTest extends BaseEntityManagerFunctionalTestCase {
 
         doInJPA( this::entityManagerFactory, entityManager -> {
             try {
+                Coordinate [] coordinates = new Coordinate[] {
+                        new Coordinate(1,1), new Coordinate(20,1), new Coordinate(20,20),
+                        new Coordinate(1,20), new Coordinate(1,1)
+                };
                 //tag::spatial-types-query-example[]
+                Polygon window = geometryFactory.createPolygon( coordinates );
                 Event event = entityManager.createQuery(
 					"select e " +
 					"from Event e " +
-					"where within(e.location, :filter) = true", Event.class)
-				.setParameter("filter", new WKTReader().read( "POLYGON((1 1,20 1,20 20,1 20,1 1))"))
+					"where within(e.location, :window) = true", Event.class)
+				.setParameter("filter", window)
                 .getSingleResult();
                 //end::spatial-types-query-example[]
                 Coordinate coordinate = event.getLocation().getCoordinate();
@@ -92,7 +109,6 @@ public class SpatialTest extends BaseEntityManagerFunctionalTestCase {
 
         private String name;
 
-        @Type(type = "jts_geometry")
         private Point location;
 
         //Getters and setters are omitted for brevity

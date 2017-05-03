@@ -22,32 +22,48 @@ final String[] versionComponents = version.split( '\\.' );
 final String majorMinorVersion = versionComponents[0] + '.' + versionComponents[1];
 
 final File documentationDir = mkdir( "${project.buildDir}/documentation" );
-final File ormDocumentationDir = mkdir( new File( documentationDir, "orm" ) )
-final File versionedDocumentationDir = mkdir( new File( ormDocumentationDir, majorMinorVersion ) );
 
 /**
  * Assembles all documentation into the {buildDir}/documentation directory.
  *
  * Depends on building the docs
  */
-task assembleDocumentation(type: Task, dependsOn: [rootProject.project( 'documentation' ).tasks.buildDocs]) {
+task assembleDocumentation(type: Task, dependsOn: [rootProject.project( 'documentation' ).tasks.buildDocsForPublishing]) {
     description = 'Assembles all documentation into the {buildDir}/documentation directory'
 
     doLast {
         // copy documentation outputs into target/documentation.
         // 		* this is used in building the dist bundles
 		//		* it is also used as a base to build a staged directory for documentation upload
+
+        // Integrations Guide
         copy {
-            from "${rootProject.project( 'documentation' ).buildDir}/docbook/publish"
-            into versionedDocumentationDir
+            from "${rootProject.project( 'documentation' ).buildDir}/docbook/publish/integrationsGuide/en-US"
+            into "${documentationDir}/integrationsGuide"
         }
+
+        // Getting-started Guide
         copy {
-            from "${rootProject.project( 'documentation' ).buildDir}/asciidoc"
-            into versionedDocumentationDir
+            from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/quickstart"
+            into "${documentationDir}/quickstart"
         }
+
+        // Topical Guide
+        copy {
+            from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/topical"
+            into "${documentationDir}/topical"
+        }
+
+        // User Guide
+        copy {
+            from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/userguide"
+            into "${documentationDir}/userguide"
+        }
+
+        // Aggregated JavaDoc
         copy {
             from "${rootProject.project( 'documentation' ).buildDir}/javadocs"
-            into "${versionedDocumentationDir}/javadocs"
+            into "${documentationDir}/javadocs"
         }
     }
 }
@@ -58,10 +74,10 @@ task assembleDocumentation(type: Task, dependsOn: [rootProject.project( 'documen
 task uploadDocumentation(type:Exec, dependsOn: assembleDocumentation) {
     description = "Uploads documentation to the JBoss doc server"
 
-    final String url = 'filemgmt.jboss.org:/docs_htdocs/hibernate/';
+    final String url = "filemgmt.jboss.org:/docs_htdocs/hibernate/orm/${majorMinorVersion}";
 
     executable 'rsync'
-    args '-avz', '--links', '--protocol=28', "${ormDocumentationDir.absolutePath}/", url
+    args '-avz', '--links', '--protocol=28', "${documentationDir.absolutePath}/", url
 
     doFirst {
         if ( version.endsWith( "SNAPSHOT" ) ) {

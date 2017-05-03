@@ -15,6 +15,8 @@ import java.lang.reflect.Modifier;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
+import javax.persistence.Transient;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
@@ -451,6 +453,10 @@ public final class ReflectHelper {
 				continue;
 			}
 
+			if ( method.getAnnotation( Transient.class ) != null ) {
+				continue;
+			}
+
 			final String methodName = method.getName();
 
 			// try "get"
@@ -486,9 +492,11 @@ public final class ReflectHelper {
 		// verify that the Class does not also define a method with the same stem name with 'is'
 		try {
 			final Method isMethod = containerClass.getDeclaredMethod( "is" + stemName );
-			// No such method should throw the caught exception.  So if we get here, there was
-			// such a method.
-			checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
+			if ( isMethod.getAnnotation( Transient.class ) == null ) {
+				// No such method should throw the caught exception.  So if we get here, there was
+				// such a method.
+				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
+			}
 		}
 		catch (NoSuchMethodException ignore) {
 		}
@@ -526,7 +534,9 @@ public final class ReflectHelper {
 			final Method getMethod = containerClass.getDeclaredMethod( "get" + stemName );
 			// No such method should throw the caught exception.  So if we get here, there was
 			// such a method.
-			checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
+			if ( getMethod.getAnnotation( Transient.class ) == null ) {
+				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
+			}
 		}
 		catch (NoSuchMethodException ignore) {
 		}

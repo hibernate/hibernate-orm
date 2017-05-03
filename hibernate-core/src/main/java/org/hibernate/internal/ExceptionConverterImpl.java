@@ -50,7 +50,10 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 	public RuntimeException convertCommitException(RuntimeException e) {
 		if ( sharedSessionContract.getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
 			Throwable wrappedException;
-			if ( e instanceof PersistenceException ) {
+			if ( e instanceof HibernateException ) {
+				wrappedException = convert( (HibernateException) e );
+			}
+			else if ( e instanceof PersistenceException ) {
 				Throwable cause = e.getCause() == null ? e : e.getCause();
 				if ( cause instanceof HibernateException ) {
 					wrappedException = convert( (HibernateException) cause );
@@ -58,9 +61,6 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 				else {
 					wrappedException = cause;
 				}
-			}
-			else if ( e instanceof HibernateException ) {
-				wrappedException = convert( (HibernateException) e );
 			}
 			else {
 				wrappedException = e;

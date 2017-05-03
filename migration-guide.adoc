@@ -57,6 +57,33 @@ anything that we should not hold reference to after bootstrap should not be defi
 	`org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager` was left in placce as a shadow (deprecated, extending the new
 	contract) to ease migrations
 
+== Envers 6.0 Migration Incompatibilities
+
+In 6.0, Envers users that use the `ValidityAuditStrategy` receive improved support for database partitioning for their
+audit tables based on the revision end timestamp column.  Prior to 6.0, entities that used the `JOINED` inheritance
+strategy and that were audited only stored the revision end timestamp in the root entity's audit table.  For cases
+where users want to partition their inheritance-based tables equally based on the revision timestamp, this wasn't
+possible without exploring the use of database triggers or other means to replicate the values after the fact
+rather than Envers doing this for you.
+
+With this release, Envers ships with this support enabled by default.  So if you use the `ValidityAuditStrategy` and
+you audit an inheritance strategy that uses `JOINED` inheritance you need to be aware of these changes during your
+migration.  If you use Hibernate's Schema Management to update your schema, this should be seamless.  For users that
+manage their schema manually, you either need to decide to support the feature or use the legacy behavior.
+
+To enable the legacy behavior, set `org.hibernate.envers.audit_strategy_validity_legacy_revend_timestamp` to `true`
+and Envers won't expect this new column to exist on the joined subclass audit tables and won't try to update/set the
+the value.
+
+To manually manipulate your schema, simply add a revison end timestamp column to your joined subclass audit table
+that mirrors the column maintained in your entity's root entity audit table.
+
+Once the column exists, you can:
+
+ * Elect to leave the field empty
+ * Seed it with a sentinel value if you don't intend to use partitioning based on the field's value
+ * Replicate the value from the root entity audit table for the revision end timestamp.  Replication should be based
+   on the entity's primary key value and revision number.
 
 == todo
 

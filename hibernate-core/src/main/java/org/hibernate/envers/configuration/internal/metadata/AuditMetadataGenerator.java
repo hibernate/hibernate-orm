@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -194,6 +195,32 @@ public final class AuditMetadataGenerator {
 				);
 				MetadataTools.addColumn(
 						timestampProperty,
+						options.getRevisionEndTimestampFieldName(),
+						null,
+						null,
+						null,
+						null,
+						null,
+						null
+				);
+			}
+		}
+	}
+
+	private void addEndRevisionTimestamp(Element mapping) {
+		if ( options.getAuditStrategy() instanceof ValidityAuditStrategy ) {
+			if ( options.isRevisionEndTimestampEnabled() ) {
+				final Type timestampType = metadata.getTypeConfiguration().getBasicTypeRegistry().getBasicType( Timestamp.class );
+				final Element property = MetadataTools.addProperty(
+						mapping,
+						options.getRevisionEndTimestampFieldName(),
+						timestampType.getName(),
+						true,
+						true,
+						false
+				);
+				MetadataTools.addColumn(
+						property,
 						options.getRevisionEndTimestampFieldName(),
 						null,
 						null,
@@ -663,6 +690,12 @@ public final class AuditMetadataGenerator {
 
 				// ... and the revision number column, read from the revision info relation mapping.
 				keyMapping.add( (Element) cloneAndSetupRevisionInfoRelationMapping().element( "column" ).clone() );
+
+				if ( !options.isRevisionEndTimestampLegacyBehaviorEnabled() ) {
+					// HHH-9062 - Add revision end timestamp to mapping, if applicable.
+					addEndRevisionTimestamp( mappingData.getFirst() );
+				}
+
 				break;
 
 			case TABLE_PER_CLASS:

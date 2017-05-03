@@ -153,6 +153,7 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 		private final String revisionEndTimestampFieldName;
 		private final boolean revisionEndTimestampEnabled;
 		private final boolean numericRevisionEndTimestampEnabled;
+		private final boolean revisionEndTimestampLegacyBehaviorEnabled;
 		private final String embeddableSetOrdinalPropertyName;
 
 		private boolean trackEntitiesChangedInRevision;
@@ -328,6 +329,13 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 				revisionEndTimestampFieldName = null;
 			}
 
+			// new behavior is enabled by default
+			this.revisionEndTimestampLegacyBehaviorEnabled = ConfigurationHelper.getBoolean(
+					EnversSettings.AUDIT_STRATEGY_VALIDITY_LEGACY_REVEND_TIMESTAMP,
+					properties,
+					false
+			);
+
 			this.revisionPropertyBasePath = originalIdPropertyName + "." + revisionFieldName + ".";
 			this.revisionNumberPath = this.revisionPropertyBasePath + "id";
 
@@ -436,6 +444,11 @@ public class AuditMetadataBuilderImpl implements AuditMetadataBuilderImplementor
 		@Override
 		public boolean isRevisionEndTimestampEnabled() {
 			return revisionEndTimestampEnabled;
+		}
+
+		@Override
+		public boolean isRevisionEndTimestampLegacyBehaviorEnabled() {
+			return revisionEndTimestampLegacyBehaviorEnabled;
 		}
 
 		@Override

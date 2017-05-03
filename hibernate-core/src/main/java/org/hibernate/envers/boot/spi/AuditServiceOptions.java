@@ -53,6 +53,8 @@ public interface AuditServiceOptions {
 
 	boolean isRevisionEndTimestampEnabled();
 
+	boolean isRevisionEndTimestampLegacyBehaviorEnabled();
+
 	String getRevisionEndTimestampFieldName();
 
 	boolean isNumericRevisionEndTimestampEnabled();

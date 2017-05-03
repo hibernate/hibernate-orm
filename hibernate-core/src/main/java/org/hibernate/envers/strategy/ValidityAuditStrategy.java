@@ -11,8 +11,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.LockOptions;
@@ -32,6 +34,7 @@ import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.jdbc.ReturningWork;
+import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.property.access.spi.Getter;
@@ -107,8 +110,8 @@ public class ValidityAuditStrategy implements AuditStrategy {
 					new BeforeTransactionCompletionProcess() {
 						@Override
 						public void doBeforeTransactionCompletion(final SessionImplementor sessionImplementor) {
-							// construct the update context.
-							final UpdateContext updateContext = getUpdateContext(
+							// construct the update contexts.
+							final List<UpdateContext> updateContexts = getUpdateContexts(
 									entityName,
 									auditedEntityName,
 									sessionImplementor,
@@ -116,17 +119,31 @@ public class ValidityAuditStrategy implements AuditStrategy {
 									id,
 									revision
 							);
-							// execute the update
-							if ( executeUpdate( sessionImplementor, updateContext ) != 1 ) {
-								final RevisionType revisionType = getRevisionType( options, data );
-								if ( !reuseIdentifierNames || revisionType != RevisionType.ADD ) {
-									throw new RuntimeException(
-											String.format(
-													"Cannot update previous revision for entity %s and id %s",
-													auditedEntityName,
-													id
-											)
-									);
+
+							if ( updateContexts.isEmpty() ) {
+								throw new RuntimeException(
+										String.format(
+												Locale.ROOT,
+												"Failed to build update contexts for entity %s and id %s",
+												auditedEntityName,
+												id
+										)
+								);
+							}
+
+							// execute the update(s)
+							for ( UpdateContext updateContext : updateContexts ) {
+								if ( executeUpdate( sessionImplementor, updateContext ) != 1 ) {
+									final RevisionType revisionType = getRevisionType( options, data );
+									if ( !reuseIdentifierNames || revisionType != RevisionType.ADD ) {
+										throw new RuntimeException(
+												String.format(
+														"Cannot update previous revision for entity %s and id %s",
+														auditedEntityName,
+														id
+												)
+										);
+									}
 								}
 							}
 						}
@@ -355,6 +372,76 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	}
 
 	/**
+	 * Creates at least one, perhaps multiple, {@link UpdateContext}s based on the entity hierarchy of the
+	 * audited entity instance type.
+	 *
+	 * @param entityName The entity name.
+	 * @param auditedEntityName The audited entity name.
+	 * @param session The session.
+	 * @param auditService The AuditService.
+	 * @param id The entity identifier.
+	 * @param revision The revision entity.
+	 *
+	 * @return list of {@link UpdateContext}s.  Should always contain a minimum of 1 element.
+	 */
+	private List<UpdateContext> getUpdateContexts(String entityName,
+			String auditedEntityName,
+			SessionImplementor session,
+			AuditService auditService,
+			Serializable id,
+			Object revision) {
+		final AuditServiceOptions options = auditService.getOptions();
+
+		Queryable entityQueryable = getQueryable( entityName, session );
+
+		// HHH-9062 - update inherited
+		if ( options.isRevisionEndTimestampEnabled() && !options.isRevisionEndTimestampLegacyBehaviorEnabled() ) {
+			if ( entityQueryable instanceof JoinedSubclassEntityPersister ) {
+				List<UpdateContext> contexts = new ArrayList<>();
+				// iterate subclasses from farther descendant up the hierarchy, excluding root
+				while ( entityQueryable.getMappedSuperclass() != null ) {
+					contexts.add(
+							getNonRootUpdateContext(
+									entityName,
+									auditedEntityName,
+									session,
+									auditService,
+									id,
+									revision
+							)
+					);
+					entityName = entityQueryable.getMappedSuperclass();
+					auditedEntityName = auditService.getAuditEntityName( entityName );
+					entityQueryable = getQueryable( entityName, session );
+				}
+				// process root entity
+				contexts.add(
+						getUpdateContext(
+								entityName,
+								auditedEntityName,
+								session,
+								auditService,
+								id,
+								revision
+						)
+				);
+				return contexts;
+			}
+		}
+
+		return Collections.singletonList(
+				getUpdateContext(
+						entityName,
+						auditedEntityName,
+						session,
+						auditService,
+						id,
+						revision
+				)
+		);
+	}
+
+	/**
 	 * Creates the update context used to modify the revision end and potentially timestamp values.
 	 *
 	 * @param entityName The entity name.
@@ -409,21 +496,92 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			update.bind( getRevisionEndTimestampValue( revision, options ), timestampType );
 		}
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// WHERE (entity_id) = ? AND REV <> ? AND REVEND is null
-		update.addPrimaryKeyColumns( rootEntityQueryable.getIdentifierColumnNames() );
-		update.bind( id, rootEntityQueryable.getIdentifierType() );
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// AND REV <> ?
-		update.addWhereColumn( rootAuditedEntityQueryable.toColumns( options.getRevisionNumberPath() )[0], " <> ?" );
-		update.bind( revisionNumber, rootAuditedEntityQueryable.getPropertyType( options.getRevisionNumberPath() ) );
+		applyUpdateContextWhereCommon( update, rootEntityQueryable, rootAuditedEntityQueryable, options, id, revisionNumber );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// AND REVEND is null
-		update.addWhereColumn( rootAuditedEntityQueryable.toColumns( options.getRevisionEndFieldName() )[0], " is null" );
+		update.addWhereColumn( auditedEntityQueryable.toColumns( options.getRevisionEndFieldName() )[0], " is null" );
 
 		return update;
+	}
+
+	/**
+	 * Creates the update context used to modify the revision end timestamp values for a non root entity.
+	 *
+	 * IMPL NOTE: This is only used to set the revision end timestamp for joined inheritance non-root entity tables.
+	 *
+	 * @param entityName The entity name.
+	 * @param auditedEntityName The audited entity name.
+	 * @param session The session.
+	 * @param auditService The AuditService.
+	 * @param id The entity identifier.
+	 * @param revision The revision entity.
+	 *
+	 * @return The {@link UpdateContext} instance.
+	 */
+	private UpdateContext getNonRootUpdateContext(String entityName,
+			String auditedEntityName,
+			SessionImplementor session,
+			AuditService auditService,
+			Serializable id,
+			Object revision) {
+
+		// The expected output from this method is an UPDATE statement that follows:
+		// UPDATE audit_ent
+		//	SET REVEND_TSTMP = ?
+		// WHERE (entity_id) = ?
+		// AND REV <> ?
+		// AND REVEND_TSTMP is null
+
+		final SessionFactoryImplementor sessionFactory = session.getSessionFactory();
+		final AuditServiceOptions options = auditService.getOptions();
+
+		final Queryable entityQueryable = getQueryable( entityName, session );
+		final Queryable auditedEntityQueryable = getQueryable( auditedEntityName, session );
+
+		final UpdateContext update = new UpdateContext( sessionFactory );
+		update.setTableName( getUpdateTableName( entityQueryable, auditedEntityQueryable, auditedEntityQueryable ) );
+
+		final Type timestampType = auditedEntityQueryable.getPropertyType( options.getRevisionEndTimestampFieldName() );
+		final Object timestampValue = getRevisionEndTimestampValue( revision, options );
+		update.addColumn( auditedEntityQueryable.toColumns( options.getRevisionEndTimestampFieldName() )[0] );
+		update.bind( timestampValue, timestampType );
+
+		final Number revisionNumber = auditService.getRevisionInfoNumberReader().getRevisionNumber( revision );
+		applyUpdateContextWhereCommon( update, entityQueryable, auditedEntityQueryable, options, id, revisionNumber );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// AND REVEND_TSTMP is null
+		update.addWhereColumn( auditedEntityQueryable.toColumns( options.getRevisionEndTimestampFieldName() )[0], " is null" );
+
+		return update;
+	}
+
+	/**
+	 * Apply common where predicates to the update context.
+	 *
+	 * @param updateContext The update context.
+	 * @param entityQueryable The entity queryable.
+	 * @param auditedEntityQueryable The audited entity queryable.
+	 * @param options The AuditServiceOptions.
+	 * @param id The entity identifier.
+	 * @param revisionNumber The revision number.
+	 */
+	private void applyUpdateContextWhereCommon(UpdateContext updateContext,
+			Queryable entityQueryable,
+			Queryable auditedEntityQueryable,
+			AuditServiceOptions options,
+			Serializable id,
+			Number revisionNumber) {
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// WHERE (entity_id) = ? AND REV <> ? AND REVEND is null
+		updateContext.addPrimaryKeyColumns( entityQueryable.getIdentifierColumnNames() );
+		updateContext.bind( id, entityQueryable.getIdentifierType() );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// AND REV <> ?
+		updateContext.addWhereColumn( auditedEntityQueryable.toColumns( options.getRevisionNumberPath() )[0], " <> ?" );
+		updateContext.bind( revisionNumber, auditedEntityQueryable.getPropertyType( options.getRevisionNumberPath() ) );
 	}
 
 	private Queryable getQueryable(String entityName, SessionImplementor sessionImplementor) {

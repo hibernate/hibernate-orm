@@ -109,6 +109,11 @@ It is possible to configure various aspects of Hibernate Envers behavior, such a
 |`org.hibernate.envers.cascade_delete_revision` |`false` |While deleting revision entry, remove data of associated audited entities. Requires database support for cascade row removal.
 
 |`org.hibernate.envers.allow_identifier_reuse` |`false` |Guarantees proper validity audit strategy behavior when application reuses identifiers of deleted entities. Exactly one row with `null` end date exists for each identifier.
+|`org.hibernate.envers.audit_strategy_validity_legacy_revend_timestamp` |`true` |Should use legacy validity-based audit strategy's joined inheritance-based revision end timestamp behavior.
+
+
+  When enabled, the revision end timestamp is only maintained in the root entity of the hierarchy.
+  When disabled, the revision end timestamp will be maintained in all audit tables of the joined entity inheritance-strategy mapping.
 |=======================================================================
 
 [IMPORTANT]
@@ -120,6 +125,7 @@ be regarded as experimental:
 .  `org.hibernate.envers.using_modified_flag`
 .  `org.hibernate.envers.modified_flag_suffix`
 .  `org.hibernate.envers.use_numeric_revend_timestamp_type`
+.  `org.hibernate.envers.audit_strategy_validity_legacy_revend_timestamp` (See HHH-9062)
 ====
 
 === Additional mapping annotations
@@ -989,6 +995,8 @@ Optionally, you can also override the default values using following properties:
 `org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name`
 
 `org.hibernate.envers.use_numeric_revend_timestamp_field_type`
+
+`org.hibernate.envers.audit_strategy_validity_legacy_revend_timestamp`
 
 For more information, see <<envers-configuration>>.
 ====

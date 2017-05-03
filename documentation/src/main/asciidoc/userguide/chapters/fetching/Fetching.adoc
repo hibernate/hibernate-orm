@@ -287,9 +287,9 @@ Besides the `FetchType.LAZY` or `FetchType.EAGER` JPA annotations,
 you can also use the Hibernate-specific `@Fetch` annotation that accepts one of the following `FetchMode`s:
 
 SELECT::
-	Use a secondary select for each individual entity, collection, or join load.
+	Use a secondary select for each individual entity, collection, or join load. This FetchMode is the default one if the associated is marked as `FetchType.LAZY`.
 JOIN::
-	Use an outer join to load the related entities, collections or joins.
+	Use an outer join to load the related entities, collections or joins. This FetchMode is the default one if the associated is marked as `FetchType.EAGER`.
 SUBSELECT::
 	Available for collections only.  
 	When accessing a non-initialized collection, this fetch mode will trigger loading all elements of all collections of the same role

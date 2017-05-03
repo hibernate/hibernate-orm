@@ -38,6 +38,7 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SQLiteDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
@@ -165,6 +166,8 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "Oracle", 9, Oracle9iDialect.class, resolver );
 		testDetermination( "Oracle", 10, Oracle10gDialect.class, resolver );
 		testDetermination( "Oracle", 11, Oracle10gDialect.class, resolver );
+		testDetermination( "SQLite", SQLiteDialect.class, resolver );
+		testDetermination( "SQLite 3", SQLiteDialect.class, resolver );
 	}
 
 	@Test

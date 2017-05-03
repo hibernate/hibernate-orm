@@ -17,4 +17,5 @@ public interface ManagedTypeMapping {
 	java.util.List<ManagedTypeMapping> getSubclassMappings();
 
 	java.util.List<Property> getDeclaredProperties();
+	java.util.List<Property> getProperties();
 }

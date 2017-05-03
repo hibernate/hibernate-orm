@@ -58,29 +58,38 @@ public class Subclass extends PersistentClass {
 		return superclass;
 	}
 
+	@Override
 	public Property getIdentifierProperty() {
 		return getSuperclass().getIdentifierProperty();
 	}
 
+	@Override
 	public Property getDeclaredIdentifierProperty() {
 		return null;
 	}
 
+	@Override
 	public KeyValue getIdentifier() {
 		return getSuperclass().getIdentifier();
 	}
+
+	@Override
 	public boolean hasIdentifierProperty() {
 		return getSuperclass().hasIdentifierProperty();
 	}
+
 	public Value getDiscriminator() {
 		return getSuperclass().getDiscriminator();
 	}
+
 	public boolean isMutable() {
 		return getSuperclass().isMutable();
 	}
+
 	public boolean isInherited() {
 		return true;
 	}
+
 	public boolean isPolymorphic() {
 		return true;
 	}
@@ -106,22 +115,26 @@ public class Subclass extends PersistentClass {
 				getPropertyIterator()
 			);
 	}
+
 	public Iterator getTableClosureIterator() {
 		return new JoinedIterator(
 				getSuperclass().getTableClosureIterator(),
 				new SingletonIterator( getTable() )
 			);
 	}
+
 	public Iterator getKeyClosureIterator() {
 		return new JoinedIterator(
 				getSuperclass().getKeyClosureIterator(),
 				new SingletonIterator( getKey() )
 			);
 	}
+
 	protected void addSubclassProperty(Property p) {
 		super.addSubclassProperty(p);
 		getSuperclass().addSubclassProperty(p);
 	}
+
 	protected void addSubclassJoin(Join j) {
 		super.addSubclassJoin(j);
 		getSuperclass().addSubclassJoin(j);
@@ -132,20 +145,26 @@ public class Subclass extends PersistentClass {
 		getSuperclass().addSubclassTable(table);
 	}
 
+	@Override
 	public boolean isVersioned() {
 		return getSuperclass().isVersioned();
 	}
+
+	@Override
 	public Property getVersion() {
 		return getSuperclass().getVersion();
 	}
 
+	@Override
 	public Property getDeclaredVersion() {
 		return null;
 	}
 
+	@Override
 	public boolean hasEmbeddedIdentifier() {
 		return getSuperclass().hasEmbeddedIdentifier();
 	}
+
 	public Class getEntityPersisterClass() {
 		if (classPersisterClass==null) {
 			return getSuperclass().getEntityPersisterClass();
@@ -277,6 +296,7 @@ public class Subclass extends PersistentClass {
 		}
 	}
 
+	@Override
 	public Component getIdentifierMapper() {
 		return superclass.getIdentifierMapper();
 	}

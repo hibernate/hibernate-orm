@@ -7,7 +7,6 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.spi.Type;
 

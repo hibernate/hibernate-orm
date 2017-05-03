@@ -30,9 +30,6 @@ public class RootClass extends PersistentClass implements TableOwner {
 	public static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
 	public static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
 
-	private Property identifierProperty;
-	private KeyValue identifier;
-	private Property version;
 	private boolean polymorphic;
 	private String cacheConcurrencyStrategy;
 	private String cacheRegionName;
@@ -40,7 +37,6 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private boolean lazyPropertiesCacheable = true;
 	private Value discriminator;
 	private boolean mutable = true;
-	private boolean embeddedIdentifier;
 	private boolean explicitPolymorphism;
 	private Class entityPersisterClass;
 	private boolean forceDiscriminator;
@@ -48,8 +44,6 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private Table table;
 	private boolean discriminatorInsertable = true;
 	private int nextSubclassId;
-	private Property declaredIdentifierProperty;
-	private Property declaredVersion;
 	private boolean cachingExplicitlyRequested;
 
 	public RootClass(MetadataBuildingContext metadataBuildingContext) {
@@ -75,28 +69,8 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return table;
 	}
 
-	@Override
-	public Property getIdentifierProperty() {
-		return identifierProperty;
-	}
-
-	@Override
-	public Property getDeclaredIdentifierProperty() {
-		return declaredIdentifierProperty;
-	}
-
 	public void setDeclaredIdentifierProperty(Property declaredIdentifierProperty) {
-		this.declaredIdentifierProperty = declaredIdentifierProperty;
-	}
-
-	@Override
-	public KeyValue getIdentifier() {
-		return identifier;
-	}
-
-	@Override
-	public boolean hasIdentifierProperty() {
-		return identifierProperty != null;
+		injectDeclaredIdentifierProperty( declaredIdentifierProperty );
 	}
 
 	@Override
@@ -149,37 +123,17 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return explicitPolymorphism;
 	}
 
-	@Override
-	public Property getVersion() {
-		return version;
-	}
-
-	@Override
-	public Property getDeclaredVersion() {
-		return declaredVersion;
-	}
-
 	public void setDeclaredVersion(Property declaredVersion) {
-		this.declaredVersion = declaredVersion;
+		injectDeclaredVersionProperty( declaredVersion );
 	}
 
 	public void setVersion(Property version) {
-		this.version = version;
-	}
-
-	@Override
-	public boolean isVersioned() {
-		return version != null;
+		injectVersion( version );
 	}
 
 	@Override
 	public boolean isMutable() {
 		return mutable;
-	}
-
-	@Override
-	public boolean hasEmbeddedIdentifier() {
-		return embeddedIdentifier;
 	}
 
 	@Override
@@ -212,7 +166,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	public void setEmbeddedIdentifier(boolean embeddedIdentifier) {
-		this.embeddedIdentifier = embeddedIdentifier;
+		injectEmbeddedIdentifier( embeddedIdentifier );
 	}
 
 	public void setExplicitPolymorphism(boolean explicitPolymorphism) {
@@ -220,13 +174,12 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	public void setIdentifier(KeyValue identifier) {
-		this.identifier = identifier;
+		injectIdentifier( identifier );
 	}
 
 	public void setIdentifierProperty(Property identifierProperty) {
-		this.identifierProperty = identifierProperty;
+		injectIdentifierProperty( identifierProperty );
 		identifierProperty.setPersistentClass( this );
-
 	}
 
 	public void setMutable(boolean mutable) {

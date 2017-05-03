@@ -7,7 +7,10 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +40,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements EmbeddedValueMapping, org.hibernate.boot.model.domain.ManagedTypeMapping, PropertyContainer, MetaAttributable {
+public class Component extends SimpleValue implements EmbeddedValueMapping, org.hibernate.boot.model.domain.ManagedTypeMapping, MetaAttributable {
 	private ArrayList<Property> properties = new ArrayList<>();
 	private String componentClassName;
 	private boolean embedded;
@@ -81,6 +84,11 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, org.
 
 	public void addProperty(Property p) {
 		properties.add( p );
+	}
+
+	@Override
+	public java.util.List<Property> getProperties() {
+		return properties;
 	}
 
 	@Override
@@ -435,11 +443,6 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, org.
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// atm components/embeddables are not (yet) hierarchical
-
-	@Override
-	public PropertyContainer getSuperPropertyContainer() {
-		return null;
-	}
 
 	@Override
 	public ManagedTypeMapping getSuperclassMapping() {

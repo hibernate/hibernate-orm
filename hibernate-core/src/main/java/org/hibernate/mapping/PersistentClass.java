@@ -7,9 +7,12 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.util.*;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
@@ -23,7 +26,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
-import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 
@@ -32,7 +34,9 @@ import org.hibernate.sql.Alias;
  *
  * @author Gavin King
  */
-public abstract class PersistentClass implements EntityMapping, AttributeContainer, PropertyContainer, Serializable, Filterable, MetaAttributable {
+public abstract class PersistentClass
+		extends AbstractIdentifiableTypeMapping
+		implements AttributeContainer, Serializable, Filterable, MetaAttributable {
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
 	public static final String NULL_DISCRIMINATOR_MAPPING = "null";
@@ -53,7 +57,6 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 	private String discriminatorValue;
 	private boolean lazy;
 	private ArrayList properties = new ArrayList();
-	private ArrayList declaredProperties = new ArrayList();
 	private final ArrayList<Subclass> subclasses = new ArrayList<>();
 	private final ArrayList subclassProperties = new ArrayList();
 	private final ArrayList subclassTables = new ArrayList();
@@ -69,7 +72,6 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 	private String loaderName;
 	private Boolean isAbstract;
 	private boolean hasSubselectLoadableCollections;
-	private Component identifierMapper;
 
 	// Custom SQL
 	private String customSQLInsert;
@@ -85,7 +87,6 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 	private java.util.Map tuplizerImpls;
 
 	private MappedSuperclass superMappedSuperclass;
-	private Component declaredIdentifierMapper;
 	private OptimisticLockStyle optimisticLockStyle;
 
 	public PersistentClass(MetadataBuildingContext metadataBuildingContext) {
@@ -237,7 +238,7 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 	@Override
 	public void addProperty(Property p) {
 		properties.add( p );
-		declaredProperties.add( p );
+		addDeclaredProperty( p );
 		p.setPersistentClass( this );
 	}
 
@@ -249,25 +250,11 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 
 	public abstract boolean isMutable();
 
-	public abstract boolean hasIdentifierProperty();
-
-	public abstract Property getIdentifierProperty();
-
-	public abstract Property getDeclaredIdentifierProperty();
-
-	public abstract KeyValue getIdentifier();
-
-	public abstract Property getVersion();
-
-	public abstract Property getDeclaredVersion();
-
 	public abstract Value getDiscriminator();
 
 	public abstract boolean isInherited();
 
 	public abstract boolean isPolymorphic();
-
-	public abstract boolean isVersioned();
 
 	public abstract String getNaturalIdCacheRegionName();
 
@@ -331,8 +318,6 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 	public void setLazy(boolean lazy) {
 		this.lazy = lazy;
 	}
-
-	public abstract boolean hasEmbeddedIdentifier();
 
 	public abstract Class getEntityPersisterClass();
 
@@ -903,24 +888,12 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 		this.hasSubselectLoadableCollections = hasSubselectCollections;
 	}
 
-	public Component getIdentifierMapper() {
-		return identifierMapper;
-	}
-
-	public Component getDeclaredIdentifierMapper() {
-		return declaredIdentifierMapper;
-	}
-
 	public void setDeclaredIdentifierMapper(Component declaredIdentifierMapper) {
-		this.declaredIdentifierMapper = declaredIdentifierMapper;
+		injectDeclaredIdentifierMapper( declaredIdentifierMapper );
 	}
 
-	public boolean hasIdentifierMapper() {
-		return identifierMapper != null;
-	}
-
-	public void setIdentifierMapper(Component handle) {
-		this.identifierMapper = handle;
+	public void setIdentifierMapper(Component identifierMapper) {
+		injectIdentifierMapper( identifierMapper );
 	}
 
 	public void addTuplizer(EntityMode entityMode, String implClassName) {
@@ -959,22 +932,12 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 	// The following methods are added to support @MappedSuperclass in the metamodel
 	public Iterator getDeclaredPropertyIterator() {
 		ArrayList iterators = new ArrayList();
-		iterators.add( declaredProperties.iterator() );
+		iterators.add( getDeclaredProperties().iterator() );
 		for ( int i = 0; i < joins.size(); i++ ) {
 			Join join = (Join) joins.get( i );
 			iterators.add( join.getDeclaredPropertyIterator() );
 		}
 		return new JoinedIterator( iterators );
-	}
-
-	@Override
-	public List<Property> getDeclaredProperties() {
-		return declaredProperties;
-	}
-
-	@Override
-	public PropertyContainer getSuperPropertyContainer() {
-		return superMappedSuperclass;
 	}
 
 	public void addMappedsuperclassProperty(Property p) {

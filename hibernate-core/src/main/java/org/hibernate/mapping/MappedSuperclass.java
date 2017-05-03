@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.cfg.NotYetImplementedException;
+
 /**
  * Represents a @MappedSuperclass.
  * A @MappedSuperclass can be a superclass of an @Entity (root or not)
@@ -26,7 +28,7 @@ import java.util.List;
  *
  * @author Emmanuel Bernard
  */
-public class MappedSuperclass implements PropertyContainer {
+public class MappedSuperclass implements ManagedTypeMapping {
 	private final MappedSuperclass superMappedSuperclass;
 	private final PersistentClass superPersistentClass;
 	private final List declaredProperties;
@@ -212,12 +214,19 @@ public class MappedSuperclass implements PropertyContainer {
 	}
 
 	@Override
-	public PropertyContainer getSuperPropertyContainer() {
+	public ManagedTypeMapping getSuperclassMapping() {
 		return superMappedSuperclass != null ? superMappedSuperclass : superPersistentClass;
 	}
 
 	@Override
-	public List<Property> getDeclaredProperties() {
-		return null;
+	public java.util.List<Property> getDeclaredProperties() {
+		// todo: (6.0) implement this
+		throw new NotYetImplementedException();
+	}
+
+	@Override
+	public List<Property> getProperties() {
+		// todo: (6.0) implement this
+		throw new NotYetImplementedException();
 	}
 }

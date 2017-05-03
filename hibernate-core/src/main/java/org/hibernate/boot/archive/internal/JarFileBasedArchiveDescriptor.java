@@ -70,8 +70,8 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 				//
 				// This algorithm assumes that the zipped file is only the URL root (including entry), not
 				// just any random entry
-				try (InputStream is = new BufferedInputStream( jarFile.getInputStream( zipEntry ) )) {
-					final JarInputStream jarInputStream = new JarInputStream( is );
+				try (InputStream is = new BufferedInputStream( jarFile.getInputStream( zipEntry ) ); 
+						final JarInputStream jarInputStream = new JarInputStream( is )) {
 					ZipEntry subZipEntry = jarInputStream.getNextEntry();
 					while ( subZipEntry != null ) {
 						if ( ! subZipEntry.isDirectory() ) {

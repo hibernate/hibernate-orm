@@ -215,7 +215,9 @@ public class SchemaUpdateTask extends MatchingTask {
 			properties.putAll( getProject().getProperties() );
 		}
 		else {
-			properties.load( new FileInputStream( propertiesFile ) );
+			try (FileInputStream fip = new FileInputStream( propertiesFile )){
+				properties.load( fip );
+			} 
 		}
 
 		registryBuilder.applySettings( properties );

@@ -59,9 +59,6 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 					wrappedException = cause;
 				}
 			}
-			else if ( e instanceof HibernateException ) {
-				wrappedException = convert( (HibernateException) e );
-			}
 			else {
 				wrappedException = e;
 			}

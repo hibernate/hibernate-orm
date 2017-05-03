@@ -145,8 +145,7 @@ public class ExplodedArchiveDescriptor extends AbstractArchiveDescriptor {
 	}
 
 	private void processZippedRoot(File rootFile, ArchiveContext context) {
-		try {
-			final JarFile jarFile = new JarFile(rootFile);
+		try (final JarFile jarFile = new JarFile(rootFile)){
 			final Enumeration<? extends ZipEntry> entries = jarFile.entries();
 			while ( entries.hasMoreElements() ) {
 				final ZipEntry zipEntry = entries.nextElement();

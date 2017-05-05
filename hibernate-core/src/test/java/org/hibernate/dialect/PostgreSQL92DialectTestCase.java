@@ -17,6 +17,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Christoph Dreis
  */
+@TestForIssue( jiraKey = "HHH-11647")
 public class PostgreSQL92DialectTestCase extends BaseUnitTestCase {
 
 	/**

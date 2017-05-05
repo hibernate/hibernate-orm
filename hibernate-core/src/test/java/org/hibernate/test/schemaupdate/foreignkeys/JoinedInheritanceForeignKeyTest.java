@@ -27,6 +27,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -65,7 +66,7 @@ public class JoinedInheritanceForeignKeyTest extends BaseUnitTestCase {
 	public void testForeignKeyHasCorrectName() throws Exception {
 		createSchema( new Class[] {Role.class, User.class, Person.class} );
 		checkAlterTableStatement( new AlterTableStatement(
-				"User",
+				ssr, "User",
 				"FK_PERSON_ROLE",
 				"USER_ID",
 				"PersonRole"
@@ -78,7 +79,7 @@ public class JoinedInheritanceForeignKeyTest extends BaseUnitTestCase {
 		final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
 		boolean found = false;
 		for ( String line : sqlLines ) {
-			if ( line.matches( expectedAlterTableStatement ) ) {
+			if ( line.contains( expectedAlterTableStatement ) ) {
 				return;
 			}
 		}
@@ -86,16 +87,18 @@ public class JoinedInheritanceForeignKeyTest extends BaseUnitTestCase {
 	}
 
 	private static class AlterTableStatement {
+		final StandardServiceRegistry ssr;
 		final String tableName;
 		final String fkConstraintName;
 		final String fkColumnName;
 		final String referenceTableName;
 
 		public AlterTableStatement(
-				String tableName,
+				StandardServiceRegistry ssr, String tableName,
 				String fkConstraintName,
 				String fkColumnName,
 				String referenceTableName) {
+			this.ssr = ssr;
 			this.tableName = tableName;
 			this.fkConstraintName = fkConstraintName;
 			this.fkColumnName = fkColumnName;
@@ -103,7 +106,7 @@ public class JoinedInheritanceForeignKeyTest extends BaseUnitTestCase {
 		}
 
 		public String toSQL() {
-			return "alter table (?:if exists) " + tableName + " add constraint " + fkConstraintName + " foreign key \\(" + fkColumnName + "\\) references " + referenceTableName;
+			return ssr.getService( JdbcEnvironment.class ).getDialect().getAlterTableString( tableName ) + " add constraint " + fkConstraintName + " foreign key (" + fkColumnName + ") references " + referenceTableName;
 		}
 	}
 

@@ -37,7 +37,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
 /**
- * A convenience bas class for listeners responding to save events.
+ * A convenience base class for listeners responding to save events.
  *
  * @author Steve Ebersole.
  */

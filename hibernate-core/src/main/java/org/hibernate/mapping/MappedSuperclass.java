@@ -219,9 +219,14 @@ public class MappedSuperclass implements ManagedTypeMapping {
 	}
 
 	@Override
-	public java.util.List<Property> getDeclaredProperties() {
+	public List<ManagedTypeMapping> getSubclassMappings() {
 		// todo: (6.0) implement this
 		throw new NotYetImplementedException();
+	}
+
+	@Override
+	public java.util.List<Property> getDeclaredProperties() {
+		return declaredProperties;
 	}
 
 	@Override

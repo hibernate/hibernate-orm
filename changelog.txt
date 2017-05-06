@@ -3,58 +3,71 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changed in 5.1.6.Final (May 5, 2017)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/28200
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2028200%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-11145] - SQLServer2005LimitHandler creates invalid query when quoted column uses keywords.
+    * [HHH-11324] - SQLServer2005LimitHandler uncapable of handle subquery in column list
+    * [HHH-11352] - Hibernate & Paging: BROKEN when a column contains the word "FROM" for SQL Server
+    * [HHH-11459] - Bytecode-enhanced Entity cannot be merged or refreshed
+    * [HHH-11576] - Unloaded collections get deleted when entity is bytecode enhanced
+    * [HHH-11611] - InsertOrderingWithJoinedTableMultiLevelInheritance test hangs on sybase 15.7
+
+** Improvement
+    * [HHH-11499] - Add a new DB2 dialect that uses "cross join" for cross joins instead of ","
+
 Changes in 5.1.5.Final (March 13, 2017)
 ------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/28103
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2028103%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
 
-    [JBEAP-7850 / HHH-11530] - IdentityGeneratorExtendsTest.testIdentifierGeneratorExtendsIdentityGenerator failing on Oracle DBs
+** Bug
+    * [HHH-10537] - Usage of JPQL KEY() with entity key generates inner join
+    * [HHH-10577] - Allow dereferencing of KEY() path
+    * [HHH-10889] - Fix unit tests failing on Oracle
+    * [HHH-10919] - HQL: Sql syntax exception when joining a Map<Entity,Component>
+    * [HHH-10930] - Need to add jta dependency for the plugin to work
+    * [HHH-10981] - Support private persistent attributes in @MappedSuperclas
+    * [HHH-10989] - Unidirectional one-to-many doesn't take care of many side during removal if bytecode enhancement is on
+    * [HHH-11050] - Gradle Enhancement Task RuntimeException: class is frozen
+    * [HHH-11173] - Bytecode enhanced lazy collection won't load from cache
+    * [HHH-11284] - Enhancer dirty tracking doesn't work with inherited entities
+    * [HHH-11287] - requiresDependencyResolution must bet set in plugin.xml to include maven dependencies in enhancement classpath
+    * [HHH-11288] - Execution project artifacts are always empty, so dependencies are never included
+    * [HHH-11293] - Use of enhancer dirty tracking causes collections in entities to not be persisted
+    * [HHH-11294] - NPE in org.hibernate.jpa.internal.util.PersistenceUtilHelper.isInitialized(PersistentAttributeInterceptable)
+    * [HHH-11400] - HHH90000016: Found use of deprecated 'collection property' issue for valid JPQL query
+    * [HHH-11404] - ManagedSuperclass not enhanced when extending another ManagedSuperclass
+    * [HHH-11418] - SynonymValidationTest failure
+    * [HHH-11419] - QueryAndSQLTest failing on MS SQL Server
+    * [HHH-11434] - Failure in some tests causes TS to hang infinitely
+    * [HHH-11456] - SequenceHiLoGeneratorTest fails due to wrong select string on SQL Server
+    * [HHH-11506] - Lazy properties are not updated on bytecode-enhanced entity if not all lazy properties (e.g. collections) are initialized
+    * [HHH-11516] - Level two cache may not be enabled when using @Cacheable without/instead of @Cache
 
-    [JBEAP-8302 / HHH-11434] - some tests hanging on Sybase 16 due to issues with temporary tables
+** New Feature
+    * [HHH-3771] - Best practice for equals/hashCode implementation
+    * [HHH-10689] - Fix tests failing when switching to Oracle
 
-    [JBEAP-8394 / HHH-11400] - Found use of deprecated 'collection property' issue for valid JPQL query
+** Task
+    * [HHH-7010] - Document mapping annotations
 
-    [JBEAP-8477 / HHH-11418] - SynonymValidationTest fails because JdbcMetadaAccessStrategy.GROUPED doesn't work with synonyms in Oracle
+** Improvement
+    * [HHH-2643] - Improve Session.refresh() Javdoc to clarify contract
+    * [HHH-10996] - The cleanupTestData utility has issues with link tables
+    * [HHH-11066] - Documentation regarding the reason @Filter is not supported with @Cache for collections
+    * [HHH-11132] - Add a Performance Tuning and Best Practices chapter
+    * [HHH-11174] - Document that XML file mappings can reside outside of JAR
+    * [HHH-11189] - Remove all links to external blog posts from User Guide
+    * [HHH-11282] - Support m2e/Eclipse integration in hibernate-enhance-maven-plugin
+    * [HHH-11530] - IdentityGeneratorExtendsTest.testIdentifierGeneratorExtendsIdentityGenerator failing on Oracle DBs
 
-    [JBEAP-8479 / HHH-11419] - QueryAndSQLTest failing on MS SQL Server
+** Patch
+    * [HHH-2123] - clarification on the way interceptors and event system interact.
 
-    [JBEAP-8555] Miscellaneous enhancement bugfixes:
-                 [HHH-10989] - Unidirectional one-to-many doesn't take care of many side during removal if bytecode enhancement is on
-                 [HHH-10930] - Add explicit dependency on JTA to the maven enhacer plugin
-                 [HHH-10981] - Support private persistent attributes in @MappedSuperclas
-                 [HHH-11050] - Gradle Enhancement Task RuntimeException: class is frozen
-                 [HHH-11173] - Bytecode enhanced lazy collection won't load from cache
-                 [HHH-11282] - Support m2e/Eclipse integration in hibernate-enhance-maven-plugin
-                 [HHH-11284] - Enhancer dirty tracking doesn't work with inherited entities
-                 [HHH-11287] - requiresDependencyResolution must bet set in plugin.xml to include maven dependencies in enhancement classpath
-                 [HHH-11288] - Execution project artifacts are always empty, so dependencies are never included
-                 [HHH-11293] - Use of enhancer dirty tracking causes collections in entities to not be persisted
-                 [HHH-11294] - NPE in org.hibernate.jpa.internal.util.PersistenceUtilHelper.isInitialized(PersistentAttributeInterceptable)
-                 [HHH-11404] - ManagedSuperclass not enhanced when extending another ManagedSuperclass
-
-    [JBEAP-8684 / HHH-11456] - SequenceHiLoGeneratorTest fails due to wrong select string on mssql
-
-    [JBEAP-8686 / HHH-10689] - hibernate-envers AssociationToOne*QueryTest fail on Oracle due to keyword usage
-
-    [JBEAP-8719 / HHH-10889] - Hibernate Envers GeneratedColumnTest fails on all databases
-
-    [JBEAP-8842] Upstream documentation improvements:
-                 [HHH-2123] - clarification on the way interceptors and event system interact.
-                 [HHH-2643] - Improve Session.refresh() Javdoc to clarify contract
-                 [HHH-3771] - Best practice for equals/hashCode implementation
-                 [HHH-7010] - Document mapping annotations
-                 [HHH-11066] - Documentation regarding the reason @Filter is not supported with @Cache for collections
-                 [HHH-11132] - Add a Performance Tuning and Best Practices chapter
-                 [HHH-11174] - Document that XML file mappings can reside outside of JAR
-                 [HHH-11189] - Remove all links to external blog posts from User Guide
-
-    [JBEAP-9008] JPQL/HQL bugfixes:
-                 [HHH-10537] - Usage of JPQL KEY() with entity key generates inner join
-                 [HHH-10577] - Allow dereferencing of KEY() path
-                 [HHH-10919] - HQL: Sql syntax exception when joining a Map<Entity,Component>
-                 [HHH-10996] - The cleanupTestData utility has issues with link tables
-
-    [JBEAP-9160 / HHH-11516] - Level two cache may not be enabled when using @Cacheable without/instead of @Cache
-
-    [JBEAP-9273 / HHH-11506] - Lazy properties are not updated on bytecode-enhanced entity if not all lazy properties (e.g. collections) are initialized
 
 Changes in 5.1.4.Final (January 19, 2017)
 ------------------------------------------------------------------------------------------------------------------------

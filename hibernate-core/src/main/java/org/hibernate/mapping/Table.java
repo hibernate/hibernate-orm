@@ -20,6 +20,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
@@ -39,7 +40,7 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 @SuppressWarnings("unchecked")
-public class Table implements RelationalModel, Serializable, Exportable {
+public class Table implements MappedTable, RelationalModel, Serializable {
 	private static final Logger log = Logger.getLogger( Table.class );
 
 	private Identifier catalog;

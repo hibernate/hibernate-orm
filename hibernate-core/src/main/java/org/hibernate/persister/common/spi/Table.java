@@ -9,16 +9,16 @@ package org.hibernate.persister.common.spi;
 import java.util.Collection;
 
 /**
- * Represents a table in the mapping.  The name "table reference" comes from ANSI SQL
- * to describe the fact that the "table" might be a derived table (in-line view) or
- * a physical table reference.
+ * Represents a table in the mapping in terms of what ANSI SQL calls a
+ * "table reference".  Specifically, this models the commonality between
+ * a physical table reference and a derived table (in-line view).
  *
  * @author Steve Ebersole
  */
 public interface Table {
 	String getTableExpression();
 
-	PhysicalColumn makeColumn(String column, int jdbcType);
+	PhysicalColumn makeColumn(String columnName, int jdbcType);
 
 	DerivedColumn makeFormula(String formula, int jdbcType);
 

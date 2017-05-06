@@ -14,54 +14,54 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.QuerySpec;
-import org.hibernate.sql.ast.SelectQuery;
-import org.hibernate.sql.ast.expression.AvgFunction;
-import org.hibernate.sql.ast.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.expression.CoalesceExpression;
-import org.hibernate.sql.ast.expression.ColumnBindingExpression;
-import org.hibernate.sql.ast.expression.ConcatExpression;
-import org.hibernate.sql.ast.expression.CountFunction;
-import org.hibernate.sql.ast.expression.CountStarFunction;
-import org.hibernate.sql.ast.expression.Expression;
-import org.hibernate.sql.ast.expression.MaxFunction;
-import org.hibernate.sql.ast.expression.MinFunction;
-import org.hibernate.sql.ast.expression.NamedParameter;
-import org.hibernate.sql.ast.expression.NonStandardFunctionExpression;
-import org.hibernate.sql.ast.expression.NullifExpression;
-import org.hibernate.sql.ast.expression.PositionalParameter;
-import org.hibernate.sql.ast.expression.QueryLiteral;
-import org.hibernate.sql.ast.expression.SumFunction;
-import org.hibernate.sql.ast.expression.UnaryOperationExpression;
-import org.hibernate.sql.ast.expression.domain.EntityReferenceExpression;
-import org.hibernate.sql.ast.expression.domain.PluralAttributeElementReferenceExpression;
-import org.hibernate.sql.ast.expression.domain.PluralAttributeIndexReferenceExpression;
-import org.hibernate.sql.ast.expression.domain.SingularAttributeReferenceExpression;
-import org.hibernate.sql.ast.expression.instantiation.DynamicInstantiation;
-import org.hibernate.sql.ast.expression.instantiation.DynamicInstantiationArgument;
-import org.hibernate.sql.ast.from.ColumnReference;
-import org.hibernate.sql.ast.from.FromClause;
-import org.hibernate.sql.ast.from.TableReference;
-import org.hibernate.sql.ast.from.TableGroup;
-import org.hibernate.sql.ast.from.TableGroupJoin;
-import org.hibernate.sql.ast.from.TableJoin;
-import org.hibernate.sql.ast.from.TableSpace;
-import org.hibernate.sql.ast.predicate.BetweenPredicate;
-import org.hibernate.sql.ast.predicate.FilterPredicate;
-import org.hibernate.sql.ast.predicate.GroupedPredicate;
-import org.hibernate.sql.ast.predicate.InListPredicate;
-import org.hibernate.sql.ast.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.predicate.Junction;
-import org.hibernate.sql.ast.predicate.LikePredicate;
-import org.hibernate.sql.ast.predicate.NegatedPredicate;
-import org.hibernate.sql.ast.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.predicate.Predicate;
-import org.hibernate.sql.ast.predicate.RelationalPredicate;
-import org.hibernate.sql.ast.select.SelectClause;
-import org.hibernate.sql.ast.select.SqlSelection;
-import org.hibernate.sql.ast.sort.SortSpecification;
+import org.hibernate.sql.tree.QuerySpec;
+import org.hibernate.sql.tree.SelectStatement;
+import org.hibernate.sql.tree.expression.AvgFunction;
+import org.hibernate.sql.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.tree.expression.CaseSimpleExpression;
+import org.hibernate.sql.tree.expression.CoalesceExpression;
+import org.hibernate.sql.tree.expression.ColumnReferenceExpression;
+import org.hibernate.sql.tree.expression.ConcatExpression;
+import org.hibernate.sql.tree.expression.CountFunction;
+import org.hibernate.sql.tree.expression.CountStarFunction;
+import org.hibernate.sql.tree.expression.Expression;
+import org.hibernate.sql.tree.expression.MaxFunction;
+import org.hibernate.sql.tree.expression.MinFunction;
+import org.hibernate.sql.tree.expression.NamedParameter;
+import org.hibernate.sql.tree.expression.NonStandardFunctionExpression;
+import org.hibernate.sql.tree.expression.NullifExpression;
+import org.hibernate.sql.tree.expression.PositionalParameter;
+import org.hibernate.sql.tree.expression.QueryLiteral;
+import org.hibernate.sql.tree.expression.SumFunction;
+import org.hibernate.sql.tree.expression.UnaryOperationExpression;
+import org.hibernate.sql.tree.expression.domain.EntityReferenceExpression;
+import org.hibernate.sql.tree.expression.domain.PluralAttributeElementReferenceExpression;
+import org.hibernate.sql.tree.expression.domain.PluralAttributeIndexReferenceExpression;
+import org.hibernate.sql.tree.expression.domain.SingularAttributeReferenceExpression;
+import org.hibernate.sql.tree.expression.instantiation.DynamicInstantiation;
+import org.hibernate.sql.tree.expression.instantiation.DynamicInstantiationArgument;
+import org.hibernate.sql.tree.from.ColumnReference;
+import org.hibernate.sql.tree.from.FromClause;
+import org.hibernate.sql.tree.from.TableReference;
+import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.sql.tree.from.TableGroupJoin;
+import org.hibernate.sql.tree.from.TableJoin;
+import org.hibernate.sql.tree.from.TableSpace;
+import org.hibernate.sql.tree.predicate.BetweenPredicate;
+import org.hibernate.sql.tree.predicate.FilterPredicate;
+import org.hibernate.sql.tree.predicate.GroupedPredicate;
+import org.hibernate.sql.tree.predicate.InListPredicate;
+import org.hibernate.sql.tree.predicate.InSubQueryPredicate;
+import org.hibernate.sql.tree.predicate.Junction;
+import org.hibernate.sql.tree.predicate.LikePredicate;
+import org.hibernate.sql.tree.predicate.NegatedPredicate;
+import org.hibernate.sql.tree.predicate.NullnessPredicate;
+import org.hibernate.sql.tree.predicate.Predicate;
+import org.hibernate.sql.tree.predicate.RelationalPredicate;
+import org.hibernate.sql.tree.select.SelectClause;
+import org.hibernate.sql.tree.select.SqlSelection;
+import org.hibernate.sql.tree.sort.SortSpecification;
 import org.hibernate.sql.convert.spi.ConversionHelper;
 import org.hibernate.sql.convert.spi.SqlSelectPlan;
 import org.hibernate.sql.exec.internal.JdbcSelectImpl;
@@ -142,7 +142,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		sqlBuffer.append( fragment );
 	}
 
-	public void visitSelectQuery(SelectQuery selectQuery) {
+	public void visitSelectQuery(SelectStatement selectQuery) {
 		visitQuerySpec( selectQuery.getQuerySpec() );
 
 	}
@@ -309,7 +309,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		//		e.g...
 		//			1) In the select clause we should render the complete column bindings for associations
 		//			2) In join predicates
-		renderColumnBindings( attributeExpression.getColumnBindings() );
+		renderColumnBindings( attributeExpression.getColumnReferences() );
 	}
 
 	private void renderColumnBindings(List<ColumnReference> columnBindings) {
@@ -327,16 +327,16 @@ public class SqlSelectAstToJdbcSelectConverter {
 	}
 
 	public void visitEntityExpression(EntityReferenceExpression entityExpression) {
-		renderColumnBindings( entityExpression.getColumnBindings() );
+		renderColumnBindings( entityExpression.getColumnReferences() );
 	}
 
 	public void visitPluralAttributeElement(PluralAttributeElementReferenceExpression elementExpression) {
-		renderColumnBindings( elementExpression.getColumnBindings() );
+		renderColumnBindings( elementExpression.getColumnReferences() );
 
 	}
 
 	public void visitPluralAttributeIndex(PluralAttributeIndexReferenceExpression indexExpression) {
-		renderColumnBindings( indexExpression.getColumnBindings() );
+		renderColumnBindings( indexExpression.getColumnReferences() );
 	}
 
 	public void visitColumnBinding(ColumnReference columnBinding) {
@@ -384,9 +384,9 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( " end" );
 	}
 
-	public void visitColumnBindingExpression(ColumnBindingExpression columnBindingExpression) {
+	public void visitColumnBindingExpression(ColumnReferenceExpression columnBindingExpression) {
 		// need to find a better way to do this
-		final ColumnReference columnBinding = columnBindingExpression.getColumnBinding();
+		final ColumnReference columnBinding = columnBindingExpression.getColumnReference();
 		appendSql( columnBinding.getColumn().render( columnBinding.getIdentificationVariable() ) );
 	}
 

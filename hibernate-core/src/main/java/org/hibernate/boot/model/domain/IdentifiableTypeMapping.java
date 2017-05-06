@@ -6,9 +6,20 @@
  */
 package org.hibernate.boot.model.domain;
 
+import java.util.Collection;
+
 /**
  * @author Steve Ebersole
  */
-public interface IdentifiableTypeMapping extends ManagedTypeMapping<IdentifiableTypeMapping> {
+public interface IdentifiableTypeMapping extends ManagedTypeMapping {
 	EntityMappingHierarchy getEntityMappingHierarchy();
+
+	IdentifiableTypeMapping getSuperTypeMapping();
+
+	/**
+	 * @todo (6.0) Should we order these?
+	 * 		I'm just not sure there is a clear benefit here (beyond root first), so at the moment
+	 * 		I'd lean towards no.
+	 */
+	Collection<IdentifiableTypeMapping> getSubTypeMappings();
 }

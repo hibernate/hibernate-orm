@@ -49,8 +49,8 @@ As always the "trigger" for Beta1 is (relatively) stable API.
 		*** `org.hibernate.loader.plan.spi.EntityReturn` ->
 			`org.hibernate.sql.convert.results.spi.ReturnEntity`
 		*** etc..
-	** `org.hibernate.loader.plan.spi.QuerySpaces` -> `org.hibernate.sql.ast.from.FromClause` ?
-		*** `org.hibernate.loader.plan.spi.QuerySpace` -> `org.hibernate.sql.ast.from.TableSpace`
+	** `org.hibernate.loader.plan.spi.QuerySpaces` -> `org.hibernate.sql.tree.from.FromClause` ?
+		*** `org.hibernate.loader.plan.spi.QuerySpace` -> `org.hibernate.sql.tree.from.TableSpace`
 		*** etc..
 	** etc..
 * need to investigate the impact on counter-parts for "result assembly".
@@ -58,6 +58,9 @@ As always the "trigger" for Beta1 is (relatively) stable API.
 	work to handle properly.  Need to find the test that Gail wrote for this.
 * prior to release, look at the Alpha2 list and see if there is any "low-hanging fruit" we could
 * Make Byte Buddy the default bytecode provider
+* Make sure we have added `@since 6.0` to all major API/SPI contracts we have added in 6.0 dev.  Also,
+ 	add `@Incubating` to those where appropriate.  ? - Is it valid to apply the `@Incubating` annotation
+ 	at the package level?
 
 
 === Alpha2
@@ -206,6 +209,8 @@ Unresolved/undecided design questions.
 * Should we drop `JTD#areEquals`?  That is really the same thing as `JTD#getComparator().compare() == 0`.
  	*Assuming JTD comparator is never used for identity-based comparison*.
 * Allow controlling "JPA strict compliance" per-query (hint)?
+* New boot-time mapping contracts based on "managed type" classifications... keep in `org.hibernate.mapping`,
+	or move to `org.hibernate.boot.model.domain`?
 
 
 == Misc

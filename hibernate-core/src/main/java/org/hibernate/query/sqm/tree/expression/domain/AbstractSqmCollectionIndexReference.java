@@ -9,15 +9,19 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import org.hibernate.persister.collection.spi.CollectionPersister.CollectionClassification;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.PluralPersistentAttribute;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.persister.queryable.spi.NavigableSourceReferenceInfo;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmCollectionIndexReference extends AbstractSqmNavigableReference implements
-		SqmCollectionIndexReference {
+public abstract class AbstractSqmCollectionIndexReference
+		extends AbstractSqmNavigableReference
+		implements SqmCollectionIndexReference {
+
 	private final SqmPluralAttributeReference attributeBinding;
 	private final PluralPersistentAttribute pluralAttributeReference;
 	private final NavigablePath propertyPath;
@@ -69,5 +73,31 @@ public abstract class AbstractSqmCollectionIndexReference extends AbstractSqmNav
 	@Override
 	public String asLoggableText() {
 		return "KEY(" + attributeBinding.asLoggableText() + ")";
+	}
+
+
+	@Override
+	public NavigableSourceReferenceInfo getSourceReferenceInfo() {
+		return getPluralAttributeBinding();
+	}
+
+	@Override
+	public String getUniqueIdentifier() {
+		// for most index classifications, the uid should point to the "collection table"...
+		return getPluralAttributeBinding().getUniqueIdentifier();
+	}
+
+	@Override
+	public String getIdentificationVariable() {
+		// for most index classifications, the "identification variable" (alias)
+		// 		associated with the index should point to the identification variable
+		// 		for the collection reference
+		return getPluralAttributeBinding().getIdentificationVariable();
+	}
+
+	@Override
+	public EntityPersister getIntrinsicSubclassEntityPersister() {
+		// for most index classifications, there is none
+		return null;
 	}
 }

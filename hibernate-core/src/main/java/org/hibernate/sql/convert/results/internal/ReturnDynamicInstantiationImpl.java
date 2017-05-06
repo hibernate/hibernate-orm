@@ -7,8 +7,8 @@
 
 package org.hibernate.sql.convert.results.internal;
 
-import org.hibernate.sql.ast.expression.Expression;
-import org.hibernate.sql.ast.expression.instantiation.DynamicInstantiation;
+import org.hibernate.sql.tree.expression.Expression;
+import org.hibernate.sql.tree.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.convert.results.spi.ReturnDynamicInstantiation;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
 

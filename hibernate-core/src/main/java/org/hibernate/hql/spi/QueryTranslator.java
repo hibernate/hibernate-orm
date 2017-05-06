@@ -24,6 +24,20 @@ import org.hibernate.type.spi.Type;
 /**
  * Defines the contract of an HQL->SQL translator.
  *
+ * todo (6.0) : this is more like a "query executor" for SELECT queries, not just a translator.
+ * 		in terms of 6.0 this is akin to a combination of
+ * 		org.hibernate.sql.convert.spi.SqmSelectToSqlAstConverter and
+ * 		org.hibernate.sql.exec.spi.JdbcSelectExecutor
+ *
+ * The overview process for 6.0 is:
+ * 		1) Convert source (HQL, Criteria, etc) into SQM (QuerySqmImpl)
+ * 		2) Check "query plan cache" for matching translation (QuerySqmImpl)
+ * 		3) If not cached, create the plan and possibly cache it (QuerySqmImpl)
+ * 		4) Use the query plan to coordinate execution (SelectQueryPlan)
+ * 				a) convert SQM to SqlSelectPlan (SqmSelectToSqlAstConverter)
+ * 				b) generate JdbcSelect from SqlSelectPlan (SqlSelectAstToJdbcSelectConverter)
+ * 				c) execute the JdbcSelect (JdbcSelectExecutor)
+ *
  * @author josh
  */
 public interface QueryTranslator {

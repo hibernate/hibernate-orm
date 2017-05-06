@@ -7,7 +7,9 @@
 package org.hibernate.persister.embedded.spi;
 
 import org.hibernate.persister.common.spi.NavigableSource;
-import org.hibernate.sql.convert.spi.TableGroupProducer;
+import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
+import org.hibernate.persister.queryable.spi.TableGroupResolver;
+import org.hibernate.sql.tree.from.TableGroup;
 
 /**
  * Contract for things that can contain composites.
@@ -15,7 +17,16 @@ import org.hibernate.sql.convert.spi.TableGroupProducer;
  * @author Steve Ebersole
  */
 public interface EmbeddedContainer<T> extends NavigableSource<T> {
-	TableGroupProducer resolveTableGroupProducer();
+	/**
+	 * Resolve the TableGroup that defines the group of tables which
+	 * contain the composite values.
+	 *
+	 * @param embeddedReferenceInfo Information about the embedded-valued navigable reference
+	 * @param tableGroupResolver Access to existing TableGroup resolutions
+	 *
+	 * @return The resolved TableGroup
+	 */
+	TableGroup resolveTableGroup(NavigableReferenceInfo embeddedReferenceInfo, TableGroupResolver tableGroupResolver);
 
 	/**
 	 * Holy alliteration Bat Man! :)

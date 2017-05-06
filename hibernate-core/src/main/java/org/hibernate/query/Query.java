@@ -140,7 +140,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Retrieve a Stream over the query results.
 	 * <p/>
 	 * In the initial implementation (5.2) this returns a simple sequential Stream.  The plan
-	 * is to return a a smarter stream in 6.0 leveraging the SQM model.
+	 * is to return a a smarter stream in 6.x leveraging the SQM model.
 	 *
 	 * @return The results Stream
 	 *

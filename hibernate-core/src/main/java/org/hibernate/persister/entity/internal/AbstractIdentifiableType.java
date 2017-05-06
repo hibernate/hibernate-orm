@@ -9,8 +9,8 @@ package org.hibernate.persister.entity.internal;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.mapping.IdentifiableTypeMapping;
-import org.hibernate.mapping.Property;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.spi.AbstractManagedType;
 import org.hibernate.persister.common.spi.Column;
@@ -28,8 +28,9 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 	private EntityHierarchy entityHierarchy;
 	private IdentifiableTypeImplementor<? super T> superclassType;
 
-	public AbstractIdentifiableType(IdentifiableJavaDescriptor<T> javaTypeDescriptor) {
+	public AbstractIdentifiableType(EntityHierarchy entityHierarchy, IdentifiableJavaDescriptor<T> javaTypeDescriptor) {
 		super( javaTypeDescriptor );
+		this.entityHierarchy = entityHierarchy;
 	}
 
 	@Override
@@ -53,7 +54,6 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 		super.visitDeclaredNavigables( visitor );
 	}
 
-	@Override
 	public void finishInitialization(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeImplementor<? super T> superType,
@@ -62,7 +62,7 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 		this.entityHierarchy = entityHierarchy;
 		this.superclassType = superType;
 
-		for ( Property property : mappingDescriptor.getDeclaredProperties() ) {
+		for ( PersistentAttributeMapping attributeMapping : mappingDescriptor.getDeclaredPersistentAttributes() ) {
 
 			// todo : Columns
 			final List<Column> columns = Collections.emptyList();
@@ -70,7 +70,7 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 			final PersistentAttribute persistentAttribute = PersisterHelper.INSTANCE.buildAttribute(
 					creationContext,
 					this,
-					property,
+					attributeMapping,
 					columns
 			);
 			addAttribute( persistentAttribute );

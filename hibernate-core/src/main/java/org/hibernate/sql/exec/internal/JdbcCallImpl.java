@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.tree.select.SqlSelection;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.exec.spi.InFlightJdbcCall;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;

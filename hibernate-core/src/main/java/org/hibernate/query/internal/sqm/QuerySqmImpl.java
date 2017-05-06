@@ -289,7 +289,7 @@ public class QuerySqmImpl<R> extends AbstractQuery<R> {
 	private SelectQueryPlan<R> buildAggregatedSelectQueryPlan(SqmSelectStatement[] concreteSqmStatements) {
 		final SelectQueryPlan[] aggregatedQueryPlans = new SelectQueryPlan[ concreteSqmStatements.length ];
 
-		// todo : we want to make sure that certain thing (ResultListTransformer, etc) only get applied at the aggregator-level
+		// todo (6.0) : we want to make sure that certain thing (ResultListTransformer, etc) only get applied at the aggregator-level
 
 		for ( int i = 0, x = concreteSqmStatements.length; i < x; i++ ) {
 			aggregatedQueryPlans[i] = buildConcreteSelectQueryPlan(

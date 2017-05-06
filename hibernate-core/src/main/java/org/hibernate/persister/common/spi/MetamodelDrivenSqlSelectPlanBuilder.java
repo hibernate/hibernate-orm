@@ -15,7 +15,7 @@ import org.hibernate.sql.convert.spi.SqlSelectPlan;
  *
  * @author Steve Ebersole
  */
-public interface MetamodelDrivenSqlSelectPlanBuilder extends NavigableVisitationStrategy {
+public interface MetamodelDrivenSqlSelectPlanBuilder {
 	/**
 	 * Build the SqlSelectPlan, driven by mapping model, with the given
 	 * NavigableSource as query root..  The mapping model indicates the shape

@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.EntityMode;
-import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.tree.select.SqlSelection;
 import org.hibernate.sql.convert.results.internal.ReturnCompositeImpl;
 import org.hibernate.sql.exec.results.process.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.exec.results.process.spi.RowProcessingState;

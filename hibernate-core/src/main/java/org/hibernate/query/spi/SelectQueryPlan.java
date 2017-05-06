@@ -9,27 +9,38 @@ package org.hibernate.query.spi;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.Incubating;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.Query;
 
 /**
- * General contract for performing execution of a query returning results
+ * General contract for performing execution of a query returning results.  These
+ * are the methods delegated to by the Query impls in response to {@link Query#list()},
+ * {@link Query#uniqueResult}, {@link Query#uniqueResultOptional},
+ * {@link Query#getResultList}, {@link Query#getSingleResult} and
+ * {@link Query#scroll}.
+ *
+ * todo (6.0) : ? - can this be re-used for handling entity and collection loads as well?
+ *
+ * @since 6.0
  *
  * @author Steve Ebersole
  */
-public interface SelectQueryPlan<R> {
+@Incubating
+public interface SelectQueryPlan<R> extends QueryPlan {
 	List<R> performList(
 			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings);
 
-	ScrollableResultsImplementor performScroll(
+	ScrollableResultsImplementor<R> performScroll(
 			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
 			QueryParameterBindings inputParameterBindings,
 			ScrollMode scrollMode);
 
-	// todo (6.0) : drop support for Query#iterate per team consensus
+	// todo (6.0) : drop support for Query#iterate per team consensus (dev ml)
 
 	Iterator<R> performIterate(
 			SharedSessionContractImplementor persistenceContext,

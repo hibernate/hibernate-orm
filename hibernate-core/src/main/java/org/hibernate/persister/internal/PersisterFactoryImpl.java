@@ -15,6 +15,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
@@ -72,9 +73,9 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	//			#finishUp will be called.  This is the trigger to walk all the
 	//			previously created persisters *in a specific order*: starting
 	// 			from #roots we walk down each hierarchy meaning that as we
-	//			perform EntityPersister#finishInitialization processing we know
+	//			perform EntityPersister#finishInstantiation processing we know
 	//			that the super is completely initialized.  Part of this
-	//			EntityPersister#finishInitialization process is creating the
+	//			EntityPersister#finishInstantiation process is creating the
 	//			entity's Attribute definitions.  As PluralAttribute definitions
 	//			are recognized we create CollectionPersisters
 	//
@@ -225,7 +226,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			return interpretMappedSuperclass( entityBinding.getSuperMappedSuperclass() );
 		}
 		else if ( entityBinding.getSuperclass() != null ) {
-			// else, if entityBinding#getSuperclassMapping() is not null, that is the direct super type
+			// else, if entityBinding#getSuperTypeMapping() is not null, that is the direct super type
 			// 		in this case we want to create the TypeHierarchyNode (if not already there), but not the persisters...
 			// 		that will happen on later call to
 			final String superTypeName = entityBinding.getSuperclass().getEntityName();
@@ -329,17 +330,17 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 
 	@Override
 	public EmbeddedPersister createEmbeddablePersister(
-			Component componentBinding,
+			EmbeddedValueMapping embeddedValueMapping,
 			EmbeddedContainer source,
 			String localName,
 			PersisterCreationContext creationContext) {
-		final Class<? extends EmbeddedPersister> persisterClass = persisterClassResolver.getEmbeddablePersisterClass( componentBinding );
+		final Class<? extends EmbeddedPersister> persisterClass = persisterClassResolver.getEmbeddablePersisterClass( embeddedValueMapping );
 
 		try {
 			Constructor<? extends EmbeddedPersister> constructor = persisterClass.getConstructor( EmbeddedPersister.STANDARD_CTOR_SIGNATURE );
 			try {
 				return constructor.newInstance(
-						componentBinding,
+						embeddedValueMapping,
 						source,
 						localName,
 						creationContext

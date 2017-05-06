@@ -7,12 +7,13 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.queryable.spi.NavigableSourceReferenceInfo;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmNavigableSourceReference extends SqmNavigableReference, SqmFromExporter {
+public interface SqmNavigableSourceReference extends SqmNavigableReference, NavigableSourceReferenceInfo, SqmFromExporter {
 	@Override
 	NavigableSource getReferencedNavigable();
 }

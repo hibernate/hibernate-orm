@@ -7,7 +7,7 @@
 package org.hibernate.sql.convert.internal;
 
 import org.hibernate.sql.JoinType;
-import org.hibernate.sql.ast.from.TableReference;
+import org.hibernate.sql.tree.from.TableReference;
 
 /**
  * @author Steve Ebersole

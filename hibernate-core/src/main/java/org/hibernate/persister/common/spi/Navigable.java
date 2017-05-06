@@ -8,8 +8,8 @@ package org.hibernate.persister.common.spi;
 
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.queryable.spi.ExpressableType;
-import org.hibernate.sql.ast.from.TableGroup;
-import org.hibernate.sql.ast.from.TableSpace;
+import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.sql.tree.from.TableSpace;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sql.convert.results.spi.Fetch;
@@ -29,7 +29,9 @@ public interface Navigable<T> extends ExpressableType<T>, TypeExporter<T> {
 
 	NavigableRole getNavigableRole();
 
-	String getNavigableName();
+	default String getNavigableName() {
+		return getNavigableRole().getNavigableName();
+	}
 
 	JavaTypeDescriptor getJavaTypeDescriptor();
 
@@ -41,14 +43,6 @@ public interface Navigable<T> extends ExpressableType<T>, TypeExporter<T> {
 	String asLoggableText();
 
 	void visitNavigable(NavigableVisitationStrategy visitor);
-
-	// todo (6.0) - this should get removed.
-	//		but I think we may still need a way for resolving the TableGroup for a Navigable.
-
-	TableGroup buildTableGroup(
-			TableSpace tableSpace,
-			SqlAliasBaseManager sqlAliasBaseManager,
-			FromClauseIndex fromClauseIndex);
 
 	Return generateReturn(ReturnResolutionContext returnResolutionContext, TableGroup tableGroup);
 

@@ -9,7 +9,7 @@ package org.hibernate.sql.exec.results.process.internal;
 
 import java.sql.SQLException;
 
-import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.tree.select.SqlSelection;
 import org.hibernate.sql.convert.results.spi.ReturnScalar;
 import org.hibernate.sql.exec.results.process.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.exec.results.process.spi.RowProcessingState;

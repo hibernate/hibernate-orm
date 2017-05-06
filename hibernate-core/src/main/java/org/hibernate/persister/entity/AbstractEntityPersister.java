@@ -5254,7 +5254,7 @@ public abstract class AbstractEntityPersister<T>
 	}
 
 	@Override
-	public EntityTuplizer getEntityTuplizer() {
+	public EntityTuplizer getTuplizer() {
 		return entityTuplizer;
 	}
 

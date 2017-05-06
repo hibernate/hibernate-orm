@@ -8,16 +8,15 @@
 package org.hibernate.sql.convert.expression.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
-import org.hibernate.sql.ast.expression.domain.NavigableReferenceExpression;
-import org.hibernate.sql.ast.from.TableGroup;
+import org.hibernate.sql.tree.Clause;
+import org.hibernate.sql.tree.expression.domain.ColumnBindingSource;
+import org.hibernate.sql.tree.expression.domain.NavigableReferenceExpression;
+import org.hibernate.sql.tree.from.TableGroup;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 

@@ -9,9 +9,9 @@ package org.hibernate.sql.convert.results.internal;
 
 import java.util.List;
 
-import org.hibernate.sql.ast.expression.Expression;
-import org.hibernate.sql.ast.select.SelectableEmbeddedTypeImpl;
-import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.tree.expression.Expression;
+import org.hibernate.sql.tree.select.SelectableEmbeddedTypeImpl;
+import org.hibernate.sql.tree.select.SqlSelection;
 import org.hibernate.sql.convert.results.spi.ReturnComposite;
 import org.hibernate.sql.exec.results.process.internal.ReturnAssemblerComposite;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;

@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.persister.collection.spi.CollectionElement;
 import org.hibernate.persister.collection.spi.CollectionPersister.CollectionClassification;
@@ -29,11 +31,11 @@ import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.UnknownEntityException;
-import org.hibernate.query.sqm.hql.internal.antlr.HqlParser;
-import org.hibernate.query.sqm.hql.internal.antlr.HqlParserBaseVisitor;
 import org.hibernate.query.sqm.produce.internal.NavigableBindingHelper;
 import org.hibernate.query.sqm.produce.internal.QuerySpecProcessingStateDmlImpl;
 import org.hibernate.query.sqm.produce.internal.QuerySpecProcessingStateStandardImpl;
+import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParser;
+import org.hibernate.query.sqm.produce.internal.hql.grammar.HqlParserBaseVisitor;
 import org.hibernate.query.sqm.produce.internal.hql.navigable.NavigableBindingResolver;
 import org.hibernate.query.sqm.produce.internal.hql.navigable.PathHelper;
 import org.hibernate.query.sqm.produce.internal.hql.navigable.PathResolverBasicImpl;
@@ -497,10 +499,10 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		else {
 			final String className = ctx.dynamicInstantiationTarget().dotIdentifierSequence().getText();
 			try {
-				final Class targetJavaType = parsingContext.getSessionFactory().classByName( className );
+				final Class targetJavaType = classForName( className );
 				dynamicInstantiation = SqmDynamicInstantiation.forClassInstantiation( targetJavaType );
 			}
-			catch (ClassNotFoundException e) {
+			catch (ClassLoadingException e) {
 				throw new SemanticException( "Unable to resolve class named for dynamic instantiation : " + className );
 			}
 		}
@@ -510,6 +512,13 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		}
 
 		return dynamicInstantiation;
+	}
+
+	private Class classForName(String className) {
+		return parsingContext.getSessionFactory()
+							.getServiceRegistry()
+							.getService( ClassLoaderService.class )
+							.classForName( className );
 	}
 
 	@Override
@@ -1660,7 +1669,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		final String fieldName = reference.substring( dotPosition+1, reference.length() );
 
 		try {
-			final Class clazz = parsingContext.getSessionFactory().classByName( className );
+			final Class clazz = classForName( className );
 			if ( clazz.isEnum() ) {
 				try {
 					return new ConstantEnumSqmExpression( Enum.valueOf( clazz, fieldName ) );
@@ -1689,7 +1698,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 				}
 			}
 		}
-		catch (ClassNotFoundException e) {
+		catch (ClassLoadingException e) {
 			throw new SemanticException( "Cannot resolve class for sqm constant [" + reference + "]" );
 		}
 	}
@@ -2064,8 +2073,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		}
 	}
 
-	private BasicValuedExpressableType resolveExpressableTypeBasic(Class javaType) {
-		return parsingContext.getSessionFactory().getTypeConfiguration().resolveBasicType( javaType );
+	private <J> BasicValuedExpressableType<J> resolveExpressableTypeBasic(Class<J> javaType) {
+		return parsingContext.getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().getBasicType( javaType );
 	}
 
 	@Override

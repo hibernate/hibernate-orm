@@ -20,24 +20,25 @@ import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 public abstract class AbstractSqmAttributeReference<A extends PersistentAttribute>
 		extends AbstractSqmNavigableReference
 		implements SqmAttributeReference, SqmFromExporter {
-	private final SqmNavigableSourceReference sourceBinding;
+
+	private final SqmNavigableSourceReference sourceReference;
 	private final A attribute;
-	private final NavigablePath propertyPath;
+	private final NavigablePath navigablePath;
 
 	private SqmAttributeJoin join;
 
-	public AbstractSqmAttributeReference(SqmNavigableSourceReference sourceBinding, A attribute) {
-		if ( sourceBinding == null ) {
+	public AbstractSqmAttributeReference(SqmNavigableSourceReference sourceReference, A attribute) {
+		if ( sourceReference == null ) {
 			throw new IllegalArgumentException( "Source for AttributeBinding cannot be null" );
 		}
 		if ( attribute == null ) {
 			throw new IllegalArgumentException( "Attribute for AttributeBinding cannot be null" );
 		}
 
-		this.sourceBinding = sourceBinding;
+		this.sourceReference = sourceReference;
 		this.attribute = attribute;
 
-		this.propertyPath = sourceBinding.getNavigablePath().append( attribute.getAttributeName() );
+		this.navigablePath = sourceReference.getNavigablePath().append( attribute.getAttributeName() );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -60,7 +61,7 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 	@Override
 	public SqmNavigableSourceReference getSourceReference() {
 		// attribute binding must have a source
-		return sourceBinding;
+		return sourceReference;
 	}
 
 	@Override
@@ -90,16 +91,16 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 
 	@Override
 	public NavigablePath getNavigablePath() {
-		return propertyPath;
+		return navigablePath;
 	}
 
 	@Override
 	public String asLoggableText() {
 		if ( join == null || join.getIdentificationVariable() == null ) {
-			return getClass().getSimpleName() + '(' + sourceBinding.asLoggableText() + '.' + attribute.getAttributeName() + ")";
+			return getClass().getSimpleName() + '(' + sourceReference.asLoggableText() + '.' + attribute.getAttributeName() + ")";
 		}
 		else {
-			return getClass().getSimpleName() + '(' + sourceBinding.asLoggableText() + '.' + attribute.getAttributeName() + " : " + join.getIdentificationVariable() + ")";
+			return getClass().getSimpleName() + '(' + sourceReference.asLoggableText() + '.' + attribute.getAttributeName() + " : " + join.getIdentificationVariable() + ")";
 		}
 	}
 }

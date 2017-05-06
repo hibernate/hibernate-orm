@@ -7,6 +7,7 @@
 package org.hibernate.persister.spi;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
@@ -74,7 +75,7 @@ public interface PersisterFactory extends Service {
 	/**
 	 * Create an embeddable persister instance.
 	 *
-	 * @param componentBinding The mapping information describing the composition
+	 * @param embeddedValueMapping The mapping information describing the composition
 	 * @param creationContext Access to additional information needed to create a persister
 	 *
 	 * @return An appropriate collection persister instance.
@@ -82,7 +83,7 @@ public interface PersisterFactory extends Service {
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
 	EmbeddedPersister createEmbeddablePersister(
-			Component componentBinding,
+			EmbeddedValueMapping embeddedValueMapping,
 			EmbeddedContainer source,
 			String localName,
 			PersisterCreationContext creationContext);

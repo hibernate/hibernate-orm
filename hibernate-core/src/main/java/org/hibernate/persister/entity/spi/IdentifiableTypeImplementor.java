@@ -8,10 +8,12 @@ package org.hibernate.persister.entity.spi;
 
 import javax.persistence.metamodel.IdentifiableType;
 
-import org.hibernate.mapping.IdentifiableTypeMapping;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.EntityMode;
+import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.tuple.Tuplizer;
+import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
  * Hibernate extension SPI for working with {@link IdentifiableType} implementations, which includes
@@ -30,18 +32,35 @@ public interface IdentifiableTypeImplementor<T> extends ManagedTypeImplementor<T
 
 	EntityHierarchy getHierarchy();
 
+	@Override
+	default EntityMode getEntityMode() {
+		return getHierarchy().getEntityMode();
+	}
+
+	@Override
+	EntityTuplizer getTuplizer();
+
 	/**
-	 * Called after all EntityPersister instance have been created and (initially) initialized.
+	 * Called after all EntityPersister instance have been created and (at least partially) initialized.
 	 *
+	 * @param entityHierarchy The entity hierarchy descriptor for the entity tree this
+	 * 		identifiable belongs to
 	 * @param superType The entity's super's EntityPersister
-	 * @param mappingDescriptor Should be  the same PersistentClass instance originally passed to the
-	 * 		ctor, but we want to not have to store that around as EntityPersister instance state -
-	 * 		so we pass it in again
+	 * @param bootMapping The mapping object from Hibernate's boot-time model.  Should be
+	 * 		the same mapping instance originally passed to the ctor, but we want to not
+	 * 		have to store that around as instance state - so we pass it in here again
 	 * @param creationContext Access to the database model
 	 */
-	void finishInitialization(
+	void finishInstantiation(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeImplementor<? super T> superType,
-			IdentifiableTypeMapping mappingDescriptor,
+			IdentifiableTypeMappingImplementor bootMapping,
 			PersisterCreationContext creationContext);
+
+	void completeInitialization(
+			EntityHierarchy entityHierarchy,
+			IdentifiableTypeImplementor<? super T> superType,
+			IdentifiableTypeMappingImplementor bootMapping,
+			PersisterCreationContext creationContext);
+
 }

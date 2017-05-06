@@ -18,8 +18,8 @@ import java.util.stream.Collectors;
 
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
-import org.hibernate.sql.ast.from.FromClause;
-import org.hibernate.sql.ast.from.TableGroup;
+import org.hibernate.sql.tree.from.FromClause;
+import org.hibernate.sql.tree.from.TableGroup;
 import org.hibernate.sql.convert.ConversionException;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;

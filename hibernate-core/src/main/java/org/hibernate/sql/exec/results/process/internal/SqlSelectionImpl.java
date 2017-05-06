@@ -7,8 +7,8 @@
 
 package org.hibernate.sql.exec.results.process.internal;
 
-import org.hibernate.sql.ast.select.SqlSelectable;
-import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.tree.select.SqlSelectable;
+import org.hibernate.sql.tree.select.SqlSelection;
 import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
 
 /**

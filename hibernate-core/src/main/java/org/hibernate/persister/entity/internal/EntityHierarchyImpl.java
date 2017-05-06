@@ -153,7 +153,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 							resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
 							rootEntityBinding.getIdentifierProperty().getName(),
 							creationContext
-					)
+					),
+					creationContext
 			);
 		}
 		else {
@@ -163,7 +164,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 					resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
 					rootEntityBinding.getIdentifierProperty(),
 					(BasicType) rootEntityBinding.getIdentifier().getType(),
-					resolveColumns( identifierTable, rootEntityBinding.getIdentifier(), creationContext )
+					resolveColumns( identifierTable, rootEntityBinding.getIdentifier(), creationContext ),
+					creationContext
 			);
 		}
 	}
@@ -269,7 +271,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 				rootEntityBinding.getVersion().getName(),
 				(BasicType) rootEntityBinding.getVersion().getType(),
 				false,
-				( (KeyValue) rootEntityBinding.getVersion().getValue() ).getNullValue()
+				( (KeyValue) rootEntityBinding.getVersion().getValue() ).getNullValue(),
+				creationContext
 		);
 	}
 

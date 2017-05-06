@@ -729,8 +729,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return subclassTableSequentialSelect[j] && !isClassOrSuperclassTable[j];
 	}
 
-	/*public void postInstantiate() throws MappingException {
-		super.postInstantiate();
+	/*public void completeInitialization() throws MappingException {
+		super.completeInitialization();
 		//TODO: other lock modes?
 		loader = createEntityLoader(LockMode.NONE, CollectionHelper.EMPTY_MAP);
 	}*/

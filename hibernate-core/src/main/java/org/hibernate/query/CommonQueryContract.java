@@ -14,8 +14,8 @@ import org.hibernate.SessionFactory;
 
 /**
  * Defines the aspects of query definition that apply to all forms of
- * querying (HQL, JPQL, criteria) across all forms of persistence contexts
- * (Session, StatelessSession, EntityManager).
+ * querying (HQL/JPQL, Criteria, native, procedure-call) across all forms
+ * of persistence contexts (Session, StatelessSession, EntityManager).
  *
  * @author Steve Ebersole
  * @author Gavin King
@@ -27,7 +27,7 @@ public interface CommonQueryContract {
 	 *
 	 * @return The query FlushMode.
 	 *
-	 * @see Session#getFlushMode()
+	 * @see Session#getHibernateFlushMode
 	 * @see FlushMode
 	 */
 	FlushMode getHibernateFlushMode();
@@ -39,6 +39,7 @@ public interface CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
+	 * @see Session#getHibernateFlushMode()
 	 * @see #getHibernateFlushMode()
 	 */
 	CommonQueryContract setHibernateFlushMode(FlushMode flushMode);

@@ -11,7 +11,7 @@ import java.util.Map;
 import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.expression.Expression;
+import org.hibernate.sql.tree.expression.Expression;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.convert.results.spi.EntityIdentifierReference;
 import org.hibernate.sql.convert.results.spi.ReturnEntity;

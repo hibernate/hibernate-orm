@@ -14,7 +14,8 @@ import org.hibernate.boot.model.naming.Identifier;
  *
  * @author Steve Ebersole
  */
-public class Sequence implements Exportable {
+public class Sequence implements MappedSequence {
+
 	public static class Name extends QualifiedNameParser.NameParts {
 		public Name(
 				Identifier catalogIdentifier,
@@ -24,14 +25,14 @@ public class Sequence implements Exportable {
 		}
 	}
 
-	private final QualifiedSequenceName name;
+	private final QualifiedSequenceName logicalName;
 	private final String exportIdentifier;
 	private int initialValue = 1;
 	private int incrementSize = 1;
 
 	public Sequence(Identifier catalogName, Identifier schemaName, Identifier sequenceName) {
-		this.name = new QualifiedSequenceName( catalogName, schemaName, sequenceName );
-		this.exportIdentifier = name.render();
+		this.logicalName = new QualifiedSequenceName( catalogName, schemaName, sequenceName );
+		this.exportIdentifier = logicalName.render();
 	}
 
 	public Sequence(
@@ -45,8 +46,17 @@ public class Sequence implements Exportable {
 		this.incrementSize = incrementSize;
 	}
 
+	/**
+	 * @deprecated Use {@link #getLogicalName()} instead
+	 */
+	@Deprecated
 	public QualifiedSequenceName getName() {
-		return name;
+		return logicalName;
+	}
+
+	@Override
+	public QualifiedSequenceName getLogicalName() {
+		return logicalName;
 	}
 
 	@Override
@@ -85,5 +95,10 @@ public class Sequence implements Exportable {
 					)
 			);
 		}
+	}
+
+	@Override
+	public String toLoggableString() {
+		return "Sequence(" + logicalName.render() + ")";
 	}
 }

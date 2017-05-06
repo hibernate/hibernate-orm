@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.persister.collection.spi.CollectionIndexEntity;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.EntityValuedNavigable;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -56,5 +57,17 @@ public class SqmCollectionIndexReferenceEntity
 				this.exportedFromElement
 		);
 		exportedFromElement = sqmFrom;
+	}
+
+	@Override
+	public EntityPersister getIntrinsicSubclassEntityPersister() {
+		// todo (6.0) : override this to account for implicit or explicit Downcasts
+		return super.getIntrinsicSubclassEntityPersister();
+	}
+
+	@Override
+	public String getUniqueIdentifier() {
+		// todo (6.0) : for the entity index classification we should point to the referenced entity's uid
+		return super.getUniqueIdentifier();
 	}
 }

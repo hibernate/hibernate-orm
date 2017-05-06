@@ -153,7 +153,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			}
 		};
 
-		// todo : SqmSelectToSqlAstConverter needs to account for the EntityGraph hint
+		// todo (6.0) : SqmSelectToSqlAstConverter needs to account for the EntityGraph hint
 		final SqlSelectPlan interpretation = SqmSelectToSqlAstConverter.interpret(
 				sqm,
 				persistenceContext,
@@ -162,6 +162,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				callback
 		);
 
+		// todo (6.0) : is there any benefit to building SqlSelectPlan and then JdbcSelect in successive steps?
+		//		as opposed to combining into one step
 		final JdbcSelect jdbcSelect = SqlSelectAstToJdbcSelectConverter.interpret(
 				interpretation,
 				shallow,

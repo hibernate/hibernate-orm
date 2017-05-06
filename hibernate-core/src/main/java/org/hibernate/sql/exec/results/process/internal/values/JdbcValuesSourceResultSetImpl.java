@@ -17,7 +17,7 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Limit;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.tree.select.SqlSelection;
 import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.results.process.internal.caching.QueryCachePutManager;
 import org.hibernate.sql.exec.results.process.internal.caching.QueryCachePutManagerDisabledImpl;

@@ -12,7 +12,7 @@ import org.hibernate.query.spi.NavigablePath;
 /**
  * @author Steve Ebersole
  */
-public interface NavigableReferenceInfo extends TableGroupInfoSource {
+public interface NavigableReferenceInfo extends TableGroupInfoSource, ExpressableType {
 
 	// todo (6.0) : just use org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference
 

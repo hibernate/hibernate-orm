@@ -7,8 +7,8 @@
 
 package org.hibernate.sql.convert.spi;
 
-import org.hibernate.sql.ast.from.TableGroup;
-import org.hibernate.sql.ast.from.TableSpace;
+import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.sql.tree.from.TableSpace;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.query.sqm.tree.from.SqmFrom;

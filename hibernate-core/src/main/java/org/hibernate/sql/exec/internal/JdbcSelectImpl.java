@@ -9,7 +9,7 @@ package org.hibernate.sql.exec.internal;
 
 import java.util.List;
 
-import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.tree.select.SqlSelection;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;

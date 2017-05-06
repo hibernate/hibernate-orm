@@ -10,6 +10,7 @@ import java.util.Collection;
 
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmDowncast;
@@ -26,7 +27,7 @@ import org.hibernate.query.sqm.tree.from.SqmDowncast;
  *
  * @author Steve Ebersole
  */
-public interface SqmNavigableReference extends SqmExpression {
+public interface SqmNavigableReference extends SqmExpression, NavigableReferenceInfo {
 	/**
 	 * Get the Navigable reference that is the source ("lhs") of this reference.
 	 */

@@ -12,20 +12,19 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.common.spi.PhysicalColumn;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.RowIdDescriptor;
-import org.hibernate.sql.ast.from.TableGroup;
-import org.hibernate.sql.ast.from.TableSpace;
-import org.hibernate.sql.convert.internal.FromClauseIndex;
-import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sql.convert.results.spi.Fetch;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
+import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -49,6 +48,19 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 
 	@Override
 	public Type getOrmType() {
+		// what should this be?
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		// what should this be?
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		// what should this be?
 		throw new NotYetImplementedException(  );
 	}
 
@@ -105,14 +117,6 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitRowId( this );
-	}
-
-	@Override
-	public TableGroup buildTableGroup(
-			TableSpace tableSpace,
-			SqlAliasBaseManager sqlAliasBaseManager,
-			FromClauseIndex fromClauseIndex) {
-		throw new NotYetImplementedException();
 	}
 
 	@Override

@@ -8,8 +8,6 @@ package org.hibernate.loader.plan.spi;
 
 import java.util.List;
 
-import org.hibernate.sql.ast.SelectQuery;
-
 /**
  * Describes a plan for performing a load of results.
  *

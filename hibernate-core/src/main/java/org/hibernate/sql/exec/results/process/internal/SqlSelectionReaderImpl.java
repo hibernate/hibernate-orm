@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.tree.select.SqlSelection;
 import org.hibernate.sql.exec.results.process.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
 import org.hibernate.type.spi.BasicType;

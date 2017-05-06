@@ -30,8 +30,8 @@ public class Namespace {
 	private final Name name;
 	private final Name physicalName;
 
-	private Map<Identifier, Table> tables = new TreeMap<Identifier, Table>();
-	private Map<Identifier, Sequence> sequences = new TreeMap<Identifier, Sequence>();
+	private Map<Identifier, MappedTable> tables = new TreeMap<>();
+	private Map<Identifier, MappedSequence> sequences = new TreeMap<>();
 
 	public Namespace(Database database, Name name) {
 		this.database = database;
@@ -59,7 +59,7 @@ public class Namespace {
 		return physicalName;
 	}
 
-	public Collection<Table> getTables() {
+	public Collection<MappedTable> getTables() {
 		return tables.values();
 	}
 
@@ -72,7 +72,7 @@ public class Namespace {
 	 *         or null if there is no table with the specified
 	 *         table name.
 	 */
-	public Table locateTable(Identifier logicalTableName) {
+	public MappedTable locateTable(Identifier logicalTableName) {
 		return tables.get( logicalTableName );
 	}
 
@@ -83,8 +83,8 @@ public class Namespace {
 	 *
 	 * @return the created table.
 	 */
-	public Table createTable(Identifier logicalTableName, boolean isAbstract) {
-		final Table existing = tables.get( logicalTableName );
+	public MappedTable createTable(Identifier logicalTableName, boolean isAbstract) {
+		final MappedTable existing = tables.get( logicalTableName );
 		if ( existing != null ) {
 			return existing;
 		}
@@ -93,13 +93,14 @@ public class Namespace {
 		Table table = new Table( this, physicalTableName, isAbstract );
 		tables.put( logicalTableName, table );
 		return table;
+
 	}
 
-	public DenormalizedTable createDenormalizedTable(Identifier logicalTableName, boolean isAbstract, Table includedTable) {
-		final Table existing = tables.get( logicalTableName );
+	public DenormalizedMappedTable createDenormalizedTable(Identifier logicalTableName, boolean isAbstract, Table includedTable) {
+		final MappedTable existing = tables.get( logicalTableName );
 		if ( existing != null ) {
 			// for now assume it is
-			return (DenormalizedTable) existing;
+			return (DenormalizedMappedTable) existing;
 		}
 
 		final Identifier physicalTableName = database.getPhysicalNamingStrategy().toPhysicalTableName( logicalTableName, database.getJdbcEnvironment() );
@@ -108,11 +109,11 @@ public class Namespace {
 		return table;
 	}
 
-	public Sequence locateSequence(Identifier name) {
+	public MappedSequence locateSequence(Identifier name) {
 		return sequences.get( name );
 	}
 
-	public Sequence createSequence(Identifier logicalName, int initialValue, int increment) {
+	public MappedSequence createSequence(Identifier logicalName, int initialValue, int increment) {
 		if ( sequences.containsKey( logicalName ) ) {
 			throw new HibernateException( "Sequence was already registered with that name [" + logicalName.toString() + "]" );
 		}
@@ -153,7 +154,7 @@ public class Namespace {
 		return name.hashCode();
 	}
 
-	public Iterable<Sequence> getSequences() {
+	public Collection<MappedSequence> getSequences() {
 		return sequences.values();
 	}
 

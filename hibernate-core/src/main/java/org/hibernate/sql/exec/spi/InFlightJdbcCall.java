@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.exec.spi;
 
-import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.tree.select.SqlSelection;
 import org.hibernate.sql.convert.results.spi.Return;
 
 /**

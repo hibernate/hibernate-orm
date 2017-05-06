@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.Map;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.OptimisticCacheSource;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
@@ -32,9 +32,9 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.common.spi.SecondaryTableBinding;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.entity.MultiLoadOptions;
@@ -43,21 +43,13 @@ import org.hibernate.persister.exec.spi.MultiIdEntityLoader;
 import org.hibernate.persister.exec.spi.SingleIdEntityLoader;
 import org.hibernate.persister.exec.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
-import org.hibernate.persister.queryable.spi.InFlightJdbcJdbcOperation;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
-import org.hibernate.persister.queryable.spi.TableGroupResolutionContext;
+import org.hibernate.persister.queryable.spi.RootTableGroupProducer;
+import org.hibernate.persister.queryable.spi.SqlAliasBaseResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.sql.ast.from.EntityTableGroup;
-import org.hibernate.sql.ast.from.TableGroup;
-import org.hibernate.sql.ast.from.TableGroupJoin;
-import org.hibernate.sql.ast.from.TableSpace;
-import org.hibernate.sql.convert.internal.FromClauseIndex;
-import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
-import org.hibernate.sql.convert.spi.TableGroupProducer;
-import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.tree.from.EntityTableGroup;
+import org.hibernate.sql.tree.from.TableSpace;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.spi.Type;
 
@@ -80,8 +72,8 @@ import org.hibernate.type.spi.Type;
 @Incubating
 public interface EntityPersister<T>
 		extends EntityValuedExpressableType<T>, NavigableSource<T>, EmbeddedContainer<T>,
-				TableGroupProducer, OptimisticCacheSource, IdentifiableTypeImplementor<T>,
-				EntityType<T> {
+				RootTableGroupProducer, OptimisticCacheSource,
+				IdentifiableTypeImplementor<T>, EntityType<T> {
 
 	// todo (6.0) : ? - can OptimisticCacheSource stuff go away?
 	// 		It was added for caches like JBoss Tree Cache that supported MVCC-based
@@ -116,8 +108,29 @@ public interface EntityPersister<T>
 			PersisterCreationContext.class
 	};
 
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Redesigned contract
+
+	/**
+	 * Called after all EntityPersister instance for the persistence unit have been created;
+	 *
+	 * @param superType The entity's super's EntityPersister
+	 * @param mappingDescriptor Should be  the same reference (instance) originally passed to the
+	 * 		ctor, but we want to not have to store that reference as instance state -
+	 * 		so we pass it in again
+	 * @param creationContext Access to the database model, etc
+	 */
+	void finishInitialization(
+			EntityHierarchy entityHierarchy,
+			IdentifiableTypeImplementor<? super T> superType,
+			EntityMapping mappingDescriptor,
+			PersisterCreationContext creationContext);
+
+	/**
+	 * Called after {@link #finishInitialization} has been called on all persisters.
+	 */
+	void postInstantiate();
 
 	/**
 	 * The entity name which this persister maps.
@@ -191,73 +204,18 @@ public interface EntityPersister<T>
 	EntityLocker getLocker(LockOptions lockOptions, SharedSessionContractImplementor session);
 
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Design a "Queryable"-like contract for asking the persister to augment
-	// a org.hibernate.sql.exec.spi.JdbcOperation.
-	//
-	// One caveat to this is that currently JdbcOperation exposes the SQL String
-	// whereas it would be more effective to have this contract have access to the
-	// SQL AST for augmentation.  Either have JdbcOperation expose SQL AST, or
-	// have this contract take an "in-flight" view of the JdbcOperation.
-	//
-	// Another consideration is that in the PoC, these methods simply accepted the
-	// SQM node types.  That's awkward if we want this to operate at the level
-	// of SQL-AST/JdbcOperation as produced by persisters because we'd have to
-	// create and pass "intermediary objects"  - see  TableGroupSourceInfo (commented-out), etc below
-	// as an example).  Or build SQM objects anyway - which kind of defeats the purpose
-	// (perf) of persisters operating on SQL-AST/JdbcOperation level.  Another option that
-	// I shudder to mention would be to have overloaded forms - but that is fugly, and again
-	// defeats the purpose of this design and centralization
-	//
-	// todo (6.0) - (CRITICAL) determine the best approach for this ^^
-
-	// todo  (6.0) - need to apply "load query influencers"?  Or is that handled by callers?
-	//		if we want that handled here, probably better pass in "in flight" access
-	//		to the SQL AST here to allow augmentation to other parts of the query - e.g.
-	//		applying join restrictions to the WHERE clause in cases where the Dialect
-	//		does not support "ANSI joins".
-
-	// todo (6.0) - note that we should allow some of these arguments to be null to avoid unnecessary object creations
-	//		specifically thinking TableGroupSourceInfo/NavigableBindingInfo
-
-
-	/**
-	 * Build the EntityTableGroup for this entity.  This method is called
-	 * when the entity is the root.
-	 *
-	 * @param navigableInfo Information about the TableGroup to be built (alias, etc)
-	 * @param tableSpace The SQL-AST TableSpace that is to be the container for the EntityTableGroup we build
-	 * @param sqlAliasBaseManager Access to the SQL alias manager
-	 *
-	 * @return The generated EntityTableGroup
-	 */
-	EntityTableGroup applyTableGroup(
-			NavigableReferenceInfo navigableInfo,
-			InFlightJdbcJdbcOperation inFlightJdbcJdbcOperation,
+	default EntityTableGroup createEntityTableGroup(
+			NavigableReferenceInfo navigableReferenceInfo,
 			TableSpace tableSpace,
-			TableGroupResolutionContext tableGroupResolutionContext,
-			SqlAliasBaseManager sqlAliasBaseManager);
-
-	// todo (6.0) - or should join handling come via Navigable?
-	/**
-	 * Build the EntityTableGroup for this entity.  This method is called
-	 * when the entity is the root.
-	 *
-	 * @param navigableInfo Information about the TableGroupJoin to be built (alias, etc)
-	 * @param tableSpace The SQL-AST TableSpace that is to be the container for the TableGroupJoin we build
-	 * @param sqlAliasBaseManager Access to the SQL alias manager
-	 *
-	 * @return The generated TableGroupJoin
-	 */
-	TableGroupJoin applyTableGroupJoin(
-			NavigableReferenceInfo navigableInfo,
-			SqmJoinType joinType,
-			InFlightJdbcJdbcOperation inFlightJdbcJdbcOperation,
-			TableSpace tableSpace,
-			TableGroupResolutionContext tableGroupResolutionContext,
-			SqlAliasBaseManager sqlAliasBaseManager);
-
+			SqlAliasBaseResolver sqlAliasBaseResolver) {
+		return new EntityTableGroup(
+				tableSpace,
+				navigableReferenceInfo.getUniqueIdentifier(),
+				sqlAliasBaseResolver.getSqlAliasBase( navigableReferenceInfo ),
+				this,
+				navigableReferenceInfo.getNavigablePath()
+		);
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Methods in this section should be replaced by the new Queryable-like ones
@@ -266,44 +224,13 @@ public interface EntityPersister<T>
 
 	/**
 	 * Access to the root table for this entity.
-	 *
-	 * todo (6.0) : why is this needed?
-	 *
 	 */
 	Table getRootTable();
 
 	/**
-	 * Build the EntityTableGroup for this entity.  This method is called
-	 * when the entity is a root in the query.
-	 *
-	 * @param fromElement The SQM FromElement
-	 * @param tableSpace The SQL-AST TableSpace we are building
-	 * @param sqlAliasBaseManager Access to the SQL alias manager
-	 * @param fromClauseIndex The SQL-AST FromClause index
-	 *
-	 * @return The populated EntityTableGroup
+	 * Access to all "declared" secondary table mapping info for this entity.
 	 */
-	EntityTableGroup buildTableGroup(
-			SqmFrom fromElement,
-			TableSpace tableSpace,
-			SqlAliasBaseManager sqlAliasBaseManager,
-			FromClauseIndex fromClauseIndex);
-
-	/**
-	 * Populate a previously built TableGroup with this entity's table(s).  This
-	 * method is generally called to handle cases where the entity is part of a
-	 * collection bound to a query
-	 *
-	 * @param group The TableGroup to which we should add our joins
-	 * @param joinType The type of join we should use (at least to the root table).
-	 * @param fkColumns The left-hand side join columns
-	 * @param fkTargetColumns The right-hand side join columns
-	 */
-	void addTableJoins(TableGroup group, SqmJoinType joinType, List<Column> fkColumns, List<Column> fkTargetColumns);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	List<SecondaryTableBinding> getSecondaryTableBindings();
 
 
 
@@ -993,9 +920,6 @@ public interface EntityPersister<T>
 	 */
 	EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory);
 
-	EntityMode getEntityMode();
-	EntityTuplizer getEntityTuplizer();
-	
 	FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 
 	/**

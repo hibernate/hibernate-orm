@@ -7,8 +7,8 @@
 
 package org.hibernate.sql.convert.results.internal;
 
-import org.hibernate.sql.ast.expression.Expression;
-import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.tree.expression.Expression;
+import org.hibernate.sql.tree.select.SqlSelection;
 import org.hibernate.sql.convert.results.spi.ReturnScalar;
 import org.hibernate.sql.exec.results.process.internal.ReturnAssemblerScalar;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;

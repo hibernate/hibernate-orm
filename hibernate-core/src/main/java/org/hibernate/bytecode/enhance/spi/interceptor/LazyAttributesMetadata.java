@@ -10,15 +10,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
+import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 
 /**
  * Information about all of the bytecode lazy attributes for an entity
@@ -30,22 +29,20 @@ public class LazyAttributesMetadata implements Serializable {
 	 * Build a LazyFetchGroupMetadata based on the attributes defined for the
 	 * PersistentClass
 	 *
-	 * @param mappedEntity The entity definition
+	 * @param entityMapping The entity definition
 	 *
 	 * @return The built LazyFetchGroupMetadata
 	 */
-	public static LazyAttributesMetadata from(PersistentClass mappedEntity) {
+	public static LazyAttributesMetadata from(EntityMapping entityMapping) {
 		final Map<String, LazyAttributeDescriptor> lazyAttributeDescriptorMap = new LinkedHashMap<>();
 		final Map<String, Set<String>> fetchGroupToAttributesMap = new HashMap<>();
 
 		int i = -1;
 		int x = 0;
-		final Iterator itr = mappedEntity.getPropertyClosureIterator();
-		while ( itr.hasNext() ) {
+		for ( PersistentAttributeMapping attributeMapping : entityMapping.getDeclaredPersistentAttributes() ) {
 			i++;
-			final Property property = (Property) itr.next();
-			if ( property.isLazy() ) {
-				final LazyAttributeDescriptor lazyAttributeDescriptor = LazyAttributeDescriptor.from( property, i, x++ );
+			if ( attributeMapping.isLazy() ) {
+				final LazyAttributeDescriptor lazyAttributeDescriptor = LazyAttributeDescriptor.from( attributeMapping, i, x++ );
 				lazyAttributeDescriptorMap.put( lazyAttributeDescriptor.getName(), lazyAttributeDescriptor );
 
 				final Set<String> attributeSet = fetchGroupToAttributesMap.computeIfAbsent(
@@ -57,7 +54,7 @@ public class LazyAttributesMetadata implements Serializable {
 		}
 
 		if ( lazyAttributeDescriptorMap.isEmpty() ) {
-			return new LazyAttributesMetadata( mappedEntity.getEntityName() );
+			return new LazyAttributesMetadata( entityMapping.getEntityName() );
 		}
 
 		for ( Map.Entry<String, Set<String>> entry : fetchGroupToAttributesMap.entrySet() ) {
@@ -65,7 +62,7 @@ public class LazyAttributesMetadata implements Serializable {
 		}
 
 		return new LazyAttributesMetadata(
-				mappedEntity.getEntityName(),
+				entityMapping.getEntityName(),
 				Collections.unmodifiableMap( lazyAttributeDescriptorMap ),
 				Collections.unmodifiableMap( fetchGroupToAttributesMap )
 		);

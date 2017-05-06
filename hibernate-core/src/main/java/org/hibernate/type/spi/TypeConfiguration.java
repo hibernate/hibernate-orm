@@ -34,7 +34,11 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
+import org.hibernate.boot.model.relational.DenormalizedMappedTable;
+import org.hibernate.boot.model.relational.DerivedMappedTable;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.PhysicalMappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -57,9 +61,7 @@ import org.hibernate.jpa.graph.internal.AbstractGraphNode;
 import org.hibernate.jpa.graph.internal.AttributeNodeImpl;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.jpa.graph.internal.SubgraphImpl;
-import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.internal.DatabaseModelImpl;
@@ -79,22 +81,13 @@ import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralSqmExpression;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.type.internal.ArrayType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CustomCollectionType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.internal.IdentifierBagType;
-import org.hibernate.type.internal.ListType;
 import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.internal.MapType;
 import org.hibernate.type.OneToOneType;
-import org.hibernate.type.internal.OrderedMapType;
-import org.hibernate.type.internal.OrderedSetType;
-import org.hibernate.type.internal.SetType;
-import org.hibernate.type.internal.SortedMapType;
-import org.hibernate.type.internal.SortedSetType;
 import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -102,7 +95,16 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.java.spi.MappedSuperclassJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.internal.ArrayType;
 import org.hibernate.type.internal.BagType;
+import org.hibernate.type.internal.IdentifierBagType;
+import org.hibernate.type.internal.ListType;
+import org.hibernate.type.internal.MapType;
+import org.hibernate.type.internal.OrderedMapType;
+import org.hibernate.type.internal.OrderedSetType;
+import org.hibernate.type.internal.SetType;
+import org.hibernate.type.internal.SortedMapType;
+import org.hibernate.type.internal.SortedSetType;
 import org.hibernate.usertype.ParameterizedType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -704,20 +706,21 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		//		either like org.hibernate.boot.model.relational.Database does
 		//		or via catalogs/schemas-specific names
 		for ( Namespace namespace : mappingMetadata.getDatabase().getNamespaces() ) {
-			for ( Table mappingTable : namespace.getTables() ) {
+			for ( MappedTable mappedTable : namespace.getTables() ) {
 				// todo : incorporate mapping Table's isAbstract indicator
 				final org.hibernate.persister.common.spi.Table table;
-				if ( mappingTable instanceof DenormalizedTable ) {
+				if ( mappedTable instanceof DenormalizedMappedTable ) {
 					// this is akin to a UnionSubclassTable
 					throw new NotYetImplementedException( "DenormalizedTable support not yet implemented" );
 				}
-				else if ( mappingTable.getSubselect() != null ) {
-					table = new DerivedTable( mappingTable.getSubselect() );
+				else if ( mappedTable instanceof DerivedMappedTable ) {
+					table = new DerivedTable( ( (DerivedMappedTable) mappedTable ).getSqlSelect() );
 				}
 				else {
+					final PhysicalMappedTable physicalMappedTable = (PhysicalMappedTable) mappedTable;
 					final JdbcEnvironment jdbcEnvironment = getSessionFactory().getJdbcServices().getJdbcEnvironment();
 					final String qualifiedTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-							mappingTable.getQualifiedTableName(),
+							physicalMappedTable.getLogicalName(),
 							jdbcEnvironment.getDialect()
 					);
 					table = new PhysicalTable( qualifiedTableName );
@@ -1076,7 +1079,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	public void register(CollectionPersister collectionPersister) {
-		collectionPersisterMap.put( collectionPersister.getRoleName(), collectionPersister );
+		collectionPersisterMap.put( collectionPersister.getNavigableRole().getFullPath(), collectionPersister );
 
 		if ( collectionPersister.getIndexDescriptor() != null
 				&& collectionPersister.getIndexDescriptor() instanceof EntityValuedExpressableType ) {
@@ -1085,7 +1088,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 					entityName,
 					k -> new HashSet<>()
 			);
-			roles.add( collectionPersister.getRoleName() );
+			roles.add( collectionPersister.getNavigableRole().getFullPath() );
 		}
 
 		if ( collectionPersister.getElementDescriptor() instanceof EntityValuedExpressableType ) {
@@ -1094,7 +1097,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 					entityName,
 					k -> new HashSet<>()
 			);
-			roles.add( collectionPersister.getRoleName() );
+			roles.add( collectionPersister.getNavigableRole().getFullPath() );
 		}
 	}
 

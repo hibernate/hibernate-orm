@@ -13,8 +13,10 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 /**
  * @author Steve Ebersole
  */
-public class SqmCollectionIndexReferenceEmbedded extends AbstractSqmCollectionIndexReference
+public class SqmCollectionIndexReferenceEmbedded
+		extends AbstractSqmCollectionIndexReference
 		implements SqmEmbeddableTypedReference {
+
 	public SqmCollectionIndexReferenceEmbedded(SqmPluralAttributeReference pluralAttributeBinding) {
 		super( pluralAttributeBinding );
 	}
@@ -32,5 +34,20 @@ public class SqmCollectionIndexReferenceEmbedded extends AbstractSqmCollectionIn
 	@Override
 	public void injectExportedFromElement(SqmFrom sqmFrom) {
 		throw new NotYetImplementedException( "Cannot inject SqmFrom element into a CompositeBinding" );
+	}
+
+	@Override
+	public String getTypeName() {
+		return getJavaType().getName();
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getIndexDescriptor().getJavaType();
 	}
 }

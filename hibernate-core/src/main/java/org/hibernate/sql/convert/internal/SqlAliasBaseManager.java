@@ -11,41 +11,42 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
+import org.hibernate.persister.queryable.spi.SqlAliasBaseResolver;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
-public class SqlAliasBaseManager {
-	// an overall dictionary; used to ensure that a given FromElement instance always
-	// resolves to the same alias-base (its called base because a FromElement can encompass
-	// multiple physical tables).
-	private Map<SqmFrom,String> fromElementAliasMap = new HashMap<>();
+public class SqlAliasBaseManager implements SqlAliasBaseResolver {
+
+	// an overall dictionary.  used to ensure that a given NavigableReferenceInfo instance always
+	// resolves to the same SQL alias base; its called base because a NavigableReferenceInfo can encompass
+	// multiple physical tables - each needing its own SQL alias which we derive from the base.
+	private Map<NavigableReferenceInfo,String> fromElementAliasMap = new HashMap<>();
 
 	// work dictionary used to map a FromElement type name to its acronym
 	private Map<String,String> nameAcronymMap = new HashMap<>();
 	// wok dictionary used to map an acronym to the number of times it has been used.
 	private Map<String,Integer> acronymCountMap = new HashMap<>();
 
-	public String getSqlAliasBase(SqmFrom fromElement) {
+	public String getSqlAliasBase(NavigableReferenceInfo navigableReferenceInfo) {
 		return fromElementAliasMap.computeIfAbsent(
-				fromElement,
-				e -> generateAliasBase( e.getBinding().getReferencedNavigable() )
+				navigableReferenceInfo,
+				e -> generateAliasBase( navigableReferenceInfo )
 		);
 	}
 
-	private String generateAliasBase(Navigable domainReference) {
+	private String generateAliasBase(NavigableReferenceInfo domainReference) {
 		final String acronym;
 		if ( domainReference instanceof EntityValuedExpressableType ) {
 			acronym = determineAcronym( (EntityValuedExpressableType) domainReference );
 		}
-		else if ( domainReference instanceof PersistentAttribute ) {
-			acronym = determineAcronym( (PersistentAttribute) domainReference );
+		else if ( domainReference.getReferencedNavigable() instanceof PersistentAttribute ) {
+			acronym = determineAcronym( (PersistentAttribute) domainReference.getReferencedNavigable() );
 		}
 		else {
 			throw new IllegalArgumentException( "Unexpected Navigable type : " + domainReference );

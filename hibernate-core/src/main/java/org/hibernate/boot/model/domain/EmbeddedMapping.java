@@ -17,5 +17,7 @@ package org.hibernate.boot.model.domain;
  *
  * @author Steve Ebersole
  */
-public interface EmbeddedMapping extends ManagedTypeMapping<EmbeddedMapping> {
+public interface EmbeddedMapping extends ManagedTypeMapping, ValueMappingContainer {
+	@Override
+	EmbeddedValueMapping getValueMapping();
 }

@@ -18,15 +18,16 @@ import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.VersionDescriptor;
-import org.hibernate.sql.ast.expression.Expression;
+import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.sql.tree.expression.Expression;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.expression.domain.NavigableReferenceExpression;
-import org.hibernate.sql.ast.expression.domain.SingularAttributeReferenceExpression;
-import org.hibernate.sql.ast.from.ColumnReference;
-import org.hibernate.sql.ast.from.TableGroup;
-import org.hibernate.sql.ast.from.TableSpace;
-import org.hibernate.sql.ast.select.Selectable;
-import org.hibernate.sql.ast.select.SelectableBasicTypeImpl;
+import org.hibernate.sql.tree.expression.domain.NavigableReferenceExpression;
+import org.hibernate.sql.tree.expression.domain.SingularAttributeReferenceExpression;
+import org.hibernate.sql.tree.from.ColumnReference;
+import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.sql.tree.from.TableSpace;
+import org.hibernate.sql.tree.select.Selectable;
+import org.hibernate.sql.tree.select.SelectableBasicTypeImpl;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sql.convert.results.spi.Fetch;
@@ -50,11 +51,12 @@ public class VersionDescriptorImpl<O,J> extends AbstractSingularPersistentAttrib
 			String name,
 			BasicType<J> ormType,
 			boolean nullable,
-			String unsavedValue) {
+			String unsavedValue,
+			PersisterCreationContext creationContext) {
 		super(
 				hierarchy.getRootEntityPersister(),
 				name,
-				PersisterHelper.resolvePropertyAccess( hierarchy.getRootEntityPersister(), rootEntityBinding.getVersion() ),
+				PersisterHelper.resolvePropertyAccess( hierarchy.getRootEntityPersister(), rootEntityBinding.getVersion(), creationContext ),
 				ormType,
 				Disposition.NORMAL,
 				nullable
@@ -99,12 +101,6 @@ public class VersionDescriptorImpl<O,J> extends AbstractSingularPersistentAttrib
 	}
 
 	@Override
-	public TableGroup buildTableGroup(
-			TableSpace tableSpace, SqlAliasBaseManager sqlAliasBaseManager, FromClauseIndex fromClauseIndex) {
-		throw new NotYetImplementedException();
-	}
-
-	@Override
 	public Return generateReturn(
 			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup) {
 		return null;
@@ -134,7 +130,7 @@ public class VersionDescriptorImpl<O,J> extends AbstractSingularPersistentAttrib
 			);
 			this.selectableDelegate = new SelectableBasicTypeImpl(
 					this,
-					getColumnBindings().get( 0 ),
+					getColumnReferences().get( 0 ),
 					getType()
 			);
 		}
@@ -177,8 +173,8 @@ public class VersionDescriptorImpl<O,J> extends AbstractSingularPersistentAttrib
 		}
 
 		@Override
-		public List<ColumnReference> getColumnBindings() {
-			return expressionDelegate.getColumnBindings();
+		public List<ColumnReference> getColumnReferences() {
+			return expressionDelegate.getColumnReferences();
 		}
 	}
 

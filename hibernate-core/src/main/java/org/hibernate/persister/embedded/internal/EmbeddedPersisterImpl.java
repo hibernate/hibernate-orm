@@ -9,20 +9,22 @@ package org.hibernate.persister.embedded.internal;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.boot.model.domain.AttributeMapping;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Property;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.spi.AbstractManagedType;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.sql.ast.from.TableGroup;
-import org.hibernate.sql.ast.from.TableSpace;
+import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.sql.tree.from.TableSpace;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sql.convert.results.spi.Fetch;
@@ -44,11 +46,11 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 	private final EmbeddedType ormType;
 
 	public EmbeddedPersisterImpl(
-			Component componentBinding,
+			Component bootMapping,
 			EmbeddedContainer source,
 			String localName,
 			PersisterCreationContext creationContext) {
-		super( resolveJtd( creationContext, componentBinding ) );
+		super( resolveJtd( creationContext, bootMapping ) );
 		this.source = source;
 		this.navigableRole = source.getNavigableRole().append( localName );
 		this.ormType = new EmbeddedTypeImpl( null, navigableRole, getJavaTypeDescriptor() );
@@ -72,16 +74,23 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public EmbeddableJavaDescriptor<T> getJavaTypeDescriptor() {
-		return (EmbeddableJavaDescriptor<T>) super.getJavaTypeDescriptor();
+	public void finishInstantiation(
+			EmbeddedValueMapping embeddedValueMapping,
+			PersisterCreationContext creationContext) {
+		bindAttributes( embeddedValueMapping, creationContext );
 	}
 
 	@Override
-	public void afterInitialization(
-			Component embeddableBinding,
+	public void completeInitialization(
+			EmbeddedValueMapping embeddedValueMapping,
 			PersisterCreationContext creationContext) {
-		bindAttributes( embeddableBinding, creationContext );
+		// todo (6.0) : I think we will want some form of "after all mappings have been 'initialized' (see #finishInstantiation)"
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public EmbeddableJavaDescriptor<T> getJavaTypeDescriptor() {
+		return (EmbeddableJavaDescriptor<T>) super.getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -144,19 +153,30 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 		throw new NotYetImplementedException(  );
 	}
 
-	private void bindAttributes(Component embeddableBinding, PersisterCreationContext creationContext) {
-		for ( Property property : embeddableBinding.getDeclaredProperties() ) {
+	private void bindAttributes(EmbeddedValueMapping embeddableBinding, PersisterCreationContext creationContext) {
+		for ( AttributeMapping attributeMapping : embeddableBinding.getAttributeMappings() ) {
 
-			// todo : Columns
+			// todo (6.0) : Columns
 			final List<Column> columns = Collections.emptyList();
 
+			// todo (6.0) : new
 			final PersistentAttribute persistentAttribute = PersisterHelper.INSTANCE.buildAttribute(
 					creationContext,
 					this,
-					property,
+					attributeMapping,
 					columns
 			);
 			addAttribute( persistentAttribute );
 		}
+	}
+
+	@Override
+	public List<ManagedTypeImplementor<? extends T>> getSubclassTypes() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public void addSubclassType(ManagedTypeImplementor<? extends T> subclassType) {
+		throw new UnsupportedOperationException( "Embeddable inheritance is not yet implemented" );
 	}
 }

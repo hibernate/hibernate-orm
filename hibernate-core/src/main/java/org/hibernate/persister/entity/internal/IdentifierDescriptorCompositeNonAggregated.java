@@ -9,6 +9,7 @@ package org.hibernate.persister.entity.internal;
 import java.util.List;
 
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
@@ -22,22 +23,20 @@ import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.IdentifierDescriptor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl;
-import org.hibernate.sql.ast.expression.Expression;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.expression.domain.NavigableReferenceExpression;
-import org.hibernate.sql.ast.expression.domain.SingularAttributeReferenceExpression;
-import org.hibernate.sql.ast.from.ColumnReference;
-import org.hibernate.sql.ast.from.TableGroup;
-import org.hibernate.sql.ast.from.TableSpace;
-import org.hibernate.sql.ast.select.Selectable;
-import org.hibernate.sql.ast.select.SelectableEmbeddedTypeImpl;
-import org.hibernate.sql.convert.internal.FromClauseIndex;
-import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sql.convert.results.spi.Fetch;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.tree.expression.Expression;
+import org.hibernate.sql.tree.expression.domain.NavigableReferenceExpression;
+import org.hibernate.sql.tree.expression.domain.SingularAttributeReferenceExpression;
+import org.hibernate.sql.tree.from.ColumnReference;
+import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.sql.tree.select.Selectable;
+import org.hibernate.sql.tree.select.SelectableEmbeddedTypeImpl;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**
@@ -95,14 +94,6 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 	}
 
 	@Override
-	public TableGroup buildTableGroup(
-			TableSpace tableSpace,
-			SqlAliasBaseManager sqlAliasBaseManager,
-			FromClauseIndex fromClauseIndex) {
-		throw new NotYetImplementedException();
-	}
-
-	@Override
 	public Return generateReturn(ReturnResolutionContext returnResolutionContext, TableGroup tableGroup) {
 		// todo : not sure what we will need here yet...
 
@@ -126,6 +117,16 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 	}
 
 	@Override
+	public NavigableRole getNavigableRole() {
+		return embeddedPersister.getNavigableRole();
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return embeddedPersister.getJavaTypeDescriptor();
+	}
+
+	@Override
 	public String getAttributeName() {
 		return NAVIGABLE_NAME;
 	}
@@ -136,8 +137,13 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 	}
 
 	@Override
-	public Navigable findNavigable(String navigableName) {
+	public <N> Navigable<N> findNavigable(String navigableName) {
 		return embeddedPersister.findNavigable( navigableName );
+	}
+
+	@Override
+	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
+		return embeddedPersister.findDeclaredNavigable( navigableName );
 	}
 
 	@Override
@@ -165,7 +171,6 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 		return PersistenceType.EMBEDDABLE;
 	}
 
-
 	private static class SelectableImpl implements Selectable, NavigableReferenceExpression {
 		private final SingularAttributeReferenceExpression expressionDelegate;
 		private final SelectableEmbeddedTypeImpl selectableDelegate;
@@ -184,7 +189,7 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 			);
 			this.selectableDelegate = new SelectableEmbeddedTypeImpl(
 					this,
-					getColumnBindings(),
+					getColumnReferences(),
 					getType()
 			);
 		}
@@ -227,8 +232,8 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 		}
 
 		@Override
-		public List<ColumnReference> getColumnBindings() {
-			return expressionDelegate.getColumnBindings();
+		public List<ColumnReference> getColumnReferences() {
+			return expressionDelegate.getColumnReferences();
 		}
 	}
 }

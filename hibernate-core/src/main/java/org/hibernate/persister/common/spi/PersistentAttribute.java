@@ -7,6 +7,8 @@
 package org.hibernate.persister.common.spi;
 
 /**
+ * Models a persistent (mapped) attribute in Hibernate's "runtime model".
+ *
  * @author Steve Ebersole
  */
 public interface PersistentAttribute<O,T>
@@ -14,7 +16,9 @@ public interface PersistentAttribute<O,T>
 	@Override
 	ManagedTypeImplementor<O> getSource();
 
-	String getAttributeName();
+	default String getAttributeName() {
+		return getNavigableName();
+	}
 
 	@Override
 	default String getName() {

@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.DenormalizedMappedTable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.internal.util.collections.JoinedIterator;
 
@@ -18,7 +19,7 @@ import org.hibernate.internal.util.collections.JoinedIterator;
  * @author Gavin King
  */
 @SuppressWarnings("unchecked")
-public class DenormalizedTable extends Table {
+public class DenormalizedTable extends Table implements DenormalizedMappedTable {
 
 	private final Table includedTable;
 

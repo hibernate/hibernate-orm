@@ -7,15 +7,18 @@
 package org.hibernate.persister.entity.spi;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
@@ -25,8 +28,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.persister.collection.spi.CollectionElement;
 import org.hibernate.persister.common.NavigableRole;
+import org.hibernate.persister.common.spi.JoinColumnMapping;
+import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableSource;
 import org.hibernate.persister.entity.internal.AbstractIdentifiableType;
@@ -36,18 +41,25 @@ import org.hibernate.persister.exec.spi.EntityLocker;
 import org.hibernate.persister.exec.spi.MultiIdEntityLoader;
 import org.hibernate.persister.exec.spi.SingleIdEntityLoader;
 import org.hibernate.persister.exec.spi.SingleUniqueKeyEntityLoader;
-import org.hibernate.persister.queryable.spi.InFlightJdbcJdbcOperation;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
-import org.hibernate.persister.queryable.spi.TableGroupResolutionContext;
+import org.hibernate.persister.queryable.spi.RootTableGroupContext;
+import org.hibernate.persister.queryable.spi.SqlAliasBaseResolver;
+import org.hibernate.persister.queryable.spi.TableGroupJoinContext;
+import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.from.EntityTableGroup;
-import org.hibernate.sql.ast.from.TableGroupJoin;
-import org.hibernate.sql.ast.from.TableSpace;
-import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.tree.expression.ColumnReferenceExpression;
+import org.hibernate.sql.tree.from.EntityTableGroup;
+import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.sql.tree.from.TableGroupJoin;
+import org.hibernate.sql.tree.from.TableSpace;
+import org.hibernate.sql.tree.predicate.Junction;
+import org.hibernate.sql.tree.predicate.Predicate;
+import org.hibernate.sql.tree.predicate.RelationalPredicate;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataPojoImpl;
+import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
@@ -68,27 +80,37 @@ public abstract class AbstractEntityPersister<T>
 	private final NavigableRole navigableRole;
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 
+	private final EntityTuplizer tuplizer;
 
 	@SuppressWarnings("UnnecessaryBoxing")
 	public AbstractEntityPersister(
-			PersistentClass persistentClass,
+			EntityHierarchy entityHierarchy,
+			EntityMapping entityMapping,
 			EntityRegionAccessStrategy cacheAccessStrategy,
 			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 			PersisterCreationContext creationContext) throws HibernateException {
-		super( resolveJavaTypeDescriptor( creationContext, persistentClass ) );
+		super( entityHierarchy, resolveJavaTypeDescriptor( creationContext, entityMapping ) );
 
 		this.factory = creationContext.getSessionFactory();
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
 
-		this.navigableRole = new NavigableRole( persistentClass.getEntityName() );
+		this.navigableRole = new NavigableRole( entityMapping.getEntityName() );
 
-		if ( persistentClass.hasPojoRepresentation() ) {
-			bytecodeEnhancementMetadata = BytecodeEnhancementMetadataPojoImpl.from( persistentClass );
+		if ( entityHierarchy.getEntityMode() == EntityMode.POJO ) {
+			this.bytecodeEnhancementMetadata = BytecodeEnhancementMetadataPojoImpl.from( entityMapping );
 		}
 		else {
-			bytecodeEnhancementMetadata = new BytecodeEnhancementMetadataNonPojoImpl( persistentClass.getEntityName() );
+			this.bytecodeEnhancementMetadata = new BytecodeEnhancementMetadataNonPojoImpl( entityMapping.getEntityName() );
 		}
+
+		this.tuplizer = creationContext.getSessionFactory().getSessionFactoryOptions().getEntityTuplizerFactory().createTuplizer(
+				entityMapping.getExplicitTuplizerClassName(),
+				entityMapping.getEntityMode(),
+				this,
+				entityMapping,
+				creationContext
+		);
 
 		log.debugf(
 				"Instantiated persister [%s] for entity [%s (%s)]",
@@ -100,17 +122,17 @@ public abstract class AbstractEntityPersister<T>
 
 	private static <T> IdentifiableJavaDescriptor<T> resolveJavaTypeDescriptor(
 			PersisterCreationContext creationContext,
-			PersistentClass persistentClass) {
+			EntityMapping entityMapping) {
 		return (EntityJavaDescriptor<T>) creationContext.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( persistentClass.getEntityName() );
+				.getDescriptor( entityMapping.getEntityName() );
 	}
 
 	@Override
 	public void finishInitialization(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeImplementor<? super T> superType,
-			PersistentClass mappingDescriptor,
+			EntityMapping mappingDescriptor,
 			PersisterCreationContext creationContext) {
 		super.finishInitialization( entityHierarchy, superType, mappingDescriptor, creationContext );
 
@@ -160,6 +182,11 @@ public abstract class AbstractEntityPersister<T>
 	@Override
 	public Class<T> getBindableJavaType() {
 		return getJavaType();
+	}
+
+	@Override
+	public EntityTuplizer getTuplizer() {
+		return tuplizer;
 	}
 
 	@Override
@@ -357,36 +384,94 @@ public abstract class AbstractEntityPersister<T>
 
 
 	@Override
-	public EntityTableGroup applyTableGroup(
-			NavigableReferenceInfo navigableInfo,
-			InFlightJdbcJdbcOperation inFlightJdbcJdbcOperation,
-			TableSpace tableSpace,
-			TableGroupResolutionContext tableGroupResolutionContext,
-			SqlAliasBaseManager sqlAliasBaseManager) {
-		final EntityTableGroup group = new EntityTableGroup(
-				tableSpace,
-				navigableInfo.getUniqueIdentifier(),
-				// todo (6.0) - need a proper key into SqlAliasBaseManager
-				//		- currently relies on SqmFrom which only makes sense from query parsing
-				//		- but if not keyed on SqmFrom what is the correct thing to use - try to avoid
-				//			"key object instantiations".  Could use the uid, but would need a way to
-				//			resolve that to
-				sqlAliasBaseManager.getSqlAliasBase( null ),
-				this,
-				navigableInfo.getNavigablePath()
+	public EntityTableGroup applyRootTableGroup(
+			NavigableReferenceInfo navigableReferenceInfo,
+			RootTableGroupContext tableGroupContext,
+			SqlAliasBaseResolver sqlAliasBaseResolver) {
+		assert navigableReferenceInfo.getReferencedNavigable() instanceof EntityValuedNavigable;
+		assert ( (EntityValuedNavigable) navigableReferenceInfo ).getEntityPersister() == this;
+
+		final EntityTableGroup group = createEntityTableGroup(
+				navigableReferenceInfo,
+				tableGroupContext.getTableSpace(),
+				sqlAliasBaseResolver
 		);
 
-		throw new NotYetImplementedException(  );
+		tableGroupContext.getTableSpace().setRootTableGroup( group );
+
+		// todo (6.0) - apply filters - which needs access to Session, or at least its LoadQueryInfluencers
+		//		the filter conditions would be added to the SQL-AST's where-clause via tableGroupContext
+		//		for now, add null, this is just here as a placeholder
+		tableGroupContext.addRestriction( null );
+
+		return group;
 	}
 
 	@Override
 	public TableGroupJoin applyTableGroupJoin(
-			NavigableReferenceInfo navigableBindingInfo,
+			NavigableReferenceInfo navigableReferenceInfo,
 			SqmJoinType joinType,
-			InFlightJdbcJdbcOperation inFlightJdbcJdbcOperation,
-			TableSpace tableSpace,
-			TableGroupResolutionContext tableGroupResolutionContext,
-			SqlAliasBaseManager sqlAliasBaseManager) {
-		throw new NotYetImplementedException(  );
+			TableGroupJoinContext tableGroupJoinContext,
+			TableGroupResolver tableGroupResolutionContext,
+			SqlAliasBaseResolver sqlAliasBaseResolver) {
+		assert navigableReferenceInfo.getReferencedNavigable() instanceof EntityValuedNavigable;
+		assert navigableReferenceInfo.getReferencedNavigable() instanceof JoinablePersistentAttribute
+				|| navigableReferenceInfo.getReferencedNavigable() instanceof CollectionElement;
+		assert ( (EntityValuedNavigable) navigableReferenceInfo ).getEntityPersister() == this;
+		assert navigableReferenceInfo.getSourceReferenceInfo() != null;
+
+		final EntityTableGroup group = createEntityTableGroup(
+				navigableReferenceInfo,
+				tableGroupJoinContext.getTableSpace(),
+				sqlAliasBaseResolver
+		);
+
+		// todo (6.0) - apply filters - but which again needs access to Session, or at least its LoadQueryInfluencers
+		//		- see above note in #applyTableGroup
+		//		- here, though, we'd apply the predicate to the TableGroupJoin's predicate instead
+
+		// create the join predicate
+		final Predicate joinPredicate;
+		TableGroup lhsTableGroup = tableGroupResolutionContext.resolveTableGroup( navigableReferenceInfo.getSourceReferenceInfo().getUniqueIdentifier() );
+		final List<JoinColumnMapping> joinColumnMappings = ( (JoinablePersistentAttribute<?, ?>) navigableReferenceInfo.getReferencedNavigable() )
+				.getJoinColumnMappings();
+		if ( joinColumnMappings.size() == 1 ) {
+			joinPredicate = createJoinPredicate( joinColumnMappings.get( 0 ), lhsTableGroup, group );
+		}
+		else {
+			joinPredicate = new Junction( Junction.Nature.CONJUNCTION );
+			for ( JoinColumnMapping joinColumnMapping : joinColumnMappings ) {
+				( (Junction) joinPredicate ).add( createJoinPredicate( joinColumnMapping, lhsTableGroup, group ) );
+			}
+		}
+
+		// todo (6.0) : the null here is the join predicate - need to build it
+		//		however the
+		// todo (6.0) : create a "FilterableNavigable" or somesuch
+		TableGroupJoin tableGroupJoin = new TableGroupJoin(
+				joinType,
+				group,
+				joinPredicate
+		);
+
+		tableGroupJoinContext.getTableSpace().addJoinedTableGroup( tableGroupJoin );
+
+		return tableGroupJoin;
+
+	}
+
+	private Predicate createJoinPredicate(
+			JoinColumnMapping joinColumnMapping,
+			TableGroup lhsTableGroup,
+			EntityTableGroup rhsTableGroup) {
+		return new RelationalPredicate(
+				RelationalPredicate.Operator.EQUAL,
+				new ColumnReferenceExpression(
+						lhsTableGroup.resolveColumnBinding( joinColumnMapping.getLeftHandSideColumn() )
+				),
+				new ColumnReferenceExpression(
+						rhsTableGroup.resolveColumnBinding( joinColumnMapping.getRightHandSideColumn() )
+				)
+		);
 	}
 }

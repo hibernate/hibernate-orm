@@ -105,6 +105,13 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
+	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
+		return declaredAttributesByName.get( navigableName );
+	}
+
+
+	@Override
 	public PersistentAttribute<? super T, ?> findAttribute(String name) {
 		final PersistentAttribute<? super T, ?> declaredPersistentAttribute = findDeclaredAttribute( name );
 		if ( declaredPersistentAttribute != null ) {

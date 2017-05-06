@@ -16,14 +16,14 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmCollectionElementRefere
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.expression.domain.ColumnBindingSource;
-import org.hibernate.sql.ast.expression.domain.CompositeColumnBindingSource;
-import org.hibernate.sql.ast.expression.domain.EntityReferenceExpression;
-import org.hibernate.sql.ast.expression.domain.NavigableReferenceExpression;
-import org.hibernate.sql.ast.expression.domain.PluralAttributeElementReferenceExpression;
-import org.hibernate.sql.ast.expression.domain.SingularAttributeReferenceExpression;
-import org.hibernate.sql.ast.from.CollectionTableGroup;
-import org.hibernate.sql.ast.from.TableGroup;
+import org.hibernate.sql.tree.expression.domain.ColumnBindingSource;
+import org.hibernate.sql.tree.expression.domain.CompositeColumnBindingSource;
+import org.hibernate.sql.tree.expression.domain.EntityReferenceExpression;
+import org.hibernate.sql.tree.expression.domain.NavigableReferenceExpression;
+import org.hibernate.sql.tree.expression.domain.PluralAttributeElementReferenceExpression;
+import org.hibernate.sql.tree.expression.domain.SingularAttributeReferenceExpression;
+import org.hibernate.sql.tree.from.CollectionTableGroup;
+import org.hibernate.sql.tree.from.TableGroup;
 import org.hibernate.sql.convert.expression.spi.NavigableReferenceExpressionBuilder;
 
 /**

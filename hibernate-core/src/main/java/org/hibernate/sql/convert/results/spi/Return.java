@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.convert.results.spi;
 
-import org.hibernate.sql.ast.expression.Expression;
+import org.hibernate.sql.tree.expression.Expression;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;
 
 /**

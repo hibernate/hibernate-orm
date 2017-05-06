@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
-
 import javax.persistence.metamodel.PluralAttribute;
 
 import org.hibernate.HibernateException;
@@ -25,7 +24,6 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.common.NavigableRole;
-import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.PluralPersistentAttribute;
 import org.hibernate.persister.common.spi.Table;
@@ -33,13 +31,13 @@ import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.exec.spi.CollectionLoader;
+import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
+import org.hibernate.persister.queryable.spi.RootTableGroupProducer;
+import org.hibernate.persister.queryable.spi.TableGroupJoinProducer;
+import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.sql.ast.from.CollectionTableGroup;
-import org.hibernate.sql.ast.from.TableSpace;
-import org.hibernate.sql.convert.internal.FromClauseIndex;
-import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
-import org.hibernate.sql.convert.spi.TableGroupProducer;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.tree.from.TableGroup;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -83,7 +81,8 @@ import org.hibernate.type.spi.Type;
  * @author Gavin King
  */
 public interface CollectionPersister<O,C,E>
-		extends PluralPersistentAttribute<O,C,E>, TableGroupProducer, TypeExporter<C>, EmbeddedContainer<C> {
+		extends PluralPersistentAttribute<O,C,E>, RootTableGroupProducer, TableGroupJoinProducer,
+		TypeExporter<C>, EmbeddedContainer<C> {
 
 	Class[] CONSTRUCTOR_SIGNATURE = new Class[] {
 			Collection.class,
@@ -176,22 +175,22 @@ public interface CollectionPersister<O,C,E>
 
 	Table getSeparateCollectionTable();
 
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// CollectionPersister as TableGroupProducer
+	// CollectionPersister as EmbeddedContainer
 
 	@Override
-	default TableGroupProducer resolveTableGroupProducer() {
-		return this;
+	default TableGroup resolveTableGroup(NavigableReferenceInfo embeddedReferenceInfo, TableGroupResolver tableGroupResolver) {
+		// here we are asked to resolve the TableGroup to use for columns making up
+		// 		the collection's composite element or composite index index
+		// todo (6.0) : I *think* this is correct - verify
+
+		assert embeddedReferenceInfo.getReferencedNavigable() instanceof CollectionElementEmbedded
+				|| embeddedReferenceInfo.getReferencedNavigable() instanceof CollectionIndexEmbedded;
+
+		return tableGroupResolver.resolveTableGroup( embeddedReferenceInfo.getSourceReferenceInfo().getUniqueIdentifier() );
 	}
-
-	@Override
-	CollectionTableGroup buildTableGroup(
-			SqmFrom joinedFromElement,
-			TableSpace tableSpace,
-			SqlAliasBaseManager sqlAliasBaseManager,
-			FromClauseIndex fromClauseIndex);
-
-
 
 
 	/**

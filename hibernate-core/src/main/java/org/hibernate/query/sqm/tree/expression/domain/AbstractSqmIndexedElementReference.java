@@ -8,6 +8,8 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.persister.collection.spi.CollectionElement;
 import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.queryable.spi.NavigableSourceReferenceInfo;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -63,5 +65,29 @@ public abstract class AbstractSqmIndexedElementReference
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public NavigableSourceReferenceInfo getSourceReferenceInfo() {
+		return getPluralAttributeBinding();
+	}
+
+	@Override
+	public String getUniqueIdentifier() {
+		// for most element classifications, the uid should point to the "collection table"...
+		return getPluralAttributeBinding().getUniqueIdentifier();
+	}
+
+	@Override
+	public String getIdentificationVariable() {
+		// for most element classifications, the "identification variable" (alias)
+		// 		associated with elements is the identification variable for the collection reference
+		return getPluralAttributeBinding().getIdentificationVariable();
+	}
+
+	@Override
+	public EntityPersister getIntrinsicSubclassEntityPersister() {
+		// for most element classifications, there is none
+		return null;
 	}
 }

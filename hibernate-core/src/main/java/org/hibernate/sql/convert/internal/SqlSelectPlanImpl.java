@@ -9,7 +9,7 @@ package org.hibernate.sql.convert.internal;
 
 import java.util.List;
 
-import org.hibernate.sql.ast.SelectQuery;
+import org.hibernate.sql.tree.SelectStatement;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.spi.SqlSelectPlan;
 
@@ -17,18 +17,18 @@ import org.hibernate.sql.convert.spi.SqlSelectPlan;
  * @author Steve Ebersole
  */
 public class SqlSelectPlanImpl implements SqlSelectPlan {
-	private final SelectQuery selectQuery;
+	private final SelectStatement selectQuery;
 	private final List<Return> queryReturns;
 
 	public SqlSelectPlanImpl(
-			SelectQuery selectQuery,
+			SelectStatement selectQuery,
 			List<Return> queryReturns) {
 		this.selectQuery = selectQuery;
 		this.queryReturns = queryReturns;
 	}
 
 	@Override
-	public SelectQuery getSqlSelectAst() {
+	public SelectStatement getSqlSelectAst() {
 		return selectQuery;
 	}
 

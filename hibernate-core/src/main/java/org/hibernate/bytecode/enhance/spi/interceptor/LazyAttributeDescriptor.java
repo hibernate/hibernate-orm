@@ -6,7 +6,7 @@
  */
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
-import org.hibernate.mapping.Property;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -16,21 +16,21 @@ import org.hibernate.type.spi.Type;
  */
 public class LazyAttributeDescriptor {
 	public static LazyAttributeDescriptor from(
-			Property property,
+			PersistentAttributeMapping attributeMapping,
 			int attributeIndex,
 			int lazyIndex) {
-		String fetchGroupName = property.getLazyGroup();
+		String fetchGroupName = attributeMapping.getLazyGroup();
 		if ( fetchGroupName == null ) {
-			fetchGroupName = property.getType().isCollectionType()
-					? property.getName()
+			fetchGroupName = attributeMapping.getValueMapping().getType().isCollectionType()
+					? attributeMapping.getName()
 					: "DEFAULT";
 		}
 
 		return new LazyAttributeDescriptor(
 				attributeIndex,
 				lazyIndex,
-				property.getName(),
-				property.getType(),
+				attributeMapping.getName(),
+				attributeMapping.getValueMapping().getType(),
 				fetchGroupName
 		);
 	}

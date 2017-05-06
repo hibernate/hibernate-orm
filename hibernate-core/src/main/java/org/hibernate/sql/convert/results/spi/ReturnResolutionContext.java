@@ -7,8 +7,8 @@
 package org.hibernate.sql.convert.results.spi;
 
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.select.SqlSelectable;
-import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.tree.select.SqlSelectable;
+import org.hibernate.sql.tree.select.SqlSelection;
 
 /**
  * @author Steve Ebersole

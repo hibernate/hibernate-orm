@@ -8,7 +8,6 @@ package org.hibernate.persister.entity.internal;
 
 import java.util.List;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
@@ -19,22 +18,20 @@ import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.IdentifiableTypeImplementor;
 import org.hibernate.persister.entity.spi.IdentifierDescriptor;
-import org.hibernate.sql.ast.expression.Expression;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.expression.domain.NavigableReferenceExpression;
-import org.hibernate.sql.ast.expression.domain.SingularAttributeReferenceExpression;
-import org.hibernate.sql.ast.from.ColumnReference;
-import org.hibernate.sql.ast.from.TableGroup;
-import org.hibernate.sql.ast.from.TableSpace;
-import org.hibernate.sql.ast.select.Selectable;
-import org.hibernate.sql.ast.select.SelectableBasicTypeImpl;
-import org.hibernate.sql.convert.internal.FromClauseIndex;
-import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sql.convert.results.spi.Fetch;
 import org.hibernate.sql.convert.results.spi.FetchParent;
 import org.hibernate.sql.convert.results.spi.Return;
 import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
 import org.hibernate.sql.exec.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.tree.expression.Expression;
+import org.hibernate.sql.tree.expression.domain.NavigableReferenceExpression;
+import org.hibernate.sql.tree.expression.domain.SingularAttributeReferenceExpression;
+import org.hibernate.sql.tree.from.ColumnReference;
+import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.sql.tree.select.Selectable;
+import org.hibernate.sql.tree.select.SelectableBasicTypeImpl;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -51,11 +48,12 @@ public class IdentifierDescriptorSimple<O,J>
 			IdentifiableTypeImplementor declarer,
 			Property property,
 			BasicType<J> ormType,
-			List<Column> columns) {
+			List<Column> columns,
+			PersisterCreationContext creationContext) {
 		super(
 				hierarchy.getRootEntityPersister(),
 				property.getName(),
-				PersisterHelper.resolvePropertyAccess( declarer, property ),
+				PersisterHelper.resolvePropertyAccess( declarer, property, creationContext ),
 				ormType,
 				Disposition.ID,
 				false
@@ -66,7 +64,7 @@ public class IdentifierDescriptorSimple<O,J>
 
 	@Override
 	public BasicType getIdType() {
-		return getOrmType();
+		return (BasicType) getOrmType();
 	}
 
 	@Override
@@ -110,14 +108,6 @@ public class IdentifierDescriptorSimple<O,J>
 	}
 
 	@Override
-	public TableGroup buildTableGroup(
-			TableSpace tableSpace,
-			SqlAliasBaseManager sqlAliasBaseManager,
-			FromClauseIndex fromClauseIndex) {
-		throw new NotYetImplementedException();
-	}
-
-	@Override
 	public Return generateReturn(
 			ReturnResolutionContext returnResolutionContext,
 			TableGroup tableGroup) {
@@ -153,7 +143,7 @@ public class IdentifierDescriptorSimple<O,J>
 			);
 			this.selectableDelegate = new SelectableBasicTypeImpl(
 					this,
-					getColumnBindings().get( 0 ),
+					getColumnReferences().get( 0 ),
 					getType()
 			);
 		}
@@ -196,8 +186,8 @@ public class IdentifierDescriptorSimple<O,J>
 		}
 
 		@Override
-		public List<ColumnReference> getColumnBindings() {
-			return expressionDelegate.getColumnBindings();
+		public List<ColumnReference> getColumnReferences() {
+			return expressionDelegate.getColumnReferences();
 		}
 	}
 }

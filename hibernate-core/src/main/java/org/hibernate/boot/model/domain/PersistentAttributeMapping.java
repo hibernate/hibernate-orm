@@ -7,15 +7,13 @@
 package org.hibernate.boot.model.domain;
 
 import org.hibernate.mapping.MetaAttributable;
-import org.hibernate.mapping.Value;
 import org.hibernate.tuple.ValueGeneration;
 
 /**
  * @author Steve Ebersole
  */
-public interface PersistentAttributeMapping extends MetaAttributable {
-	ManagedTypeMapping<?> getDeclaringType();
-	Value getValue();
+public interface PersistentAttributeMapping extends ValueMappingContainer, MetaAttributable {
+	String getName();
 
 	default boolean isVirtual() {
 		return false;

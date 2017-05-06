@@ -14,6 +14,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
@@ -51,6 +52,11 @@ public class Property implements Serializable, PersistentAttributeMapping {
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
 	private boolean lob;
+
+	@Override
+	public ValueMapping getValueMapping() {
+		return value;
+	}
 
 	public boolean isBackRef() {
 		return false;

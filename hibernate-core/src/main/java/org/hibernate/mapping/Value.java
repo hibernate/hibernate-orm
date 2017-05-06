@@ -10,6 +10,7 @@ import java.util.Iterator;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.Type;
@@ -23,7 +24,7 @@ import org.hibernate.type.spi.Type;
  *
  * @author Gavin King
  */
-public interface Value extends Serializable {
+public interface Value extends ValueMapping, Serializable {
 	int getColumnSpan();
 	Iterator<Selectable> getColumnIterator();
 	Type getType() throws MappingException;

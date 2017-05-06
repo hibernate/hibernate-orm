@@ -14,7 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Any;
@@ -35,10 +37,9 @@ import org.hibernate.persister.collection.spi.CollectionElement.ElementClassific
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.collection.spi.CollectionPersister.CollectionClassification;
 import org.hibernate.persister.common.spi.AbstractPersistentAttribute;
-import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
-import org.hibernate.persister.common.spi.SingularPersistentAttribute;
+import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute.Disposition;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute.SingularAttributeClassification;
 import org.hibernate.persister.common.spi.Table;
@@ -51,8 +52,9 @@ import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
-import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.query.sqm.tree.SqmPropertyPath;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.internal.EntityTypeImpl;
 import org.hibernate.type.spi.BasicType;
@@ -231,22 +233,22 @@ public class PersisterHelper {
 	public PersistentAttribute buildAttribute(
 			PersisterCreationContext creationContext,
 			ManagedTypeImplementor source,
-			Property property,
+			PersistentAttributeMapping attributeMapping,
 			List<Column> columns) {
-		if ( property.getValue() instanceof Collection ) {
+		if ( attributeMapping.getValueMapping() instanceof Collection ) {
 			assert columns == null || columns.isEmpty();
 
 			return buildPluralAttribute(
 					creationContext,
 					source,
-					property
+					attributeMapping
 			);
 		}
 		else {
 			return buildSingularAttribute(
 					creationContext,
 					source,
-					property,
+					attributeMapping,
 					columns
 			);
 		}
@@ -255,29 +257,29 @@ public class PersisterHelper {
 	public AbstractPersistentAttribute buildSingularAttribute(
 			PersisterCreationContext creationContext,
 			ManagedTypeImplementor source,
-			Property property,
+			PersistentAttributeMapping attributeMapping,
 			List<Column> columns) {
-		if ( property.getValue() instanceof Any ) {
+		if ( attributeMapping.getValueMapping() instanceof Any ) {
 			throw new NotYetImplementedException();
 		}
-		else if ( property.getValue() instanceof Component ) {
+		else if ( attributeMapping.getValueMapping() instanceof Component ) {
 			return new SingularPersistentAttributeEmbedded(
 					source,
-					property.getName(),
-					resolvePropertyAccess( creationContext, property ),
+					attributeMapping.getName(),
+					resolvePropertyAccess( creationContext, attributeMapping, source ),
 					Disposition.NORMAL,
 					creationContext.getPersisterFactory().createEmbeddablePersister(
-							(Component) property.getValue(),
+							(Component) attributeMapping.getValueMapping(),
 							source,
-							property.getName(),
+							attributeMapping.getName(),
 							creationContext
 					)
 			);
 		}
-		else if ( property.getValue() instanceof ToOne ) {
-			final ToOne toOne = (ToOne) property.getValue();
+		else if ( attributeMapping.getValueMapping() instanceof ToOne ) {
+			final ToOne toOne = (ToOne) attributeMapping.getValueMapping();
 
-			if ( property.getValue() instanceof OneToOne ) {
+			if ( attributeMapping.getValueMapping() instanceof OneToOne ) {
 				// the Classification here should be ONE_TO_ONE which could represent either a real PK one-to-one
 				//		or a unique-FK one-to-one (logical).  If this is a real one-to-one then we should have
 				//		no columns passed here and should instead use the LHS (source) PK column(s)
@@ -288,9 +290,9 @@ public class PersisterHelper {
 
 			return new SingularPersistentAttributeEntity(
 					source,
-					property.getName(),
-					resolvePropertyAccess( creationContext, property ),
-					property.getValue() instanceof OneToOne || ( (ManyToOne) property.getValue() ).isLogicalOneToOne()
+					attributeMapping.getName(),
+					resolvePropertyAccess( creationContext, attributeMapping ),
+					attributeMapping.getValueMapping() instanceof OneToOne || ( (ManyToOne) attributeMapping.getValueMapping() ).isLogicalOneToOne()
 							? SingularAttributeClassification.ONE_TO_ONE
 							: SingularAttributeClassification.MANY_TO_ONE,
 					makeEntityType( creationContext, toOne ),
@@ -300,16 +302,16 @@ public class PersisterHelper {
 			);
 		}
 		else {
-			assert property.getValue() instanceof SimpleValue;
+			assert attributeMapping.getValueMapping() instanceof SimpleValue;
 
-			final SimpleValue simpleValue = (SimpleValue) property.getValue();
+			final SimpleValue simpleValue = (SimpleValue) attributeMapping.getValueMapping();
 
 			final AttributeConverterDefinition attributeConverterInfo = simpleValue.getAttributeConverterDescriptor();
 
 			return new SingularPersistentAttributeBasic<>(
 					source,
-					property.getName(),
-					resolvePropertyAccess( creationContext, property ),
+					attributeMapping.getName(),
+					resolvePropertyAccess( creationContext, attributeMapping ),
 					resolveBasicType( creationContext, simpleValue ),
 					Disposition.NORMAL,
 					attributeConverterInfo,
@@ -342,9 +344,37 @@ public class PersisterHelper {
 		);
 	}
 
-	private PropertyAccess resolvePropertyAccess(PersisterCreationContext persisterCreationContext, Property property) {
-		final PropertyAccessStrategy strategy = property.getPropertyAccessStrategy( property.getPersistentClass().getMappedClass() );
-		return strategy.buildPropertyAccess( property.getPersistentClass().getMappedClass(), property.getName() );
+	private PropertyAccess resolvePropertyAccess(PersisterCreationContext persisterCreationContext, PersistentAttributeMapping attributeMapping) {
+		final PropertyAccessStrategyResolver accessStrategyResolver = persisterCreationContext.getSessionFactory()
+				.getServiceRegistry()
+				.getService( PropertyAccessStrategyResolver.class );
+
+		String accessName = attributeMapping.getPropertyAccessorName();
+		attributeMapping.
+		if ( accessName == null ) {
+			if ( clazz == null || java.util.Map.class.equals( clazz ) ) {
+				accessName = "map";
+			}
+			else {
+				accessName = "property";
+			}
+		}
+
+		final EntityMode entityMode = clazz == null || java.util.Map.class.equals( clazz )
+				? EntityMode.MAP
+				: EntityMode.POJO;
+
+		return resolveServiceRegistry().getService( PropertyAccessStrategyResolver.class ).resolvePropertyAccessStrategy(
+				clazz,
+				accessName,
+				entityMode
+		);
+
+		final PropertyAccessStrategy accessStrategy = accessStrategyResolver.resolvePropertyAccessStrategy(
+
+		);
+		final PropertyAccessStrategy strategy = attributeMapping.getPropertyAccessStrategy( attributeMapping.getPersistentClass().getMappedClass() );
+		return strategy.buildPropertyAccess( attributeMapping.getPersistentClass().getMappedClass(), attributeMapping.getName() );
 	}
 
 	private static String extractEmbeddableName(Type attributeType) {
@@ -355,7 +385,7 @@ public class PersisterHelper {
 	public PersistentAttribute buildPluralAttribute(
 			PersisterCreationContext creationContext,
 			ManagedTypeImplementor source,
-			Property property) {
+			PersistentAttributeMapping attributeMapping) {
 		final PersisterFactory persisterFactory = creationContext.getSessionFactory().getServiceRegistry().getService( PersisterFactory.class );
 
 			// todo : resolve cache access
@@ -363,9 +393,9 @@ public class PersisterHelper {
 
 		// need PersisterCreationContext - we should always have access to that when building persisters, through finalized initialization
 		final CollectionPersister collectionPersister = persisterFactory.createCollectionPersister(
-				(Collection) property.getValue(),
+				(Collection) attributeMapping.getValueMapping(),
 				source,
-				property.getName(),
+				attributeMapping.getName(),
 				cachingAccess,
 				creationContext
 		);
@@ -373,9 +403,39 @@ public class PersisterHelper {
 		return collectionPersister;
 	}
 
-	public static PropertyAccess resolvePropertyAccess(IdentifiableTypeImplementor declarer, Property property) {
-		final PropertyAccessStrategy strategy = property.getPropertyAccessStrategy( declarer.getJavaType() );
-		return strategy.buildPropertyAccess( declarer.getJavaType(), property.getName() );
+	public static PropertyAccess resolvePropertyAccess(
+			ManagedTypeImplementor declarer,
+			PersistentAttributeMapping attributeMapping,
+			PersisterCreationContext persisterCreationContext) {
+		final PropertyAccessStrategyResolver accessStrategyResolver = persisterCreationContext.getSessionFactory()
+				.getServiceRegistry()
+				.getService( PropertyAccessStrategyResolver.class );
+
+		String accessName = attributeMapping.getPropertyAccessorName();
+		if ( accessName == null ) {
+			if ( clazz == null || java.util.Map.class.equals( clazz ) ) {
+				accessName = "map";
+			}
+			else {
+				accessName = "property";
+			}
+		}
+
+		final EntityMode entityMode = clazz == null || java.util.Map.class.equals( clazz )
+				? EntityMode.MAP
+				: EntityMode.POJO;
+
+		return resolveServiceRegistry().getService( PropertyAccessStrategyResolver.class ).resolvePropertyAccessStrategy(
+				clazz,
+				accessName,
+				entityMode
+		);
+
+		final PropertyAccessStrategy accessStrategy = accessStrategyResolver.resolvePropertyAccessStrategy(
+
+		);
+		final PropertyAccessStrategy strategy = attributeMapping.getPropertyAccessStrategy( attributeMapping.getPersistentClass().getMappedClass() );
+		return strategy.buildPropertyAccess( attributeMapping.getPersistentClass().getMappedClass(), attributeMapping.getName() );
 	}
 
 	public static List<Column> makeValues(

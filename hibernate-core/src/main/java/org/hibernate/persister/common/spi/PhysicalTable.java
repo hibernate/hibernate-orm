@@ -4,11 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.persister.common.spi;
 
 /**
- * Represents a TableSpecification naming a physical table (or view)m, as opposed to a DerivedTableSpecification
+ * Represents a physical table (or view).
  *
  * @author Steve Ebersole
  */

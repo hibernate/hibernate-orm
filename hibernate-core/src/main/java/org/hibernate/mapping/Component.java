@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -36,7 +37,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements PropertyContainer, MetaAttributable, ManagedTypeMapping {
+public class Component extends SimpleValue implements EmbeddedValueMapping, org.hibernate.boot.model.domain.ManagedTypeMapping, PropertyContainer, MetaAttributable {
 	private ArrayList<Property> properties = new ArrayList<>();
 	private String componentClassName;
 	private boolean embedded;

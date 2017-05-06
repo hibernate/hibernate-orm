@@ -20,4 +20,6 @@ public interface JoinablePersistentAttribute<O,T> extends PersistentAttribute<O,
 	//		3) ? JoinableAttributeContainer ?
 	//		4) ? JoinableAttribute ?
 	List<JoinColumnMapping> getJoinColumnMappings();
+
+
 }

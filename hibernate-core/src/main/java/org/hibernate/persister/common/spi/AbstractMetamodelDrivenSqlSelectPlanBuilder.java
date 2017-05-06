@@ -54,11 +54,11 @@ import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
-import org.hibernate.sql.ast.QuerySpec;
-import org.hibernate.sql.ast.SelectQuery;
+import org.hibernate.sql.tree.QuerySpec;
+import org.hibernate.sql.tree.SelectStatement;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.from.TableGroup;
-import org.hibernate.sql.ast.from.TableSpace;
+import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.sql.tree.from.TableSpace;
 import org.hibernate.sql.convert.internal.FromClauseIndex;
 import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
 import org.hibernate.sql.convert.internal.SqlSelectPlanImpl;
@@ -89,7 +89,7 @@ import org.jboss.logging.MDC;
  * @see NavigableVisitationStrategy
  */
 public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
-		implements MetamodelDrivenSqlSelectPlanBuilder, SqlSelectPlanBuildingContext, ReturnResolutionContext {
+		implements MetamodelDrivenSqlSelectPlanBuilder, NavigableVisitationStrategy, SqlSelectPlanBuildingContext, ReturnResolutionContext {
 	private static final Logger log = Logger.getLogger( AbstractMetamodelDrivenSqlSelectPlanBuilder.class );
 	private static final String MDC_KEY = "hibernateSqlSelectPlanWalkPath";
 
@@ -118,7 +118,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	private org.hibernate.sql.convert.results.spi.Return queryReturn;
 
 
-	private final PropertyPathStack propertyPathStack = new PropertyPathStack();
+	private final NavigablePathStack propertyPathStack = new NavigablePathStack();
 
 
 	private final Stack<FetchParent> fetchParentStack = new Stack<>();
@@ -143,7 +143,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.lockOptions = lockOptions;
 
-		this.querySpec = new QuerySpec();
+		this.querySpec = new QuerySpec( true );
 		this.tableSpace = querySpec.getFromClause().makeTableSpace();
 	}
 
@@ -203,7 +203,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 		}
 
 		return new SqlSelectPlanImpl(
-				new SelectQuery( querySpec ),
+				new SelectStatement( querySpec ),
 				Collections.singletonList( queryReturn )
 		);
 	}
@@ -292,7 +292,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 
 	private void pushToStack(ExpandingFetchSource fetchSource) {
 		log.trace( "Pushing fetch source to stack : " + fetchSource );
-		propertyPathStack.push( fetchSource.getNavigablePath() );
+		propertyPathStack.push( fetchSource );
 		fetchSourceStack.addFirst( fetchSource );
 	}
 
@@ -1061,23 +1061,22 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	 * beneficial to see exactly where we are in the graph walking as part of log messages.
 	 * This MDC hook provides this capability.
 	 */
-	public static class PropertyPathStack {
-		private ArrayDeque<PropertyPath> internalStack = new ArrayDeque<>();
+	public static class NavigablePathStack {
+		private ArrayDeque<NavigablePath> internalStack = new ArrayDeque<>();
 
-		NavigablePath
 		public void push(Navigable navigable) {
 			assert navigable != null;
 
-			final PropertyPath propertyPath;
+			final NavigablePath navigablePath;
 			if ( internalStack.isEmpty() ) {
-				propertyPath = new PropertyPath( navigable.getNavigableName() );
+				navigablePath = new NavigablePath( navigable.getNavigableName() );
 			}
 			else {
-				propertyPath = internalStack.peekFirst().append( navigable.getNavigableName() );
+				navigablePath = internalStack.peekFirst().append( navigable.getNavigableName() );
 			}
-			internalStack.addFirst( propertyPath );
+			internalStack.addFirst( navigablePath );
 
-			MDC.put( MDC_KEY, propertyPath.getFullPath() );
+			MDC.put( MDC_KEY, navigablePath.getFullPath() );
 		}
 
 		public void pop() {
@@ -1085,7 +1084,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 
 			internalStack.removeFirst();
 
-			final PropertyPath newHead = internalStack.peekFirst();
+			final NavigablePath newHead = internalStack.peekFirst();
 			final String mdcRep = newHead == null ? "<no-path>" : newHead.getFullPath();
 			MDC.put( MDC_KEY, mdcRep );
 		}

@@ -8,7 +8,9 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.PluralPersistentAttribute;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.persister.queryable.spi.NavigableSourceReferenceInfo;
 import org.hibernate.query.spi.NavigablePath;
 
 /**
@@ -18,13 +20,13 @@ public abstract class AbstractSqmCollectionElementReference extends AbstractSqmN
 		SqmCollectionElementReference {
 	private final SqmPluralAttributeReference attributeBinding;
 	private final PluralPersistentAttribute pluralAttributeReference;
-	private final NavigablePath propertyPath;
+	private final NavigablePath navigablePath;
 
 	public AbstractSqmCollectionElementReference(SqmPluralAttributeReference pluralAttributeBinding) {
 		this.attributeBinding = pluralAttributeBinding;
 		this.pluralAttributeReference = pluralAttributeBinding.getReferencedNavigable();
 
-		this.propertyPath = pluralAttributeBinding.getNavigablePath().append( "{elements}" );
+		this.navigablePath = pluralAttributeBinding.getNavigablePath().append( "{elements}" );
 	}
 
 	public SqmPluralAttributeReference getPluralAttributeBinding() {
@@ -43,7 +45,7 @@ public abstract class AbstractSqmCollectionElementReference extends AbstractSqmN
 
 	@Override
 	public NavigablePath getNavigablePath() {
-		return propertyPath;
+		return navigablePath;
 	}
 
 	@Override
@@ -59,5 +61,29 @@ public abstract class AbstractSqmCollectionElementReference extends AbstractSqmN
 	@Override
 	public ExpressableType getInferableType() {
 		return getExpressionType();
+	}
+
+	@Override
+	public NavigableSourceReferenceInfo getSourceReferenceInfo() {
+		return getPluralAttributeBinding();
+	}
+
+	@Override
+	public String getUniqueIdentifier() {
+		// for most element classifications, the uid should point to the "collection table"...
+		return getPluralAttributeBinding().getUniqueIdentifier();
+	}
+
+	@Override
+	public String getIdentificationVariable() {
+		// for most element classifications, the "identification variable" (alias)
+		// 		associated with elements is the identification variable for the collection reference
+		return getPluralAttributeBinding().getIdentificationVariable();
+	}
+
+	@Override
+	public EntityPersister getIntrinsicSubclassEntityPersister() {
+		// for most element classifications, there is none
+		return null;
 	}
 }

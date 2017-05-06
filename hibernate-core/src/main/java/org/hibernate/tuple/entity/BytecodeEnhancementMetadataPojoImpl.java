@@ -6,6 +6,7 @@
  */
 package org.hibernate.tuple.entity;
 
+import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
@@ -19,15 +20,15 @@ import org.hibernate.mapping.PersistentClass;
  * @author Steve Ebersole
  */
 public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementMetadata {
-	public static BytecodeEnhancementMetadata from(PersistentClass persistentClass) {
-		final Class mappedClass = persistentClass.getMappedClass();
+	public static BytecodeEnhancementMetadata from(EntityMapping entityMapping) {
+		final Class mappedClass = entityMapping.getMappedClass();
 		final boolean enhancedForLazyLoading = PersistentAttributeInterceptable.class.isAssignableFrom( mappedClass );
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancedForLazyLoading
-				? LazyAttributesMetadata.from( persistentClass )
-				: LazyAttributesMetadata.nonEnhanced( persistentClass.getEntityName() );
+				? LazyAttributesMetadata.from( entityMapping )
+				: LazyAttributesMetadata.nonEnhanced( entityMapping.getEntityName() );
 
 		return new BytecodeEnhancementMetadataPojoImpl(
-				persistentClass.getEntityName(),
+				entityMapping.getEntityName(),
 				mappedClass,
 				enhancedForLazyLoading,
 				lazyAttributesMetadata

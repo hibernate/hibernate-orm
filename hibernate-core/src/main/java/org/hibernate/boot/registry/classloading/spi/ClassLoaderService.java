@@ -31,7 +31,7 @@ public interface ClassLoaderService extends Service, Stoppable {
 	 *
 	 * @throws ClassLoadingException Indicates the class could not be found
 	 */
-	public <T> Class<T> classForName(String className);
+	<T> Class<T> classForName(String className);
 
 	/**
 	 * Locate a resource by name (classpath lookup).
@@ -40,7 +40,7 @@ public interface ClassLoaderService extends Service, Stoppable {
 	 *
 	 * @return The located URL; may return {@code null} to indicate the resource was not found
 	 */
-	public URL locateResource(String name);
+	URL locateResource(String name);
 
 	/**
 	 * Locate a resource by name (classpath lookup) and gets its stream.
@@ -49,7 +49,7 @@ public interface ClassLoaderService extends Service, Stoppable {
 	 *
 	 * @return The stream of the located resource; may return {@code null} to indicate the resource was not found
 	 */
-	public InputStream locateResourceStream(String name);
+	InputStream locateResourceStream(String name);
 
 	/**
 	 * Locate a series of resource by name (classpath lookup).
@@ -58,7 +58,7 @@ public interface ClassLoaderService extends Service, Stoppable {
 	 *
 	 * @return The list of URL matching; may return {@code null} to indicate the resource was not found
 	 */
-	public List<URL> locateResources(String name);
+	List<URL> locateResources(String name);
 
 	/**
 	 * Discovers and instantiates implementations of the named service contract.
@@ -71,7 +71,7 @@ public interface ClassLoaderService extends Service, Stoppable {
 	 *     
 	 * @return The ordered set of discovered services.
 	 */
-	public <S> Collection<S> loadJavaServices(Class<S> serviceContract);
+	<S> Collection<S> loadJavaServices(Class<S> serviceContract);
 
 	<T> T generateProxy(InvocationHandler handler, Class... interfaces);
 

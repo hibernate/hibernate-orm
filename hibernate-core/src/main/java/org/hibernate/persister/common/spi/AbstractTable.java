@@ -19,15 +19,16 @@ import org.hibernate.MappingException;
 public abstract class AbstractTable implements Table {
 	private final Map<String,Column> valueMap = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 
-	public PhysicalColumn makeColumn(String name, int jdbcType) {
-		if ( valueMap.containsKey( name ) ) {
+	public PhysicalColumn makeColumn(String columnName, int jdbcType) {
+		if ( valueMap.containsKey( columnName ) ) {
 			// assume it is a Column
-			@SuppressWarnings("UnnecessaryLocalVariable") final PhysicalColumn existing = (PhysicalColumn) valueMap.get( name );
+			@SuppressWarnings("UnnecessaryLocalVariable") final PhysicalColumn existing = (PhysicalColumn) valueMap.get(
+					columnName );
 			// todo : "type compatibility" checks would be nice
 			return existing;
 		}
-		final PhysicalColumn column = new PhysicalColumn( this, name, jdbcType );
-		valueMap.put( name, column );
+		final PhysicalColumn column = new PhysicalColumn( this, columnName, jdbcType );
+		valueMap.put( columnName, column );
 		return column;
 	}
 

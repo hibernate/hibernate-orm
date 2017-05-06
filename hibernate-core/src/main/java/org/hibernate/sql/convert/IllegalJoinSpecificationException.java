@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.convert;
 
-import org.hibernate.sql.ast.from.TableJoin;
+import org.hibernate.sql.tree.from.TableJoin;
 
 /**
  * Indicates a problem in the definition of a {@link TableJoin}

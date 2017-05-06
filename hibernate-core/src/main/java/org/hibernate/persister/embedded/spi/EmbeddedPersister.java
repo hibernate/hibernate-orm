@@ -10,14 +10,17 @@ import java.util.Collections;
 import java.util.List;
 import javax.persistence.metamodel.EmbeddableType;
 
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.mapping.Component;
 import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.TypeExporter;
+import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
+import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.sql.convert.spi.TableGroupProducer;
+import org.hibernate.sql.tree.from.TableGroup;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.spi.EmbeddedType;
 
@@ -27,8 +30,9 @@ import org.hibernate.type.spi.EmbeddedType;
  * @author Steve Ebersole
  */
 public interface EmbeddedPersister<T>
-		extends ManagedTypeImplementor<T>, TypeExporter, EmbeddedContainer<T>, EmbeddableType<T>,
+		extends ManagedTypeImplementor<T>, TypeExporter<T>, EmbeddedContainer<T>, EmbeddableType<T>,
 		EmbeddedValuedNavigable<T> {
+
 	Class[] STANDARD_CTOR_SIGNATURE = new Class[] {
 			Component.class,
 			EmbeddedContainer.class,
@@ -36,8 +40,35 @@ public interface EmbeddedPersister<T>
 			PersisterCreationContext.class
 	};
 
-	void afterInitialization(
-			Component embeddableBinding,
+	/**
+	 * Called after all managed types in the persistence unit have been
+	 * instantiated.  Some will have been at least partially populated.
+	 * <p/>
+	 * At this point implementors ought to be able to locate other
+	 * managed types.
+	 *
+	 * @param embeddedValueMapping The source boot-time mapping descriptor
+	 * @param creationContext Access to services needed while finishing the instantiation
+	 */
+	void finishInstantiation(
+			EmbeddedValueMapping embeddedValueMapping,
+			PersisterCreationContext creationContext);
+
+	/**
+	 * Called after all managed types in the persistence unit have been
+	 * fully instantiated (all their `#finishInstantiation` calls have completed).
+	 * <p/>
+	 * At this point implementors ought to be able to rely on the complete Navigable structure to have
+	 * at least been "stitched" together and most information has been populated (there are a few
+	 * exceptions, which we ought to list in a Navigable "design doc").
+	 *
+	 * todo (6.0) : Create Navigable-design-doc either here in repo or as wiki
+	 *
+	 * @param embeddedValueMapping The source boot-time mapping descriptor
+	 * @param creationContext Access to services needed while finishing the instantiation
+	 */
+	void completeInitialization(
+			EmbeddedValueMapping embeddedValueMapping,
 			PersisterCreationContext creationContext);
 
 	default String getRoleName() {
@@ -58,12 +89,7 @@ public interface EmbeddedPersister<T>
 	EmbeddedContainer<?> getSource();
 
 	@Override
-	EmbeddedType getOrmType();
-
-	@Override
-	default EmbeddedType getExportedDomainType() {
-		return getOrmType();
-	}
+	EmbeddedType<T> getOrmType();
 
 	@Override
 	default String getTypeName() {
@@ -82,8 +108,8 @@ public interface EmbeddedPersister<T>
 	}
 
 	@Override
-	default TableGroupProducer resolveTableGroupProducer() {
-		return getSource().resolveTableGroupProducer();
+	default TableGroup resolveTableGroup(NavigableReferenceInfo embeddedReferenceInfo, TableGroupResolver tableGroupResolver) {
+		return getSource().resolveTableGroup( embeddedReferenceInfo, tableGroupResolver );
 	}
 
 	@Override

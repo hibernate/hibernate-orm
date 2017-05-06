@@ -10,7 +10,7 @@ package org.hibernate.sql.exec.results.internal.instantiation;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.tree.select.SqlSelection;
 import org.hibernate.sql.exec.results.process.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.exec.results.process.spi.RowProcessingState;
 import org.hibernate.sql.exec.results.process.spi.ReturnAssembler;

@@ -6,8 +6,15 @@
  */
 package org.hibernate.boot.model.domain;
 
+import org.hibernate.EntityMode;
+
 /**
  * @author Steve Ebersole
  */
 public interface EntityMapping extends IdentifiableTypeMapping {
+	String getEntityName();
+	String getJpaEntityName();
+
+	EntityMode getEntityMode();
+	String getExplicitTuplizerClassName();
 }

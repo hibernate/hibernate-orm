@@ -17,7 +17,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.ast.select.SqlSelection;
+import org.hibernate.sql.tree.select.SqlSelection;
 import org.hibernate.sql.exec.results.process.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;

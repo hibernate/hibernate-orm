@@ -7,6 +7,9 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.persister.common.spi.PluralPersistentAttribute;
+import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.queryable.spi.NavigableSourceReferenceInfo;
+import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
 /**
@@ -36,4 +39,39 @@ public class SqmPluralAttributeReference
 		return (SqmAttributeJoin) super.getExportedFromElement();
 	}
 
+
+	@Override
+	public NavigableSourceReferenceInfo getSourceReferenceInfo() {
+		return getSourceReference();
+	}
+
+	@Override
+	public String getTypeName() {
+		return getReferencedNavigable().getTypeName();
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return getReferencedNavigable().getCollectionPersister().getPersistenceType();
+	}
+
+	@Override
+	public Class getJavaType() {
+		return getReferencedNavigable().getJavaType();
+	}
+
+	@Override
+	public String getUniqueIdentifier() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public String getIdentificationVariable() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public EntityPersister getIntrinsicSubclassEntityPersister() {
+		throw new NotYetImplementedException(  );
+	}
 }

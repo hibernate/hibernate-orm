@@ -36,50 +36,50 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.QuerySpec;
-import org.hibernate.sql.ast.SelectQuery;
-import org.hibernate.sql.ast.expression.AvgFunction;
-import org.hibernate.sql.ast.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.expression.CoalesceExpression;
-import org.hibernate.sql.ast.expression.ColumnBindingExpression;
-import org.hibernate.sql.ast.expression.ConcatExpression;
-import org.hibernate.sql.ast.expression.CountFunction;
-import org.hibernate.sql.ast.expression.CountStarFunction;
-import org.hibernate.sql.ast.expression.Expression;
-import org.hibernate.sql.ast.expression.MaxFunction;
-import org.hibernate.sql.ast.expression.MinFunction;
-import org.hibernate.sql.ast.expression.NamedParameter;
-import org.hibernate.sql.ast.expression.NonStandardFunctionExpression;
-import org.hibernate.sql.ast.expression.NullifExpression;
-import org.hibernate.sql.ast.expression.PositionalParameter;
-import org.hibernate.sql.ast.expression.QueryLiteral;
-import org.hibernate.sql.ast.expression.SumFunction;
-import org.hibernate.sql.ast.expression.UnaryOperationExpression;
+import org.hibernate.sql.tree.Clause;
+import org.hibernate.sql.tree.QuerySpec;
+import org.hibernate.sql.tree.SelectStatement;
+import org.hibernate.sql.tree.expression.AvgFunction;
+import org.hibernate.sql.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.tree.expression.CaseSimpleExpression;
+import org.hibernate.sql.tree.expression.CoalesceExpression;
+import org.hibernate.sql.tree.expression.ColumnReferenceExpression;
+import org.hibernate.sql.tree.expression.ConcatExpression;
+import org.hibernate.sql.tree.expression.CountFunction;
+import org.hibernate.sql.tree.expression.CountStarFunction;
+import org.hibernate.sql.tree.expression.Expression;
+import org.hibernate.sql.tree.expression.MaxFunction;
+import org.hibernate.sql.tree.expression.MinFunction;
+import org.hibernate.sql.tree.expression.NamedParameter;
+import org.hibernate.sql.tree.expression.NonStandardFunctionExpression;
+import org.hibernate.sql.tree.expression.NullifExpression;
+import org.hibernate.sql.tree.expression.PositionalParameter;
+import org.hibernate.sql.tree.expression.QueryLiteral;
+import org.hibernate.sql.tree.expression.SumFunction;
+import org.hibernate.sql.tree.expression.UnaryOperationExpression;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.expression.instantiation.DynamicInstantiation;
-import org.hibernate.sql.ast.from.EntityTableGroup;
-import org.hibernate.sql.ast.from.TableGroup;
-import org.hibernate.sql.ast.from.TableGroupJoin;
-import org.hibernate.sql.ast.from.TableSpace;
-import org.hibernate.sql.ast.predicate.BetweenPredicate;
-import org.hibernate.sql.ast.predicate.GroupedPredicate;
-import org.hibernate.sql.ast.predicate.InListPredicate;
-import org.hibernate.sql.ast.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.predicate.Junction;
-import org.hibernate.sql.ast.predicate.LikePredicate;
-import org.hibernate.sql.ast.predicate.NegatedPredicate;
-import org.hibernate.sql.ast.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.predicate.Predicate;
-import org.hibernate.sql.ast.predicate.RelationalPredicate;
-import org.hibernate.sql.ast.select.SelectClause;
-import org.hibernate.sql.ast.select.Selectable;
-import org.hibernate.sql.ast.select.Selection;
-import org.hibernate.sql.ast.select.SqlSelectable;
-import org.hibernate.sql.ast.select.SqlSelection;
-import org.hibernate.sql.ast.sort.SortSpecification;
+import org.hibernate.sql.tree.expression.instantiation.DynamicInstantiation;
+import org.hibernate.sql.tree.from.EntityTableGroup;
+import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.sql.tree.from.TableGroupJoin;
+import org.hibernate.sql.tree.from.TableSpace;
+import org.hibernate.sql.tree.predicate.BetweenPredicate;
+import org.hibernate.sql.tree.predicate.GroupedPredicate;
+import org.hibernate.sql.tree.predicate.InListPredicate;
+import org.hibernate.sql.tree.predicate.InSubQueryPredicate;
+import org.hibernate.sql.tree.predicate.Junction;
+import org.hibernate.sql.tree.predicate.LikePredicate;
+import org.hibernate.sql.tree.predicate.NegatedPredicate;
+import org.hibernate.sql.tree.predicate.NullnessPredicate;
+import org.hibernate.sql.tree.predicate.Predicate;
+import org.hibernate.sql.tree.predicate.RelationalPredicate;
+import org.hibernate.sql.tree.select.SelectClause;
+import org.hibernate.sql.tree.select.Selectable;
+import org.hibernate.sql.tree.select.Selection;
+import org.hibernate.sql.tree.select.SqlSelectable;
+import org.hibernate.sql.tree.select.SqlSelection;
+import org.hibernate.sql.tree.sort.SortSpecification;
 import org.hibernate.sql.convert.ConversionException;
 import org.hibernate.sql.convert.SyntaxException;
 import org.hibernate.sql.convert.expression.internal.NavigableReferenceExpressionBuilderImpl;
@@ -264,9 +264,9 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public SelectQuery visitSelectStatement(SqmSelectStatement statement) {
+	public SelectStatement visitSelectStatement(SqmSelectStatement statement) {
 		final QuerySpec querySpec = visitQuerySpec( statement.getQuerySpec() );
-		final SelectQuery sqlAst = new SelectQuery( querySpec );
+		final SelectStatement sqlAst = new SelectStatement( querySpec );
 
 		return sqlAst;
 	}
@@ -443,10 +443,10 @@ public class SqmSelectToSqlAstConverter
 			predicate.add(
 					new RelationalPredicate(
 							RelationalPredicate.Operator.EQUAL,
-							new ColumnBindingExpression(
+							new ColumnReferenceExpression(
 									ownerTableGroup.resolveColumnBinding( joinLhsColumn )
 							),
-							new ColumnBindingExpression(
+							new ColumnReferenceExpression(
 									joinedTableGroup.resolveColumnBinding( joinRhsColumn )
 							)
 					)
@@ -1208,7 +1208,7 @@ public class SqmSelectToSqlAstConverter
 	public InSubQueryPredicate visitInSubQueryPredicate(InSubQuerySqmPredicate predicate) {
 		return new InSubQueryPredicate(
 				(Expression) predicate.getTestExpression().accept( this ),
-				(org.hibernate.sql.ast.QuerySpec) predicate.getSubQueryExpression().accept( this ),
+				(org.hibernate.sql.tree.QuerySpec) predicate.getSubQueryExpression().accept( this ),
 				predicate.isNegated()
 		);
 	}

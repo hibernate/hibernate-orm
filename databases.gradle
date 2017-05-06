@@ -78,6 +78,13 @@ ext {
                         'jdbc.user'  : 'informix',
                         'jdbc.pass'  : 'in4mix',
                         'jdbc.url'   : 'jdbc:informix-sqli://192.168.99.100:9088/sysuser:INFORMIXSERVER=dev;user=informix;password=in4mix'
+                ],
+                sqlite : [
+                        'db.dialect' : 'org.hibernate.dialect.SQLiteDialect',
+                        'jdbc.driver': 'org.sqlite.JDBC',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:sqlite:sqlite_test.db'
                 ]
         ]
 }

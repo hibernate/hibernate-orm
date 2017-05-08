@@ -30,6 +30,7 @@ import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.internal.EntityActionVetoException;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
@@ -283,11 +284,20 @@ public class ActionQueue {
 			LOG.trace( "Adding resolved non-early insert action." );
 			addAction( AbstractEntityInsertAction.class, insert );
 		}
-		insert.makeEntityManaged();
-		if( unresolvedInsertions != null ) {
-			for ( AbstractEntityInsertAction resolvedAction : unresolvedInsertions.resolveDependentActions( insert.getInstance(), session ) ) {
-				addResolvedEntityInsertAction( resolvedAction );
+		if ( !insert.isVeto() ) {
+			insert.makeEntityManaged();
+
+			if( unresolvedInsertions != null ) {
+				for ( AbstractEntityInsertAction resolvedAction : unresolvedInsertions.resolveDependentActions( insert.getInstance(), session ) ) {
+					addResolvedEntityInsertAction( resolvedAction );
+				}
 			}
+		}
+		else {
+			throw new EntityActionVetoException(
+				"The EntityInsertAction was vetoed.",
+				insert
+			);
 		}
 	}
 

@@ -37,6 +37,8 @@ public abstract class EntityAction
 	private transient SharedSessionContractImplementor session;
 	private transient EntityPersister persister;
 
+	private transient boolean veto;
+
 	/**
 	 * Instantiate an action.
 	 *
@@ -51,6 +53,14 @@ public abstract class EntityAction
 		this.instance = instance;
 		this.session = session;
 		this.persister = persister;
+	}
+
+	public boolean isVeto() {
+		return veto;
+	}
+
+	public void setVeto(boolean veto) {
+		this.veto = veto;
 	}
 
 	@Override

@@ -78,6 +78,13 @@ ext {
                         'jdbc.user'  : 'informix',
                         'jdbc.pass'  : 'in4mix',
                         'jdbc.url'   : 'jdbc:informix-sqli://192.168.99.100:9088/sysuser:INFORMIXSERVER=dev;user=informix;password=in4mix'
+                ],
+                db2 : [
+                        'db.dialect' : 'org.hibernate.dialect.DB2Dialect',
+                        'jdbc.driver': 'com.ibm.db2.jcc.DB2Driver',
+                        'jdbc.user'  : 'db2inst1',
+                        'jdbc.pass'  : 'db2inst1-pwd',
+                        'jdbc.url'   : 'jdbc:db2://127.0.0.1:50000/hibern8'
                 ]
         ]
 }

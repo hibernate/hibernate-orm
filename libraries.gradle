@@ -99,6 +99,7 @@ ext {
 
             oracle:          'com.oracle.jdbc:ojdbc7:12.1.0.2',
             mssql:           'com.microsoft.sqlserver:mssql-jdbc:6.1.0.jre8',
+            db2:             'com.ibm.db2:db2jcc:10.5',
 
             informix:        'com.ibm.informix:jdbc:4.10.7.20160517',
             jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",

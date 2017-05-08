@@ -62,7 +62,9 @@ public class  AuditEntitiesConfiguration {
 				EnversSettings.AUDIT_STRATEGY, properties, DefaultAuditStrategy.class.getName()
 		);
 
-		originalIdPropName = "originalId";
+		originalIdPropName = ConfigurationHelper.getString(
+				EnversSettings.ORIGINAL_ID_PROP_NAME, properties, "originalId"
+		);
 
 		revisionFieldName = ConfigurationHelper.getString( EnversSettings.REVISION_FIELD_NAME, properties, "REV" );
 

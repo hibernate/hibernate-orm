@@ -8,6 +8,7 @@ package org.hibernate.envers.internal.entities;
 
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
+import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -22,6 +23,9 @@ public class RelationDescription {
 	private final IdMapper idMapper;
 	private final PropertyMapper fakeBidirectionalRelationMapper;
 	private final PropertyMapper fakeBidirectionalRelationIndexMapper;
+	private final MiddleIdData referencingIdData;
+	private final MiddleIdData referencedIdData;
+	private final String auditMiddleEntityName;
 	private final boolean insertable;
 	private final boolean indexed;
 	private boolean bidirectional;
@@ -38,7 +42,7 @@ public class RelationDescription {
 			boolean ignoreNotFound) {
 		return new RelationDescription(
 				fromPropertyName, relationType, toEntityName, mappedByPropertyName, idMapper,
-				fakeBidirectionalRelationMapper, fakeBidirectionalRelationIndexMapper, insertable, ignoreNotFound, false
+				fakeBidirectionalRelationMapper, fakeBidirectionalRelationIndexMapper, null, null, null, insertable, ignoreNotFound, false
 		);
 	}
 
@@ -50,6 +54,9 @@ public class RelationDescription {
 			IdMapper idMapper,
 			PropertyMapper fakeBidirectionalRelationMapper,
 			PropertyMapper fakeBidirectionalRelationIndexMapper,
+			MiddleIdData referencingIdData,
+			MiddleIdData referencedIdData,
+			String auditMiddleEntityName,
 			boolean insertable,
 			boolean indexed) {
 		// Envers populates collections by executing dedicated queries. Special handling of
@@ -58,7 +65,7 @@ public class RelationDescription {
 		// Therefore assigning false to ignoreNotFound.
 		return new RelationDescription(
 				fromPropertyName, relationType, toEntityName, mappedByPropertyName, idMapper, fakeBidirectionalRelationMapper,
-				fakeBidirectionalRelationIndexMapper, insertable, false, indexed
+				fakeBidirectionalRelationIndexMapper, referencingIdData, referencedIdData, auditMiddleEntityName, insertable, false, indexed
 		);
 	}
 
@@ -70,6 +77,9 @@ public class RelationDescription {
 			IdMapper idMapper,
 			PropertyMapper fakeBidirectionalRelationMapper,
 			PropertyMapper fakeBidirectionalRelationIndexMapper,
+			MiddleIdData referencingIdData,
+			MiddleIdData referencedIdData,
+			String auditMiddleEntityName,
 			boolean insertable,
 			boolean ignoreNotFound,
 			boolean indexed) {
@@ -81,6 +91,9 @@ public class RelationDescription {
 		this.idMapper = idMapper;
 		this.fakeBidirectionalRelationMapper = fakeBidirectionalRelationMapper;
 		this.fakeBidirectionalRelationIndexMapper = fakeBidirectionalRelationIndexMapper;
+		this.referencingIdData = referencingIdData;
+		this.referencedIdData = referencedIdData;
+		this.auditMiddleEntityName = auditMiddleEntityName;
 		this.insertable = insertable;
 		this.indexed = indexed;
 		this.bidirectional = false;
@@ -116,6 +129,18 @@ public class RelationDescription {
 
 	public PropertyMapper getFakeBidirectionalRelationIndexMapper() {
 		return fakeBidirectionalRelationIndexMapper;
+	}
+
+	public MiddleIdData getReferencingIdData() {
+		return referencingIdData;
+	}
+
+	public MiddleIdData getReferencedIdData() {
+		return referencedIdData;
+	}
+
+	public String getAuditMiddleEntityName() {
+		return auditMiddleEntityName;
 	}
 
 	public boolean isInsertable() {

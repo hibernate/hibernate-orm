@@ -148,7 +148,7 @@ public class SanityCheckTest extends BaseEnversFunctionalTestCase {
 		catch ( Exception e ) {
 			assertTyping( AuditException.class, e );
 			assertEquals(
-					"This type of relation (org.hibernate.envers.test.integration.components.dynamic.PlainEntity.component_manyToManyList) isn't supported and can't be used in queries.",
+					"This type of relation (org.hibernate.envers.test.integration.components.dynamic.PlainEntity.component_manyToManyList) can't be used in audit query restrictions.",
 					e.getMessage()
 			);
 		}

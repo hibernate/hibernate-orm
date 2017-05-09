@@ -9,6 +9,7 @@ package org.hibernate.envers.query.criteria.internal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
@@ -48,13 +49,20 @@ public abstract class CriteriaTools {
 			return null;
 		}
 
-		if ( relationDesc.getRelationType() == RelationType.TO_ONE ) {
+		if ( relationDesc.getRelationType() == RelationType.TO_ONE
+				|| relationDesc.getRelationType() == RelationType.TO_MANY_MIDDLE
+				|| relationDesc.getRelationType() == RelationType.TO_MANY_NOT_OWNING
+				|| relationDesc.getRelationType() == RelationType.TO_MANY_MIDDLE_NOT_OWNING ) {
 			return relationDesc;
 		}
 
 		throw new AuditException(
-				"This type of relation (" + entityName + "." + propertyName +
-						") isn't supported and can't be used in queries."
+				String.format(
+						Locale.ENGLISH,
+						"This type of relation (%s.%s) isn't supported and can't be used in queries.",
+						entityName,
+						propertyName
+				)
 		);
 	}
 

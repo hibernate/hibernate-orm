@@ -16,7 +16,6 @@ import java.util.Set;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
@@ -370,28 +369,6 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 			}
 
 			assertTyping( IllegalArgumentException.class, e );
-		}
-
-		try {
-			getAuditReader().createQuery()
-					.forEntitiesAtRevision( AdvancedEntity.class, 1 )
-					.add(
-							AuditEntity.property( "dynamicConfiguration_" + INTERNAL_MAP_WITH_MANY_TO_MANY )
-									.eq( entity.getDynamicConfiguration().get( INTERNAL_MAP_WITH_MANY_TO_MANY ) )
-					)
-					.getResultList();
-			Assert.fail();
-		}
-		catch ( Exception e ) {
-			if ( getSession().getTransaction().isActive() ) {
-				getSession().getTransaction().rollback();
-			}
-
-			assertTyping( AuditException.class, e );
-			Assert.assertEquals(
-					"This type of relation (org.hibernate.orm.test.envers.integration.components.dynamic.AdvancedEntity.dynamicConfiguration_internalMapWithEntities) isn't supported and can't be used in queries.",
-					e.getMessage()
-			);
 		}
 	}
 

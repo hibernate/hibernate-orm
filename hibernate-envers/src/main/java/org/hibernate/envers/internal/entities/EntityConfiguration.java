@@ -12,6 +12,7 @@ import java.util.Map;
 import org.hibernate.envers.internal.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
+import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 
 /**
  * Runtime representation of an entity that may or may not be audited.
@@ -109,13 +110,21 @@ public class EntityConfiguration {
 						idMapper,
 						fakeBidirectionalRelationMapper,
 						fakeBidirectionalRelationIndexMapper,
+						null,
+						null,
+						null,
 						true,
 						indexed
 				)
 		);
 	}
 
-	public void addToManyMiddleRelation(String fromPropertyName, String toEntityName) {
+	public void addToManyMiddleRelation(
+			String fromPropertyName,
+			String toEntityName,
+			MiddleIdData referencingIdData,
+			MiddleIdData referencedIdData,
+			String auditMiddleEntityName) {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toMany(
@@ -126,13 +135,22 @@ public class EntityConfiguration {
 						null,
 						null,
 						null,
+						referencingIdData,
+						referencedIdData,
+						auditMiddleEntityName,
 						true,
 						false
 				)
 		);
 	}
 
-	public void addToManyMiddleNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName) {
+	public void addToManyMiddleNotOwningRelation(
+			String fromPropertyName,
+			String mappedByPropertyName,
+			String toEntityName,
+			MiddleIdData referencingIdData,
+			MiddleIdData referencedIdData,
+			String auditMiddleEntityName) {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toMany(
@@ -143,6 +161,9 @@ public class EntityConfiguration {
 						null,
 						null,
 						null,
+						referencingIdData,
+						referencedIdData,
+						auditMiddleEntityName,
 						true,
 						false
 				)

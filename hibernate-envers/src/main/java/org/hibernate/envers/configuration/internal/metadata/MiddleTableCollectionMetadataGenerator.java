@@ -178,7 +178,7 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 		addMapper( context, commonCollectionMapperData, elementComponentData, indexComponentData );
 
 		// Storing information about this relation.
-		storeMiddleEntityRelationInformation( context, mappedBy );
+		storeMiddleEntityRelationInformation( context, mappedBy, referencingIdData, referencedPrefix, auditMiddleEntityName );
 	}
 
 	private String getMiddleTableName(CollectionMetadataContext context) {
@@ -231,20 +231,42 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 		return getMetadataBuildingContext().getMetadataCollector().getEntityBinding( context.getReferencedEntityName() );
 	}
 	
-	private void storeMiddleEntityRelationInformation(CollectionMetadataContext context, String mappedBy) {
+	private void storeMiddleEntityRelationInformation(
+			CollectionMetadataContext context,
+			String mappedBy,
+			MiddleIdData referencingIdData,
+			String referencedPrefix,
+			String auditMiddleEntityName) {
 		// Only if this is a relation (when there is a referenced entity).
 		if ( context.getReferencedEntityName() != null ) {
+			final IdMappingData referencedIdMapping = getReferencedIdMappingData(
+					context.getReferencingEntityName(),
+					context.getReferencedEntityName(),
+					context.getPropertyAuditingData(),
+					true
+			);
+			final MiddleIdData referencedIdData = createMiddleIdData(
+					referencedIdMapping,
+					referencedPrefix + "_",
+					context.getReferencedEntityName()
+			);
 			if ( context.getCollection().isInverse() ) {
 				context.getReferencingEntityConfiguration().addToManyMiddleNotOwningRelation(
 						context.getPropertyName(),
 						mappedBy,
-						context.getReferencedEntityName()
+						context.getReferencedEntityName(),
+						referencingIdData,
+						referencedIdData,
+						auditMiddleEntityName
 				);
 			}
 			else {
 				context.getReferencingEntityConfiguration().addToManyMiddleRelation(
 						context.getPropertyName(),
-						context.getReferencedEntityName()
+						context.getReferencedEntityName(),
+						referencingIdData,
+						referencedIdData,
+						auditMiddleEntityName
 				);
 			}
 		}

@@ -6,10 +6,13 @@
  */
 package org.hibernate.envers.query.criteria.internal;
 
+import java.util.Locale;
+
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
+import org.hibernate.envers.internal.entities.RelationType;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -59,7 +62,13 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 			final Type type = getPropertyType( session, entityName, propertyName );
 			if ( type != null && type.isComponentType() ) {
 				if ( !"=".equals( op ) && !"<>".equals( op ) ) {
-					throw new AuditException( "Component-based criterion is not supported for op: " + op );
+					throw new AuditException(
+							String.format(
+									Locale.ENGLISH,
+									"Component-based criterion is not supported for op: %s",
+									op
+							)
+					);
 				}
 				final ComponentType componentType = (ComponentType) type;
 				for ( int i = 0; i < componentType.getPropertyNames().length; i++ ) {
@@ -76,15 +85,29 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 				parameters.addWhereWithParam( alias, propertyName, op, value );
 			}
 		}
-		else {
+		else if ( relatedEntity.getRelationType() == RelationType.TO_ONE ) {
 			if ( !"=".equals( op ) && !"<>".equals( op ) ) {
 				throw new AuditException(
-						"This type of operation: " + op + " (" + entityName + "." + propertyName +
-								") isn't supported and can't be used in queries."
+						String.format(
+								Locale.ENGLISH,
+								"This type of operation: %s (%s.%s) isn't supported and can't be used in queries.",
+								op,
+								entityName,
+								propertyName
+						)
 				);
 			}
 			Object id = relatedEntity.getIdMapper().mapToIdFromEntity( value );
 			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, alias, null, "=".equals( op ) );
+		}
+		else {
+			throw new AuditException(
+					String.format(
+							"This type of relation (%s.%s) can't be used in audit query restrictions.",
+							entityName,
+							propertyName
+					)
+			);
 		}
 	}
 

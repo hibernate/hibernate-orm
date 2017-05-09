@@ -41,6 +41,6 @@ public class FunctionFunctionAuditExpression implements AuditCriterion {
 			String baseAlias,
 			QueryBuilder queryBuilder,
 			Parameters parameters) {
-		parameters.addWhereWithFunction( enversService, leftFunction, op, rightFunction );
+		parameters.addWhereWithFunction( enversService, aliasToEntityNameMap, leftFunction, op, rightFunction );
 	}
 }

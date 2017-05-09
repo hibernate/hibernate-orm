@@ -9,6 +9,7 @@ package org.hibernate.envers.query.criteria;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.criterion.MatchMode;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -53,6 +54,20 @@ public class AuditFunction implements AuditProjection {
 	 */
 	public AuditCriterion ne(Object value) {
 		return new SimpleFunctionAuditExpression( this, value, "<>" );
+	}
+
+	/**
+	 * Apply a "like" constraint
+	 */
+	public AuditCriterion like(Object value) {
+		return new SimpleFunctionAuditExpression( this, value, " like " );
+	}
+
+	/**
+	 * Apply a "like" constraint
+	 */
+	public AuditCriterion like(String value, MatchMode matchMode) {
+		return new SimpleFunctionAuditExpression( this, matchMode.toMatchString( value ), " like " );
 	}
 
 	/**
@@ -224,7 +239,7 @@ public class AuditFunction implements AuditProjection {
 	@Override
 	public void addProjectionToQuery(EnversService enversService, AuditReaderImplementor auditReader,
 			Map<String, String> aliasToEntityNameMap, String baseAlias, QueryBuilder queryBuilder) {
-		queryBuilder.addProjection( enversService, this );
+		queryBuilder.addProjection( enversService, aliasToEntityNameMap, this );
 	}
 
 	@Override

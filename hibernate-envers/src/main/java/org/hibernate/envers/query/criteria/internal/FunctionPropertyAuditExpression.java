@@ -56,6 +56,13 @@ public class FunctionPropertyAuditExpression implements AuditCriterion {
 				entityName,
 				propertyNameGetter );
 		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
-		parameters.addWhereWithFunction( enversService.getConfig(), effectiveAlias, propertyName, op, function );
+		parameters.addWhereWithFunction(
+				enversService.getConfig(),
+				aliasToEntityNameMap,
+				effectiveAlias,
+				propertyName,
+				op,
+				function
+		);
 	}
 }

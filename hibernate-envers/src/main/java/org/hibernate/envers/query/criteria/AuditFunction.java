@@ -56,6 +56,20 @@ public class AuditFunction implements AuditProjection {
 	}
 
 	/**
+	 * Apply a "like" constraint
+	 */
+	public AuditCriterion like(Object value) {
+		return new SimpleFunctionAuditExpression( this, value, " like " );
+	}
+
+	/**
+	 * Apply a "like" constraint
+	 */
+	public AuditCriterion like(String value, MatchMode matchMode) {
+		return new SimpleFunctionAuditExpression( this, matchMode.toMatchString( value ), " like " );
+	}
+
+	/**
 	 * Apply a "greater than" constraint
 	 */
 	public AuditCriterion gt(Object value) {
@@ -222,9 +236,13 @@ public class AuditFunction implements AuditProjection {
 	}
 
 	@Override
-	public void addProjectionToQuery(EnversService enversService, AuditReaderImplementor auditReader,
-			Map<String, String> aliasToEntityNameMap, String baseAlias, QueryBuilder queryBuilder) {
-		queryBuilder.addProjection( enversService.getConfig(), this );
+	public void addProjectionToQuery(
+			EnversService enversService,
+			AuditReaderImplementor auditReader,
+			Map<String, String> aliasToEntityNameMap,
+			String baseAlias,
+			QueryBuilder queryBuilder) {
+		queryBuilder.addProjection( enversService.getConfig(), aliasToEntityNameMap, this );
 	}
 
 	@Override

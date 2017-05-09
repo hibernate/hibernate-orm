@@ -33,9 +33,14 @@ public class SimpleFunctionAuditExpression implements AuditCriterion {
 	}
 
 	@Override
-	public void addToQuery(EnversService enversService, AuditReaderImplementor versionsReader,
-			Map<String, String> aliasToEntityNameMap, String baseAlias, QueryBuilder qb, Parameters parameters) {
-		parameters.addWhereWithFunction( enversService.getConfig(), function, op, value );
+	public void addToQuery(
+			EnversService enversService,
+			AuditReaderImplementor versionsReader,
+			Map<String, String> aliasToEntityNameMap,
+			String baseAlias,
+			QueryBuilder qb,
+			Parameters parameters) {
+		parameters.addWhereWithFunction( enversService.getConfig(), aliasToEntityNameMap, function, op, value );
 	}
 
 }

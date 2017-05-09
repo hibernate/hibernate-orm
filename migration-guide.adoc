@@ -17,6 +17,13 @@ Additionally, `hibernate-envers` has been made part of `hibernate-core` and bett
 from an API perspective.
 
 
+== Removed deprecations
+
+=== Legacy criteria support (`org.hibernate.criterion` package mainly)
+
+
+The legacy Hibernate criteria API as a whole has been deprecated all the way back to
+
 == Things that (might) make sense in a boot-only ServiceRegistry
 
 * ClassmateContext

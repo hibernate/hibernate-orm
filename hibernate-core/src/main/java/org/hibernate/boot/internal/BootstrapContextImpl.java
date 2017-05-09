@@ -119,8 +119,14 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	private ClassLoaderDelegate generateHcannClassLoaderDelegate() {
-		// todo (6.0) : this should use the JPA temp class loader if possible
-		//		or create our own "throw awy" ClassLoader.
+		//	class loading here needs to be drastically different for 7.0
+		//		but luckily 7.0 will do away with HCANN use and be easier to
+		//		implement this.
+		//
+		// todo (6.0) : *if possible* make similar change in 6.0
+		// 		possibly using the JPA temp class loader or create our own "throw awy" ClassLoader;
+		//		the trouble there is that we eventually need to load the Class into the real
+		//		ClassLoader prior to use
 
 		final ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
 

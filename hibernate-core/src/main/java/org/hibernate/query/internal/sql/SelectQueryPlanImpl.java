@@ -16,8 +16,8 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.spi.RowTransformer;
+import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
+import org.hibernate.sql.ast.consume.spi.RowTransformer;
 
 /**
  * @author Steve Ebersole

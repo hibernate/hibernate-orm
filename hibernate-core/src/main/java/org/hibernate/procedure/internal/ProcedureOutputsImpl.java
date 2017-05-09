@@ -28,17 +28,17 @@ import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.exec.results.process.internal.JdbcValuesSourceProcessingStateStandardImpl;
-import org.hibernate.sql.exec.results.process.internal.RowProcessingStateStandardImpl;
-import org.hibernate.sql.exec.results.process.internal.values.DirectResultSetAccess;
-import org.hibernate.sql.exec.results.process.internal.values.JdbcValuesSourceResultSetImpl;
-import org.hibernate.sql.exec.results.process.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.exec.results.process.spi.RowReader;
-import org.hibernate.sql.exec.spi.JdbcCall;
-import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
-import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
-import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.ast.consume.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.ast.consume.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.ast.consume.results.internal.values.DirectResultSetAccess;
+import org.hibernate.sql.ast.consume.results.internal.values.JdbcValuesSourceResultSetImpl;
+import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.ast.consume.results.spi.RowReader;
+import org.hibernate.sql.ast.consume.spi.JdbcCall;
+import org.hibernate.sql.ast.consume.spi.JdbcCallParameterExtractor;
+import org.hibernate.sql.ast.consume.spi.JdbcCallParameterRegistration;
+import org.hibernate.sql.ast.consume.spi.JdbcCallRefCursorExtractor;
+import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
 
 import org.jboss.logging.Logger;
 

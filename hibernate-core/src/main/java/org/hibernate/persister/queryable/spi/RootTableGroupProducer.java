@@ -6,8 +6,8 @@
  */
 package org.hibernate.persister.queryable.spi;
 
-import org.hibernate.sql.tree.from.TableGroup;
-import org.hibernate.sql.tree.from.TableSpace;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 
 /**
  * Contract for things that can produce the {@link TableGroup} that is the root of a

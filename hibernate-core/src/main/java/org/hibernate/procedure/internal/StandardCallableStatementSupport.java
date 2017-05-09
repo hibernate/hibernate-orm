@@ -17,8 +17,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.ParameterRegistry;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
-import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
+import org.hibernate.sql.ast.consume.spi.JdbcCallFunctionReturn;
+import org.hibernate.sql.ast.consume.spi.JdbcCallParameterRegistration;
 
 /**
  * Standard implementation of CallableStatementSupport

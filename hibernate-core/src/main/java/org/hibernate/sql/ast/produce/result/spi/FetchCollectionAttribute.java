@@ -1,0 +1,31 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.sql.ast.produce.result.spi;
+
+import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.type.CollectionType;
+
+/**
+ * Models the requested fetching of a persistent collection attribute.
+ *
+ * @author Steve Ebersole
+ */
+public interface FetchCollectionAttribute extends FetchAttribute, CollectionReference, CollectionAttributeFetch {
+	/**
+	 * Get the Hibernate Type that describes the fetched attribute as a {@link CollectionType}.
+	 *
+	 * @return The Type of the fetched attribute
+	 */
+	@Override
+	CollectionType getFetchedType();
+
+	@Override
+	default NavigablePath getNavigablePath() {
+		return getSource().getNavigablePath().append( getFetchedAttributeDescriptor().getAttributeName() );
+	}
+}

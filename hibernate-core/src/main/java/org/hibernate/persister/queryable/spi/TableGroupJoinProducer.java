@@ -7,7 +7,7 @@
 package org.hibernate.persister.queryable.spi;
 
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.sql.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 
 /**
  * @author Steve Ebersole

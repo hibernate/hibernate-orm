@@ -20,7 +20,7 @@ import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.spi.EmbeddedType;
 

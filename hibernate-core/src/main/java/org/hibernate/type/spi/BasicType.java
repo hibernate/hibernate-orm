@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.persister.queryable.spi.ExpressableType;
-import org.hibernate.sql.exec.results.process.spi.SqlSelectionReader;
+import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.spi.WrapperOptions;

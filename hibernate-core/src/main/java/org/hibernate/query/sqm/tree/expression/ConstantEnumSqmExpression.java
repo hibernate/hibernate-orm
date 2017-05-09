@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 
@@ -14,13 +15,13 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
  */
 public class ConstantEnumSqmExpression<T extends Enum> implements ConstantSqmExpression<T> {
 	private final T value;
-	private ExpressableType domainType;
+	private BasicValuedExpressableType domainType;
 
 	public ConstantEnumSqmExpression(T value) {
 		this( value, null );
 	}
 
-	public ConstantEnumSqmExpression(T value, ExpressableType domainType) {
+	public ConstantEnumSqmExpression(T value, BasicValuedExpressableType domainType) {
 		this.value = value;
 		this.domainType = domainType;
 	}
@@ -31,12 +32,12 @@ public class ConstantEnumSqmExpression<T extends Enum> implements ConstantSqmExp
 	}
 
 	@Override
-	public ExpressableType getExpressionType() {
+	public BasicValuedExpressableType getExpressionType() {
 		return domainType;
 	}
 
 	@Override
-	public ExpressableType getInferableType() {
+	public BasicValuedExpressableType getInferableType() {
 		return getExpressionType();
 	}
 

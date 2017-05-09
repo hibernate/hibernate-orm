@@ -9,7 +9,7 @@ package org.hibernate.loader.plan.build.spi;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
-import org.hibernate.sql.convert.spi.SqlSelectPlan;
+import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 
 /**
  * A metadata-driven builder of SqmSelectInterpretation.  Coordinates between the

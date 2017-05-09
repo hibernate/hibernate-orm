@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.produce.spi.ParsingContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
@@ -16,7 +17,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
  *
  * @author Steve Ebersole
  */
-public interface SqmFrom {
+public interface SqmFrom extends NavigableReferenceInfo {
 	/**
 	 * Obtain reference to the FromElementSpace that this FromElement belongs to.
 	 */

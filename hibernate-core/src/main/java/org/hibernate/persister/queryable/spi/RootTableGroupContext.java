@@ -6,8 +6,8 @@
  */
 package org.hibernate.persister.queryable.spi;
 
-import org.hibernate.sql.tree.from.TableSpace;
-import org.hibernate.sql.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.spi.from.TableSpace;
+import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 
 /**
  * Parameter object passed to {@link RootTableGroupProducer#applyTableGroup} giving

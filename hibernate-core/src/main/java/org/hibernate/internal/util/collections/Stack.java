@@ -29,4 +29,8 @@ public class Stack<T> {
 	public T getCurrent() {
 		return stack.peek();
 	}
+
+	public boolean isEmpty() {
+		return stack.isEmpty();
+	}
 }

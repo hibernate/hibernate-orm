@@ -6,9 +6,17 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
+
 /**
  * @author Steve Ebersole
  */
 public interface ConstantSqmExpression<T> extends ImpliedTypeSqmExpression {
 	T getValue();
+
+	@Override
+	BasicValuedExpressableType getExpressionType();
+
+	@Override
+	BasicValuedExpressableType getInferableType();
 }

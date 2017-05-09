@@ -13,6 +13,6 @@ import org.hibernate.persister.common.spi.Navigable;
  *
  * @author Steve Ebersole
  */
-public interface Joinable extends Navigable, TableGroupJoinProducer {
+public interface Joinable<T> extends Navigable<T>, TableGroupJoinProducer {
 
 }

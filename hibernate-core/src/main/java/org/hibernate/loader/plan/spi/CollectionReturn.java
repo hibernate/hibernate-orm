@@ -6,7 +6,7 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import org.hibernate.sql.convert.results.spi.ReturnCollection;
+import org.hibernate.sql.ast.produce.result.spi.ReturnCollection;
 
 /**
  * Models the a persistent collection as root {@link Return}.  Pertinent to collection initializer

@@ -14,7 +14,7 @@ import org.hibernate.persister.collection.spi.CollectionPersister;
  *
  * @author Steve Ebersole
  *
- * @deprecated Use {@link org.hibernate.sql.convert.results.spi.CollectionReference}
+ * @deprecated Use {@link org.hibernate.sql.ast.produce.result.spi.CollectionReference}
  */
 @Deprecated
 public interface CollectionReference {

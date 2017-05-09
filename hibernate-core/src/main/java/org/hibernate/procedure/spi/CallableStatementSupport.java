@@ -10,8 +10,8 @@ import java.sql.CallableStatement;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
-import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
+import org.hibernate.sql.ast.consume.spi.JdbcCallFunctionReturn;
+import org.hibernate.sql.ast.consume.spi.JdbcCallParameterRegistration;
 
 /**
  * @author Steve Ebersole

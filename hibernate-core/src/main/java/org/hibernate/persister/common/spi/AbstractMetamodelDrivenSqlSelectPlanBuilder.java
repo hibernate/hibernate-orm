@@ -18,6 +18,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.build.internal.returns.CollectionReturnImpl;
 import org.hibernate.loader.plan.build.internal.returns.EntityReturnImpl;
@@ -54,19 +55,18 @@ import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
-import org.hibernate.sql.tree.QuerySpec;
-import org.hibernate.sql.tree.SelectStatement;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.tree.from.TableGroup;
-import org.hibernate.sql.tree.from.TableSpace;
-import org.hibernate.sql.convert.internal.FromClauseIndex;
-import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
-import org.hibernate.sql.convert.internal.SqlSelectPlanImpl;
-import org.hibernate.sql.convert.results.spi.FetchParent;
-import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
-import org.hibernate.sql.convert.spi.Callback;
-import org.hibernate.sql.convert.spi.SqlSelectPlan;
-import org.hibernate.sql.convert.spi.Stack;
+import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
+import org.hibernate.sql.ast.tree.spi.QuerySpec;
+import org.hibernate.sql.ast.tree.spi.SelectStatement;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableSpace;
+import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
+import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -115,7 +115,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	private QuerySpec querySpec;
 	private TableSpace tableSpace;
 
-	private org.hibernate.sql.convert.results.spi.Return queryReturn;
+	private org.hibernate.sql.ast.produce.result.spi.Return queryReturn;
 
 
 	private final NavigablePathStack propertyPathStack = new NavigablePathStack();

@@ -1,0 +1,81 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.sql.ast.tree.spi.expression.domain;
+
+import java.util.List;
+
+import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.sql.ast.tree.spi.from.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.ast.tree.spi.select.SelectableEntityTypeImpl;
+import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.type.spi.Type;
+
+/**
+ * @author Andrea Boriero
+ * @author Steve Ebersole
+ */
+public class EntityReferenceExpression implements NavigableReferenceExpression {
+	private final ColumnBindingSource columnBindingSource;
+	private final EntityPersister entityPersister;
+	private final NavigablePath propertyPath;
+
+	private final SelectableEntityTypeImpl selectable;
+
+	public EntityReferenceExpression(
+			ColumnBindingSource columnBindingSource,
+			EntityPersister entityPersister,
+			NavigablePath propertyPath,
+			boolean isShallow) {
+		this.columnBindingSource = columnBindingSource;
+		this.entityPersister = entityPersister;
+		this.propertyPath = propertyPath;
+
+		this.selectable = new SelectableEntityTypeImpl(
+				this,
+				propertyPath,
+				columnBindingSource,
+				entityPersister,
+				isShallow
+		);
+	}
+
+	public EntityPersister getEntityPersister() {
+		return entityPersister;
+	}
+
+	@Override
+	public Type getType() {
+		return null;
+	}
+
+	@Override
+	public Selectable getSelectable() {
+		return selectable;
+	}
+
+	@Override
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
+		walker.visitEntityExpression( this );
+	}
+
+	@Override
+	public NavigablePath getNavigablePath() {
+		return propertyPath;
+	}
+
+	@Override
+	public List<ColumnReference> getColumnReferences() {
+		return selectable.getColumnBinding();
+	}
+
+	@Override
+	public EntityPersister getNavigable() {
+		return getEntityPersister();
+	}
+}

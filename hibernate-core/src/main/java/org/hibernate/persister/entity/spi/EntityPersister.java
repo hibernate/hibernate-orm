@@ -44,11 +44,12 @@ import org.hibernate.persister.exec.spi.SingleIdEntityLoader;
 import org.hibernate.persister.exec.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
+import org.hibernate.persister.queryable.spi.RootTableGroupContext;
 import org.hibernate.persister.queryable.spi.RootTableGroupProducer;
 import org.hibernate.persister.queryable.spi.SqlAliasBaseResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.sql.tree.from.EntityTableGroup;
-import org.hibernate.sql.tree.from.TableSpace;
+import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.spi.Type;
@@ -183,6 +184,12 @@ public interface EntityPersister<T>
 	 */
 	BytecodeEnhancementMetadata getBytecodeEnhancementMetadata();
 
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// loader/locker support
+
 	/**
 	 * @todo (6.0) what args?
 	 */
@@ -204,23 +211,33 @@ public interface EntityPersister<T>
 	EntityLocker getLocker(LockOptions lockOptions, SharedSessionContractImplementor session);
 
 
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// `org.hibernate.persister.queryable` support
+
+
+	@Override
+	EntityTableGroup applyRootTableGroup(
+			NavigableReferenceInfo navigableReferenceInfo,
+			RootTableGroupContext tableGroupContext,
+			SqlAliasBaseResolver sqlAliasBaseResolver);
+
 	default EntityTableGroup createEntityTableGroup(
 			NavigableReferenceInfo navigableReferenceInfo,
 			TableSpace tableSpace,
 			SqlAliasBaseResolver sqlAliasBaseResolver) {
-		return new EntityTableGroup(
+		final EntityTableGroup group = new EntityTableGroup(
 				tableSpace,
 				navigableReferenceInfo.getUniqueIdentifier(),
 				sqlAliasBaseResolver.getSqlAliasBase( navigableReferenceInfo ),
 				this,
 				navigableReferenceInfo.getNavigablePath()
 		);
+
+
+		return group;
 	}
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Methods in this section should be replaced by the new Queryable-like ones
-	// above
-
 
 	/**
 	 * Access to the root table for this entity.
@@ -229,6 +246,7 @@ public interface EntityPersister<T>
 
 	/**
 	 * Access to all "declared" secondary table mapping info for this entity.
+	 * This does not include secondary tables from super-types.
 	 */
 	List<SecondaryTableBinding> getSecondaryTableBindings();
 

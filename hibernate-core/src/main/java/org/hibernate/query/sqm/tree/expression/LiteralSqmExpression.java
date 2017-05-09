@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
+
 /**
  * Represents a literal value in the sqm, e.g.<ul>
  *     <li>1</li>
@@ -18,4 +20,10 @@ package org.hibernate.query.sqm.tree.expression;
  */
 public interface LiteralSqmExpression<T> extends ImpliedTypeSqmExpression {
 	T getLiteralValue();
+
+	@Override
+	BasicValuedExpressableType getExpressionType();
+
+	@Override
+	BasicValuedExpressableType getInferableType();
 }

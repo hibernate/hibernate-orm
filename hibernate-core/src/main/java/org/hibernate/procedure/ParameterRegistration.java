@@ -10,7 +10,6 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.type.spi.Type;
 
 /**

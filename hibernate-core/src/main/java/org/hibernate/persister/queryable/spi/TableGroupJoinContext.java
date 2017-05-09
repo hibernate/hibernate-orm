@@ -6,8 +6,8 @@
  */
 package org.hibernate.persister.queryable.spi;
 
-import org.hibernate.sql.tree.QuerySpec;
-import org.hibernate.sql.tree.from.TableSpace;
+import org.hibernate.sql.ast.tree.spi.QuerySpec;
+import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 
 /**
  * Parameter object passed to {@link TableGroupJoinProducer#applyTableGroupJoin}

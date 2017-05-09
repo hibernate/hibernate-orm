@@ -17,5 +17,5 @@ public interface CollectionFetchableElement extends FetchSource {
 	 *
 	 * @return the collection reference.
 	 */
-	public org.hibernate.sql.convert.results.spi.CollectionReference  getCollectionReference();
+	public org.hibernate.sql.ast.produce.result.spi.CollectionReference getCollectionReference();
 }

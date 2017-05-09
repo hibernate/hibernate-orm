@@ -19,14 +19,14 @@ import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.queryable.spi.PolymorphicEntityValuedExpressableType;
-import org.hibernate.sql.tree.from.TableGroup;
-import org.hibernate.sql.tree.from.TableSpace;
-import org.hibernate.sql.convert.internal.FromClauseIndex;
-import org.hibernate.sql.convert.internal.SqlAliasBaseManager;
-import org.hibernate.sql.convert.results.spi.Fetch;
-import org.hibernate.sql.convert.results.spi.FetchParent;
-import org.hibernate.sql.convert.results.spi.Return;
-import org.hibernate.sql.convert.results.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableSpace;
+import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.produce.result.spi.Fetch;
+import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
 
 /**
  * Hibernate's standard PolymorphicEntityValuedExpressableType impl.

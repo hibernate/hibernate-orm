@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.HibernateException;
 import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -14,7 +15,7 @@ import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
  * @author Steve Ebersole
  */
 public class LiteralNullSqmExpression implements LiteralSqmExpression<Void> {
-	private ExpressableType injectedExpressionType;
+	private BasicValuedExpressableType injectedExpressionType;
 
 	public LiteralNullSqmExpression() {
 		injectedExpressionType = NULL_TYPE;
@@ -26,12 +27,12 @@ public class LiteralNullSqmExpression implements LiteralSqmExpression<Void> {
 	}
 
 	@Override
-	public ExpressableType getExpressionType() {
+	public BasicValuedExpressableType getExpressionType() {
 		return injectedExpressionType;
 	}
 
 	@Override
-	public ExpressableType getInferableType() {
+	public BasicValuedExpressableType getInferableType() {
 		return getExpressionType();
 	}
 
@@ -64,6 +65,9 @@ public class LiteralNullSqmExpression implements LiteralSqmExpression<Void> {
 
 	@Override
 	public void impliedType(ExpressableType type) {
-		injectedExpressionType = type;
+		if ( !BasicValuedExpressableType.class.isInstance( type ) ) {
+			throw new HibernateException( "Invalid type.  Found [" + type  + "], but expecting BasicValuedExpressableType" );
+		}
+		injectedExpressionType = (BasicValuedExpressableType) type;
 	}
 }

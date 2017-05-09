@@ -11,6 +11,7 @@ import java.util.Collection;
 import javax.persistence.TemporalType;
 
 import org.hibernate.Incubating;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -32,7 +33,7 @@ public interface QueryParameterBinding<T> {
 	 *
 	 * @return The currently associated Type
 	 */
-	Type getBindType();
+	ExpressableType getBindType();
 
 	/**
 	 * Sets the parameter binding value.  The inherent parameter type (if known) is assumed

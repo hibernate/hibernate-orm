@@ -38,19 +38,19 @@ As always the "trigger" for Beta1 is (relatively) stable API.
 	represents an ongoing path in a query; NavigableRole represents the static role of an attribute
 	in relation to a root entity#
 * find all usage of `LoadPlan` and replace it with
-	`org.hibernate.sql.convert.spi.SqlSelectPlan` / `org.hibernate.sql.exec.spi.JdbcSelect`.  This will
+	`org.hibernate.sql.ast.produce.spi.SqlSelectPlan` / `org.hibernate.sql.ast.consume.spi.JdbcSelect`.  This will
 	include the following (and more probably) replacements:
 	** `AssociationVisitationStrategy` -> `NavigableVisitationStrategy`
 	** `EntityDefinition` -> ? `EntityReference` or `EntityPersister`?
 	** `AttributeSource` -> ? `PersistentAttribute` or `Navigable`?
-	** `org.hibernate.loader.plan.spi.Return` -> `org.hibernate.sql.convert.results.spi.Return`
+	** `org.hibernate.loader.plan.spi.Return` -> `org.hibernate.sql.ast.produce.result.spi.Return`
 		*** `org.hibernate.loader.plan.spi.ScalarReturn` ->
-			`org.hibernate.sql.convert.results.spi.ReturnScalar`
+			`org.hibernate.sql.ast.produce.result.spi.ReturnScalar`
 		*** `org.hibernate.loader.plan.spi.EntityReturn` ->
-			`org.hibernate.sql.convert.results.spi.ReturnEntity`
+			`org.hibernate.sql.ast.produce.result.spi.ReturnEntity`
 		*** etc..
-	** `org.hibernate.loader.plan.spi.QuerySpaces` -> `org.hibernate.sql.tree.from.FromClause` ?
-		*** `org.hibernate.loader.plan.spi.QuerySpace` -> `org.hibernate.sql.tree.from.TableSpace`
+	** `org.hibernate.loader.plan.spi.QuerySpaces` -> `org.hibernate.sql.ast.tree.spi.from.FromClause` ?
+		*** `org.hibernate.loader.plan.spi.QuerySpace` -> `org.hibernate.sql.ast.tree.spi.from.TableSpace`
 		*** etc..
 	** etc..
 * need to investigate the impact on counter-parts for "result assembly".
@@ -105,6 +105,13 @@ As always the "trigger" for Beta1 is (relatively) stable API.
  	Beta however.
 * Find incubations and evaluate for promotion
 * Remove the Javassist bytecode provider (Byte Buddy was already made the default in Alpha1)
+* Remove vast majority of legacy criteria package.  We all agree it would be a good idea to continue
+	to support the "criterion/restriction factory contracts", although moved to our expanded
+	JPA CriteriaBuilder specialization (`org.hibernate.query.criteria.HibernateCriteriaBuilder`), possibly
+	with a set of similar specializations for the JPA criteria nodes.  We should analyze all specific
+	Criterion/Restriction impls that make sense to port to the JPA model, including discussed CTE
+	support (sub-query as part of FROM clause) - Christian.  Any known custom impls that make sense?  Call
+	to community?
 
 
 == Should

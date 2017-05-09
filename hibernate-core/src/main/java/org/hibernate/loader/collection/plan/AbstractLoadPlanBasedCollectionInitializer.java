@@ -26,7 +26,7 @@ import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.sql.convert.spi.SqlSelectPlan;
+import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 import org.hibernate.type.spi.Type;
 
 /**

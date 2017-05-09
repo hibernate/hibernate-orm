@@ -37,7 +37,7 @@ import org.hibernate.persister.queryable.spi.RootTableGroupProducer;
 import org.hibernate.persister.queryable.spi.TableGroupJoinProducer;
 import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.type.spi.Type;
 
 /**

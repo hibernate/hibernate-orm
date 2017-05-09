@@ -9,7 +9,7 @@ package org.hibernate.persister.embedded.spi;
 import org.hibernate.persister.common.spi.NavigableSource;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.persister.queryable.spi.TableGroupResolver;
-import org.hibernate.sql.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 /**
  * Contract for things that can contain composites.

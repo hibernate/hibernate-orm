@@ -18,7 +18,9 @@ public enum JoinType {
 	LEFT_OUTER_JOIN( 1 ),
 	RIGHT_OUTER_JOIN( 2 ),
 	FULL_JOIN( 4 );
+
 	private int joinTypeValue;
+private final javax.persistence.criteria.JoinType jpaCriteriaJoinType;
 
 	JoinType(int joinTypeValue) {
 		this.joinTypeValue = joinTypeValue;

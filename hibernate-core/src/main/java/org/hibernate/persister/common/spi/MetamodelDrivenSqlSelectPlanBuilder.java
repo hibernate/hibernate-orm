@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.common.spi;
 
-import org.hibernate.sql.convert.spi.SqlSelectPlan;
+import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 
 /**
  * Specialization {@link NavigableVisitationStrategy} implementation for

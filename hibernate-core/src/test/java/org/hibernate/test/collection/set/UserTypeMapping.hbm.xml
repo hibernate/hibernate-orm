@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.collection.set">
+
+    <class name="PersonInfoEntity">
+		<id name="id" column="ID" type="long" />
+
+        <set name="infos">
+            <key column="entity_id" />
+            <element type="org.hibernate.test.collection.set.PersonInfoType">
+              <column name="height" />
+              <column name="hair_color" />
+            </element>
+        </set>
+	</class>
+
+</hibernate-mapping>

@@ -153,4 +153,12 @@ public class AuditFunctionQueryTest extends BaseEnversJPAFunctionalTestCase {
 		assertEquals( "Expected the entity to be returned", testEntity1.getId(), entity.getId() );
 	}
 
+	@Test
+	public void testFunctionOnIdProperty() {
+		TestEntity entity = (TestEntity) getAuditReader().createQuery().forEntitiesAtRevision( TestEntity.class, 1 )
+				.add( AuditEntity.function( "str", AuditEntity.id() ).like( "%1%" ) ).getSingleResult();
+		assertNotNull( "Expected the entity to be returned", entity );
+		assertEquals( "Expected the entity to be returned", testEntity1.getId(), entity.getId() );
+	}
+
 }

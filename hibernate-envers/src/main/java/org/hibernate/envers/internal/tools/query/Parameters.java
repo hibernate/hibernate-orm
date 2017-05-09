@@ -317,14 +317,28 @@ public class Parameters {
 	 * Add where clause with a function call on the left and a scalar value on the right.
 	 *
 	 * @param configuration the configuration.
+	 * @param aliasToEntityNameMap alias to entity name map, never {@literal null}
 	 * @param function the function.
 	 * @param op the operator.
 	 * @param value the scalar value.
 	 */
-	public void addWhereWithFunction(Configuration configuration, AuditFunction function, String op, Object value) {
+	public void addWhereWithFunction(
+			Configuration configuration,
+			Map<String, String> aliasToEntityNameMap,
+			AuditFunction function,
+			String op,
+			Object value) {
 		final StringBuilder expression = new StringBuilder();
 
-		QueryBuilder.appendFunctionArgument( configuration, queryParamCounter, localQueryParamValues, alias, expression, function );
+		QueryBuilder.appendFunctionArgument(
+				configuration,
+				aliasToEntityNameMap,
+				queryParamCounter,
+				localQueryParamValues,
+				alias,
+				expression,
+				function
+		);
 
 		expression.append( ' ' ).append( op );
 
@@ -339,15 +353,30 @@ public class Parameters {
 	 * Add a where clause with a function call on the left and an optionally aliased property on the right.
 	 *
 	 * @param configuration the configuration.
+	 * @param aliasToEntityNameMap alias to entity name map, never {@literal null}
 	 * @param function the function.
 	 * @param op the operator.
 	 * @param aliasRight the optional alias of the right property, may be {@literal null}
 	 * @param right the property.
 	 */
-	public void addWhereWithFunction(Configuration configuration, AuditFunction function, String op, String aliasRight, String right) {
+	public void addWhereWithFunction(
+			Configuration configuration,
+			Map<String, String> aliasToEntityNameMap,
+			AuditFunction function,
+			String op,
+			String aliasRight,
+			String right) {
 		final StringBuilder expression = new StringBuilder();
 
-		QueryBuilder.appendFunctionArgument( configuration, queryParamCounter, localQueryParamValues, alias, expression, function );
+		QueryBuilder.appendFunctionArgument(
+				configuration,
+				aliasToEntityNameMap,
+				queryParamCounter,
+				localQueryParamValues,
+				alias,
+				expression,
+				function
+		);
 
 		expression.append( ' ' ).append( op ).append( ' ' );
 
@@ -363,12 +392,19 @@ public class Parameters {
 	 * Adds a where clause with a left (optionally aliased) property and a function call on the right side.
 	 *
 	 * @param configuration the configuration.
+	 * @param aliasToEntityNameMap alias to entity name map, never {@literal null}
 	 * @param aliasLeft the optional alias of the left property, may be {@literal null}
 	 * @param left the property.
 	 * @param op the operator.
 	 * @param function the function.
 	 */
-	public void addWhereWithFunction(Configuration configuration, String aliasLeft, String left, String op, AuditFunction function) {
+	public void addWhereWithFunction(
+			Configuration configuration,
+			Map<String, String> aliasToEntityNameMap,
+			String aliasLeft,
+			String left,
+			String op,
+			AuditFunction function) {
 		final StringBuilder expression = new StringBuilder();
 
 		if ( aliasLeft != null ) {
@@ -378,7 +414,15 @@ public class Parameters {
 
 		expression.append( ' ' ).append( op ).append( ' ' );
 
-		QueryBuilder.appendFunctionArgument( configuration, queryParamCounter, localQueryParamValues, alias, expression, function );
+		QueryBuilder.appendFunctionArgument(
+				configuration,
+				aliasToEntityNameMap,
+				queryParamCounter,
+				localQueryParamValues,
+				alias,
+				expression,
+				function
+		);
 
 		expressions.add( expression.toString() );
 	}
@@ -387,18 +431,40 @@ public class Parameters {
 	 * Adds a where clause with a function call on both the left and right of the predicate.
 	 *
 	 * @param configuration the configuration.
+	 * @param aliasToEntityNameMap alias to entity name map, never {@literal null}
 	 * @param left the left-side function.
 	 * @param op the operator.
 	 * @param right the right-side function.
 	 */
-	public void addWhereWithFunction(Configuration configuration, AuditFunction left, String op, AuditFunction right) {
+	public void addWhereWithFunction(
+			Configuration configuration,
+			Map<String, String> aliasToEntityNameMap,
+			AuditFunction left,
+			String op,
+			AuditFunction right) {
 		final StringBuilder expression = new StringBuilder();
 
-		QueryBuilder.appendFunctionArgument( configuration, queryParamCounter, localQueryParamValues, alias, expression, left );
+		QueryBuilder.appendFunctionArgument(
+				configuration,
+				aliasToEntityNameMap,
+				queryParamCounter,
+				localQueryParamValues,
+				alias,
+				expression,
+				left
+		);
 
 		expression.append( ' ' ).append( op ).append( ' ' );
 
-		QueryBuilder.appendFunctionArgument( configuration, queryParamCounter, localQueryParamValues, alias, expression, right );
+		QueryBuilder.appendFunctionArgument(
+				configuration,
+				aliasToEntityNameMap,
+				queryParamCounter,
+				localQueryParamValues,
+				alias,
+				expression,
+				right
+		);
 
 		expressions.add( expression.toString() );
 	}

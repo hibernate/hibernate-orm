@@ -12,18 +12,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
 import jakarta.persistence.criteria.JoinType;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.function.OrderByFragmentFunction;
 import org.hibernate.envers.internal.entities.RevisionTypeType;
+import org.hibernate.envers.internal.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.query.criteria.AuditFunction;
+import org.hibernate.envers.query.criteria.AuditId;
 import org.hibernate.envers.query.criteria.AuditProperty;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.query.Query;
@@ -214,14 +219,23 @@ public class QueryBuilder {
 		}
 	}
 
-	public void addProjection(Configuration configuration, AuditFunction function) {
+	public void addProjection(Configuration configuration, Map<String, String> aliasToEntityNameMap, AuditFunction function) {
 		final StringBuilder expression = new StringBuilder();
-		appendFunctionArgument( configuration, paramCounter, projectionQueryParamValues, alias, expression, function );
+		appendFunctionArgument(
+				configuration,
+				aliasToEntityNameMap,
+				paramCounter,
+				projectionQueryParamValues,
+				alias,
+				expression,
+				function
+		);
 		projections.add( expression.toString() );
 	}
 
 	protected static void appendFunctionArgument(
 			Configuration configuration,
+			Map<String, String> aliasToEntityNameMap,
 			MutableInteger paramCounter,
 			Map<String, Object> queryParamValues,
 			String alias,
@@ -235,10 +249,41 @@ public class QueryBuilder {
 				if ( !first ) {
 					expression.append( ',' );
 				}
-				appendFunctionArgument( configuration, paramCounter, queryParamValues, alias, expression, innerArg );
+				appendFunctionArgument(
+						configuration,
+						aliasToEntityNameMap,
+						paramCounter,
+						queryParamValues,
+						alias,
+						expression,
+						innerArg
+				);
 				first = false;
 			}
 			expression.append( ')' );
+		}
+		else if ( argument instanceof AuditId ) {
+			AuditId<?> id = (AuditId<?>) argument;
+			String prefix = configuration.getOriginalIdPropertyName();
+			String idAlias = id.getAlias( alias );
+			String entityName = aliasToEntityNameMap.get( idAlias );
+			/*
+			 * Resolve the name of the id property by reusing the IdMapper.mapToQueryParametersFromId() method. Null is
+			 * passed as value because only the name of the property is of interest. TODO: is there a better way to
+			 * obtain the name of the id property?
+			 */
+			EnversService enversService = configuration.getEnversService();
+			List<QueryParameterData> parameters = enversService.getEntitiesConfigurations().get( entityName )
+					.getIdMapper()
+					.mapToQueryParametersFromId( null );
+			if ( parameters.size() != 1 ) {
+				throw new HibernateException( "Cannot add id property as function argument when id property is not a single column property" );
+			}
+			String propertyName = parameters.get( 0 ).getProperty( prefix );
+			if ( idAlias != null ) {
+				expression.append( idAlias ).append( '.' );
+			}
+			expression.append( propertyName );
 		}
 		else if ( argument instanceof AuditProperty ) {
 			AuditProperty<?> property = (AuditProperty<?>) argument;

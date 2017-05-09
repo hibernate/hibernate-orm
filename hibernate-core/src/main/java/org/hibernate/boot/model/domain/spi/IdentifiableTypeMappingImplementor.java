@@ -12,5 +12,8 @@ import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
  * @author Steve Ebersole
  */
 public interface IdentifiableTypeMappingImplementor extends IdentifiableTypeMapping, ManagedTypeMappingImplementor {
+	@Override
+	EntityMappingHierarchyImplementor getEntityMappingHierarchy();
+
 	void injectSuperclassMapping(IdentifiableTypeMappingImplementor superTypeMapping);
 }

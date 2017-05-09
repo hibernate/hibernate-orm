@@ -12,6 +12,8 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreLogging;
@@ -30,12 +32,12 @@ public class RootClass extends PersistentClass implements TableOwner {
 	public static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
 	public static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
 
+	private KeyValue identifier;
 	private boolean polymorphic;
 	private String cacheConcurrencyStrategy;
 	private String cacheRegionName;
 	private String naturalIdCacheRegionName;
 	private boolean lazyPropertiesCacheable = true;
-	private Value discriminator;
 	private boolean mutable = true;
 	private boolean explicitPolymorphism;
 	private Class entityPersisterClass;
@@ -44,6 +46,8 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private Table table;
 	private boolean discriminatorInsertable = true;
 	private int nextSubclassId;
+	private PersistentAttributeMapping declaredIdentifierAttributeMapping;
+	private PersistentAttributeMapping declaredVersionAttributeMapping;
 	private boolean cachingExplicitlyRequested;
 
 	public RootClass(MetadataBuildingContext metadataBuildingContext) {
@@ -69,13 +73,50 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return table;
 	}
 
+	@Override
+	public Property getIdentifierProperty() {
+		return (Property) getIdentifierAttributeMapping();
+	}
+
+	public PersistentAttributeMapping getIdentifierAttributeMapping() {
+		return getEntityMappingHierarchy().getIdentifierMapping().getSingularPersistentAttributeMapping();
+	}
+
+	@Override
+	public Property getDeclaredIdentifierProperty() {
+		return (Property) getDeclaredIdentifierAttributeMapping();
+	}
+
+	public PersistentAttributeMapping getDeclaredIdentifierAttributeMapping() {
+		return declaredIdentifierAttributeMapping;
+	}
+
+	/**
+	 * @deprecated since 6.0, use {@link #setDeclaredIdentifierAttributeMapping()}.
+	 */
+	@Deprecated
 	public void setDeclaredIdentifierProperty(Property declaredIdentifierProperty) {
-		injectDeclaredIdentifierProperty( declaredIdentifierProperty );
+		setDeclaredIdentifierAttributeMapping( declaredIdentifierProperty );
+	}
+
+	public void setDeclaredIdentifierAttributeMapping(PersistentAttributeMapping declaredIdentifierAttributeMapping) {
+		this.declaredIdentifierAttributeMapping = declaredIdentifierAttributeMapping;
+		getEntityMappingHierarchy().setIdentifierAttributeMapping( declaredIdentifierAttributeMapping );
+	}
+
+	@Override
+	public KeyValue getIdentifier() {
+		return identifier;
+	}
+
+	@Override
+	public boolean hasIdentifierProperty() {
+		return getEntityMappingHierarchy().hasIdentifierAttributeMapping();
 	}
 
 	@Override
 	public Value getDiscriminator() {
-		return discriminator;
+		return (Value) getEntityMappingHierarchy().getDiscriminatorMapping();
 	}
 
 	@Override
@@ -123,17 +164,58 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return explicitPolymorphism;
 	}
 
-	public void setDeclaredVersion(Property declaredVersion) {
-		injectDeclaredVersionProperty( declaredVersion );
+	@Override
+	public Property getVersion() {
+		return (Property) getEntityMappingHierarchy().getVersionAttributeMapping();
 	}
 
+	public PersistentAttributeMapping getDeclaredVersionAttributeMapping() {
+		return declaredVersionAttributeMapping;
+	}
+
+	@Override
+	public Property getDeclaredVersion() {
+		return (Property) getDeclaredVersionAttributeMapping();
+	}
+
+	public void setDeclaredVersionAttributeMapping(PersistentAttributeMapping versionAttributeMapping) {
+		setVersionAttributeMapping( versionAttributeMapping );
+		this.declaredVersionAttributeMapping = versionAttributeMapping;
+	}
+
+	/**
+	 * @deprecated since 6.0, use {@link #setDeclaredVersionAttributeMapping(PersistentAttributeMapping)}.
+	 */
+	@Deprecated
+	public void setDeclaredVersion(Property declaredVersion) {
+		setDeclaredVersionAttributeMapping( declaredVersion );
+	}
+
+	public void setVersionAttributeMapping(PersistentAttributeMapping versionAttributeMapping) {
+		getEntityMappingHierarchy().setVersionAttributeMapping( versionAttributeMapping );
+	}
+
+	/**
+	 * @deprecated since 6.0, use {@link #setVersionAttributeMapping(PersistentAttributeMapping)}.
+	 */
+	@Deprecated
 	public void setVersion(Property version) {
-		injectVersion( version );
+		setVersionAttributeMapping( version );
+	}
+
+	@Override
+	public boolean isVersioned() {
+		return getEntityMappingHierarchy().isVersioned();
 	}
 
 	@Override
 	public boolean isMutable() {
 		return mutable;
+	}
+
+	@Override
+	public boolean hasEmbeddedIdentifier() {
+		return getEntityMappingHierarchy().getIdentifierMapping().isEmbeddedIdentifierMapping();
 	}
 
 	@Override
@@ -161,12 +243,24 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return getIdentifier();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #setDiscriminatorValueMapping(ValueMapping)}.
+	 */
+	@Deprecated
 	public void setDiscriminator(Value discriminator) {
-		this.discriminator = discriminator;
+		setDiscriminatorValueMapping( discriminator );
 	}
 
+	public void setDiscriminatorValueMapping(ValueMapping discriminatorValueMapping) {
+		getEntityMappingHierarchy().setDiscriminatorMapping( discriminatorValueMapping );
+	}
+
+	/**
+	 * @deprecated since 6.0, use {@link IdentifierMappingImplementor#setEmbedded(boolean)}.
+	 */
+	@Deprecated
 	public void setEmbeddedIdentifier(boolean embeddedIdentifier) {
-		injectEmbeddedIdentifier( embeddedIdentifier );
+		getEntityMappingHierarchy().getIdentifierMapping().setEmbedded( embeddedIdentifier );
 	}
 
 	public void setExplicitPolymorphism(boolean explicitPolymorphism) {
@@ -174,12 +268,14 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	public void setIdentifier(KeyValue identifier) {
-		injectIdentifier( identifier );
+		this.identifier = identifier;
 	}
 
 	public void setIdentifierProperty(Property identifierProperty) {
-		injectIdentifierProperty( identifierProperty );
+		getEntityMappingHierarchy().setIdentifierAttributeMapping( identifierProperty );
+		// todo: (6.0) do we need this going forward?
 		identifierProperty.setPersistentClass( this );
+
 	}
 
 	public void setMutable(boolean mutable) {

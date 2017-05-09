@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.domain;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Steve Ebersole
@@ -22,4 +23,24 @@ public interface IdentifiableTypeMapping extends ManagedTypeMapping {
 	 * 		I'd lean towards no.
 	 */
 	Collection<IdentifiableTypeMapping> getSubTypeMappings();
+
+
+//	// todo: we want to refactor this
+//
+//	PersistentAttributeMapping getDeclaredIdentifierAttributeMapping();
+//
+//
+//	EmbeddedValueMapping getDeclaredIdentifierEmbeddedValueMapping();
+//	EmbeddedValueMapping getIdentifierEmbeddedValueMapping();
+//
+//	List<PersistentAttributeMapping> getIdClassAttributeMappings();
+//
+//	boolean hasIdentifierAttributeMapping();
+//	boolean hasIdentifierEmbeddableValueMapping();
+//	boolean hasEmbeddedIdentier();
+//
+//	PersistentAttributeMapping getDeclaredVersionPersistentAttributeMapping();
+//	PersistentAttributeMapping getVersionPersistentAttributeMapping();
+//	boolean isVersioned();
+
 }

@@ -16,6 +16,11 @@ import java.util.StringTokenizer;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.IdentifierMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.internal.AbstractIdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.internal.IdentifierMappingCompositeNonAggregated;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -57,6 +62,7 @@ public abstract class PersistentClass
 	private String discriminatorValue;
 	private boolean lazy;
 	private ArrayList properties = new ArrayList();
+	private ArrayList declaredProperties = new ArrayList();
 	private final ArrayList<Subclass> subclasses = new ArrayList<>();
 	private final ArrayList subclassProperties = new ArrayList();
 	private final ArrayList subclassTables = new ArrayList();
@@ -72,6 +78,7 @@ public abstract class PersistentClass
 	private String loaderName;
 	private Boolean isAbstract;
 	private boolean hasSubselectLoadableCollections;
+	private EmbeddedValueMapping identifierEmbeddedValueMapping;
 
 	// Custom SQL
 	private String customSQLInsert;
@@ -87,6 +94,7 @@ public abstract class PersistentClass
 	private java.util.Map tuplizerImpls;
 
 	private MappedSuperclass superMappedSuperclass;
+	private IdentifierMapping declaredIdentifierMapping;
 	private OptimisticLockStyle optimisticLockStyle;
 
 	public PersistentClass(MetadataBuildingContext metadataBuildingContext) {
@@ -250,11 +258,57 @@ public abstract class PersistentClass
 
 	public abstract boolean isMutable();
 
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#hasIdentifierAttributeMapping()}.
+	 */
+	@Deprecated
+	public abstract boolean hasIdentifierProperty();
+
+	/**
+	 * @deprecated since 6.0 use {@link EntityMappingHierarchy#getIdentifierAttributeMapping()}.
+	 */
+	@Deprecated
+	public abstract Property getIdentifierProperty();
+
+	/**
+	 * @deprecated since 6.0 use {@link #getDeclaredIdentifierAttributeMapping()}.
+	 */
+	@Deprecated
+	public abstract Property getDeclaredIdentifierProperty();
+
+	public abstract PersistentAttributeMapping getDeclaredIdentifierAttributeMapping();
+
+	public abstract KeyValue getIdentifier();
+
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#getVersionPersistentAttributeMapping()}.
+	 */
+	@Deprecated
+	public abstract Property getVersion();
+
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredVersionAttributeMapping()}.
+	 */
+	@Deprecated
+	public abstract Property getDeclaredVersion();
+
+	public abstract PersistentAttributeMapping getDeclaredVersionAttributeMapping();
+
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#getDiscriminatorValueMapping()}.
+	 */
+	@Deprecated
 	public abstract Value getDiscriminator();
 
 	public abstract boolean isInherited();
 
 	public abstract boolean isPolymorphic();
+
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#isVersioned()}.
+	 */
+	@Deprecated
+	public abstract boolean isVersioned();
 
 	public abstract String getNaturalIdCacheRegionName();
 
@@ -318,6 +372,12 @@ public abstract class PersistentClass
 	public void setLazy(boolean lazy) {
 		this.lazy = lazy;
 	}
+
+	/**
+	 * @deprecated since 6.0, use {@link IdentifierMapping#isEmbeddedIdentifierMapping()}.
+	 */
+	@Deprecated
+	public abstract boolean hasEmbeddedIdentifier();
 
 	public abstract Class getEntityPersisterClass();
 
@@ -891,12 +951,45 @@ public abstract class PersistentClass
 		this.hasSubselectLoadableCollections = hasSubselectCollections;
 	}
 
-	public void setDeclaredIdentifierMapper(Component declaredIdentifierMapper) {
-		injectDeclaredIdentifierMapper( declaredIdentifierMapper );
+	/**
+	 * @deprecated since 6.0, use {@link #getIdentifierEmbeddedValueMapping()}.
+	 */
+	@Deprecated
+	public Component getIdentifierMapper() {
+		if ( !getEntityMappingHierarchy().getIdentifierMapping().isSingleIdentifierMapping() ) {
+			return (Component) getEntityMappingHierarchy().getIdentifierMapping().getValueMapping();
+		}
+		return null;
 	}
 
-	public void setIdentifierMapper(Component identifierMapper) {
-		injectIdentifierMapper( identifierMapper );
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredIdentifierEmbeddedValueMapping()}.
+	 */
+	@Deprecated
+	public Component getDeclaredIdentifierMapper() {
+		return (Component) getEntityMappingHierarchy().getIdentifierMapping();
+	}
+
+	public void setDeclaredIdentifierMapper(Component declaredIdentifierMapper) {
+		declaredIdentifierMapping = new IdentifierMappingCompositeNonAggregated( declaredIdentifierMapper );
+		getEntityMappingHierarchy().setIdentifierMapping( declaredIdentifierMapping );
+	}
+
+	/**
+	 * @deprecated since 6.0, use {@link #hasIdentifierEmbeddableValueMapping()}}.
+	 */
+	@Deprecated
+	public boolean hasIdentifierMapper() {
+		return hasIdentifierEmbeddableValueMapping();
+	}
+
+	@Override
+	public boolean hasIdentifierEmbeddableValueMapping() {
+		return identifierEmbeddedValueMapping != null;
+	}
+
+	public void setIdentifierMapper(Component handle) {
+		this.identifierEmbeddedValueMapping = handle;
 	}
 
 	public void addTuplizer(EntityMode entityMode, String implClassName) {
@@ -941,6 +1034,16 @@ public abstract class PersistentClass
 			iterators.add( join.getDeclaredPropertyIterator() );
 		}
 		return new JoinedIterator( iterators );
+	}
+
+	@Override
+	public java.util.List<Property> getDeclaredProperties() {
+		return declaredProperties;
+	}
+
+	@Override
+	public PropertyContainer getSuperPropertyContainer() {
+		return superMappedSuperclass;
 	}
 
 	public void addMappedsuperclassProperty(Property p) {

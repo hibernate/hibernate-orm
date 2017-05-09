@@ -14,4 +14,14 @@ public interface EntityMappingHierarchy {
 
 	// todo (6.0) id, version, etc here
 	//		have existing "root" info methods delegate here - allows tools to keep working.
+
+	IdentifierMapping getIdentifierMapping();
+
+	PersistentAttributeMapping getVersionAttributeMapping();
+
+	boolean hasIdentifierAttributeMapping();
+
+	boolean isVersioned();
+
+	ValueMapping getDiscriminatorMapping();
 }

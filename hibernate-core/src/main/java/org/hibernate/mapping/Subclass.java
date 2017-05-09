@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.collections.JoinedIterator;
@@ -65,6 +66,10 @@ public class Subclass extends PersistentClass {
 
 	@Override
 	public Property getDeclaredIdentifierProperty() {
+		return null;
+	}
+
+	public PersistentAttributeMapping getDeclaredIdentifierAttributeMapping() {
 		return null;
 	}
 
@@ -157,6 +162,11 @@ public class Subclass extends PersistentClass {
 
 	@Override
 	public Property getDeclaredVersion() {
+		return null;
+	}
+
+	@Override
+	public PersistentAttributeMapping getDeclaredVersionAttributeMapping() {
 		return null;
 	}
 

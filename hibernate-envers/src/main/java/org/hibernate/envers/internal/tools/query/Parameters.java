@@ -308,10 +308,10 @@ public class Parameters {
 		sub2.addNullRestriction( right, false );
 	}
 
-	public void addWhereWithFunction(EnversService enversService, AuditFunction function, String op, Object value) {
+	public void addWhereWithFunction(EnversService enversService, Map<String, String> aliasToEntityNameMap, AuditFunction function, String op, Object value) {
 		final StringBuilder expression = new StringBuilder();
 
-		QueryBuilder.appendFunctionArgument( enversService, queryParamCounter, localQueryParamValues, alias, expression, function );
+		QueryBuilder.appendFunctionArgument( enversService, aliasToEntityNameMap, queryParamCounter, localQueryParamValues, alias, expression, function );
 
 		expression.append( ' ' ).append( op );
 
@@ -322,10 +322,11 @@ public class Parameters {
 		expressions.add( expression.toString() );
 	}
 
-	public void addWhereWithFunction(EnversService enversService, AuditFunction function, String op, String aliasRight, String right) {
+	public void addWhereWithFunction(EnversService enversService, Map<String, String> aliasToEntityNameMap, AuditFunction function, String op,
+			String aliasRight, String right) {
 		final StringBuilder expression = new StringBuilder();
 
-		QueryBuilder.appendFunctionArgument( enversService, queryParamCounter, localQueryParamValues, alias, expression, function );
+		QueryBuilder.appendFunctionArgument( enversService, aliasToEntityNameMap, queryParamCounter, localQueryParamValues, alias, expression, function );
 
 		expression.append( ' ' ).append( op ).append( ' ' );
 
@@ -337,7 +338,8 @@ public class Parameters {
 		expressions.add( expression.toString() );
 	}
 
-	public void addWhereWithFunction(EnversService enversService, String aliasLeft, String left, String op, AuditFunction function) {
+	public void addWhereWithFunction(EnversService enversService, Map<String, String> aliasToEntityNameMap, String aliasLeft, String left, String op,
+			AuditFunction function) {
 		final StringBuilder expression = new StringBuilder();
 
 		if ( aliasLeft != null ) {
@@ -347,19 +349,20 @@ public class Parameters {
 
 		expression.append( ' ' ).append( op ).append( ' ' );
 
-		QueryBuilder.appendFunctionArgument( enversService, queryParamCounter, localQueryParamValues, alias, expression, function );
+		QueryBuilder.appendFunctionArgument( enversService, aliasToEntityNameMap, queryParamCounter, localQueryParamValues, alias, expression, function );
 
 		expressions.add( expression.toString() );
 	}
 
-	public void addWhereWithFunction(EnversService enversService, AuditFunction left, String op, AuditFunction right) {
+	public void addWhereWithFunction(EnversService enversService, Map<String, String> aliasToEntityNameMap, AuditFunction left, String op,
+			AuditFunction right) {
 		final StringBuilder expression = new StringBuilder();
 
-		QueryBuilder.appendFunctionArgument( enversService, queryParamCounter, localQueryParamValues, alias, expression, left );
+		QueryBuilder.appendFunctionArgument( enversService, aliasToEntityNameMap, queryParamCounter, localQueryParamValues, alias, expression, left );
 
 		expression.append( ' ' ).append( op ).append( ' ' );
 
-		QueryBuilder.appendFunctionArgument( enversService, queryParamCounter, localQueryParamValues, alias, expression, right );
+		QueryBuilder.appendFunctionArgument( enversService, aliasToEntityNameMap, queryParamCounter, localQueryParamValues, alias, expression, right );
 
 		expressions.add( expression.toString() );
 	}

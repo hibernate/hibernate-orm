@@ -53,6 +53,6 @@ public class PropertyFunctionAuditExpression implements AuditCriterion {
 		if ( enversService.getEntitiesConfigurations().isVersioned( otherEntityName ) ) {
 			CriteriaTools.checkPropertyNotARelation( enversService, otherEntityName, otherPropertyName );
 		}
-		parameters.addWhereWithFunction( enversService, function, op, effectiveOtherAlias, otherPropertyName );
+		parameters.addWhereWithFunction( enversService, aliasToEntityNameMap, function, op, effectiveOtherAlias, otherPropertyName );
 	}
 }

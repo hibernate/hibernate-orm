@@ -9,6 +9,7 @@ package org.hibernate.envers.test.integration.query;
 import java.util.List;
 
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
@@ -22,7 +23,6 @@ import org.hibernate.envers.test.Priority;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.transaction.TransactionUtil;
 
 import static org.hibernate.envers.query.AuditEntity.disjunction;
 import static org.hibernate.envers.query.AuditEntity.property;
@@ -41,7 +41,9 @@ public class InheritanceAssociationToOneInnerJoinTest extends BaseEnversJPAFunct
 	@Test
 	@Priority(10)
 	public void initData() {
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		EntityManager entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+		{
 			final EntityC c = new EntityC();
 			c.setId( 1 );
 			c.setFoo( "bar" );
@@ -65,7 +67,9 @@ public class InheritanceAssociationToOneInnerJoinTest extends BaseEnversJPAFunct
 			b2.setRelationToC( c );
 			b2.setRelationToD( d );
 			entityManager.persist( b2 );
-		} );
+		}
+		entityManager.getTransaction().commit();
+		entityManager.close();
 	}
 
 	@Test

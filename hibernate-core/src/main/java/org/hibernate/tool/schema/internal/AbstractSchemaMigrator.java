@@ -414,14 +414,14 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			while ( fkItr.hasNext() ) {
 				final ForeignKey foreignKey = fkItr.next();
 				if ( foreignKey.isPhysicalConstraint() && foreignKey.isCreationEnabled() ) {
-					ForeignKeyInformation existingForeignKey = null;
+					boolean existingForeignKeyFound = false;
 					if ( tableInformation != null ) {
-						existingForeignKey = findMatchingForeignKey(
+						existingForeignKeyFound = checkForExistingForeignKey(
 								foreignKey,
 								tableInformation
 						);
 					}
-					if ( existingForeignKey == null ) {
+					if ( !existingForeignKeyFound ) {
 						// todo : shouldn't we just drop+recreate if FK exists?
 						//		this follows the existing code from legacy SchemaUpdate which just skipped
 
@@ -439,11 +439,23 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 	}
 
-	private ForeignKeyInformation findMatchingForeignKey(ForeignKey foreignKey, TableInformation tableInformation) {
+	private boolean checkForExistingForeignKey(ForeignKey foreignKey, TableInformation tableInformation) {
 		if ( foreignKey.getName() == null ) {
-			return null;
+			return false;
 		}
-		return tableInformation.getForeignKey( Identifier.toIdentifier( foreignKey.getName() ) );
+		
+		/*
+		 * Find existing keys based on referencing column and referencedTable
+		 */
+		String referencingColumn = foreignKey.getColumn(0).getName();
+		String referencedTableName = foreignKey.getReferencedTable().getName();
+		Predicate<ColumnReferenceMapping> mappingPredicate = m -> referencingColumn.equals(m.getReferencingColumnMetadata().getColumnIdentifier().getText())
+				&& referencedTableName.equals(m.getReferencedColumnMetadata().getContainingTableInformation().getName().getTableName().getCanonicalName());
+		boolean found = StreamSupport.stream(tableInformation.getForeignKeys().spliterator(), false)
+				.flatMap(key -> StreamSupport.stream(key.getColumnReferenceMappings().spliterator(), false)).anyMatch(mappingPredicate);
+		if (found) return true;
+		
+		return tableInformation.getForeignKey( Identifier.toIdentifier( foreignKey.getName() ) ) != null;
 	}
 
 	protected void checkExportIdentifier(Exportable exportable, Set<String> exportIdentifiers) {

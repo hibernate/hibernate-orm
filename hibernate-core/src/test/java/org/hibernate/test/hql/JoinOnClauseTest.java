@@ -6,8 +6,9 @@
  */
 package org.hibernate.test.hql;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.Session;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,7 +31,6 @@ import javax.persistence.criteria.Root;
 import java.util.List;
 
 import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -38,7 +38,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Christian Beikov
  */
-public class JoinOnClauseTest extends BaseEntityManagerFunctionalTestCase {
+public class JoinOnClauseTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -47,25 +47,33 @@ public class JoinOnClauseTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Before
 	public void setUp(){
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		Session s = openSession();
+		s.getTransaction().begin();
+		{
 			Price price = new Price( 10, "EUR" );
 			Author author = new Author( "Author 1" );
 			Book book = new Book( author, "Book 1", price );
-			entityManager.persist( book );
+			s.persist( book );
 
 			book = new Book( author, "Book 2", price );
-			entityManager.persist( book );
-		} );
+			s.persist( book );
+		}
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11437")
 	public void testOnClauseUsesNonDrivingTableAlias() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<Book> result = entityManager.createQuery( "SELECT DISTINCT b1 FROM Book b1 JOIN Book b2 ON b1.price = b2.price", Book.class )
-				.getResultList();
+		Session s = openSession();
+		s.getTransaction().begin();
+		{
+			List result = s.createQuery( "SELECT DISTINCT b1 FROM Book b1 JOIN Book b2 ON b1.price = b2.price" )
+				.list();
 			assertEquals(2, result.size());
-		} );
+		}
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Entity(name = "Item")

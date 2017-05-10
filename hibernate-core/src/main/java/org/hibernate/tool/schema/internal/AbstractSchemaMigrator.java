@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.StreamSupport;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
@@ -35,6 +37,7 @@ import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
+import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation.ColumnReferenceMapping;
 import org.hibernate.tool.schema.extract.spi.IndexInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;

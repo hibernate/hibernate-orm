@@ -8,16 +8,17 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -41,8 +42,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements EmbeddedValueMapping, ManagedTypeMapping, MetaAttributable {
-	private ArrayList<Property> properties = new ArrayList<>();
+public class Component extends SimpleValue implements EmbeddedValueMapping, ManagedTypeMapping, PropertyContainer, MetaAttributable {
+	private List<PersistentAttributeMapping> properties = new ArrayList<>();
 	private String componentClassName;
 	private boolean embedded;
 	private String parentProperty;
@@ -52,7 +53,7 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Mana
 	private boolean isKey;
 	private String roleName;
 
-	private java.util.Map<EntityMode,String> tuplizerImpls;
+	private Map<EntityMode,String> tuplizerImpls;
 
 	public Component(InFlightMetadataCollector metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
@@ -75,6 +76,11 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Mana
 		this.owner = owner;
 	}
 
+	@Override
+	public String getName() {
+		return componentClassName;
+	}
+
 	public int getPropertySpan() {
 		return properties.size();
 	}
@@ -85,11 +91,6 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Mana
 
 	public void addProperty(Property p) {
 		properties.add( p );
-	}
-
-	@Override
-	public java.util.List<Property> getProperties() {
-		return properties;
 	}
 
 	@Override
@@ -124,6 +125,10 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Mana
 		return embedded;
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getName()}.
+	 */
+	@Deprecated
 	public String getComponentClassName() {
 		return componentClassName;
 	}
@@ -438,20 +443,41 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Mana
 
 	@Override
 	public List<Property> getDeclaredProperties() {
+		return properties.stream().map( p -> (Property) p ).collect( Collectors.toList() );
+	}
+
+	@Override
+	public List<PersistentAttributeMapping> getDeclaredPersistentAttributes() {
 		return properties;
 	}
 
+	@Override
+	public List<PersistentAttributeMapping> getPersistentAttributes() {
+		List<PersistentAttributeMapping> attributes = new ArrayList<>();
+		attributes.addAll( properties );
+		ManagedTypeMapping superTypeMapping = getSuperManagedTypeMapping();
+		while ( superTypeMapping != null ) {
+			attributes.addAll( superTypeMapping.getPersistentAttributes() );
+			superTypeMapping = superTypeMapping.getSuperManagedTypeMapping();
+		}
+		return attributes;
+	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// atm components/embeddables are not (yet) hierarchical
 
 	@Override
-	public ManagedTypeMapping getSuperclassMapping() {
+	public PropertyContainer getSuperPropertyContainer() {
 		return null;
 	}
 
 	@Override
-	public List<ManagedTypeMapping> getSubclassMappings() {
-		return Collections.emptyList();
+	public ManagedTypeMapping getSuperManagedTypeMapping() {
+		return null;
+	}
+
+	@Override
+	public List<ManagedTypeMapping> getSuperManagedTypeMappings() {
+		return null;
 	}
 }

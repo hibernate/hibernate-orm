@@ -80,7 +80,7 @@ public class SimpleValue implements KeyValue {
 	private Properties identifierGeneratorProperties;
 	private String identifierGeneratorStrategy = DEFAULT_ID_GEN_STRATEGY;
 	private String nullValue;
-	private Table table;
+	private MappedTable table;
 	private String foreignKeyName;
 	private String foreignKeyDefinition;
 	private boolean alternateUniqueKey;
@@ -94,7 +94,7 @@ public class SimpleValue implements KeyValue {
 		this.buildingContext = buildingContext;
 	}
 
-	public SimpleValue(MetadataBuildingContext buildingContext, Table table) {
+	public SimpleValue(MetadataBuildingContext buildingContext, MappedTable table) {
 		this( buildingContext );
 		this.table = table;
 	}
@@ -326,10 +326,7 @@ public class SimpleValue implements KeyValue {
 		return nullValue;
 	}
 
-	/**
-	 * @deprecated since 6.0, use {@link #getMappedTable()}.
-	 */
-	@Deprecated
+	@Override
 	public Table getTable() {
 		return (Table) getMappedTable();
 	}

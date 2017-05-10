@@ -26,10 +26,19 @@ import org.hibernate.type.spi.Type;
  */
 public interface Value extends ValueMapping, Serializable {
 	int getColumnSpan();
+
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedColumns()}.
+	 */
+	@Deprecated
 	Iterator<Selectable> getColumnIterator();
-	Type getType() throws MappingException;
-	FetchMode getFetchMode();
+
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedTable()}.
+	 */
+	@Deprecated
 	Table getTable();
+
 	boolean hasFormula();
 	boolean isAlternateUniqueKey();
 	boolean isNullable();

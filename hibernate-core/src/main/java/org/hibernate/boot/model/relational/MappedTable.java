@@ -6,7 +6,10 @@
  */
 package org.hibernate.boot.model.relational;
 
+import java.util.List;
 import java.util.Set;
+
+import org.hibernate.mapping.ForeignKey;
 
 /**
  * Models any mapped "table reference" (e.g. a physical table, an in-lined
@@ -37,4 +40,31 @@ public interface MappedTable extends Exportable, Loggable {
 	Set<MappedColumn> getMappedColumns();
 
 	// todo (6.0) : others as deemed appropriate - see o.h.mapping.Table
+
+	/**
+	 * Get the name of the mapped table.
+	 */
+	String getName();
+
+	/**
+	 * Get the schema associated to the mapped table.
+	 */
+	String getSchema();
+
+	/**
+	 * Get the catalog associated to the mapped table.
+	 */
+	String getCatalog();
+
+	/**
+	 * Create a foreign key associated to the mapped table.
+	 *
+	 * @param keyName the foreign key name.
+	 * @param keyColumns the columns to be associated with the foreign key.
+	 * @param referencedEntityName the referenced entity name.
+	 * @param keyDefinition foreign key definition
+	 * @return the constructed foreign key.
+	 */
+	ForeignKey createForeignKey(String keyName, List keyColumns, String referencedEntityName, String keyDefinition);
+
 }

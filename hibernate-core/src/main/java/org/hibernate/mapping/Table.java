@@ -153,6 +153,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		this.name = Identifier.toIdentifier( name );
 	}
 
+	@Override
 	public String getName() {
 		return name == null ? null : name.getText();
 	}
@@ -188,6 +189,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		this.schema = Identifier.toIdentifier( schema );
 	}
 
+	@Override
 	public String getSchema() {
 		return schema == null ? null : schema.getText();
 	}
@@ -208,6 +210,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		this.catalog = Identifier.toIdentifier( catalog );
 	}
 
+	@Override
 	public String getCatalog() {
 		return catalog == null ? null : catalog.getText();
 	}
@@ -687,7 +690,12 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 	public void createForeignKeys() {
 	}
 
-	public ForeignKey createForeignKey(String keyName, List keyColumns, String referencedEntityName, String keyDefinition) {
+	@Override
+	public ForeignKey createForeignKey(
+			String keyName,
+			List keyColumns,
+			String referencedEntityName,
+			String keyDefinition) {
 		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, null );
 	}
 

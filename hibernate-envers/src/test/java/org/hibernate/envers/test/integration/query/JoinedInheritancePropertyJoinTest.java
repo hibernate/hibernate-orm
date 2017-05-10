@@ -9,6 +9,7 @@ package org.hibernate.envers.test.integration.query;
 import java.util.List;
 
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
@@ -21,7 +22,6 @@ import org.hibernate.envers.test.Priority;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.transaction.TransactionUtil;
 
 import static org.junit.Assert.assertEquals;
 
@@ -38,7 +38,9 @@ public class JoinedInheritancePropertyJoinTest extends BaseEnversJPAFunctionalTe
 	@Test
 	@Priority(10)
 	public void initData() {
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		EntityManager entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+		{
 			final EntityC c1 = new EntityC();
 			c1.setId( 1 );
 			c1.setName( "c1" );
@@ -52,7 +54,9 @@ public class JoinedInheritancePropertyJoinTest extends BaseEnversJPAFunctionalTe
 			a1.setRelationToC( c1 );
 			a1.setPropA( "propC" );
 			entityManager.persist( a1 );
-		} );
+		}
+		entityManager.getTransaction().commit();
+		entityManager.close();
 	}
 
 	@Test
@@ -95,10 +99,14 @@ public class JoinedInheritancePropertyJoinTest extends BaseEnversJPAFunctionalTe
 	@Test
 	public void testHibernateUnrelatedPropertyQuery() {
 		final String queryString = "FROM EntityA a Inner Join EntityC c ON a.propA = c.propC Where c.propB = :propB";
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		EntityManager entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+		{
 			List results = entityManager.createQuery( queryString ).setParameter( "propB", "propB" ).getResultList();
 			assertEquals( 1, results.size() );
-		} );
+		}
+		entityManager.getTransaction().commit();
+		entityManager.close();
 	}
 
 	@Entity(name = "EntityA")

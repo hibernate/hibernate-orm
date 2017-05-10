@@ -130,7 +130,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 			String name,
 			boolean isAbstract,
 			String subselect,
-			Table includedTable) throws DuplicateMappingException;
+			MappedTable includedTable) throws DuplicateMappingException;
 
 	/**
 	 * Adds metadata for a named query to this repository.

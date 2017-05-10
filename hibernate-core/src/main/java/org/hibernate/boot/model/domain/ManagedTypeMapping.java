@@ -34,7 +34,13 @@ public interface ManagedTypeMapping {
 	 */
 	List<PersistentAttributeMapping> getPersistentAttributes();
 
-	// todo: (6.0) how to model this?
+	/**
+	 * Get the super managed type associated with this managed type or {@code null}.
+	 */
 	ManagedTypeMapping getSuperManagedTypeMapping();
+
+	/**
+	 * Get all super managed type mappings associated with this managed type or empty list.
+	 */
 	List<ManagedTypeMapping> getSuperManagedTypeMappings();
 }

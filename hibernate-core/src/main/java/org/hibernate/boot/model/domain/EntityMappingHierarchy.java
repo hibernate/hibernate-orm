@@ -6,6 +6,9 @@
  */
 package org.hibernate.boot.model.domain;
 
+import org.hibernate.EntityMode;
+import org.hibernate.engine.OptimisticLockStyle;
+
 /**
  * @author Steve Ebersole
  */
@@ -35,6 +38,11 @@ public interface EntityMappingHierarchy {
 	 */
 	ValueMapping getDiscriminatorMapping();
 
+	/**
+	 * Get the optimistic locking style.
+	 */
+	OptimisticLockStyle getOptimisticLockStyle();
+
 	boolean hasIdentifierAttributeMapping();
 
 	boolean hasIdentifierMapper();
@@ -43,5 +51,5 @@ public interface EntityMappingHierarchy {
 
 	boolean isVersioned();
 
-
+	EntityMode getEntityMode();
 }

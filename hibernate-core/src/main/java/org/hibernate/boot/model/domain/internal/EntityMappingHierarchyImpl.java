@@ -6,11 +6,13 @@
  */
 package org.hibernate.boot.model.domain.internal;
 
+import org.hibernate.EntityMode;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
+import org.hibernate.engine.OptimisticLockStyle;
 
 /**
  * @author Chris Cranford
@@ -24,7 +26,14 @@ public class EntityMappingHierarchyImpl implements EntityMappingHierarchyImpleme
 	private PersistentAttributeMapping versionAttributeMapping;
 	private ValueMapping discriminatorValueMapping;
 
+	private OptimisticLockStyle optimisticLockStyle;
+	private EntityMode entityMode;
+
 	private boolean embeddedIdentifier;
+
+	public EntityMappingHierarchyImpl() {
+		this.entityMode = EntityMode.MAP;
+	}
 
 	@Override
 	public IdentifiableTypeMapping getRootType() {
@@ -98,5 +107,24 @@ public class EntityMappingHierarchyImpl implements EntityMappingHierarchyImpleme
 	@Override
 	public void setEmbeddedIdentifier(boolean embeddedIdentifier) {
 		this.embeddedIdentifier = embeddedIdentifier;
+	}
+
+	@Override
+	public OptimisticLockStyle getOptimisticLockStyle() {
+		return optimisticLockStyle;
+	}
+
+	public void setOptimisticLockStyle(OptimisticLockStyle optimisticLockStyle) {
+		this.optimisticLockStyle = optimisticLockStyle;
+	}
+
+	@Override
+	public EntityMode getEntityMode() {
+		return entityMode;
+	}
+
+	@Override
+	public void setEntityMode(EntityMode entityMode) {
+		this.entityMode = entityMode;
 	}
 }

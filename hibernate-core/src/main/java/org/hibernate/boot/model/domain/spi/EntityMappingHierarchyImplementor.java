@@ -6,11 +6,13 @@
  */
 package org.hibernate.boot.model.domain.spi;
 
+import org.hibernate.EntityMode;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
+import org.hibernate.engine.OptimisticLockStyle;
 
 /**
  * @author Chris Cranford
@@ -27,4 +29,8 @@ public interface EntityMappingHierarchyImplementor extends EntityMappingHierarch
 	void setDiscriminatorMapping(ValueMapping discriminatorMapping);
 
 	void setEmbeddedIdentifier(boolean embeddedIdentifier);
+
+	void setOptimisticLockStyle(OptimisticLockStyle optimisticLockStyle);
+
+	void setEntityMode(EntityMode entityMode);
 }

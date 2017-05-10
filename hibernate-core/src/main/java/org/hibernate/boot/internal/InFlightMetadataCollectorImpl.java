@@ -808,7 +808,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			String name,
 			boolean isAbstract,
 			String subselectFragment,
-			Table includedTable) throws DuplicateMappingException {
+			MappedTable includedTable) throws DuplicateMappingException {
 		final Namespace namespace = getDatabase().locateNamespace(
 				getDatabase().toIdentifier( catalogName ),
 				getDatabase().toIdentifier( schemaName )

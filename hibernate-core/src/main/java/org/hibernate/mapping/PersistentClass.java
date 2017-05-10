@@ -13,10 +13,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.internal.AbstractIdentifiableTypeMapping;
@@ -42,7 +44,7 @@ import org.hibernate.sql.Alias;
  */
 public abstract class PersistentClass
 		extends AbstractIdentifiableTypeMapping
-		implements AttributeContainer, Serializable, Filterable, MetaAttributable, PropertyContainer {
+		implements EntityMapping, AttributeContainer, Serializable, Filterable, MetaAttributable, PropertyContainer {
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
 	public static final String NULL_DISCRIMINATOR_MAPPING = "null";
@@ -62,8 +64,7 @@ public abstract class PersistentClass
 
 	private String discriminatorValue;
 	private boolean lazy;
-	private ArrayList properties = new ArrayList();
-	private ArrayList declaredProperties = new ArrayList();
+	private ArrayList properties = new ArrayList<>();
 	private final ArrayList<Subclass> subclasses = new ArrayList<>();
 	private final ArrayList subclassProperties = new ArrayList();
 	private final ArrayList subclassTables = new ArrayList();
@@ -92,11 +93,11 @@ public abstract class PersistentClass
 	private boolean customDeleteCallable;
 	private ExecuteUpdateResultCheckStyle deleteCheckStyle;
 
-	private java.util.Map tuplizerImpls;
+	private java.util.Map<EntityMode, String> tuplizerImpls;
 
 	private MappedSuperclass superMappedSuperclass;
 	private EmbeddedValueMapping declaredIdentifierValueMapping;
-	private OptimisticLockStyle optimisticLockStyle;
+
 
 	public PersistentClass(MetadataBuildingContext metadataBuildingContext, EntityMappingHierarchyImplementor entityMappingHierarchy) {
 		super( entityMappingHierarchy );
@@ -114,6 +115,9 @@ public abstract class PersistentClass
 	public void setClassName(String className) {
 		this.className = className == null ? null : className.intern();
 		this.mappedClass = null;
+		if ( this.className != null ) {
+			getEntityMappingHierarchy().setEntityMode( EntityMode.POJO );
+		}
 	}
 
 	@Override
@@ -253,12 +257,13 @@ public abstract class PersistentClass
 	@Override
 	public void addProperty(Property p) {
 		properties.add( p );
-		declaredProperties.add( p );
+		addDeclaredPersistentAttribute( p );
 		p.setPersistentClass( this );
 	}
 
 	public abstract Table getTable();
 
+	@Override
 	public String getEntityName() {
 		return entityName;
 	}
@@ -633,12 +638,20 @@ public abstract class PersistentClass
 		setOptimisticLockStyle( OptimisticLockStyle.interpretOldCode( optimisticLockMode ) );
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#getOptimisticLockStyle()}.
+	 */
+	@Deprecated
 	public OptimisticLockStyle getOptimisticLockStyle() {
-		return optimisticLockStyle;
+		return getEntityMappingHierarchy().getOptimisticLockStyle();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchyImplementor#setOptimisticLockStyle(OptimisticLockStyle)}.
+	 */
+	@Deprecated
 	public void setOptimisticLockStyle(OptimisticLockStyle optimisticLockStyle) {
-		this.optimisticLockStyle = optimisticLockStyle;
+		getEntityMappingHierarchy().setOptimisticLockStyle( optimisticLockStyle );
 	}
 
 	public void validate(Mapping mapping) throws MappingException {
@@ -938,6 +951,7 @@ public abstract class PersistentClass
 
 	public abstract Object accept(PersistentClassVisitor mv);
 
+	@Override
 	public String getJpaEntityName() {
 		return jpaEntityName;
 	}
@@ -946,8 +960,12 @@ public abstract class PersistentClass
 		this.jpaEntityName = jpaEntityName;
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getEntityMode()}.
+	 */
+	@Deprecated
 	public boolean hasPojoRepresentation() {
-		return getClassName() != null;
+		return getEntityMode() == EntityMode.POJO;
 	}
 
 	public boolean hasSubselectLoadableCollections() {
@@ -1041,7 +1059,7 @@ public abstract class PersistentClass
 
 	@Override
 	public java.util.List<Property> getDeclaredProperties() {
-		return declaredProperties;
+		return getDeclaredPersistentAttributes().stream().map( p -> (Property) p ).collect( Collectors.toList() );
 	}
 
 	@Override
@@ -1064,4 +1082,13 @@ public abstract class PersistentClass
 
 	// End of @Mappedsuperclass support
 
+	@Override
+	public EntityMode getEntityMode() {
+		return getEntityMappingHierarchy().getEntityMode();
+	}
+
+	@Override
+	public String getExplicitTuplizerClassName() {
+		return tuplizerImpls.get( getEntityMode() );
+	}
 }

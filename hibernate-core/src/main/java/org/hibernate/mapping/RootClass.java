@@ -23,7 +23,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.SingletonIterator;
-import org.hibernate.persister.entity.internal.EntityHierarchyImpl;
 
 /**
  * The root class of an inheritance hierarchy

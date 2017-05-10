@@ -19,6 +19,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
@@ -178,13 +179,13 @@ public class AttributeConverterDescriptorNonAutoApplicableImpl implements Attrib
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getDomainType() {
-		return domainType;
+	public BasicJavaDescriptor<?> getDomainType() {
+		return (BasicJavaDescriptor) domainType;
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getJdbcType() {
-		return jdbcType;
+	public BasicJavaDescriptor<?> getJdbcType() {
+		return (BasicJavaDescriptor) jdbcType;
 	}
 
 	@Override

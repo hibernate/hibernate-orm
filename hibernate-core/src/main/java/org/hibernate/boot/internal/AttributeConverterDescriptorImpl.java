@@ -22,6 +22,8 @@ import org.hibernate.annotations.common.reflection.java.JavaXMember;
 import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AttributeConverterDefinition;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
@@ -39,11 +41,12 @@ public class AttributeConverterDescriptorImpl implements AttributeConverterDescr
 	private final boolean autoApply;
 	private final ResolvedType domainType;
 	private final ResolvedType jdbcType;
-
+	private final TypeConfiguration typeConfiguration;
 
 	public static AttributeConverterDescriptor create(
 			AttributeConverterDefinition definition,
-			ClassmateContext classmateContext) {
+			ClassmateContext classmateContext,
+			TypeConfiguration typeConfiguration) {
 		final AttributeConverter converter = definition.getAttributeConverter();
 		final Class converterClass = converter.getClass();
 
@@ -66,7 +69,8 @@ public class AttributeConverterDescriptorImpl implements AttributeConverterDescr
 				converter,
 				definition.isAutoApply(),
 				converterParamTypes.get( 0 ),
-				converterParamTypes.get( 1 )
+				converterParamTypes.get( 1 ),
+				typeConfiguration
 		);
 	}
 
@@ -74,11 +78,13 @@ public class AttributeConverterDescriptorImpl implements AttributeConverterDescr
 			AttributeConverter attributeConverter,
 			boolean autoApply,
 			ResolvedType domainType,
-			ResolvedType jdbcType) {
+			ResolvedType jdbcType,
+			TypeConfiguration typeConfiguration) {
 		this.attributeConverter = attributeConverter;
 		this.autoApply = autoApply;
 		this.domainType = domainType;
 		this.jdbcType = jdbcType;
+		this.typeConfiguration = typeConfiguration;
 	}
 
 	@Override
@@ -87,13 +93,15 @@ public class AttributeConverterDescriptorImpl implements AttributeConverterDescr
 	}
 
 	@Override
-	public Class<?> getDomainType() {
-		return domainType.getErasedType();
+	public BasicJavaDescriptor<?> getDomainType() {
+		return (BasicJavaDescriptor) typeConfiguration.getBasicTypeRegistry()
+				.getBasicType( domainType.getErasedType() );
 	}
 
 	@Override
-	public Class<?> getJdbcType() {
-		return jdbcType.getErasedType();
+	public BasicJavaDescriptor<?> getJdbcType() {
+		return (BasicJavaDescriptor) typeConfiguration.getBasicTypeRegistry()
+				.getBasicType( jdbcType.getErasedType() );
 	}
 
 	@Override

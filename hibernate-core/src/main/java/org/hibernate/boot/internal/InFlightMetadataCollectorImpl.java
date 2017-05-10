@@ -427,7 +427,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		attributeConverterManager.addConverter(
 				AttributeConverterDescriptorImpl.create(
 						definition,
-						getBootstrapContext().getClassmateContext()
+						getBootstrapContext().getClassmateContext(),
+						getBootstrapContext().getTypeConfiguration()
 				)
 		);
 	}

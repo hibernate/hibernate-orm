@@ -69,7 +69,7 @@ public class AttributeConverterManager implements AttributeConverterAutoApplyHan
 			log.debugf(
 					"Checking auto-apply AttributeConverter [%s] (type=%s) for match against attribute : %s.%s (type=%s)",
 					descriptor.toString(),
-					descriptor.getDomainType().getSimpleName(),
+					descriptor.getDomainType().getTypeName(),
 					xProperty.getDeclaringClass().getName(),
 					xProperty.getName(),
 					xProperty.getType().getName()
@@ -110,7 +110,7 @@ public class AttributeConverterManager implements AttributeConverterAutoApplyHan
 			log.debugf(
 					"Checking auto-apply AttributeConverter [%s] (type=%s) for match against collection attribute's element : %s.%s (type=%s)",
 					descriptor.toString(),
-					descriptor.getDomainType().getSimpleName(),
+					descriptor.getDomainType().getTypeName(),
 					xProperty.getDeclaringClass().getName(),
 					xProperty.getName(),
 					xProperty.getElementClass().getName()
@@ -150,7 +150,7 @@ public class AttributeConverterManager implements AttributeConverterAutoApplyHan
 			log.debugf(
 					"Checking auto-apply AttributeConverter [%s] (type=%s) for match against map attribute's key : %s.%s (type=%s)",
 					descriptor.toString(),
-					descriptor.getDomainType().getSimpleName(),
+					descriptor.getDomainType().getTypeName(),
 					xProperty.getDeclaringClass().getName(),
 					xProperty.getName(),
 					xProperty.getMapKey().getName()

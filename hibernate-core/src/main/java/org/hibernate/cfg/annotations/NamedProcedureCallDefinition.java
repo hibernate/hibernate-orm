@@ -27,6 +27,8 @@ import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.internal.ProcedureCallMementoImpl;
 import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.sql.ast.consume.results.internal.RowReaderNoResultsExpectedImpl;
+import org.hibernate.sql.ast.produce.result.spi.Return;
 
 import static org.hibernate.procedure.internal.ProcedureCallMementoImpl.ParameterMemento;
 
@@ -79,7 +81,7 @@ public class NamedProcedureCallDefinition {
 	public ProcedureCallMemento toMemento(
 			final SessionFactoryImplementor sessionFactory,
 			final Map<String,ResultSetMappingDefinition> resultSetMappingDefinitions) {
-		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<NativeSQLQueryReturn>();
+		final List<Return> collectedQueryReturns = new ArrayList<>();
 		final Set<String> collectedQuerySpaces = new HashSet<String>();
 
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;
@@ -94,7 +96,7 @@ public class NamedProcedureCallDefinition {
 						}
 
 						@Override
-						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
+						public void addQueryReturns(Return... queryReturns) {
 							Collections.addAll( collectedQueryReturns, queryReturns );
 						}
 
@@ -120,7 +122,7 @@ public class NamedProcedureCallDefinition {
 						}
 
 						@Override
-						public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
+						public void addQueryReturns(Return... queryReturns) {
 							Collections.addAll( collectedQueryReturns, queryReturns );
 						}
 
@@ -132,12 +134,12 @@ public class NamedProcedureCallDefinition {
 					resultSetMappings
 			);
 		}
-
+		
 		return new ProcedureCallMementoImpl(
 				procedureName,
-				collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] ),
 				parameterDefinitions.getParameterStrategy(),
 				parameterDefinitions.toMementos( sessionFactory ),
+				RowReaderNoResultsExpectedImpl.INSTANCE,
 				collectedQuerySpaces,
 				hints
 		);

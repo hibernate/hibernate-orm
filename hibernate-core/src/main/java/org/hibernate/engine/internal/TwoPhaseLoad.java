@@ -147,21 +147,7 @@ public final class TwoPhaseLoad {
 		final Type[] types = persister.getPropertyTypes();
 		for ( int i = 0; i < hydratedState.length; i++ ) {
 			final Object value = hydratedState[i];
-			if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-				// IMPLEMENTATION NOTE: This is a lazy property on a bytecode-enhanced entity.
-				// hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY so that
-				// setPropertyValues() below (ultimately AbstractEntityTuplizer#setPropertyValues) works properly
-				// No resolution is necessary, unless the lazy property is a collection.
-				if ( types[i].isCollectionType() ) {
-					// IMPLEMENTATION NOTE: this is a lazy collection property on a bytecode-enhanced entity.
-					// HHH-10989: We need to resolve the collection so that a CollectionReference is added to StatefulPersistentContext.
-					// As mentioned above, hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY
-					// so do not assign the resolved, unitialized PersistentCollection back to hydratedState[i].
-					types[i].resolve( value, session, entity );
-				}
-			}
-			else if ( value!= PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				// we know value != LazyPropertyInitializer.UNFETCHED_PROPERTY
+			if ( value!=LazyPropertyInitializer.UNFETCHED_PROPERTY && value!= PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				hydratedState[i] = types[i].resolve( value, session, entity );
 			}
 		}

@@ -317,31 +317,12 @@ results by the first selection item (p.id).
 ====
 
 
-====  SqlSelectAstToJdbcSelectConverter
-
-Overall, this `SqlSelectAstToJdbcSelectConverter` has 2 main responsibilities:
-	* Rendering the SQL String
-	* Building "readers"
-
-
-=== Rendering SQL String
-
-One of the functions performed by `SqlSelectAstToJdbcSelectConverter` is to render the SQL AST into a SQL query String.  It
-does this by walking the nodes of the `SelectStatement` using the visitation pattern.  This is where the
-collection of `SqlSelection` references as described above occurs.
-
-
-=== Building "readers"
-
-There are numerous actors involved in reading back results.  They are all built by this process based
-on the `List<Return>` from `JdbcSelect` as well as the `SqlSelection` references
-associated with the selected Expression.
-
-Again, this will be discussed more in the section describing processing results.
 
 
 
 
+-- end of work ---
+rest needs to be re-worked
 
 
 

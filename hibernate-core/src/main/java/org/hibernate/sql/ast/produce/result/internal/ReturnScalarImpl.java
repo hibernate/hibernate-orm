@@ -33,6 +33,8 @@ public class ReturnScalarImpl implements ReturnScalar {
 		this.resultVariable = resultVariable;
 		this.expressableType = expressableType;
 
+		// note : just a single SqlSelection because this describes a scalar return
+
 		this.assembler = new ReturnAssemblerScalar( sqlSelection, this );
 	}
 

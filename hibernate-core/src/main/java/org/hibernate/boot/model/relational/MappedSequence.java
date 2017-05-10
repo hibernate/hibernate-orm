@@ -16,7 +16,7 @@ public interface MappedSequence extends Exportable, Loggable {
 	 * {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy#toPhysicalSequenceName}) is not
 	 * determined until later
 	 */
-	QualifiedName getLogicalName();
+	QualifiedSequenceName getLogicalName();
 
 	int getInitialValue();
 

@@ -9,8 +9,8 @@ package org.hibernate.tool.schema.extract.spi;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.mapping.Table;
 
 /**
  * @author Andrea Boriero
@@ -27,7 +27,7 @@ public class NameSpaceTablesInformation {
 		tables.put( tableInformation.getName().getTableName().getText(), tableInformation );
 	}
 
-	public TableInformation getTableInformation(Table table) {
+	public TableInformation getTableInformation(MappedTable table) {
 		return tables.get( identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() ) );
 	}
 

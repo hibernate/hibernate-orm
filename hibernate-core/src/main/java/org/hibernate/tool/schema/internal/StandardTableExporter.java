@@ -14,20 +14,20 @@ import java.util.List;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.InitCommand;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
  * @author Steve Ebersole
  */
-public class StandardTableExporter implements Exporter<Table> {
+public class StandardTableExporter implements Exporter<MappedTable> {
 	protected final Dialect dialect;
 
 	public StandardTableExporter(Dialect dialect) {
@@ -35,7 +35,7 @@ public class StandardTableExporter implements Exporter<Table> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(Table table, Metadata metadata) {
+	public String[] getSqlCreateStrings(MappedTable table, Metadata metadata) {
 		final QualifiedName tableName = new QualifiedNameParser.NameParts(
 				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
 				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
@@ -157,7 +157,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		return sqlStrings.toArray( new String[ sqlStrings.size() ] );
 	}
 
-	protected void applyComments(Table table, QualifiedName tableName, List<String> sqlStrings) {
+	protected void applyComments(MappedTable table, QualifiedName tableName, List<String> sqlStrings) {
 		if ( dialect.supportsCommentOn() ) {
 			if ( table.getComment() != null ) {
 				sqlStrings.add( "comment on table " + tableName + " is '" + table.getComment() + "'" );
@@ -173,7 +173,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		}
 	}
 
-	protected void applyInitCommands(Table table, List<String> sqlStrings) {
+	protected void applyInitCommands(MappedTable table, List<String> sqlStrings) {
 		for ( InitCommand initCommand : table.getInitCommands() ) {
 			Collections.addAll( sqlStrings, initCommand.getInitCommands() );
 		}
@@ -183,9 +183,9 @@ public class StandardTableExporter implements Exporter<Table> {
 		buf.append( dialect.getTableTypeString() );
 	}
 
-	protected void applyTableCheck(Table table, StringBuilder buf) {
+	protected void applyTableCheck(MappedTable table, StringBuilder buf) {
 		if ( dialect.supportsTableCheck() ) {
-			final Iterator<String> checkConstraints = table.getCheckConstraintsIterator();
+			final Iterator<String> checkConstraints = table.getCheckConstraints().iterator();
 			while ( checkConstraints.hasNext() ) {
 				buf.append( ", check (" )
 						.append( checkConstraints.next() )
@@ -200,7 +200,7 @@ public class StandardTableExporter implements Exporter<Table> {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Table table, Metadata metadata) {
+	public String[] getSqlDropStrings(MappedTable table, Metadata metadata) {
 		StringBuilder buf = new StringBuilder( "drop table " );
 		if ( dialect.supportsIfExistsBeforeTableName() ) {
 			buf.append( "if exists " );

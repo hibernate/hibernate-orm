@@ -10,10 +10,10 @@ import java.util.Set;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -63,7 +63,7 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 					targets
 			);
 			final NameSpaceTablesInformation tables = existingDatabase.getTablesInformation( namespace );
-			for ( Table table : namespace.getTables() ) {
+			for ( MappedTable table : namespace.getTables() ) {
 				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
 					checkExportIdentifier( table, exportIdentifiers );
 					final TableInformation tableInformation = tables.getTableInformation( table );
@@ -77,7 +77,7 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 				}
 			}
 
-			for ( Table table : namespace.getTables() ) {
+			for ( MappedTable table : namespace.getTables() ) {
 				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
 					final TableInformation tableInformation = tablesInformation.getTableInformation( table );
 					if ( tableInformation == null || ( tableInformation != null && tableInformation.isPhysicalTable() ) ) {

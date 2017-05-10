@@ -21,8 +21,9 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
+import org.hibernate.boot.model.relational.MappedSequence;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -37,7 +38,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -282,7 +282,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 
 			// sequences
-			for ( Sequence sequence : namespace.getSequences() ) {
+			for ( MappedSequence sequence : namespace.getSequences() ) {
 				if ( !schemaFilter.includeSequence( sequence ) ) {
 					continue;
 				}
@@ -304,7 +304,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 
 			// tables
-			for ( Table table : namespace.getTables() ) {
+			for ( MappedTable table : namespace.getTables() ) {
 				if ( !table.isPhysicalTable() ){
 					continue;
 				}
@@ -321,7 +321,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 			}
 
-			for ( Table table : namespace.getTables() ) {
+			for ( MappedTable table : namespace.getTables() ) {
 				if ( !table.isPhysicalTable() ){
 					continue;
 				}
@@ -364,7 +364,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				continue;
 			}
 
-			for ( Table table : namespace.getTables() ) {
+			for ( MappedTable table : namespace.getTables() ) {
 				if ( !schemaFilter.includeTable( table ) ) {
 					continue;
 				}

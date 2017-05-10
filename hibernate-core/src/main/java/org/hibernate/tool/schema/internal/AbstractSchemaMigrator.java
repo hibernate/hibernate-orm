@@ -17,8 +17,9 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.MappedSequence;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -29,7 +30,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy;
@@ -215,9 +215,9 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			);
 			tablesInformation.put( namespace, nameSpaceTablesInformation );
 			if ( schemaFilter.includeNamespace( namespace ) ) {
-				for ( Sequence sequence : namespace.getSequences() ) {
+				for ( MappedSequence sequence : namespace.getSequences() ) {
 					checkExportIdentifier( sequence, exportIdentifiers );
-					final SequenceInformation sequenceInformation = existingDatabase.getSequenceInformation( sequence.getName() );
+					final SequenceInformation sequenceInformation = existingDatabase.getSequenceInformation( sequence.getLogicalName() );
 					if ( sequenceInformation == null ) {
 						applySqlStrings(
 								false,
@@ -238,7 +238,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		for ( Namespace namespace : database.getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				final NameSpaceTablesInformation nameSpaceTablesInformation = tablesInformation.get( namespace );
-				for ( Table table : namespace.getTables() ) {
+				for ( MappedTable table : namespace.getTables() ) {
 					if ( schemaFilter.includeTable( table ) ) {
 						final TableInformation tableInformation = nameSpaceTablesInformation.getTableInformation( table );
 						if ( tableInformation == null || ( tableInformation != null && tableInformation.isPhysicalTable() ) ) {
@@ -264,7 +264,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	}
 
 	protected void createTable(
-			Table table,
+			MappedTable table,
 			Dialect dialect,
 			Metadata metadata,
 			Formatter formatter,
@@ -280,7 +280,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	}
 
 	protected void migrateTable(
-			Table table,
+			MappedTable table,
 			TableInformation tableInformation,
 			Dialect dialect,
 			Metadata metadata,
@@ -306,7 +306,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	}
 
 	protected void applyIndexes(
-			Table table,
+			MappedTable table,
 			TableInformation tableInformation,
 			Dialect dialect,
 			Metadata metadata,
@@ -341,7 +341,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	}
 
 	protected void applyUniqueKeys(
-			Table table,
+			MappedTable table,
 			TableInformation tableInfo,
 			Dialect dialect,
 			Metadata metadata,
@@ -399,7 +399,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	}
 
 	protected void applyForeignKeys(
-			Table table,
+			MappedTable table,
 			TableInformation tableInformation,
 			Dialect dialect,
 			Metadata metadata,

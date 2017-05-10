@@ -51,7 +51,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 *
 	 * @return String The generated name
 	 */
-	public static String generateName(String prefix, Table table, Column... columns) {
+	public static String generateName(String prefix, MappedTable table, Column... columns) {
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
 
@@ -75,7 +75,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 *
 	 * @return String The generated name
 	 */
-	public static String generateName(String prefix, Table table, List<Column> columns) {
+	public static String generateName(String prefix, MappedTable table, List<Column> columns) {
 		return generateName( prefix, table, columns.toArray( new Column[columns.size()] ) );
 	}
 

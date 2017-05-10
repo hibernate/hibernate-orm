@@ -172,6 +172,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return name == null ? null : name.render( dialect );
 	}
 
+	@Override
 	public QualifiedTableName getQualifiedTableName() {
 		return name == null ? null : new QualifiedTableName( catalog, schema, name );
 	}
@@ -204,6 +205,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return schema == null ? null : schema.render( dialect );
 	}
 
+	@Override
 	public boolean isSchemaQuoted() {
 		return schema != null && schema.isQuoted();
 	}
@@ -225,6 +227,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return catalog == null ? null : catalog.render( dialect );
 	}
 
+	@Override
 	public boolean isCatalogQuoted() {
 		return catalog != null && catalog.isQuoted();
 	}
@@ -454,6 +457,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 
 	}
 
+	@Override
 	public Iterator sqlAlterStrings(
 			Dialect dialect,
 			Mapping p,
@@ -526,6 +530,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return results.iterator();
 	}
 
+	@Override
 	public boolean hasPrimaryKey() {
 		return getPrimaryKey() != null;
 	}
@@ -762,6 +767,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		this.idValue = idValue;
 	}
 
+	@Override
 	public KeyValue getIdentifierValue() {
 		return idValue;
 	}
@@ -841,6 +847,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return isAbstract;
 	}
 
+	@Override
 	public boolean isPhysicalTable() {
 		return !isSubselect() && !isAbstractUnionTable();
 	}
@@ -855,8 +862,17 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		this.comment = comment;
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getCheckConstraints()}.
+	 */
+	@Deprecated
 	public Iterator<String> getCheckConstraintsIterator() {
 		return checkConstraints.iterator();
+	}
+
+	@Override
+	public List<String> getCheckConstraints() {
+		return Collections.unmodifiableList( checkConstraints );
 	}
 
 	public Iterator sqlCommentStrings(Dialect dialect, String defaultCatalog, String defaultSchema) {
@@ -941,6 +957,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		initCommands.add( command );
 	}
 
+	@Override
 	public List<InitCommand> getInitCommands() {
 		if ( initCommands == null ) {
 			return Collections.emptyList();

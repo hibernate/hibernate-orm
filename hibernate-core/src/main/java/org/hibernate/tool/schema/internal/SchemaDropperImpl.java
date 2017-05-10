@@ -20,8 +20,9 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.MappedSequence;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -36,7 +37,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Table;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -230,7 +230,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			applyConstraintDropping( namespace, metadata, formatter, options, targets );
 
 			// now it's safe to drop the tables
-			for ( Table table : namespace.getTables() ) {
+			for ( MappedTable table : namespace.getTables() ) {
 				if ( !table.isPhysicalTable() ) {
 					continue;
 				}
@@ -241,7 +241,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 				applySqlStrings( dialect.getTableExporter().getSqlDropStrings( table, metadata ), formatter, options,targets );
 			}
 
-			for ( Sequence sequence : namespace.getSequences() ) {
+			for ( MappedSequence sequence : namespace.getSequences() ) {
 				if ( !schemaFilter.includeSequence( sequence ) ) {
 					continue;
 				}
@@ -317,7 +317,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			return;
 		}
 
-		for ( Table table : namespace.getTables() ) {
+		for ( MappedTable table : namespace.getTables() ) {
 			if ( !table.isPhysicalTable() ) {
 				continue;
 			}

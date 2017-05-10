@@ -7,6 +7,7 @@
 package org.hibernate.dialect.unique;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.mapping.UniqueKey;
 
 /**
@@ -57,7 +58,7 @@ public interface UniqueDelegate {
 	 * @return The fragment, typically in the form {@code ", unique(col1, col2), unique( col20)"}.  NOTE: The leading
 	 * comma is important!
 	 */
-	public String getTableCreationUniqueConstraintsFragment(org.hibernate.mapping.Table table);
+	public String getTableCreationUniqueConstraintsFragment(MappedTable table);
 
 	/**
 	 * Get the SQL ALTER TABLE command to be used to create the given UniqueKey.

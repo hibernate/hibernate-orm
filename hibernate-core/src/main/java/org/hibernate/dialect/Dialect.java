@@ -33,7 +33,8 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.MappedSequence;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastFunction;
 import org.hibernate.dialect.function.SQLFunction;
@@ -82,7 +83,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
-import org.hibernate.mapping.Table;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -1925,11 +1925,11 @@ public abstract class Dialect implements ConversionContext {
 	private StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
 	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
 
-	public Exporter<Table> getTableExporter() {
+	public Exporter<MappedTable> getTableExporter() {
 		return tableExporter;
 	}
 
-	public Exporter<Sequence> getSequenceExporter() {
+	public Exporter<MappedSequence> getSequenceExporter() {
 		return sequenceExporter;
 	}
 

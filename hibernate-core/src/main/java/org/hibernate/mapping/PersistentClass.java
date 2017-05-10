@@ -21,6 +21,7 @@ import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.internal.AbstractIdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -340,7 +341,7 @@ public abstract class PersistentClass
 		subclassJoins.add( join );
 	}
 
-	protected void addSubclassTable(Table subclassTable) {
+	protected void addSubclassTable(MappedTable subclassTable) {
 		subclassTables.add( subclassTable );
 	}
 

@@ -121,21 +121,13 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return (Table) collectionTable;
 	}
 
-	/**
-	 * @deprecated since 6.0, use {@link #setMappedTable(MappedTable)}.
-	 */
-	@Deprecated
-	public void setCollectionTable(Table table) {
+	public void setCollectionTable(MappedTable table) {
 		this.collectionTable = table;
 	}
 
 	@Override
 	public MappedTable getMappedTable() {
 		return collectionTable;
-	}
-
-	public void setMappedTable(MappedTable collectionTable) {
-		this.collectionTable = collectionTable;
 	}
 
 	@Override

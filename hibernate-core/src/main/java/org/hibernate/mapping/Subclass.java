@@ -14,6 +14,7 @@ import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.collections.JoinedIterator;
@@ -145,7 +146,7 @@ public class Subclass extends PersistentClass {
 		getSuperclass().addSubclassJoin(j);
 	}
 
-	protected void addSubclassTable(Table table) {
+	protected void addSubclassTable(MappedTable table) {
 		super.addSubclassTable(table);
 		getSuperclass().addSubclassTable(table);
 	}

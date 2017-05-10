@@ -96,7 +96,7 @@ public class Namespace {
 
 	}
 
-	public DenormalizedMappedTable createDenormalizedTable(Identifier logicalTableName, boolean isAbstract, Table includedTable) {
+	public DenormalizedMappedTable createDenormalizedTable(Identifier logicalTableName, boolean isAbstract, MappedTable includedTable) {
 		final MappedTable existing = tables.get( logicalTableName );
 		if ( existing != null ) {
 			// for now assume it is

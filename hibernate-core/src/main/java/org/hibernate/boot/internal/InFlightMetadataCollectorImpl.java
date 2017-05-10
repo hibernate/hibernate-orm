@@ -19,6 +19,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
 import javax.persistence.AttributeConverter;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -36,7 +38,6 @@ import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
@@ -44,6 +45,7 @@ import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
@@ -85,7 +87,6 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -167,8 +168,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private Map<String, String> mappedByResolver;
 	private Map<String, String> propertyRefResolver;
 	private Set<DelayedPropertyReferenceHandler> delayedPropertyReferenceHandlers;
-	private Map<Table, List<UniqueConstraintHolder>> uniqueConstraintHoldersByTable;
-	private Map<Table, List<JPAIndexHolder>> jpaIndexHoldersByTable;
+	private Map<MappedTable, List<UniqueConstraintHolder>> uniqueConstraintHoldersByTable;
+	private Map<MappedTable, List<JPAIndexHolder>> jpaIndexHoldersByTable;
 
 	private AuditMetadataBuilderImpl auditMetadataBuilder;
 
@@ -502,7 +503,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public java.util.Collection<Table> collectTableMappings() {
-		ArrayList<Table> tables = new ArrayList<>();
+		return collectTableMappings().stream().map( t -> (Table) t ).collect( Collectors.toList() );
+	}
+
+	@Override
+	public java.util.Collection<MappedTable> collectMappedTableMappings() {
+		ArrayList<MappedTable> tables = new ArrayList<>();
 		for ( Namespace namespace : getDatabase().getNamespaces() ) {
 			tables.addAll( namespace.getTables() );
 		}
@@ -759,7 +765,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// Table handling
 
 	@Override
-	public Table addTable(
+	public MappedTable addTable(
 			String schemaName,
 			String catalogName,
 			String name,
@@ -784,7 +790,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return new Table( namespace, logicalName, subselectFragment, isAbstract );
 		}
 		else {
-			Table table = namespace.locateTable( logicalName );
+			MappedTable table = namespace.locateTable( logicalName );
 			if ( table != null ) {
 				if ( !isAbstract ) {
 					table.setAbstract( false );
@@ -796,7 +802,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public Table addDenormalizedTable(
+	public MappedTable addDenormalizedTable(
 			String schemaName,
 			String catalogName,
 			String name,
@@ -822,7 +828,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return new DenormalizedTable( namespace, logicalName, subselectFragment, isAbstract, includedTable );
 		}
 		else {
-			Table table = namespace.locateTable( logicalName );
+			MappedTable table = namespace.locateTable( logicalName );
 			if ( table != null ) {
 				throw new DuplicateMappingException( DuplicateMappingException.Type.TABLE, logicalName.toString() );
 			}
@@ -879,13 +885,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private Map<Identifier,Identifier> physicalToLogicalTableNameMap = new HashMap<>();
 
 	@Override
-	public void addTableNameBinding(Identifier logicalName, Table table) {
+	public void addTableNameBinding(Identifier logicalName, MappedTable table) {
 		logicalToPhysicalTableNameMap.put( logicalName, table.getNameIdentifier() );
 		physicalToLogicalTableNameMap.put( table.getNameIdentifier(), logicalName );
 	}
 
 	@Override
-	public void addTableNameBinding(String schema, String catalog, String logicalName, String realTableName, Table denormalizedSuperTable) {
+	public void addTableNameBinding(String schema, String catalog, String logicalName, String realTableName, MappedTable denormalizedSuperTable) {
 		final Identifier logicalNameIdentifier = getDatabase().toIdentifier( logicalName );
 		final Identifier physicalNameIdentifier = getDatabase().toIdentifier( realTableName );
 
@@ -894,7 +900,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public String getLogicalTableName(Table ownerTable) {
+	public String getLogicalTableName(MappedTable ownerTable) {
 		final Identifier logicalName = physicalToLogicalTableNameMap.get( ownerTable.getNameIdentifier() );
 		if ( logicalName == null ) {
 			throw new MappingException( "Unable to find physical table: " + ownerTable.getName() );
@@ -978,15 +984,15 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
-	private Map<Table,TableColumnNameBinding> columnNameBindingByTableMap;
+	private Map<MappedTable, TableColumnNameBinding> columnNameBindingByTableMap;
 
 	@Override
-	public void addColumnNameBinding(Table table, String logicalName, Column column) throws DuplicateMappingException {
+	public void addColumnNameBinding(MappedTable table, String logicalName, Column column) throws DuplicateMappingException {
 		addColumnNameBinding( table, getDatabase().toIdentifier( logicalName ), column );
 	}
 
 	@Override
-	public void addColumnNameBinding(Table table, Identifier logicalName, Column column) throws DuplicateMappingException {
+	public void addColumnNameBinding(MappedTable table, Identifier logicalName, Column column) throws DuplicateMappingException {
 		TableColumnNameBinding binding = null;
 
 		if ( columnNameBindingByTableMap == null ) {
@@ -1005,17 +1011,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public String getPhysicalColumnName(Table table, String logicalName) throws MappingException {
+	public String getPhysicalColumnName(MappedTable table, String logicalName) throws MappingException {
 		return getPhysicalColumnName( table, getDatabase().toIdentifier( logicalName ) );
 	}
 
 	@Override
-	public String getPhysicalColumnName(Table table, Identifier logicalName) throws MappingException {
+	public String getPhysicalColumnName(MappedTable table, Identifier logicalName) throws MappingException {
 		if ( logicalName == null ) {
 			throw new MappingException( "Logical column name cannot be null" );
 		}
 
-		Table currentTable = table;
+		MappedTable currentTable = table;
 		String physicalName = null;
 
 		while ( currentTable != null ) {
@@ -1044,17 +1050,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public String getLogicalColumnName(Table table, String physicalName) throws MappingException {
+	public String getLogicalColumnName(MappedTable table, String physicalName) throws MappingException {
 		return getLogicalColumnName( table, getDatabase().toIdentifier( physicalName ) );
 	}
 
 
 	@Override
-	public String getLogicalColumnName(Table table, Identifier physicalName) throws MappingException {
+	public String getLogicalColumnName(MappedTable table, Identifier physicalName) throws MappingException {
 		final String physicalNameString = physicalName.render( getDatabase().getJdbcEnvironment().getDialect() );
 		Identifier logicalName = null;
 
-		Table currentTable = table;
+		MappedTable currentTable = table;
 		while ( currentTable != null ) {
 			final TableColumnNameBinding binding = columnNameBindingByTableMap.get( currentTable );
 
@@ -1300,7 +1306,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public void addUniqueConstraints(Table table, List uniqueConstraints) {
+	public void addUniqueConstraints(MappedTable table, List uniqueConstraints) {
 		List<UniqueConstraintHolder> constraintHolders = new ArrayList<>(
 				CollectionHelper.determineProperSizing( uniqueConstraints.size() )
 		);
@@ -1315,7 +1321,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		addUniqueConstraintHolders( table, constraintHolders );
 	}
 
-	private int determineCurrentNumberOfUniqueConstraintHolders(Table table) {
+	private int determineCurrentNumberOfUniqueConstraintHolders(MappedTable table) {
 		List currentHolders = uniqueConstraintHoldersByTable == null ? null : uniqueConstraintHoldersByTable.get( table );
 		return currentHolders == null
 				? 0
@@ -1323,7 +1329,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraintHolders) {
+	public void addUniqueConstraintHolders(MappedTable table, List<UniqueConstraintHolder> uniqueConstraintHolders) {
 		List<UniqueConstraintHolder> holderList = null;
 
 		if ( uniqueConstraintHoldersByTable == null ) {
@@ -1342,7 +1348,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public void addJpaIndexHolders(Table table, List<JPAIndexHolder> holders) {
+	public void addJpaIndexHolders(MappedTable table, List<JPAIndexHolder> holders) {
 		List<JPAIndexHolder> holderList = null;
 
 		if ( jpaIndexHoldersByTable == null ) {
@@ -1371,7 +1377,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	public EntityTableXref addEntityTableXref(
 			String entityName,
 			Identifier primaryTableLogicalName,
-			Table primaryTable,
+			MappedTable primaryTable,
 			EntityTableXref superEntityTableXref) {
 		final EntityTableXrefImpl entry = new EntityTableXrefImpl(
 				primaryTableLogicalName,
@@ -1392,14 +1398,14 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private final class EntityTableXrefImpl implements EntityTableXref {
 		private final Identifier primaryTableLogicalName;
-		private final Table primaryTable;
+		private final MappedTable primaryTable;
 		private EntityTableXrefImpl superEntityTableXref;
 
 		//annotations needs a Map<String,Join>
 		//private Map<Identifier,Join> secondaryTableJoinMap;
 		private Map<String,Join> secondaryTableJoinMap;
 
-		public EntityTableXrefImpl(Identifier primaryTableLogicalName, Table primaryTable, EntityTableXrefImpl superEntityTableXref) {
+		public EntityTableXrefImpl(Identifier primaryTableLogicalName, MappedTable primaryTable, EntityTableXrefImpl superEntityTableXref) {
 			this.primaryTableLogicalName = primaryTableLogicalName;
 			this.primaryTable = primaryTable;
 			this.superEntityTableXref = superEntityTableXref;
@@ -1466,12 +1472,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		@Override
-		public Table getPrimaryTable() {
+		public MappedTable getPrimaryTable() {
 			return primaryTable;
 		}
 
 		@Override
-		public Table resolveTable(Identifier tableName) {
+		public MappedTable resolveTable(Identifier tableName) {
 			if ( tableName == null ) {
 				return primaryTable;
 			}
@@ -1846,14 +1852,14 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private void secondPassCompileForeignKeys(MetadataBuildingContext buildingContext) {
 		int uniqueInteger = 0;
 		Set<ForeignKey> done = new HashSet<>();
-		for ( Table table : collectTableMappings() ) {
+		for ( MappedTable table : collectTableMappings() ) {
 			table.setUniqueInteger( uniqueInteger++ );
 			secondPassCompileForeignKeys( table, done, buildingContext );
 		}
 	}
 
 	protected void secondPassCompileForeignKeys(
-			final Table table,
+			final MappedTable table,
 			Set<ForeignKey> done,
 			final MetadataBuildingContext buildingContext) throws MappingException {
 		table.createForeignKeys();
@@ -1989,8 +1995,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return;
 		}
 
-		for ( Map.Entry<Table, List<UniqueConstraintHolder>> tableListEntry : uniqueConstraintHoldersByTable.entrySet() ) {
-			final Table table = tableListEntry.getKey();
+		for ( Map.Entry<MappedTable, List<UniqueConstraintHolder>> tableListEntry : uniqueConstraintHoldersByTable.entrySet() ) {
+			final MappedTable table = tableListEntry.getKey();
 			final List<UniqueConstraintHolder> uniqueConstraints = tableListEntry.getValue();
 			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
 				buildUniqueKeyFromColumnNames( table, holder.getName(), holder.getColumns(), buildingContext );
@@ -2001,7 +2007,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	private void buildUniqueKeyFromColumnNames(
-			Table table,
+			MappedTable table,
 			String keyName,
 			String[] columnNames,
 			MetadataBuildingContext buildingContext) {
@@ -2009,7 +2015,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	private void buildUniqueKeyFromColumnNames(
-			final Table table,
+			final MappedTable table,
 			String keyName,
 			final String[] columnNames,
 			String[] orderings,
@@ -2145,7 +2151,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return;
 		}
 
-		for ( Table table : jpaIndexHoldersByTable.keySet() ) {
+		for ( MappedTable table : jpaIndexHoldersByTable.keySet() ) {
 			final List<JPAIndexHolder> jpaIndexHolders = jpaIndexHoldersByTable.get( table );
 			for ( JPAIndexHolder holder : jpaIndexHolders ) {
 				buildUniqueKeyFromColumnNames(

@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 
@@ -16,20 +17,28 @@ import org.hibernate.engine.spi.Mapping;
  * @author Gavin King
  */
 public class JoinedSubclass extends Subclass implements TableOwner {
-	private Table table;
+	private MappedTable table;
 	private KeyValue key;
 
 	public JoinedSubclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
 		super( superclass, metadataBuildingContext );
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedTable()}.
+	 */
+	@Deprecated
 	public Table getTable() {
-		return table;
+		return (Table) getMappedTable();
 	}
 
-	public void setTable(Table table) {
-		this.table=table;
-		getSuperclass().addSubclassTable(table);
+	public void setTable(MappedTable table) {
+		this.table = table;
+		getSuperclass().addSubclassTable( table );
+	}
+
+	public MappedTable getMappedTable() {
+		return table;
 	}
 
 	public KeyValue getKey() {

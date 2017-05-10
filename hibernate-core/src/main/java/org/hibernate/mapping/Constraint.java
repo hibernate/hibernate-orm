@@ -19,6 +19,7 @@ import java.util.Locale;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 
@@ -32,7 +33,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 
 	private String name;
 	private final ArrayList<Column> columns = new ArrayList<>();
-	private Table table;
+	private MappedTable table;
 
 	public String getName() {
 		return name;
@@ -151,12 +152,20 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return columns.iterator();
 	}
 
+	/**
+	 * @deprecated since 6.0 use {@link #getMappedTable()}.
+	 */
+	@Deprecated
 	public Table getTable() {
-		return table;
+		return (Table) getMappedTable();
 	}
 
-	public void setTable(Table table) {
+	public void setTable(MappedTable table) {
 		this.table = table;
+	}
+
+	public MappedTable getMappedTable() {
+		return table;
 	}
 
 	public boolean isGenerated(Dialect dialect) {

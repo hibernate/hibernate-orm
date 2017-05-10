@@ -6,10 +6,16 @@
  */
 package org.hibernate.boot.model.relational;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
+import org.hibernate.mapping.Index;
+import org.hibernate.mapping.PrimaryKey;
+import org.hibernate.mapping.UniqueKey;
 
 /**
  * Models any mapped "table reference" (e.g. a physical table, an in-lined
@@ -41,10 +47,14 @@ public interface MappedTable extends Exportable, Loggable {
 
 	// todo (6.0) : others as deemed appropriate - see o.h.mapping.Table
 
+	void setName(String name);
+
 	/**
 	 * Get the name of the mapped table.
 	 */
 	String getName();
+
+	Identifier getNameIdentifier();
 
 	/**
 	 * Get the schema associated to the mapped table.
@@ -55,6 +65,12 @@ public interface MappedTable extends Exportable, Loggable {
 	 * Get the catalog associated to the mapped table.
 	 */
 	String getCatalog();
+
+	Index getOrCreateIndex(String indexName);
+
+	UniqueKey getOrCreateUniqueKey(String keyName);
+
+	void createForeignKeys();
 
 	/**
 	 * Create a foreign key associated to the mapped table.
@@ -67,4 +83,61 @@ public interface MappedTable extends Exportable, Loggable {
 	 */
 	ForeignKey createForeignKey(String keyName, List keyColumns, String referencedEntityName, String keyDefinition);
 
+	// This must be done outside of Table, rather than statically, to ensure
+	// deterministic alias names.  See HHH-2448.
+	void setUniqueInteger(int uniqueInteger);
+
+	void addCheckConstraint(String constraint);
+
+	boolean containsColumn(Column column);
+
+	String getRowId();
+
+	void setRowId(String rowId);
+
+	String getSubselect();
+
+	void setSubselect(String subselect);
+
+	void setHasDenormalizedTables();
+
+	/**
+	 * Set whether the mapped table is abstract.
+	 * @param isAbstract
+	 */
+	void setAbstract(boolean isAbstract);
+
+	/**
+	 * Get whether the mapped table is abstract.
+	 */
+	boolean isAbstract();
+
+	/**
+	 * Get the mapped table comme.t
+	 */
+	String getComment();
+
+	/**
+	 * Set a comment on the mapped table.
+	 * @param comment
+	 */
+	void setComment(String comment);
+
+	Column getColumn(Column column);
+
+	Column getColumn(Identifier name);
+
+	Column getColumn(int n);
+
+	Iterator getColumnIterator();
+
+	Iterator<Index> getIndexIterator();
+
+	Iterator getForeignKeyIterator();
+
+	Iterator<UniqueKey> getUniqueKeyIterator();
+
+	PrimaryKey getPrimaryKey();
+
+	void setPrimaryKey(PrimaryKey primaryKey);
 }

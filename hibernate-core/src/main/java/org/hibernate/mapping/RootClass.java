@@ -16,6 +16,7 @@ import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.boot.model.domain.internal.EntityMappingHierarchyImpl;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreLogging;
@@ -46,7 +47,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private Class entityPersisterClass;
 	private boolean forceDiscriminator;
 	private String where;
-	private Table table;
+	private MappedTable table;
 	private boolean discriminatorInsertable = true;
 	private int nextSubclassId;
 	private PersistentAttributeMapping declaredIdentifierAttributeMapping;
@@ -68,13 +69,13 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return 0;
 	}
 
-	public void setTable(Table table) {
+	public void setTable(MappedTable table) {
 		this.table = table;
 	}
 
 	@Override
 	public Table getTable() {
-		return table;
+		return (Table)table;
 	}
 
 	@Override

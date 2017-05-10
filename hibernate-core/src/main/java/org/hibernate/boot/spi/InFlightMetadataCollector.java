@@ -7,7 +7,6 @@
 package org.hibernate.boot.spi;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -19,10 +18,10 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AttributeConverterDefinition;
@@ -108,7 +107,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @return The created table metadata, or the existing reference.
 	 */
-	Table addTable(String schema, String catalog, String name, String subselect, boolean isAbstract);
+	MappedTable addTable(String schema, String catalog, String name, String subselect, boolean isAbstract);
 
 	/**
 	 * Adds a 'denormalized table' to this repository.
@@ -125,7 +124,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @throws DuplicateMappingException If such a table mapping already exists.
 	 */
-	Table addDenormalizedTable(
+	MappedTable addDenormalizedTable(
 			String schema,
 			String catalog,
 			String name,
@@ -220,23 +219,23 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// stuff needed for annotation binding :(
 
-	void addTableNameBinding(Identifier logicalName, Table table);
+	void addTableNameBinding(Identifier logicalName, MappedTable table);
 	void addTableNameBinding(
 			String schema,
 			String catalog,
 			String logicalName,
 			String realTableName,
-			Table denormalizedSuperTable);
-	String getLogicalTableName(Table ownerTable);
+			MappedTable denormalizedSuperTable);
+	String getLogicalTableName(MappedTable ownerTable);
 	String getPhysicalTableName(Identifier logicalName);
 	String getPhysicalTableName(String logicalName);
 
-	void addColumnNameBinding(Table table, Identifier logicalColumnName, Column column);
-	void addColumnNameBinding(Table table, String logicalColumnName, Column column);
-	String getPhysicalColumnName(Table table, Identifier logicalName) throws MappingException;
-	String getPhysicalColumnName(Table table, String logicalName) throws MappingException;
-	String getLogicalColumnName(Table table, Identifier physicalName);
-	String getLogicalColumnName(Table table, String physicalName);
+	void addColumnNameBinding(MappedTable table, Identifier logicalColumnName, Column column);
+	void addColumnNameBinding(MappedTable table, String logicalColumnName, Column column);
+	String getPhysicalColumnName(MappedTable table, Identifier logicalName) throws MappingException;
+	String getPhysicalColumnName(MappedTable table, String logicalName) throws MappingException;
+	String getLogicalColumnName(MappedTable table, Identifier physicalName);
+	String getLogicalColumnName(MappedTable table, String physicalName);
 
 	void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
@@ -305,16 +304,16 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addMappedBy(String name, String mappedBy, String propertyName);
 	String getFromMappedBy(String ownerEntityName, String propertyName);
 
-	void addUniqueConstraints(Table table, List uniqueConstraints);
-	void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraints);
-	void addJpaIndexHolders(Table table, List<JPAIndexHolder> jpaIndexHolders);
+	void addUniqueConstraints(MappedTable table, List uniqueConstraints);
+	void addUniqueConstraintHolders(MappedTable table, List<UniqueConstraintHolder> uniqueConstraints);
+	void addJpaIndexHolders(MappedTable table, List<JPAIndexHolder> jpaIndexHolders);
 
 
 	interface EntityTableXref {
 		void addSecondaryTable(LocalMetadataBuildingContext buildingContext, Identifier logicalName, Join secondaryTableJoin);
 		void addSecondaryTable(Identifier logicalName, Join secondaryTableJoin);
-		Table resolveTable(Identifier tableName);
-		Table getPrimaryTable();
+		MappedTable resolveTable(Identifier tableName);
+		MappedTable getPrimaryTable();
 		Join locateJoin(Identifier tableName);
 	}
 
@@ -337,7 +336,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	EntityTableXref addEntityTableXref(
 			String entityName,
 			Identifier primaryTableLogicalName,
-			Table primaryTable,
+			MappedTable primaryTable,
 			EntityTableXref superEntityTableXref);
 	Map<String,Join> getJoins(String entityName);
 }

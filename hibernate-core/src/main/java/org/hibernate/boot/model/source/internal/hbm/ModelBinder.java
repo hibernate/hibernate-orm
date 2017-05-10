@@ -1236,7 +1236,7 @@ public class ModelBinder {
 					final Property attribute = createManyToOneAttribute(
 							mappingDocument,
 							manyToOneAttributeSource,
-							new ManyToOne( mappingDocument.getMetadataCollector(), table ),
+							new ManyToOne( mappingDocument, table ),
 							entityDescriptor.getClassName()
 					);
 
@@ -1259,7 +1259,7 @@ public class ModelBinder {
 					final Property attribute = createOneToOneAttribute(
 							mappingDocument,
 							oneToOneAttributeSource,
-							new OneToOne( mappingDocument.getMetadataCollector(), table, entityDescriptor ),
+							new OneToOne( mappingDocument, table, entityDescriptor ),
 							entityDescriptor.getClassName()
 					);
 					entityDescriptor.addProperty( attribute );
@@ -2681,7 +2681,7 @@ public class ModelBinder {
 				attribute = createManyToOneAttribute(
 						sourceDocument,
 						(SingularAttributeSourceManyToOne) attributeSource,
-						new ManyToOne( sourceDocument.getMetadataCollector(), component.getTable() ),
+						new ManyToOne( sourceDocument, component.getTable() ),
 						component.getComponentClassName()
 				);
 			}
@@ -2689,7 +2689,7 @@ public class ModelBinder {
 				attribute = createOneToOneAttribute(
 						sourceDocument,
 						(SingularAttributeSourceOneToOne) attributeSource,
-						new OneToOne( sourceDocument.getMetadataCollector(), component.getTable(), component.getOwner() ),
+						new OneToOne( sourceDocument, component.getTable(), component.getOwner() ),
 						component.getComponentClassName()
 				);
 			}
@@ -3399,7 +3399,7 @@ public class ModelBinder {
 				final PluralAttributeElementSourceManyToMany elementSource =
 						(PluralAttributeElementSourceManyToMany) getPluralAttributeSource().getElementSource();
 				final ManyToOne elementBinding = new ManyToOne(
-						getMappingDocument().getMetadataCollector(),
+						getMappingDocument(),
 						getCollectionBinding().getCollectionTable()
 				);
 
@@ -3919,7 +3919,7 @@ public class ModelBinder {
 			final PluralAttributeMapKeyManyToManySource mapKeySource =
 					(PluralAttributeMapKeyManyToManySource) pluralAttributeSource.getIndexSource();
 			final ManyToOne mapKeyBinding = new ManyToOne(
-					mappingDocument.getMetadataCollector(),
+					mappingDocument,
 					collectionBinding.getCollectionTable()
 			);
 

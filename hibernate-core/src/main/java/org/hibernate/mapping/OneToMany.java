@@ -6,10 +6,13 @@
  */
 package org.hibernate.mapping;
 
-import java.util.Iterator;
+import java.util.*;
+import java.util.List;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.service.ServiceRegistry;
@@ -23,7 +26,7 @@ import org.hibernate.type.spi.Type;
  */
 public class OneToMany implements Value {
 	private final MetadataImplementor metadata;
-	private final Table referencingTable;
+	private final MappedTable referencingTable;
 
 	private String referencedEntityName;
 	private PersistentClass associatedClass;
@@ -81,9 +84,21 @@ public class OneToMany implements Value {
 
 	/**
 	 * Table of the owner entity (the "one" side)
+	 * @deprecated since 6.0, use {@link #getMappedTable()}
 	 */
+	@Deprecated
 	public Table getTable() {
+		return (Table) referencingTable;
+	}
+
+	@Override
+	public MappedTable getMappedTable() {
 		return referencingTable;
+	}
+
+	@Override
+	public List<MappedColumn> getMappedColumns() {
+		return Collections.unmodifiableList( new ArrayList<>( referencingTable.getMappedColumns() ) );
 	}
 
 	public Type getType() {

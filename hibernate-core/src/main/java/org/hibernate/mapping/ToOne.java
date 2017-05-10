@@ -10,6 +10,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.spi.Type;
@@ -27,7 +28,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	protected boolean unwrapProxy;
 	protected boolean referenceToPrimaryKey = true;
 
-	protected ToOne(InFlightMetadataCollector metadata, Table table) {
+	protected ToOne(MetadataBuildingContext metadata, Table table) {
 		super( metadata, table );
 	}
 
@@ -61,7 +62,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
 		if (referencedEntityName == null) {
-			final ClassLoaderService cls = getBuildingContext().getMetadataBuildingOptions()
+			final ClassLoaderService cls  = getBuildingContext().getBootstrapContext()
 					.getServiceRegistry()
 					.getService( ClassLoaderService.class );
 			referencedEntityName = ReflectHelper.reflectedPropertyClass( className, propertyName, cls ).getName();

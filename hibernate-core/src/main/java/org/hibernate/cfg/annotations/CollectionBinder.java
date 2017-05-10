@@ -1329,7 +1329,7 @@ public abstract class CollectionBinder {
 
 		ManyToOne element = null;
 		if ( isCollectionOfEntities ) {
-			element = new ManyToOne( buildingContext.getMetadataCollector(),  collValue.getCollectionTable() );
+			element = new ManyToOne( buildingContext, collValue.getCollectionTable() );
 			collValue.setElement( element );
 			element.setReferencedEntityName( collType.getName() );
 			//element.setFetchMode( fetchMode );

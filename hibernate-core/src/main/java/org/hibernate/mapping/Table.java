@@ -9,20 +9,23 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.Mapping;
@@ -50,7 +53,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 	/**
 	 * contains all columns, including the primary key
 	 */
-	private Map columns = new LinkedHashMap();
+	private Map<String, MappedColumn> columns = new LinkedHashMap();
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
 	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>();
@@ -63,6 +66,8 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 	private boolean isAbstract;
 	private boolean hasDenormalizedTables;
 	private String comment;
+
+	private boolean isPhysicalTable;
 
 	private List<InitCommand> initCommands;
 
@@ -767,6 +772,11 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return buf.toString();
 	}
 
+	@Override
+	public String toLoggableString() {
+		return toString();
+	}
+
 	public String getSubselect() {
 		return subselect;
 	}
@@ -843,6 +853,11 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		);
 	}
 
+	@Override
+	public boolean isExportable() {
+		return isPhysicalTable();
+	}
+
 	private String render(Identifier identifier) {
 		return identifier == null ? null : identifier.render();
 	}
@@ -899,5 +914,16 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		else {
 			return Collections.unmodifiableList( initCommands );
 		}
+	}
+
+	@Override
+	public Set<MappedColumn> getMappedColumns() {
+		return Collections.unmodifiableSet( new HashSet<>( columns.values() ) );
+	}
+
+	@Override
+	public String getUid() {
+		// todo (6.0) what makes snese to impl this??
+		throw new NotYetImplementedException();
 	}
 }

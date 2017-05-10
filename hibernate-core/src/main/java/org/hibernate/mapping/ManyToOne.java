@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
@@ -23,7 +24,7 @@ public class ManyToOne extends ToOne {
 	private boolean ignoreNotFound;
 	private boolean isLogicalOneToOne;
 	
-	public ManyToOne(InFlightMetadataCollector metadata, Table table) {
+	public ManyToOne(MetadataBuildingContext metadata, Table table) {
 		super( metadata, table );
 	}
 

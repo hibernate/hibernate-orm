@@ -6,13 +6,14 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 
 /**
  * Models the commonality between a column and a formula (computed value).
  */
-public interface Selectable {
+public interface Selectable extends MappedColumn {
 	String getAlias(Dialect dialect);
 	String getAlias(Dialect dialect, Table table);
 	boolean isFormula();

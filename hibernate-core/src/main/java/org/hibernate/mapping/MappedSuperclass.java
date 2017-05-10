@@ -5,12 +5,14 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.hibernate.boot.model.domain.ManagedTypeMapping;
-import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.internal.AbstractIdentifiableTypeMapping;
 
 /**
  * Represents a @MappedSuperclass.
@@ -29,19 +31,26 @@ import org.hibernate.cfg.NotYetImplementedException;
  *
  * @author Emmanuel Bernard
  */
-public class MappedSuperclass implements ManagedTypeMapping, PropertyContainer {
+public class MappedSuperclass extends AbstractIdentifiableTypeMapping implements PropertyContainer {
 	private final MappedSuperclass superMappedSuperclass;
 	private final PersistentClass superPersistentClass;
-	private final List declaredProperties;
+	private final List<PersistentAttributeMapping> declaredProperties;
 	private Class mappedClass;
 	private Property identifierProperty;
 	private Property version;
 	private Component identifierMapper;
 
 	public MappedSuperclass(MappedSuperclass superMappedSuperclass, PersistentClass superPersistentClass) {
+		// todo: (6.0) is this correct, is superPersistentClass the "root" entity??
+		super( superPersistentClass.getEntityMappingHierarchy() );
 		this.superMappedSuperclass = superMappedSuperclass;
 		this.superPersistentClass = superPersistentClass;
 		this.declaredProperties = new ArrayList();
+	}
+
+	@Override
+	public String getName() {
+		return mappedClass.getName();
 	}
 
 	/**
@@ -215,24 +224,18 @@ public class MappedSuperclass implements ManagedTypeMapping, PropertyContainer {
 	}
 
 	@Override
-	public ManagedTypeMapping getSuperclassMapping() {
+	public PropertyContainer getSuperPropertyContainer() {
 		return superMappedSuperclass != null ? superMappedSuperclass : superPersistentClass;
 	}
 
 	@Override
-	public List<ManagedTypeMapping> getSubclassMappings() {
-		// todo: (6.0) implement this
-		throw new NotYetImplementedException();
+	public List<Property> getDeclaredProperties() {
+		return declaredProperties.stream().map( e -> (Property) e ).collect( Collectors.toList() );
 	}
 
 	@Override
-	public java.util.List<Property> getDeclaredProperties() {
+	public List<PersistentAttributeMapping> getDeclaredPersistentAttributes() {
 		return declaredProperties;
 	}
 
-	@Override
-	public List<Property> getProperties() {
-		// todo: (6.0) implement this
-		throw new NotYetImplementedException();
-	}
 }

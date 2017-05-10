@@ -42,6 +42,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
@@ -64,7 +65,9 @@ import org.hibernate.jpa.internal.metamodel.EntityTypeImpl;
 import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.proxy.HibernateProxy;
 
 import org.jboss.logging.Logger;
 
@@ -664,13 +667,32 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 		@Override
 		public Object getIdentifier(Object entity) {
-			final Class entityClass = Hibernate.getClass( entity );
-			final ClassMetadata classMetadata = emf.getSessionFactory().getClassMetadata( entityClass );
-			if ( classMetadata == null ) {
-				throw new IllegalArgumentException( entityClass + " is not an entity" );
+			if ( entity == null ) {
+				throw new IllegalArgumentException( "Passed entity cannot be null" );
 			}
-			//TODO does that work for @IdClass?
-			return classMetadata.getIdentifier( entity );
+
+			if ( entity instanceof HibernateProxy ) {
+				final HibernateProxy proxy = (HibernateProxy) entity;
+				return proxy.getHibernateLazyInitializer().getIdentifier();
+			}
+			else if ( entity instanceof ManagedEntity ) {
+				final ManagedEntity enhancedEntity = (ManagedEntity) entity;
+				return enhancedEntity.$$_hibernate_getEntityEntry().getId();
+			}
+			else {
+				log.debugf(
+						"javax.persistence.PersistenceUnitUtil.getIdentifier is only intended to work with enhanced entities " +
+								"(although Hibernate also adapts this support to its proxies); " +
+								"however the passed entity was not enhanced (nor a proxy).. may not be able to read identifier"
+				);
+				final Class entityClass = Hibernate.getClass( entity );
+				final EntityPersister persister = emf.getSessionFactory().getEntityPersister( entityClass.getName() );
+				if ( persister == null ) {
+					throw new IllegalArgumentException( entityClass + " is not an entity" );
+				}
+				//TODO does that work for @IdClass?
+				return persister.getIdentifier( entity );
+			}
 		}
 	}
 }

@@ -7,11 +7,13 @@
 package org.hibernate.tuple.entity;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.EntityMode;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
@@ -176,6 +178,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		else {
 			identifierMapperType = (CompositeType) mapper.getType();
 			mappedIdentifierValueMarshaller = buildMappedIdentifierValueMarshaller(
+					getFactory(),
 					(ComponentType) entityMetamodel.getIdentifierProperty().getType(),
 					(ComponentType) identifierMapperType
 			);
@@ -276,6 +279,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	private final MappedIdentifierValueMarshaller mappedIdentifierValueMarshaller;
 
 	private static MappedIdentifierValueMarshaller buildMappedIdentifierValueMarshaller(
+			SessionFactoryImplementor sessionFactory,
 			ComponentType mappedIdClassComponentType,
 			ComponentType virtualIdComponent) {
 		// so basically at this point we know we have a "mapped" composite identifier
@@ -302,8 +306,9 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		return wereAllEquivalent
 				? new NormalMappedIdentifierValueMarshaller( virtualIdComponent, mappedIdClassComponentType )
 				: new IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller(
-				virtualIdComponent,
-				mappedIdClassComponentType
+						sessionFactory,
+						virtualIdComponent,
+						mappedIdClassComponentType
 		);
 	}
 
@@ -338,12 +343,15 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	private static class IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller
 			implements MappedIdentifierValueMarshaller {
+		private final SessionFactoryImplementor sessionFactory;
 		private final ComponentType virtualIdComponent;
 		private final ComponentType mappedIdentifierType;
 
 		private IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller(
+				SessionFactoryImplementor sessionFactory,
 				ComponentType virtualIdComponent,
 				ComponentType mappedIdentifierType) {
+			this.sessionFactory = sessionFactory;
 			this.virtualIdComponent = virtualIdComponent;
 			this.mappedIdentifierType = mappedIdentifierType;
 		}
@@ -354,25 +362,18 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			final Object[] propertyValues = virtualIdComponent.getPropertyValues( entity, entityMode );
 			final Type[] subTypes = virtualIdComponent.getSubtypes();
 			final Type[] copierSubTypes = mappedIdentifierType.getSubtypes();
-			final Iterable<PersistEventListener> persistEventListeners = persistEventListeners( session );
 			final int length = subTypes.length;
 			for ( int i = 0; i < length; i++ ) {
 				if ( propertyValues[i] == null ) {
 					throw new HibernateException( "No part of a composite identifier may be null" );
 				}
 				//JPA 2 @MapsId + @IdClass points to the pk of the entity
-				if ( subTypes[i].isAssociationType() && !copierSubTypes[i].isAssociationType() ) {
-					// we need a session to handle this use case
-					if ( session == null ) {
-						throw new AssertionError(
-								"Deprecated version of getIdentifier (no session) was used but session was required"
-						);
-					}
+				if ( subTypes[i].isAssociationType() && !copierSubTypes[i].isAssociationType()  ) {
 					propertyValues[i] = determineEntityIdPersistIfNecessary(
 							propertyValues[i],
 							(AssociationType) subTypes[i],
 							session,
-							persistEventListeners
+							sessionFactory
 					);
 				}
 			}
@@ -397,7 +398,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 					final String associatedEntityName = ( (EntityType) virtualPropertyType ).getAssociatedEntityName();
 					final EntityKey entityKey = session.generateEntityKey(
 							(Serializable) extractedValues[i],
-							session.getFactory().getEntityPersister( associatedEntityName )
+							sessionFactory.getEntityPersister( associatedEntityName )
 					);
 					// it is conceivable there is a proxy, so check that first
 					Object association = persistenceContext.getProxy( entityKey );
@@ -416,6 +417,9 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	private static Iterable<PersistEventListener> persistEventListeners(SessionImplementor session) {
+		if ( session == null ) {
+			return Collections.emptyList();
+		}
 		return session
 				.getFactory()
 				.getServiceRegistry()
@@ -428,62 +432,107 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			Object entity,
 			AssociationType associationType,
 			SessionImplementor session,
-			Iterable<PersistEventListener> persistEventListeners) {
+			SessionFactoryImplementor sessionFactory) {
+		if ( entity == null ) {
+			return null;
+		}
+
+		// NOTE : persist if necessary for proper merge support (HHH-11328)
+		// 		but only allow persist if a Session is passed (HHH-11274)
+
 		if ( HibernateProxy.class.isInstance( entity ) ) {
 			// entity is a proxy, so we know it is not transient; just return ID from proxy
 			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
 		}
-		else {
-			EntityEntry pcEntry = session.getPersistenceContext().getEntry( entity );
+		if ( session != null ) {
+			final EntityEntry pcEntry = session.getPersistenceContext().getEntry( entity );
 			if ( pcEntry != null ) {
 				// entity managed; return ID.
 				return pcEntry.getId();
 			}
-			else {
-				final EntityPersister persister = session.getEntityPersister(
-						associationType.getAssociatedEntityName( session.getFactory() ),
-						entity
-				);
-				Serializable entityId = persister.getIdentifier( entity, session );
-				if ( entityId == null ) {
-					// entity is transient with no ID; we need to persist the entity to get the ID.
-					entityId = persistTransientEntity( entity, session, persistEventListeners );
+		}
+
+		final EntityPersister persister = resolveEntityPersister(
+				entity,
+				associationType,
+				session,
+				sessionFactory
+		);
+
+		Serializable entityId = persister.getIdentifier( entity, session );
+
+		if ( entityId == null ) {
+			if ( session != null ) {
+				// if we have a session, then follow the HHH-11328 requirements
+				entityId = persistTransientEntity( entity, session );
+			}
+			// otherwise just let it be null HHH-11274
+		}
+		else {
+			if ( session != null ) {
+				// if the entity is in the process of being merged, it may be stored in the
+				// PC already, but doesn't have an EntityEntry yet. If this is the case,
+				// then don't persist even if it is transient because doing so can lead
+				// to having 2 entities in the PC with the same ID (HHH-11328).
+				final EntityKey entityKey = session.generateEntityKey( entityId, persister );
+				if ( session.getPersistenceContext().getEntity( entityKey ) == null &&
+						ForeignKeys.isTransient(
+								persister.getEntityName(),
+								entity,
+								null,
+								session
+						) ) {
+					// entity is transient and it is not in the PersistenceContext.
+					// entity needs to be persisted.
+					persistTransientEntity( entity, session );
 				}
-				else {
-					// entity has an ID.
-					final EntityKey entityKey = session.generateEntityKey( entityId, persister );
-					// if the entity is in the process of being merged, it may be stored in the
-					// PC already, but doesn't have an EntityEntry yet. If this is the case,
-					// then don't persist even if it is transient because doing so can lead
-					// to having 2 entities in the PC with the same ID (HHH-11328).
-					if ( session.getPersistenceContext().getEntity( entityKey ) == null &&
-							ForeignKeys.isTransient(
-									persister.getEntityName(),
-									entity,
-									null,
-									session
-							) ) {
-						// entity is transient and it is not in the PersistenceContext.
-						// entity needs to be persisted.
-						persistTransientEntity( entity, session, persistEventListeners );
-					}
-				}
-				return entityId;
 			}
 		}
+		return entityId;
+	}
+
+	private static EntityPersister resolveEntityPersister(
+			Object entity,
+			AssociationType associationType,
+			SessionImplementor session,
+			SessionFactoryImplementor sessionFactory) {
+		assert sessionFactory != null;
+
+		if ( session != null ) {
+			return session.getEntityPersister(
+					associationType.getAssociatedEntityName( session.getFactory() ),
+					entity
+			);
+		}
+
+		String entityName = null;
+		for ( EntityNameResolver entityNameResolver : sessionFactory.iterateEntityNameResolvers() ) {
+			entityName = entityNameResolver.resolveEntityName( entity );
+			if ( entityName != null ) {
+				break;
+			}
+		}
+		if ( entityName == null ) {
+			// old fall-back
+			entityName = entity.getClass().getName();
+		}
+
+		return sessionFactory.getEntityPersister( entityName );
 	}
 
 	private static Serializable persistTransientEntity(
 			Object entity,
-			SessionImplementor session,
-			Iterable<PersistEventListener> persistEventListeners) {
+			SessionImplementor session) {
+		assert session != null;
+
 		LOG.debug( "Performing implicit derived identity cascade" );
 		final PersistEvent event = new PersistEvent(
 				null,
 				entity,
 				(EventSource) session
 		);
-		for ( PersistEventListener listener : persistEventListeners ) {
+
+		for ( PersistEventListener listener : persistEventListeners( session ) ) {
 			listener.onPersist( event );
 		}
 		final EntityEntry pcEntry = session.getPersistenceContext().getEntry( entity );

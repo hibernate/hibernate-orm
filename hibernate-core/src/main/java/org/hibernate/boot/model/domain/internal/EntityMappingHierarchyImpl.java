@@ -6,7 +6,8 @@
  */
 package org.hibernate.boot.model.domain.internal;
 
-import org.hibernate.boot.model.domain.IdentifierMapping;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
@@ -16,23 +17,52 @@ import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
  */
 public class EntityMappingHierarchyImpl implements EntityMappingHierarchyImplementor {
 
-	private IdentifierMapping identifierMapping;
+	private IdentifiableTypeMapping rootIdentifiableType;
+
+	private PersistentAttributeMapping identifierAttributeMapping;
+	private EmbeddedValueMapping identifierEmbeddedValueMapping;
 	private PersistentAttributeMapping versionAttributeMapping;
 	private ValueMapping discriminatorValueMapping;
 
+	private boolean embeddedIdentifier;
+
 	@Override
-	public void setIdentifierMapping(IdentifierMapping identifierMapping) {
-		this.identifierMapping = identifierMapping;
+	public IdentifiableTypeMapping getRootType() {
+		return this.rootIdentifiableType;
+	}
+
+	public void setRootType(IdentifiableTypeMapping rootIdentifiableType) {
+		this.rootIdentifiableType = rootIdentifiableType;
+	}
+
+	@Override
+	public PersistentAttributeMapping getIdentifierAttributeMapping() {
+		return identifierAttributeMapping;
+	}
+
+	@Override
+	public void setIdentifierAttributeMapping(PersistentAttributeMapping identifierAttributeMapping) {
+		this.identifierAttributeMapping = identifierAttributeMapping;
+	}
+
+	@Override
+	public EmbeddedValueMapping getIdentifierEmbeddedValueMapping() {
+		return identifierEmbeddedValueMapping;
+	}
+
+	@Override
+	public void setIdentifierEmbeddedValueMapping(EmbeddedValueMapping identifierEmbeddedValueMapping) {
+		this.identifierEmbeddedValueMapping = identifierEmbeddedValueMapping;
+	}
+
+	@Override
+	public PersistentAttributeMapping getVersionAttributeMapping() {
+		return versionAttributeMapping;
 	}
 
 	@Override
 	public void setVersionAttributeMapping(PersistentAttributeMapping versionAttributeMapping) {
 		this.versionAttributeMapping = versionAttributeMapping;
-	}
-
-	@Override
-	public boolean hasIdentifierAttributeMapping() {
-		return identifierMapping.isSingleIdentifierMapping() || identifierMapping.isEmbeddedIdentifierMapping();
 	}
 
 	@Override
@@ -43,5 +73,30 @@ public class EntityMappingHierarchyImpl implements EntityMappingHierarchyImpleme
 	@Override
 	public ValueMapping getDiscriminatorMapping() {
 		return discriminatorValueMapping;
+	}
+
+	@Override
+	public void setDiscriminatorMapping(ValueMapping discriminatorMapping) {
+		this.discriminatorValueMapping = discriminatorMapping;
+	}
+
+	@Override
+	public boolean hasIdentifierAttributeMapping() {
+		return identifierAttributeMapping != null;
+	}
+
+	@Override
+	public boolean hasIdentifierMapper() {
+		return identifierEmbeddedValueMapping != null;
+	}
+
+	@Override
+	public boolean hasEmbeddedIdentifier() {
+		return embeddedIdentifier;
+	}
+
+	@Override
+	public void setEmbeddedIdentifier(boolean embeddedIdentifier) {
+		this.embeddedIdentifier = embeddedIdentifier;
 	}
 }

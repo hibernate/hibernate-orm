@@ -14,6 +14,8 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
+import org.hibernate.boot.model.domain.internal.EntityMappingHierarchyImpl;
+import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreLogging;
@@ -51,7 +53,8 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private boolean cachingExplicitlyRequested;
 
 	public RootClass(MetadataBuildingContext metadataBuildingContext) {
-		super( metadataBuildingContext );
+		super( metadataBuildingContext, new EntityMappingHierarchyImpl() );
+		getEntityMappingHierarchy().setRootType( this );
 	}
 
 	@Override
@@ -79,7 +82,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	public PersistentAttributeMapping getIdentifierAttributeMapping() {
-		return getEntityMappingHierarchy().getIdentifierMapping().getSingularPersistentAttributeMapping();
+		return getEntityMappingHierarchy().getIdentifierAttributeMapping();
 	}
 
 	@Override
@@ -215,7 +218,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 
 	@Override
 	public boolean hasEmbeddedIdentifier() {
-		return getEntityMappingHierarchy().getIdentifierMapping().isEmbeddedIdentifierMapping();
+		return getEntityMappingHierarchy().hasEmbeddedIdentifier();
 	}
 
 	@Override
@@ -256,11 +259,11 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	/**
-	 * @deprecated since 6.0, use {@link IdentifierMappingImplementor#setEmbedded(boolean)}.
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchyImplementor#setEmbeddedIdentifier(boolean)}
 	 */
 	@Deprecated
 	public void setEmbeddedIdentifier(boolean embeddedIdentifier) {
-		getEntityMappingHierarchy().getIdentifierMapping().setEmbedded( embeddedIdentifier );
+		getEntityMappingHierarchy().setEmbeddedIdentifier( embeddedIdentifier );
 	}
 
 	public void setExplicitPolymorphism(boolean explicitPolymorphism) {
@@ -275,7 +278,6 @@ public class RootClass extends PersistentClass implements TableOwner {
 		getEntityMappingHierarchy().setIdentifierAttributeMapping( identifierProperty );
 		// todo: (6.0) do we need this going forward?
 		identifierProperty.setPersistentClass( this );
-
 	}
 
 	public void setMutable(boolean mutable) {

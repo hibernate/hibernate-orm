@@ -29,7 +29,7 @@ public class Subclass extends PersistentClass {
 	private final int subclassId;
 	
 	public Subclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
-		super( metadataBuildingContext );
+		super( metadataBuildingContext, superclass.getEntityMappingHierarchy() );
 		this.superclass = superclass;
 		this.subclassId = superclass.nextSubclassId();
 	}

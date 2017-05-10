@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.cfg.NotYetImplementedException;
 
 /**
@@ -28,7 +29,7 @@ import org.hibernate.cfg.NotYetImplementedException;
  *
  * @author Emmanuel Bernard
  */
-public class MappedSuperclass implements ManagedTypeMapping {
+public class MappedSuperclass implements ManagedTypeMapping, PropertyContainer {
 	private final MappedSuperclass superMappedSuperclass;
 	private final PersistentClass superPersistentClass;
 	private final List declaredProperties;

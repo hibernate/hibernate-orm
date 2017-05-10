@@ -6,8 +6,9 @@
  */
 package org.hibernate.boot.model.domain.spi;
 
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
-import org.hibernate.boot.model.domain.IdentifierMapping;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
 
@@ -15,13 +16,15 @@ import org.hibernate.boot.model.domain.ValueMapping;
  * @author Chris Cranford
  */
 public interface EntityMappingHierarchyImplementor extends EntityMappingHierarchy {
-	@Override
-	IdentifierMappingImplementor getIdentifierMapping();
+	void setRootType(IdentifiableTypeMapping rootIdentifiableType);
 
 	void setIdentifierAttributeMapping(PersistentAttributeMapping identifierAttributeMapping);
+
+	void setIdentifierEmbeddedValueMapping(EmbeddedValueMapping identifierEmbeddedValueMapping);
+
 	void setVersionAttributeMapping(PersistentAttributeMapping versionAttributeMapping);
 
-	void setIdentifierMapping(IdentifierMapping identifierMapping);
-
 	void setDiscriminatorMapping(ValueMapping discriminatorMapping);
+
+	void setEmbeddedIdentifier(boolean embeddedIdentifier);
 }

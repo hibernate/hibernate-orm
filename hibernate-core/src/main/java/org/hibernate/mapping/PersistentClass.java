@@ -17,10 +17,10 @@ import java.util.StringTokenizer;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
-import org.hibernate.boot.model.domain.IdentifierMapping;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.internal.AbstractIdentifiableTypeMapping;
-import org.hibernate.boot.model.domain.internal.IdentifierMappingCompositeNonAggregated;
+import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -41,7 +41,7 @@ import org.hibernate.sql.Alias;
  */
 public abstract class PersistentClass
 		extends AbstractIdentifiableTypeMapping
-		implements AttributeContainer, Serializable, Filterable, MetaAttributable {
+		implements AttributeContainer, Serializable, Filterable, MetaAttributable, PropertyContainer {
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
 	public static final String NULL_DISCRIMINATOR_MAPPING = "null";
@@ -94,10 +94,11 @@ public abstract class PersistentClass
 	private java.util.Map tuplizerImpls;
 
 	private MappedSuperclass superMappedSuperclass;
-	private IdentifierMapping declaredIdentifierMapping;
+	private EmbeddedValueMapping declaredIdentifierValueMapping;
 	private OptimisticLockStyle optimisticLockStyle;
 
-	public PersistentClass(MetadataBuildingContext metadataBuildingContext) {
+	public PersistentClass(MetadataBuildingContext metadataBuildingContext, EntityMappingHierarchyImplementor entityMappingHierarchy) {
+		super( entityMappingHierarchy );
 		this.metadataBuildingContext = metadataBuildingContext;
 	}
 
@@ -112,6 +113,11 @@ public abstract class PersistentClass
 	public void setClassName(String className) {
 		this.className = className == null ? null : className.intern();
 		this.mappedClass = null;
+	}
+
+	@Override
+	public String getName() {
+		return getMappedClass().getName();
 	}
 
 	public String getProxyInterfaceName() {
@@ -246,7 +252,7 @@ public abstract class PersistentClass
 	@Override
 	public void addProperty(Property p) {
 		properties.add( p );
-		addDeclaredProperty( p );
+		declaredProperties.add( p );
 		p.setPersistentClass( this );
 	}
 
@@ -374,7 +380,7 @@ public abstract class PersistentClass
 	}
 
 	/**
-	 * @deprecated since 6.0, use {@link IdentifierMapping#isEmbeddedIdentifierMapping()}.
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#hasEmbeddedIdentifier()}.
 	 */
 	@Deprecated
 	public abstract boolean hasEmbeddedIdentifier();
@@ -956,10 +962,7 @@ public abstract class PersistentClass
 	 */
 	@Deprecated
 	public Component getIdentifierMapper() {
-		if ( !getEntityMappingHierarchy().getIdentifierMapping().isSingleIdentifierMapping() ) {
-			return (Component) getEntityMappingHierarchy().getIdentifierMapping().getValueMapping();
-		}
-		return null;
+		return (Component) getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping();
 	}
 
 	/**
@@ -967,29 +970,28 @@ public abstract class PersistentClass
 	 */
 	@Deprecated
 	public Component getDeclaredIdentifierMapper() {
-		return (Component) getEntityMappingHierarchy().getIdentifierMapping();
+		return (Component) declaredIdentifierValueMapping;
 	}
 
 	public void setDeclaredIdentifierMapper(Component declaredIdentifierMapper) {
-		declaredIdentifierMapping = new IdentifierMappingCompositeNonAggregated( declaredIdentifierMapper );
-		getEntityMappingHierarchy().setIdentifierMapping( declaredIdentifierMapping );
+		this.declaredIdentifierValueMapping = declaredIdentifierMapper;
+		getEntityMappingHierarchy().setIdentifierEmbeddedValueMapping( declaredIdentifierMapper );
 	}
 
 	/**
-	 * @deprecated since 6.0, use {@link #hasIdentifierEmbeddableValueMapping()}}.
+	 * @deprecated since 6.0, use {@link IdentifierMapping#hasEmbeddedValueMapping()}.
 	 */
 	@Deprecated
 	public boolean hasIdentifierMapper() {
-		return hasIdentifierEmbeddableValueMapping();
+		return getEntityMappingHierarchy().hasIdentifierMapper();
 	}
 
-	@Override
-	public boolean hasIdentifierEmbeddableValueMapping() {
-		return identifierEmbeddedValueMapping != null;
-	}
-
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchyImplementor#setIdentifierEmbeddedValueMapping(EmbeddedValueMapping)}.
+	 */
+	@Deprecated
 	public void setIdentifierMapper(Component handle) {
-		this.identifierEmbeddedValueMapping = handle;
+		getEntityMappingHierarchy().setIdentifierEmbeddedValueMapping( handle );
 	}
 
 	public void addTuplizer(EntityMode entityMode, String implClassName) {

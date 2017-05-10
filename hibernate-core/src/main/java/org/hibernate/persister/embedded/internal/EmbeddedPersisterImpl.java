@@ -30,7 +30,7 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -143,13 +143,13 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 
 	@Override
 	public Return generateReturn(
-			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup) {
+			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
 		throw new NotYetImplementedException(  );
 	}
 
 	@Override
 	public Fetch generateFetch(
-			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
+			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
 		throw new NotYetImplementedException(  );
 	}
 

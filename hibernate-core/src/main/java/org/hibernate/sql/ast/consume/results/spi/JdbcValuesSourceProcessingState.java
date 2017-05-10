@@ -19,13 +19,15 @@ import org.hibernate.sql.ast.consume.results.internal.values.JdbcValuesSource;
  * and provides access to environmental information needed to perform the
  * processing.
  * <p/>
- * todo : look at making these hierarchical for nested loads.
- * The reason being that the perf team had once identified TwoPhaseLoad#addUninitializedEntity
- * as a hot-spot.  That method is used to add a placeholder into the PC indicating that the
- * entity is being loaded (effectively we put the entity twice into a Map).  An alternative
- * would be to keep that relative to the ResultSetProcessingState and have load look here
- * for entities that are still in the process of being loaded; not sure that is any more efficient
- * however.
+ * todo (6.0) : look at making these hierarchical for nested loads.
+ * 		- The reason being that the perf team had once identified TwoPhaseLoad#addUninitializedEntity
+ * 			as a hot-spot.  That method is used to add a placeholder into the PC indicating that the
+ * 			entity is being loaded (effectively we put the entity twice into a Map).  An alternative
+ * 			would be to keep that relative to the ResultSetProcessingState and have load look here
+ * 			for entities that are still in the process of being loaded; not sure that is any more efficient
+ * 			however.
+ * AFAIR, this ^^ is actually handled vis `#registerLoadingEntity` and
+ * 		`org.hibernate.sql.ast.consume.results.internal.JdbcValuesSourceProcessingStateStandardImpl#loadingEntityMap`.
  *
  * @author Steve Ebersole
  */

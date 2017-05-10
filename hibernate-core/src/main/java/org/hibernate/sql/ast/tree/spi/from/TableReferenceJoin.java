@@ -15,12 +15,12 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
  *
  * @author Steve Ebersole
  */
-public class TableJoin {
+public class TableReferenceJoin {
 	private final SqmJoinType joinType;
 	private final TableReference joinedTableBinding;
 	private final Predicate predicate;
 
-	public TableJoin(SqmJoinType joinType, TableReference joinedTableBinding, Predicate predicate) {
+	public TableReferenceJoin(SqmJoinType joinType, TableReference joinedTableBinding, Predicate predicate) {
 		this.joinType = joinType;
 		this.joinedTableBinding = joinedTableBinding;
 		this.predicate = predicate;

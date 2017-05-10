@@ -23,7 +23,7 @@ import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReferenceExpression;
@@ -109,14 +109,14 @@ public class IdentifierDescriptorSimple<O,J>
 
 	@Override
 	public Return generateReturn(
-			ReturnResolutionContext returnResolutionContext,
+			QueryResultCreationContext returnResolutionContext,
 			TableGroup tableGroup) {
 		return new SelectableImpl( this, returnResolutionContext, tableGroup ).toQueryReturn( returnResolutionContext, null );
 	}
 
 	@Override
 	public Fetch generateFetch(
-			ReturnResolutionContext returnResolutionContext,
+			QueryResultCreationContext returnResolutionContext,
 			TableGroup tableGroup,
 			FetchParent fetchParent) {
 		throw new UnsupportedOperationException();
@@ -132,7 +132,7 @@ public class IdentifierDescriptorSimple<O,J>
 
 		public SelectableImpl(
 				IdentifierDescriptorSimple idDescriptor,
-				ReturnResolutionContext returnResolutionContext,
+				QueryResultCreationContext returnResolutionContext,
 				TableGroup tableGroup) {
 			this.navigablePath = returnResolutionContext.currentNavigablePath().append( idDescriptor.getNavigableName() );
 
@@ -171,7 +171,7 @@ public class IdentifierDescriptorSimple<O,J>
 		}
 
 		@Override
-		public Return toQueryReturn(ReturnResolutionContext returnResolutionContext, String resultVariable) {
+		public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 			return selectableDelegate.toQueryReturn( returnResolutionContext, resultVariable );
 		}
 

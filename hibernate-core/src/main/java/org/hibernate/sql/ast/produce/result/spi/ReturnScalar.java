@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.ast.produce.result.spi;
 
-import org.hibernate.loader.plan.spi.ScalarReturn;
 import org.hibernate.persister.queryable.spi.ExpressableType;
 
 /**
@@ -16,16 +15,11 @@ import org.hibernate.persister.queryable.spi.ExpressableType;
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public interface ReturnScalar extends Return, ScalarReturn {
+public interface ReturnScalar extends Return {
 	/**
 	 * Gets the type of the scalar return.
 	 *
 	 * @return The type of the scalar return.
 	 */
 	ExpressableType getType();
-
-	@Override
-	default String getName() {
-		return getResultVariable();
-	}
 }

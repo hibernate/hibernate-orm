@@ -12,11 +12,13 @@ import java.util.List;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.sql.ast.produce.result.internal.ReturnEntityImpl;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReferenceExpression;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 
 /**
@@ -86,6 +88,18 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	}
 
 	@Override
+	public Return makeQueryResult(Expression selectedExpression, String resultVariable, QueryResultCreationContext returnResolutionContext) {
+		return new ReturnEntityImpl(
+				this,
+				persister,
+				resultVariable,
+
+		);
+	}
+
+
+
+	@Override
 	public EntityReferenceExpression getSelectedExpression() {
 		if ( selectableExpression == null ) {
 			selectableExpression = new EntityReferenceExpression(
@@ -105,7 +119,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	}
 
 	@Override
-	public Return toQueryReturn(ReturnResolutionContext returnResolutionContext, String resultVariable) {
+	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 		return getSelectedExpression().getSelectable().toQueryReturn( returnResolutionContext, resultVariable );
 	}
 }

@@ -16,9 +16,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.common.spi.UnionSubclassTable;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnBindingSource;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.type.spi.Type;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnBindingSource;
 
 import org.jboss.logging.Logger;
 
@@ -36,11 +35,10 @@ public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSou
 	private final TableSpace tableSpace;
 	private final String uid;
 	private final String aliasBase;
-	private final
 	private final NavigablePath propertyPath;
 
-	private TableReference rootTableBinding;
-	private List<TableJoin> tableJoins;
+	private TableReference rootTableReference;
+	private List<TableReferenceJoin> tableReferenceJoins;
 
 	public AbstractTableGroup(TableSpace tableSpace, String uid, String aliasBase, NavigablePath propertyPath) {
 		this.tableSpace = tableSpace;
@@ -64,26 +62,26 @@ public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSou
 		return aliasBase;
 	}
 
-	public TableReference getRootTableBinding() {
-		return rootTableBinding;
+	public TableReference getRootTableReference() {
+		return rootTableReference;
 	}
 
-	public void setRootTableBinding(TableReference rootTableBinding) {
+	public void setRootTableReference(TableReference rootTableReference) {
 		log.tracef(
 				"Setting root TableSpecification for group [%s] : %s (was %s)",
 				this.toString(),
-				rootTableBinding,
-				this.rootTableBinding == null ? "<null>" : this.rootTableBinding
+				rootTableReference,
+				this.rootTableReference == null ? "<null>" : this.rootTableReference
 		);
-		this.rootTableBinding = rootTableBinding;
+		this.rootTableReference = rootTableReference;
 	}
 
-	public List<TableJoin> getTableJoins() {
-		if ( tableJoins == null ) {
+	public List<TableReferenceJoin> getTableReferenceJoins() {
+		if ( tableReferenceJoins == null ) {
 			return Collections.emptyList();
 		}
 		else {
-			return Collections.unmodifiableList( tableJoins );
+			return Collections.unmodifiableList( tableReferenceJoins );
 		}
 	}
 
@@ -99,17 +97,17 @@ public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSou
 
 	@Override
 	public TableReference locateTableBinding(Table table) {
-		if ( table == getRootTableBinding().getTable() ) {
-			return getRootTableBinding();
+		if ( table == getRootTableReference().getTable() ) {
+			return getRootTableReference();
 		}
 
-		if ( getRootTableBinding().getTable() instanceof UnionSubclassTable ) {
-			if ( ( (UnionSubclassTable) getRootTableBinding().getTable() ).includes( table ) ) {
-				return getRootTableBinding();
+		if ( getRootTableReference().getTable() instanceof UnionSubclassTable ) {
+			if ( ( (UnionSubclassTable) getRootTableReference().getTable() ).includes( table ) ) {
+				return getRootTableReference();
 			}
 		}
 
-		for ( TableJoin tableJoin : getTableJoins() ) {
+		for ( TableReferenceJoin tableJoin : getTableReferenceJoins() ) {
 			if ( tableJoin.getJoinedTableBinding().getTable() == table ) {
 				return tableJoin.getJoinedTableBinding();
 			}
@@ -118,12 +116,12 @@ public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSou
 		throw new IllegalStateException( "Could not resolve binding for table : " + table );
 	}
 
-	public void addTableSpecificationJoin(TableJoin join) {
+	public void addTableSpecificationJoin(TableReferenceJoin join) {
 		log.tracef( "Adding TableSpecification join [%s] to group [%s]", join, this );
-		if ( tableJoins == null ) {
-			tableJoins = new ArrayList<>();
+		if ( tableReferenceJoins == null ) {
+			tableReferenceJoins = new ArrayList<>();
 		}
-		tableJoins.add( join );
+		tableReferenceJoins.add( join );
 	}
 
 	private final SortedMap<Column,ColumnReference> columnBindingMap = new TreeMap<>(
@@ -156,10 +154,5 @@ public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSou
 		final ColumnReference columnBinding = new ColumnReference( column, tableBinding );
 		columnBindingMap.put( column, columnBinding );
 		return columnBinding;
-	}
-
-	@Override
-	public Type getType() {
-		throw new IllegalStateException( "Cannot treat TableGroup as Expression" );
 	}
 }

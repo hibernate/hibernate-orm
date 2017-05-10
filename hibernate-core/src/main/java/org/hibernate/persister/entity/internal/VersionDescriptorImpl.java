@@ -29,7 +29,7 @@ import org.hibernate.sql.ast.tree.spi.select.SelectableBasicTypeImpl;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
 
@@ -98,13 +98,13 @@ public class VersionDescriptorImpl<O,J> extends AbstractSingularPersistentAttrib
 
 	@Override
 	public Return generateReturn(
-			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup) {
+			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
 		return null;
 	}
 
 	@Override
 	public Fetch generateFetch(
-			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
+			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -115,7 +115,7 @@ public class VersionDescriptorImpl<O,J> extends AbstractSingularPersistentAttrib
 
 		public SelectableImpl(
 				VersionDescriptorImpl versionDescriptor,
-				ReturnResolutionContext returnResolutionContext,
+				QueryResultCreationContext returnResolutionContext,
 				TableGroup tableGroup) {
 			this.navigablePath = returnResolutionContext.currentNavigablePath().append( versionDescriptor.getNavigableName() );
 
@@ -154,7 +154,7 @@ public class VersionDescriptorImpl<O,J> extends AbstractSingularPersistentAttrib
 		}
 
 		@Override
-		public Return toQueryReturn(ReturnResolutionContext returnResolutionContext, String resultVariable) {
+		public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 			return selectableDelegate.toQueryReturn( returnResolutionContext, resultVariable );
 		}
 

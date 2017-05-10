@@ -8,7 +8,7 @@
 package org.hibernate.sql.ast.tree.spi.expression.instantiation;
 
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.ArgumentReader;
 
 /**
@@ -31,7 +31,7 @@ public class DynamicInstantiationArgument {
 		return alias;
 	}
 
-	public ArgumentReader buildArgumentReader(ReturnResolutionContext resolutionContext) {
+	public ArgumentReader buildArgumentReader(QueryResultCreationContext resolutionContext) {
 		return new ArgumentReader(
 				expression.getSelectable().toQueryReturn( resolutionContext, alias ).getReturnAssembler(),
 				alias

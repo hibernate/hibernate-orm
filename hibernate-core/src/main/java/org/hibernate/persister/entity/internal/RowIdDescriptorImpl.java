@@ -22,7 +22,7 @@ import org.hibernate.persister.entity.spi.RowIdDescriptor;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.Type;
@@ -121,13 +121,13 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 
 	@Override
 	public Return generateReturn(
-			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup) {
+			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Fetch generateFetch(
-			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
+			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
 		throw new UnsupportedOperationException();
 	}
 

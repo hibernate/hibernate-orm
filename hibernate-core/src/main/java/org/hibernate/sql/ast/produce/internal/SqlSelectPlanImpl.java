@@ -27,12 +27,12 @@ public class SqlSelectPlanImpl implements SqlSelectPlan {
 	}
 
 	@Override
-	public SelectStatement getSqlSelectAst() {
+	public SelectStatement getSqlAstSelectStatement() {
 		return selectQuery;
 	}
 
 	@Override
-	public List<Return> getQueryReturns() {
+	public List<Return> getQueryResults() {
 		return queryReturns;
 	}
 }

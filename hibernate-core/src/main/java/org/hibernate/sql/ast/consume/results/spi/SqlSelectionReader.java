@@ -10,7 +10,6 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 
 /**
@@ -43,24 +42,30 @@ public interface SqlSelectionReader<T> {
 	 *
 	 * @param statement The CallableStatement from which to extract the parameter value.
 	 * @param jdbcParameterIndex The index of the registered INOUT/OUT parameter
-	 * @param session The Session from which this request originates.
+	 * @param jdbcValuesSourceProcessingState The current JDBC values processing state
 	 *
-	 * @return
+	 * @return The extracted value
 	 *
 	 * @throws SQLException Exceptions from the underlying JDBC objects are simply re-thrown.
 	 */
-	T extractParameterValue(CallableStatement statement, int jdbcParameterIndex, SharedSessionContractImplementor session) throws SQLException;
+	T extractParameterValue(
+			CallableStatement statement,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+			int jdbcParameterIndex) throws SQLException;
 
 	/**
 	 * Extract the value of an INOUT/OUT parameter from the JDBC CallableStatement *by name*
 	 *
 	 * @param statement The CallableStatement from which to extract the parameter value.
 	 * @param jdbcParameterName The parameter name.
-	 * @param session The Session from which this request originates.
+	 * @param jdbcValuesSourceProcessingState The current JDBC values processing state
 	 *
 	 * @return The extracted value.
 	 *
 	 * @throws SQLException Exceptions from the underlying JDBC objects are simply re-thrown.
 	 */
-	T extractParameterValue(CallableStatement statement, String jdbcParameterName, SharedSessionContractImplementor session) throws SQLException;
+	T extractParameterValue(
+			CallableStatement statement,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+			String jdbcParameterName) throws SQLException;
 }

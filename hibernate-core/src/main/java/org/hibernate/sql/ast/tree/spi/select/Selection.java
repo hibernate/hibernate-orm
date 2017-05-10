@@ -7,42 +7,30 @@
 
 package org.hibernate.sql.ast.tree.spi.select;
 
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**
  * @author Steve Ebersole
  */
 public class Selection {
-	private final ReturnResolutionContext returnResolutionContext;
-	private final Selectable selectable;
-	private final Expression selectExpression;
+	private final Expression selectedExpression;
 	private final String resultVariable;
 
 	private Return queryReturn;
 
 	public Selection(
-			ReturnResolutionContext returnResolutionContext,
-			Selectable selectable,
-			Expression selectExpression,
+			Expression selectedExpression,
 			String resultVariable) {
-		this.returnResolutionContext = returnResolutionContext;
-		this.selectable = selectable;
-		this.selectExpression = selectExpression;
+		assert selectedExpression != null;
+		assert selectedExpression.getSelectable() != null;
+
+		this.selectedExpression = selectedExpression;
 		this.resultVariable = resultVariable;
 	}
 
-	public ReturnResolutionContext getReturnResolutionContext() {
-		return returnResolutionContext;
-	}
-
-	public Selectable getSelectable() {
-		return selectable;
-	}
-
-	public Expression getSelectExpression() {
-		return selectExpression;
+	public Expression getSelectedExpression() {
+		return selectedExpression;
 	}
 
 	public String getResultVariable() {

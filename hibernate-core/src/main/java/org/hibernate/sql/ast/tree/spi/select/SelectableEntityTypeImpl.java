@@ -28,7 +28,7 @@ import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.spi.from.ColumnReference;
 import org.hibernate.sql.ast.produce.result.internal.ReturnEntityImpl;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroupEmpty;
@@ -116,7 +116,7 @@ public class SelectableEntityTypeImpl implements Selectable {
 	}
 
 	@Override
-	public Return toQueryReturn(ReturnResolutionContext returnResolutionContext, String resultVariable) {
+	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 		return new ReturnEntityImpl(
 				expression,
 				entityPersister,
@@ -128,7 +128,7 @@ public class SelectableEntityTypeImpl implements Selectable {
 		);
 	}
 
-	private Map<PersistentAttribute, SqlSelectionGroup> buildSqlSelectionGroupMap(ReturnResolutionContext resolutionContext) {
+	private Map<PersistentAttribute, SqlSelectionGroup> buildSqlSelectionGroupMap(QueryResultCreationContext resolutionContext) {
 		final Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap = new HashMap<>();
 
 		for ( Map.Entry<PersistentAttribute, ColumnBindingGroup> entry : columnBindingGroupMap.entrySet() ) {
@@ -141,7 +141,7 @@ public class SelectableEntityTypeImpl implements Selectable {
 		return sqlSelectionGroupMap;
 	}
 
-	private SqlSelectionGroup toSqlSelectionGroup(ColumnBindingGroup columnBindingGroup, ReturnResolutionContext resolutionContext) {
+	private SqlSelectionGroup toSqlSelectionGroup(ColumnBindingGroup columnBindingGroup, QueryResultCreationContext resolutionContext) {
 		if ( columnBindingGroup.getColumnBindings().isEmpty() ) {
 			return SqlSelectionGroupEmpty.INSTANCE;
 		}

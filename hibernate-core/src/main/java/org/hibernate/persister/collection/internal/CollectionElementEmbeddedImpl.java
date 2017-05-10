@@ -24,7 +24,7 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**
@@ -71,14 +71,14 @@ public class CollectionElementEmbeddedImpl<J>
 
 	@Override
 	public Return generateReturn(
-			ReturnResolutionContext returnResolutionContext,
+			QueryResultCreationContext returnResolutionContext,
 			TableGroup tableGroup) {
 		throw new NotYetImplementedException(  );
 	}
 
 	@Override
 	public Fetch generateFetch(
-			ReturnResolutionContext returnResolutionContext,
+			QueryResultCreationContext returnResolutionContext,
 			TableGroup tableGroup,
 			FetchParent fetchParent) {
 		throw new NotYetImplementedException(  );

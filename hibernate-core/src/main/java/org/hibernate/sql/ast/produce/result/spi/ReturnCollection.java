@@ -7,8 +7,7 @@
 package org.hibernate.sql.ast.produce.result.spi;
 
 /**
- * Models the a persistent collection as root {@link Return}.  Pertinent to collection initializer
- * ({@link org.hibernate.loader.plan.spi.LoadPlan.Disposition#COLLECTION_INITIALIZER}) LoadPlans only,
+ * Models the a persistent collection as root {@link Return}.  Pertinent to collection initializers only.
  *
  * @author Steve Ebersole
  */

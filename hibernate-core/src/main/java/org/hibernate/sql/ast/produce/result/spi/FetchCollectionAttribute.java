@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.ast.produce.result.spi;
 
-import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.type.CollectionType;
 
@@ -15,7 +14,7 @@ import org.hibernate.type.CollectionType;
  *
  * @author Steve Ebersole
  */
-public interface FetchCollectionAttribute extends FetchAttribute, CollectionReference, CollectionAttributeFetch {
+public interface FetchCollectionAttribute extends FetchAttribute, CollectionReference {
 	/**
 	 * Get the Hibernate Type that describes the fetched attribute as a {@link CollectionType}.
 	 *
@@ -26,6 +25,6 @@ public interface FetchCollectionAttribute extends FetchAttribute, CollectionRefe
 
 	@Override
 	default NavigablePath getNavigablePath() {
-		return getSource().getNavigablePath().append( getFetchedAttributeDescriptor().getAttributeName() );
+		return getFetchParent().getNavigablePath().append( getFetchedAttributeDescriptor().getAttributeName() );
 	}
 }

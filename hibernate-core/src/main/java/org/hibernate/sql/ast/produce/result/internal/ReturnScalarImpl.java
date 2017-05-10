@@ -20,7 +20,7 @@ import org.hibernate.sql.ast.consume.results.spi.ReturnAssembler;
 public class ReturnScalarImpl implements ReturnScalar {
 	private final Expression selectedExpression;
 	private final String resultVariable;
-	private final BasicValuedExpressableType type;
+	private final BasicValuedExpressableType expressableType;
 
 	private final ReturnAssembler assembler;
 
@@ -28,10 +28,10 @@ public class ReturnScalarImpl implements ReturnScalar {
 			Expression selectedExpression,
 			SqlSelection sqlSelection,
 			String resultVariable,
-			BasicValuedExpressableType type) {
+			BasicValuedExpressableType expressableType) {
 		this.selectedExpression = selectedExpression;
 		this.resultVariable = resultVariable;
-		this.type = type;
+		this.expressableType = expressableType;
 
 		this.assembler = new ReturnAssemblerScalar( sqlSelection, this );
 	}
@@ -48,12 +48,12 @@ public class ReturnScalarImpl implements ReturnScalar {
 
 	@Override
 	public Class getReturnedJavaType() {
-		return getType().getReturnedClass();
+		return getType().getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override
 	public ExpressableType getType() {
-		return type;
+		return expressableType;
 	}
 
 	@Override

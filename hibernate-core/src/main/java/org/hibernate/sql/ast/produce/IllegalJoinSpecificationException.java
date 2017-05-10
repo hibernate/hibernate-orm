@@ -6,10 +6,10 @@
  */
 package org.hibernate.sql.ast.produce;
 
-import org.hibernate.sql.ast.tree.spi.from.TableJoin;
+import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 
 /**
- * Indicates a problem in the definition of a {@link TableJoin}
+ * Indicates a problem in the definition of a {@link TableReferenceJoin}
  *
  * @author Steve Ebersole
  */

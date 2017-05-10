@@ -902,7 +902,7 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 		fromClauseIndex.crossReference( sqmFrom, group );
 
 		if ( separateCollectionTable != null ) {
-			group.setRootTableBinding( new TableReference( separateCollectionTable, group.getAliasBase() ) );
+			group.setRootTableReference( new TableReference( separateCollectionTable, group.getAliasBase() ) );
 		}
 
 		if ( getElementDescriptor() instanceof CollectionElementEntity ) {

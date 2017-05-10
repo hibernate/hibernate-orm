@@ -30,43 +30,4 @@ public interface EntityReference extends FetchParent, InitializerSource {
 	 * @return The identifier description.
 	 */
 	EntityIdentifierReference getIdentifierReference();
-
-
-//	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//	// org.hibernate.loader.plan.spi.EntityReference impls
-//
-//	@Override
-//	default String getQuerySpaceUid() {
-//		return null;
-//	}
-//
-//	@Override
-//	default String getTableGroupUniqueIdentifier() {
-//		return null;
-//	}
-//
-//	@Override
-//	default InitializerParent getInitializerParentForFetchInitializers() {
-//		return null;
-//	}
-//
-//	@Override
-//	default void addFetch(Fetch fetch) {
-//
-//	}
-//
-//	@Override
-//	default EntityIdentifierDescription getIdentifierDescription() {
-//		return getIdentifierReference();
-//	}
-//
-//	@Override
-//	default BidirectionalEntityReference[] getBidirectionalEntityReferences() {
-//		return new BidirectionalEntityReference[0];
-//	}
-//
-//	@Override
-//	default org.hibernate.loader.plan.spi.EntityReference resolveEntityReference() {
-//		return null;
-//	}
 }

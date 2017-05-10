@@ -10,7 +10,7 @@ package org.hibernate.sql.ast.tree.spi.select;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.produce.result.internal.ReturnScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -36,7 +36,7 @@ public class SelectableBasicTypeImpl implements Selectable {
 	}
 
 	@Override
-	public Return toQueryReturn(ReturnResolutionContext returnResolutionContext, String resultVariable) {
+	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 		return new ReturnScalarImpl(
 				expression,
 				returnResolutionContext.resolveSqlSelection( sqlSelectable ),

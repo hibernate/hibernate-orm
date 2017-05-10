@@ -40,7 +40,6 @@ public class ReturnEntityImpl extends AbstractFetchParent implements ReturnEntit
 			Expression expression,
 			EntityPersister entityPersister,
 			String resultVariable,
-			boolean isShallow,
 			Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap,
 			NavigablePath navigablePath,
 			String tableGroupUid) {
@@ -52,7 +51,8 @@ public class ReturnEntityImpl extends AbstractFetchParent implements ReturnEntit
 		this.initializer = new EntityReturnInitializerImpl(
 				this,
 				sqlSelectionGroupMap,
-				isShallow
+				// root entity result cannot be shallow
+				false
 		);
 		assembler = new ReturnAssemblerEntity( this );
 	}

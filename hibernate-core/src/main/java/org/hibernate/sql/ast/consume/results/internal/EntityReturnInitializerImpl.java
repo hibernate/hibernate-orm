@@ -21,8 +21,7 @@ public class EntityReturnInitializerImpl
 		implements EntityReferenceInitializer {
 	public EntityReturnInitializerImpl(
 			EntityReference entityReference,
-			Map<PersistentAttribute,SqlSelectionGroup> sqlSelectionGroupMap,
-			boolean isShallow) {
+			Map<PersistentAttribute,SqlSelectionGroup> sqlSelectionGroupMap, boolean isShallow) {
 		super( null, entityReference, true, sqlSelectionGroupMap, isShallow );
 	}
 }

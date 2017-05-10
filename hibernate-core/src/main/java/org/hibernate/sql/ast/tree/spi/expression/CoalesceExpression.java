@@ -14,7 +14,7 @@ import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 import org.hibernate.sql.ast.produce.result.internal.ReturnScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
@@ -55,7 +55,7 @@ public class CoalesceExpression implements Expression, SqlSelectable, Selectable
 	}
 
 	@Override
-	public Return toQueryReturn(ReturnResolutionContext returnResolutionContext, String resultVariable) {
+	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 		return new ReturnScalarImpl(
 				this,
 				returnResolutionContext.resolveSqlSelection( this ),

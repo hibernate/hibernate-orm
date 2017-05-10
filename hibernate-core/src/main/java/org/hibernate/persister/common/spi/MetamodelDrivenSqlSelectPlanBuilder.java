@@ -19,8 +19,8 @@ public interface MetamodelDrivenSqlSelectPlanBuilder {
 	/**
 	 * Build the SqlSelectPlan, driven by mapping model, with the given
 	 * NavigableSource as query root..  The mapping model indicates the shape
-	 * of the SelectQuery AST ({@link SqlSelectPlan#getSqlSelectAst}) as well as the shape of the results
-	 * as indicated by the query Return graphs ({@link SqlSelectPlan#getQueryReturns}).
+	 * of the SelectQuery AST ({@link SqlSelectPlan#getSqlAstSelectStatement}) as well as the shape of the results
+	 * as indicated by the query Return graphs ({@link SqlSelectPlan#getQueryResults}).
 	 *
 	 * @param rootNavigable The NavigableSource which is the root of the query.
 	 */

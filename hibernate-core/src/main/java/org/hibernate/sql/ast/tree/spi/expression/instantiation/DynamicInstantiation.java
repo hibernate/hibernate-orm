@@ -20,7 +20,7 @@ import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.produce.result.internal.ReturnDynamicInstantiationImpl;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.ArgumentReader;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.ReturnAssemblerConstructorImpl;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.ReturnAssemblerInjectionImpl;
@@ -120,7 +120,7 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 	private ReturnDynamicInstantiationImpl queryReturn;
 
 	@Override
-	public Return toQueryReturn(ReturnResolutionContext returnResolutionContext, String resultVariable) {
+	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 		if ( queryReturn != null ) {
 			return queryReturn;
 		}

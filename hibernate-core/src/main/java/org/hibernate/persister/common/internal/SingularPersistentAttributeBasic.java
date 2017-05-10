@@ -72,8 +72,8 @@ public class SingularPersistentAttributeBasic<O,J> extends AbstractSingularPersi
 	}
 
 	@Override
-	public Optional<AttributeConverterDefinition > getAttributeConverter() {
-		return Optional.ofNullable( attributeConverterInfo );
+	public AttributeConverterDefinition getAttributeConverter() {
+		return attributeConverterInfo;
 	}
 
 	@Override

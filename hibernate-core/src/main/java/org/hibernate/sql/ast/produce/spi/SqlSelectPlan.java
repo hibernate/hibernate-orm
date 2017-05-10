@@ -16,6 +16,6 @@ import org.hibernate.sql.ast.produce.result.spi.Return;
  * @author Steve Ebersole
  */
 public interface SqlSelectPlan {
-	SelectStatement getSqlSelectAst();
-	List<Return> getQueryReturns();
+	SelectStatement getSqlAstSelectStatement();
+	List<Return> getQueryResults();
 }

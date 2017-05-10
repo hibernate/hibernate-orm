@@ -28,7 +28,7 @@ public class ReturnAssemblerScalar implements ReturnAssembler {
 
 	@Override
 	public Class getReturnedJavaType() {
-		// todo : remove the ReturnAssembler#getReturnedJavaType method.
+		// todo (6.0) : remove the ReturnAssembler#getReturnedJavaType method.
 		//		It is only used for resolving dynamic-instantiation arguments which should
 		//		not be modeled as Returns anyway...
 		return returnScalar.getReturnedJavaType();
@@ -38,6 +38,7 @@ public class ReturnAssemblerScalar implements ReturnAssembler {
 	public Object assemble(
 			RowProcessingState rowProcessingState,
 			JdbcValuesSourceProcessingOptions options) throws SQLException {
+		// todo (6.0) : apply AttributeConverter?  Or, what calls this?  Maybe there?
 		return rowProcessingState.getJdbcValues()[ sqlSelection.getValuesArrayPosition() ];
 	}
 }

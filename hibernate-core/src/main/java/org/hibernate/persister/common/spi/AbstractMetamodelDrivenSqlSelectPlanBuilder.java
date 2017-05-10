@@ -66,7 +66,7 @@ import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -89,7 +89,8 @@ import org.jboss.logging.MDC;
  * @see NavigableVisitationStrategy
  */
 public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
-		implements MetamodelDrivenSqlSelectPlanBuilder, NavigableVisitationStrategy, SqlSelectPlanBuildingContext, ReturnResolutionContext {
+		implements MetamodelDrivenSqlSelectPlanBuilder, NavigableVisitationStrategy, SqlSelectPlanBuildingContext,
+		QueryResultCreationContext {
 	private static final Logger log = Logger.getLogger( AbstractMetamodelDrivenSqlSelectPlanBuilder.class );
 	private static final String MDC_KEY = "hibernateSqlSelectPlanWalkPath";
 

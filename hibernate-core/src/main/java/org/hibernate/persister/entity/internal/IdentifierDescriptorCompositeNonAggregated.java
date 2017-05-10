@@ -27,7 +27,7 @@ import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReferenceExpression;
@@ -94,7 +94,7 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 	}
 
 	@Override
-	public Return generateReturn(ReturnResolutionContext returnResolutionContext, TableGroup tableGroup) {
+	public Return generateReturn(QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
 		// todo : not sure what we will need here yet...
 
 		// for now...
@@ -102,7 +102,7 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 	}
 
 	@Override
-	public Fetch generateFetch(ReturnResolutionContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
+	public Fetch generateFetch(QueryResultCreationContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
 		throw new NotYetImplementedException(  );
 	}
 
@@ -178,7 +178,7 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 
 		public SelectableImpl(
 				IdentifierDescriptorCompositeNonAggregated idDescriptor,
-				ReturnResolutionContext returnResolutionContext,
+				QueryResultCreationContext returnResolutionContext,
 				TableGroup tableGroup) {
 			this.navigablePath = returnResolutionContext.currentNavigablePath().append( idDescriptor.getNavigableName() );
 
@@ -217,7 +217,7 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 		}
 
 		@Override
-		public Return toQueryReturn(ReturnResolutionContext returnResolutionContext, String resultVariable) {
+		public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 			return selectableDelegate.toQueryReturn( returnResolutionContext, resultVariable );
 		}
 

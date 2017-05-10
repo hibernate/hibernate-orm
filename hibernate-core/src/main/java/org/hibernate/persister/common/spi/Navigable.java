@@ -12,7 +12,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -41,7 +41,7 @@ public interface Navigable<T> extends ExpressableType<T>, TypeExporter<T> {
 
 	void visitNavigable(NavigableVisitationStrategy visitor);
 
-	Return generateReturn(ReturnResolutionContext returnResolutionContext, TableGroup tableGroup);
+	Return generateReturn(QueryResultCreationContext returnResolutionContext, TableGroup tableGroup);
 
-	Fetch generateFetch(ReturnResolutionContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent);
+	Fetch generateFetch(QueryResultCreationContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent);
 }

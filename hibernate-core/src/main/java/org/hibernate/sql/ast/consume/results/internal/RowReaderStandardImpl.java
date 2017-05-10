@@ -46,7 +46,9 @@ public class RowReaderStandardImpl<T> implements RowReader<T> {
 	@Override
 	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) throws SQLException {
 		// NOTE : atm we only support reading scalar values...
-		// todo : support other stuff ^^
+		// todo (6.0) : support other stuff ^^
+		// 		^^ may already be done... need to check.  If not, impls are largely the same as
+		//			the load-plan corollary.
 
 		coordinateInitializers( rowProcessingState, options );
 

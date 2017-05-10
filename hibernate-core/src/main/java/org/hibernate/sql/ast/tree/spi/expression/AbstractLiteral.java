@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.ast.tree.spi.expression;
 
 import java.sql.PreparedStatement;
@@ -17,7 +16,7 @@ import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 import org.hibernate.sql.ast.produce.result.internal.ReturnScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
@@ -67,7 +66,7 @@ public abstract class AbstractLiteral
 	}
 
 	@Override
-	public Return toQueryReturn(ReturnResolutionContext returnResolutionContext, String resultVariable) {
+	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 		return new ReturnScalarImpl(
 				this,
 				returnResolutionContext.resolveSqlSelection( this ),
@@ -87,6 +86,7 @@ public abstract class AbstractLiteral
 			int startPosition,
 			QueryParameterBindings queryParameterBindings,
 			SharedSessionContractImplementor session) throws SQLException {
+		getType()
 		getType().
 		getType().nullSafeSet( statement, getValue(), startPosition, session );
 		return getType().getColumnSpan();

@@ -23,12 +23,13 @@ import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.IdentifierDescriptor;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReferenceExpression;
@@ -39,7 +40,6 @@ import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.SelectableEmbeddedTypeImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 import org.hibernate.type.spi.EmbeddedType;
-import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
@@ -109,7 +109,7 @@ public class IdentifierDescriptorCompositeAggregated<O,J>
 	}
 
 	@Override
-	public Return generateReturn(ReturnResolutionContext returnResolutionContext, TableGroup tableGroup) {
+	public Return generateReturn(QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
 		// todo : not sure what we will need here yet...
 
 		// for now...
@@ -117,7 +117,7 @@ public class IdentifierDescriptorCompositeAggregated<O,J>
 	}
 
 	@Override
-	public Fetch generateFetch(ReturnResolutionContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
+	public Fetch generateFetch(QueryResultCreationContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
 		throw new NotYetImplementedException(  );
 	}
 
@@ -184,7 +184,7 @@ public class IdentifierDescriptorCompositeAggregated<O,J>
 
 		public SelectableImpl(
 				IdentifierDescriptorCompositeAggregated idDescriptor,
-				ReturnResolutionContext returnResolutionContext,
+				QueryResultCreationContext returnResolutionContext,
 				TableGroup tableGroup) {
 			this.navigablePath = returnResolutionContext.currentNavigablePath().append( idDescriptor.getNavigableName() );
 			this.expressionDelegate = new SingularAttributeReferenceExpression(
@@ -200,8 +200,8 @@ public class IdentifierDescriptorCompositeAggregated<O,J>
 		}
 
 		@Override
-		public Type getType() {
-			return expressionDelegate.getType();
+		public ExpressableType getType() {
+			return expressionDelegate.getNavigable();
 		}
 
 		@Override
@@ -222,7 +222,7 @@ public class IdentifierDescriptorCompositeAggregated<O,J>
 		}
 
 		@Override
-		public Return toQueryReturn(ReturnResolutionContext returnResolutionContext, String resultVariable) {
+		public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 			return selectableDelegate.toQueryReturn( returnResolutionContext, resultVariable );
 		}
 

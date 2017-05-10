@@ -22,8 +22,8 @@ public interface TableGroup extends ColumnBindingSource, NavigableReferenceExpre
 	TableSpace getTableSpace();
 	String getUid();
 	String getAliasBase();
-	TableReference getRootTableBinding();
-	List<TableJoin> getTableJoins();
+	TableReference getRootTableReference();
+	List<TableReferenceJoin> getTableReferenceJoins();
 
 	TableReference locateTableBinding(Table table);
 	ColumnReference resolveColumnBinding(Column column);

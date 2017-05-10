@@ -6,23 +6,17 @@
  */
 package org.hibernate.sql.ast.produce.result.spi;
 
-import org.hibernate.loader.plan.spi.EntityIdentifierDescription;
-import org.hibernate.loader.plan.spi.FetchSource;
-
 /**
  * Descriptor for the identifier of an entity as a FetchSource (which allows for key-many-to-one handling).
  *
  * @author Steve Ebersole
  */
-public interface EntityIdentifierReference extends EntityIdentifierDescription {
+public interface EntityIdentifierReference {
 	EntityReference getEntityReference();
 
 	/**
 	 * Can this EntityIdentifierDescription be treated as a FetchSource and if so does it have any
-	 * fetches?
-	 *
-	 * @return {@code true} iff {@code this} can be cast to {@link FetchSource} and (afterQuery casting) it returns
-	 * non-empty results for {@link FetchSource#getFetches()}
+	 * fetches?  In other words, can it be cast to {@link FetchParent}?
 	 */
 	boolean hasFetches();
 
@@ -30,8 +24,10 @@ public interface EntityIdentifierReference extends EntityIdentifierDescription {
 	 * Can this EntityIdentifierDescription be treated as a FetchSource and if so does it have any
 	 * bidirectional entity references?
 	 *
-	 * @return {@code true} iff {@code this} can be cast to {@link FetchSource} and (afterQuery casting) it returns
-	 * non-empty results for {@link FetchSource#getBidirectionalEntityReferences()}
+	 * @return {@code true} iff {@code this} can be cast to {@link FetchParent} and (after casting) it returns
+	 * non-empty results for {@link FetchParent#getBidirectionalEntityReferences()}
+	 *
+	 * todo (6.0) : need to account for this method as per load plan's FetchSource#getBidirectionalEntityReferences
 	 */
 	boolean hasBidirectionalEntityReferences();
 }

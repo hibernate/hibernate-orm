@@ -46,7 +46,7 @@ of results.
 The main parts of the overall design for this work follow...
 
 
-=== SQL AST tree
+=== SQL AST
 
 The decision was made to base this centralization for generating SQL, executing it and, for SELECTs, processing
 its results on the idea of an Abstract Syntax Tree (AST) - which is just a fancy way of saying that we created
@@ -57,10 +57,14 @@ a visitable object representation of a SQL query (`org.hibernate.sql.ast.tree`) 
 
 Consumption of an SQL AST tree involves:
 
-	* generating JDBC "operation" - `org.hibernate.sql.ast.tree.spi.Statement` todo (6.0) : spi package?
-	* executing these JDBC operation - `org.hibernate.sql.ast.consume.spi.JdbcSelectExecutor` and other still to
-		be defined for executing DELETEs, etc
-	* (possibly) processing ResultSet(s) into domain results - `org.hibernate.sql.exec.results`
+	* generating JDBC "operation" - `org.hibernate.sql.ast.tree.spi.Statement` and `org.hibernate.sql.ast.consume.spi.JdbcOperation`
+	* executing these JDBC operation
+	 	** CALL -> todo (6.0) (although `org.hibernate.sql.ast.consume.spi.JdbcCall` is done)
+		** SELECT -> `org.hibernate.sql.ast.consume.spi.JdbcSelectExecutor`
+		** DELETE -> todo (6.0)
+		** UPDATE -> todo (6.0)
+		** INSERT -> todo (6.0)
+	* for operations returning results, processing ResultSet(s) into domain results - `org.hibernate.sql.exec.results`
 
 
 Producing the SQL AST tree comes from 2 main sources:
@@ -76,137 +80,103 @@ in handling _Persister-based load, remove, etc calls_ because:
  	* It already knows how to generate the sub-trees.
  	* Is more performant than generation the SQM view and then walking that SQM.
 
+The SQL AST tree is made up of the following parts...
 
-
-===
-
-
-
-Part of this is the
-SQM parser for handling semantic interpretation of HQL, JPQL and criteria queries.  Part is building
-an "SQL AST" from various sources:
-
-* SQM and options
-* get & load handling (single and multi id)
-* persister-driven DML handling (save, persist, merge, etc)
-
-TBD if persister-based operations would directly produce SQL AST or SQM that runs through the interpreters.
-
-Building SQM is defined by the hibernate-semantic-query project.  From there we have 2 phases
-that happen to actually get all the pieces needed to execute a query.
-
-
-== 1st Phase - SqmSelectToSqlAstConverter
-
-SqmSelectToSqlAstConverter takes in a SQM query (and a few other things) and produces a `SqmSelectInterpretation`.
-The `SqmSelectInterpretation` encapsulates:
-
-* The SQL AST (syntax tree) - SelectQuery
-* a List of Return objects
-
-The SQL AST as produced by SqmSelectToSqlAstConverter is a logic SQL representation.  It has
-no Dialect specific handling.  It is still to-be-determined how to best allow Dialect specific hooks.
-
-The sections below describe these 2 pieces of SqmSelectInterpretation information.
-
-It is also important to note that SqmSelectToSqlAstConverter is responsible for applying
-an EntityGraph hint (if supplied).  It is part of
-
-
-
-See the section below
-question - does SQM incorporate entity-graphs?  seems better to have the thing that interprets SQM to apply
-entity-graphs.
-
-question - better for persister to incorporate the model descriptor?  Or for persister to simply hold
-reference to model descriptor?  The latter seems best (certainly least disruptive), however that makes querying
-MappedSuperclasses more difficult.  This really comes down to a decision of whether to model MappedSuperclass
-in the EntityPersister hierarchy.  As a follow-on to this... we should incorporate a representation of
-MappedSuperclass into the SQM domain model.  Seems that the spec does not allow querying MappedSuperclasses; verify!
-
-
-=== SQL AST
-
-The SQL AST is a syntax tree modelling a SQL query.  It is made up of the following parts.
 
 ==== FromClause - Tables and Groups and Spaces (oh my)
 
-Modeling the from-clause is central to SQM and its translation.  In translating SQM into an SQL AST
-we build the following types:
+Modeling the from-clause is central to SQL (and to SQM as we will see later).  The FromClause (`org.hibernate.sql.ast.tree.spi.from.FromClause`)
+is logically contained on a QuerySpec (`org.hibernate.sql.ast.tree.spi.QuerySpec`) meant to capture the commonality between
+a top-level select and a sub-query select.  The FromClause is made up of the following parts, bottom-up:
 
-TableBinding:: Models a singular table (`org.hibernate.persister.common.spi.Table`) reference.  This could be either
-a real table (PhysicalTable) or an inline-view (DerivedTable).
+TableReference:: `org.hibernate.sql.ast.tree.spi.from.TableReference` - Models a single Table
+(`org.hibernate.persister.common.spi.Table`) reference.
 
-TableGroup:: Represents a related group of TableBinding instances.  Specifically it models
-the TableBinding instances originating from a given entity/collection persister (see the "improved" persister contracts).
+TableGroup:: `org.hibernate.sql.ast.tree.spi.from.TableGroup` - Represents a related group of TableReference instances,
+generally grouped by a common Navigable reference.  E.g. The EntityTableGroup includes TableReferences for all of the
+Tables that the entity is mapped to.
 
 TableGroupJoin:: Represents a joined TableGroup along with the target of join and any predicate.
-used to represent joins between "persister references".  These would be joins explicitly defined in the query
+used to represent joins between joinable Navigables.
 
 TableSpace:: Models what ANSI SQL calls a "table reference".  Easiest way to think of this is the comma separated groups
 of "from elements".  It is a grouping of a root TableGroup, and zero-or-more TableGroupJoin instances
 
 FromClause:: grouping of one or more TableSpaces.
 
-Let's look at some examples to make this more clear...
+Let's look at some examples to make this more clear.  Along the way we will also look at the various contracts used
+to build these TableGroups and TableGroupJoins...
 
 [source]
 .select e from Entity e (single table)
 ----
 FromClause
     TableSpace
-        root=TableGroup(com.acme.Entity, "e")
-            root=TableBinding(PhysicalTable("t_entity"), "e0")
-            joins={}
-        joins={}
+        rootTableGroup=EntityTableGroup(com.acme.Entity, "e")
+            rootTableReference=TableBinding(PhysicalTable("t_entity"), "e0")
+            tableReferenceJoins={}
+        tableGroupJoins={}
 ----
 
+The generation of all `TableSpace#rootTableGroup` references are handled through the
+`org.hibernate.persister.queryable.spi.RootTableGroupProducer` contract.  Here, e.g.,
+we'd get that root `EntityTableGroup(com.acme.Entity, "e")` reference by calling
+`EntityPersister(com.acme.Entity)#applyRootTableGroup`.
+
+
 [source]
-.select e from Entity e (secondary table)
+.select e from Entity e (root table + secondary table)
 ----
 FromClause
     TableSpace
-        root=TableGroup(com.acme.Entity, "e")
-            root=TableBinding(PhysicalTable("t_entity"), "e0")
-            joins={
-                TableJoin
-                    TableBinding(PhysicalTable("t_entity_secondary"), "e1")
+        rootTableGroup=EntityTableGroup(com.acme.Entity, "e")
+            rootTableReference=TableReference(PhysicalTable("t_entity"), "e0")
+            tableReferenceJoins={
+                TableReferenceJoin
+                    TableReference(PhysicalTable("t_entity_secondary"), "e1")
                     INNER
                     <join predicate>
             }
-        joins={}
+        tableGroupJoins={}
 ----
+
+All the table references here are part of the root TableGroup, so they are built
+via the same `EntityPersister(com.acme.Entity)#applyRootTableGroup` we saw above.
+
 
 [source]
 .select e from Entity e (joined inheritance)
 ----
 FromClause
     TableSpace
-        root=TableGroup(com.acme.Entity, "e")
-            root=TableBinding(PhysicalTable("t_entity"), "e0")
-            joins={
-                TableJoin
-                    TableBinding(PhysicalTable("t_entity_secondary"), "e1")
+        rootTableGroup=EntityTableGroup(com.acme.Entity, "e")
+            rootTableReference=TableReference(PhysicalTable("t_entity"), "e0")
+            tableReferenceJoins={
+                TableReferenceJoin
+                    TableReference(PhysicalTable("t_entity_secondary"), "e1")
                     INNER
                     <join predicate>
             }
-        joins={}
+        tableGroupJoins={}
 ----
+
+Built from the same `EntityPersister(com.acme.Entity)#applyRootTableGroup`
+
 
 [source]
 .select e from Entity e, SecondEntity se
 ----
 FromClause
     TableSpace
-        root=TableGroup(com.acme.Entity, "e")
-            root=TableBinding(PhysicalTable("t_entity"), "e0")
-            joins={}
-        joins={}
+        rootTableGroup=EntityTableGroup(com.acme.Entity, "e")
+            rootTableReference=TableReference(PhysicalTable("t_entity"), "e0")
+            tableReferenceJoins={}
+        tableGroupJoins={}
     TableSpace
-        root=TableGroup(com.acme.SecondEntity, "se")
-            root=TableBinding(PhysicalTable("t_second_entity"), "se0")
-            joins={}
-        joins={}
+        rootTableGroup=EntityTableGroup(com.acme.SecondEntity, "se")
+            rootTableReference=TableReference(PhysicalTable("t_second_entity"), "se0")
+            tableReferenceJoins={}
+        tableGroupJoins={}
 ----
 
 [source]
@@ -214,58 +184,173 @@ FromClause
 ----
 FromClause
     TableSpace
-        root=TableGroup(com.acme.Entity, "e")
-            root=TableBinding(PhysicalTable("t_entity"), "e0")
-            joins={}
-        joins={
+        rootTableGroup=EntityTableGroup(com.acme.Entity, "e")
+            rootTableReference=TableReference(PhysicalTable("t_entity"), "e0")
+            tableReferenceJoins={}
+        tableGroupJoins={
             TableGroupJoin
-                TableGroup(com.acme.SecondEntity, "se")
-		            root=TableBinding(PhysicalTable("t_second_entity"), "se0")
+                EntityTableGroup(com.acme.SecondEntity, "se")
+		            rootTableReference=TableReference(PhysicalTable("t_second_entity"), "se0")
                     INNER
                     <join predicate>
         }
 ----
 
 
+==== Expressions
+
+Expressions are fundamental to building the other parts of the SQL AST.  Examples of `Expression` include:
+	* reference to part of the domain model (attribute, etc)
+	* aggregation (count, sum, min, max, etc)
+	* arithmetic operation
+	* function
+	* literal
+	* parameter
+	* case statement
+	* dynamic instantiation (although this one is special in that it can only be used in the SELECT clause)
+	* etc
+
+
+
+
 ==== SelectClause
 
-The SQL AST `SelectClause` contains one or more `SqlSelection` references representing SQL
-expressions (column reference, aggregate function, literal, etc) that are an individual
-selection in the SQL query.
+The SQL AST `org.hibernate.sql.ast.tree.spi.select.SelectClause` contains one or more
+`org.hibernate.sql.ast.tree.spi.select.Selection` references.  A `Selection` is made up of
+a specific `Expression` and an optional "result variable" (the term used in JPA for the alias
+assigned to a selection).
 
-These `SqlSelection` references have the following characteristics...
+`Expression`s contribute to this by exposing a `Selectable`, which in turn can be used to
+build `Return` references which model the individual values in the overall domain query result.
+The specific `Return` sub-types include:
+	* `ReturnScalar` - scalar query result; e.g. a function call in the HQL or reference to a String-valued attribute
+	* `ReturnComposite` - composite/embeddable valued query result
+	* `ReturnEntity` - an entity valued query return
+	* `ReturnDynamicInstantiation` - a "constructor" query result.  only used through SQM -> SQL AST producer
+	* `ReturnCollection` - specialized query result used when loading plural attribute entries.
 
-First they are uniqued by `SqlSelectable`.  `SqlSelectable` is an interface describing things
-that can be rendered as a SQL selection.  Examples of `SqlSelectable` include:
+Generally speaking an `Expression` is its own `Selectable`.  Examples where that is not the case include
+`NavigableReferenceExpression`s.
 
-* `ColumnBinding`
-* `MinFunction`
-* `QueryLiteral`
-* `Parameter`
-* etc
+Ultimately this `SelectClause` need to be converted into a SQL SELECT statement as well as
+"readers" to read back values from the JDBC `ResultSet`.
 
-During `SqmSelectToSqlAstConverter` processing, part of resolving a `SqlSelectable` into a
-`SqlSelection` is to make sure we use the same `SqlSelection` for the same `SqlSelectable`
-no matter how many times we see it.  E.g., multiple references to the `ColumnBinding` `p.name`
+
+==== SqlSelectAstToJdbcSelectConverter
+
+The 2 main responsibilities of `SqlSelectAstToJdbcSelectConverter`:
+
+	* Rendering the SQL String
+	* Building "readers" used later to read back the JDBC result values.
+
+The input to `SqlSelectAstToJdbcSelectConverter` which encapsulates:
+
+	* `org.hibernate.sql.ast.produce.spi.SqlSelectPlan` which encapsulates:
+		. the SQL AST tree `org.hibernate.sql.ast.tree.spi.SelectStatement`
+        . the `List` of `Return` references describing the query results (at the domain level)
+    * `org.hibernate.query.spi.QueryParameterBindings`
+
+The output from `SqlSelectAstToJdbcSelectConverter` is a `org.hibernate.sql.ast.consume.spi.JdbcSelect` which
+models all the information needed to create, prepare and execute a SELECT `PreparedStatement` and
+process its results.  It encapsulates:
+
+	* The SQL String
+	* `List` of `JdbcParameterBinder`
+	* `List` of `SqlSelection` references (see section on reading results)
+	* `List` of `Return` references (see section on reading results)
+
+
+=== Rendering SQL String
+
+`SqlSelectAstToJdbcSelectConverter` is responsibile to render the SQL AST into a SQL query String.  It
+does this by walking the nodes of the `SelectStatement` using the visitation pattern.  This is where the
+collection of `SqlSelection` references occurs.
+
+
+=== Building "readers"
+
+There are numerous actors involved in reading back results.  They are all built by this process based
+on the `List<Return>` from `JdbcSelect` as well as the `SqlSelection` references
+associated with the selected Expression.  These `SqlSelection`s are used to later read back the JDBC
+values via the `SqlSelectionReader SqlSelection#getSqlSelectionReader` method.  The process for reading
+results is covered later.
+
+
+
+[NOTE]
+====
+The process used to resolve the `SqlSelection` references given the `SqlSelectable` counterpart is
+handled through the `org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext` contract
+which `SqlSelectAstToJdbcSelectConverter` implements[1].  `SqlSelection` is the way we implement
+positional access to the JDBC `ReultSet`.  `SqlSelection` maintains the position at which the SQL
+selection was rendered and is the way we implement positional access to the JDBC `ResultSet` values.
+
+
+This process is also used to "unique" the `SqlSelection` references per `SqlSelectable`.  The purpose of
+this isto make sure we use the same `SqlSelection` for the same `SqlSelectable`
+no matter how many times we see it.  E.g., multiple references to the `ColumnReference` `p.name`
 will all resolve the the same `SqlSelection`.  In other words, given an HQL query like
 `select p.name, p.name from Person p` we will actually render the following SQL:
 `select p.name from person p`.  Notice the single column reference.  The HQL query will still
 return the 2 values; we will see how that works when we talk about Return objects.
 
-This "uniqueing" is managed through `SqmSelectToSqlAstConverter#sqlSelectionMapByQuerySpec`
-and `SqmSelectToSqlAstConverter#resolveSqlSelection`.
+Combined with the positional access into the `ResultSet` this not only makes the JDBC value
+reading more performant, it also makes the SQL shorter which is better for wire transfer as well
+as DB query parsing.
 
-Secondly, a `SqlSelection` incorporates the position in the SQL select clause.  This is
-important when we come back to discuss Returns.
+
+[1] See `QueryResultCreationContext#resolveSqlSelection`
+====
+
+
 
 [NOTE]
 ====
-I'd like to come back and investigate leveraging the SqlSelection position when
-rendering order-by (and group-by?) clauses.  ANSI SQL defines (and most DBs support)
-referring to a selection by position in the order-by.  For example, given a SQL query like
-`select p.id, p.name from Person p order by 1`, the interpretation would be to order the
+todo (6.0) : ^^ cover "intermediary" raw JDBC values array and how things move into it and are then accessed.
+
+todo (6.0) : ? - rename `Return` as `QueryResult` along with all related names?
+
+todo (6.0) : I'd like to come back and investigate leveraging the SqlSelection position when rendering order-by (and group-by?) clauses.
+ANSI SQL defines (and most DBs support) referring to a selection by position in the order-by.  For example, given a SQL
+query like `select p.id, p.name from Person p order by 1`, the interpretation would be to order the
 results by the first selection item (p.id).
 ====
+
+
+====  SqlSelectAstToJdbcSelectConverter
+
+Overall, this `SqlSelectAstToJdbcSelectConverter` has 2 main responsibilities:
+	* Rendering the SQL String
+	* Building "readers"
+
+
+=== Rendering SQL String
+
+One of the functions performed by `SqlSelectAstToJdbcSelectConverter` is to render the SQL AST into a SQL query String.  It
+does this by walking the nodes of the `SelectStatement` using the visitation pattern.  This is where the
+collection of `SqlSelection` references as described above occurs.
+
+
+=== Building "readers"
+
+There are numerous actors involved in reading back results.  They are all built by this process based
+on the `List<Return>` from `JdbcSelect` as well as the `SqlSelection` references
+associated with the selected Expression.
+
+Again, this will be discussed more in the section describing processing results.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ==== Parameters
@@ -394,7 +479,7 @@ Additionally, the following contracts are important:
 
 
 
-== 2nd phase - SqlAstInterpreter
+== 2nd phase - `org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter` ->
 
 `SqlAstInterpreter` takes as its input the SqmSelectInterpretation (and some other things)
 and does a number of things and is responsible for mainly 2 tasks:
@@ -529,3 +614,43 @@ This comes down to a general decision of where the tipping point is for the effe
 these plans (size of cache versus resources to build plan).
 
 ?Maybe config options stating what to to include in the cache key versus what implicitly means excluding from cache?
+
+
+
+
+
+
+
+
+== 1st Phase - SqmSelectToSqlAstConverter
+
+SqmSelectToSqlAstConverter takes in a SQM query (and a few other things) and produces a `SqmSelectInterpretation`.
+The `SqmSelectInterpretation` encapsulates:
+
+* The SQL AST (syntax tree) - SelectQuery
+* a List of Return objects
+
+The SQL AST as produced by SqmSelectToSqlAstConverter is a logic SQL representation.  It has
+no Dialect specific handling.  It is still to-be-determined how to best allow Dialect specific hooks.
+
+The sections below describe these 2 pieces of SqmSelectInterpretation information.
+
+It is also important to note that SqmSelectToSqlAstConverter is responsible for applying
+an EntityGraph hint (if supplied).  It is part of
+
+
+
+See the section below
+question - does SQM incorporate entity-graphs?  seems better to have the thing that interprets SQM to apply
+entity-graphs.
+
+question - better for persister to incorporate the model descriptor?  Or for persister to simply hold
+reference to model descriptor?  The latter seems best (certainly least disruptive), however that makes querying
+MappedSuperclasses more difficult.  This really comes down to a decision of whether to model MappedSuperclass
+in the EntityPersister hierarchy.  As a follow-on to this... we should incorporate a representation of
+MappedSuperclass into the SQM domain model.  Seems that the spec does not allow querying MappedSuperclasses; verify!
+
+
+=== SQL AST
+
+The SQL AST is a syntax tree modelling a SQL query.  It is made up of the following parts.

@@ -24,7 +24,7 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -68,13 +68,13 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 
 	@Override
 	public Return generateReturn(
-			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup) {
+			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Fetch generateFetch(
-			ReturnResolutionContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
+			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
 		throw new UnsupportedOperationException();
 	}
 

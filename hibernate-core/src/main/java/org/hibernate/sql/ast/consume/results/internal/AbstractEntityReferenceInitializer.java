@@ -154,7 +154,7 @@ public abstract class AbstractEntityReferenceInitializer
 			return;
 		}
 
-		int numberOfNonIdentifierAttributes = concretePersister.getNonIdentifierAttributes().size();
+		int numberOfNonIdentifierAttributes = concretePersister.getPersistentAttributes().size();
 
 		final Object rowId;
 		if ( concretePersister.getHierarchy().getRowIdDescriptor() != null ) {
@@ -179,7 +179,7 @@ public abstract class AbstractEntityReferenceInitializer
 
 		final Object[] hydratedState = new Object[ numberOfNonIdentifierAttributes ];
 		int i = 0;
-		for ( PersistentAttribute persistentAttribute : concretePersister.getNonIdentifierAttributes() ) {
+		for ( PersistentAttribute<?,?> persistentAttribute : ( (EntityPersister<?>) concretePersister ).getPersistentAttributes() ) {
 			// todo : need to account for non-eager entities by calling something other than Type#resolve (which loads the entity)
 			//		something akin to org.hibernate.persister.entity.AbstractEntityPersister.hydrate() but that operates on Object[], not ResultSet
 			//

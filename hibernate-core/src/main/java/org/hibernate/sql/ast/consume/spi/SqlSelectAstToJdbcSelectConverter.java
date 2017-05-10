@@ -46,7 +46,7 @@ import org.hibernate.sql.ast.tree.spi.from.FromClause;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableJoin;
+import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.FilterPredicate;
@@ -97,12 +97,12 @@ public class SqlSelectAstToJdbcSelectConverter {
 				parameterBindings,
 				shallow
 		);
-		walker.visitSelectQuery( sqlSelectPlan.getSqlSelectAst() );
+		walker.visitSelectQuery( sqlSelectPlan.getSqlAstSelectStatement() );
 		return new JdbcSelectImpl(
 				walker.sqlBuffer.toString(),
 				walker.parameterBinders,
-				sqlSelectPlan.getSqlSelectAst().getQuerySpec().getSelectClause().getSqlSelections(),
-				sqlSelectPlan.getQueryReturns()
+				sqlSelectPlan.getSqlAstSelectStatement().getQuerySpec().getSelectClause().getSqlSelections(),
+				sqlSelectPlan.getQueryResults()
 		);
 	}
 
@@ -282,9 +282,9 @@ public class SqlSelectAstToJdbcSelectConverter {
 	}
 
 	public void visitTableGroup(TableGroup tableGroup) {
-		visitTableBinding( tableGroup.getRootTableBinding() );
+		visitTableBinding( tableGroup.getRootTableReference() );
 
-		for ( TableJoin tableJoin : tableGroup.getTableJoins() ) {
+		for ( TableReferenceJoin tableJoin : tableGroup.getTableReferenceJoins() ) {
 			appendSql( " " );
 			appendSql( tableJoin.getJoinType().getText() );
 			appendSql( " join " );

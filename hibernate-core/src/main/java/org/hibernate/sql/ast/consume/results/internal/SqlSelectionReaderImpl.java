@@ -7,14 +7,16 @@
 
 package org.hibernate.sql.ast.consume.results.internal;
 
+import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 
+import org.hibernate.persister.common.spi.ConvertibleNavigable;
 import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
@@ -28,8 +30,8 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 		reader = new JdbcTypeCodeReaderImpl( jdbcTypeCode );
 	}
 
-	public SqlSelectionReaderImpl(BasicValuedExpressableType basicType) {
-		reader = new BasicTypeReaderAdapterImpl( basicType );
+	public SqlSelectionReaderImpl(BasicValuedExpressableType expressableType) {
+		reader = new BasicTypeReaderAdapterImpl( expressableType );
 	}
 
 	public SqlSelectionReaderImpl(BasicValuedExpressableType basicType, int jdbcTypeCode) {
@@ -45,17 +47,41 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 	public Object read(
 			ResultSet resultSet,
 			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
-			SqlSelection sqlSelection)
-			throws SQLException {
+			SqlSelection sqlSelection) throws SQLException {
 		return reader.read( resultSet, jdbcValuesSourceProcessingState, sqlSelection.getJdbcResultSetIndex() );
 	}
 
+	@Override
+	public Object extractParameterValue(
+			CallableStatement statement,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+			int jdbcParameterIndex) throws SQLException {
+		return reader.readParameterValue( statement, jdbcValuesSourceProcessingState, jdbcParameterIndex );
+	}
+
+	@Override
+	public Object extractParameterValue(
+			CallableStatement statement,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+			String jdbcParameterName) throws SQLException {
+		return reader.readParameterValue( statement, jdbcValuesSourceProcessingState, jdbcParameterName );
+	}
+
 	private static interface Reader {
-		Object read(
+		<T> T read(
 				ResultSet resultSet,
 				JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
-				int position)
-				throws SQLException;
+				int position) throws SQLException;
+
+		<T> T readParameterValue(
+				CallableStatement statement,
+				JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+				int jdbcParameterIndex) throws SQLException;
+
+		<T> T readParameterValue(
+				CallableStatement statement,
+				JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+				String jdbcParameterName) throws SQLException;
 	}
 
 	static class JdbcTypeCodeReaderImpl implements Reader {
@@ -66,6 +92,7 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public Object read(
 				ResultSet resultSet,
 				JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
@@ -81,109 +108,185 @@ public class SqlSelectionReaderImpl implements SqlSelectionReader {
 					jdbcValuesSourceProcessingState.getPersistenceContext().getFactory().getMetamodel().getTypeConfiguration()
 			);
 
-			return javaTypeDescriptor.wrap(
-					extractJdbcValue( resultSet, jdbcTypeCode, position ),
-					jdbcValuesSourceProcessingState.getPersistenceContext()
+			return extractRawJdbcValue(
+					resultSet,
+					(BasicJavaDescriptor) javaTypeDescriptor,
+					sqlDescriptor,
+					jdbcValuesSourceProcessingState,
+					position
+			);
+		}
+
+		@Override
+		public <T> T readParameterValue(
+				CallableStatement statement,
+				JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+				int jdbcParameterIndex) throws SQLException {
+			final SqlTypeDescriptor sqlDescriptor = jdbcValuesSourceProcessingState.getPersistenceContext()
+					.getFactory()
+					.getMetamodel()
+					.getTypeConfiguration()
+					.getSqlTypeDescriptorRegistry()
+					.getDescriptor( jdbcTypeCode );
+
+			final JavaTypeDescriptor<T> javaTypeDescriptor = sqlDescriptor.getJdbcRecommendedJavaTypeMapping(
+					jdbcValuesSourceProcessingState.getPersistenceContext().getFactory().getMetamodel().getTypeConfiguration()
+			);
+
+			return extractRawJdbcParameterValue(
+					statement,
+					(BasicJavaDescriptor<T>) javaTypeDescriptor,
+					sqlDescriptor,
+					jdbcValuesSourceProcessingState,
+					jdbcParameterIndex
+			);
+		}
+
+		@Override
+		public <T> T readParameterValue(
+				CallableStatement statement,
+				JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+				String jdbcParameterName) throws SQLException {
+			final SqlTypeDescriptor sqlDescriptor = jdbcValuesSourceProcessingState.getPersistenceContext()
+					.getFactory()
+					.getMetamodel()
+					.getTypeConfiguration()
+					.getSqlTypeDescriptorRegistry()
+					.getDescriptor( jdbcTypeCode );
+
+			final JavaTypeDescriptor<T> javaTypeDescriptor = sqlDescriptor.getJdbcRecommendedJavaTypeMapping(
+					jdbcValuesSourceProcessingState.getPersistenceContext().getFactory().getMetamodel().getTypeConfiguration()
+			);
+
+			return extractRawJdbcParameterValue(
+					statement,
+					(BasicJavaDescriptor<T>) javaTypeDescriptor,
+					sqlDescriptor,
+					jdbcValuesSourceProcessingState,
+					jdbcParameterName
 			);
 		}
 	}
 
-	public static Object extractJdbcValue(ResultSet resultSet, int jdbcTypeCode, int position) throws SQLException {
-		switch ( jdbcTypeCode ) {
-			case Types.BIGINT: {
-				return resultSet.getBigDecimal( position );
-			}
-			case Types.BIT: {
-				return resultSet.getBoolean( position );
-			}
-			case Types.BOOLEAN: {
-				return resultSet.getBoolean( position );
-			}
-			case Types.CHAR: {
-				return resultSet.getString( position );
-			}
-			case Types.DATE: {
-				return resultSet.getDate( position );
-			}
-			case Types.DECIMAL: {
-				return resultSet.getBigDecimal( position );
-			}
-			case Types.DOUBLE: {
-				return resultSet.getDouble( position );
-			}
-			case Types.FLOAT: {
-				return resultSet.getFloat( position );
-			}
-			case Types.INTEGER: {
-				return resultSet.getInt( position );
-			}
-			case Types.LONGNVARCHAR: {
-				return resultSet.getNString( position );
-			}
-			case Types.LONGVARCHAR: {
-				return resultSet.getString( position );
-			}
-			case Types.LONGVARBINARY: {
-				return resultSet.getBytes( position );
-			}
-			case Types.NCHAR: {
-				return resultSet.getNString( position );
-			}
-			case Types.NUMERIC: {
-				return resultSet.getBigDecimal( position );
-			}
-			case Types.NVARCHAR: {
-				return resultSet.getNString( position );
-			}
-			case Types.TIME: {
-				return resultSet.getTime( position );
-			}
-			case Types.TIMESTAMP: {
-				return resultSet.getTimestamp( position );
-			}
-			case Types.VARCHAR: {
-				return resultSet.getString( position );
-			}
-			case Types.BLOB: {
-				return resultSet.getBlob( position );
-			}
-			case Types.CLOB: {
-				return resultSet.getClob( position );
-			}
-			case Types.NCLOB: {
-				return resultSet.getNClob( position );
-			}
-		}
+	private static <T> T extractRawJdbcValue(
+			ResultSet resultSet,
+			BasicJavaDescriptor<T> javaTypeDescriptor,
+			SqlTypeDescriptor sqlTypeDescriptor,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+			int position) throws SQLException {
+		assert resultSet != null;
+		assert javaTypeDescriptor != null;
+		assert sqlTypeDescriptor != null;
+		assert jdbcValuesSourceProcessingState != null;
+		assert position > 0;
 
-		throw new UnsupportedOperationException( "JDBC type [" + jdbcTypeCode + " not supported" );
+		return sqlTypeDescriptor.getExtractor( javaTypeDescriptor ).extract(
+				resultSet,
+				position,
+				jdbcValuesSourceProcessingState.getPersistenceContext()
+		);
+	}
+
+	private static <T> T extractRawJdbcParameterValue(
+			CallableStatement statement,
+			BasicJavaDescriptor<T> javaTypeDescriptor,
+			SqlTypeDescriptor sqlTypeDescriptor,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+			int jdbcParameterIndex) throws SQLException {
+		assert statement != null;
+		assert javaTypeDescriptor != null;
+		assert sqlTypeDescriptor != null;
+		assert jdbcValuesSourceProcessingState != null;
+
+		return sqlTypeDescriptor.getExtractor( javaTypeDescriptor ).extract(
+				statement,
+				jdbcParameterIndex,
+				jdbcValuesSourceProcessingState.getPersistenceContext()
+		);
+	}
+
+	private static <T> T extractRawJdbcParameterValue(
+			CallableStatement statement,
+			BasicJavaDescriptor<T> javaTypeDescriptor,
+			SqlTypeDescriptor sqlTypeDescriptor,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+			String jdbcParameterName) throws SQLException {
+		assert statement != null;
+		assert javaTypeDescriptor != null;
+		assert sqlTypeDescriptor != null;
+		assert jdbcValuesSourceProcessingState != null;
+
+		return sqlTypeDescriptor.getExtractor( javaTypeDescriptor ).extract(
+				statement,
+				jdbcParameterName,
+				jdbcValuesSourceProcessingState.getPersistenceContext()
+		);
 	}
 
 	private class BasicTypeReaderAdapterImpl implements Reader {
-		private final BasicValuedExpressableType basicType;
+		private final BasicValuedExpressableType expressableType;
 
-		public BasicTypeReaderAdapterImpl(BasicValuedExpressableType basicType) {
-			this.basicType = basicType;
+		// todo (6.0) : it is not generally true that the raw JDBC value for a converted Navigable is the same Java type as the Navigable's type.
+		//		- in fact it is generally this use case that AttributeConverter tries to address.
+
+		public BasicTypeReaderAdapterImpl(BasicValuedExpressableType expressableType) {
+			this.expressableType = expressableType;
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public Object read(
 				ResultSet resultSet,
 				JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
 				int position) throws SQLException {
-			// Any more than a single column is an error at this level
-			final int jdbcTypeCode = basicType.sqlTypes()[0];
+			return extractRawJdbcValue(
+					resultSet,
+					determineJavaTypeDescriptor( expressableType ),
+					expressableType.getSqlTypeDescriptor(),
+					jdbcValuesSourceProcessingState,
+					position
+			);
+		}
 
-			final JavaTypeDescriptor javaTypeDescriptor = jdbcValuesSourceProcessingState.getPersistenceContext()
-					.getFactory()
-					.getMetamodel()
-					.getTypeConfiguration()
-					.getJavaTypeDescriptorRegistry()
-					.getDescriptor( basicType.getReturnedClass() );
+		@Override
+		@SuppressWarnings("unchecked")
+		public <T> T readParameterValue(
+				CallableStatement statement,
+				JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+				int jdbcParameterIndex) throws SQLException {
+			return extractRawJdbcParameterValue(
+					statement,
+					determineJavaTypeDescriptor( expressableType ),
+					expressableType.getSqlTypeDescriptor(),
+					jdbcValuesSourceProcessingState,
+					jdbcParameterIndex
+			);
+		}
 
-			return javaTypeDescriptor.wrap(
-					extractJdbcValue( resultSet, jdbcTypeCode, position ),
-					jdbcValuesSourceProcessingState.getPersistenceContext()
+		@Override
+		@SuppressWarnings("unchecked")
+		public <T> T readParameterValue(
+				CallableStatement statement,
+				JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+				String jdbcParameterName) throws SQLException {
+			return extractRawJdbcParameterValue(
+					statement,
+					determineJavaTypeDescriptor( expressableType ),
+					expressableType.getSqlTypeDescriptor(),
+					jdbcValuesSourceProcessingState,
+					jdbcParameterName
 			);
 		}
 	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> BasicJavaDescriptor<T> determineJavaTypeDescriptor(BasicValuedExpressableType expressableType) {
+		if ( expressableType instanceof ConvertibleNavigable
+				&& ( (ConvertibleNavigable) expressableType ).getAttributeConverter() != null ) {
+			return ( (ConvertibleNavigable) expressableType ).getAttributeConverter().getJdbcType();
+		}
+
+		return expressableType.getJavaTypeDescriptor();
+	}
+
 }

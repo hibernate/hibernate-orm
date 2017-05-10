@@ -102,20 +102,18 @@ import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.consume.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.ast.produce.SyntaxException;
-import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
-import org.hibernate.sql.convert.expression.internal.NavigableReferenceExpressionBuilderImpl;
-import org.hibernate.sql.convert.expression.spi.NavigableReferenceExpressionBuilder;
-import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
 import org.hibernate.sql.ast.produce.result.internal.FetchCompositeAttributeImpl;
 import org.hibernate.sql.ast.produce.result.internal.FetchEntityAttributeImpl;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.Return;
 import org.hibernate.sql.ast.produce.result.spi.ReturnDynamicInstantiation;
-import org.hibernate.sql.ast.produce.result.spi.ReturnResolutionContext;
-import org.hibernate.sql.ast.consume.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 import org.hibernate.sql.ast.tree.spi.Clause;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
@@ -172,7 +170,7 @@ import org.jboss.logging.Logger;
 @SuppressWarnings("unchecked")
 public class SqmSelectToSqlAstConverter
 		extends BaseSemanticQueryWalker
-		implements NavigableReferenceExpressionBuilder.BuildingContext, ReturnResolutionContext {
+		implements QueryResultCreationContext {
 	private static final Logger log = Logger.getLogger( SqmSelectToSqlAstConverter.class );
 
 	private final Stack<NavigablePath> navigablePathStack = new Stack<>();
@@ -210,7 +208,6 @@ public class SqmSelectToSqlAstConverter
 
 	private final FromClauseIndex fromClauseIndex = new FromClauseIndex();
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
-	private final Stack<NavigableReferenceExpressionBuilder> domainExpressionBuilderStack = new Stack<>();
 	private final Stack<Clause> currentClauseStack = new Stack<>();
 	private final Stack<QuerySpec> querySpecStack = new Stack<>();
 	private int querySpecDepth = 0;
@@ -1174,40 +1171,13 @@ public class SqmSelectToSqlAstConverter
 		);
 	}
 
-	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return factory;
-	}
-
-	@Override
-	public NavigableReferenceExpressionBuilder getCurrentDomainReferenceExpressionBuilder() {
-		return domainExpressionBuilderStack.getCurrent();
-	}
-
-	@Override
-	public FromClauseIndex getFromClauseIndex() {
-		return fromClauseIndex;
-	}
-
-	@Override
-	public boolean isShallowQuery() {
-		return isShallow;
-	}
-
-	@Override
-	public Clause getCurrentStatementClause() {
-		return currentClauseStack.getCurrent();
-	}
-
-	@Override
-	public ReturnResolutionContext getReturnResolutionContext() {
-		return this;
-	}
-
 	private final Map<QuerySpec,Map<SqlSelectable,SqlSelection>> sqlSelectionMapByQuerySpec = new HashMap<>();
 
 	@Override
 	public SqlSelection resolveSqlSelection(SqlSelectable sqlSelectable) {
+		// todo (6.0) : this needs to be relative to some notion of a particular TableGroup
+		//		SqlSelectable e.g. would be a ColumnReference
+
 		final Map<SqlSelectable,SqlSelection> sqlSelectionMap = sqlSelectionMapByQuerySpec.computeIfAbsent(
 				currentQuerySpec(),
 				k -> new HashMap<>()

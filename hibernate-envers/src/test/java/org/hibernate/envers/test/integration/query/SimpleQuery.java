@@ -11,10 +11,10 @@ import java.util.HashSet;
 import java.util.List;
 import javax.persistence.EntityManager;
 
-import org.hibernate.criterion.MatchMode;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.envers.query.criteria.MatchMode;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;

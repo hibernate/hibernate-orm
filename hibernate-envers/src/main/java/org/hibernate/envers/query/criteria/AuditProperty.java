@@ -8,7 +8,6 @@ package org.hibernate.envers.query.criteria;
 
 import java.util.Collection;
 
-import org.hibernate.criterion.MatchMode;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.query.criteria.internal.BetweenAuditExpression;
@@ -86,7 +85,16 @@ public class AuditProperty<T> implements AuditProjection {
 
     /**
      *  Apply an "ilike" constraint
+	 *  @deprecated since 5.2, use {@link #ilike(String, MatchMode)}.  To be removed in 6.0.
      */
+    @Deprecated
+	public AuditCriterion ilike(String value, org.hibernate.criterion.MatchMode matchMode) {
+		return new IlikeAuditExpression( alias, propertyNameGetter, matchMode.toMatchString( value ) );
+	}
+
+	/**
+	 * Apply on "ilike" constraint
+	 */
 	public AuditCriterion ilike(String value, MatchMode matchMode) {
 		return new IlikeAuditExpression( alias, propertyNameGetter, matchMode.toMatchString( value ) );
 	}

@@ -19,6 +19,7 @@ import java.util.Locale;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 
@@ -32,7 +33,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 
 	private String name;
 	private final ArrayList<Column> columns = new ArrayList<>();
-	private Table table;
+	private MappedTable table;
 
 	public String getName() {
 		return name;
@@ -50,7 +51,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 *
 	 * @return String The generated name
 	 */
-	public static String generateName(String prefix, Table table, Column... columns) {
+	public static String generateName(String prefix, MappedTable table, Column... columns) {
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
 
@@ -74,7 +75,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 *
 	 * @return String The generated name
 	 */
-	public static String generateName(String prefix, Table table, List<Column> columns) {
+	public static String generateName(String prefix, MappedTable table, List<Column> columns) {
 		return generateName( prefix, table, columns.toArray( new Column[columns.size()] ) );
 	}
 
@@ -151,12 +152,20 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return columns.iterator();
 	}
 
+	/**
+	 * @deprecated since 6.0 use {@link #getMappedTable()}.
+	 */
+	@Deprecated
 	public Table getTable() {
-		return table;
+		return (Table) getMappedTable();
 	}
 
-	public void setTable(Table table) {
+	public void setTable(MappedTable table) {
 		this.table = table;
+	}
+
+	public MappedTable getMappedTable() {
+		return table;
 	}
 
 	public boolean isGenerated(Dialect dialect) {

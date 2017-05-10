@@ -7,7 +7,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.spi.Type;
 
@@ -23,7 +23,7 @@ public class DependantValue extends SimpleValue {
 	private boolean nullable;
 	private boolean updateable;
 
-	public DependantValue(MetadataBuildingContext buildingContext, Table table, KeyValue prototype) {
+	public DependantValue(MetadataBuildingContext buildingContext, MappedTable table, KeyValue prototype) {
 		super( buildingContext, table );
 		this.wrappedValue = prototype;
 	}

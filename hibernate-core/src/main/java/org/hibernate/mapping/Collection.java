@@ -6,15 +6,13 @@
  */
 package org.hibernate.mapping;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Properties;
+import java.util.*;
+import java.util.List;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
@@ -40,7 +38,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	private KeyValue key;
 	private Value element;
-	private Table collectionTable;
+	private MappedTable collectionTable;
 	private String role;
 	private boolean lazy;
 	private boolean extraLazy;
@@ -115,12 +113,26 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return false;
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedTable()}.
+	 */
+	@Deprecated
 	public Table getCollectionTable() {
+		return (Table) collectionTable;
+	}
+
+	public void setCollectionTable(MappedTable table) {
+		this.collectionTable = table;
+	}
+
+	@Override
+	public MappedTable getMappedTable() {
 		return collectionTable;
 	}
 
-	public void setCollectionTable(Table table) {
-		this.collectionTable = table;
+	@Override
+	public List<MappedColumn> getMappedColumns() {
+		return Collections.unmodifiableList( new ArrayList<>( getMappedTable().getMappedColumns() ) );
 	}
 
 	public boolean isSorted() {

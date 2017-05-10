@@ -14,4 +14,6 @@ import org.hibernate.boot.model.domain.PersistentAttributeMapping;
  */
 public interface ManagedTypeMappingImplementor extends ManagedTypeMapping {
 	void addDeclaredPersistentAttribute(PersistentAttributeMapping attribute);
+
+	void setSuperManagedType(ManagedTypeMapping superTypeMapping);
 }

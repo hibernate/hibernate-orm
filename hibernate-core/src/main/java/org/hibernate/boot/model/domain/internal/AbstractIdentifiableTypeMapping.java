@@ -11,8 +11,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 
 import org.jboss.logging.Logger;
@@ -26,12 +26,12 @@ public abstract class AbstractIdentifiableTypeMapping
 
 	private static final Logger log = Logger.getLogger( AbstractIdentifiableTypeMapping.class );
 
-	private final EntityMappingHierarchy entityMappingHierarchy;
+	private final EntityMappingHierarchyImplementor entityMappingHierarchy;
 
 	private IdentifiableTypeMappingImplementor superTypeMapping;
 	private List<IdentifiableTypeMappingImplementor> subTypeMappings;
 
-	public AbstractIdentifiableTypeMapping(EntityMappingHierarchy entityMappingHierarchy) {
+	public AbstractIdentifiableTypeMapping(EntityMappingHierarchyImplementor entityMappingHierarchy) {
 		this.entityMappingHierarchy = entityMappingHierarchy;
 	}
 
@@ -53,7 +53,7 @@ public abstract class AbstractIdentifiableTypeMapping
 	}
 
 	@Override
-	public EntityMappingHierarchy getEntityMappingHierarchy() {
+	public EntityMappingHierarchyImplementor getEntityMappingHierarchy() {
 		return entityMappingHierarchy;
 	}
 

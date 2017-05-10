@@ -28,4 +28,13 @@ public interface ManagedTypeMapping {
 	 * todo (6.0) : is this what we want?
 	 */
 	List<PersistentAttributeMapping> getDeclaredPersistentAttributes();
+
+	/**
+	 * Get the persistent attributes of this managed type and all super managed types.
+	 */
+	List<PersistentAttributeMapping> getPersistentAttributes();
+
+	// todo: (6.0) how to model this?
+	ManagedTypeMapping getSuperManagedTypeMapping();
+	List<ManagedTypeMapping> getSuperManagedTypeMappings();
 }

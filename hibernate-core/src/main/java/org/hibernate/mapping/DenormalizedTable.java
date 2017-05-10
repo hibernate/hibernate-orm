@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.DenormalizedMappedTable;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.internal.util.collections.JoinedIterator;
 
@@ -21,14 +22,14 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 @SuppressWarnings("unchecked")
 public class DenormalizedTable extends Table implements DenormalizedMappedTable {
 
-	private final Table includedTable;
+	private final MappedTable includedTable;
 
 	public DenormalizedTable(Table includedTable) {
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
-	public DenormalizedTable(Namespace namespace, Identifier physicalTableName, boolean isAbstract, Table includedTable) {
+	public DenormalizedTable(Namespace namespace, Identifier physicalTableName, boolean isAbstract, MappedTable includedTable) {
 		super( namespace, physicalTableName, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
@@ -39,13 +40,13 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 			Identifier physicalTableName,
 			String subselectFragment,
 			boolean isAbstract,
-			Table includedTable) {
+			MappedTable includedTable) {
 		super( namespace, physicalTableName, subselectFragment, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
-	public DenormalizedTable(Namespace namespace, String subselect, boolean isAbstract, Table includedTable) {
+	public DenormalizedTable(Namespace namespace, String subselect, boolean isAbstract, MappedTable includedTable) {
 		super( namespace, subselect, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
@@ -138,7 +139,15 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 		);
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getIncludedMappedTable()}.
+	 */
+	@Deprecated
 	public Table getIncludedTable() {
+		return (Table) getIncludedMappedTable();
+	}
+
+	public MappedTable getIncludedMappedTable() {
 		return includedTable;
 	}
 }

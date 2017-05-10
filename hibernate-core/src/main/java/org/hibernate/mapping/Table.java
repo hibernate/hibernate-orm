@@ -9,20 +9,23 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
+import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.Mapping;
@@ -50,7 +53,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 	/**
 	 * contains all columns, including the primary key
 	 */
-	private Map columns = new LinkedHashMap();
+	private Map<String, MappedColumn> columns = new LinkedHashMap();
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
 	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>();
@@ -63,6 +66,8 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 	private boolean isAbstract;
 	private boolean hasDenormalizedTables;
 	private String comment;
+
+	private boolean isPhysicalTable;
 
 	private List<InitCommand> initCommands;
 
@@ -144,14 +149,17 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return qualifiedName.append( table ).toString();
 	}
 
+	@Override
 	public void setName(String name) {
 		this.name = Identifier.toIdentifier( name );
 	}
 
+	@Override
 	public String getName() {
 		return name == null ? null : name.getText();
 	}
 
+	@Override
 	public Identifier getNameIdentifier() {
 		return name;
 	}
@@ -164,6 +172,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return name == null ? null : name.render( dialect );
 	}
 
+	@Override
 	public QualifiedTableName getQualifiedTableName() {
 		return name == null ? null : new QualifiedTableName( catalog, schema, name );
 	}
@@ -183,6 +192,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		this.schema = Identifier.toIdentifier( schema );
 	}
 
+	@Override
 	public String getSchema() {
 		return schema == null ? null : schema.getText();
 	}
@@ -195,6 +205,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return schema == null ? null : schema.render( dialect );
 	}
 
+	@Override
 	public boolean isSchemaQuoted() {
 		return schema != null && schema.isQuoted();
 	}
@@ -203,6 +214,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		this.catalog = Identifier.toIdentifier( catalog );
 	}
 
+	@Override
 	public String getCatalog() {
 		return catalog == null ? null : catalog.getText();
 	}
@@ -215,6 +227,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return catalog == null ? null : catalog.render( dialect );
 	}
 
+	@Override
 	public boolean isCatalogQuoted() {
 		return catalog != null && catalog.isQuoted();
 	}
@@ -225,6 +238,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 	 * @param column column with atleast a name.
 	 * @return the underlying column or null if not inside this table. Note: the instance *can* be different than the input parameter, but the name will be the same.
 	 */
+	@Override
 	public Column getColumn(Column column) {
 		if ( column == null ) {
 			return null;
@@ -237,6 +251,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 				null;
 	}
 
+	@Override
 	public Column getColumn(Identifier name) {
 		if ( name == null ) {
 			return null;
@@ -245,6 +260,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return (Column) columns.get( name.getCanonicalName() );
 	}
 
+	@Override
 	public Column getColumn(int n) {
 		Iterator iter = columns.values().iterator();
 		for ( int i = 0; i < n - 1; i++ ) {
@@ -280,14 +296,17 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return columns.size();
 	}
 
+	@Override
 	public Iterator getColumnIterator() {
 		return columns.values().iterator();
 	}
 
+	@Override
 	public Iterator<Index> getIndexIterator() {
 		return indexes.values().iterator();
 	}
 
+	@Override
 	public Iterator getForeignKeyIterator() {
 		return foreignKeys.values().iterator();
 	}
@@ -296,6 +315,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return Collections.unmodifiableMap( foreignKeys );
 	}
 
+	@Override
 	public Iterator<UniqueKey> getUniqueKeyIterator() {
 		return getUniqueKeys().values().iterator();
 	}
@@ -437,6 +457,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 
 	}
 
+	@Override
 	public Iterator sqlAlterStrings(
 			Dialect dialect,
 			Mapping p,
@@ -509,6 +530,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return results.iterator();
 	}
 
+	@Override
 	public boolean hasPrimaryKey() {
 		return getPrimaryKey() != null;
 	}
@@ -612,14 +634,17 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return dialect.getDropTableString( getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
 	}
 
+	@Override
 	public PrimaryKey getPrimaryKey() {
 		return primaryKey;
 	}
 
+	@Override
 	public void setPrimaryKey(PrimaryKey primaryKey) {
 		this.primaryKey = primaryKey;
 	}
 
+	@Override
 	public Index getOrCreateIndex(String indexName) {
 
 		Index index =  indexes.get( indexName );
@@ -667,6 +692,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return uniqueKeys.get( keyName );
 	}
 
+	@Override
 	public UniqueKey getOrCreateUniqueKey(String keyName) {
 		UniqueKey uk = uniqueKeys.get( keyName );
 
@@ -679,10 +705,16 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return uk;
 	}
 
+	@Override
 	public void createForeignKeys() {
 	}
 
-	public ForeignKey createForeignKey(String keyName, List keyColumns, String referencedEntityName, String keyDefinition) {
+	@Override
+	public ForeignKey createForeignKey(
+			String keyName,
+			List keyColumns,
+			String referencedEntityName,
+			String keyDefinition) {
 		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, null );
 	}
 
@@ -722,7 +754,8 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 
 	// This must be done outside of Table, rather than statically, to ensure
 	// deterministic alias names.  See HHH-2448.
-	public void setUniqueInteger( int uniqueInteger ) {
+	@Override
+	public void setUniqueInteger(int uniqueInteger) {
 		this.uniqueInteger = uniqueInteger;
 	}
 
@@ -734,22 +767,27 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		this.idValue = idValue;
 	}
 
+	@Override
 	public KeyValue getIdentifierValue() {
 		return idValue;
 	}
 
+	@Override
 	public void addCheckConstraint(String constraint) {
 		checkConstraints.add( constraint );
 	}
 
+	@Override
 	public boolean containsColumn(Column column) {
 		return columns.containsValue( column );
 	}
 
+	@Override
 	public String getRowId() {
 		return rowId;
 	}
 
+	@Override
 	public void setRowId(String rowId) {
 		this.rowId = rowId;
 	}
@@ -767,10 +805,17 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return buf.toString();
 	}
 
+	@Override
+	public String toLoggableString() {
+		return toString();
+	}
+
+	@Override
 	public String getSubselect() {
 		return subselect;
 	}
 
+	@Override
 	public void setSubselect(String subselect) {
 		this.subselect = subselect;
 	}
@@ -787,32 +832,47 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return hasDenormalizedTables;
 	}
 
-	void setHasDenormalizedTables() {
+	@Override
+	public void setHasDenormalizedTables() {
 		hasDenormalizedTables = true;
 	}
 
+	@Override
 	public void setAbstract(boolean isAbstract) {
 		this.isAbstract = isAbstract;
 	}
 
+	@Override
 	public boolean isAbstract() {
 		return isAbstract;
 	}
 
+	@Override
 	public boolean isPhysicalTable() {
 		return !isSubselect() && !isAbstractUnionTable();
 	}
 
+	@Override
 	public String getComment() {
 		return comment;
 	}
 
+	@Override
 	public void setComment(String comment) {
 		this.comment = comment;
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getCheckConstraints()}.
+	 */
+	@Deprecated
 	public Iterator<String> getCheckConstraintsIterator() {
 		return checkConstraints.iterator();
+	}
+
+	@Override
+	public List<String> getCheckConstraints() {
+		return Collections.unmodifiableList( checkConstraints );
 	}
 
 	public Iterator sqlCommentStrings(Dialect dialect, String defaultCatalog, String defaultSchema) {
@@ -841,6 +901,11 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 				render( schema ),
 				name.render()
 		);
+	}
+
+	@Override
+	public boolean isExportable() {
+		return isPhysicalTable();
 	}
 
 	private String render(Identifier identifier) {
@@ -892,6 +957,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		initCommands.add( command );
 	}
 
+	@Override
 	public List<InitCommand> getInitCommands() {
 		if ( initCommands == null ) {
 			return Collections.emptyList();
@@ -899,5 +965,16 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		else {
 			return Collections.unmodifiableList( initCommands );
 		}
+	}
+
+	@Override
+	public Set<MappedColumn> getMappedColumns() {
+		return Collections.unmodifiableSet( new HashSet<>( columns.values() ) );
+	}
+
+	@Override
+	public String getUid() {
+		// todo (6.0) what makes snese to impl this??
+		throw new NotYetImplementedException();
 	}
 }

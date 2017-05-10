@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.sql.Alias;
 
@@ -22,7 +23,7 @@ public class Join implements AttributeContainer, Serializable {
 
 	private ArrayList properties = new ArrayList();
 	private ArrayList declaredProperties = new ArrayList();
-	private Table table;
+	private MappedTable table;
 	private KeyValue key;
 	private PersistentClass persistentClass;
 	private boolean sequentialSelect;
@@ -63,11 +64,20 @@ public class Join implements AttributeContainer, Serializable {
 		return properties.iterator();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedTable()}.
+	 */
+	@Deprecated
 	public Table getTable() {
-		return table;
+		return (Table) getMappedTable();
 	}
-	public void setTable(Table table) {
+
+	public void setTable(MappedTable table) {
 		this.table = table;
+	}
+
+	public MappedTable getMappedTable() {
+		return table;
 	}
 
 	public KeyValue getKey() {

@@ -11,8 +11,8 @@ import java.util.UUID;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.function.SQLFunction;
@@ -174,6 +174,7 @@ public interface Metadata extends Mapping {
 	IdentifierGeneratorDefinition getIdentifierGenerator(String name);
 
 	java.util.Collection<Table> collectTableMappings();
+	java.util.Collection<MappedTable> collectMappedTableMappings();
 
 	Map<String,SQLFunction> getSqlFunctionMap();
 }

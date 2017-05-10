@@ -78,7 +78,7 @@ public class OneToOneSecondPass implements SecondPass {
 	//TODO refactor this code, there is a lot of duplication in this method
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		org.hibernate.mapping.OneToOne value = new org.hibernate.mapping.OneToOne(
-				buildingContext.getMetadataCollector(),
+				buildingContext,
 				propertyHolder.getTable(),
 				propertyHolder.getPersistentClass()
 		);
@@ -172,7 +172,7 @@ public class OneToOneSecondPass implements SecondPass {
 					Join mappedByJoin = buildJoinFromMappedBySide(
 							(PersistentClass) persistentClasses.get( ownerEntity ), otherSideProperty, otherSideJoin
 					);
-					ManyToOne manyToOne = new ManyToOne( buildingContext.getMetadataCollector(), mappedByJoin.getTable() );
+					ManyToOne manyToOne = new ManyToOne( buildingContext, mappedByJoin.getTable() );
 					//FIXME use ignore not found here
 					manyToOne.setIgnoreNotFound( ignoreNotFound );
 					manyToOne.setCascadeDeleteEnabled( value.isCascadeDeleteEnabled() );

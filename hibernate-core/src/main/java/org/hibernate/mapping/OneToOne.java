@@ -11,8 +11,9 @@ import java.util.Iterator;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.type.spi.EntityType;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -27,7 +28,7 @@ public class OneToOne extends ToOne {
 	private String propertyName;
 	private String entityName;
 
-	public OneToOne(InFlightMetadataCollector metadata, Table table, PersistentClass owner) throws MappingException {
+	public OneToOne(MetadataBuildingContext metadata, Table table, PersistentClass owner) throws MappingException {
 		super( metadata, table );
 		this.identifier = owner.getKey();
 		this.entityName = owner.getEntityName();
@@ -51,7 +52,7 @@ public class OneToOne extends ToOne {
 	
 	public Type getType() throws MappingException {
 		if ( getColumnIterator().hasNext() ) {
-			return getBuildingContext().getTypeConfiguration().specialOneToOne(
+			return getBuildingContext().getBootstrapContext().getTypeConfiguration().specialOneToOne(
 					getReferencedEntityName(), 
 					foreignKeyType,
 					referenceToPrimaryKey, 
@@ -63,7 +64,7 @@ public class OneToOne extends ToOne {
 			);
 		}
 		else {
-			return getBuildingContext().getTypeConfiguration().oneToOne(
+			return getBuildingContext().getBootstrapContext().getTypeConfiguration().oneToOne(
 					getReferencedEntityName(), 
 					foreignKeyType,
 					referenceToPrimaryKey, 

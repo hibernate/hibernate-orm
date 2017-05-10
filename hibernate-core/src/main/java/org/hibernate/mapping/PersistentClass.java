@@ -7,12 +7,21 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.util.*;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.internal.AbstractIdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -23,7 +32,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
-import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 
@@ -32,7 +40,9 @@ import org.hibernate.sql.Alias;
  *
  * @author Gavin King
  */
-public abstract class PersistentClass implements EntityMapping, AttributeContainer, PropertyContainer, Serializable, Filterable, MetaAttributable {
+public abstract class PersistentClass
+		extends AbstractIdentifiableTypeMapping
+		implements AttributeContainer, Serializable, Filterable, MetaAttributable, PropertyContainer {
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
 	public static final String NULL_DISCRIMINATOR_MAPPING = "null";
@@ -69,7 +79,7 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 	private String loaderName;
 	private Boolean isAbstract;
 	private boolean hasSubselectLoadableCollections;
-	private Component identifierMapper;
+	private EmbeddedValueMapping identifierEmbeddedValueMapping;
 
 	// Custom SQL
 	private String customSQLInsert;
@@ -85,10 +95,11 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 	private java.util.Map tuplizerImpls;
 
 	private MappedSuperclass superMappedSuperclass;
-	private Component declaredIdentifierMapper;
+	private EmbeddedValueMapping declaredIdentifierValueMapping;
 	private OptimisticLockStyle optimisticLockStyle;
 
-	public PersistentClass(MetadataBuildingContext metadataBuildingContext) {
+	public PersistentClass(MetadataBuildingContext metadataBuildingContext, EntityMappingHierarchyImplementor entityMappingHierarchy) {
+		super( entityMappingHierarchy );
 		this.metadataBuildingContext = metadataBuildingContext;
 	}
 
@@ -103,6 +114,11 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 	public void setClassName(String className) {
 		this.className = className == null ? null : className.intern();
 		this.mappedClass = null;
+	}
+
+	@Override
+	public String getName() {
+		return getMappedClass().getName();
 	}
 
 	public String getProxyInterfaceName() {
@@ -249,24 +265,56 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 
 	public abstract boolean isMutable();
 
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#hasIdentifierAttributeMapping()}.
+	 */
+	@Deprecated
 	public abstract boolean hasIdentifierProperty();
 
+	/**
+	 * @deprecated since 6.0 use {@link EntityMappingHierarchy#getIdentifierAttributeMapping()}.
+	 */
+	@Deprecated
 	public abstract Property getIdentifierProperty();
 
+	/**
+	 * @deprecated since 6.0 use {@link #getDeclaredIdentifierAttributeMapping()}.
+	 */
+	@Deprecated
 	public abstract Property getDeclaredIdentifierProperty();
+
+	public abstract PersistentAttributeMapping getDeclaredIdentifierAttributeMapping();
 
 	public abstract KeyValue getIdentifier();
 
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#getVersionPersistentAttributeMapping()}.
+	 */
+	@Deprecated
 	public abstract Property getVersion();
 
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredVersionAttributeMapping()}.
+	 */
+	@Deprecated
 	public abstract Property getDeclaredVersion();
 
+	public abstract PersistentAttributeMapping getDeclaredVersionAttributeMapping();
+
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#getDiscriminatorValueMapping()}.
+	 */
+	@Deprecated
 	public abstract Value getDiscriminator();
 
 	public abstract boolean isInherited();
 
 	public abstract boolean isPolymorphic();
 
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#isVersioned()}.
+	 */
+	@Deprecated
 	public abstract boolean isVersioned();
 
 	public abstract String getNaturalIdCacheRegionName();
@@ -293,7 +341,7 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 		subclassJoins.add( join );
 	}
 
-	protected void addSubclassTable(Table subclassTable) {
+	protected void addSubclassTable(MappedTable subclassTable) {
 		subclassTables.add( subclassTable );
 	}
 
@@ -332,6 +380,10 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 		this.lazy = lazy;
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#hasEmbeddedIdentifier()}.
+	 */
+	@Deprecated
 	public abstract boolean hasEmbeddedIdentifier();
 
 	public abstract Class getEntityPersisterClass();
@@ -625,14 +677,17 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 		return NULL_DISCRIMINATOR_MAPPING.equals( getDiscriminatorValue() );
 	}
 
+	@Override
 	public java.util.Map getMetaAttributes() {
 		return metaAttributes;
 	}
 
+	@Override
 	public void setMetaAttributes(java.util.Map metas) {
 		this.metaAttributes = metas;
 	}
 
+	@Override
 	public MetaAttribute getMetaAttribute(String name) {
 		return metaAttributes == null
 				? null
@@ -903,24 +958,41 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 		this.hasSubselectLoadableCollections = hasSubselectCollections;
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getIdentifierEmbeddedValueMapping()}.
+	 */
+	@Deprecated
 	public Component getIdentifierMapper() {
-		return identifierMapper;
+		return (Component) getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getDeclaredIdentifierEmbeddedValueMapping()}.
+	 */
+	@Deprecated
 	public Component getDeclaredIdentifierMapper() {
-		return declaredIdentifierMapper;
+		return (Component) declaredIdentifierValueMapping;
 	}
 
 	public void setDeclaredIdentifierMapper(Component declaredIdentifierMapper) {
-		this.declaredIdentifierMapper = declaredIdentifierMapper;
+		this.declaredIdentifierValueMapping = declaredIdentifierMapper;
+		getEntityMappingHierarchy().setIdentifierEmbeddedValueMapping( declaredIdentifierMapper );
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link IdentifierMapping#hasEmbeddedValueMapping()}.
+	 */
+	@Deprecated
 	public boolean hasIdentifierMapper() {
-		return identifierMapper != null;
+		return getEntityMappingHierarchy().hasIdentifierMapper();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchyImplementor#setIdentifierEmbeddedValueMapping(EmbeddedValueMapping)}.
+	 */
+	@Deprecated
 	public void setIdentifierMapper(Component handle) {
-		this.identifierMapper = handle;
+		getEntityMappingHierarchy().setIdentifierEmbeddedValueMapping( handle );
 	}
 
 	public void addTuplizer(EntityMode entityMode, String implClassName) {
@@ -959,7 +1031,7 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 	// The following methods are added to support @MappedSuperclass in the metamodel
 	public Iterator getDeclaredPropertyIterator() {
 		ArrayList iterators = new ArrayList();
-		iterators.add( declaredProperties.iterator() );
+		iterators.add( getDeclaredProperties().iterator() );
 		for ( int i = 0; i < joins.size(); i++ ) {
 			Join join = (Join) joins.get( i );
 			iterators.add( join.getDeclaredPropertyIterator() );
@@ -968,7 +1040,7 @@ public abstract class PersistentClass implements EntityMapping, AttributeContain
 	}
 
 	@Override
-	public List<Property> getDeclaredProperties() {
+	public java.util.List<Property> getDeclaredProperties() {
 		return declaredProperties;
 	}
 

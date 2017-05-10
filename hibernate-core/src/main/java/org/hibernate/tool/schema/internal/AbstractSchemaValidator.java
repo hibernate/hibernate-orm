@@ -11,12 +11,12 @@ import java.util.Locale;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.MappedSequence;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Table;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
@@ -92,10 +92,10 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
-				for ( Sequence sequence : namespace.getSequences() ) {
+				for ( MappedSequence sequence : namespace.getSequences() ) {
 					if ( schemaFilter.includeSequence( sequence ) ) {
 						final SequenceInformation sequenceInformation = databaseInformation.getSequenceInformation(
-								sequence.getName()
+								sequence.getLogicalName()
 						);
 						validateSequence( sequence, sequenceInformation );
 					}
@@ -111,7 +111,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Dialect dialect, Namespace namespace);
 
 	protected void validateTable(
-			Table table,
+			MappedTable table,
 			TableInformation tableInformation,
 			Metadata metadata,
 			ExecutionOptions options,
@@ -146,7 +146,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 	}
 
 	protected void validateColumnType(
-			Table table,
+			MappedTable table,
 			Column column,
 			ColumnInformation columnInformation,
 			Metadata metadata,
@@ -178,10 +178,10 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 		// todo : this ^^
 	}
 
-	protected void validateSequence(Sequence sequence, SequenceInformation sequenceInformation) {
+	protected void validateSequence(MappedSequence sequence, SequenceInformation sequenceInformation) {
 		if ( sequenceInformation == null ) {
 			throw new SchemaManagementException(
-					String.format( "Schema-validation: missing sequence [%s]", sequence.getName() )
+					String.format( "Schema-validation: missing sequence [%s]", sequence.getLogicalName() )
 			);
 		}
 
@@ -190,7 +190,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			throw new SchemaManagementException(
 					String.format(
 							"Schema-validation: sequence [%s] defined inconsistent increment-size; found [%s] but expecting [%s]",
-							sequence.getName(),
+							sequence.getLogicalName(),
 							sequenceInformation.getIncrementSize(),
 							sequence.getIncrementSize()
 					)

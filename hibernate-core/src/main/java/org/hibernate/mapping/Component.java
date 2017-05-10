@@ -7,13 +7,18 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.ManagedTypeMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -37,8 +42,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements EmbeddedValueMapping, org.hibernate.boot.model.domain.ManagedTypeMapping, PropertyContainer, MetaAttributable {
-	private ArrayList<Property> properties = new ArrayList<>();
+public class Component extends SimpleValue implements EmbeddedValueMapping, ManagedTypeMapping, PropertyContainer, MetaAttributable {
+	private List<PersistentAttributeMapping> properties = new ArrayList<>();
 	private String componentClassName;
 	private boolean embedded;
 	private String parentProperty;
@@ -48,7 +53,7 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, org.
 	private boolean isKey;
 	private String roleName;
 
-	private java.util.Map<EntityMode,String> tuplizerImpls;
+	private Map<EntityMode,String> tuplizerImpls;
 
 	public Component(InFlightMetadataCollector metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
@@ -69,6 +74,11 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, org.
 	public Component(InFlightMetadataCollector metadata, Table table, PersistentClass owner) throws MappingException {
 		super( metadata.getTypeConfiguration().getMetadataBuildingContext(), table );
 		this.owner = owner;
+	}
+
+	@Override
+	public String getName() {
+		return componentClassName;
 	}
 
 	public int getPropertySpan() {
@@ -115,6 +125,10 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, org.
 		return embedded;
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getName()}.
+	 */
+	@Deprecated
 	public String getComponentClassName() {
 		return componentClassName;
 	}
@@ -429,11 +443,27 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, org.
 
 	@Override
 	public List<Property> getDeclaredProperties() {
+		return properties.stream().map( p -> (Property) p ).collect( Collectors.toList() );
+	}
+
+	@Override
+	public List<PersistentAttributeMapping> getDeclaredPersistentAttributes() {
 		return properties;
 	}
 
+	@Override
+	public List<PersistentAttributeMapping> getPersistentAttributes() {
+		List<PersistentAttributeMapping> attributes = new ArrayList<>();
+		attributes.addAll( properties );
+		ManagedTypeMapping superTypeMapping = getSuperManagedTypeMapping();
+		while ( superTypeMapping != null ) {
+			attributes.addAll( superTypeMapping.getPersistentAttributes() );
+			superTypeMapping = superTypeMapping.getSuperManagedTypeMapping();
+		}
+		return attributes;
+	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// atm components/embeddables are not (yet) hierarchical
 
 	@Override
@@ -442,12 +472,12 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, org.
 	}
 
 	@Override
-	public ManagedTypeMapping getSuperclassMapping() {
+	public ManagedTypeMapping getSuperManagedTypeMapping() {
 		return null;
 	}
 
 	@Override
-	public List<ManagedTypeMapping> getSubclassMappings() {
-		return Collections.emptyList();
+	public List<ManagedTypeMapping> getSuperManagedTypeMappings() {
+		return null;
 	}
 }

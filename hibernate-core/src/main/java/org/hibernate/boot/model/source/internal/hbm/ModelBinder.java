@@ -27,7 +27,6 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.model.Caching;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.JavaTypeDescriptor;
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.naming.EntityNaming;
@@ -43,6 +42,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.AnyMappingSource;
@@ -231,7 +231,7 @@ public class ModelBinder {
 				rootEntityDescriptor
 		);
 
-		final Table primaryTable = bindEntityTableSpecification(
+		final MappedTable primaryTable = bindEntityTableSpecification(
 				mappingDocument,
 				hierarchySource.getRoot().getPrimaryTable(),
 				null,
@@ -602,7 +602,7 @@ public class ModelBinder {
 				entityDescriptor
 		);
 
-		final Table primaryTable = bindEntityTableSpecification(
+		final MappedTable primaryTable = bindEntityTableSpecification(
 				mappingDocument,
 				entitySource.getPrimaryTable(),
 				null,
@@ -678,7 +678,7 @@ public class ModelBinder {
 				entityDescriptor
 		);
 
-		final Table primaryTable = bindEntityTableSpecification(
+		final MappedTable primaryTable = bindEntityTableSpecification(
 				mappingDocument,
 				entitySource.getPrimaryTable(),
 				entityDescriptor.getSuperclass().getTable(),
@@ -1236,7 +1236,7 @@ public class ModelBinder {
 					final Property attribute = createManyToOneAttribute(
 							mappingDocument,
 							manyToOneAttributeSource,
-							new ManyToOne( mappingDocument.getMetadataCollector(), table ),
+							new ManyToOne( mappingDocument, table ),
 							entityDescriptor.getClassName()
 					);
 
@@ -1259,7 +1259,7 @@ public class ModelBinder {
 					final Property attribute = createOneToOneAttribute(
 							mappingDocument,
 							oneToOneAttributeSource,
-							new OneToOne( mappingDocument.getMetadataCollector(), table, entityDescriptor ),
+							new OneToOne( mappingDocument, table, entityDescriptor ),
 							entityDescriptor.getClassName()
 					);
 					entityDescriptor.addProperty( attribute );
@@ -1753,7 +1753,7 @@ public class ModelBinder {
 		final Identifier schemaName = determineSchemaName( secondaryTableSource.getTableSource() );
 		final Namespace namespace = database.locateNamespace( catalogName, schemaName );
 
-		Table secondaryTable;
+		MappedTable secondaryTable;
 		final Identifier logicalTableName;
 
 		if ( TableSource.class.isInstance( secondaryTableSource.getTableSource() ) ) {
@@ -2681,7 +2681,7 @@ public class ModelBinder {
 				attribute = createManyToOneAttribute(
 						sourceDocument,
 						(SingularAttributeSourceManyToOne) attributeSource,
-						new ManyToOne( sourceDocument.getMetadataCollector(), component.getTable() ),
+						new ManyToOne( sourceDocument, component.getTable() ),
 						component.getComponentClassName()
 				);
 			}
@@ -2689,7 +2689,7 @@ public class ModelBinder {
 				attribute = createOneToOneAttribute(
 						sourceDocument,
 						(SingularAttributeSourceOneToOne) attributeSource,
-						new OneToOne( sourceDocument.getMetadataCollector(), component.getTable(), component.getOwner() ),
+						new OneToOne( sourceDocument, component.getTable(), component.getOwner() ),
 						component.getComponentClassName()
 				);
 			}
@@ -2731,10 +2731,10 @@ public class ModelBinder {
 		simpleValue.setBasicTypeResolver( basicTypeResolver );
 	}
 
-	private Table bindEntityTableSpecification(
+	private MappedTable bindEntityTableSpecification(
 			final MappingDocument mappingDocument,
 			TableSpecificationSource tableSpecSource,
-			Table denormalizedSuperTable,
+			MappedTable denormalizedSuperTable,
 			final EntitySource entitySource,
 			PersistentClass entityDescriptor) {
 		final Namespace namespace = database.locateNamespace(
@@ -2746,7 +2746,7 @@ public class ModelBinder {
 		final boolean isAbstract = entityDescriptor.isAbstract() == null ? false : entityDescriptor.isAbstract();
 		final String subselect;
 		final Identifier logicalTableName;
-		final Table table;
+		final MappedTable table;
 		if ( isTable ) {
 			final TableSource tableSource = (TableSource) tableSpecSource;
 
@@ -3088,7 +3088,7 @@ public class ModelBinder {
 				final Identifier logicalSchemaName = determineSchemaName( tableSpecSource );
 				final Namespace namespace = database.locateNamespace( logicalCatalogName, logicalSchemaName );
 
-				final Table collectionTable;
+				final MappedTable collectionTable;
 
 				if ( tableSpecSource instanceof TableSource ) {
 					final TableSource tableSource = (TableSource) tableSpecSource;
@@ -3399,7 +3399,7 @@ public class ModelBinder {
 				final PluralAttributeElementSourceManyToMany elementSource =
 						(PluralAttributeElementSourceManyToMany) getPluralAttributeSource().getElementSource();
 				final ManyToOne elementBinding = new ManyToOne(
-						getMappingDocument().getMetadataCollector(),
+						getMappingDocument(),
 						getCollectionBinding().getCollectionTable()
 				);
 
@@ -3919,7 +3919,7 @@ public class ModelBinder {
 			final PluralAttributeMapKeyManyToManySource mapKeySource =
 					(PluralAttributeMapKeyManyToManySource) pluralAttributeSource.getIndexSource();
 			final ManyToOne mapKeyBinding = new ManyToOne(
-					mappingDocument.getMetadataCollector(),
+					mappingDocument,
 					collectionBinding.getCollectionTable()
 			);
 

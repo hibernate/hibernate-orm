@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 import java.util.Iterator;
 
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
@@ -21,7 +22,7 @@ import org.jboss.logging.Logger;
 public class PrimaryKey extends Constraint {
 	private static final Logger log = Logger.getLogger( PrimaryKey.class );
 
-	public PrimaryKey(Table table){
+	public PrimaryKey(MappedTable table){
 		setTable( table );
 	}
 

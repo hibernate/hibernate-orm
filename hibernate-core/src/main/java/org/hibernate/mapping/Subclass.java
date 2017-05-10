@@ -13,6 +13,8 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.collections.JoinedIterator;
@@ -28,7 +30,7 @@ public class Subclass extends PersistentClass {
 	private final int subclassId;
 	
 	public Subclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
-		super( metadataBuildingContext );
+		super( metadataBuildingContext, superclass.getEntityMappingHierarchy() );
 		this.superclass = superclass;
 		this.subclassId = superclass.nextSubclassId();
 	}
@@ -58,29 +60,42 @@ public class Subclass extends PersistentClass {
 		return superclass;
 	}
 
+	@Override
 	public Property getIdentifierProperty() {
 		return getSuperclass().getIdentifierProperty();
 	}
 
+	@Override
 	public Property getDeclaredIdentifierProperty() {
 		return null;
 	}
 
+	public PersistentAttributeMapping getDeclaredIdentifierAttributeMapping() {
+		return null;
+	}
+
+	@Override
 	public KeyValue getIdentifier() {
 		return getSuperclass().getIdentifier();
 	}
+
+	@Override
 	public boolean hasIdentifierProperty() {
 		return getSuperclass().hasIdentifierProperty();
 	}
+
 	public Value getDiscriminator() {
 		return getSuperclass().getDiscriminator();
 	}
+
 	public boolean isMutable() {
 		return getSuperclass().isMutable();
 	}
+
 	public boolean isInherited() {
 		return true;
 	}
+
 	public boolean isPolymorphic() {
 		return true;
 	}
@@ -106,46 +121,61 @@ public class Subclass extends PersistentClass {
 				getPropertyIterator()
 			);
 	}
+
 	public Iterator getTableClosureIterator() {
 		return new JoinedIterator(
 				getSuperclass().getTableClosureIterator(),
 				new SingletonIterator( getTable() )
 			);
 	}
+
 	public Iterator getKeyClosureIterator() {
 		return new JoinedIterator(
 				getSuperclass().getKeyClosureIterator(),
 				new SingletonIterator( getKey() )
 			);
 	}
+
 	protected void addSubclassProperty(Property p) {
 		super.addSubclassProperty(p);
 		getSuperclass().addSubclassProperty(p);
 	}
+
 	protected void addSubclassJoin(Join j) {
 		super.addSubclassJoin(j);
 		getSuperclass().addSubclassJoin(j);
 	}
 
-	protected void addSubclassTable(Table table) {
+	protected void addSubclassTable(MappedTable table) {
 		super.addSubclassTable(table);
 		getSuperclass().addSubclassTable(table);
 	}
 
+	@Override
 	public boolean isVersioned() {
 		return getSuperclass().isVersioned();
 	}
+
+	@Override
 	public Property getVersion() {
 		return getSuperclass().getVersion();
 	}
 
+	@Override
 	public Property getDeclaredVersion() {
 		return null;
 	}
 
+	@Override
+	public PersistentAttributeMapping getDeclaredVersionAttributeMapping() {
+		return null;
+	}
+
+	@Override
 	public boolean hasEmbeddedIdentifier() {
 		return getSuperclass().hasEmbeddedIdentifier();
 	}
+
 	public Class getEntityPersisterClass() {
 		if (classPersisterClass==null) {
 			return getSuperclass().getEntityPersisterClass();
@@ -277,6 +307,7 @@ public class Subclass extends PersistentClass {
 		}
 	}
 
+	@Override
 	public Component getIdentifierMapper() {
 		return superclass.getIdentifierMapper();
 	}

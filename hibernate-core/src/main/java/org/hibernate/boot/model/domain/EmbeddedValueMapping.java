@@ -6,14 +6,12 @@
  */
 package org.hibernate.boot.model.domain;
 
-import java.util.List;
-
 /**
  * Models an embeddable-valued mapping such as an {@link javax.persistence.Embedded} or
  * a {@link javax.persistence.ElementCollection}
  *
  * @author Steve Ebersole
  */
-public interface EmbeddedValueMapping extends ValueMapping {
-	List<AttributeMapping> getAttributeMappings();
+public interface EmbeddedValueMapping extends ValueMapping, ManagedTypeMapping {
+
 }

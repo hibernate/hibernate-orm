@@ -8,10 +8,13 @@ package org.hibernate.mapping;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
+
 import javax.persistence.AttributeConverter;
 import javax.persistence.EnumType;
 import javax.persistence.TemporalType;
@@ -20,6 +23,8 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.internal.AttributeConverterDescriptorNonAutoApplicableImpl;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -63,7 +68,7 @@ public class SimpleValue implements KeyValue {
 
 	private final MetadataBuildingContext buildingContext;
 
-	private final List<Selectable> columns = new ArrayList<>();
+	private final List<MappedColumn> columns = new ArrayList<>();
 
 	private final BasicTypeParametersImpl basicTypeParameters = new BasicTypeParametersImpl();
 
@@ -75,7 +80,7 @@ public class SimpleValue implements KeyValue {
 	private Properties identifierGeneratorProperties;
 	private String identifierGeneratorStrategy = DEFAULT_ID_GEN_STRATEGY;
 	private String nullValue;
-	private Table table;
+	private MappedTable table;
 	private String foreignKeyName;
 	private String foreignKeyDefinition;
 	private boolean alternateUniqueKey;
@@ -89,7 +94,7 @@ public class SimpleValue implements KeyValue {
 		this.buildingContext = buildingContext;
 	}
 
-	public SimpleValue(MetadataBuildingContext buildingContext, Table table) {
+	public SimpleValue(MetadataBuildingContext buildingContext, MappedTable table) {
 		this( buildingContext );
 		this.table = table;
 	}
@@ -145,12 +150,21 @@ public class SimpleValue implements KeyValue {
 		return columns.size();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedColumns()}.
+	 */
 	@Override
+	@Deprecated
 	public Iterator<Selectable> getColumnIterator() {
-		return columns.iterator();
+		return columns.stream().map( column -> (Selectable) column ).collect( Collectors.toList() ).iterator();
 	}
 
-	public List getConstraintColumns() {
+	@Override
+	public List<MappedColumn> getMappedColumns() {
+		return Collections.unmodifiableList( columns );
+	}
+
+	public List<MappedColumn> getConstraintColumns() {
 		return columns;
 	}
 
@@ -312,7 +326,13 @@ public class SimpleValue implements KeyValue {
 		return nullValue;
 	}
 
+	@Override
 	public Table getTable() {
+		return (Table) getMappedTable();
+	}
+
+	@Override
+	public MappedTable getMappedTable() {
 		return table;
 	}
 
@@ -600,7 +620,7 @@ public class SimpleValue implements KeyValue {
 		try {
 			String[] columnsNames = new String[columns.size()];
 			for ( int i = 0; i < columns.size(); i++ ) {
-				Selectable column = columns.get(i);
+				MappedColumn column = columns.get(i);
 				if (column instanceof Column){
 					columnsNames[i] = ((Column) column).getName();
 				}

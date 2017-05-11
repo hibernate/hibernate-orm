@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -23,6 +24,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -40,7 +42,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
@@ -298,7 +299,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public java.util.Collection<Table> collectTableMappings() {
-		ArrayList<Table> tables = new ArrayList<>();
+		return collectMappedTableMappings().stream().map( t -> (Table) t ).collect( Collectors.toList() );
+	}
+
+	@Override
+	public java.util.Collection<MappedTable> collectMappedTableMappings() {
+		ArrayList<MappedTable> tables = new ArrayList<>();
 		for ( Namespace namespace : database.getNamespaces() ) {
 			tables.addAll( namespace.getTables() );
 		}

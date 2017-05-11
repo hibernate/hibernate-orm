@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.embedded.spi;
 
-import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -16,7 +16,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
  *
  * @author Steve Ebersole
  */
-public interface EmbeddedContainer<T> extends NavigableSource<T> {
+public interface EmbeddedContainer<T> extends NavigableContainer<T> {
 	/**
 	 * Resolve the TableGroup that defines the group of tables which
 	 * contain the composite values.

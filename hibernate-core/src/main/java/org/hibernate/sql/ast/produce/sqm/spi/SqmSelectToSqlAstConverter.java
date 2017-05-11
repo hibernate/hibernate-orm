@@ -109,8 +109,8 @@ import org.hibernate.sql.ast.produce.result.internal.FetchCompositeAttributeImpl
 import org.hibernate.sql.ast.produce.result.internal.FetchEntityAttributeImpl;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.ReturnDynamicInstantiation;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultDynamicInstantiation;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
@@ -121,20 +121,20 @@ import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
 import org.hibernate.sql.ast.tree.spi.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.spi.expression.CoalesceExpression;
-import org.hibernate.sql.ast.tree.spi.expression.ConcatExpression;
+import org.hibernate.sql.ast.tree.spi.expression.CoalesceFunction;
+import org.hibernate.sql.ast.tree.spi.expression.ConcatFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountStarFunction;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.MaxFunction;
 import org.hibernate.sql.ast.tree.spi.expression.MinFunction;
 import org.hibernate.sql.ast.tree.spi.expression.NamedParameter;
-import org.hibernate.sql.ast.tree.spi.expression.NonStandardFunctionExpression;
-import org.hibernate.sql.ast.tree.spi.expression.NullifExpression;
+import org.hibernate.sql.ast.tree.spi.expression.NonStandardFunction;
+import org.hibernate.sql.ast.tree.spi.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
-import org.hibernate.sql.ast.tree.spi.expression.UnaryOperationExpression;
+import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -212,7 +212,7 @@ public class SqmSelectToSqlAstConverter
 	private final Stack<QuerySpec> querySpecStack = new Stack<>();
 	private int querySpecDepth = 0;
 
-	private final List<Return> queryReturns = new ArrayList<>();
+	private final List<QueryResult> queryReturns = new ArrayList<>();
 
 	private SqmSelectToSqlAstConverter(
 			SessionFactoryImplementor factory,
@@ -488,35 +488,33 @@ public class SqmSelectToSqlAstConverter
 	@Override
 	public Selection visitSelection(SqmSelection sqmSelection) {
 		final Expression expression = (Expression) sqmSelection.getExpression().accept( this );
-		final Selectable selectable = expression.getSelectable();
-		final Return queryReturn = selectable.toQueryReturn( this, sqmSelection.getAlias() );
-
-		if ( querySpecDepth == 1 ) {
-			queryReturns.add( queryReturn );
-		}
-		final Selection selection = new Selection(
-				this,
-				expression.getSelectable(),
+		final Selection selection = expression.getSelectable().createSelection(
 				expression,
-				sqmSelection.getAlias()
+				sqmSelection.getAlias(),
+				// todo (6.0) : what to pass as ColumnReferenceResolver?
+				null
+		);
+		currentQuerySpec().getSelectClause().selection( selection );
+
+		final QueryResult queryResult = selection.createQueryResult(
+				// todo (6.0) : what to pass as SqlSelectionResolver?
+				//		those resolutions are not available until SqlSelectAstToJdbcSelectConverter
+				//
+				null
 		);
 
-		if ( !domainExpressionBuilderStack.getCurrent().isShallow() ) {
-			applyFetchesAndEntityGraph( queryReturn );
-		}
-
-		currentQuerySpec().getSelectClause().selection( selection );
+		applyFetchesAndEntityGraph( queryResult );
 
 		return selection;
 	}
 
-	private void applyFetchesAndEntityGraph(Return queryReturn) {
+	private void applyFetchesAndEntityGraph(QueryResult queryReturn) {
 		if ( queryReturn instanceof FetchParent ) {
 			applyFetchesAndEntityGraph( (FetchParent) queryReturn, extractEntityGraph() );
 		}
 
 		// todo : dynamic-instantiations *if* the dynamic-instantiation takes the entity as an argument
-		if ( queryReturn instanceof ReturnDynamicInstantiation ) {
+		if ( queryReturn instanceof QueryResultDynamicInstantiation ) {
 
 		}
 
@@ -907,7 +905,7 @@ public class SqmSelectToSqlAstConverter
 	public Object visitUnaryOperationExpression(UnaryOperationSqmExpression expression) {
 		pushDomainExpressionBuilder( true );
 		try {
-			return new UnaryOperationExpression(
+			return new UnaryOperation(
 					interpret( expression.getOperation() ),
 					(Expression) expression.getOperand().accept( this ),
 					expression.getExpressionType()
@@ -918,13 +916,13 @@ public class SqmSelectToSqlAstConverter
 		}
 	}
 
-	private UnaryOperationExpression.Operation interpret(UnaryOperationSqmExpression.Operation operation) {
+	private UnaryOperation.Operator interpret(UnaryOperationSqmExpression.Operation operation) {
 		switch ( operation ) {
 			case PLUS: {
-				return UnaryOperationExpression.Operation.PLUS;
+				return UnaryOperation.Operator.PLUS;
 			}
 			case MINUS: {
-				return UnaryOperationExpression.Operation.MINUS;
+				return UnaryOperation.Operator.MINUS;
 			}
 		}
 
@@ -936,7 +934,7 @@ public class SqmSelectToSqlAstConverter
 		pushDomainExpressionBuilder( true );
 		try {
 			if ( expression.getOperation() == BinaryArithmeticSqmExpression.Operation.MODULO ) {
-				return new NonStandardFunctionExpression(
+				return new NonStandardFunction(
 						"mod",
 						null, //(BasicType) extractOrmType( expression.getExpressionType() ),
 						(Expression) expression.getLeftHandOperand().accept( this ),
@@ -978,8 +976,8 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public CoalesceExpression visitCoalesceExpression(CoalesceSqmExpression expression) {
-		final CoalesceExpression result = new CoalesceExpression();
+	public CoalesceFunction visitCoalesceExpression(CoalesceSqmExpression expression) {
+		final CoalesceFunction result = new CoalesceFunction();
 		for ( SqmExpression value : expression.getValues() ) {
 			result.value( (Expression) value.accept( this ) );
 		}
@@ -1023,16 +1021,16 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public NullifExpression visitNullifExpression(NullifSqmExpression expression) {
-		return new NullifExpression(
+	public NullifFunction visitNullifExpression(NullifSqmExpression expression) {
+		return new NullifFunction(
 				(Expression) expression.getFirstArgument().accept( this ),
 				(Expression) expression.getSecondArgument().accept( this )
 		);
 	}
 
 	@Override
-	public ConcatExpression visitConcatExpression(ConcatSqmExpression expression) {
-		return new ConcatExpression(
+	public ConcatFunction visitConcatExpression(ConcatSqmExpression expression) {
+		return new ConcatFunction(
 				(Expression) expression.getLeftHandOperand().accept( this ),
 				(Expression) expression.getLeftHandOperand().accept( this ),
 				expression.getExpressionType()

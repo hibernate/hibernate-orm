@@ -14,7 +14,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
@@ -25,7 +25,7 @@ import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 
 /**
@@ -50,7 +50,7 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements Polymorphi
 	}
 
 	@Override
-	public NavigableSource getSource() {
+	public NavigableContainer getContainer() {
 		return null;
 	}
 
@@ -150,7 +150,7 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements Polymorphi
 	}
 
 	@Override
-	public Return generateReturn(
+	public QueryResult generateReturn(
 			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
 		throw new NotYetImplementedException(  );
 	}

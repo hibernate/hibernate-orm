@@ -11,15 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.persister.queryable.spi.ExpressableType;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
-import org.hibernate.sql.ast.produce.result.internal.ReturnScalarImpl;
-import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
+import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -68,18 +68,11 @@ public class CaseSearchedExpression implements Expression, SqlSelectable, Select
 	}
 
 	@Override
-	public Expression getSelectedExpression() {
-		return this;
-	}
-
-	@Override
-	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
-		return new ReturnScalarImpl(
-				this,
-				returnResolutionContext.resolveSqlSelection( this ),
-				resultVariable,
-				getType()
-		);
+	public Selection createSelection(
+			Expression selectedExpression,
+			String resultVariable,
+			ColumnReferenceResolver columnReferenceResolver) {
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override

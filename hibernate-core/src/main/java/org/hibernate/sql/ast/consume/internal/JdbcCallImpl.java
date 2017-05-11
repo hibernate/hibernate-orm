@@ -13,7 +13,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.consume.spi.InFlightJdbcOperation;
 import org.hibernate.sql.ast.consume.spi.JdbcCallFunctionReturn;
 import org.hibernate.sql.ast.consume.spi.JdbcCallParameterExtractor;
@@ -36,7 +36,7 @@ public class JdbcCallImpl implements InFlightJdbcOperation {
 	private List<JdbcCallParameterExtractor> parameterExtractors;
 	private List<JdbcCallRefCursorExtractor> refCursorExtractors;
 	private List<SqlSelection> sqlSelections;
-	private List<Return> queryReturns;
+	private List<QueryResult> queryReturns;
 
 	public JdbcCallImpl(String callableName, ParameterStrategy parameterStrategy) {
 		this.callableName = callableName;
@@ -79,7 +79,7 @@ public class JdbcCallImpl implements InFlightJdbcOperation {
 	}
 
 	@Override
-	public List<Return> getReturns() {
+	public List<QueryResult> getReturns() {
 		return queryReturns;
 	}
 
@@ -149,7 +149,7 @@ public class JdbcCallImpl implements InFlightJdbcOperation {
 	}
 
 	@Override
-	public void addQueryReturn(Return queryReturn) {
+	public void addQueryReturn(QueryResult queryReturn) {
 		if ( queryReturns == null ) {
 			queryReturns  = new ArrayList<>();
 		}

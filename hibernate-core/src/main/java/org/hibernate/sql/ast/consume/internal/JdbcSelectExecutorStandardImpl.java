@@ -26,7 +26,7 @@ import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.consume.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.ast.consume.results.internal.RowProcessingStateStandardImpl;
@@ -39,7 +39,7 @@ import org.hibernate.sql.ast.consume.results.internal.values.JdbcValuesSourceRes
 import org.hibernate.sql.ast.consume.results.spi.Initializer;
 import org.hibernate.sql.ast.consume.results.spi.InitializerSource;
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.ast.consume.results.spi.ReturnAssembler;
+import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.consume.results.spi.RowReader;
 import org.hibernate.sql.ast.consume.spi.JdbcSelect;
 import org.hibernate.sql.ast.consume.spi.JdbcSelectExecutor;
@@ -257,10 +257,10 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				persistenceContext
 		);
 
-		final List<ReturnAssembler> returnAssemblers = new ArrayList<>();
+		final List<QueryResultAssembler> returnAssemblers = new ArrayList<>();
 		final List<Initializer> initializers = new ArrayList<>();
-		for ( Return queryReturn : jdbcSelect.getReturns() ) {
-			returnAssemblers.add( queryReturn.getReturnAssembler() );
+		for ( QueryResult queryReturn : jdbcSelect.getReturns() ) {
+			returnAssemblers.add( queryReturn.getResultAssembler() );
 
 			if ( queryReturn instanceof InitializerSource ) {
 				// todo : break the Initializers out into types

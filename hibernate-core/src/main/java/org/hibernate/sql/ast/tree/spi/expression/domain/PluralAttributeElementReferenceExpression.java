@@ -33,7 +33,7 @@ import org.hibernate.type.spi.Type;
  */
 public class PluralAttributeElementReferenceExpression implements NavigableReferenceExpression {
 	private final CollectionPersister collectionPersister;
-	private final ColumnBindingSource columnBindingSource;
+	private final ColumnReferenceSource columnBindingSource;
 	private final NavigablePath navigablePath;
 
 	private final Selectable selectable;
@@ -54,7 +54,7 @@ public class PluralAttributeElementReferenceExpression implements NavigableRefer
 		switch ( elementReference.getClassification() ) {
 			case BASIC: {
 				final Column column = (Column) elementReference.getColumns().get( 0 );
-				final ColumnReference columnBinding = columnBindingSource.resolveColumnBinding( column );
+				final ColumnReference columnBinding = columnBindingSource.resolveColumnReference( column );
 				this.columnBindings = Collections.singletonList( columnBinding );
 				this.selectable = new SelectableBasicTypeImpl(
 						this,
@@ -67,7 +67,7 @@ public class PluralAttributeElementReferenceExpression implements NavigableRefer
 				this.columnBindings = new ArrayList<>();
 				for ( Object ugh : elementReference.getColumns() ) {
 					final Column column = (Column) ugh;
-					this.columnBindings.add( columnBindingSource.resolveColumnBinding( column ) );
+					this.columnBindings.add( columnBindingSource.resolveColumnReference( column ) );
 				}
 				this.selectable = new SelectableEmbeddedTypeImpl(
 						this,
@@ -81,7 +81,7 @@ public class PluralAttributeElementReferenceExpression implements NavigableRefer
 				final CollectionElementEntity<?> entityElement = (CollectionElementEntity<?>) collectionPersister.getElementDescriptor();
 				this.columnBindings = new ArrayList<>();
 				for ( Column column : entityElement.getColumns() ) {
-					this.columnBindings.add( columnBindingSource.resolveColumnBinding( column ) );
+					this.columnBindings.add( columnBindingSource.resolveColumnReference( column ) );
 				}
 				this.selectable = new SelectableEntityTypeImpl(
 						this,

@@ -8,7 +8,7 @@
 /**
  * Models query returns and fetches.
  *
- * The actual returns from a query are defined by {@link org.hibernate.sql.ast.produce.result.spi.Return} and its
+ * The actual returns from a query are defined by {@link org.hibernate.sql.ast.produce.result.spi.QueryResult} and its
  * sub-types.  Together with {@link org.hibernate.sql.ast.produce.result.spi.Fetch} they define the structure
  * and shape of the SQL select clause and how to read back those results.
  */

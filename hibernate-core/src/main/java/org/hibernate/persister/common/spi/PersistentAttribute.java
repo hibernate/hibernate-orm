@@ -14,7 +14,7 @@ package org.hibernate.persister.common.spi;
 public interface PersistentAttribute<O,T>
 		extends Navigable<T>, TypeExporter<T>, javax.persistence.metamodel.Attribute<O,T> {
 	@Override
-	ManagedTypeImplementor<O> getSource();
+	ManagedTypeImplementor<O> getContainer();
 
 	default String getAttributeName() {
 		return getNavigableName();
@@ -27,7 +27,7 @@ public interface PersistentAttribute<O,T>
 
 	@Override
 	default ManagedTypeImplementor<O> getDeclaringType() {
-		return getSource();
+		return getContainer();
 	}
 
 	@Override

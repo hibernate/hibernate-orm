@@ -6,11 +6,11 @@
  */
 package org.hibernate.persister.entity.spi;
 
-import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 
 /**
  * @author Steve Ebersole
  */
-public interface EntityValuedNavigable<J> extends EntityValuedExpressableType<J>, NavigableSource<J> {
+public interface EntityValuedNavigable<J> extends EntityValuedExpressableType<J>, NavigableContainer<J> {
 }

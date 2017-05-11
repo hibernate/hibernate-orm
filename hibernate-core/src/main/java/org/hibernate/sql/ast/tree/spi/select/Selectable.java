@@ -6,9 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.spi.select;
 
+import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 
 /**
  * Represents something that is selectable at the domain level.  This is
@@ -18,7 +17,9 @@ import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
  * @author Steve Ebersole
  */
 public interface Selectable {
-	Return makeQueryResult(Expression selectedExpression, String resultVariable, QueryResultCreationContext returnResolutionContext);
+	Selection createSelection(Expression selectedExpression, String resultVariable, ColumnReferenceResolver columnReferenceResolver);
 
-	Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable);
+//	QueryResult makeQueryResult(Expression selectedExpression, String resultVariable, QueryResultCreationContext returnResolutionContext);
+//
+//	QueryResult toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable);
 }

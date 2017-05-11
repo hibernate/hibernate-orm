@@ -29,7 +29,7 @@ public abstract class AbstractCollectionIndex<J, T extends Type<J>> implements C
 	}
 
 	@Override
-	public CollectionPersister getSource() {
+	public CollectionPersister getContainer() {
 		return persister;
 	}
 

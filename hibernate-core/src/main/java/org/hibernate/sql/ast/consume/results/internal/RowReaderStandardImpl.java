@@ -16,14 +16,14 @@ import org.hibernate.sql.ast.consume.results.spi.RowProcessingState;
 import org.hibernate.sql.ast.consume.results.spi.RowReader;
 import org.hibernate.sql.ast.consume.results.spi.EntityReferenceInitializer;
 import org.hibernate.sql.ast.consume.results.spi.Initializer;
-import org.hibernate.sql.ast.consume.results.spi.ReturnAssembler;
+import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.consume.spi.RowTransformer;
 
 /**
  * @author Steve Ebersole
  */
 public class RowReaderStandardImpl<T> implements RowReader<T> {
-	private final List<ReturnAssembler> returnAssemblers;
+	private final List<QueryResultAssembler> returnAssemblers;
 	private final List<Initializer> initializers;
 	private final RowTransformer<T> rowTransformer;
 
@@ -31,7 +31,7 @@ public class RowReaderStandardImpl<T> implements RowReader<T> {
 	private final Callback callback;
 
 	public RowReaderStandardImpl(
-			List<ReturnAssembler> returnAssemblers,
+			List<QueryResultAssembler> returnAssemblers,
 			List<Initializer> initializers,
 			RowTransformer<T> rowTransformer,
 			Callback callback) {

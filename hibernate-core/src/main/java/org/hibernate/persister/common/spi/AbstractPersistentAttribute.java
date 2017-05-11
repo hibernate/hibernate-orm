@@ -38,7 +38,7 @@ public abstract class AbstractPersistentAttribute<O,T> implements PersistentAttr
 	}
 
 	@Override
-	public ManagedTypeImplementor<O> getSource() {
+	public ManagedTypeImplementor<O> getContainer() {
 		return container;
 	}
 

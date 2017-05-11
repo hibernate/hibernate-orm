@@ -22,7 +22,7 @@ import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -89,7 +89,7 @@ public class IdentifierDescriptorSimple<O,J>
 
 	@Override
 	public String asLoggableText() {
-		return "IdentifierSimple(" + getSource().asLoggableText() + ")";
+		return "IdentifierSimple(" + getContainer().asLoggableText() + ")";
 	}
 
 	@Override
@@ -108,7 +108,7 @@ public class IdentifierDescriptorSimple<O,J>
 	}
 
 	@Override
-	public Return generateReturn(
+	public QueryResult generateReturn(
 			QueryResultCreationContext returnResolutionContext,
 			TableGroup tableGroup) {
 		return new SelectableImpl( this, returnResolutionContext, tableGroup ).toQueryReturn( returnResolutionContext, null );
@@ -171,7 +171,7 @@ public class IdentifierDescriptorSimple<O,J>
 		}
 
 		@Override
-		public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
+		public QueryResult toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 			return selectableDelegate.toQueryReturn( returnResolutionContext, resultVariable );
 		}
 

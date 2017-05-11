@@ -31,7 +31,7 @@ import org.hibernate.type.spi.Type;
  */
 public class PluralAttributeIndexReferenceExpression implements NavigableReferenceExpression {
 	private final CollectionPersister collectionPersister;
-	private final ColumnBindingSource columnBindingSource;
+	private final ColumnReferenceSource columnBindingSource;
 	private final NavigablePath navigablePath;
 
 	private final List<ColumnReference> columnBindings;
@@ -50,7 +50,7 @@ public class PluralAttributeIndexReferenceExpression implements NavigableReferen
 		final CollectionIndex indexReference = collectionPersister.getIndexDescriptor();
 		switch ( indexReference.getClassification() ) {
 			case BASIC: {
-				final ColumnReference columnBinding = columnBindingSource.resolveColumnBinding( (Column) indexReference.getColumns().get( 0 ) );
+				final ColumnReference columnBinding = columnBindingSource.resolveColumnReference( (Column) indexReference.getColumns().get( 0 ) );
 				this.columnBindings = Collections.singletonList( columnBinding );
 				this.selectable = new SelectableBasicTypeImpl(
 						this,
@@ -63,7 +63,7 @@ public class PluralAttributeIndexReferenceExpression implements NavigableReferen
 				this.columnBindings = new ArrayList<>();
 				for ( Object ugh : indexReference.getColumns() ) {
 					final Column column = (Column) ugh;
-					this.columnBindings.add( columnBindingSource.resolveColumnBinding( column ) );
+					this.columnBindings.add( columnBindingSource.resolveColumnReference( column ) );
 				}
 				this.selectable = new SelectableEmbeddedTypeImpl(
 						this,

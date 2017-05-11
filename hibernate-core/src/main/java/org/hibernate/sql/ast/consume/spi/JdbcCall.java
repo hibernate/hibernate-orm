@@ -10,7 +10,7 @@ package org.hibernate.sql.ast.consume.spi;
 import java.util.List;
 
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 
 /**
  * @author Steve Ebersole
@@ -30,5 +30,5 @@ public interface JdbcCall extends JdbcOperation {
 
 	List<SqlSelection> getSqlSelections();
 
-	List<Return> getReturns();
+	List<QueryResult> getReturns();
 }

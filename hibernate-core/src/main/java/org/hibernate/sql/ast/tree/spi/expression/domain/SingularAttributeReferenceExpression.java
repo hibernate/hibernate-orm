@@ -30,7 +30,7 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  */
 public class SingularAttributeReferenceExpression implements NavigableReferenceExpression {
-	private final ColumnBindingSource columnBindingSource;
+	private final ColumnReferenceSource columnBindingSource;
 	private final SingularPersistentAttribute referencedAttribute;
 	private final NavigablePath navigablePath;
 
@@ -38,7 +38,7 @@ public class SingularAttributeReferenceExpression implements NavigableReferenceE
 	private List<ColumnReference> columnBindings;
 
 	public SingularAttributeReferenceExpression(
-			ColumnBindingSource columnBindingSource,
+			ColumnReferenceSource columnBindingSource,
 			SingularPersistentAttribute referencedAttribute,
 			NavigablePath navigablePath) {
 		this.columnBindingSource = columnBindingSource;
@@ -53,7 +53,7 @@ public class SingularAttributeReferenceExpression implements NavigableReferenceE
 			case BASIC: {
 				return new SelectableBasicTypeImpl(
 						this,
-						columnBindingSource.resolveColumnBinding( referencedAttribute.getColumns().get( 0 ) ),
+						columnBindingSource.resolveColumnReference( referencedAttribute.getColumns().get( 0 ) ),
 						(BasicType) referencedAttribute.getOrmType()
 				);
 			}
@@ -121,7 +121,7 @@ public class SingularAttributeReferenceExpression implements NavigableReferenceE
 	private List<ColumnReference> resolveNonSelectColumnBindings() {
 		final List<ColumnReference> columnBindings = new ArrayList<>();
 		for ( Column column : getReferencedAttribute().getColumns() ) {
-			columnBindings.add( columnBindingSource.resolveColumnBinding( column ) );
+			columnBindings.add( columnBindingSource.resolveColumnReference( column ) );
 		}
 		return columnBindings;
 	}

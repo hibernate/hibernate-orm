@@ -19,7 +19,7 @@ import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
@@ -70,7 +70,7 @@ public class CollectionIndexBasicImpl<J>
 	}
 
 	@Override
-	public Return generateReturn(
+	public QueryResult generateReturn(
 			QueryResultCreationContext returnResolutionContext,
 			TableGroup tableGroup) {
 		throw new NotYetImplementedException(  );

@@ -10,16 +10,16 @@ import java.sql.SQLException;
 
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.ast.consume.results.spi.RowProcessingState;
-import org.hibernate.sql.ast.consume.results.spi.ReturnAssembler;
+import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 
 /**
  * @author Steve Ebersole
  */
-public class ArgumentReader implements ReturnAssembler {
-	private final ReturnAssembler returnAssembler;
+public class ArgumentReader implements QueryResultAssembler {
+	private final QueryResultAssembler returnAssembler;
 	private final String alias;
 
-	public ArgumentReader(ReturnAssembler returnAssembler, String alias) {
+	public ArgumentReader(QueryResultAssembler returnAssembler, String alias) {
 		this.returnAssembler = returnAssembler;
 		this.alias = alias;
 	}

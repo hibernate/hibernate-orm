@@ -33,7 +33,9 @@ import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
 import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.common.spi.NavigableContainer;
+import org.hibernate.persister.common.spi.JoinedTableBinding;
+import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.entity.internal.AbstractIdentifiableType;
 import org.hibernate.persister.entity.internal.IdentifierDescriptorCompositeAggregated;
 import org.hibernate.persister.entity.internal.IdentifierDescriptorSimple;
@@ -49,7 +51,6 @@ import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.spi.expression.ColumnReferenceExpression;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
@@ -77,8 +78,11 @@ public abstract class AbstractEntityPersister<T>
 	private final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy;
 
 	private final NavigableRole navigableRole;
-	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 
+	private final Table rootTable;
+	private final List<JoinedTableBinding> secondaryTableBindings;
+
+	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 	private final EntityTuplizer tuplizer;
 
 	@SuppressWarnings("UnnecessaryBoxing")
@@ -95,6 +99,9 @@ public abstract class AbstractEntityPersister<T>
 		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
 
 		this.navigableRole = new NavigableRole( entityMapping.getEntityName() );
+
+		entityMapping.
+
 
 		if ( entityHierarchy.getEntityMode() == EntityMode.POJO ) {
 			this.bytecodeEnhancementMetadata = BytecodeEnhancementMetadataPojoImpl.from( entityMapping );
@@ -169,7 +176,7 @@ public abstract class AbstractEntityPersister<T>
 	}
 
 	@Override
-	public NavigableSource getSource() {
+	public NavigableContainer getContainer() {
 		return null;
 	}
 
@@ -465,12 +472,8 @@ public abstract class AbstractEntityPersister<T>
 			EntityTableGroup rhsTableGroup) {
 		return new RelationalPredicate(
 				RelationalPredicate.Operator.EQUAL,
-				new ColumnReferenceExpression(
-						lhsTableGroup.resolveColumnBinding( joinColumnMapping.getLeftHandSideColumn() )
-				),
-				new ColumnReferenceExpression(
-						rhsTableGroup.resolveColumnBinding( joinColumnMapping.getRightHandSideColumn() )
-				)
+				lhsTableGroup.resolveColumnReference( joinColumnMapping.getLeftHandSideColumn() ),
+				rhsTableGroup.resolveColumnReference( joinColumnMapping.getRightHandSideColumn() )
 		);
 	}
 }

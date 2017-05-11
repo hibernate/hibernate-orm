@@ -12,15 +12,15 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
-import org.hibernate.sql.ast.produce.result.internal.ReturnScalarImpl;
-import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
-import org.hibernate.type.spi.BasicType;
+import org.hibernate.sql.ast.produce.result.internal.BasicScalarSelectionImpl;
+import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
+import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 
 /**
  * We classify literals different based on their source so that we can handle then differently
@@ -61,23 +61,17 @@ public abstract class AbstractLiteral
 	}
 
 	@Override
-	public Expression getSelectedExpression() {
-		return this;
+	public Selection createSelection(
+			Expression selectedExpression,
+			String resultVariable,
+			ColumnReferenceResolver columnReferenceResolver) {
+		return new BasicScalarSelectionImpl( selectedExpression, resultVariable, this );
 	}
 
-	@Override
-	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
-		return new ReturnScalarImpl(
-				this,
-				returnResolutionContext.resolveSqlSelection( this ),
-				resultVariable,
-				getType()
-		);
-	}
 
 	@Override
 	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( (BasicType) getType() );
+		return new SqlSelectionReaderImpl( getType() );
 	}
 
 	@Override
@@ -86,9 +80,10 @@ public abstract class AbstractLiteral
 			int startPosition,
 			QueryParameterBindings queryParameterBindings,
 			SharedSessionContractImplementor session) throws SQLException {
-		getType()
-		getType().
-		getType().nullSafeSet( statement, getValue(), startPosition, session );
-		return getType().getColumnSpan();
+		throw new NotYetImplementedException(  );
+//		getType()
+//		getType().
+//		getType().nullSafeSet( statement, getValue(), startPosition, session );
+//		return getType().getColumnSpan();
 	}
 }

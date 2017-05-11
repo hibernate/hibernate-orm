@@ -755,7 +755,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		}
 //
 //		@Override
-//		public FetchOwner getSource() {
+//		public FetchOwner getContainer() {
 //			return circularFetchOwner;
 //		}
 //

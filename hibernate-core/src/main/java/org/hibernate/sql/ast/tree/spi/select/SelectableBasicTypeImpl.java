@@ -7,9 +7,11 @@
 
 package org.hibernate.sql.ast.tree.spi.select;
 
+import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.produce.result.internal.ReturnScalarImpl;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.type.spi.BasicType;
 
@@ -19,29 +21,20 @@ import org.hibernate.type.spi.BasicType;
 public class SelectableBasicTypeImpl implements Selectable {
 	private final Expression expression;
 	private final SqlSelectable sqlSelectable;
-	private final BasicType type;
+	private final BasicValuedExpressableType type;
 
 	public SelectableBasicTypeImpl(
 			Expression expression,
 			SqlSelectable sqlSelectable,
-			BasicType type) {
+			BasicValuedExpressableType type) {
 		this.expression = expression;
 		this.sqlSelectable = sqlSelectable;
 		this.type = type;
 	}
 
 	@Override
-	public Expression getSelectedExpression() {
-		return expression;
-	}
-
-	@Override
-	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
-		return new ReturnScalarImpl(
-				expression,
-				returnResolutionContext.resolveSqlSelection( sqlSelectable ),
-				resultVariable,
-				type
-		);
+	public Selection createSelection(
+			Expression selectedExpression, String resultVariable, ColumnReferenceResolver columnReferenceResolver) {
+		return null;
 	}
 }

@@ -13,39 +13,42 @@ import java.util.List;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.sqm.tree.order.SqmSortOrder;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.consume.internal.JdbcSelectImpl;
+import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
+import org.hibernate.sql.ast.produce.sqm.spi.ConversionHelper;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
 import org.hibernate.sql.ast.tree.spi.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.spi.expression.CoalesceExpression;
-import org.hibernate.sql.ast.tree.spi.expression.ColumnReferenceExpression;
-import org.hibernate.sql.ast.tree.spi.expression.ConcatExpression;
+import org.hibernate.sql.ast.tree.spi.expression.CoalesceFunction;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.ConcatFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountStarFunction;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.MaxFunction;
 import org.hibernate.sql.ast.tree.spi.expression.MinFunction;
 import org.hibernate.sql.ast.tree.spi.expression.NamedParameter;
-import org.hibernate.sql.ast.tree.spi.expression.NonStandardFunctionExpression;
-import org.hibernate.sql.ast.tree.spi.expression.NullifExpression;
+import org.hibernate.sql.ast.tree.spi.expression.NonStandardFunction;
+import org.hibernate.sql.ast.tree.spi.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
-import org.hibernate.sql.ast.tree.spi.expression.UnaryOperationExpression;
+import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReferenceExpression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeElementReferenceExpression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeIndexReferenceExpression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReferenceExpression;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationArgument;
-import org.hibernate.sql.ast.tree.spi.from.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.from.FromClause;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.BetweenPredicate;
@@ -62,10 +65,6 @@ import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
-import org.hibernate.sql.ast.produce.sqm.spi.ConversionHelper;
-import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
-import org.hibernate.sql.ast.consume.internal.JdbcSelectImpl;
-import org.hibernate.query.sqm.tree.order.SqmSortOrder;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -312,12 +311,12 @@ public class SqlSelectAstToJdbcSelectConverter {
 		renderColumnBindings( attributeExpression.getColumnReferences() );
 	}
 
-	private void renderColumnBindings(List<ColumnReference> columnBindings) {
+	private void renderColumnBindings(List<org.hibernate.sql.ast.tree.spi.from.ColumnReference> columnBindings) {
 		if ( currentlyInPredicate && columnBindings.size() > 1 ) {
 			appendSql( "(" );
 		}
 
-		for ( ColumnReference columnBinding : columnBindings ) {
+		for ( org.hibernate.sql.ast.tree.spi.from.ColumnReference columnBinding : columnBindings ) {
 			appendSql( columnBinding.getColumn().render( columnBinding.getIdentificationVariable() ) );
 		}
 
@@ -339,8 +338,8 @@ public class SqlSelectAstToJdbcSelectConverter {
 		renderColumnBindings( indexExpression.getColumnReferences() );
 	}
 
-	public void visitColumnBinding(ColumnReference columnBinding) {
-		appendSql( columnBinding.getColumn().render( columnBinding.getIdentificationVariable() ) );
+	public void visitColumnReference(ColumnReference columnReference) {
+		appendSql( columnReference.getColumn().render( columnReference.getIdentificationVariable() ) );
 	}
 
 	public void visitAvgFunction(AvgFunction avgFunction) {
@@ -384,13 +383,12 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( " end" );
 	}
 
-	public void visitColumnBindingExpression(ColumnReferenceExpression columnBindingExpression) {
+	public void visitColumnBindingExpression(ColumnReference columnReference) {
 		// need to find a better way to do this
-		final ColumnReference columnBinding = columnBindingExpression.getColumnReference();
-		appendSql( columnBinding.getColumn().render( columnBinding.getIdentificationVariable() ) );
+		appendSql( columnReference.getColumn().render( columnReference.getIdentificationVariable() ) );
 	}
 
-	public void visitCoalesceExpression(CoalesceExpression coalesceExpression) {
+	public void visitCoalesceFunction(CoalesceFunction coalesceExpression) {
 		appendSql( "coalesce(" );
 		String separator = "";
 		for ( Expression expression : coalesceExpression.getValues() ) {
@@ -402,7 +400,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( ")" );
 	}
 
-	public void visitConcatExpression(ConcatExpression concatExpression) {
+	public void visitConcatFunction(ConcatFunction concatExpression) {
 		appendSql( "concat(" );
 		concatExpression.getLeftHandOperand().accept( this );
 		appendSql( "," );
@@ -476,7 +474,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		}
 	}
 
-	public void visitNonStandardFunctionExpression(NonStandardFunctionExpression functionExpression) {
+	public void visitNonStandardFunctionExpression(NonStandardFunction functionExpression) {
 		// todo : look up function registry entry (maybe even when building the SQL tree)
 		appendSql( functionExpression.getFunctionName() );
 		if ( !functionExpression.getArguments().isEmpty() ) {
@@ -491,11 +489,11 @@ public class SqlSelectAstToJdbcSelectConverter {
 		}
 	}
 
-	public void visitNullifExpression(NullifExpression nullifExpression) {
+	public void visitNullifFunction(NullifFunction function) {
 		appendSql( "nullif(" );
-		nullifExpression.getFirstArgument().accept( this );
+		function.getFirstArgument().accept( this );
 		appendSql( ", " );
-		nullifExpression.getSecondArgument().accept( this );
+		function.getSecondArgument().accept( this );
 		appendSql( ")" );
 	}
 
@@ -611,8 +609,8 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( ")" );
 	}
 
-	public void visitUnaryOperationExpression(UnaryOperationExpression unaryOperationExpression) {
-		if ( unaryOperationExpression.getOperation() == UnaryOperationExpression.Operation.PLUS ) {
+	public void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression) {
+		if ( unaryOperationExpression.getOperator() == UnaryOperation.Operator.PLUS ) {
 			appendSql( "+" );
 		}
 		else {

@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.embedded.spi;
 
-import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.queryable.spi.EmbeddedValueExpressableType;
 
 /**
@@ -14,9 +14,9 @@ import org.hibernate.persister.queryable.spi.EmbeddedValueExpressableType;
  *
  * @author Steve Ebersole
  */
-public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType<J>, NavigableSource<J> {
+public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType<J>, NavigableContainer<J> {
 	@Override
-	EmbeddedContainer getSource();
+	EmbeddedContainer getContainer();
 
 	EmbeddedPersister getEmbeddablePersister();
 }

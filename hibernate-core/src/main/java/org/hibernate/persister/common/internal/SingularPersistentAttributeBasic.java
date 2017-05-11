@@ -8,7 +8,6 @@
 package org.hibernate.persister.common.internal;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
@@ -56,7 +55,7 @@ public class SingularPersistentAttributeBasic<O,J> extends AbstractSingularPersi
 
 	@Override
 	public String asLoggableText() {
-		return "SingularAttributeBasic(" + getSource().asLoggableText() + '.' + getAttributeName() + ')';
+		return "SingularAttributeBasic(" + getContainer().asLoggableText() + '.' + getAttributeName() + ')';
 	}
 
 	@Override
@@ -64,7 +63,7 @@ public class SingularPersistentAttributeBasic<O,J> extends AbstractSingularPersi
 		log.debugf(
 				"AttributeConverter [%s] being injected for singular attribute '%s.%s' collection; was : %s",
 				attributeConverterInfo,
-				getSource().asLoggableText(),
+				getContainer().asLoggableText(),
 				getName(),
 				this.attributeConverterInfo
 		);

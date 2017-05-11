@@ -18,15 +18,15 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.produce.ConversionException;
-import org.hibernate.sql.ast.produce.result.internal.ReturnDynamicInstantiationImpl;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultDynamicInstantiationImpl;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.ArgumentReader;
-import org.hibernate.sql.ast.consume.results.internal.instantiation.ReturnAssemblerConstructorImpl;
-import org.hibernate.sql.ast.consume.results.internal.instantiation.ReturnAssemblerInjectionImpl;
-import org.hibernate.sql.ast.consume.results.internal.instantiation.ReturnAssemblerListImpl;
-import org.hibernate.sql.ast.consume.results.internal.instantiation.ReturnAssemblerMapImpl;
-import org.hibernate.sql.ast.consume.results.spi.ReturnAssembler;
+import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultAssemblerConstructorImpl;
+import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultAssemblerInjectionImpl;
+import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultAssemblerListImpl;
+import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultAssemblerMapImpl;
+import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.type.spi.Type;
@@ -117,10 +117,10 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 		return this;
 	}
 
-	private ReturnDynamicInstantiationImpl queryReturn;
+	private QueryResultDynamicInstantiationImpl queryReturn;
 
 	@Override
-	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
+	public QueryResult toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 		if ( queryReturn != null ) {
 			return queryReturn;
 		}
@@ -147,7 +147,7 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 			}
 		}
 
-		final ReturnAssembler assembler = resolveAssembler(
+		final QueryResultAssembler assembler = resolveAssembler(
 				target,
 				arguments,
 				areAllArgumentsAliased,
@@ -156,12 +156,12 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 				argumentReaders
 		);
 
-		queryReturn = new ReturnDynamicInstantiationImpl( this, resultVariable, assembler );
+		queryReturn = new QueryResultDynamicInstantiationImpl( this, resultVariable, assembler );
 
 		return queryReturn;
 	}
 
-	private static ReturnAssembler resolveAssembler(
+	private static QueryResultAssembler resolveAssembler(
 			Class target,
 			List<DynamicInstantiationArgument> arguments,
 			boolean areAllArgumentsAliased,
@@ -172,7 +172,7 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 			if ( log.isDebugEnabled() && areAnyArgumentsAliased ) {
 				log.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
 			}
-			return new ReturnAssemblerListImpl( argumentReaders );
+			return new QueryResultAssemblerListImpl( argumentReaders );
 		}
 		else if ( Map.class.equals( target ) ) {
 			if ( ! areAllArgumentsAliased ) {
@@ -183,7 +183,7 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 						"Map dynamic instantiation contained arguments with duplicated aliases [" + StringHelper.join( ",", duplicatedAliases ) + "]"
 				);
 			}
-			return new ReturnAssemblerMapImpl( argumentReaders );
+			return new QueryResultAssemblerMapImpl( argumentReaders );
 		}
 		else {
 			// find a constructor matching argument types
@@ -212,7 +212,7 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 				}
 
 				constructor.setAccessible( true );
-				return new ReturnAssemblerConstructorImpl( constructor, argumentReaders );
+				return new QueryResultAssemblerConstructorImpl( constructor, argumentReaders );
 			}
 
 			log.debugf(
@@ -231,7 +231,7 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 				);
 			}
 
-			return new ReturnAssemblerInjectionImpl( target, argumentReaders );
+			return new QueryResultAssemblerInjectionImpl( target, argumentReaders );
 		}
 	}
 }

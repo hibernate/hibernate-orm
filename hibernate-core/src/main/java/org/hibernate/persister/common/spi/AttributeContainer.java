@@ -13,7 +13,7 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface AttributeContainer extends NavigableSource {
+public interface AttributeContainer extends NavigableContainer {
 	// todo : what else would be useful here?
 
 	AttributeContainer getSuperAttributeContainer();

@@ -16,7 +16,7 @@ import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
@@ -28,7 +28,7 @@ import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -46,7 +46,7 @@ import org.hibernate.type.spi.EmbeddedType;
  */
 public class IdentifierDescriptorCompositeAggregated<O,J>
 		extends AbstractSingularPersistentAttribute<O,J,EmbeddedType<J>>
-		implements IdentifierDescriptor<O,J>, SingularPersistentAttribute<O,J>, NavigableSource<J> {
+		implements IdentifierDescriptor<O,J>, SingularPersistentAttribute<O,J>, NavigableContainer<J> {
 	private final EntityHierarchy entityHierarchy;
 	private final EmbeddedPersister<J> embeddedPersister;
 
@@ -109,7 +109,7 @@ public class IdentifierDescriptorCompositeAggregated<O,J>
 	}
 
 	@Override
-	public Return generateReturn(QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
+	public QueryResult generateReturn(QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
 		// todo : not sure what we will need here yet...
 
 		// for now...
@@ -173,7 +173,7 @@ public class IdentifierDescriptorCompositeAggregated<O,J>
 
 	@Override
 	public List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute) {
-		return getSource().resolveJoinColumnMappings( persistentAttribute );
+		return getContainer().resolveJoinColumnMappings( persistentAttribute );
 	}
 
 
@@ -222,7 +222,7 @@ public class IdentifierDescriptorCompositeAggregated<O,J>
 		}
 
 		@Override
-		public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
+		public QueryResult toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 			return selectableDelegate.toQueryReturn( returnResolutionContext, resultVariable );
 		}
 

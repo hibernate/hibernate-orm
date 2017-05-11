@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.produce.spi;
 import java.util.List;
 
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 
 /**
  *
@@ -17,5 +17,5 @@ import org.hibernate.sql.ast.produce.result.spi.Return;
  */
 public interface SqlSelectPlan {
 	SelectStatement getSqlAstSelectStatement();
-	List<Return> getQueryResults();
+	List<QueryResult> getQueryResults();
 }

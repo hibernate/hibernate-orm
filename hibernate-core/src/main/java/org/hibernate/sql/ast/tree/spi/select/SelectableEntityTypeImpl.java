@@ -20,14 +20,14 @@ import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnBindingGroup;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnBindingGroupEmptyImpl;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnBindingGroupImpl;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnBindingSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroup;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroupEmptyImpl;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroupImpl;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.spi.from.ColumnReference;
-import org.hibernate.sql.ast.produce.result.internal.ReturnEntityImpl;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultEntityImpl;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
@@ -39,16 +39,16 @@ import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroupEmpty;
 public class SelectableEntityTypeImpl implements Selectable {
 	private final Expression expression;
 	private final NavigablePath navigablePath;
-	private final ColumnBindingSource columnBindingSource;
+	private final ColumnReferenceSource columnBindingSource;
 	private final EntityPersister<?> entityPersister;
 
-	private final LinkedHashMap<PersistentAttribute, ColumnBindingGroup> columnBindingGroupMap;
+	private final LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> columnBindingGroupMap;
 	private final boolean isShallow;
 
 	public SelectableEntityTypeImpl(
 			Expression expression,
 			NavigablePath navigablePath,
-			ColumnBindingSource columnBindingSource,
+			ColumnReferenceSource columnBindingSource,
 			EntityPersister entityPersister,
 			boolean isShallow) {
 		this.expression = expression;
@@ -59,8 +59,8 @@ public class SelectableEntityTypeImpl implements Selectable {
 		this.isShallow = isShallow;
 	}
 
-	private LinkedHashMap<PersistentAttribute, ColumnBindingGroup> buildColumnBindingGroupMap(boolean isShallow) {
-		final LinkedHashMap<PersistentAttribute, ColumnBindingGroup> columnBindingGroupMap = new LinkedHashMap<>();
+	private LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> buildColumnBindingGroupMap(boolean isShallow) {
+		final LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> columnBindingGroupMap = new LinkedHashMap<>();
 
 		// no matter what, include:
 		//		1) identifier
@@ -86,14 +86,14 @@ public class SelectableEntityTypeImpl implements Selectable {
 
 	private void addColumnBindingGroupEntry(
 			PersistentAttribute persistentAttribute,
-			Map<PersistentAttribute, ColumnBindingGroup> columnBindingGroupMap) {
+			Map<PersistentAttribute, ColumnReferenceGroup> columnBindingGroupMap) {
 		if ( !SingularPersistentAttribute.class.isInstance( persistentAttribute ) ) {
-			columnBindingGroupMap.put( persistentAttribute, ColumnBindingGroupEmptyImpl.INSTANCE );
+			columnBindingGroupMap.put( persistentAttribute, ColumnReferenceGroupEmptyImpl.INSTANCE );
 			return;
 		}
 
 		final SingularPersistentAttribute singularAttribute = (SingularPersistentAttribute) persistentAttribute;
-		final ColumnBindingGroupImpl columnBindingGroup = new ColumnBindingGroupImpl();
+		final ColumnReferenceGroupImpl columnBindingGroup = new ColumnReferenceGroupImpl();
 
 		final List<Column> columns;
 		if ( persistentAttribute instanceof SingularPersistentAttributeEmbedded ) {
@@ -104,7 +104,7 @@ public class SelectableEntityTypeImpl implements Selectable {
 		}
 
 		for ( Column column : columns ) {
-			columnBindingGroup.addColumnBinding( columnBindingSource.resolveColumnBinding( column ) );
+			columnBindingGroup.addColumnBinding( columnBindingSource.resolveColumnReference( column ) );
 		}
 
 		columnBindingGroupMap.put( persistentAttribute, columnBindingGroup );
@@ -116,8 +116,8 @@ public class SelectableEntityTypeImpl implements Selectable {
 	}
 
 	@Override
-	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
-		return new ReturnEntityImpl(
+	public QueryResult toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
+		return new QueryResultEntityImpl(
 				expression,
 				entityPersister,
 				resultVariable,
@@ -131,7 +131,7 @@ public class SelectableEntityTypeImpl implements Selectable {
 	private Map<PersistentAttribute, SqlSelectionGroup> buildSqlSelectionGroupMap(QueryResultCreationContext resolutionContext) {
 		final Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap = new HashMap<>();
 
-		for ( Map.Entry<PersistentAttribute, ColumnBindingGroup> entry : columnBindingGroupMap.entrySet() ) {
+		for ( Map.Entry<PersistentAttribute, ColumnReferenceGroup> entry : columnBindingGroupMap.entrySet() ) {
 			sqlSelectionGroupMap.put(
 					entry.getKey(),
 					toSqlSelectionGroup( entry.getValue(), resolutionContext )
@@ -141,13 +141,13 @@ public class SelectableEntityTypeImpl implements Selectable {
 		return sqlSelectionGroupMap;
 	}
 
-	private SqlSelectionGroup toSqlSelectionGroup(ColumnBindingGroup columnBindingGroup, QueryResultCreationContext resolutionContext) {
-		if ( columnBindingGroup.getColumnBindings().isEmpty() ) {
+	private SqlSelectionGroup toSqlSelectionGroup(ColumnReferenceGroup columnBindingGroup, QueryResultCreationContext resolutionContext) {
+		if ( columnBindingGroup.getColumnReferences().isEmpty() ) {
 			return SqlSelectionGroupEmpty.INSTANCE;
 		}
 
 		final SqlSelectionGroupImpl sqlSelectionGroup = new SqlSelectionGroupImpl();
-		for ( ColumnReference columnBinding : columnBindingGroup.getColumnBindings() ) {
+		for ( ColumnReference columnBinding : columnBindingGroup.getColumnReferences() ) {
 			sqlSelectionGroup.addSqlSelection( resolutionContext.resolveSqlSelection( columnBinding ) );
 		}
 		return sqlSelectionGroup;
@@ -156,15 +156,15 @@ public class SelectableEntityTypeImpl implements Selectable {
 	public List<ColumnReference> getColumnBinding() {
 		List<ColumnReference> columnBindings = null;
 
-		for ( ColumnBindingGroup columnBindingGroup : columnBindingGroupMap.values() ) {
-			if ( columnBindingGroup.getColumnBindings().isEmpty() ) {
+		for ( ColumnReferenceGroup columnBindingGroup : columnBindingGroupMap.values() ) {
+			if ( columnBindingGroup.getColumnReferences().isEmpty() ) {
 				continue;
 			}
 
 			if ( columnBindings == null ) {
 				columnBindings = new ArrayList<>();
 			}
-			columnBindings.addAll( columnBindingGroup.getColumnBindings() );
+			columnBindings.addAll( columnBindingGroup.getColumnReferences() );
 		}
 
 		return columnBindings == null ? Collections.emptyList() : columnBindings;

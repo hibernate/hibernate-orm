@@ -12,8 +12,8 @@ import java.util.List;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 
 /**
- * Represents a grouping of SqlSelectionDescriptors, generally related to a
- * single attribute
+ * Represents a grouping of SqlSelection references, generally related to a
+ * single Navigable
  *
  * @author Steve Ebersole
  */

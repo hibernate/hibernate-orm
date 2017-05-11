@@ -33,8 +33,8 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.persister.common.spi.NavigableSource;
-import org.hibernate.persister.common.spi.SecondaryTableBinding;
+import org.hibernate.persister.common.spi.NavigableContainer;
+import org.hibernate.persister.common.spi.JoinedTableBinding;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.entity.MultiLoadOptions;
@@ -72,7 +72,7 @@ import org.hibernate.type.spi.Type;
  */
 @Incubating
 public interface EntityPersister<T>
-		extends EntityValuedExpressableType<T>, NavigableSource<T>, EmbeddedContainer<T>,
+		extends EntityValuedExpressableType<T>, NavigableContainer<T>, EmbeddedContainer<T>,
 				RootTableGroupProducer, OptimisticCacheSource,
 				IdentifiableTypeImplementor<T>, EntityType<T> {
 
@@ -248,7 +248,7 @@ public interface EntityPersister<T>
 	 * Access to all "declared" secondary table mapping info for this entity.
 	 * This does not include secondary tables from super-types.
 	 */
-	List<SecondaryTableBinding> getSecondaryTableBindings();
+	List<JoinedTableBinding> getSecondaryTableBindings();
 
 
 

@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+
 /**
  * Represents a return value in the query results.  Not the same as a result (column) in the JDBC ResultSet!
  * <p/>
@@ -17,7 +19,7 @@ package org.hibernate.loader.plan.spi;
  *
  * @author Steve Ebersole
  *
- * @deprecated Use {@link org.hibernate.sql.ast.produce.result.spi.Return}
+ * @deprecated Use {@link QueryResult}
  */
 @Deprecated
 public interface Return {

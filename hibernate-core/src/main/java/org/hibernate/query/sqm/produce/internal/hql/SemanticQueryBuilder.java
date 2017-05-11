@@ -19,7 +19,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.persister.collection.spi.CollectionElement;
 import org.hibernate.persister.collection.spi.CollectionPersister.CollectionClassification;
-import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.common.spi.PluralPersistentAttribute;
 import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
@@ -1532,7 +1532,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		// the binding would additionally need to be an AttributeBindingSource
 		// and expose a Bindable
 
-		if ( ! NavigableSource.class.isInstance( elementReference ) ) {
+		if ( ! NavigableContainer.class.isInstance( elementReference ) ) {
 			throw new SemanticException(
 					String.format(
 							Locale.ROOT,

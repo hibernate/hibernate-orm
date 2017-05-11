@@ -12,8 +12,8 @@ import java.util.List;
 
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.from.ColumnReference;
-import org.hibernate.sql.ast.produce.result.internal.ReturnCompositeImpl;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.type.spi.EmbeddedType;
 
@@ -40,7 +40,7 @@ public class SelectableEmbeddedTypeImpl implements Selectable {
 	}
 
 	@Override
-	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
+	public QueryResult toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 		// todo : not sure what we will need here yet...
 		final List<SqlSelection> sqlSelections = new ArrayList<>();
 		for ( ColumnReference columnBinding : columnBindings ) {
@@ -49,7 +49,7 @@ public class SelectableEmbeddedTypeImpl implements Selectable {
 			);
 		}
 
-		return new ReturnCompositeImpl(
+		return new QueryResultCompositeImpl(
 				this,
 				resultVariable,
 				sqlSelections,

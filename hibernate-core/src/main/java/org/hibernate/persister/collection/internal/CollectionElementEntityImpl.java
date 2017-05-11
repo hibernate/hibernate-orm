@@ -24,7 +24,7 @@ import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.type.spi.EntityType;
 
@@ -96,7 +96,7 @@ public class CollectionElementEntityImpl<J>
 	}
 
 	@Override
-	public Return generateReturn(
+	public QueryResult generateReturn(
 			QueryResultCreationContext returnResolutionContext,
 			TableGroup tableGroup) {
 		throw new NotYetImplementedException(  );

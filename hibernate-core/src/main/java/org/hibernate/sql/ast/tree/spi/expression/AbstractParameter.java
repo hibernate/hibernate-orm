@@ -11,18 +11,19 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.sql.ast.produce.result.internal.ReturnScalarImpl;
-import org.hibernate.sql.ast.produce.result.spi.Return;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.sqm.spi.ParameterSpec;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
+import org.hibernate.sql.ast.produce.result.internal.BasicScalarSelectionImpl;
+import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
+import org.hibernate.sql.ast.produce.sqm.spi.ParameterSpec;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
-import org.hibernate.type.spi.BasicType;
 
 import org.jboss.logging.Logger;
 
@@ -54,18 +55,11 @@ public abstract class AbstractParameter
 	}
 
 	@Override
-	public Expression getSelectedExpression() {
-		return this;
-	}
-
-	@Override
-	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
-		return new ReturnScalarImpl(
-				this,
-				returnResolutionContext.resolveSqlSelection( this ),
-				resultVariable,
-				getType()
-		);
+	public Selection createSelection(
+			Expression selectedExpression,
+			String resultVariable,
+			ColumnReferenceResolver columnReferenceResolver) {
+		return new BasicScalarSelectionImpl( selectedExpression, resultVariable, this );
 	}
 
 	@Override
@@ -75,7 +69,9 @@ public abstract class AbstractParameter
 
 	@Override
 	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( (BasicType) getType() );
+		// todo (6.0) : this limits parameter bindings to just basic (single column) types.
+
+		return new SqlSelectionReaderImpl( ( BasicValuedExpressableType) getType() );
 	}
 
 	protected int bindParameterValue(
@@ -109,8 +105,9 @@ public abstract class AbstractParameter
 			warnNullBindValue();
 		}
 
-		bindType.nullSafeSet( statement, bindValue, startPosition, session );
-		return bindType.getColumnSpan();
+		throw new NotYetImplementedException(  );
+//		bindType.nullSafeSet( statement, bindValue, startPosition, session );
+//		return bindType.getColumnSpan();
 	}
 
 	protected abstract void warnNoBinding();

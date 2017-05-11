@@ -110,6 +110,15 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 		return declaredAttributesByName.get( navigableName );
 	}
 
+	@Override
+	public List<Navigable> getNavigables(boolean includeMetaNavigables) {
+		return null;
+	}
+
+	@Override
+	public List<Navigable> getDeclaredNavigables(boolean includeMetaNavigables) {
+		return null;
+	}
 
 	@Override
 	public PersistentAttribute<? super T, ?> findAttribute(String name) {

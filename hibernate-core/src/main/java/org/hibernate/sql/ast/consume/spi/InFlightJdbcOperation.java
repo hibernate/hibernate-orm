@@ -8,7 +8,7 @@
 package org.hibernate.sql.ast.consume.spi;
 
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 
 /**
  * @author Steve Ebersole
@@ -21,5 +21,5 @@ public interface InFlightJdbcOperation extends JdbcCall {
 
 	void addSqlSelection(SqlSelection sqlSelection);
 
-	void addQueryReturn(Return queryReturn);
+	void addQueryReturn(QueryResult queryReturn);
 }

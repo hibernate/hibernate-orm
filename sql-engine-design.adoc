@@ -200,6 +200,7 @@ FromClause
 ==== Expressions
 
 Expressions are fundamental to building the other parts of the SQL AST.  Examples of `Expression` include:
+
 	* reference to part of the domain model (attribute, etc)
 	* aggregation (count, sum, min, max, etc)
 	* arithmetic operation
@@ -218,25 +219,60 @@ Expressions are fundamental to building the other parts of the SQL AST.  Example
 The SQL AST `org.hibernate.sql.ast.tree.spi.select.SelectClause` contains one or more
 `org.hibernate.sql.ast.tree.spi.select.Selection` references.  A `Selection` is made up of
 a specific `Expression` and an optional "result variable" (the term used in JPA for the alias
-assigned to a selection).
+assigned to a selection).  A `Selection` is obtained from `Expression#getType` -> `ExpressableType#makeSelection`.
 
-`Expression`s contribute to this by exposing a `Selectable`, which in turn can be used to
-build `Return` references which model the individual values in the overall domain query result.
-The specific `Return` sub-types include:
-	* `ReturnScalar` - scalar query result; e.g. a function call in the HQL or reference to a String-valued attribute
-	* `ReturnComposite` - composite/embeddable valued query result
-	* `ReturnEntity` - an entity valued query return
-	* `ReturnDynamicInstantiation` - a "constructor" query result.  only used through SQM -> SQL AST producer
-	* `ReturnCollection` - specialized query result used when loading plural attribute entries.
+A `Selection` operates as a producer of `QueryResult` instances (`Selection#makeQueryResult`).
 
-Generally speaking an `Expression` is its own `Selectable`.  Examples where that is not the case include
-`NavigableReferenceExpression`s.
+	todo (6.0) : ^^ note that an alternative option is to pass `QueryResultCreationContext` into the
+		creation of `Selection` which could build then the `QueryResult` at any time as needed and cache the reference
+		for access later.
+
+These `QueryResult` references:
+
+	. model the individual values in the overall domain query result
+	. contibute to the resolution/creation of the various readers, assemblers and initializers.
+
+Some specific sub-types include:
+
+	* `QueryResultScalar` - scalar query result; e.g. a function call in the HQL or reference to a String-valued attribute
+	* `QueryResultComposite` - composite/embeddable valued query result
+	* `QueryResultEntity` - an entity valued query return
+	* `QueryResultDynamicInstantiation` - a "constructor" query result.  only used through SQM -> SQL AST producer
+	* `QueryResultCollection` - specialized query result used when loading plural attribute entries.
+
+Generally speaking an `Expression` is its own `Selectable`.  What does that mean?  Most `Expression` impls
+additionally implement `Selectable` and return itself (`this`) as its `Selectable`.  For example,
+the `org.hibernate.sql.ast.tree.spi.expression.AvgFunction` (modelling an AVG aggregate function) implements
+`Expression` and also implements `Selectable`; it's `Expression#getSelectable` by returning itself as the
+`AvgFunction` already knows how to build its Return (for `Selectable#makeQueryResult`).  The main case where this
+is not the case is `NavigableReferenceExpression`s; for these the `Selectable` is part of the `Navigable`
+model (proposed, it is not yet this way).
 
 Ultimately this `SelectClause` need to be converted into a SQL SELECT statement as well as
-"readers" to read back values from the JDBC `ResultSet`.
+"readers" to read back values from the JDBC `ResultSet`.  This is the role of `SqlSelectAstToJdbcSelectConverter`:
+
+	* Rendering SQL String - `SqlSelectAstToJdbcSelectConverter` overall works on the principle of visitation,
+		specifically visiting the "nodes" of the SQL AST tree.  As the individual nodes dispatch themselves
+		to the visitor we used the specific visitor methods to render the various expressions as SQL fragments
+		into the in-flight `SqlSelectAstToJdbcSelectConverter#sqlBuffer`.
+
+
+
 
 
 ==== SqlSelectAstToJdbcSelectConverter
+
+`SqlSelectAstToJdbcSelectConverter` implements the transformation of a SQL SELECT AST into
+a representation of the "JDBC operation(s)" to perform.  The inputs into this process are:
+
+	* `org.hibernate.sql.ast.produce.spi.SqlSelectPlan`, made up of
+		* `org.hibernate.sql.ast.tree.spi.SelectStatement` - the SQL AST tree
+		* the `List` of `Return` references describing the query results (at the domain level.  Note that
+			these are gleaned from the SQL AST
+
+`org.hibernate.sql.ast.consume.spi.JdbcSelect.
+a `org.hibernate.sql.ast.consume.spi.JdbcSelect` which represents the actual
+JDBC call.
 
 The 2 main responsibilities of `SqlSelectAstToJdbcSelectConverter`:
 
@@ -262,9 +298,12 @@ process its results.  It encapsulates:
 
 === Rendering SQL String
 
-`SqlSelectAstToJdbcSelectConverter` is responsibile to render the SQL AST into a SQL query String.  It
-does this by walking the nodes of the `SelectStatement` using the visitation pattern.  This is where the
-collection of `SqlSelection` references occurs.
+
+
+As it walks the AST it renders the SELECT portion
+
+
+This is also where the collection of `SqlSelection` references occurs.
 
 
 === Building "readers"
@@ -275,9 +314,7 @@ associated with the selected Expression.  These `SqlSelection`s are used to late
 values via the `SqlSelectionReader SqlSelection#getSqlSelectionReader` method.  The process for reading
 results is covered later.
 
-
-
-[NOTE]
+[IMPORTANT]
 ====
 The process used to resolve the `SqlSelection` references given the `SqlSelectable` counterpart is
 handled through the `org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext` contract
@@ -431,6 +468,7 @@ This is more of an esoteric concept at this point, but ultimately the idea is th
 parameter value to JDBC.  It would be best to drive the binding of parameter values from "nodes
 embedded in the query AST".  This could be a case where the implementation of ParameterSpec
 additionally implements this "binding contract" as well.
+
 
 
 

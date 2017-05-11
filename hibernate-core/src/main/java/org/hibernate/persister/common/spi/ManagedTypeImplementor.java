@@ -16,7 +16,6 @@ import org.hibernate.EntityMode;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.tuple.Tuplizer;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 
 /**
@@ -33,7 +32,7 @@ import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
  * @author Steve Ebersole
  */
 public interface ManagedTypeImplementor<T>
-		extends ManagedType<T>, NavigableSource<T>, EmbeddedContainer<T>, ExpressableType<T> {
+		extends ManagedType<T>, NavigableContainer<T>, EmbeddedContainer<T>, ExpressableType<T> {
 	ManagedTypeImplementor<? super T> getSuperclassType();
 
 	ManagedJavaDescriptor<T> getJavaTypeDescriptor();

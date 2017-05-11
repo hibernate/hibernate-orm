@@ -56,7 +56,7 @@ import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.consume.internal.JdbcCallImpl;
 import org.hibernate.sql.ast.consume.internal.JdbcCallParameterBinderImpl;
 import org.hibernate.sql.ast.consume.internal.JdbcCallParameterExtractorImpl;
@@ -66,7 +66,7 @@ import org.hibernate.sql.ast.consume.results.internal.RowReaderNoResultsExpected
 import org.hibernate.sql.ast.consume.results.internal.RowReaderStandardImpl;
 import org.hibernate.sql.ast.consume.results.spi.Initializer;
 import org.hibernate.sql.ast.consume.results.spi.InitializerSource;
-import org.hibernate.sql.ast.consume.results.spi.ReturnAssembler;
+import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.consume.results.spi.RowReader;
 import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
 import org.hibernate.type.spi.Type;
@@ -122,7 +122,7 @@ public class ProcedureCallImpl<R>
 		this.parameterManager = new ParameterManager( this );
 
 		final Set<String> querySpaces = new HashSet<>();
-		final List<ReturnAssembler> returnAssemblers = new ArrayList<>();
+		final List<QueryResultAssembler> returnAssemblers = new ArrayList<>();
 		final List<Initializer> initializers = new ArrayList<>();
 
 		Util.resolveResultClasses(
@@ -138,9 +138,9 @@ public class ProcedureCallImpl<R>
 					}
 
 					@Override
-					public void addQueryReturns(Return... queryReturns) {
-						for ( Return queryReturn : queryReturns ) {
-							returnAssemblers.add( queryReturn.getReturnAssembler() );
+					public void addQueryReturns(QueryResult... queryReturns) {
+						for ( QueryResult queryReturn : queryReturns ) {
+							returnAssemblers.add( queryReturn.getResultAssembler() );
 							if ( queryReturn instanceof InitializerSource ) {
 								( (InitializerSource) queryReturn ).registerInitializers( initializers::add );
 							}
@@ -173,7 +173,7 @@ public class ProcedureCallImpl<R>
 		this.parameterManager = new ParameterManager( this );
 
 		final Set<String> querySpaces = new HashSet<>();
-		final List<ReturnAssembler> returnAssemblers = new ArrayList<>();
+		final List<QueryResultAssembler> returnAssemblers = new ArrayList<>();
 		final List<Initializer> initializers = new ArrayList<>();
 
 		Util.resolveResultSetMappings(
@@ -194,9 +194,9 @@ public class ProcedureCallImpl<R>
 					}
 
 					@Override
-					public void addQueryReturns(Return... queryReturns) {
-						for ( Return queryReturn : queryReturns ) {
-							returnAssemblers.add( queryReturn.getReturnAssembler() );
+					public void addQueryReturns(QueryResult... queryReturns) {
+						for ( QueryResult queryReturn : queryReturns ) {
+							returnAssemblers.add( queryReturn.getResultAssembler() );
 							if ( queryReturn instanceof InitializerSource ) {
 								( (InitializerSource) queryReturn ).registerInitializers( initializers::add );
 							}

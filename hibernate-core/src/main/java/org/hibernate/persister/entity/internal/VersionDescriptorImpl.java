@@ -28,7 +28,7 @@ import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.SelectableBasicTypeImpl;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
@@ -88,7 +88,7 @@ public class VersionDescriptorImpl<O,J> extends AbstractSingularPersistentAttrib
 
 	@Override
 	public String asLoggableText() {
-		return getSource().asLoggableText() + '.' + getNavigableName();
+		return getContainer().asLoggableText() + '.' + getNavigableName();
 	}
 
 	@Override
@@ -97,7 +97,7 @@ public class VersionDescriptorImpl<O,J> extends AbstractSingularPersistentAttrib
 	}
 
 	@Override
-	public Return generateReturn(
+	public QueryResult generateReturn(
 			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
 		return null;
 	}
@@ -154,7 +154,7 @@ public class VersionDescriptorImpl<O,J> extends AbstractSingularPersistentAttrib
 		}
 
 		@Override
-		public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
+		public QueryResult toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 			return selectableDelegate.toQueryReturn( returnResolutionContext, resultVariable );
 		}
 

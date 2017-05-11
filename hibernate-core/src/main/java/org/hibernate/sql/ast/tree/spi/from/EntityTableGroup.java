@@ -12,12 +12,12 @@ import java.util.List;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.sql.ast.produce.result.internal.ReturnEntityImpl;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultEntityImpl;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReferenceExpression;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 
@@ -54,7 +54,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 		final List<ColumnReference> bindings = new ArrayList<>();
 
 		for ( Column column : persister.getHierarchy().getIdentifierDescriptor().getColumns() ) {
-			bindings.add( resolveColumnBinding( column ) );
+			bindings.add( resolveColumnReference( column ) );
 		}
 		return bindings;
 	}
@@ -88,29 +88,16 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	}
 
 	@Override
-	public Return makeQueryResult(Expression selectedExpression, String resultVariable, QueryResultCreationContext returnResolutionContext) {
-		return new ReturnEntityImpl(
-				this,
+	public QueryResult makeQueryResult(Expression selectedExpression, String resultVariable, QueryResultCreationContext returnResolutionContext) {
+		return new QueryResultEntityImpl(
+				selectedExpression,
 				persister,
 				resultVariable,
-
+				// todo (6.0) : build this Map<?,SqlSelectionGroup>
+				null,
+				getNavigablePath(),
+				getUid()
 		);
-	}
-
-
-
-	@Override
-	public EntityReferenceExpression getSelectedExpression() {
-		if ( selectableExpression == null ) {
-			selectableExpression = new EntityReferenceExpression(
-					this,
-					persister,
-					getNavigablePath(),
-					// todo : (vv) shallow
-					false
-			);
-		}
-		return selectableExpression;
 	}
 
 	@Override
@@ -119,7 +106,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	}
 
 	@Override
-	public Return toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
+	public QueryResult toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
 		return getSelectedExpression().getSelectable().toQueryReturn( returnResolutionContext, resultVariable );
 	}
 }

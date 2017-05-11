@@ -17,14 +17,15 @@ import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.common.spi.UnionSubclassTable;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnBindingSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSource {
+public abstract class AbstractTableGroup implements TableGroup, ColumnReferenceSource {
 	private static final Logger log = Logger.getLogger( AbstractTableGroup.class );
 
 	// todo (6.0) : track the "source Navigable"?
@@ -96,7 +97,7 @@ public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSou
 	}
 
 	@Override
-	public TableReference locateTableBinding(Table table) {
+	public TableReference locateTableReference(Table table) {
 		if ( table == getRootTableReference().getTable() ) {
 			return getRootTableReference();
 		}
@@ -138,13 +139,13 @@ public abstract class AbstractTableGroup implements TableGroup, ColumnBindingSou
 	);
 
 	@Override
-	public ColumnReference resolveColumnBinding(Column column) {
+	public ColumnReference resolveColumnReference(Column column) {
 		final ColumnReference existing = columnBindingMap.get( column );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final TableReference tableBinding = locateTableBinding( column.getSourceTable() );
+		final TableReference tableBinding = locateTableReference( column.getSourceTable() );
 		if ( tableBinding == null ) {
 			throw new HibernateException(
 					"Problem resolving Column(" + column.toLoggableString() +

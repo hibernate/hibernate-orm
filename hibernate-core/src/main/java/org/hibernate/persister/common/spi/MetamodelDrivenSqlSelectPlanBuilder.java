@@ -24,5 +24,5 @@ public interface MetamodelDrivenSqlSelectPlanBuilder {
 	 *
 	 * @param rootNavigable The NavigableSource which is the root of the query.
 	 */
-	SqlSelectPlan buildSqlSelectPlan(NavigableSource rootNavigable);
+	SqlSelectPlan buildSqlSelectPlan(NavigableContainer rootNavigable);
 }

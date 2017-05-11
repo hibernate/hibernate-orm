@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.queryable;
 
-import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.query.sqm.SemanticException;
 
 /**
@@ -15,7 +15,7 @@ import org.hibernate.query.sqm.SemanticException;
  * situation where we expect such a navigable to exists and it is an error for
  * it to not.
  *
- * @see NavigableSource#findNavigable
+ * @see NavigableContainer#findNavigable
  *
  * @author Steve Ebersole
  */

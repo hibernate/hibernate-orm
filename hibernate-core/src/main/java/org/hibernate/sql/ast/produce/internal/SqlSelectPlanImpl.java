@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.produce.internal;
 import java.util.List;
 
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 
 /**
@@ -17,11 +17,11 @@ import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
  */
 public class SqlSelectPlanImpl implements SqlSelectPlan {
 	private final SelectStatement selectQuery;
-	private final List<Return> queryReturns;
+	private final List<QueryResult> queryReturns;
 
 	public SqlSelectPlanImpl(
 			SelectStatement selectQuery,
-			List<Return> queryReturns) {
+			List<QueryResult> queryReturns) {
 		this.selectQuery = selectQuery;
 		this.queryReturns = queryReturns;
 	}
@@ -32,7 +32,7 @@ public class SqlSelectPlanImpl implements SqlSelectPlan {
 	}
 
 	@Override
-	public List<Return> getQueryResults() {
+	public List<QueryResult> getQueryResults() {
 		return queryReturns;
 	}
 }

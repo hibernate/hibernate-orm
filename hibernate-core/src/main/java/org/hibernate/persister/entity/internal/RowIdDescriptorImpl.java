@@ -21,7 +21,7 @@ import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.RowIdDescriptor;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -110,7 +110,7 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 	}
 
 	@Override
-	public ManagedTypeImplementor getSource() {
+	public ManagedTypeImplementor getContainer() {
 		return hierarchy.getRootEntityPersister();
 	}
 
@@ -120,7 +120,7 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 	}
 
 	@Override
-	public Return generateReturn(
+	public QueryResult generateReturn(
 			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
 		throw new UnsupportedOperationException();
 	}

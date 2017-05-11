@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.queryable.spi;
 
-import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
@@ -14,7 +14,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
  *
  * @author Steve Ebersole
  */
-public interface EntityValuedExpressableType<T> extends ExpressableType<T>, NavigableSource<T> {
+public interface EntityValuedExpressableType<T> extends ExpressableType<T>, NavigableContainer<T> {
 
 	// todo (6.0) : should this extend NavigableSource rather than just Navigable?
 	// 		or should this just specialize ExpressableType?

@@ -1,0 +1,65 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+
+package org.hibernate.sql.ast.tree.spi.expression;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
+import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
+import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.produce.result.internal.BasicScalarSelectionImpl;
+import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
+import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.type.spi.BasicType;
+
+/**
+ * @author Steve Ebersole
+ */
+public class CoalesceFunction implements StandardFunction {
+	private List<Expression> values = new ArrayList<>();
+
+	public List<Expression> getValues() {
+		return values;
+	}
+
+	public void value(Expression expression) {
+		values.add( expression );
+	}
+
+	@Override
+	public BasicType getType() {
+		return (BasicType) values.get( 0 ).getType();
+	}
+
+	@Override
+	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
+		walker.visitCoalesceFunction( this );
+	}
+
+	@Override
+	public Selectable getSelectable() {
+		return this;
+	}
+
+	@Override
+	public Selection createSelection(
+			Expression selectedExpression,
+			String resultVariable,
+			ColumnReferenceResolver columnReferenceResolver) {
+		assert selectedExpression == this;
+
+		return new BasicScalarSelectionImpl( selectedExpression, resultVariable, this );
+	}
+
+	@Override
+	public SqlSelectionReader getSqlSelectionReader() {
+		return new SqlSelectionReaderImpl( getType() );
+	}
+}

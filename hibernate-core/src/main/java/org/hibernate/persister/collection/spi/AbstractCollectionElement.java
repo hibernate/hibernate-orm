@@ -33,7 +33,7 @@ public abstract class AbstractCollectionElement<J,T extends Type<J>> implements 
 	}
 
 	@Override
-	public CollectionPersister getSource() {
+	public CollectionPersister getContainer() {
 		return persister;
 	}
 

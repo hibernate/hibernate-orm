@@ -56,7 +56,7 @@ public class ColumnReference implements SqlSelectable {
 
 	@Override
 	public void accept(SqlSelectAstToJdbcSelectConverter interpreter) {
-		interpreter.visitColumnBinding( this );
+		interpreter.visitColumnReference( this );
 	}
 
 	@Override

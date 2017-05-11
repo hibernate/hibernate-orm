@@ -4,13 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.ast.consume.spi;
 
 import java.util.List;
 
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 
 /**
  * Represents the {@link SqlSelectAstToJdbcSelectConverter}'s interpretation of a select query
@@ -19,5 +18,5 @@ import org.hibernate.sql.ast.produce.result.spi.Return;
  */
 public interface JdbcSelect extends JdbcOperation {
 	List<SqlSelection> getSqlSelections();
-	List<Return> getReturns();
+	List<QueryResult> getReturns();
 }

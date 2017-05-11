@@ -32,17 +32,17 @@ import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.produce.result.internal.ReturnDynamicInstantiationImpl;
-import org.hibernate.sql.ast.produce.result.internal.ReturnEntityImpl;
-import org.hibernate.sql.ast.produce.result.internal.ReturnScalarImpl;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultDynamicInstantiationImpl;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultEntityImpl;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.ArgumentReader;
-import org.hibernate.sql.ast.consume.results.internal.instantiation.ReturnAssemblerConstructorImpl;
-import org.hibernate.sql.ast.consume.results.internal.instantiation.ReturnAssemblerListImpl;
+import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultAssemblerConstructorImpl;
+import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultAssemblerListImpl;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.ast.consume.results.spi.ReturnAssembler;
+import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
@@ -124,7 +124,7 @@ public class Util {
 		 *
 		 * @param queryReturns The query returns
 		 */
-		void addQueryReturns(Return... queryReturns);
+		void addQueryReturns(QueryResult... queryReturns);
 
 		/**
 		 * Callback to add query spaces indicated by the result set mapping(s)
@@ -167,7 +167,7 @@ public class Util {
 		 *
 		 * @param queryReturns The query returns
 		 */
-		void addQueryReturns(Return... queryReturns);
+		void addQueryReturns(QueryResult... queryReturns);
 
 		/**
 		 * Callback to add query spaces indicated by the result set mapping(s)
@@ -191,7 +191,7 @@ public class Util {
 			final EntityPersister persister = context.getSessionFactory().getTypeConfiguration().findEntityPersister( resultClass.getName() );
 			context.addQuerySpaces( (String[]) persister.getQuerySpaces() );
 			context.addQueryReturns(
-					new ReturnEntityImpl(
+					new QueryResultEntityImpl(
 							null,
 							persister,
 							null,
@@ -235,7 +235,7 @@ public class Util {
 			for ( NativeSQLQueryReturn nativeQueryReturn : mapping.getQueryReturns() ) {
 				if ( nativeQueryReturn instanceof NativeSQLQueryScalarReturn ) {
 					final NativeSQLQueryScalarReturn rtn = (NativeSQLQueryScalarReturn) nativeQueryReturn;
-					final ReturnScalarImpl scalarReturn = new ReturnScalarImpl(
+					final QueryResultScalarImpl scalarReturn = new QueryResultScalarImpl(
 							null,
 							resolveSqlSelection( (BasicType) rtn.getType(), rtn.getColumnAlias() ),
 							null,
@@ -245,7 +245,7 @@ public class Util {
 				}
 				else if ( nativeQueryReturn instanceof NativeSQLQueryConstructorReturn ) {
 					final NativeSQLQueryConstructorReturn rtn = (NativeSQLQueryConstructorReturn) nativeQueryReturn;
-					final ReturnDynamicInstantiationImpl dynamicInstantiationReturn = new ReturnDynamicInstantiationImpl(
+					final QueryResultDynamicInstantiationImpl dynamicInstantiationReturn = new QueryResultDynamicInstantiationImpl(
 							new DynamicInstantiation( rtn.getTargetClass() ),
 							null,
 							buildDynamicInstantiationAssembler( rtn )
@@ -262,7 +262,7 @@ public class Util {
 				else if ( nativeQueryReturn instanceof NativeSQLQueryRootReturn ) {
 					final NativeSQLQueryRootReturn rtn = (NativeSQLQueryRootReturn) nativeQueryReturn;
 					final EntityPersister persister = context.getSessionFactory().getTypeConfiguration().findEntityPersister( rtn.getReturnEntityName() );
-					final ReturnEntityImpl entityReturn = new ReturnEntityImpl(
+					final QueryResultEntityImpl entityReturn = new QueryResultEntityImpl(
 							null,
 							persister,
 							null,
@@ -305,7 +305,7 @@ public class Util {
 			);
 		}
 
-		private ReturnAssembler buildDynamicInstantiationAssembler(NativeSQLQueryConstructorReturn nativeQueryReturn) {
+		private QueryResultAssembler buildDynamicInstantiationAssembler(NativeSQLQueryConstructorReturn nativeQueryReturn) {
 			final Class target = nativeQueryReturn.getTargetClass();
 			if ( Map.class.equals( target ) ) {
 				throw new HibernateException( "Map dynamic-instantiations not allowed for native/procedure queries" );
@@ -315,17 +315,17 @@ public class Util {
 
 			for ( NativeSQLQueryScalarReturn argument : nativeQueryReturn.getColumnReturns() ) {
 				final BasicType ormType = (BasicType) argument.getType();
-				final ReturnScalarImpl argumentReturn = new ReturnScalarImpl(
+				final QueryResultScalarImpl argumentReturn = new QueryResultScalarImpl(
 						null,
 						resolveSqlSelection( ormType, argument.getColumnAlias() ),
 						null,
 						ormType
 				);
-				argumentReaders.add( new ArgumentReader( argumentReturn.getReturnAssembler(), null ) );
+				argumentReaders.add( new ArgumentReader( argumentReturn.getResultAssembler(), null ) );
 			}
 
 			if ( List.class.equals( target ) ) {
-				return new ReturnAssemblerListImpl( argumentReaders );
+				return new QueryResultAssemblerListImpl( argumentReaders );
 			}
 			else {
 				// find a constructor matching argument types
@@ -354,7 +354,7 @@ public class Util {
 					}
 
 					constructor.setAccessible( true );
-					return new ReturnAssemblerConstructorImpl( constructor, argumentReaders );
+					return new QueryResultAssemblerConstructorImpl( constructor, argumentReaders );
 				}
 
 				throw new HibernateException(

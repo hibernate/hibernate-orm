@@ -29,7 +29,7 @@ import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -114,7 +114,7 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 	}
 
 	@Override
-	public EmbeddedContainer<?> getSource() {
+	public EmbeddedContainer<?> getContainer() {
 		return source;
 	}
 
@@ -142,7 +142,7 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 	}
 
 	@Override
-	public Return generateReturn(
+	public QueryResult generateReturn(
 			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
 		throw new NotYetImplementedException(  );
 	}

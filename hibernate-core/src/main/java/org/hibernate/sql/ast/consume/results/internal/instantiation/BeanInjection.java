@@ -6,16 +6,16 @@
  */
 package org.hibernate.sql.ast.consume.results.internal.instantiation;
 
-import org.hibernate.sql.ast.consume.results.spi.ReturnAssembler;
+import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 
 /**
  * @author Steve Ebersole
  */
 public class BeanInjection {
 	private final BeanInjector beanInjector;
-	private final ReturnAssembler valueAssembler;
+	private final QueryResultAssembler valueAssembler;
 
-	public BeanInjection(BeanInjector beanInjector, ReturnAssembler valueAssembler) {
+	public BeanInjection(BeanInjector beanInjector, QueryResultAssembler valueAssembler) {
 		this.beanInjector = beanInjector;
 		this.valueAssembler = valueAssembler;
 	}
@@ -24,7 +24,7 @@ public class BeanInjection {
 		return beanInjector;
 	}
 
-	public ReturnAssembler getValueAssembler() {
+	public QueryResultAssembler getValueAssembler() {
 		return valueAssembler;
 	}
 }

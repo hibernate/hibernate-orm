@@ -28,7 +28,7 @@ import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.EntityType;
@@ -138,7 +138,7 @@ public class SingularPersistentAttributeEntity<O,J>
 	@Override
 	public String asLoggableText() {
 		return "SingularAttributeEntity([" + getAttributeTypeClassification().name() + "] " +
-				getSource().asLoggableText() + '.' + getAttributeName() +
+				getContainer().asLoggableText() + '.' + getAttributeName() +
 				")";
 	}
 
@@ -154,7 +154,7 @@ public class SingularPersistentAttributeEntity<O,J>
 	@Override
 	public List<JoinColumnMapping> getJoinColumnMappings() {
 		if ( joinColumnMappings == null ) {
-			this.joinColumnMappings = getSource().resolveJoinColumnMappings( this );
+			this.joinColumnMappings = getContainer().resolveJoinColumnMappings( this );
 		}
 		return joinColumnMappings;
 	}
@@ -178,7 +178,7 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public Return generateReturn(
+	public QueryResult generateReturn(
 			QueryResultCreationContext returnResolutionContext,
 			TableGroup tableGroup) {
 		throw new NotYetImplementedException(  );

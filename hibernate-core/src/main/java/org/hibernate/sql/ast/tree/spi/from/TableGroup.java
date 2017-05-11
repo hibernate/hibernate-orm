@@ -10,7 +10,8 @@ import java.util.List;
 
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Table;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnBindingSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReferenceExpression;
 
 /**
@@ -18,13 +19,13 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReferenceExpres
  *
  * @author Steve Ebersole
  */
-public interface TableGroup extends ColumnBindingSource, NavigableReferenceExpression {
+public interface TableGroup extends ColumnReferenceSource, NavigableReferenceExpression {
 	TableSpace getTableSpace();
 	String getUid();
 	String getAliasBase();
 	TableReference getRootTableReference();
 	List<TableReferenceJoin> getTableReferenceJoins();
 
-	TableReference locateTableBinding(Table table);
-	ColumnReference resolveColumnBinding(Column column);
+	TableReference locateTableReference(Table table);
+	ColumnReference resolveColumnReference(Column column);
 }

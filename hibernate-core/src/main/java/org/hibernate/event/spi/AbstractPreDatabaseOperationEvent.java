@@ -76,7 +76,7 @@ public abstract class AbstractPreDatabaseOperationEvent
 	 * originated.
 	 * <p/>
 	 * Some of the pre-* events had previous exposed the event source using
-	 * getSource() because they had not originally extended from
+	 * getContainer() because they had not originally extended from
 	 * {@link AbstractEvent}.
 	 *
 	 * @return Value for property 'source'.

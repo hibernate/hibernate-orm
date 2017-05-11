@@ -45,7 +45,7 @@ public class CollectionKey implements TypeExporter {
 
 	public List<JoinColumnMapping> getJoinColumnMappings() {
 		if ( joinColumnMappings == null ) {
-			joinColumnMappings = collectionPersister.getSource().resolveJoinColumnMappings(
+			joinColumnMappings = collectionPersister.getContainer().resolveJoinColumnMappings(
 					collectionPersister );
 		}
 		return joinColumnMappings;

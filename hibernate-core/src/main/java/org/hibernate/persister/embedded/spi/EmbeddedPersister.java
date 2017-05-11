@@ -86,7 +86,7 @@ public interface EmbeddedPersister<T>
 	}
 
 	@Override
-	EmbeddedContainer<?> getSource();
+	EmbeddedContainer<?> getContainer();
 
 	@Override
 	EmbeddedType<T> getOrmType();
@@ -104,12 +104,12 @@ public interface EmbeddedPersister<T>
 
 	@Override
 	default boolean canCompositeContainCollections() {
-		return getSource().canCompositeContainCollections();
+		return getContainer().canCompositeContainCollections();
 	}
 
 	@Override
 	default TableGroup resolveTableGroup(NavigableReferenceInfo embeddedReferenceInfo, TableGroupResolver tableGroupResolver) {
-		return getSource().resolveTableGroup( embeddedReferenceInfo, tableGroupResolver );
+		return getContainer().resolveTableGroup( embeddedReferenceInfo, tableGroupResolver );
 	}
 
 	@Override

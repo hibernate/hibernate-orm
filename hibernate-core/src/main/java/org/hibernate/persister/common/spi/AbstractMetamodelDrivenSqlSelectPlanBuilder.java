@@ -56,6 +56,7 @@ import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -116,7 +117,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	private QuerySpec querySpec;
 	private TableSpace tableSpace;
 
-	private org.hibernate.sql.ast.produce.result.spi.Return queryReturn;
+	private QueryResult queryReturn;
 
 
 	private final NavigablePathStack propertyPathStack = new NavigablePathStack();
@@ -167,7 +168,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	}
 
 	@Override
-	public SqlSelectPlan buildSqlSelectPlan(NavigableSource rootNavigable) {
+	public SqlSelectPlan buildSqlSelectPlan(NavigableContainer rootNavigable) {
 		// rootNavigable should be either
 		// 		1) an IdentifiableTypeImplementor (Entity or MappedSuperclass)
 		// 		2) a CollectionPersister
@@ -234,7 +235,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 
 
 	private void visitNavigables(
-			NavigableSource navigableSource,
+			NavigableContainer navigableSource,
 			FetchParent fetchParent,
 			TableGroup tableGroup) {
 		fetchParentStack.push( fetchParent );
@@ -258,7 +259,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 		propertyPathStack.push( entityIdentifier );
 
 		try {
-			if ( entityIdentifier instanceof NavigableSource ) {
+			if ( entityIdentifier instanceof NavigableContainer ) {
 
 			}
 		}
@@ -913,7 +914,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		}
 //
 //		@Override
-//		public FetchOwner getSource() {
+//		public FetchOwner getContainer() {
 //			return circularFetchOwner;
 //		}
 //

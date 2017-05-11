@@ -6,12 +6,12 @@
  */
 package org.hibernate.persister.queryable.spi;
 
-import org.hibernate.persister.common.spi.NavigableSource;
+import org.hibernate.persister.common.spi.NavigableContainer;
 
 /**
  * @author Steve Ebersole
  */
 public interface NavigableSourceReferenceInfo extends NavigableReferenceInfo {
 	@Override
-	NavigableSource getReferencedNavigable();
+	NavigableContainer getReferencedNavigable();
 }

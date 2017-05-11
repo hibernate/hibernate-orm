@@ -11,9 +11,9 @@ import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Models a "piece" of the application's domain model that can be navigated
@@ -22,7 +22,11 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface Navigable<T> extends ExpressableType<T>, TypeExporter<T> {
-	NavigableSource getSource();
+	/**
+	 * The NavigableContainer which contains this Navigable.  A NavigableContainer
+	 * is container for
+	 */
+	NavigableContainer getContainer();
 
 	NavigableRole getNavigableRole();
 
@@ -41,7 +45,7 @@ public interface Navigable<T> extends ExpressableType<T>, TypeExporter<T> {
 
 	void visitNavigable(NavigableVisitationStrategy visitor);
 
-	Return generateReturn(QueryResultCreationContext returnResolutionContext, TableGroup tableGroup);
+	QueryResult generateReturn(QueryResultCreationContext returnResolutionContext, TableGroup tableGroup);
 
 	Fetch generateFetch(QueryResultCreationContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent);
 }

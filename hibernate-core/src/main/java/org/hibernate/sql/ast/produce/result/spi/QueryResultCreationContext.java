@@ -11,6 +11,8 @@ import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 
 /**
+ * todo (6.0) : superseded by SqlSelectionResolver
+ *
  * @author Steve Ebersole
  */
 public interface QueryResultCreationContext {

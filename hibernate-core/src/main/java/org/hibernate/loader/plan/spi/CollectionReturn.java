@@ -6,7 +6,7 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import org.hibernate.sql.ast.produce.result.spi.ReturnCollection;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCollection;
 
 /**
  * Models the a persistent collection as root {@link Return}.  Pertinent to collection initializer
@@ -14,7 +14,7 @@ import org.hibernate.sql.ast.produce.result.spi.ReturnCollection;
  *
  * @author Steve Ebersole
  *
- * @deprecated Use {@link ReturnCollection}
+ * @deprecated Use {@link QueryResultCollection}
  */
 @Deprecated
 public interface CollectionReturn extends CollectionReference, Return {

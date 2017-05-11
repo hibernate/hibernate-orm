@@ -22,7 +22,7 @@ import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
@@ -55,7 +55,7 @@ public class CollectionElementBasicImpl<J>
 		log.debugf(
 				"AttributeConverter [%s] being injected for elements of the '%s' collection; was : %s",
 				attributeConverter.getAttributeConverter(),
-				getSource().getRole(),
+				getContainer().getRole(),
 				this.attributeConverter
 		);
 	}
@@ -81,7 +81,7 @@ public class CollectionElementBasicImpl<J>
 	}
 
 	@Override
-	public Return generateReturn(
+	public QueryResult generateReturn(
 			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
 		throw new NotYetImplementedException(  );
 	}

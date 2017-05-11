@@ -33,7 +33,7 @@ public class DynamicInstantiationArgument {
 
 	public ArgumentReader buildArgumentReader(QueryResultCreationContext resolutionContext) {
 		return new ArgumentReader(
-				expression.getSelectable().toQueryReturn( resolutionContext, alias ).getReturnAssembler(),
+				expression.getSelectable().toQueryReturn( resolutionContext, alias ).getResultAssembler(),
 				alias
 		);
 	}

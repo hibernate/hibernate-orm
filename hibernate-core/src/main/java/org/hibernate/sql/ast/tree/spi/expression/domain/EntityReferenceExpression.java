@@ -21,14 +21,14 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  */
 public class EntityReferenceExpression implements NavigableReferenceExpression {
-	private final ColumnBindingSource columnBindingSource;
+	private final ColumnReferenceSource columnBindingSource;
 	private final EntityPersister entityPersister;
 	private final NavigablePath propertyPath;
 
 	private final SelectableEntityTypeImpl selectable;
 
 	public EntityReferenceExpression(
-			ColumnBindingSource columnBindingSource,
+			ColumnReferenceSource columnBindingSource,
 			EntityPersister entityPersister,
 			NavigablePath propertyPath,
 			boolean isShallow) {

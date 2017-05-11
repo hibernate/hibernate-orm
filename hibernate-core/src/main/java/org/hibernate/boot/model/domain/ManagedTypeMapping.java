@@ -8,6 +8,8 @@ package org.hibernate.boot.model.domain;
 
 import java.util.List;
 
+import javax.persistence.metamodel.Type;
+
 /**
  * Corollary to what JPA calls a "managed type" as part of Hibernate's boot-time
  * metamodel.  Essentially a base class describing the commonality between an entity,
@@ -22,6 +24,16 @@ public interface ManagedTypeMapping {
 	String getName();
 
 	/**
+	 * Get the class associated with the managed type mapping.
+	 */
+	Class<?> getJavaType();
+
+	/**
+	 * The mappings persistence type.
+	 */
+	Type.PersistenceType getPersistenceType();
+
+	/**
 	 * The ordering here is defined by the alphabetical ordering of the
 	 * attributes' names
 	 *
@@ -33,6 +45,16 @@ public interface ManagedTypeMapping {
 	 * Get the persistent attributes of this managed type and all super managed types.
 	 */
 	List<PersistentAttributeMapping> getPersistentAttributes();
+
+	boolean hasDeclaredPersistentAttribute(String name);
+
+	/**
+	 * Check whether the managed type contains an attribute of the specified name or any
+	 * super managed types.
+	 *
+	 * @param name the attribute name.
+	 */
+	boolean hasPersistentAttribute(String name);
 
 	/**
 	 * Get the super managed type associated with this managed type or {@code null}.

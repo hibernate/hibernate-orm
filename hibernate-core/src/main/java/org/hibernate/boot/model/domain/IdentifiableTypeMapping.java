@@ -22,4 +22,45 @@ public interface IdentifiableTypeMapping extends ManagedTypeMapping {
 	 * 		I'd lean towards no.
 	 */
 	Collection<IdentifiableTypeMapping> getSubTypeMappings();
+
+	/**
+	 * Get the attribute that represents a single identifier or an embedded id.
+	 */
+	PersistentAttributeMapping getIdentifierAttributeMapping();
+
+	/**
+	 * Get the mapping associated to multiple-id or {@link javax.persistence.IdClass}.
+	 */
+	EmbeddedValueMapping getEmbeddedIdentifierAttributeMapping();
+
+	/**
+	 * Get the declared mapping associated to multiple-id or {@link javax.persistence.IdClass}.
+	 */
+	EmbeddedValueMapping getDeclaredEmbeddedIdentifierAttributeMapping();
+
+	/**
+	 * Get the version attribute.
+	 */
+	PersistentAttributeMapping getVersionAttributeMapping();
+
+	/**
+	 * Get the locally declared attribute that represents a single identifier
+	 * or an embedded id.
+	 */
+	PersistentAttributeMapping getDeclaredIdentifierAttributeMapping();
+
+	/**
+	 * Get the locally declared version attribute.
+	 */
+	PersistentAttributeMapping getDeclaredVersionAttributeMapping();
+
+	/**
+	 * Checks whether a version attribute mapping has been specified.
+	 */
+	boolean hasVersionAttributeMapping();
+
+	/**
+	 * Checks whether the identifier attribute represents a single id or embedded id.
+	 */
+	boolean hasSingleIdentifierAttributeMapping();
 }

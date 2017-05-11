@@ -40,6 +40,7 @@ public class EntityMappingHierarchyImpl implements EntityMappingHierarchyImpleme
 		return this.rootIdentifiableType;
 	}
 
+	@Override
 	public void setRootType(IdentifiableTypeMapping rootIdentifiableType) {
 		this.rootIdentifiableType = rootIdentifiableType;
 	}
@@ -75,7 +76,7 @@ public class EntityMappingHierarchyImpl implements EntityMappingHierarchyImpleme
 	}
 
 	@Override
-	public boolean isVersioned() {
+	public boolean hasVersionAttributeMapping() {
 		return versionAttributeMapping != null;
 	}
 
@@ -114,6 +115,7 @@ public class EntityMappingHierarchyImpl implements EntityMappingHierarchyImpleme
 		return optimisticLockStyle;
 	}
 
+	@Override
 	public void setOptimisticLockStyle(OptimisticLockStyle optimisticLockStyle) {
 		this.optimisticLockStyle = optimisticLockStyle;
 	}

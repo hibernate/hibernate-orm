@@ -20,6 +20,8 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.internal.AbstractIdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
@@ -65,7 +67,7 @@ public abstract class PersistentClass
 	private String discriminatorValue;
 	private boolean lazy;
 	private ArrayList properties = new ArrayList<>();
-	private final ArrayList<Subclass> subclasses = new ArrayList<>();
+	//private final ArrayList<Subclass> subclasses = new ArrayList<>();
 	private final ArrayList subclassProperties = new ArrayList();
 	private final ArrayList subclassTables = new ArrayList();
 	private boolean dynamicInsert;
@@ -99,7 +101,7 @@ public abstract class PersistentClass
 	private EmbeddedValueMapping declaredIdentifierValueMapping;
 
 
-	public PersistentClass(MetadataBuildingContext metadataBuildingContext, EntityMappingHierarchyImplementor entityMappingHierarchy) {
+	public PersistentClass(MetadataBuildingContext metadataBuildingContext, EntityMappingHierarchy entityMappingHierarchy) {
 		super( entityMappingHierarchy );
 		this.metadataBuildingContext = metadataBuildingContext;
 	}
@@ -170,8 +172,6 @@ public abstract class PersistentClass
 		return dynamicInsert;
 	}
 
-	abstract int nextSubclassId();
-
 	public abstract int getSubclassId();
 
 	public boolean useDynamicUpdate() {
@@ -192,30 +192,21 @@ public abstract class PersistentClass
 	}
 
 	public void addSubclass(Subclass subclass) throws MappingException {
-		// inheritance cycle detection (paranoid check)
-		PersistentClass superclass = getSuperclass();
-		while ( superclass != null ) {
-			if ( subclass.getEntityName().equals( superclass.getEntityName() ) ) {
-				throw new MappingException(
-						"Circular inheritance mapping detected: " +
-								subclass.getEntityName() +
-								" will have it self as superclass when extending " +
-								getEntityName()
-				);
-			}
-			superclass = superclass.getSuperclass();
-		}
-		subclasses.add( subclass );
+		subclass.injectSuperclassMapping( this );
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getSubTypeMappings()}
+	 */
+	@Deprecated
 	public boolean hasSubclasses() {
-		return subclasses.size() > 0;
+		return !getSubTypeMappings().isEmpty();
 	}
 
 	public int getSubclassSpan() {
-		int n = subclasses.size();
-		for ( Subclass subclass : subclasses ) {
-			n += subclass.getSubclassSpan();
+		int n = getSubTypeMappings().size();
+		for ( IdentifiableTypeMapping subclass : getSubTypeMappings() ) {
+			n += subclass.getSubTypeMappings().size();
 		}
 		return n;
 	}
@@ -225,13 +216,13 @@ public abstract class PersistentClass
 	 * first.
 	 */
 	public Iterator getSubclassIterator() {
-		Iterator[] iters = new Iterator[subclasses.size() + 1];
-		Iterator iter = subclasses.iterator();
+		Iterator[] iters = new Iterator[getSubTypeMappings().size() + 1];
+		Iterator iter = getSubTypeMappings().iterator();
 		int i = 0;
 		while ( iter.hasNext() ) {
 			iters[i++] = ( (Subclass) iter.next() ).getSubclassIterator();
 		}
-		iters[i] = subclasses.iterator();
+		iters[i] = getSubTypeMappings().iterator();
 		return new JoinedIterator( iters );
 	}
 
@@ -246,12 +237,16 @@ public abstract class PersistentClass
 		return new JoinedIterator( iters );
 	}
 
-	public Table getIdentityTable() {
+	public MappedTable getIdentityTable() {
 		return getRootTable();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getSubTypeMappings()}.
+	 */
+	@Deprecated
 	public Iterator getDirectSubclasses() {
-		return subclasses.iterator();
+		return getSubTypeMappings().iterator();
 	}
 
 	@Override
@@ -271,13 +266,13 @@ public abstract class PersistentClass
 	public abstract boolean isMutable();
 
 	/**
-	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#hasIdentifierAttributeMapping()}.
+	 * @deprecated since 6.0, use {@link #hasSingleIdentifierAttributeMapping()}.
 	 */
 	@Deprecated
 	public abstract boolean hasIdentifierProperty();
 
 	/**
-	 * @deprecated since 6.0 use {@link EntityMappingHierarchy#getIdentifierAttributeMapping()}.
+	 * @deprecated since 6.0 use {@link #getIdentifierAttributeMapping()}.
 	 */
 	@Deprecated
 	public abstract Property getIdentifierProperty();
@@ -288,12 +283,10 @@ public abstract class PersistentClass
 	@Deprecated
 	public abstract Property getDeclaredIdentifierProperty();
 
-	public abstract PersistentAttributeMapping getDeclaredIdentifierAttributeMapping();
-
 	public abstract KeyValue getIdentifier();
 
 	/**
-	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#getVersionPersistentAttributeMapping()}.
+	 * @deprecated since 6.0, use {@link #getVersionAttributeMapping()}.
 	 */
 	@Deprecated
 	public abstract Property getVersion();
@@ -303,8 +296,6 @@ public abstract class PersistentClass
 	 */
 	@Deprecated
 	public abstract Property getDeclaredVersion();
-
-	public abstract PersistentAttributeMapping getDeclaredVersionAttributeMapping();
 
 	/**
 	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#getDiscriminatorValueMapping()}.
@@ -317,7 +308,7 @@ public abstract class PersistentClass
 	public abstract boolean isPolymorphic();
 
 	/**
-	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#isVersioned()}.
+	 * @deprecated since 6.0, use {@link #hasVersionAttributeMapping()}.
 	 */
 	@Deprecated
 	public abstract boolean isVersioned();
@@ -390,10 +381,6 @@ public abstract class PersistentClass
 	 */
 	@Deprecated
 	public abstract boolean hasEmbeddedIdentifier();
-
-	public abstract Class getEntityPersisterClass();
-
-	public abstract void setEntityPersisterClass(Class classPersisterClass);
 
 	public abstract Table getRootTable();
 

@@ -43,13 +43,26 @@ public interface EntityMappingHierarchy {
 	 */
 	OptimisticLockStyle getOptimisticLockStyle();
 
+	/**
+	 * Checks whether a single id or embedded id attribute mapping has been specified.
+	 */
 	boolean hasIdentifierAttributeMapping();
 
 	boolean hasIdentifierMapper();
 
+	/**
+	 * Returns true if the hierarchy has multiple id annotations specified without an
+	 * actual {@link javax.persistence.IdClass} implementation.
+	 */
 	boolean hasEmbeddedIdentifier();
 
-	boolean isVersioned();
+	/**
+	 * Checks whether a version attribute mapping has been specified.
+	 */
+	boolean hasVersionAttributeMapping();
 
+	/**
+	 * Get the entity-mode being used by this hierarchy.
+	 */
 	EntityMode getEntityMode();
 }

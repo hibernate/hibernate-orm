@@ -24,11 +24,19 @@ public class UnionSubclass extends Subclass implements TableOwner {
 		super( superclass, metadataBuildingContext );
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link #getMappedTable}.
+	 */
+	@Deprecated
 	public Table getTable() {
 		return (Table) table;
 	}
 
-	public void setTable(MappedTable table) {
+	public MappedTable getMappedTable() {
+		return table;
+	}
+
+	public void setMappedTable(MappedTable table) {
 		this.table = table;
 		getSuperclass().addSubclassTable(table);
 	}
@@ -53,8 +61,8 @@ public class UnionSubclass extends Subclass implements TableOwner {
 		}
 	}
 	
-	public Table getIdentityTable() {
-		return getTable();
+	public MappedTable getIdentityTable() {
+		return getMappedTable();
 	}
 	
 	public Object accept(PersistentClassVisitor mv) {

@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
 
+import javax.persistence.metamodel.Type;
+
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.ManagedTypeMappingImplementor;
@@ -23,8 +25,9 @@ import org.jboss.logging.Logger;
 public abstract class AbstractManagedTypeMapping implements ManagedTypeMappingImplementor {
 	private static final Logger log = Logger.getLogger( AbstractManagedTypeMapping.class );
 
+	private Class<?> javaType;
 	private ManagedTypeMapping superTypeMapping;
-	private TreeMap<String,PersistentAttributeMapping> declaredAttributeMappings;
+	private TreeMap<String, PersistentAttributeMapping> declaredAttributeMappings;
 
 	@Override
 	public void addDeclaredPersistentAttribute(PersistentAttributeMapping attribute) {
@@ -45,6 +48,16 @@ public abstract class AbstractManagedTypeMapping implements ManagedTypeMappingIm
 	}
 
 	@Override
+	public void setJavaType(Class<?> javaType) {
+		this.javaType = javaType;
+	}
+
+	@Override
+	public Class<?> getJavaType() {
+		return javaType;
+	}
+
+	@Override
 	public List<PersistentAttributeMapping> getDeclaredPersistentAttributes() {
 		return declaredAttributeMappings == null
 				? Collections.emptyList()
@@ -61,6 +74,22 @@ public abstract class AbstractManagedTypeMapping implements ManagedTypeMappingIm
 		return attributes;
 	}
 
+	@Override
+	public boolean hasDeclaredPersistentAttribute(String name) {
+		return declaredAttributeMappings.containsKey( name );
+	}
+
+	@Override
+	public boolean hasPersistentAttribute(String name) {
+		ManagedTypeMapping managedType = this;
+		while ( managedType != null ) {
+			if ( hasDeclaredPersistentAttribute( name ) ) {
+				return true;
+			}
+			managedType = managedType.getSuperManagedTypeMapping();
+		}
+		return false;
+	}
 
 	@Override
 	public ManagedTypeMapping getSuperManagedTypeMapping() {
@@ -81,5 +110,19 @@ public abstract class AbstractManagedTypeMapping implements ManagedTypeMappingIm
 			superType = superType.getSuperManagedTypeMapping();
 		}
 		return managedTypeMappings;
+	}
+
+	/**
+	 * Get the super managed type of this managed type if the super managed type is of the
+	 * specified {@code persistenceType} or returns {@code null}.
+	 *
+	 * @param persistenceType The persistence type of interest.
+	 * @return the super managed type mapping or null if the super type is not the same persistence type.
+	 */
+	protected ManagedTypeMapping getSuperManagedTypeMappingOfType(Type.PersistenceType persistenceType) {
+		if ( superTypeMapping.getPersistenceType() == persistenceType ) {
+			return superTypeMapping;
+		}
+		return null;
 	}
 }

@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.domain;
 
+import javax.persistence.metamodel.Type;
+
 /**
  * The representation of an embedded in the application's domain model.  Note
  * that the embedded is different than the embeddable - the embeddable refers
@@ -20,4 +22,9 @@ package org.hibernate.boot.model.domain;
 public interface EmbeddedMapping extends ManagedTypeMapping, ValueMappingContainer {
 	@Override
 	EmbeddedValueMapping getValueMapping();
+
+	@Override
+	default Type.PersistenceType getPersistenceType() {
+		return Type.PersistenceType.EMBEDDABLE;
+	}
 }

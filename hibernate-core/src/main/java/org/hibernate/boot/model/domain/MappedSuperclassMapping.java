@@ -10,4 +10,6 @@ package org.hibernate.boot.model.domain;
  * @author Steve Ebersole
  */
 public interface MappedSuperclassMapping extends IdentifiableTypeMapping {
+	@Override
+	MappedSuperclassMapping getSuperManagedTypeMapping();
 }

@@ -49,8 +49,6 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private MappedTable table;
 	private boolean discriminatorInsertable = true;
 	private int nextSubclassId;
-	private PersistentAttributeMapping declaredIdentifierAttributeMapping;
-	private PersistentAttributeMapping declaredVersionAttributeMapping;
 	private boolean cachingExplicitlyRequested;
 
 	public RootClass(MetadataBuildingContext metadataBuildingContext) {
@@ -59,7 +57,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
-	int nextSubclassId() {
+	public int nextSubclassId() {
 		return ++nextSubclassId;
 	}
 
@@ -68,9 +66,11 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return 0;
 	}
 
-	public void setTable(MappedTable table) {
+	@Override
+	public void setMappedTable(MappedTable table) {
 		this.table = table;
 	}
+
 
 	@Override
 	public Table getTable() {
@@ -91,10 +91,6 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return (Property) getDeclaredIdentifierAttributeMapping();
 	}
 
-	public PersistentAttributeMapping getDeclaredIdentifierAttributeMapping() {
-		return declaredIdentifierAttributeMapping;
-	}
-
 	/**
 	 * @deprecated since 6.0, use {@link #setDeclaredIdentifierAttributeMapping()}.
 	 */
@@ -103,9 +99,10 @@ public class RootClass extends PersistentClass implements TableOwner {
 		setDeclaredIdentifierAttributeMapping( declaredIdentifierProperty );
 	}
 
+	@Override
 	public void setDeclaredIdentifierAttributeMapping(PersistentAttributeMapping declaredIdentifierAttributeMapping) {
-		this.declaredIdentifierAttributeMapping = declaredIdentifierAttributeMapping;
 		getEntityMappingHierarchy().setIdentifierAttributeMapping( declaredIdentifierAttributeMapping );
+		super.setDeclaredIdentifierAttributeMapping( declaredIdentifierAttributeMapping );
 	}
 
 	@Override
@@ -170,21 +167,12 @@ public class RootClass extends PersistentClass implements TableOwner {
 
 	@Override
 	public Property getVersion() {
-		return (Property) getEntityMappingHierarchy().getVersionAttributeMapping();
-	}
-
-	public PersistentAttributeMapping getDeclaredVersionAttributeMapping() {
-		return declaredVersionAttributeMapping;
+		return (Property) getVersionAttributeMapping();
 	}
 
 	@Override
 	public Property getDeclaredVersion() {
 		return (Property) getDeclaredVersionAttributeMapping();
-	}
-
-	public void setDeclaredVersionAttributeMapping(PersistentAttributeMapping versionAttributeMapping) {
-		setVersionAttributeMapping( versionAttributeMapping );
-		this.declaredVersionAttributeMapping = versionAttributeMapping;
 	}
 
 	/**
@@ -193,10 +181,6 @@ public class RootClass extends PersistentClass implements TableOwner {
 	@Deprecated
 	public void setDeclaredVersion(Property declaredVersion) {
 		setDeclaredVersionAttributeMapping( declaredVersion );
-	}
-
-	public void setVersionAttributeMapping(PersistentAttributeMapping versionAttributeMapping) {
-		getEntityMappingHierarchy().setVersionAttributeMapping( versionAttributeMapping );
 	}
 
 	/**
@@ -209,7 +193,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 
 	@Override
 	public boolean isVersioned() {
-		return getEntityMappingHierarchy().isVersioned();
+		return hasVersionAttributeMapping();
 	}
 
 	@Override
@@ -395,8 +379,8 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@SuppressWarnings("UnnecessaryUnboxing")
-	public Set<Table> getIdentityTables() {
-		Set<Table> tables = new HashSet<Table>();
+	public Set<MappedTable> getIdentityTables() {
+		Set<MappedTable> tables = new HashSet<>();
 		Iterator iter = getSubclassClosureIterator();
 		while ( iter.hasNext() ) {
 			PersistentClass clazz = (PersistentClass) iter.next();

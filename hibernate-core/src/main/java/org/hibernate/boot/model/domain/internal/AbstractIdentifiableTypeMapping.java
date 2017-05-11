@@ -10,8 +10,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
+import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 
@@ -26,12 +31,16 @@ public abstract class AbstractIdentifiableTypeMapping
 
 	private static final Logger log = Logger.getLogger( AbstractIdentifiableTypeMapping.class );
 
-	private final EntityMappingHierarchyImplementor entityMappingHierarchy;
+	private final EntityMappingHierarchy entityMappingHierarchy;
 
 	private IdentifiableTypeMappingImplementor superTypeMapping;
 	private List<IdentifiableTypeMappingImplementor> subTypeMappings;
 
-	public AbstractIdentifiableTypeMapping(EntityMappingHierarchyImplementor entityMappingHierarchy) {
+	private PersistentAttributeMapping declaredIdentifierAttributeMapping;
+	private PersistentAttributeMapping declaredVersionAttributeMapping;
+	private EmbeddedValueMapping declaredIdentifierEmbeddedValueMapping;
+
+	public AbstractIdentifiableTypeMapping(EntityMappingHierarchy entityMappingHierarchy) {
 		this.entityMappingHierarchy = entityMappingHierarchy;
 	}
 
@@ -39,6 +48,14 @@ public abstract class AbstractIdentifiableTypeMapping
 	public void injectSuperclassMapping(IdentifiableTypeMappingImplementor superTypeMapping) {
 		if ( this.superTypeMapping != null ) {
 			log.debugf( "ManagedTypeMapping#injectSuperTypeMapping called multiple times" );
+			throw new MappingException(
+					String.format(
+							Locale.ROOT,
+							"Circular inheritance mapping detected: %s",
+							getName()
+					)
+
+			);
 		}
 
 		this.superTypeMapping = superTypeMapping;
@@ -54,7 +71,7 @@ public abstract class AbstractIdentifiableTypeMapping
 
 	@Override
 	public EntityMappingHierarchyImplementor getEntityMappingHierarchy() {
-		return entityMappingHierarchy;
+		return (EntityMappingHierarchyImplementor) entityMappingHierarchy;
 	}
 
 	@Override
@@ -67,5 +84,62 @@ public abstract class AbstractIdentifiableTypeMapping
 		return subTypeMappings == null
 				? Collections.emptyList()
 				: Collections.unmodifiableList( subTypeMappings );
+	}
+
+	@Override
+	public void setDeclaredIdentifierAttributeMapping(PersistentAttributeMapping declaredIdentifierAttributeMapping) {
+		this.declaredIdentifierAttributeMapping = declaredIdentifierAttributeMapping;
+	}
+
+	@Override
+	public PersistentAttributeMapping getDeclaredIdentifierAttributeMapping() {
+		return declaredIdentifierAttributeMapping;
+	}
+
+	@Override
+	public PersistentAttributeMapping getIdentifierAttributeMapping() {
+		return getEntityMappingHierarchy().getIdentifierAttributeMapping();
+	}
+
+	@Override
+	public EmbeddedValueMapping getDeclaredEmbeddedIdentifierAttributeMapping() {
+		return declaredIdentifierEmbeddedValueMapping;
+	}
+
+	@Override
+	public EmbeddedValueMapping getEmbeddedIdentifierAttributeMapping() {
+		return getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping();
+	}
+
+	@Override
+	public void setDeclaredIdentifierEmbeddedValueMapping(EmbeddedValueMapping embeddedValueMapping) {
+		this.declaredIdentifierEmbeddedValueMapping = embeddedValueMapping;
+		getEntityMappingHierarchy().setIdentifierEmbeddedValueMapping( embeddedValueMapping );
+	}
+
+	@Override
+	public void setDeclaredVersionAttributeMapping(PersistentAttributeMapping declaredVersionAttributeMapping) {
+		this.declaredVersionAttributeMapping = declaredVersionAttributeMapping;
+		getEntityMappingHierarchy().setVersionAttributeMapping( declaredVersionAttributeMapping );
+	}
+
+	@Override
+	public PersistentAttributeMapping getDeclaredVersionAttributeMapping() {
+		return declaredVersionAttributeMapping;
+	}
+
+	@Override
+	public PersistentAttributeMapping getVersionAttributeMapping() {
+		return getEntityMappingHierarchy().getVersionAttributeMapping();
+	}
+
+	@Override
+	public boolean hasVersionAttributeMapping() {
+		return getEntityMappingHierarchy().hasVersionAttributeMapping();
+	}
+
+	@Override
+	public boolean hasSingleIdentifierAttributeMapping() {
+		return getEntityMappingHierarchy().hasIdentifierAttributeMapping();
 	}
 }

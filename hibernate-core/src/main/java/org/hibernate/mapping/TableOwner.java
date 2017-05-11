@@ -17,5 +17,13 @@ import org.hibernate.boot.model.relational.MappedTable;
  * @author Steve Ebersole
  */
 public interface TableOwner {
-	void setTable(MappedTable table);
+	/**
+	 * @deprecated since 6.0, use {@link #setMappedTable(MappedTable)}.
+	 */
+	@Deprecated
+	default void setTable(Table table) {
+		setMappedTable( table );
+	}
+
+	void setMappedTable(MappedTable mappedTable);
 }

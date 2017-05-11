@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,7 +14,10 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -25,17 +29,18 @@ import org.hibernate.internal.util.collections.SingletonIterator;
  * @author Gavin King
  */
 public class Subclass extends PersistentClass {
-	private PersistentClass superclass;
+	private IdentifiableTypeMapping superclass;
 	private Class classPersisterClass;
 	private final int subclassId;
 	
-	public Subclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
+	public Subclass(IdentifiableTypeMapping superclass, MetadataBuildingContext metadataBuildingContext) {
 		super( metadataBuildingContext, superclass.getEntityMappingHierarchy() );
 		this.superclass = superclass;
-		this.subclassId = superclass.nextSubclassId();
+		this.subclassId = ( (IdentifiableTypeMappingImplementor) superclass ).nextSubclassId();
 	}
 
-	int nextSubclassId() {
+	@Override
+	public int nextSubclassId() {
 		return getSuperclass().nextSubclassId();
 	}
 	
@@ -52,12 +57,20 @@ public class Subclass extends PersistentClass {
 		return getSuperclass().getCacheConcurrencyStrategy();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#getRootType()}.
+	 */
+	@Deprecated
 	public RootClass getRootClass() {
 		return getSuperclass().getRootClass();
 	}
 
+	/**
+	 * @deprecated since 6.0 use {@link #getSuperManagedTypeMapping()}.
+	 */
+	@Deprecated
 	public PersistentClass getSuperclass() {
-		return superclass;
+		return (PersistentClass) superclass;
 	}
 
 	@Override
@@ -307,13 +320,21 @@ public class Subclass extends PersistentClass {
 		}
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#getIdentifierEmbeddedValueMapping()}.
+	 */
 	@Override
+	@Deprecated
 	public Component getIdentifierMapper() {
-		return superclass.getIdentifierMapper();
+		return (Component) getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping();
 	}
 
+	/**
+	 * @deprecated since 6.0, use {@link EntityMappingHierarchy#getOptimisticLockStyle()}.
+	 */
 	@Override
+	@Deprecated
 	public OptimisticLockStyle getOptimisticLockStyle() {
-		return superclass.getOptimisticLockStyle();
+		return getEntityMappingHierarchy().getOptimisticLockStyle();
 	}
 }

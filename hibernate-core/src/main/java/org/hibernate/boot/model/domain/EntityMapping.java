@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.model.domain;
 
-import javax.persistence.metamodel.Type;
+import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.EntityMode;
 
@@ -24,7 +24,7 @@ public interface EntityMapping extends IdentifiableTypeMapping {
 	void setEntityPersisterClass(Class entityPersisterClass);
 
 	@Override
-	default Type.PersistenceType getPersistenceType() {
-		return Type.PersistenceType.ENTITY;
+	default PersistenceType getPersistenceType() {
+		return PersistenceType.ENTITY;
 	}
 }

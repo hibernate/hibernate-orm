@@ -12,20 +12,20 @@ import java.util.Map;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 
 /**
  * @author Emmanuel Bernard
  */
 public class IndexOrUniqueKeySecondPass implements SecondPass {
-	private Table table;
+	private MappedTable table;
 	private final String indexName;
 	private final String[] columns;
 	private final MetadataBuildingContext buildingContext;
@@ -35,7 +35,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	/**
 	 * Build an index
 	 */
-	public IndexOrUniqueKeySecondPass(Table table, String indexName, String[] columns, MetadataBuildingContext buildingContext) {
+	public IndexOrUniqueKeySecondPass(MappedTable table, String indexName, String[] columns, MetadataBuildingContext buildingContext) {
 		this.table = table;
 		this.indexName = indexName;
 		this.columns = columns;

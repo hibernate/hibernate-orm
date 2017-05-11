@@ -21,6 +21,8 @@ import org.hibernate.AnnotationException;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.mapping.PersistentClass;
@@ -305,8 +307,21 @@ public class InheritanceState {
 			//add MAppedSuperclass if not already there
 			mappedSuperclass = buildingContext.getMetadataCollector().getMappedSuperclass( type );
 			if ( mappedSuperclass == null ) {
-				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass( parentSuperclass, superEntity );
-				mappedSuperclass.setMappedClass( type );
+
+				// todo (6.0) : verify this is actually correct
+				EntityMappingHierarchy entityHierarchy = persistentClass.getEntityMappingHierarchy();
+				final IdentifiableTypeMapping superTypeMapping;
+				if ( parentSuperclass != null ) {
+					superTypeMapping = parentSuperclass;
+				}
+				else if ( superEntity != null ) {
+					superTypeMapping = superEntity;
+				}
+				else {
+					superTypeMapping = null;
+				}
+
+				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass( entityHierarchy, superTypeMapping, type );
 				buildingContext.getMetadataCollector().addMappedSuperclass( type, mappedSuperclass );
 			}
 		}

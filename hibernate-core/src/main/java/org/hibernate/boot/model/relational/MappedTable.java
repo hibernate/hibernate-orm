@@ -65,6 +65,8 @@ public interface MappedTable extends Exportable, Loggable {
 
 	Identifier getNameIdentifier();
 
+	String getQuotedName();
+
 	QualifiedTableName getQualifiedTableName();
 
 	/**

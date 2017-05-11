@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.domain.internal;
 
 import javax.persistence.metamodel.Type;
+import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.MappedSuperclassMapping;
@@ -40,7 +41,7 @@ public abstract class AbstractMappedSuperclassMapping
 	}
 
 	@Override
-	public Type.PersistenceType getPersistenceType() {
-		return Type.PersistenceType.MAPPED_SUPERCLASS;
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.MAPPED_SUPERCLASS;
 	}
 }

@@ -239,7 +239,7 @@ public class ModelBinder {
 				rootEntityDescriptor
 		);
 
-		rootEntityDescriptor.setTable( primaryTable );
+		rootEntityDescriptor.setMappedTable( primaryTable );
 		if ( log.isDebugEnabled() ) {
 			log.debugf( "Mapping class: %s -> %s", rootEntityDescriptor.getEntityName(), primaryTable.getName() );
 		}
@@ -610,7 +610,7 @@ public class ModelBinder {
 				entityDescriptor
 		);
 
-		entityDescriptor.setTable( primaryTable );
+		entityDescriptor.setMappedTable( primaryTable );
 		if ( log.isDebugEnabled() ) {
 			log.debugf( "Mapping joined-subclass: %s -> %s", entityDescriptor.getEntityName(), primaryTable.getName() );
 		}
@@ -685,7 +685,7 @@ public class ModelBinder {
 				entitySource,
 				entityDescriptor
 		);
-		entityDescriptor.setTable( primaryTable );
+		entityDescriptor.setMappedTable( primaryTable );
 
 		if ( log.isDebugEnabled() ) {
 			log.debugf( "Mapping union-subclass: %s -> %s", entityDescriptor.getEntityName(), primaryTable.getName() );

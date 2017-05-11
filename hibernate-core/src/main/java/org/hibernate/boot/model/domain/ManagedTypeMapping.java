@@ -9,6 +9,7 @@ package org.hibernate.boot.model.domain;
 import java.util.List;
 
 import javax.persistence.metamodel.Type;
+import javax.persistence.metamodel.Type.PersistenceType;
 
 /**
  * Corollary to what JPA calls a "managed type" as part of Hibernate's boot-time
@@ -24,14 +25,9 @@ public interface ManagedTypeMapping {
 	String getName();
 
 	/**
-	 * Get the class associated with the managed type mapping.
-	 */
-	Class<?> getJavaType();
-
-	/**
 	 * The mappings persistence type.
 	 */
-	Type.PersistenceType getPersistenceType();
+	PersistenceType getPersistenceType();
 
 	/**
 	 * The ordering here is defined by the alphabetical ordering of the

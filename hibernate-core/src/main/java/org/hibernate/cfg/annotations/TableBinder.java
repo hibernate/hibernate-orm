@@ -20,6 +20,7 @@ import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
 import org.hibernate.boot.model.naming.ImplicitJoinTableNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.NamingStrategyHelper;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -135,7 +136,7 @@ public class TableBinder {
 	}
 
 	// only bind association table currently
-	public Table bind() {
+	public MappedTable bind() {
 		final Identifier ownerEntityTableNameIdentifier = toIdentifier( ownerEntityTable );
 		final Identifier associatedEntityTableNameIdentifier = toIdentifier( associatedEntityTable );
 
@@ -442,7 +443,7 @@ public class TableBinder {
 		return new AssociationTableNameSource( name, logicalName.render() );
 	}
 
-	public static Table buildAndFillTable(
+	public static MappedTable buildAndFillTable(
 			String schema,
 			String catalog,
 			ObjectNameSource nameSource,
@@ -476,7 +477,7 @@ public class TableBinder {
 		);
 	}
 
-	public static Table buildAndFillTable(
+	public static MappedTable buildAndFillTable(
 			String schema,
 			String catalog,
 			Identifier logicalName,
@@ -494,7 +495,7 @@ public class TableBinder {
 				? extract( buildingContext.getMetadataCollector().getDatabase().getDefaultNamespace().getPhysicalName().getCatalog() )
 				: catalog;
 
-		final Table table;
+		final MappedTable table;
 		if ( denormalizedSuperTableXref != null ) {
 			table = buildingContext.getMetadataCollector().addDenormalizedTable(
 					schema,
@@ -742,7 +743,7 @@ public class TableBinder {
 		value.getTable().createUniqueKey( cols );
 	}
 
-	public static void addIndexes(Table hibTable, Index[] indexes, MetadataBuildingContext buildingContext) {
+	public static void addIndexes(MappedTable hibTable, Index[] indexes, MetadataBuildingContext buildingContext) {
 		for (Index index : indexes) {
 			//no need to handle inSecondPass here since it is only called from EntityBinder
 			buildingContext.getMetadataCollector().addSecondPass(
@@ -751,7 +752,7 @@ public class TableBinder {
 		}
 	}
 
-	public static void addIndexes(Table hibTable, javax.persistence.Index[] indexes, MetadataBuildingContext buildingContext) {
+	public static void addIndexes(MappedTable hibTable, javax.persistence.Index[] indexes, MetadataBuildingContext buildingContext) {
 		buildingContext.getMetadataCollector().addJpaIndexHolders( hibTable, buildJpaIndexHolder( indexes ) );
 	}
 

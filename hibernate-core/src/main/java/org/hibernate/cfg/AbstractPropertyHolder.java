@@ -117,7 +117,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	protected AttributeConverterDescriptor makeAttributeConverterDescriptor(AttributeConversionInfo conversion) {
 		try {
 			AttributeConverterDefinition definition = AttributeConverterDefinition.from(context.getBootstrapContext().getClassmateContext(), conversion.getConverterClass(), false );
-			return AttributeConverterDescriptorImpl.create( definition, context.getMetadataCollector().getBootstrapContext().getClassmateContext() );
+			return AttributeConverterDescriptorImpl.create(
+					definition,
+					context.getMetadataCollector().getBootstrapContext().getClassmateContext(),
+					context.getBootstrapContext().getTypeConfiguration()
+			);
 		}
 		catch (Exception e) {
 			throw new AnnotationException( "Unable to create AttributeConverter instance", e );

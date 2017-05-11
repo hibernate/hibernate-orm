@@ -61,6 +61,7 @@ import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitEntityNameSource;
 import org.hibernate.boot.model.naming.NamingStrategyHelper;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -661,7 +662,7 @@ public class EntityBinder {
 			logicalName = namingStrategyHelper.determineImplicitName( context );
 		}
 
-		final Table table = TableBinder.buildAndFillTable(
+		final MappedTable table = TableBinder.buildAndFillTable(
 				schema,
 				catalog,
 				logicalName,
@@ -687,7 +688,7 @@ public class EntityBinder {
 
 		if ( persistentClass instanceof TableOwner ) {
 			LOG.debugf( "Bind entity %s on table %s", persistentClass.getEntityName(), table.getName() );
-			( (TableOwner) persistentClass ).setTable( table );
+			( (TableOwner) persistentClass ).setMappedTable( table );
 		}
 		else {
 			throw new AssertionFailure( "binding a table for a subclass" );
@@ -965,7 +966,7 @@ public class EntityBinder {
 			throw new AssertionFailure( "Both JoinTable and SecondaryTable are null" );
 		}
 
-		final Table table = TableBinder.buildAndFillTable(
+		final MappedTable table = TableBinder.buildAndFillTable(
 				schema,
 				catalog,
 				logicalName,

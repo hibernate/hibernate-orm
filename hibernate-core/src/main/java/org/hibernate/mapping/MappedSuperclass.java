@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
@@ -36,15 +37,20 @@ import org.hibernate.boot.model.domain.internal.AbstractMappedSuperclassMapping;
  * @author Emmanuel Bernard
  */
 public class MappedSuperclass extends AbstractMappedSuperclassMapping implements PropertyContainer {
+	private Class<?> mappedSuperclassClass;
 
-	public MappedSuperclass(EntityMappingHierarchy entityMappingHierarchy, IdentifiableTypeMapping superIdentifiableTypeMapping) {
+	public MappedSuperclass(
+			EntityMappingHierarchy entityMappingHierarchy,
+			IdentifiableTypeMapping superIdentifiableTypeMapping,
+			Class<?> mappedSuperclassClass) {
 		super( entityMappingHierarchy );
+		this.mappedSuperclassClass = mappedSuperclassClass;
 		setSuperManagedType( superIdentifiableTypeMapping );
 	}
 
 	@Override
 	public String getName() {
-		return getJavaType().getName();
+		return mappedSuperclassClass.getName();
 	}
 
 	/**
@@ -106,15 +112,15 @@ public class MappedSuperclass extends AbstractMappedSuperclassMapping implements
 	 */
 	@Deprecated
 	public Class getMappedClass() {
-		return getJavaType();
+		return mappedSuperclassClass;
 	}
 
 	/**
-	 * @deprecated since 6.0, use {@link #setJavaType(Class)}.
+	 * @deprecated since 6.0, pass via class consructor.
 	 */
 	@Deprecated
 	public void setMappedClass(Class mappedClass) {
-		setJavaType( mappedClass );
+		this.mappedSuperclassClass = mappedClass;
 	}
 
 	/**
@@ -237,5 +243,10 @@ public class MappedSuperclass extends AbstractMappedSuperclassMapping implements
 	@Deprecated
 	public List<Property> getDeclaredProperties() {
 		return getDeclaredPersistentAttributes().stream().map( e -> (Property) e ).collect( Collectors.toList() );
+	}
+
+	@Override
+	public int nextSubclassId() {
+		throw new MappingException( "This should not be called on a MappedSuperclass" );
 	}
 }

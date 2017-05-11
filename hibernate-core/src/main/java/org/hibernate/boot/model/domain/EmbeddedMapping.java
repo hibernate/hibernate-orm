@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.model.domain;
 
-import javax.persistence.metamodel.Type;
+import javax.persistence.metamodel.Type.PersistenceType;
 
 /**
  * The representation of an embedded in the application's domain model.  Note
@@ -24,7 +24,7 @@ public interface EmbeddedMapping extends ManagedTypeMapping, ValueMappingContain
 	EmbeddedValueMapping getValueMapping();
 
 	@Override
-	default Type.PersistenceType getPersistenceType() {
-		return Type.PersistenceType.EMBEDDABLE;
+	default PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
 	}
 }

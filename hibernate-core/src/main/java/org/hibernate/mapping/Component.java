@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.persistence.metamodel.Type.PersistenceType;
+
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
@@ -479,5 +481,26 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Mana
 	@Override
 	public List<ManagedTypeMapping> getSuperManagedTypeMappings() {
 		return null;
+	}
+
+	@Override
+	public boolean hasPersistentAttribute(String name) {
+		// since we don't support inheritance of embedded components, this delegates to declared
+		return hasDeclaredPersistentAttribute( name );
+	}
+
+	@Override
+	public boolean hasDeclaredPersistentAttribute(String name) {
+		for ( PersistentAttributeMapping attribute : getDeclaredPersistentAttributes() ) {
+			if ( attribute.getName().equals( name ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
 	}
 }

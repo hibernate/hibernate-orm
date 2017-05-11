@@ -164,6 +164,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return name;
 	}
 
+	@Override
 	public String getQuotedName() {
 		return name == null ? null : name.toString();
 	}

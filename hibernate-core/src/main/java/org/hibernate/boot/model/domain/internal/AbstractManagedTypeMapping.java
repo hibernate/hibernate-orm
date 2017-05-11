@@ -48,16 +48,6 @@ public abstract class AbstractManagedTypeMapping implements ManagedTypeMappingIm
 	}
 
 	@Override
-	public void setJavaType(Class<?> javaType) {
-		this.javaType = javaType;
-	}
-
-	@Override
-	public Class<?> getJavaType() {
-		return javaType;
-	}
-
-	@Override
 	public List<PersistentAttributeMapping> getDeclaredPersistentAttributes() {
 		return declaredAttributeMappings == null
 				? Collections.emptyList()

@@ -7,6 +7,7 @@
 package org.hibernate.test.resource.transaction.jdbc;
 
 import org.hibernate.resource.jdbc.internal.LogicalConnectionProvidedImpl;
+import org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl;
 
 import org.hibernate.test.resource.common.DatabaseConnectionInfo;
 
@@ -15,6 +16,6 @@ import org.hibernate.test.resource.common.DatabaseConnectionInfo;
  */
 public class LogicalConnectionTestingImpl extends LogicalConnectionProvidedImpl {
 	public LogicalConnectionTestingImpl() throws Exception {
-		super( DatabaseConnectionInfo.INSTANCE.makeConnection() );
+		super( DatabaseConnectionInfo.INSTANCE.makeConnection(), new ResourceRegistryStandardImpl() );
 	}
 }

@@ -38,8 +38,10 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl;
 import org.hibernate.resource.jdbc.internal.LogicalConnectionProvidedImpl;
+import org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
@@ -94,13 +96,17 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			JdbcSessionOwner owner) {
 		this.isUserSuppliedConnection = userSuppliedConnection != null;
 
+		final ResourceRegistry resourceRegistry = new ResourceRegistryStandardImpl(
+				owner.getJdbcSessionContext().getObserver()
+		);
 		if ( isUserSuppliedConnection ) {
-			this.logicalConnection = new LogicalConnectionProvidedImpl( userSuppliedConnection );
+			this.logicalConnection = new LogicalConnectionProvidedImpl( userSuppliedConnection, resourceRegistry );
 		}
 		else {
 			this.logicalConnection = new LogicalConnectionManagedImpl(
 					owner.getJdbcConnectionAccess(),
-					owner.getJdbcSessionContext()
+					owner.getJdbcSessionContext(),
+					resourceRegistry
 			);
 		}
 		this.owner = owner;

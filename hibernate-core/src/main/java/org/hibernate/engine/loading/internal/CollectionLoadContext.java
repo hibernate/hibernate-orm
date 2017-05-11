@@ -121,7 +121,7 @@ public class CollectionLoadContext {
 				}
 				// create one
 				LOG.tracev( "Instantiating new collection [key={0}, rs={1}]", key, resultSet );
-				collection = persister.getCollectionType().instantiate(
+				collection = persister.getOrmType().instantiate(
 						loadContexts.getPersistenceContext().getSession(), persister, key );
 			}
 			collection.beforeInitialize( persister, -1 );
@@ -233,7 +233,7 @@ public class CollectionLoadContext {
 		// warning: can cause a recursive calls! (proxy initialization)
 		final boolean hasNoQueuedAdds = lce.getCollection().endRead();
 
-		if ( persister.getCollectionType().hasHolder() ) {
+		if ( persister.isArray() ) {
 			getLoadContext().getPersistenceContext().addCollectionHolder( lce.getCollection() );
 		}
 
@@ -339,7 +339,7 @@ public class CollectionLoadContext {
 		);
 
 		boolean isPutFromLoad = true;
-		if ( persister.getElementType().isAssociationType() ) {
+		if ( persister.isAssociation() ) {
 			for ( Serializable id : entry.getState() ) {
 				EntityPersister entityPersister = ( (QueryableCollection) persister ).getElementPersister();
 				if ( session.getPersistenceContext().wasInsertedDuringTransaction( entityPersister, id ) ) {

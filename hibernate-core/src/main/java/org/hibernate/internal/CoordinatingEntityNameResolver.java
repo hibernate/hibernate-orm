@@ -9,16 +9,17 @@ package org.hibernate.internal;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
 public class CoordinatingEntityNameResolver implements EntityNameResolver {
-	private final SessionFactoryImplementor sessionFactory;
+	private final TypeConfiguration typeConfiguration;
 	private final Interceptor interceptor;
 
 	public CoordinatingEntityNameResolver(SessionFactoryImplementor sessionFactory, Interceptor interceptor) {
-		this.sessionFactory = sessionFactory;
+		this.typeConfiguration = sessionFactory.getMetamodel().getTypeConfiguration();
 		this.interceptor = interceptor;
 	}
 
@@ -29,7 +30,7 @@ public class CoordinatingEntityNameResolver implements EntityNameResolver {
 			return entityName;
 		}
 
-		for ( EntityNameResolver resolver : sessionFactory.getMetamodel().getEntityNameResolvers() ) {
+		for ( EntityNameResolver resolver : typeConfiguration.getEntityNameResolvers() ) {
 			entityName = resolver.resolveEntityName( entity );
 			if ( entityName != null ) {
 				break;

@@ -10,8 +10,9 @@ import java.util.List;
 
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.from.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 /**
  * An expression that is a reference to some part of the application domain model.
@@ -28,5 +29,8 @@ public interface NavigableReferenceExpression extends Expression {
 
 	NavigablePath getNavigablePath();
 
+	TableGroup getSourceTableGroup();
+
+	// todo (6.0) : this should go away..
 	List<ColumnReference> getColumnReferences();
 }

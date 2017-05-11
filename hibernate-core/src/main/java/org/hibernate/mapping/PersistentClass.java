@@ -7,12 +7,9 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.*;
+import java.util.Collection;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
 import org.hibernate.EntityMode;
@@ -23,6 +20,7 @@ import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.ManagedTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.boot.model.domain.MappedTableJoin;
 import org.hibernate.boot.model.domain.internal.AbstractIdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
 import org.hibernate.boot.model.relational.MappedTable;
@@ -33,6 +31,7 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
@@ -383,6 +382,23 @@ public abstract class PersistentClass
 	public abstract boolean hasEmbeddedIdentifier();
 
 	public abstract Table getRootTable();
+
+	protected abstract Collection<Join> getJoins();
+
+	@Override
+	public Collection<MappedTableJoin> getSecondaryTables() {
+		final Collection<Join> joins = getJoins();
+
+		if ( joins.size() <= 0 ) {
+			return Collections.emptyList();
+		}
+
+		if ( getJoinClosureSpan() == 1 ) {
+			return Collections.singletonList( joins.iterator().next() );
+		}
+
+		return new ArrayList<>( joins );
+	}
 
 	public abstract RootClass getRootClass();
 

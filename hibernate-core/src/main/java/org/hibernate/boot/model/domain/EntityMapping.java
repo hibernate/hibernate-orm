@@ -9,6 +9,7 @@ package org.hibernate.boot.model.domain;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.EntityMode;
+import org.hibernate.boot.model.relational.MappedTable;
 
 /**
  * @author Steve Ebersole
@@ -27,4 +28,6 @@ public interface EntityMapping extends IdentifiableTypeMapping {
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.ENTITY;
 	}
+
+	MappedTable getRootTable();
 }

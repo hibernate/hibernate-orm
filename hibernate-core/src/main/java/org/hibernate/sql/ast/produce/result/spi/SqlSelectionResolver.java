@@ -12,6 +12,9 @@ import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 
 /**
+ * Resolves SqlSelectable references to SqlSelection.  This is the process responsible for
+ * "uniqueing" the SqlSelection per SqlSelectable.
+ *
  * @author Steve Ebersole
  */
 public interface SqlSelectionResolver {

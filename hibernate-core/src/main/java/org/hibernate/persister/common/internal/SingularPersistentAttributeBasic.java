@@ -7,8 +7,10 @@
 
 package org.hibernate.persister.common.internal;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.persister.common.BasicValuedNavigable;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.ConvertibleNavigable;
@@ -23,10 +25,10 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class SingularPersistentAttributeBasic<O,J> extends AbstractSingularPersistentAttribute<O, J, BasicType<J>>
-		implements ConvertibleNavigable<J> {
+		implements ConvertibleNavigable<J>, BasicValuedNavigable<J> {
 	private static final Logger log = Logger.getLogger( SingularPersistentAttributeBasic.class );
 
-	private final List<Column> columns;
+	private final Column boundColumn;
 
 	private AttributeConverterDefinition attributeConverterInfo;
 
@@ -39,8 +41,11 @@ public class SingularPersistentAttributeBasic<O,J> extends AbstractSingularPersi
 			AttributeConverterDefinition attributeConverterInfo,
 			List<Column> columns) {
 		super( declaringType, name, propertyAccess, ormType, disposition, true );
+
+		assert columns.size() == 1;
+
 		this.attributeConverterInfo = attributeConverterInfo;
-		this.columns = columns;
+		this.boundColumn = columns.get( 0 );
 	}
 
 	@Override
@@ -49,25 +54,18 @@ public class SingularPersistentAttributeBasic<O,J> extends AbstractSingularPersi
 	}
 
 	@Override
+	public Column getBoundColumn() {
+		return boundColumn;
+	}
+
+	@Override
 	public List<Column> getColumns() {
-		return columns;
+		return Collections.singletonList( getBoundColumn() );
 	}
 
 	@Override
 	public String asLoggableText() {
 		return "SingularAttributeBasic(" + getContainer().asLoggableText() + '.' + getAttributeName() + ')';
-	}
-
-	@Override
-	public void injectAttributeConverter(AttributeConverterDefinition  attributeConverterInfo) {
-		log.debugf(
-				"AttributeConverter [%s] being injected for singular attribute '%s.%s' collection; was : %s",
-				attributeConverterInfo,
-				getContainer().asLoggableText(),
-				getName(),
-				this.attributeConverterInfo
-		);
-		this.attributeConverterInfo = attributeConverterInfo;
 	}
 
 	@Override

@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.hibernate.boot.model.domain.MappedTableJoin;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.sql.Alias;
@@ -17,7 +18,7 @@ import org.hibernate.sql.Alias;
 /**
  * @author Gavin King
  */
-public class Join implements AttributeContainer, Serializable {
+public class Join implements AttributeContainer, Serializable, MappedTableJoin {
 
 	private static final Alias PK_ALIAS = new Alias(15, "PK");
 

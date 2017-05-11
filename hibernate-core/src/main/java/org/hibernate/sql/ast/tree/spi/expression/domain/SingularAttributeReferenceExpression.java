@@ -14,17 +14,18 @@ import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.spi.from.ColumnReference;
+import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.SelectableBasicTypeImpl;
 import org.hibernate.sql.ast.tree.spi.select.SelectableEmbeddedTypeImpl;
 import org.hibernate.sql.ast.tree.spi.select.SelectableEntityTypeImpl;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.EmbeddedType;
-import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
@@ -91,8 +92,8 @@ public class SingularAttributeReferenceExpression implements NavigableReferenceE
 	}
 
 	@Override
-	public Type getType() {
-		return referencedAttribute.getOrmType();
+	public ExpressableType getType() {
+		return referencedAttribute;
 	}
 
 	@Override
@@ -129,5 +130,10 @@ public class SingularAttributeReferenceExpression implements NavigableReferenceE
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
+	}
+
+	@Override
+	public TableGroup getSourceTableGroup() {
+		return columnBindingSource.getTableGroup();
 	}
 }

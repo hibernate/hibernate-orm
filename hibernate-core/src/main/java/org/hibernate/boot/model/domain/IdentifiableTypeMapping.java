@@ -24,6 +24,12 @@ public interface IdentifiableTypeMapping extends ManagedTypeMapping {
 	Collection<IdentifiableTypeMapping> getSubTypeMappings();
 
 	/**
+	 * It is conceivable that a user might want to define a
+	 * SecondaryTable on a MappedSuperclass, so we add those here.
+	 */
+	Collection<MappedTableJoin> getSecondaryTables();
+
+	/**
 	 * Get the attribute that represents a single identifier or an embedded id.
 	 */
 	PersistentAttributeMapping getIdentifierAttributeMapping();
@@ -63,4 +69,5 @@ public interface IdentifiableTypeMapping extends ManagedTypeMapping {
 	 * Checks whether the identifier attribute represents a single id or embedded id.
 	 */
 	boolean hasSingleIdentifierAttributeMapping();
+
 }

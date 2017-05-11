@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Table;
+import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -19,7 +20,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
  *
  * @author Steve Ebersole
  */
-public interface ColumnReferenceSource {
+public interface ColumnReferenceSource extends ColumnReferenceResolver {
 	TableGroup getTableGroup();
 
 	TableReference locateTableReference(Table table);

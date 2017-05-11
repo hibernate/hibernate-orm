@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.common;
 
+import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 
@@ -13,4 +14,5 @@ import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
  * @author Steve Ebersole
  */
 public interface BasicValuedNavigable<J> extends BasicValuedExpressableType<J>, Navigable<J> {
+	Column getBoundColumn();
 }

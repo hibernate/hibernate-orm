@@ -18,7 +18,7 @@ import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
-import org.hibernate.sql.ast.produce.result.internal.BasicScalarSelectionImpl;
+import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
 import org.hibernate.sql.ast.produce.sqm.spi.ParameterSpec;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
@@ -59,7 +59,7 @@ public abstract class AbstractParameter
 			Expression selectedExpression,
 			String resultVariable,
 			ColumnReferenceResolver columnReferenceResolver) {
-		return new BasicScalarSelectionImpl( selectedExpression, resultVariable, this );
+		return new BasicValuedNonNavigableSelection( selectedExpression, resultVariable, this );
 	}
 
 	@Override

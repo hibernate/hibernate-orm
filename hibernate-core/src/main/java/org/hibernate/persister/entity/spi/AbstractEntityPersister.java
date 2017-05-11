@@ -6,11 +6,14 @@
  */
 package org.hibernate.persister.entity.spi;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
@@ -19,6 +22,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.MappedTableJoin;
+import org.hibernate.boot.model.relational.DenormalizedMappedTable;
+import org.hibernate.boot.model.relational.DerivedMappedTable;
+import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.boot.model.relational.PhysicalMappedTable;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
@@ -100,8 +108,8 @@ public abstract class AbstractEntityPersister<T>
 
 		this.navigableRole = new NavigableRole( entityMapping.getEntityName() );
 
-		entityMapping.
-
+		this.rootTable = resolveRootTable( entityMapping, creationContext );
+		this.secondaryTableBindings = resolveSecondaryTableBindings( entityMapping, creationContext );
 
 		if ( entityHierarchy.getEntityMode() == EntityMode.POJO ) {
 			this.bytecodeEnhancementMetadata = BytecodeEnhancementMetadataPojoImpl.from( entityMapping );
@@ -123,6 +131,60 @@ public abstract class AbstractEntityPersister<T>
 				this,
 				getJavaTypeDescriptor().getEntityName(),
 				getJavaTypeDescriptor().getJpaEntityName()
+		);
+	}
+
+	// todo (6.0) : the root-table may not need to be phyically stored here
+	// 		table structures vary by inheritance type
+	//
+	private Table resolveRootTable(EntityMapping entityMapping, PersisterCreationContext creationContext) {
+		final MappedTable rootMappedTable = entityMapping.getRootTable();
+		return resolveTable( rootMappedTable, creationContext );
+	}
+
+	private Table resolveTable(MappedTable mappedTable, PersisterCreationContext creationContext) {
+		if ( mappedTable instanceof DerivedMappedTable ) {
+			final DerivedMappedTable derivedMappedTable = (DerivedMappedTable) mappedTable;
+			return creationContext.getDatabaseModel().findDerivedTable( derivedMappedTable.getSqlSelect() );
+		}
+		else if ( mappedTable instanceof DenormalizedMappedTable ) {
+			final DenormalizedMappedTable denormalizedMappedTable = (DenormalizedMappedTable) mappedTable;
+			return creationContext.getDatabaseModel().findPhysicalTable( denormalizedMappedTable.getName() );
+		}
+
+		// else it is a PhysicalMappedTable
+		final PhysicalMappedTable physicalMappedTable = (PhysicalMappedTable) mappedTable;
+		return creationContext.getDatabaseModel().findPhysicalTable( physicalMappedTable.getName() );
+	}
+
+	private List<JoinedTableBinding> resolveSecondaryTableBindings(
+			EntityMapping entityMapping,
+			PersisterCreationContext creationContext) {
+		final Collection<MappedTableJoin> secondaryTables = entityMapping.getSecondaryTables();
+		if ( secondaryTables.size() <= 0 ) {
+			return Collections.emptyList();
+		}
+
+		if ( secondaryTables.size() == 1 ) {
+			return Collections.singletonList(
+					generateJoinedTableBinding( secondaryTables.iterator().next(), creationContext )
+			);
+		}
+
+		return secondaryTables.stream().map( m ->generateJoinedTableBinding( m, creationContext ) ).collect( Collectors.toList() );
+	}
+
+	private JoinedTableBinding generateJoinedTableBinding(MappedTableJoin mappedTableJoin, PersisterCreationContext creationContext) {
+		final Table joinedTable = resolveTable( mappedTableJoin.getMappedTable(), creationContext );
+
+		// todo (6.0) : resolve "join predicate" as ForeignKey.ColumnMappings
+		//		see note on MappedTableJoin regarding what to expose there
+
+		return new JoinedTableBinding(
+				joinedTable,
+				getRootTable(),
+				null,
+				mappedTableJoin.isOptional()
 		);
 	}
 

@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.produce.result.spi;
 
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.sql.ast.tree.spi.from.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 
 /**
  * @author Steve Ebersole

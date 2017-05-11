@@ -15,6 +15,7 @@ import java.sql.SQLException;
  */
 public interface QueryResultAssembler {
 	// todo (6.0) : ? - (like on QueryResult) JavaTypeDescriptor or ExpressableType instead of Java type?
+	// todo (6.0) : is this even needed in any form?
 	Class getReturnedJavaType();
 	Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) throws SQLException;
 }

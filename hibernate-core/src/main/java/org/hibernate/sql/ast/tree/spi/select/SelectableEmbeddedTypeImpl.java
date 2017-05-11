@@ -10,11 +10,11 @@ package org.hibernate.sql.ast.tree.spi.select;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.from.ColumnReference;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.type.spi.EmbeddedType;
 
 /**
@@ -32,11 +32,6 @@ public class SelectableEmbeddedTypeImpl implements Selectable {
 		this.selectedExpression = selectedExpression;
 		this.columnBindings = columnBindings;
 		this.embeddedType = embeddedType;
-	}
-
-	@Override
-	public Expression getSelectedExpression() {
-		return selectedExpression;
 	}
 
 	@Override

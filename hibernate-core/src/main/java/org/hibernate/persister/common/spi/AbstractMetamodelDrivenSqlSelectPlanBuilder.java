@@ -57,6 +57,7 @@ import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -91,7 +92,7 @@ import org.jboss.logging.MDC;
  */
 public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 		implements MetamodelDrivenSqlSelectPlanBuilder, NavigableVisitationStrategy, SqlSelectPlanBuildingContext,
-		QueryResultCreationContext {
+		SqlSelectionResolver {
 	private static final Logger log = Logger.getLogger( AbstractMetamodelDrivenSqlSelectPlanBuilder.class );
 	private static final String MDC_KEY = "hibernateSqlSelectPlanWalkPath";
 

@@ -8,11 +8,13 @@ package org.hibernate.sql.ast.consume.results.internal;
 
 import java.sql.SQLException;
 
+import org.hibernate.persister.common.spi.ConvertibleNavigable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultScalar;
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.ast.consume.results.spi.RowProcessingState;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 
 /**
  * @author Steve Ebersole
@@ -34,11 +36,21 @@ public class QueryResultAssemblerScalar implements QueryResultAssembler {
 		return returnScalar.getReturnedJavaType();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Object assemble(
 			RowProcessingState rowProcessingState,
 			JdbcValuesSourceProcessingOptions options) throws SQLException {
-		// todo (6.0) : apply AttributeConverter?  Or, what calls this?  Maybe there?
-		return rowProcessingState.getJdbcValues()[ sqlSelection.getValuesArrayPosition() ];
+		final Object rawJdbcValue = rowProcessingState.getJdbcValues()[sqlSelection.getValuesArrayPosition()];
+
+		if ( returnScalar.getType() instanceof ConvertibleNavigable ) {
+			final AttributeConverterDefinition attributeConverter = ( (ConvertibleNavigable) returnScalar.getType() ).getAttributeConverter();
+			if ( attributeConverter != null ) {
+				// apply the attribute converter
+				return attributeConverter.getAttributeConverter().convertToEntityAttribute( rawJdbcValue );
+			}
+		}
+
+		return rawJdbcValue;
 	}
 }

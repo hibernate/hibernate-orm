@@ -15,12 +15,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
-import org.hibernate.sql.ast.produce.ConversionException;
-import org.hibernate.sql.ast.produce.result.internal.QueryResultDynamicInstantiationImpl;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.ArgumentReader;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultAssemblerConstructorImpl;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultAssemblerInjectionImpl;
@@ -28,8 +24,17 @@ import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultA
 import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultAssemblerMapImpl;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.query.sqm.tree.expression.Compatibility;
-import org.hibernate.type.spi.Type;
+import org.hibernate.sql.ast.produce.ConversionException;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultDynamicInstantiationImpl;
+import org.hibernate.sql.ast.tree.internal.AbstractSelection;
+import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultGenerator;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.ast.tree.spi.select.Selection;
 
 import org.jboss.logging.Logger;
 
@@ -98,7 +103,7 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 	}
 
 	@Override
-	public Type getType() {
+	public ExpressableType getType() {
 		return null;
 	}
 
@@ -112,53 +117,100 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 		return this;
 	}
 
-	@Override
-	public Expression getSelectedExpression() {
-		return this;
-	}
-
 	private QueryResultDynamicInstantiationImpl queryReturn;
 
+
 	@Override
-	public QueryResult toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
-		if ( queryReturn != null ) {
-			return queryReturn;
-		}
+	public Selection createSelection(
+			Expression selectedExpression,
+			String resultVariable,
+			ColumnReferenceResolver columnReferenceResolver) {
+		assert selectedExpression == this;
 
-		boolean areAllArgumentsAliased = true;
-		boolean areAnyArgumentsAliased = false;
-		final Set<String> aliases = new HashSet<>();
-		final List<String> duplicatedAliases = new ArrayList<>();
-
-		final List<ArgumentReader> argumentReaders = new ArrayList<>();
-		if ( arguments != null ) {
-			for ( DynamicInstantiationArgument argument : arguments ) {
-				if ( argument.getAlias() == null ) {
-					areAllArgumentsAliased = false;
-				}
-				else {
-					if ( !aliases.add( argument.getAlias() ) ) {
-						duplicatedAliases.add( argument.getAlias() );
-					}
-					areAnyArgumentsAliased = true;
-				}
-
-				argumentReaders.add( argument.buildArgumentReader( returnResolutionContext ) );
-			}
-		}
-
-		final QueryResultAssembler assembler = resolveAssembler(
-				target,
-				arguments,
-				areAllArgumentsAliased,
-				areAnyArgumentsAliased,
-				duplicatedAliases,
-				argumentReaders
+		return new DynamicInstantiationSelection(
+				this,
+				resultVariable,
+				columnReferenceResolver
 		);
+	}
 
-		queryReturn = new QueryResultDynamicInstantiationImpl( this, resultVariable, assembler );
+	private static class DynamicInstantiationSelection extends AbstractSelection {
+		private final DynamicInstantiationQueryResultGenerator queryResultGenerator;
 
-		return queryReturn;
+		public DynamicInstantiationSelection(
+				DynamicInstantiation dynamicInstantiation,
+				String resultVariable,
+				ColumnReferenceResolver columnReferenceResolver) {
+			super( dynamicInstantiation, resultVariable );
+
+			this.queryResultGenerator = new DynamicInstantiationQueryResultGenerator( this, columnReferenceResolver );
+		}
+
+		@Override
+		public DynamicInstantiation getSelectedExpression() {
+			return (DynamicInstantiation) super.getSelectedExpression();
+		}
+
+		@Override
+		protected QueryResultGenerator getQueryResultGenerator() {
+			return queryResultGenerator;
+		}
+	}
+
+	private static class DynamicInstantiationQueryResultGenerator implements QueryResultGenerator {
+		private final DynamicInstantiationSelection dynamicInstantiationSelection;
+		private final ColumnReferenceResolver columnReferenceResolver;
+
+		public DynamicInstantiationQueryResultGenerator(
+				DynamicInstantiationSelection dynamicInstantiationSelection,
+				ColumnReferenceResolver columnReferenceResolver) {
+			this.dynamicInstantiationSelection = dynamicInstantiationSelection;
+			this.columnReferenceResolver = columnReferenceResolver;
+		}
+
+		private <T> DynamicInstantiation<T> getDynamicInstantiation() {
+			//noinspection unchecked
+			return dynamicInstantiationSelection.getSelectedExpression();
+		}
+
+		@Override
+		public QueryResult generateQueryResult(
+				ColumnReferenceResolver columnReferenceResolver,
+				SqlSelectionResolver sqlSelectionResolver,
+				QueryResultCreationContext creationContext) {
+			boolean areAllArgumentsAliased = true;
+			boolean areAnyArgumentsAliased = false;
+			final Set<String> aliases = new HashSet<>();
+			final List<String> duplicatedAliases = new ArrayList<>();
+
+			final List<ArgumentReader> argumentReaders = new ArrayList<>();
+			if ( getDynamicInstantiation().arguments != null ) {
+				for ( DynamicInstantiationArgument argument : getDynamicInstantiation().arguments ) {
+					if ( argument.getAlias() == null ) {
+						areAllArgumentsAliased = false;
+					}
+					else {
+						if ( !aliases.add( argument.getAlias() ) ) {
+							duplicatedAliases.add( argument.getAlias() );
+						}
+						areAnyArgumentsAliased = true;
+					}
+
+					argumentReaders.add( argument.buildArgumentReader( columnReferenceResolver, sqlSelectionResolver, creationContext ) );
+				}
+			}
+
+			final QueryResultAssembler assembler = resolveAssembler(
+					getDynamicInstantiation().target,
+					getDynamicInstantiation().arguments,
+					areAllArgumentsAliased,
+					areAnyArgumentsAliased,
+					duplicatedAliases,
+					argumentReaders
+			);
+
+			return new QueryResultDynamicInstantiationImpl( getDynamicInstantiation(), dynamicInstantiationSelection.getResultVariable(), assembler );
+		}
 	}
 
 	private static QueryResultAssembler resolveAssembler(

@@ -107,10 +107,12 @@ import org.hibernate.sql.ast.produce.SyntaxException;
 import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
 import org.hibernate.sql.ast.produce.result.internal.FetchCompositeAttributeImpl;
 import org.hibernate.sql.ast.produce.result.internal.FetchEntityAttributeImpl;
+import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultDynamicInstantiation;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
@@ -170,7 +172,7 @@ import org.jboss.logging.Logger;
 @SuppressWarnings("unchecked")
 public class SqmSelectToSqlAstConverter
 		extends BaseSemanticQueryWalker
-		implements QueryResultCreationContext {
+		implements ColumnReferenceResolver {
 	private static final Logger log = Logger.getLogger( SqmSelectToSqlAstConverter.class );
 
 	private final Stack<NavigablePath> navigablePathStack = new Stack<>();
@@ -490,9 +492,7 @@ public class SqmSelectToSqlAstConverter
 		final Expression expression = (Expression) sqmSelection.getExpression().accept( this );
 		final Selection selection = expression.getSelectable().createSelection(
 				expression,
-				sqmSelection.getAlias(),
-				// todo (6.0) : what to pass as ColumnReferenceResolver?
-				null
+				sqmSelection.getAlias()
 		);
 		currentQuerySpec().getSelectClause().selection( selection );
 

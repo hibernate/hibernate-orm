@@ -266,7 +266,7 @@ public class PersisterHelper {
 			return new SingularPersistentAttributeEmbedded(
 					source,
 					attributeMapping.getName(),
-					resolvePropertyAccess( creationContext, attributeMapping, source ),
+					resolvePropertyAccess( source, attributeMapping, creationContext ),
 					Disposition.NORMAL,
 					creationContext.getPersisterFactory().createEmbeddablePersister(
 							(Component) attributeMapping.getValueMapping(),

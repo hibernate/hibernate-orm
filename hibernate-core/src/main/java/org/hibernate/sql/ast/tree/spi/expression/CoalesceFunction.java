@@ -13,7 +13,7 @@ import java.util.List;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.sql.ast.produce.result.internal.BasicScalarSelectionImpl;
+import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
@@ -55,7 +55,7 @@ public class CoalesceFunction implements StandardFunction {
 			ColumnReferenceResolver columnReferenceResolver) {
 		assert selectedExpression == this;
 
-		return new BasicScalarSelectionImpl( selectedExpression, resultVariable, this );
+		return new BasicValuedNonNavigableSelection( selectedExpression, resultVariable, this );
 	}
 
 	@Override

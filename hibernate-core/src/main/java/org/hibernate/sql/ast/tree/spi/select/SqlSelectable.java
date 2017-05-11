@@ -12,13 +12,11 @@ import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 /**
  * Unifying contract for things that are selectable at the SQL level.
  *
- * todo (6.0) : org.hibernate.persister.common.spi.Column extends this?
- * 		if so, nice way to handle physical versus formula in terms of walking.
- *
  * @author Steve Ebersole
  */
 public interface SqlSelectable {
 	SqlSelectionReader getSqlSelectionReader();
 
+	// todo (6.0) : i believe accept should be more at the Selection/Exprssion level
 	void accept(SqlSelectAstToJdbcSelectConverter interpreter);
 }

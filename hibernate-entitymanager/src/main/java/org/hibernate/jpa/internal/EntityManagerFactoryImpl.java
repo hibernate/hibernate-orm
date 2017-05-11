@@ -692,7 +692,8 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 								"(although Hibernate also adapts this support to its proxies); " +
 								"however the passed entity was not enhanced (nor a proxy).. may not be able to read identifier"
 				);
-				return getIdentifierFromPersister( entity );			}
+				return getIdentifierFromPersister( entity );
+			}
 		}
 
 		private Object getIdentifierFromPersister(Object entity) {

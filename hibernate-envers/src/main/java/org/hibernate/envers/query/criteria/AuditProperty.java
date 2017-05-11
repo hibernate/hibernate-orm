@@ -83,11 +83,12 @@ public class AuditProperty<T> implements AuditProjection {
 		return new IlikeAuditExpression( alias, propertyNameGetter, value.toString() );
 	}
 
-    /**
-     *  Apply an "ilike" constraint
-	 *  @deprecated since 5.2, use {@link #ilike(String, MatchMode)}.  To be removed in 6.0.
-     */
-    @Deprecated
+	/**
+	 * Apply an "ilike" constraint
+	 *
+	 * @deprecated since 5.2, use {@link #ilike(String, MatchMode)}. To be removed in 6.0.
+	 */
+	@Deprecated
 	public AuditCriterion ilike(String value, org.hibernate.criterion.MatchMode matchMode) {
 		return new IlikeAuditExpression( alias, propertyNameGetter, matchMode.toMatchString( value ) );
 	}

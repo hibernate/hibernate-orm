@@ -197,6 +197,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			}
 		}
 		currentBatch = batchBuilder().buildBatch( key, this );
+		logicalConnection.getResourceRegistry().register( currentBatch );
 		return currentBatch;
 	}
 

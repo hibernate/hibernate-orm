@@ -16,6 +16,8 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
+
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -76,8 +78,8 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		gavin.setLocation(mel);
 		mel.addBeing(gavin);
 		Human max = new Human();
-		max.setIdentity("max");
-		max.setSex('M');
+		max.setIdentity( "max" );
+		max.setSex( 'M' );
 		max.setLocation(mel);
 		mel.addBeing(gavin);
 		
@@ -403,5 +405,67 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-11740" )
+	public void testBulkOperationsInTwoConcurrentSessions() throws Exception {
+		Session s = openSession();
+		s.getTransaction().begin();
+
+		Location mars = new Location( "Mars" );
+		s.persist( mars );
+
+		Location earth = new Location( "Earth" );
+		s.persist( earth );
+
+		Hive hive = new Hive();
+		hive.setLocation( mars );
+		s.persist( hive );
+
+		Alien alien = new Alien();
+		alien.setIdentity( "Uncle Martin" );
+		alien.setSpecies( "Martian" );
+		alien.setHive( hive );
+		hive.getMembers().add( alien );
+		mars.addBeing( alien );
+
+		s.persist( alien );
+
+		Human human = new Human();
+		human.setIdentity( "Jane Doe" );
+		earth.addBeing( human );
+
+		s.persist( human );
+
+		s.getTransaction().commit();
+		s.close();
+
+		Session s1 = openSession();
+		s1.beginTransaction();
+		assertEquals(
+				1,
+				s1.createQuery( "update Being set identity = 'John Doe' where identity = 'Jane Doe'" )
+						.executeUpdate()
+		);
+
+		Session s2 = openSession();
+		s2.beginTransaction();
+		assertEquals( 1, s2.createQuery( "delete from Being where species = 'Martian'" ).executeUpdate() );
+
+		s2.getTransaction().commit();
+		s1.getTransaction().commit();
+
+		s1.close();
+		s2.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		human = (Human) s.createQuery( "from Being" ).uniqueResult();
+		assertEquals( "John Doe", human.getIdentity() );
+		s.createQuery( "delete from Being" ).executeUpdate();
+		s.createQuery( "delete from Hive" ).executeUpdate();
+		s.createQuery( "delete from Location" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
+	}
 }
 

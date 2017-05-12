@@ -16,10 +16,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
-import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -173,7 +173,7 @@ public class SequenceGenerator
 				logicalQualifiedSequenceName.getCatalogName(),
 				logicalQualifiedSequenceName.getSchemaName()
 		);
-		Sequence sequence = namespace.locateSequence( logicalQualifiedSequenceName.getObjectName() );
+		MappedSequence sequence = namespace.locateSequence( logicalQualifiedSequenceName.getObjectName() );
 		if ( sequence != null ) {
 			sequence.validate( 1, 1 );
 		}
@@ -189,7 +189,7 @@ public class SequenceGenerator
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		this.sequenceName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				sequence.getName(),
+				sequence.getLogicalName(),
 				dialect
 		);
 		this.sql = jdbcEnvironment.getDialect().getSequenceNextValString( sequenceName );

@@ -7,11 +7,14 @@
 package org.hibernate.id;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
@@ -27,7 +30,7 @@ import org.hibernate.type.spi.Type;
  */
 public class ExportableColumn extends Column {
 
-	public ExportableColumn(Database database, Table table, String name, BasicType type) {
+	public ExportableColumn(Database database, MappedTable table, String name, BasicType type) {
 		this(
 				database,
 				table,
@@ -39,7 +42,7 @@ public class ExportableColumn extends Column {
 
 	public ExportableColumn(
 			Database database,
-			Table table,
+			MappedTable table,
 			String name,
 			BasicType type,
 			String dbTypeDeclaration) {
@@ -50,11 +53,11 @@ public class ExportableColumn extends Column {
 
 	public static class ValueImpl implements Value {
 		private final ExportableColumn column;
-		private final Table table;
+		private final MappedTable table;
 		private final BasicType type;
 		private final Database database;
 
-		public ValueImpl(ExportableColumn column, Table table, BasicType type, Database database) {
+		public ValueImpl(ExportableColumn column, MappedTable table, BasicType type, Database database) {
 			this.column = column;
 			this.table = table;
 			this.type = type;
@@ -72,6 +75,16 @@ public class ExportableColumn extends Column {
 		}
 
 		@Override
+		public MappedTable getMappedTable() {
+			return table;
+		}
+
+		@Override
+		public List<MappedColumn> getMappedColumns() {
+			return null;
+		}
+
+		@Override
 		public Type getType() throws MappingException {
 			return type;
 		}
@@ -83,7 +96,7 @@ public class ExportableColumn extends Column {
 
 		@Override
 		public Table getTable() {
-			return table;
+			return (Table) table;
 		}
 
 		@Override

@@ -21,4 +21,6 @@ public interface MappedSequence extends Exportable, Loggable {
 	int getInitialValue();
 
 	int getIncrementSize();
+
+	void validate(int initialValue, int incrementSize);
 }

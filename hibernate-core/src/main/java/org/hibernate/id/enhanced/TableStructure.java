@@ -18,6 +18,7 @@ import org.hibernate.LockMode;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.dialect.Dialect;
@@ -249,7 +250,7 @@ public class TableStructure implements DatabaseStructure {
 				logicalQualifiedTableName.getSchemaName()
 		);
 
-		Table table = namespace.locateTable( logicalQualifiedTableName.getObjectName() );
+		MappedTable table = namespace.locateTable( logicalQualifiedTableName.getObjectName() );
 		if ( table == null ) {
 			table = namespace.createTable( logicalQualifiedTableName.getObjectName(), false );
 		}

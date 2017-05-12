@@ -270,6 +270,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		return (Column) iter.next();
 	}
 
+	@Override
 	public void addColumn(Column column) {
 		Column old = getColumn( column );
 		if ( old == null ) {
@@ -951,6 +952,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		}
 	}
 
+	@Override
 	public void addInitCommand(InitCommand command) {
 		if ( initCommands == null ) {
 			initCommands = new ArrayList<>();

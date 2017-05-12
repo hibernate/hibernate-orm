@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
@@ -174,7 +175,7 @@ public class SequenceStructure implements DatabaseStructure {
 				logicalQualifiedSequenceName.getCatalogName(),
 				logicalQualifiedSequenceName.getSchemaName()
 		);
-		Sequence sequence = namespace.locateSequence( logicalQualifiedSequenceName.getObjectName() );
+		MappedSequence sequence = namespace.locateSequence( logicalQualifiedSequenceName.getObjectName() );
 		if ( sequence != null ) {
 			sequence.validate( initialValue, sourceIncrementSize );
 		}
@@ -183,7 +184,7 @@ public class SequenceStructure implements DatabaseStructure {
 		}
 
 		this.sequenceName = database.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-				sequence.getName(),
+				sequence.getLogicalName(),
 				database.getJdbcEnvironment().getDialect()
 		);
 	}

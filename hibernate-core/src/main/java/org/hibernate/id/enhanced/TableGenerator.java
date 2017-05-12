@@ -22,6 +22,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
@@ -43,9 +44,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
-import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
 
@@ -667,7 +666,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 				qualifiedTableName.getSchemaName()
 		);
 
-		Table table = namespace.locateTable( qualifiedTableName.getObjectName() );
+		MappedTable table = namespace.locateTable( qualifiedTableName.getObjectName() );
 		if ( table == null ) {
 			table = namespace.createTable( qualifiedTableName.getObjectName(), false );
 

@@ -150,6 +150,8 @@ public interface MappedTable extends Exportable, Loggable {
 
 	Column getColumn(int n);
 
+	void addColumn(Column column);
+
 	Iterator getColumnIterator();
 
 	Iterator<Index> getIndexIterator();
@@ -170,4 +172,6 @@ public interface MappedTable extends Exportable, Loggable {
 	PrimaryKey getPrimaryKey();
 
 	void setPrimaryKey(PrimaryKey primaryKey);
+
+	void addInitCommand(InitCommand command);
 }

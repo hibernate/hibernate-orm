@@ -72,6 +72,7 @@ public class Sequence implements MappedSequence {
 		return incrementSize;
 	}
 
+	@Override
 	public void validate(int initialValue, int incrementSize) {
 		if ( this.initialValue != initialValue ) {
 			throw new HibernateException(

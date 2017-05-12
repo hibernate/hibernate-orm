@@ -16,7 +16,9 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
+import org.hibernate.dialect.H2Dialect;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -407,6 +409,10 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11740" )
+	@SkipForDialect(
+			value = H2Dialect.class,
+			comment = "skip dialects that throw PessimisticLockException"
+	)
 	public void testBulkOperationsInTwoConcurrentSessions() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();

@@ -14,7 +14,8 @@ package org.hibernate.persister.common.spi;
 public class PhysicalTable extends AbstractTable implements Table {
 	private final String tableName;
 
-	public PhysicalTable(String tableName) {
+	public PhysicalTable(String tableName, boolean isAbstract) {
+		super( isAbstract );
 		this.tableName = tableName;
 	}
 

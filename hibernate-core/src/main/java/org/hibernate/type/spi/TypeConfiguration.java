@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import javax.persistence.EntityGraph;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
@@ -706,14 +707,13 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		//		or via catalogs/schemas-specific names
 		for ( Namespace namespace : mappingMetadata.getDatabase().getNamespaces() ) {
 			for ( MappedTable mappedTable : namespace.getTables() ) {
-				// todo : incorporate mapping Table's isAbstract indicator
 				final org.hibernate.persister.common.spi.Table table;
 				if ( mappedTable instanceof DenormalizedMappedTable ) {
 					// this is akin to a UnionSubclassTable
 					throw new NotYetImplementedException( "DenormalizedTable support not yet implemented" );
 				}
 				else if ( mappedTable instanceof DerivedMappedTable ) {
-					table = new DerivedTable( ( (DerivedMappedTable) mappedTable ).getSqlSelect() );
+					table = new DerivedTable( ( (DerivedMappedTable) mappedTable ).getSqlSelect(), mappedTable.isAbstract() );
 				}
 				else {
 					final PhysicalMappedTable physicalMappedTable = (PhysicalMappedTable) mappedTable;
@@ -722,12 +722,10 @@ public class TypeConfiguration implements SessionFactoryObserver {
 							physicalMappedTable.getLogicalName(),
 							jdbcEnvironment.getDialect()
 					);
-					table = new PhysicalTable( qualifiedTableName );
+					table = new PhysicalTable( qualifiedTableName, mappedTable.isAbstract() );
 				}
-
 				databaseModel.registerTable( table );
 			}
-
 		}
 	}
 

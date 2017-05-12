@@ -14,7 +14,8 @@ package org.hibernate.persister.common.spi;
 public class DerivedTable extends AbstractTable implements Table {
 	private final String expression;
 
-	public DerivedTable(String expression) {
+	public DerivedTable(String expression, boolean isAbstract) {
+		super( isAbstract );
 		this.expression = expression;
 	}
 

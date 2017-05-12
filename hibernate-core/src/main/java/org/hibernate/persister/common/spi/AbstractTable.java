@@ -18,6 +18,11 @@ import org.hibernate.MappingException;
  */
 public abstract class AbstractTable implements Table {
 	private final Map<String,Column> valueMap = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
+	private final boolean isAbstract;
+
+	public AbstractTable(boolean isAbstract) {
+		this.isAbstract = isAbstract;
+	}
 
 	public PhysicalColumn makeColumn(String columnName, int jdbcType) {
 		if ( valueMap.containsKey( columnName ) ) {
@@ -65,5 +70,10 @@ public abstract class AbstractTable implements Table {
 	@Override
 	public Collection<Column> getColumns() {
 		return valueMap.values();
+	}
+
+	@Override
+	public boolean isAbstract() {
+		return isAbstract;
 	}
 }

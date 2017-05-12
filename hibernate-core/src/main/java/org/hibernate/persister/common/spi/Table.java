@@ -26,4 +26,6 @@ public interface Table {
 	Column locateColumn(String name);
 
 	Collection<Column> getColumns();
+
+	boolean isAbstract();
 }

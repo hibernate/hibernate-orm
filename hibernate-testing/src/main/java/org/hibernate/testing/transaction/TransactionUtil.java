@@ -28,6 +28,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 
 import org.jboss.logging.Logger;
 
@@ -479,6 +480,12 @@ public class TransactionUtil {
 				try (PreparedStatement st = connection.prepareStatement("SET LOCK_TIMEOUT ?")) {
 					st.setLong( 1, millis / 10 );
 					st.execute();
+				}
+			}
+			else if( Dialect.getDialect() instanceof SQLServerDialect ) {
+				try (Statement st = connection.createStatement()) {
+					//Prepared Statements fail for SET commands
+					st.execute(String.format( "SET LOCK_TIMEOUT %d", millis / 10));
 				}
 			}
 			else {

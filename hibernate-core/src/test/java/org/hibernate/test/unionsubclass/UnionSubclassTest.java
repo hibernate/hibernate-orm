@@ -7,6 +7,7 @@
 package org.hibernate.test.unionsubclass;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Test;
 
@@ -15,12 +16,18 @@ import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Order;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.util.ExceptionUtil;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -28,12 +35,32 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
  */
 @SuppressWarnings("unchecked")
 public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
+
+	private SQLServerSnapshotIsolationConnectionProvider connectionProvider =
+			new SQLServerSnapshotIsolationConnectionProvider();
+
+	@Override
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		if( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() )) {
+			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
+		}
+	}
+
+	@Override
+	protected void releaseSessionFactory() {
+		super.releaseSessionFactory();
+		connectionProvider.stop();
+	}
+
+
 	@Override
 	public String[] getMappings() {
 		return new String[] { "unionsubclass/Beings.hbm.xml" };
@@ -410,10 +437,6 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11740" )
-	@SkipForDialect(
-			value = H2Dialect.class,
-			comment = "skip dialects that throw PessimisticLockException"
-	)
 	public void testBulkOperationsInTwoConcurrentSessions() throws Exception {
 		doInHibernate( this::sessionFactory, s -> {
 			Location mars = new Location( "Mars" );
@@ -443,21 +466,35 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 			s.persist( human );
 		} );
 
+		AtomicBoolean pessimisticLocking = new AtomicBoolean( false );
+
 		doInHibernate( this::sessionFactory, s1 -> {
+			TransactionUtil.setJdbcTimeout( s1 );
 			assertEquals(
 					1,
 					s1.createQuery( "update Being set identity = 'John Doe' where identity = 'Jane Doe'" )
 							.executeUpdate()
 			);
 
-			doInHibernate( this::sessionFactory, s2 -> {
-				assertEquals( 1, s2.createQuery( "delete from Being where species = 'Martian'" ).executeUpdate() );
-			} );
+			try {
+				doInHibernate( this::sessionFactory, s2 -> {
+					TransactionUtil.setJdbcTimeout( s2 );
+					assertEquals( 1, s2.createQuery( "delete from Being where species = 'Martian'" ).executeUpdate() );
+				} );
+			}
+			catch (Exception e) {
+				if ( !ExceptionUtil.isSqlLockTimeout(e) ) {
+					fail( e.getMessage() );
+				}
+				pessimisticLocking.set( true );
+			}
 		} );
 
 		doInHibernate( this::sessionFactory, s -> {
-			Human human = (Human) s.createQuery( "from Being" ).uniqueResult();
-			assertEquals( "John Doe", human.getIdentity() );
+			if ( !pessimisticLocking.get() ) {
+				Human human = (Human) s.createQuery( "from Being" ).uniqueResult();
+				assertEquals( "John Doe", human.getIdentity() );
+			}
 			s.createQuery( "delete from Being" ).executeUpdate();
 			s.createQuery( "delete from Hive" ).executeUpdate();
 			s.createQuery( "delete from Location" ).executeUpdate();

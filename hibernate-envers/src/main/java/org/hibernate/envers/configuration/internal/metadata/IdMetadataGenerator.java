@@ -16,6 +16,7 @@ import org.hibernate.envers.internal.entities.IdMappingData;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.id.EmbeddedIdMapper;
+import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.MultipleIdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.SimpleIdMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.id.SingleIdMapper;
@@ -23,6 +24,7 @@ import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
@@ -87,6 +89,41 @@ public final class IdMetadataGenerator {
 		}
 
 		return true;
+	}
+
+	public void generateSecondPass(String entityName, PersistentClass persistentClass) {
+		final Component identifierMapper = persistentClass.getIdentifierMapper();
+		final Property identifierProperty = persistentClass.getIdentifierProperty();
+		if ( identifierMapper != null ) {
+			generateSecondPass( entityName, identifierMapper );
+		}
+		else if ( identifierProperty != null && identifierProperty.isComposite() ) {
+			final Component component = (Component) identifierProperty.getValue();
+			generateSecondPass( entityName, component );
+		}
+	}
+
+	private void generateSecondPass(String entityName, Component component) {
+		Iterator properties = component.getPropertyIterator();
+		while ( properties.hasNext() ) {
+			final Property property = (Property) properties.next();
+			if ( property.getValue() instanceof ToOne ) {
+				final PropertyAuditingData propertyData = getIdPersistentPropertyAuditingData( property );
+				final String referencedEntityName = ( (ToOne) property.getValue() ).getReferencedEntityName();
+
+				final String prefix = mainGenerator.getVerEntCfg().getOriginalIdPropName() + "." + propertyData.getName();
+				final IdMapper relMapper = mainGenerator.getEntitiesConfigurations().get( referencedEntityName ).getIdMapper();
+				final IdMapper prefixedMapper = relMapper.prefixMappedProperties( prefix + "." );
+
+				mainGenerator.getEntitiesConfigurations().get( entityName ).addToOneRelation(
+						prefix,
+						referencedEntityName,
+						prefixedMapper,
+						true,
+						false
+				);
+			}
+		}
 	}
 
 	@SuppressWarnings({"unchecked"})

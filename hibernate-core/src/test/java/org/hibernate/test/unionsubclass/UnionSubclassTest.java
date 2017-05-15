@@ -22,6 +22,7 @@ import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -414,64 +415,53 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 			comment = "skip dialects that throw PessimisticLockException"
 	)
 	public void testBulkOperationsInTwoConcurrentSessions() throws Exception {
-		Session s = openSession();
-		s.getTransaction().begin();
+		doInHibernate( this::sessionFactory, s -> {
+			Location mars = new Location( "Mars" );
+			s.persist( mars );
 
-		Location mars = new Location( "Mars" );
-		s.persist( mars );
+			Location earth = new Location( "Earth" );
+			s.persist( earth );
 
-		Location earth = new Location( "Earth" );
-		s.persist( earth );
+			Hive hive = new Hive();
+			hive.setLocation( mars );
+			s.persist( hive );
 
-		Hive hive = new Hive();
-		hive.setLocation( mars );
-		s.persist( hive );
+			Alien alien = new Alien();
+			alien.setIdentity( "Uncle Martin" );
+			alien.setSpecies( "Martian" );
+			alien.setHive( hive );
+			hive.getMembers().add( alien );
+			mars.addBeing( alien );
 
-		Alien alien = new Alien();
-		alien.setIdentity( "Uncle Martin" );
-		alien.setSpecies( "Martian" );
-		alien.setHive( hive );
-		hive.getMembers().add( alien );
-		mars.addBeing( alien );
+			s.persist( alien );
 
-		s.persist( alien );
+			Human human = new Human();
+			human.setIdentity( "Jane Doe" );
+			human.setSex( 'M' );
+			earth.addBeing( human );
 
-		Human human = new Human();
-		human.setIdentity( "Jane Doe" );
-		earth.addBeing( human );
+			s.persist( human );
+		} );
 
-		s.persist( human );
+		doInHibernate( this::sessionFactory, s1 -> {
+			assertEquals(
+					1,
+					s1.createQuery( "update Being set identity = 'John Doe' where identity = 'Jane Doe'" )
+							.executeUpdate()
+			);
 
-		s.getTransaction().commit();
-		s.close();
+			doInHibernate( this::sessionFactory, s2 -> {
+				assertEquals( 1, s2.createQuery( "delete from Being where species = 'Martian'" ).executeUpdate() );
+			} );
+		} );
 
-		Session s1 = openSession();
-		s1.beginTransaction();
-		assertEquals(
-				1,
-				s1.createQuery( "update Being set identity = 'John Doe' where identity = 'Jane Doe'" )
-						.executeUpdate()
-		);
-
-		Session s2 = openSession();
-		s2.beginTransaction();
-		assertEquals( 1, s2.createQuery( "delete from Being where species = 'Martian'" ).executeUpdate() );
-
-		s2.getTransaction().commit();
-		s1.getTransaction().commit();
-
-		s1.close();
-		s2.close();
-
-		s = openSession();
-		s.getTransaction().begin();
-		human = (Human) s.createQuery( "from Being" ).uniqueResult();
-		assertEquals( "John Doe", human.getIdentity() );
-		s.createQuery( "delete from Being" ).executeUpdate();
-		s.createQuery( "delete from Hive" ).executeUpdate();
-		s.createQuery( "delete from Location" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		doInHibernate( this::sessionFactory, s -> {
+			Human human = (Human) s.createQuery( "from Being" ).uniqueResult();
+			assertEquals( "John Doe", human.getIdentity() );
+			s.createQuery( "delete from Being" ).executeUpdate();
+			s.createQuery( "delete from Hive" ).executeUpdate();
+			s.createQuery( "delete from Location" ).executeUpdate();
+		} );
 	}
 }
 

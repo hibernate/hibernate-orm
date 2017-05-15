@@ -36,6 +36,8 @@ import org.hibernate.persister.collection.internal.CollectionElementEntityImpl;
 import org.hibernate.persister.collection.internal.CollectionIndexBasicImpl;
 import org.hibernate.persister.collection.internal.CollectionIndexEmbeddedImpl;
 import org.hibernate.persister.collection.internal.CollectionIndexEntityImpl;
+import org.hibernate.persister.collection.internal.ElementColumnReferenceSource;
+import org.hibernate.persister.collection.internal.IndexColumnReferenceSource;
 import org.hibernate.persister.collection.spi.CollectionElement.ElementClassification;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.internal.PersisterHelper;
@@ -43,7 +45,18 @@ import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.queryable.spi.JoinedTableGroupContext;
+import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
+import org.hibernate.persister.queryable.spi.RootTableGroupContext;
+import org.hibernate.persister.queryable.spi.SqlAliasBaseResolver;
+import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.sql.JoinType;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.tree.spi.from.CollectionTableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
@@ -298,6 +311,61 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 					columns
 			);
 		}
+	}
+
+	@Override
+	public CollectionTableGroup createRootTableGroup(
+			NavigableReferenceInfo navigableReferenceInfo,
+			RootTableGroupContext tableGroupContext,
+			SqlAliasBaseResolver sqlAliasBaseResolver) {
+		final SqlAliasBaseManager.SqlAliasBase sqlAliasBase = sqlAliasBaseResolver.getSqlAliasBase( navigableReferenceInfo );
+
+		final TableReference collectionTableReference;
+		if ( separateCollectionTable != null ) {
+			collectionTableReference = new TableReference( separateCollectionTable, sqlAliasBase.generateNewAlias() );
+		}
+		else {
+			collectionTableReference = null;
+		}
+
+		final ElementColumnReferenceSource elementTableGroup = new ElementColumnReferenceSource();
+		getElementDescriptor().applyTableReferenceJoins(
+				JoinType.LEFT_OUTER_JOIN,
+				sqlAliasBase,
+				elementTableGroup
+		);
+
+		final IndexColumnReferenceSource indexTableGroup;
+		if ( getIndexDescriptor() != null ) {
+			indexTableGroup = new IndexColumnReferenceSource();
+			getIndexDescriptor().applyTableReferenceJoins(
+					JoinType.LEFT_OUTER_JOIN,
+					sqlAliasBase,
+					elementTableGroup
+			);
+		}
+		else {
+			indexTableGroup = null;
+		}
+
+		return new CollectionTableGroup(
+				this,
+				tableGroupContext.getTableSpace(),
+				navigableReferenceInfo.getUniqueIdentifier(),
+				collectionTableReference,
+				elementTableGroup,
+				indexTableGroup
+		);
+	}
+
+	@Override
+	public TableGroupJoin applyTableGroupJoin(
+			NavigableReferenceInfo navigableReferenceInfo,
+			SqmJoinType joinType,
+			JoinedTableGroupContext tableGroupJoinContext,
+			TableGroupResolver tableGroupResolutionContext,
+			SqlAliasBaseResolver sqlAliasBaseResolver) {
+		return null;
 	}
 
 }

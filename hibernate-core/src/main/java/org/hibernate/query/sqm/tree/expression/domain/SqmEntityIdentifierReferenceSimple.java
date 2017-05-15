@@ -47,7 +47,7 @@ public class SqmEntityIdentifierReferenceSimple
 	}
 
 	@Override
-	public SqmNavigableSourceReference getSourceReference() {
+	public SqmNavigableContainerReference getSourceReference() {
 		return source;
 	}
 

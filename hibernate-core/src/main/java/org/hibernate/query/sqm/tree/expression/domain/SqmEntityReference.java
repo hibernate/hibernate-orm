@@ -6,7 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.persister.queryable.spi.NavigableContainerReferenceInfo;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -17,10 +19,10 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class SqmEntityReference extends AbstractSqmNavigableReference
-		implements SqmNavigableReference, SqmNavigableSourceReference, SqmEntityTypedReference {
+		implements SqmNavigableReference, SqmNavigableContainerReference, SqmEntityTypedReference {
 	private static final Logger log = Logger.getLogger( SqmEntityReference.class );
 
-	private final SqmNavigableSourceReference sourceBinding;
+	private final SqmNavigableContainerReference containerReference;
 	private final EntityValuedExpressableType entityReference;
 	private NavigablePath propertyPath;
 
@@ -28,15 +30,15 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 
 	public SqmEntityReference(EntityValuedExpressableType entityReference) {
 		this.entityReference = entityReference;
-		this.sourceBinding = null;
+		this.containerReference = null;
 		this.propertyPath = new NavigablePath( null, entityReference.getEntityName() );
 	}
 
-	public SqmEntityReference(SqmNavigableSourceReference sourceBinding, EntityValuedExpressableType entityReference) {
-		this.sourceBinding = sourceBinding;
+	public SqmEntityReference(SqmNavigableContainerReference containerReference, EntityValuedExpressableType entityReference) {
+		this.containerReference = containerReference;
 		this.entityReference = entityReference;
 
-		this.propertyPath = new NavigablePath( sourceBinding.getNavigablePath(), entityReference.getEntityName() );
+		this.propertyPath = new NavigablePath( containerReference.getNavigablePath(), entityReference.getEntityName() );
 	}
 
 	@Override
@@ -57,8 +59,8 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 	}
 
 	@Override
-	public SqmNavigableSourceReference getSourceReference() {
-		return sourceBinding;
+	public SqmNavigableContainerReference getSourceReference() {
+		return containerReference;
 	}
 
 	@Override
@@ -82,13 +84,38 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return (T) exportedFromElement.getBinding();
-//		return exportedFromElement.accept( walker );
+		return (T) exportedFromElement.getNavigableReference();
 	}
 
 	@Override
 	public String asLoggableText() {
 		return entityReference.asLoggableText();
+	}
+
+	@Override
+	public String getUniqueIdentifier() {
+		return exportedFromElement.getUniqueIdentifier();
+	}
+
+	@Override
+	public String getIdentificationVariable() {
+		return exportedFromElement.getIdentificationVariable();
+	}
+
+	@Override
+	public EntityPersister getIntrinsicSubclassEntityPersister() {
+		return exportedFromElement.getIntrinsicSubclassEntityPersister();
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.ENTITY;
+	}
+
+	@Override
+	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
+		return containerReference;
 	}
 }

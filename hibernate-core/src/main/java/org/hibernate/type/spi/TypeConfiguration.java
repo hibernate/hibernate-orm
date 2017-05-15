@@ -151,7 +151,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	private final Map<String,String> importMap = new ConcurrentHashMap<>();
 	private final Set<EntityNameResolver> entityNameResolvers = ConcurrentHashMap.newKeySet();
 
-	private final Map<Class, PolymorphicEntityValuedExpressableType<?>> polymorphicEntityReferenceMap = new HashMap<>();
+	private final Map<JavaTypeDescriptor, PolymorphicEntityValuedExpressableType<?>> polymorphicEntityReferenceMap = new HashMap<>();
 	private final Map<JavaTypeDescriptor,String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
 	private final Map<String,Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
 	private final Map<EmbeddableJavaDescriptor<?>,Set<String>> embeddedRolesByEmbeddableType = new ConcurrentHashMap<>();
@@ -418,6 +418,9 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		}
 
 		final JavaTypeDescriptor<T> jtd = getJavaTypeDescriptorRegistry().getDescriptor( javaType );
+		if ( jtd == null ) {
+			throw new HibernateException( "Could not locate JavaTypeDescriptor : " + javaType.getName() );
+		}
 
 		// next check entityProxyInterfaceMap
 		final String proxyEntityName = entityProxyInterfaceMap.get( jtd );
@@ -426,17 +429,17 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		}
 
 		// otherwise, trye to handle it as a polymorphic reference
-		if ( polymorphicEntityReferenceMap.containsKey( javaType ) ) {
-			return (EntityValuedExpressableType<T>) polymorphicEntityReferenceMap.get( javaType );
+		if ( polymorphicEntityReferenceMap.containsKey( jtd ) ) {
+			return (EntityValuedExpressableType<T>) polymorphicEntityReferenceMap.get( jtd );
 		}
 
 		final Set<EntityPersister<?>> implementors = getImplementors( javaType );
 		if ( !implementors.isEmpty() ) {
 			final PolymorphicEntityValuedExpressableTypeImpl entityReference = new PolymorphicEntityValuedExpressableTypeImpl(
-					javaType,
+					jtd,
 					implementors
 			);
-			polymorphicEntityReferenceMap.put( javaType, entityReference );
+			polymorphicEntityReferenceMap.put( jtd, entityReference );
 			return entityReference;
 		}
 

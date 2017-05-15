@@ -19,7 +19,7 @@ import org.jboss.logging.Logger;
  */
 public class SqmCollectionIndexReferenceEntity
 		extends AbstractSqmCollectionIndexReference
-		implements SqmNavigableSourceReference, SqmEntityTypedReference {
+		implements SqmNavigableContainerReference, SqmEntityTypedReference {
 	private static final Logger log = Logger.getLogger( SqmCollectionIndexReferenceEntity.class );
 
 	private SqmFrom exportedFromElement;

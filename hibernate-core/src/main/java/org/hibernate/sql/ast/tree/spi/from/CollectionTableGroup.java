@@ -7,31 +7,48 @@
 package org.hibernate.sql.ast.tree.spi.from;
 
 
-import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
-import org.hibernate.loader.PropertyPath;
+import org.hibernate.HibernateException;
+import org.hibernate.persister.collection.internal.ElementColumnReferenceSource;
+import org.hibernate.persister.collection.internal.IndexColumnReferenceSource;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.common.spi.DomainReferenceImplementor;
+import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.Table;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.consume.spi.SqlAppender;
+import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**
  * A TableSpecificationGroup for a collection reference
  *
  * @author Steve Ebersole
  */
-public class CollectionTableGroup extends AbstractTableGroup {
+public class CollectionTableGroup implements TableGroup {
 	private final CollectionPersister persister;
 
+	private final TableSpace tableSpace;
+	private final String uniqueIdentifier;
+	private final TableReference collectionTableReference;
+	private final ElementColumnReferenceSource elementTableGroup;
+	private final IndexColumnReferenceSource indexTableGroup;
+
 	public CollectionTableGroup(
-			TableSpace tableSpace,
-			String uid,
-			String aliasBase,
 			CollectionPersister persister,
-			PropertyPath propertyPath) {
-		super( tableSpace, uid, aliasBase, propertyPath );
+			TableSpace tableSpace,
+			String uniqueIdentifier,
+			TableReference collectionTableReference,
+			ElementColumnReferenceSource elementTableGroup,
+			IndexColumnReferenceSource indexTableGroup) {
 		this.persister = persister;
+		this.tableSpace = tableSpace;
+		this.uniqueIdentifier = uniqueIdentifier;
+		this.collectionTableReference = collectionTableReference;
+		this.elementTableGroup = elementTableGroup;
+		this.indexTableGroup = indexTableGroup;
 	}
 
 	public CollectionPersister getPersister() {
@@ -39,23 +56,89 @@ public class CollectionTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	public Selectable getSelectable() {
-		throw new NotYetImplementedException( );
+	public String getUniqueIdentifier() {
+		return uniqueIdentifier;
 	}
 
 	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
+	public TableSpace getTableSpace() {
+		return tableSpace;
+	}
+
+	@Override
+	public NavigableReference asExpression() {
 		throw new NotYetImplementedException(  );
 	}
 
 	@Override
-	public DomainReferenceImplementor getNavigable() {
-		// todo : element?
-		return persister.getElementDescriptor();
+	public TableReference locateTableReference(Table table) {
+		if ( table == collectionTableReference.getTable() ) {
+			return collectionTableReference;
+		}
+
+		final TableReference elementHit = elementTableGroup.locateTableReference( table );
+		if ( elementHit != null ) {
+			return elementHit;
+		}
+
+		if ( indexTableGroup != null ) {
+			return indexTableGroup.locateTableReference( table );
+		}
+
+		return null;
 	}
 
 	@Override
-	public List<ColumnReference> getColumnReferences() {
+	public void render(SqlAppender sqlAppender, SqlSelectAstWalker walker) {
 		throw new NotYetImplementedException(  );
+
+//		renderTableReference( rootTableReference, sqlAppender, walker );
+//
+//		for ( TableReferenceJoin tableJoin : tableReferenceJoins ) {
+//			sqlAppender.appendSql( " " );
+//			sqlAppender.appendSql( tableJoin.getJoinType().getText() );
+//			sqlAppender.appendSql( " join " );
+//			renderTableReference( tableJoin.getJoinedTableBinding(), sqlAppender, walker );
+//			if ( tableJoin.getJoinPredicate() != null && !tableJoin.getJoinPredicate().isEmpty() ) {
+//				sqlAppender.appendSql( " on " );
+//				tableJoin.getJoinPredicate().accept( walker );
+//			}
+//		}
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ColumnReference handling
+
+	private final SortedMap<Column,ColumnReference> columnBindingMap = new TreeMap<>(
+			(column1, column2) -> {
+				// Sort primarily on table expression
+				final int tableSort = column1.getSourceTable().getTableExpression().compareTo( column2.getSourceTable().getTableExpression() );
+				if ( tableSort != 0 ) {
+					return tableSort;
+				}
+
+				// and secondarily on column expression
+				return column1.getExpression().compareTo( column2.getExpression() );
+			}
+	);
+
+	@Override
+	public ColumnReference resolveColumnReference(Column column) {
+		final ColumnReference existing = columnBindingMap.get( column );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final TableReference tableBinding = locateTableReference( column.getSourceTable() );
+		if ( tableBinding == null ) {
+			throw new HibernateException(
+					"Problem resolving Column(" + column.toLoggableString() +
+							") to ColumnBinding via TableGroup [" + this + "]"
+			);
+		}
+		final ColumnReference columnBinding = new ColumnReference( column, tableBinding );
+		columnBindingMap.put( column, columnBinding );
+		return columnBinding;
 	}
 }

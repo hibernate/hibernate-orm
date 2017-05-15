@@ -10,7 +10,7 @@ import java.lang.reflect.Member;
 
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -57,7 +57,6 @@ public abstract class AbstractPersistentAttribute<O,T> implements PersistentAttr
 		return getOrmType().getJavaTypeDescriptor();
 	}
 
-	@Override
 	public Type<T> getOrmType() {
 		return ormType;
 	}

@@ -77,7 +77,7 @@ import org.hibernate.query.sqm.tree.expression.SubQuerySqmExpression;
 import org.hibernate.query.sqm.tree.expression.UnaryOperationSqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableSourceReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.expression.function.AvgFunctionSqmExpression;
@@ -210,7 +210,7 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 
 			for ( JpaUpdateAssignment assignment : jpaCriteria.getAssignments() ) {
 				sqmStatement.getSetClause().addAssignment(
-						(SqmSingularAttributeReference) resolveNavigableBinding( entityToUpdate.getBinding(), assignment.getTargetAttributePath() ),
+						(SqmSingularAttributeReference) resolveNavigableBinding( entityToUpdate.getNavigableReference(), assignment.getTargetAttributePath() ),
 						assignment.getUpdatedValue().visitExpression( this )
 				);
 			}
@@ -259,7 +259,7 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 			return makeSqmRoot(
 					querySpecProcessingStateStack.getCurrent().getFromClause(),
 					(JpaRoot<?>) jpaFrom
-			).getBinding();
+			).getNavigableReference();
 		}
 		else if ( jpaFrom instanceof JpaAttributeJoin ) {
 			final JpaAttributeJoin jpaAttributeJoin = (JpaAttributeJoin) jpaFrom;
@@ -268,7 +268,7 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 					parentPathBinding.getSourceReference(),
 					parentPathBinding.getSourceReference().getExportedFromElement().getContainingSpace(),
 					jpaAttributeJoin
-			).getBinding();
+			).getNavigableReference();
 		}
 
 		throw new ParsingException( "Could not determine how to resolve JpaFrom : " + jpaFrom );
@@ -305,7 +305,7 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 	}
 
 	private SqmSingularAttributeReference resolveSingularAttributePath0(JpaSingularAttributePath jpaAttributePath) {
-		final SqmNavigableSourceReference attributeSourceBinding = (SqmNavigableSourceReference) resolvePath( jpaAttributePath.getParentPath() );
+		final SqmNavigableContainerReference attributeSourceBinding = (SqmNavigableContainerReference) resolvePath( jpaAttributePath.getParentPath() );
 		final SqmSingularAttributeReference attributeBinding = (SqmSingularAttributeReference) parsingContext.findOrCreateNavigableBinding(
 				attributeSourceBinding,
 				jpaAttributePath.getNavigable().getAttributeName()
@@ -315,7 +315,7 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 	}
 
 	private SqmPluralAttributeReference resolvePluralAttributePath(JpaPluralAttributePath jpaAttributePath) {
-		final SqmNavigableSourceReference existing = (SqmNavigableSourceReference) jpaPathResolutionMap.get( jpaAttributePath );
+		final SqmNavigableContainerReference existing = (SqmNavigableContainerReference) jpaPathResolutionMap.get( jpaAttributePath );
 		if ( existing != null ) {
 			return (SqmPluralAttributeReference) existing;
 		}
@@ -324,7 +324,7 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 	}
 
 	private SqmPluralAttributeReference resolvePluralAttributePath0(JpaPluralAttributePath jpaAttributePath) {
-		final SqmNavigableSourceReference attributeSourceBinding = (SqmNavigableSourceReference) resolvePath( jpaAttributePath.getParentPath() );
+		final SqmNavigableContainerReference attributeSourceBinding = (SqmNavigableContainerReference) resolvePath( jpaAttributePath.getParentPath() );
 		final SqmPluralAttributeReference attributeBinding = (SqmPluralAttributeReference) parsingContext.findOrCreateNavigableBinding(
 				attributeSourceBinding,
 				jpaAttributePath.getNavigable().getAttributeName()
@@ -333,7 +333,7 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 		return attributeBinding;
 	}
 
-	private SqmNavigableReference resolveNavigableBinding(SqmNavigableSourceReference sqmFrom, JpaAttributePath attributePath) {
+	private SqmNavigableReference resolveNavigableBinding(SqmNavigableContainerReference sqmFrom, JpaAttributePath attributePath) {
 		return parsingContext.findOrCreateNavigableBinding(
 				sqmFrom,
 				attributePath.getNavigable().getAttributeName()
@@ -398,15 +398,15 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 				interpretAlias( jpaRoot.getAlias() )
 		);
 		space.setRoot( sqmRoot );
-		bindJoins( jpaRoot, sqmRoot.getBinding(), space );
-		bindFetches( jpaRoot, sqmRoot.getBinding(), space );
-		jpaPathResolutionMap.put( jpaRoot, sqmRoot.getBinding() );
+		bindJoins( jpaRoot, sqmRoot.getNavigableReference(), space );
+		bindFetches( jpaRoot, sqmRoot.getNavigableReference(), space );
+		jpaPathResolutionMap.put( jpaRoot, sqmRoot.getNavigableReference() );
 
 		return sqmRoot;
 	}
 
 	private void bindJoins(JpaFrom<?,?> lhs, SqmNavigableReference lhsBinding, SqmFromElementSpace space) {
-		if ( !SqmNavigableSourceReference.class.isInstance( lhsBinding ) ) {
+		if ( !SqmNavigableContainerReference.class.isInstance( lhsBinding ) ) {
 			if ( !lhs.getJoins().isEmpty() ) {
 				throw new ParsingException( "Attempt to bind joins against a NavigableBinding that is not also a NavigableSourceBinding " );
 			}
@@ -416,11 +416,11 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 		}
 
 		for ( Join<?, ?> join : lhs.getJoins() ) {
-			makeSqmAttributeJoin( (SqmNavigableSourceReference) lhsBinding, space, join );
+			makeSqmAttributeJoin( (SqmNavigableContainerReference) lhsBinding, space, join );
 		}
 	}
 
-	private SqmAttributeJoin makeSqmAttributeJoin(SqmNavigableSourceReference sourceBinding, SqmFromElementSpace space, Join<?, ?> join) {
+	private SqmAttributeJoin makeSqmAttributeJoin(SqmNavigableContainerReference sourceBinding, SqmFromElementSpace space, Join<?, ?> join) {
 		final JpaAttributeJoin<?,?> jpaAttributeJoin = (JpaAttributeJoin<?, ?>) join;
 		final String alias = jpaAttributeJoin.getAlias();
 
@@ -441,14 +441,14 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 				false
 		);
 		space.addJoin( sqmJoin );
-		bindJoins( jpaAttributeJoin, sqmJoin.getBinding(), space );
-		jpaPathResolutionMap.put( jpaAttributeJoin, sqmJoin.getBinding() );
+		bindJoins( jpaAttributeJoin, sqmJoin.getNavigableReference(), space );
+		jpaPathResolutionMap.put( jpaAttributeJoin, sqmJoin.getNavigableReference() );
 
 		return sqmJoin;
 	}
 
 	private void bindFetches(FetchParent<?, ?> lhs, SqmNavigableReference lhsBinding, SqmFromElementSpace space) {
-		if ( !SqmNavigableSourceReference.class.isInstance( lhsBinding ) ) {
+		if ( !SqmNavigableContainerReference.class.isInstance( lhsBinding ) ) {
 			if ( !lhs.getFetches().isEmpty() ) {
 				throw new ParsingException( "Attempt to bind fetches against a NavigableBinding that is not also a NavigableSourceBinding " );
 			}
@@ -457,7 +457,7 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 			}
 		}
 
-		final SqmNavigableSourceReference sourceBinding = (SqmNavigableSourceReference) lhsBinding;
+		final SqmNavigableContainerReference sourceBinding = (SqmNavigableContainerReference) lhsBinding;
 
 		for ( Fetch<?, ?> fetch : lhs.getFetches() ) {
 			final JpaFetch<?,?> jpaFetch = (JpaFetch<?, ?>) fetch;
@@ -479,8 +479,8 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 					false
 			);
 			space.addJoin( sqmFetch );
-			bindFetches( fetch, sqmFetch.getBinding(), space );
-			jpaPathResolutionMap.put( jpaFetch, sqmFetch.getBinding() );
+			bindFetches( fetch, sqmFetch.getNavigableReference(), space );
+			jpaPathResolutionMap.put( jpaFetch, sqmFetch.getNavigableReference() );
 		}
 	}
 
@@ -974,7 +974,7 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 	@Override
 	public EmptinessSqmPredicate visitEmptinessPredicate(JpaPluralAttributePath pluralAttributePath, boolean negated) {
 		// resolve the plural attribute binding
-		final SqmNavigableSourceReference lhs = (SqmNavigableSourceReference) resolvePath( pluralAttributePath.getParentPath() );
+		final SqmNavigableContainerReference lhs = (SqmNavigableContainerReference) resolvePath( pluralAttributePath.getParentPath() );
 
 		final SqmAttributeReference attributeBinding = (SqmAttributeReference) parsingContext.findOrCreateNavigableBinding(
 				lhs,

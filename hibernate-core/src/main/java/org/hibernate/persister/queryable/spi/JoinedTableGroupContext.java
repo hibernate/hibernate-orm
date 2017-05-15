@@ -6,9 +6,6 @@
  */
 package org.hibernate.persister.queryable.spi;
 
-import org.hibernate.sql.ast.tree.spi.QuerySpec;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
-
 /**
  * Parameter object passed to {@link TableGroupJoinProducer#applyTableGroupJoin}
  * giving access to information about the context into which the TableGroup is
@@ -18,7 +15,5 @@ import org.hibernate.sql.ast.tree.spi.from.TableSpace;
  *
  * @author Steve Ebersole
  */
-public interface TableGroupJoinContext {
-	QuerySpec getQuerySpec();
-	TableSpace getTableSpace();
+public interface JoinedTableGroupContext extends TableGroupContext {
 }

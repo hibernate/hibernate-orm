@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -20,7 +21,7 @@ public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
 			SqmFromElementSpace fromElementSpace,
 			String uid,
 			String alias,
-			EntityValuedExpressableType entityReference) {
+			EntityPersister entityReference) {
 		super(
 				fromElementSpace,
 				uid,
@@ -28,16 +29,16 @@ public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
 				new SqmEntityReference( entityReference ),
 				entityReference
 		);
-		getBinding().injectExportedFromElement( this );
+		getNavigableReference().injectExportedFromElement( this );
 	}
 
 	@Override
-	public SqmEntityReference getBinding() {
-		return (SqmEntityReference) super.getBinding();
+	public SqmEntityReference getNavigableReference() {
+		return (SqmEntityReference) super.getNavigableReference();
 	}
 
 	public String getEntityName() {
-		return getBinding().getReferencedNavigable().getEntityName();
+		return getNavigableReference().getReferencedNavigable().getEntityName();
 	}
 
 	@Override

@@ -6,8 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.spi.from;
 
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 
 /**
  * @author Steve Ebersole
@@ -37,4 +37,5 @@ public class TableGroupJoin {
 	public Predicate getPredicate() {
 		return predicate;
 	}
+
 }

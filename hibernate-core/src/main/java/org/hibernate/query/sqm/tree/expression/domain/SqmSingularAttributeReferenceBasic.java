@@ -14,7 +14,7 @@ import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
  */
 public class SqmSingularAttributeReferenceBasic extends AbstractSqmSingularAttributeReference {
 	public SqmSingularAttributeReferenceBasic(
-			SqmNavigableSourceReference sourceBinding,
+			SqmNavigableContainerReference sourceBinding,
 			SingularPersistentAttributeBasic boundNavigable) {
 		super( sourceBinding, boundNavigable );
 	}

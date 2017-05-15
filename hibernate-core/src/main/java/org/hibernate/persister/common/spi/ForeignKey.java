@@ -84,13 +84,13 @@ public class ForeignKey {
 	 *     </li>
 	 * </ul>
 	 */
-	interface ColumnMappings {
+	public interface ColumnMappings {
 		Table getReferringTable();
 		Table getTargetTable();
 		List<ColumnMapping> getColumnMappings();
 	}
 
-	interface ColumnMapping {
+	public interface ColumnMapping {
 		Column getReferringColumn();
 		Column getTargetColumn();
 	}

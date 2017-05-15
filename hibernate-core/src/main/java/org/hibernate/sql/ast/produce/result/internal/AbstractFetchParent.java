@@ -9,25 +9,25 @@ package org.hibernate.sql.ast.produce.result.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.sql.ast.consume.results.spi.InitializerCollector;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.consume.results.spi.InitializerCollector;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractFetchParent implements FetchParent {
 	private final NavigablePath navigablePath;
-	private final String tableGroupUid;
+	private final ColumnReferenceSource columnReferenceSource;
 
 	private List<Fetch> fetches;
 
-	public AbstractFetchParent(NavigablePath navigablePath, String tableGroupUid) {
+	public AbstractFetchParent(NavigablePath navigablePath, ColumnReferenceSource columnReferenceSource) {
 		this.navigablePath = navigablePath;
-		this.tableGroupUid = tableGroupUid;
+		this.columnReferenceSource = columnReferenceSource;
 	}
 
 	@Override
@@ -37,7 +37,7 @@ public abstract class AbstractFetchParent implements FetchParent {
 
 	@Override
 	public String getTableGroupUniqueIdentifier() {
-		return tableGroupUid;
+		return columnReferenceSource.getUniqueIdentifier();
 	}
 
 	@Override
@@ -49,11 +49,10 @@ public abstract class AbstractFetchParent implements FetchParent {
 		fetches.add( fetch );
 	}
 
-
 	@Override
 	public List<Fetch> getFetches() {
 		final List<Fetch> base = fetches == null ? Collections.emptyList() : Collections.unmodifiableList( fetches );
-		return base.stream().collect( Collectors.toList() );
+		return new ArrayList<>( base );
 	}
 
 	protected void addFetchInitializers(InitializerCollector collector) {

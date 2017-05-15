@@ -195,7 +195,6 @@ public class Util {
 							null,
 							persister,
 							null,
-							false,
 							// todo : SqlSelection map
 							null,
 							new NavigablePath( persister.getEntityName() ),
@@ -239,7 +238,7 @@ public class Util {
 							null,
 							resolveSqlSelection( (BasicType) rtn.getType(), rtn.getColumnAlias() ),
 							null,
-							rtn.getType()
+							(BasicType) rtn.getType()
 					);
 					context.addQueryReturns( scalarReturn );
 				}
@@ -266,7 +265,6 @@ public class Util {
 							null,
 							persister,
 							null,
-							false,
 							// todo : SqlSelections
 							null,
 							new NavigablePath( persister.getEntityName() ),

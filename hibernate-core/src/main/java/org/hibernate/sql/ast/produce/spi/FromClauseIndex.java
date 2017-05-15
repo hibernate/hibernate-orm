@@ -16,10 +16,11 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReferenceExpression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.from.FromClause;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.produce.ConversionException;
@@ -31,12 +32,54 @@ import org.jboss.logging.Logger;
 /**
  * An index of various FROM CLAUSE resolutions.
  *
+ * todo (6.0) : but the problem is that this only works for SQM building of a SQL AST but is passed around to the generic
+ *
  * @author Steve Ebersole
  */
 public class FromClauseIndex implements TableGroupResolver {
 	private static final Logger log = Logger.getLogger( FromClauseIndex.class );
 
 	private final Stack<FromClauseStackNode> fromClauseStackNodes = new Stack<>();
+
+	private final Map<String,NavigableReferenceInfo> navigableRefInfoByUid = new HashMap<>();
+	private final Map<String,ColumnReferenceSource> columnRefSourceByUid = new HashMap<>();
+
+	private final Map<NavigableReferenceInfo,ColumnReferenceSource> colRefSourceByNavRefInfo = new HashMap<>();
+
+
+	// todo (6.0) : Need to reconsider the cross referencing done here and decide how to index stuff:
+	//		1) This grew out of SQM processing and currently its only consumer is still SQM processing.
+	//			So perhaps we leave this SQM specific
+	//		2) We do need a similar construct in "load plan" building, in which case we'd
+	//			need a more generic cross-referencing most likely based on Navigable - especially for
+	// 			fetches (see sqmFetchesByParentUid)
+
+
+	@Override
+	public ColumnReferenceSource resolveColumnReferenceSource(String uid) {
+		return columnRefSourceByUid.get( uid );
+	}
+
+	@Override
+	public NavigableReferenceInfo resolveNavigableReferenceInfo(String uid) {
+		return navigableRefInfoByUid.get( uid );
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	private final Map<String,SqmFrom> sqmFromByUid = new HashMap<>();
 	private final Map<SqmFrom, TableGroup> tableGroupBySqmFromXref = new HashMap<>();
@@ -103,7 +146,7 @@ public class FromClauseIndex implements TableGroupResolver {
 		if ( fromElement instanceof SqmAttributeJoin ) {
 			final SqmAttributeJoin sqmAttributeJoin = (SqmAttributeJoin) fromElement;
 			if ( sqmAttributeJoin.isFetched() ) {
-				final String fetchParentUid = sqmAttributeJoin.getSourceReferenceInfo().getUniqueIdentifier();
+				final String fetchParentUid = sqmAttributeJoin.getNavigableContainerReferenceInfo().getUniqueIdentifier();
 
 				if ( sqmFetchesByParentUid == null ) {
 					sqmFetchesByParentUid = new HashMap<>();
@@ -117,7 +160,7 @@ public class FromClauseIndex implements TableGroupResolver {
 			}
 		}
 
-		crossReference( fromElement.getReferencedNavigable(), tableGroup );
+		crossReference( fromElement.getNavigableReference(), tableGroup );
 	}
 
 	public TableGroup findResolvedTableGroup(SqmFrom fromElement) {
@@ -137,7 +180,7 @@ public class FromClauseIndex implements TableGroupResolver {
 		return tableGroupBySqmFromXref.get( sqmFrom );
 	}
 
-	public void crossReference(NavigableReferenceExpression binding, TableGroup group) {
+	public void crossReference(SqmNavigableReference binding, TableGroup group) {
 		tableGroupBySqmFromXref.put( binding.getFromElement(), group );
 	}
 

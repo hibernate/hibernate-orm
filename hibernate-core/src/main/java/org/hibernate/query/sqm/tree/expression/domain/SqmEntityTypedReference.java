@@ -7,16 +7,32 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmEntityTypedReference extends SqmNavigableSourceReference {
+public interface SqmEntityTypedReference extends SqmNavigableContainerReference {
 	@Override
 	EntityValuedExpressableType getReferencedNavigable();
 
 	@Override
 	EntityValuedExpressableType getExpressionType();
+
+	@Override
+	default String getTypeName() {
+		return getExpressionType().getTypeName();
+	}
+
+	@Override
+	default JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getExpressionType().getJavaTypeDescriptor();
+	}
+
+	@Override
+	default Class getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
 
 	@Override
 	default EntityValuedExpressableType getInferableType() {

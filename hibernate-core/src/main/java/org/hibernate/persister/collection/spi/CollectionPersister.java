@@ -82,7 +82,7 @@ import org.hibernate.type.spi.Type;
  */
 public interface CollectionPersister<O,C,E>
 		extends PluralPersistentAttribute<O,C,E>, RootTableGroupProducer, TableGroupJoinProducer,
-		TypeExporter<C>, EmbeddedContainer<C> {
+		EmbeddedContainer<C> {
 
 	Class[] CONSTRUCTOR_SIGNATURE = new Class[] {
 			Collection.class,
@@ -189,7 +189,7 @@ public interface CollectionPersister<O,C,E>
 		assert embeddedReferenceInfo.getReferencedNavigable() instanceof CollectionElementEmbedded
 				|| embeddedReferenceInfo.getReferencedNavigable() instanceof CollectionIndexEmbedded;
 
-		return tableGroupResolver.resolveTableGroup( embeddedReferenceInfo.getSourceReferenceInfo().getUniqueIdentifier() );
+		return tableGroupResolver.resolveTableGroup( embeddedReferenceInfo.getNavigableContainerReferenceInfo().getUniqueIdentifier() );
 	}
 
 

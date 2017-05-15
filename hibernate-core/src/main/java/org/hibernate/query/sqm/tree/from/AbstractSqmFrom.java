@@ -6,10 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-
-import org.jboss.logging.Logger;
 
 /**
  * Convenience base class for FromElement implementations
@@ -17,20 +15,18 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmFrom implements SqmFrom {
-	private static final Logger log = Logger.getLogger( AbstractSqmFrom.class );
-
 	private final SqmFromElementSpace fromElementSpace;
 	private final String uid;
 	private final String alias;
 	private final SqmNavigableReference binding;
-	private final EntityValuedExpressableType subclassIndicator;
+	private final EntityPersister subclassIndicator;
 
 	protected AbstractSqmFrom(
 			SqmFromElementSpace fromElementSpace,
 			String uid,
 			String alias,
 			SqmNavigableReference binding,
-			EntityValuedExpressableType subclassIndicator) {
+			EntityPersister subclassIndicator) {
 		this.fromElementSpace = fromElementSpace;
 		this.uid = uid;
 		this.alias = alias;
@@ -39,7 +35,7 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 	}
 
 	@Override
-	public SqmNavigableReference getBinding() {
+	public SqmNavigableReference getNavigableReference() {
 		return binding;
 	}
 
@@ -64,7 +60,7 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 	}
 
 	@Override
-	public EntityValuedExpressableType getIntrinsicSubclassIndicator() {
+	public EntityPersister getIntrinsicSubclassEntityPersister() {
 		return subclassIndicator;
 	}
 }

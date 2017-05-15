@@ -6,20 +6,20 @@
  */
 package org.hibernate.sql.ast.tree.spi.from;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.persister.common.spi.Table;
+import org.hibernate.persister.common.spi.UnionSubclassTable;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.queryable.spi.ExpressableType;
-import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
-import org.hibernate.sql.ast.tree.internal.EntityValuedNavigableSelection;
+import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
+import org.hibernate.sql.ast.consume.spi.SqlAppender;
+import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
+import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReferenceExpression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 
@@ -29,112 +29,96 @@ import org.hibernate.sql.ast.tree.spi.select.Selection;
  * @author Steve Ebersole
  */
 public class EntityTableGroup extends AbstractTableGroup implements Selectable {
-	private final EntityPersister persister;
+	private final EntityPersister entityPersister;
+	private final TableReference rootTableReference;
+	private final List<TableReferenceJoin> tableReferenceJoins;
 
-	private EntityReferenceExpression selectableExpression;
-	private List<org.hibernate.sql.ast.tree.spi.expression.ColumnReference> identifierColumnBindings;
+	private final EntityReference expression;
 
 	public EntityTableGroup(
 			TableSpace tableSpace,
-			String uid,
-			String aliasBase,
-			EntityPersister persister,
-			NavigablePath propertyPath) {
-		super( tableSpace, uid, aliasBase, propertyPath );
+			EntityPersister entityPersister,
+			NavigableReferenceInfo navigableReferenceInfo,
+			NavigableContainerReference navigableContainerReference,
+			TableReference rootTableReference,
+			List<TableReferenceJoin> tableReferenceJoins) {
+		super( tableSpace, navigableReferenceInfo.getUniqueIdentifier() );
+		this.entityPersister = entityPersister;
+		this.rootTableReference = rootTableReference;
+		this.tableReferenceJoins = tableReferenceJoins;
 
-		this.persister = persister;
-	}
-
-	public List<org.hibernate.sql.ast.tree.spi.expression.ColumnReference > resolveIdentifierColumnBindings() {
-		if ( identifierColumnBindings == null ) {
-			identifierColumnBindings = buildIdentifierColumnBindings();
-		}
-		return identifierColumnBindings;
-	}
-
-	private List<org.hibernate.sql.ast.tree.spi.expression.ColumnReference > buildIdentifierColumnBindings() {
-		final List<org.hibernate.sql.ast.tree.spi.expression.ColumnReference> bindings = new ArrayList<>();
-
-		for ( Column column : persister.getHierarchy().getIdentifierDescriptor().getColumns() ) {
-			bindings.add( resolveColumnReference( column ) );
-		}
-		return bindings;
-	}
-
-	public EntityPersister getPersister() {
-		return persister;
-	}
-
-	@Override
-	public ExpressableType getType() {
-		return getPersister();
-	}
-
-	@Override
-	public Selectable getSelectable() {
-		return this;
-	}
-
-	@Override
-	public TableGroup getSourceTableGroup() {
-		return this;
-	}
-
-	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
-		// todo : need a way to resolve ColumnBinding[] to SqlSelectable[]
-		// walking a TableGroup as an Expression is likely wrong
-		//throw new IllegalStateException( "Cannot treat TableGroup as Expression" );
-
-		walker.visitEntityExpression( selectableExpression );
-	}
-
-	@Override
-	public Navigable getNavigable() {
-		return persister;
-	}
-
-	@Override
-	public NavigablePath getNavigablePath() {
-		return super.getNavigablePath();
-	}
-
-//	@Override
-//	public QueryResult makeQueryResult(Expression selectedExpression, String resultVariable, QueryResultCreationContext returnResolutionContext) {
-//		return new QueryResultEntityImpl(
-//				selectedExpression,
-//				persister,
-//				resultVariable,
-//				// todo (6.0) : build this Map<?,SqlSelectionGroup>
-//				null,
-//				getNavigablePath(),
-//				getUid()
-//		);
-//	}
-
-	@Override
-	public List<org.hibernate.sql.ast.tree.spi.expression.ColumnReference > getColumnReferences() {
-		throw new NotYetImplementedException(  );
-//		return getSelectedExpression().getColumnReferences();
-	}
-
-	@Override
-	public Selection createSelection(
-			Expression selectedExpression,
-			String resultVariable,
-			ColumnReferenceResolver columnReferenceResolver) {
-		assert selectedExpression == this
-				|| selectedExpression == this.selectableExpression;
-
-		return new EntityValuedNavigableSelection(
+		this.expression = new EntityReference(
 				this,
 				getPersister(),
-				resultVariable
+				navigableContainerReference,
+				(EntityValuedExpressableType) navigableReferenceInfo,
+				null,
+				false
 		);
 	}
 
-//	@Override
-//	public QueryResult toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
-//		return getSelectedExpression().getSelectable().toQueryReturn( returnResolutionContext, resultVariable );
-//	}
+	public EntityPersister getPersister() {
+		return entityPersister;
+	}
+
+	@Override
+	public NavigableReference asExpression() {
+		return expression;
+	}
+
+	@Override
+	public TableReference locateTableReference(Table table) {
+		if ( table == rootTableReference.getTable() ) {
+			return rootTableReference;
+		}
+
+		if ( rootTableReference.getTable() instanceof UnionSubclassTable ) {
+			if ( ( (UnionSubclassTable) rootTableReference.getTable() ).includes( table ) ) {
+				return rootTableReference;
+			}
+		}
+
+		for ( TableReferenceJoin tableJoin : tableReferenceJoins ) {
+			if ( tableJoin.getJoinedTableBinding().getTable() == table ) {
+				return tableJoin.getJoinedTableBinding();
+			}
+		}
+
+		throw new IllegalStateException( "Could not resolve binding for table : " + table );
+	}
+
+	@Override
+	public Selection createSelection(Expression selectedExpression, String resultVariable) {
+		assert selectedExpression != null;
+		assert selectedExpression instanceof NavigableReference;
+
+		final NavigableReference navigableReference = (NavigableReference) selectedExpression;
+		return new NavigableSelection( navigableReference, resultVariable );
+	}
+
+	@Override
+	public void render(SqlAppender sqlAppender, SqlSelectAstWalker walker) {
+		renderTableReference( rootTableReference, sqlAppender, walker );
+
+		for ( TableReferenceJoin tableJoin : tableReferenceJoins ) {
+			sqlAppender.appendSql( " " );
+			sqlAppender.appendSql( tableJoin.getJoinType().getText() );
+			sqlAppender.appendSql( " join " );
+			renderTableReference( tableJoin.getJoinedTableBinding(), sqlAppender, walker );
+			if ( tableJoin.getJoinPredicate() != null && !tableJoin.getJoinPredicate().isEmpty() ) {
+				sqlAppender.appendSql( " on " );
+				tableJoin.getJoinPredicate().accept( walker );
+			}
+		}
+	}
+
+	@Override
+	protected TableReference getRootTableReference() {
+		return rootTableReference;
+	}
+
+	@Override
+	protected List<TableReferenceJoin> getTableReferenceJoins() {
+		return tableReferenceJoins;
+	}
 }

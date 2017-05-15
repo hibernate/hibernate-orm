@@ -9,7 +9,6 @@ package org.hibernate.persister.collection.internal;
 import java.util.List;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.persister.collection.spi.AbstractCollectionElement;
@@ -17,14 +16,6 @@ import org.hibernate.persister.collection.spi.CollectionElementBasic;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
-import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
-import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
@@ -78,30 +69,6 @@ public class CollectionElementBasicImpl<J>
 	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitCollectionElementBasic( this );
-	}
-
-	@Override
-	public QueryResult generateReturn(
-			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
-	public Fetch generateFetch(
-			QueryResultCreationContext returnResolutionContext,
-			TableGroup tableGroup,
-			FetchParent fetchParent) {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
-	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( this );
-	}
-
-	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter interpreter) {
-		interpreter.visitPluralAttributeIndex( this );
 	}
 
 	@Override

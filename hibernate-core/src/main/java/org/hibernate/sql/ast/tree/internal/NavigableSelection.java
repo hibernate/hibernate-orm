@@ -6,13 +6,45 @@
  */
 package org.hibernate.sql.ast.tree.internal;
 
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReferenceExpression;
+import org.hibernate.persister.queryable.spi.TableGroupResolver;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 
 /**
  * @author Steve Ebersole
  */
-public interface NavigableSelection extends Selection {
+public class NavigableSelection implements Selection {
+	private final NavigableReference selectedExpression;
+	private final String resultVariable;
+
+	public NavigableSelection(NavigableReference selectedExpression, String resultVariable) {
+		this.selectedExpression = selectedExpression;
+		this.resultVariable = resultVariable;
+	}
+
 	@Override
-	NavigableReferenceExpression getSelectedExpression();
+	public NavigableReference getSelectedExpression() {
+		return selectedExpression;
+	}
+
+	@Override
+	public String getResultVariable() {
+		return resultVariable;
+	}
+
+	@Override
+	public QueryResult createQueryResult(
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		return getSelectedExpression().getNavigable().generateReturn(
+				getSelectedExpression(),
+				getResultVariable(),
+				getSelectedExpression().getContributedColumnReferenceSource(),
+				sqlSelectionResolver,
+				creationContext
+		);
+	}
 }

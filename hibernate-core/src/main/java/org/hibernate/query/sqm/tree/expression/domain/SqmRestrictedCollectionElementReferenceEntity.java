@@ -10,5 +10,5 @@ package org.hibernate.query.sqm.tree.expression.domain;
  * @author Steve Ebersole
  */
 public interface SqmRestrictedCollectionElementReferenceEntity
-		extends SqmRestrictedCollectionElementReference, SqmNavigableSourceReference, SqmEntityTypedReference {
+		extends SqmRestrictedCollectionElementReference, SqmNavigableContainerReference, SqmEntityTypedReference {
 }

@@ -8,11 +8,12 @@ package org.hibernate.persister.common.spi;
 
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.queryable.spi.ExpressableType;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -21,13 +22,16 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface Navigable<T> extends ExpressableType<T>, TypeExporter<T> {
+public interface Navigable<T> extends ExpressableType<T>, Selectable {
 	/**
-	 * The NavigableContainer which contains this Navigable.  A NavigableContainer
-	 * is container for
+	 * The NavigableContainer which contains this Navigable.
 	 */
 	NavigableContainer getContainer();
 
+	/**
+	 * The role for this Navigable which is unique across all
+	 * Navigables in the given TypeConfiguration.
+	 */
 	NavigableRole getNavigableRole();
 
 	default String getNavigableName() {
@@ -45,7 +49,10 @@ public interface Navigable<T> extends ExpressableType<T>, TypeExporter<T> {
 
 	void visitNavigable(NavigableVisitationStrategy visitor);
 
-	QueryResult generateReturn(QueryResultCreationContext returnResolutionContext, TableGroup tableGroup);
-
-	Fetch generateFetch(QueryResultCreationContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent);
+	QueryResult generateReturn(
+			NavigableReference selectedExpression,
+			String resultVariable,
+			ColumnReferenceSource columnReferenceSource,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext);
 }

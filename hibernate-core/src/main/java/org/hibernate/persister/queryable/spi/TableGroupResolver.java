@@ -6,12 +6,18 @@
  */
 package org.hibernate.persister.queryable.spi;
 
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 /**
  * @author Steve Ebersole
  */
 public interface TableGroupResolver {
-	// todo (6.0) - args... "unique identifier"?
+	/**
+	 * Resolve a TableGroup by its unique identifier
+	 */
 	TableGroup resolveTableGroup(String uid);
+
+	ColumnReferenceSource resolveColumnReferenceSource(String uid);
+	NavigableReferenceInfo resolveNavigableReferenceInfo(String uid);
 }

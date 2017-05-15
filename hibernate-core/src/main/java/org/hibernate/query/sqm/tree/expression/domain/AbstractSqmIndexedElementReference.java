@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import org.hibernate.persister.collection.spi.CollectionElement;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.queryable.spi.NavigableSourceReferenceInfo;
+import org.hibernate.persister.queryable.spi.NavigableContainerReferenceInfo;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -68,7 +68,7 @@ public abstract class AbstractSqmIndexedElementReference
 	}
 
 	@Override
-	public NavigableSourceReferenceInfo getSourceReferenceInfo() {
+	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
 		return getPluralAttributeBinding();
 	}
 

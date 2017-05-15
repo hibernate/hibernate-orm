@@ -27,11 +27,12 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
 import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
+import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.persister.queryable.spi.JoinedTableGroupContext;
 import org.hibernate.persister.queryable.spi.RootTableGroupContext;
-import org.hibernate.persister.queryable.spi.TableGroupJoinContext;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSemanticQueryWalker;
@@ -103,14 +104,14 @@ import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.produce.SyntaxException;
 import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
 import org.hibernate.sql.ast.produce.result.internal.FetchCompositeAttributeImpl;
 import org.hibernate.sql.ast.produce.result.internal.FetchEntityAttributeImpl;
-import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultDynamicInstantiation;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
@@ -153,7 +154,6 @@ import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
@@ -172,7 +172,7 @@ import org.jboss.logging.Logger;
 @SuppressWarnings("unchecked")
 public class SqmSelectToSqlAstConverter
 		extends BaseSemanticQueryWalker
-		implements ColumnReferenceResolver {
+		implements SqlSelectionResolver, QueryResultCreationContext {
 	private static final Logger log = Logger.getLogger( SqmSelectToSqlAstConverter.class );
 
 	private final Stack<NavigablePath> navigablePathStack = new Stack<>();
@@ -183,7 +183,6 @@ public class SqmSelectToSqlAstConverter
 	 * @param statement The SQM SelectStatement to interpret
 	 * @param queryOptions The options to be applied to the interpretation
 	 * @param callback to be formally defined
-	 * @param isShallow {@code true} if the interpretation is initiated from Query#iterate; all
 	 * other forms of Query execution would pass {@code false}
 	 *
 	 * @return The interpretation
@@ -192,12 +191,10 @@ public class SqmSelectToSqlAstConverter
 			SqmSelectStatement statement,
 			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
-			boolean isShallow,
 			Callback callback) {
 		final SqmSelectToSqlAstConverter walker = new SqmSelectToSqlAstConverter(
 				persistenceContext.getFactory(),
 				queryOptions,
-				isShallow,
 				callback
 		);
 		return walker.interpret( statement );
@@ -205,7 +202,6 @@ public class SqmSelectToSqlAstConverter
 
 	private final SessionFactoryImplementor factory;
 	private final QueryOptions queryOptions;
-	private final boolean isShallow;
 	private final Callback callback;
 
 	private final FromClauseIndex fromClauseIndex = new FromClauseIndex();
@@ -219,13 +215,10 @@ public class SqmSelectToSqlAstConverter
 	private SqmSelectToSqlAstConverter(
 			SessionFactoryImplementor factory,
 			QueryOptions queryOptions,
-			boolean isShallow,
 			Callback callback) {
 		this.factory = factory;
 		this.queryOptions = queryOptions;
-		this.isShallow = isShallow;
 		this.callback = callback;
-		pushDomainExpressionBuilder( isShallow );
 	}
 
 	private SqlSelectPlan interpret(SqmSelectStatement statement) {
@@ -236,9 +229,30 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return null;
+	}
+
+	@Override
 	public NavigablePath currentNavigablePath() {
 		return navigablePathStack.getCurrent();
 	}
+
+	private enum Shallowness {
+		NONE,
+		CTOR,
+		FUNCTION,
+		SUBQUERY;
+	}
+
+	private final Stack<Shallowness> shallownessStack = new Stack<>( Shallowness.NONE );
+
+	@Override
+	public boolean shouldCreateShallowEntityResult() {
+		// todo (6.0) : we also need to vary this for ctor result based on ctor sigs + user option
+		return shallownessStack.getCurrent() != Shallowness.NONE;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// walker
@@ -386,16 +400,24 @@ public class SqmSelectToSqlAstConverter
 
 	@Override
 	public Object visitRootEntityFromElement(SqmRoot sqmRoot) {
+		log.tracef( "Starting resolution of SqmRoot [%s] to TableGroup", sqmRoot );
+
 		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
 			final TableGroup resolvedTableGroup = fromClauseIndex.findResolvedTableGroup( sqmRoot );
+			log.tracef( "SqmRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolvedTableGroup );
 			return resolvedTableGroup;
 		}
 
-		final SqmEntityReference binding = sqmRoot.getBinding();
+		final SqmEntityReference binding = sqmRoot.getNavigableReference();
 		final EntityPersister entityPersister = (EntityPersister) binding.getReferencedNavigable();
-		final EntityTableGroup group = entityPersister.applyRootTableGroup(
-				sqmRoot,
+		final EntityTableGroup group = entityPersister.createRootTableGroup(
+				binding,
 				new RootTableGroupContext() {
+					@Override
+					public QuerySpec getQuerySpec() {
+						return currentQuerySpec();
+					}
+
 					@Override
 					public TableSpace getTableSpace() {
 						return tableSpace;
@@ -410,6 +432,8 @@ public class SqmSelectToSqlAstConverter
 		);
 		tableSpace.setRootTableGroup( group );
 
+		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, group );
+
 		return group;
 	}
 
@@ -420,12 +444,12 @@ public class SqmSelectToSqlAstConverter
 		}
 
 		final QuerySpec querySpec = currentQuerySpec();
-		final JoinablePersistentAttribute joinableAttribute = (JoinablePersistentAttribute) joinedFromElement.getAttributeBinding()
+		final JoinablePersistentAttribute joinableAttribute = (JoinablePersistentAttribute) joinedFromElement.getAttributeReference()
 				.getReferencedNavigable();
 		final TableGroupJoin tableGroupJoin = joinableAttribute.applyTableGroupJoin(
-				joinedFromElement,
+				joinedFromElement.getNavigableReference(),
 				joinedFromElement.getJoinType(),
-				new TableGroupJoinContext() {
+				new JoinedTableGroupContext() {
 					@Override
 					public QuerySpec getQuerySpec() {
 						return querySpec;
@@ -452,12 +476,21 @@ public class SqmSelectToSqlAstConverter
 
 	@Override
 	public TableGroupJoin visitCrossJoinedFromElement(SqmCrossJoin joinedFromElement) {
-		// todo : this cast will not ultimately work.
-		// 		Instead we will need to resolve the Bindable+intrinsicSubclassIndicator to its ImprovedEntityPersister/EntityPersister
-		final EntityPersister entityPersister = (EntityPersister) joinedFromElement.getIntrinsicSubclassIndicator();
+		final QuerySpec querySpec = currentQuerySpec();
+		final EntityPersister entityPersister = joinedFromElement.getIntrinsicSubclassEntityPersister();
 		final EntityTableGroup group = entityPersister.createEntityTableGroup(
-				joinedFromElement,
-				tableSpace,
+				joinedFromElement.getNavigableReference(),
+				new JoinedTableGroupContext() {
+					@Override
+					public QuerySpec getQuerySpec() {
+						return querySpec;
+					}
+
+					@Override
+					public TableSpace getTableSpace() {
+						return tableSpace;
+					}
+				},
 				sqlAliasBaseManager
 		);
 		return new TableGroupJoin( SqmJoinType.CROSS, group, null );
@@ -471,14 +504,14 @@ public class SqmSelectToSqlAstConverter
 	@Override
 	public SelectClause visitSelectClause(SqmSelectClause selectClause) {
 		currentClauseStack.push( Clause.SELECT );
-		pushDomainExpressionBuilder( querySpecDepth > 1 || isShallow );
+		shallownessStack.push( Shallowness.SUBQUERY );
 		try {
 			super.visitSelectClause( selectClause );
 			currentQuerySpec().getSelectClause().makeDistinct( selectClause.isDistinct() );
 			return currentQuerySpec().getSelectClause();
 		}
 		finally {
-			domainExpressionBuilderStack.pop();
+			shallownessStack.pop();
 			currentClauseStack.pop();
 		}
 	}
@@ -496,12 +529,14 @@ public class SqmSelectToSqlAstConverter
 		);
 		currentQuerySpec().getSelectClause().selection( selection );
 
-		final QueryResult queryResult = selection.createQueryResult(
-				// todo (6.0) : what to pass as SqlSelectionResolver?
-				//		those resolutions are not available until SqlSelectAstToJdbcSelectConverter
-				//
-				null
-		);
+		// the call to Expression to resolve the ColumnReferenceResolver
+		//		allows polymorphic input per Expression type.  E.g.
+		//		a functions
+		//
+		// todo (6.0) : just pass TableGroupResolver into Selection#createQueryResult
+		//		still allows access to TableGroup/ColumnReference resolution for
+		//		Selection/Expression/Selectables that need it
+		final QueryResult queryResult = selection.createQueryResult( this, this );
 
 		applyFetchesAndEntityGraph( queryResult );
 
@@ -539,7 +574,7 @@ public class SqmSelectToSqlAstConverter
 			return;
 		}
 
-		// todo : to do this well we are going to need a way to get all of the attributes related to this FetchParent
+		// todo : to do this where we are going to need a way to get all of the attributes related to this FetchParent
 		//		that way we can drive this process across all of the attributes defined for the
 		//		FetchParent type at once (one iteration)
 
@@ -555,7 +590,7 @@ public class SqmSelectToSqlAstConverter
 
 
 		for ( SqmAttributeJoin fetchedJoin : fetchedJoins ) {
-			final SqmAttributeReference fetchedAttributeBinding = fetchedJoin.getAttributeBinding();
+			final SqmAttributeReference fetchedAttributeBinding = fetchedJoin.getAttributeReference();
 			// todo  : need this method added to EntityGraphImplementor
 			//final String attributeName = fetchedAttributeBinding.getAttribute().getAttributeName();
 			//final AttributeNodeImplementor attributeNode = entityGraphImplementor.findAttributeNode( attributeName );
@@ -565,9 +600,9 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	private void applyFetchesAndEntityGraph(FetchParent fetchParent, SqmAttributeJoin attributeJoin, AttributeNodeImplementor attributeNode) {
-		if ( attributeJoin.getAttributeBinding() instanceof SqmPluralAttributeReference ) {
+		if ( attributeJoin.getAttributeReference() instanceof SqmPluralAttributeReference ) {
 			// apply the plural attribute fetch join
-			final SqmPluralAttributeReference pluralAttributeBinding = (SqmPluralAttributeReference) attributeJoin.getAttributeBinding();
+			final SqmPluralAttributeReference pluralAttributeBinding = (SqmPluralAttributeReference) attributeJoin.getAttributeReference();
 
 			// todo : work out how to model collection fetches...
 			//		mainly... do we need a "grouping" fetch?  And if so, should
@@ -575,9 +610,9 @@ public class SqmSelectToSqlAstConverter
 			// 		does it represent each by itself?
 
 		}
-		else if ( attributeJoin.getAttributeBinding() instanceof SqmSingularAttributeReference ) {
+		else if ( attributeJoin.getAttributeReference() instanceof SqmSingularAttributeReference ) {
 			// apply the singular attribute fetch join
-			final SqmSingularAttributeReference attributeBinding = (SqmSingularAttributeReference) attributeJoin.getAttributeBinding();
+			final SqmSingularAttributeReference attributeBinding = (SqmSingularAttributeReference) attributeJoin.getAttributeReference();
 			final SingularPersistentAttribute boundAttribute = (SingularPersistentAttribute) attributeBinding.getReferencedNavigable();
 
 			switch ( boundAttribute.getAttributeTypeClassification() ) {
@@ -810,7 +845,8 @@ public class SqmSelectToSqlAstConverter
 
 	@Override
 	public AvgFunction visitAvgFunction(AvgFunctionSqmExpression expression) {
-		pushDomainExpressionBuilder( true );
+		shallownessStack.push( Shallowness.FUNCTION );
+
 		try {
 			return new AvgFunction(
 					(Expression) expression.getArgument().accept( this ),
@@ -819,17 +855,14 @@ public class SqmSelectToSqlAstConverter
 			);
 		}
 		finally {
-			domainExpressionBuilderStack.pop();
+			shallownessStack.pop();
 		}
-	}
-
-	private void pushDomainExpressionBuilder(boolean shallow) {
-		domainExpressionBuilderStack.push( new NavigableReferenceExpressionBuilderImpl( shallow ) );
 	}
 
 	@Override
 	public MaxFunction visitMaxFunction(MaxFunctionSqmExpression expression) {
-		pushDomainExpressionBuilder( true );
+		shallownessStack.push( Shallowness.FUNCTION );
+
 		try {
 			return new MaxFunction(
 					(Expression) expression.getArgument().accept( this ),
@@ -838,13 +871,14 @@ public class SqmSelectToSqlAstConverter
 			);
 		}
 		finally {
-			domainExpressionBuilderStack.pop();
+			shallownessStack.pop();
 		}
 	}
 
 	@Override
 	public MinFunction visitMinFunction(MinFunctionSqmExpression expression) {
-		pushDomainExpressionBuilder( true );
+		shallownessStack.push( Shallowness.FUNCTION );
+
 		try {
 			return new MinFunction(
 					(Expression) expression.getArgument().accept( this ),
@@ -853,13 +887,14 @@ public class SqmSelectToSqlAstConverter
 			);
 		}
 		finally {
-			domainExpressionBuilderStack.pop();
+			shallownessStack.pop();
 		}
 	}
 
 	@Override
 	public SumFunction visitSumFunction(SumFunctionSqmExpression expression) {
-		pushDomainExpressionBuilder( true );
+		shallownessStack.push( Shallowness.FUNCTION );
+
 		try {
 			return new SumFunction(
 					(Expression) expression.getArgument().accept( this ),
@@ -868,13 +903,14 @@ public class SqmSelectToSqlAstConverter
 			);
 		}
 		finally {
-			domainExpressionBuilderStack.pop();
+			shallownessStack.pop();
 		}
 	}
 
 	@Override
 	public CountFunction visitCountFunction(CountFunctionSqmExpression expression) {
-		pushDomainExpressionBuilder( true );
+		shallownessStack.push( Shallowness.FUNCTION );
+
 		try {
 			return new CountFunction(
 					(Expression) expression.getArgument().accept( this ),
@@ -883,13 +919,14 @@ public class SqmSelectToSqlAstConverter
 			);
 		}
 		finally {
-			domainExpressionBuilderStack.pop();
+			shallownessStack.pop();
 		}
 	}
 
 	@Override
 	public CountStarFunction visitCountStarFunction(CountStarFunctionSqmExpression expression) {
-		pushDomainExpressionBuilder( true );
+		shallownessStack.push( Shallowness.FUNCTION );
+
 		try {
 			return new CountStarFunction(
 					expression.isDistinct(),
@@ -897,13 +934,14 @@ public class SqmSelectToSqlAstConverter
 			);
 		}
 		finally {
-			domainExpressionBuilderStack.pop();
+			shallownessStack.pop();
 		}
 	}
 
 	@Override
 	public Object visitUnaryOperationExpression(UnaryOperationSqmExpression expression) {
-		pushDomainExpressionBuilder( true );
+		shallownessStack.push( Shallowness.FUNCTION );
+
 		try {
 			return new UnaryOperation(
 					interpret( expression.getOperation() ),
@@ -912,7 +950,7 @@ public class SqmSelectToSqlAstConverter
 			);
 		}
 		finally {
-			domainExpressionBuilderStack.pop();
+			shallownessStack.pop();
 		}
 	}
 
@@ -931,7 +969,8 @@ public class SqmSelectToSqlAstConverter
 
 	@Override
 	public Expression visitBinaryArithmeticExpression(BinaryArithmeticSqmExpression expression) {
-		pushDomainExpressionBuilder( true );
+		shallownessStack.push( Shallowness.FUNCTION );
+
 		try {
 			if ( expression.getOperation() == BinaryArithmeticSqmExpression.Operation.MODULO ) {
 				return new NonStandardFunction(
@@ -945,11 +984,11 @@ public class SqmSelectToSqlAstConverter
 					interpret( expression.getOperation() ),
 					(Expression) expression.getLeftHandOperand().accept( this ),
 					(Expression) expression.getRightHandOperand().accept( this ),
-					null //(BasicType) extractOrmType( expression.getExpressionType() )
+					(BasicValuedExpressableType) expression.getExpressionType()
 			);
 		}
 		finally {
-			domainExpressionBuilderStack.pop();
+			shallownessStack.pop();
 		}
 	}
 
@@ -1170,6 +1209,11 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	private final Map<QuerySpec,Map<SqlSelectable,SqlSelection>> sqlSelectionMapByQuerySpec = new HashMap<>();
+
+	@Override
+	public SqlSelectionGroup resolveSqlSelectionGroup(Navigable navigable) {
+		return null;
+	}
 
 	@Override
 	public SqlSelection resolveSqlSelection(SqlSelectable sqlSelectable) {

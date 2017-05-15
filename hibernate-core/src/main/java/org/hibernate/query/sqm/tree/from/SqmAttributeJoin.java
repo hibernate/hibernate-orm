@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
@@ -27,7 +27,6 @@ public class SqmAttributeJoin
 
 	private final SqmFrom lhs;
 	private final SqmAttributeReference attributeBinding;
-	private final EntityValuedExpressableType intrinsicSubclassIndicator;
 	private final boolean fetched;
 
 	private SqmPredicate onClausePredicate;
@@ -37,7 +36,7 @@ public class SqmAttributeJoin
 			SqmAttributeReference attributeBinding,
 			String uid,
 			String alias,
-			EntityValuedExpressableType intrinsicSubclassIndicator,
+			EntityPersister intrinsicSubclassIndicator,
 			SqmJoinType joinType,
 			boolean fetched) {
 		super(
@@ -51,7 +50,6 @@ public class SqmAttributeJoin
 		this.lhs = lhs;
 
 		this.attributeBinding = attributeBinding;
-		this.intrinsicSubclassIndicator = intrinsicSubclassIndicator;
 		this.fetched = fetched;
 
 		attributeBinding.injectExportedFromElement( this );
@@ -61,18 +59,13 @@ public class SqmAttributeJoin
 		return lhs;
 	}
 
-	public SqmAttributeReference getAttributeBinding() {
+	public SqmAttributeReference getAttributeReference() {
 		return attributeBinding;
 	}
 
 	@Override
-	public SqmNavigableReference getBinding() {
-		return getAttributeBinding();
-	}
-
-	@Override
-	public EntityValuedExpressableType getIntrinsicSubclassIndicator() {
-		return intrinsicSubclassIndicator;
+	public SqmNavigableReference getNavigableReference() {
+		return getAttributeReference();
 	}
 
 	public boolean isFetched() {

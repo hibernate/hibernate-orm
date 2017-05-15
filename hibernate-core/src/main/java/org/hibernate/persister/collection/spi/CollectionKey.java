@@ -12,42 +12,25 @@ import org.hibernate.HibernateException;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.ForeignKey;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.Table;
-import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
-public class CollectionKey implements TypeExporter {
-
-	// todo : split into interface/impl
-	//		that way we can pass in the impl here, but PluralAttributeKey (interface)
-	//		can work with any ImprovedCollectionPersister (interface) impl
-
+public class CollectionKey {
 	private final AbstractCollectionPersister collectionPersister;
-	private final Type keyType;
 
-	private List<JoinColumnMapping> joinColumnMappings;
+	private ForeignKey.ColumnMappings joinColumnMappings;
 
 	public CollectionKey(AbstractCollectionPersister<?,?,?> collectionPersister, Collection mappingBinding) {
 		this.collectionPersister = collectionPersister;
-		this.keyType = mappingBinding.getKey().getType();
 	}
 
-	@Override
-	public Type getOrmType() {
-		return keyType;
-	}
-
-	public List<JoinColumnMapping> getJoinColumnMappings() {
-		if ( joinColumnMappings == null ) {
-			joinColumnMappings = collectionPersister.getContainer().resolveJoinColumnMappings(
-					collectionPersister );
-		}
+	public ForeignKey.ColumnMappings getJoinColumnMappings() {
 		return joinColumnMappings;
 	}
 

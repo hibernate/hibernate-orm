@@ -18,7 +18,7 @@ import org.hibernate.query.sqm.produce.spi.ResolutionContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableSourceReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 
 /**
  * Template support for PathResolver implementations
@@ -36,8 +36,8 @@ public abstract class AbstractNavigableBindingResolver implements NavigableBindi
 		return context;
 	}
 
-	protected SqmNavigableSourceReference resolveAnyIntermediateAttributePathJoins(
-			SqmNavigableSourceReference sourceBinding,
+	protected SqmNavigableContainerReference resolveAnyIntermediateAttributePathJoins(
+			SqmNavigableContainerReference sourceBinding,
 			String[] pathParts) {
 		// build joins for any intermediate path parts
 		for ( int i = 0, max = pathParts.length-1; i < max; i++ ) {
@@ -46,18 +46,18 @@ public abstract class AbstractNavigableBindingResolver implements NavigableBindi
 		return sourceBinding;
 	}
 
-	protected SqmNavigableSourceReference buildIntermediateAttributeJoin(
-			SqmNavigableSourceReference sourceBinding,
+	protected SqmNavigableContainerReference buildIntermediateAttributeJoin(
+			SqmNavigableContainerReference sourceBinding,
 			String navigableName) {
 		final Navigable intermediateNavigable = resolveNavigable( sourceBinding, navigableName );
 
 		validateIntermediateAttributeJoin( sourceBinding, intermediateNavigable );
 
-		return (SqmNavigableSourceReference) buildAttributeJoin( sourceBinding, intermediateNavigable, null );
+		return (SqmNavigableContainerReference) buildAttributeJoin( sourceBinding, intermediateNavigable, null );
 	}
 
 	protected SqmNavigableReference buildAttributeJoin(
-			SqmNavigableSourceReference sourceBinding,
+			SqmNavigableContainerReference sourceBinding,
 			Navigable joinedNavigable,
 			EntityValuedExpressableType subclassIndicator) {
 		final SqmAttributeReference attributeBinding = (SqmAttributeReference) context().getParsingContext()
@@ -80,7 +80,7 @@ public abstract class AbstractNavigableBindingResolver implements NavigableBindi
 	}
 
 	protected void validateIntermediateAttributeJoin(
-			SqmNavigableSourceReference sourceBinding,
+			SqmNavigableContainerReference sourceBinding,
 			Navigable joinedAttributeDescriptor) {
 		if ( !SingularPersistentAttribute.class.isInstance( joinedAttributeDescriptor ) ) {
 			throw new SemanticException(
@@ -122,7 +122,7 @@ public abstract class AbstractNavigableBindingResolver implements NavigableBindi
 		return false;
 	}
 
-	protected Navigable resolveNavigable(SqmNavigableSourceReference sourceBinding, String navigableName) {
+	protected Navigable resolveNavigable(SqmNavigableContainerReference sourceBinding, String navigableName) {
 		final Navigable navigable = sourceBinding.getReferencedNavigable().findNavigable( navigableName );
 		if ( navigable == null ) {
 			throw new NavigableResolutionException(

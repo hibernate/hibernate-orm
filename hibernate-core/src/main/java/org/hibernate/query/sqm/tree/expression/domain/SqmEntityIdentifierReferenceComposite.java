@@ -37,7 +37,7 @@ public class SqmEntityIdentifierReferenceComposite
 	}
 
 	@Override
-	public SqmNavigableSourceReference getSourceReference() {
+	public SqmNavigableContainerReference getSourceReference() {
 		return sourceBinding;
 	}
 

@@ -113,7 +113,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceEmbedd
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceEntity;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableResolutionContext;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableSourceReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
@@ -367,7 +367,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		// select the root
 		final SqmSelectClause selectClause = new SqmSelectClause( false );
 		final SqmFrom root = fromClause.getFromElementSpaces().get( 0 ).getRoot();
-		selectClause.addSelection( new SqmSelection( root.getBinding() ) );
+		selectClause.addSelection( new SqmSelection( root.getNavigableReference() ) );
 		return selectClause;
 	}
 
@@ -696,7 +696,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		}
 		final SqmRoot root = new SqmRoot( null, parsingContext.makeUniqueIdentifier(), alias, entityReference );
 		parsingContext.registerFromElementByUniqueId( root );
-		querySpecProcessingStateStack.getCurrent().getFromElementBuilder().getAliasRegistry().registerAlias( root.getBinding() );
+		querySpecProcessingStateStack.getCurrent().getFromElementBuilder().getAliasRegistry().registerAlias( root.getNavigableReference() );
 		querySpecProcessingStateStack.getCurrent().getFromClause().getFromElementSpaces().get( 0 ).setRoot( root );
 		return root;
 	}
@@ -793,7 +793,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 
 			SqmRoot root = new SqmRoot( null, parsingContext.makeUniqueIdentifier(), alias, entityReference );
 			parsingContext.registerFromElementByUniqueId( root );
-			querySpecProcessingStateStack.getCurrent().getFromElementBuilder().getAliasRegistry().registerAlias( root.getBinding() );
+			querySpecProcessingStateStack.getCurrent().getFromElementBuilder().getAliasRegistry().registerAlias( root.getNavigableReference() );
 			querySpecProcessingStateStack.getCurrent().getFromClause().getFromElementSpaces().get( 0 ).setRoot( root );
 
 			// for now we only support the INSERT-SELECT form
@@ -1028,8 +1028,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 
 			if ( parsingContext.getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
 				if ( !ImplicitAliasGenerator.isImplicitAlias( joinedFromElement.getIdentificationVariable() ) ) {
-					if ( SqmSingularAttributeReference.class.isInstance( joinedFromElement.getBinding() )
-							&& SqmFromExporter.class.isInstance( joinedFromElement.getBinding() ) ) {
+					if ( SqmSingularAttributeReference.class.isInstance( joinedFromElement.getNavigableReference() )
+							&& SqmFromExporter.class.isInstance( joinedFromElement.getNavigableReference() ) ) {
 						final SqmAttributeJoin attributeJoin = (SqmAttributeJoin) joinedFromElement;
 						if ( attributeJoin.isFetched() ) {
 							throw new StrictJpaComplianceViolation(
@@ -1546,7 +1546,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		}
 
 		return pathResolverStack.getCurrent().resolvePath(
-				(SqmNavigableSourceReference) indexedReference,
+				(SqmNavigableContainerReference) indexedReference,
 				PathHelper.split( ctx.pathTerminal().getText() )
 		);
 	}
@@ -1567,7 +1567,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 			// todo : a better solution is to better structure the grammar rules.
 		}
 
-		final SqmNavigableSourceReference root = (SqmNavigableSourceReference) rootPath ;
+		final SqmNavigableContainerReference root = (SqmNavigableContainerReference) rootPath ;
 
 		log.debugf(
 				"Resolved CompoundPath pathRoot [%s] : %s",

@@ -18,6 +18,13 @@ import java.util.LinkedList;
 public class Stack<T> {
 	private LinkedList<T> stack = new LinkedList<>();
 
+	public Stack() {
+	}
+
+	public Stack(T initial) {
+		stack.add( initial );
+	}
+
 	public void push(T newCurrent) {
 		stack.addFirst( newCurrent );
 	}

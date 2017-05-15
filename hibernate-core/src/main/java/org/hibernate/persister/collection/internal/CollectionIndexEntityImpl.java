@@ -9,24 +9,18 @@ package org.hibernate.persister.collection.internal;
 import java.util.List;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.persister.collection.spi.AbstractCollectionIndex;
 import org.hibernate.persister.collection.spi.CollectionIndexEntity;
 import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.persister.collection.spi.TableReferenceJoinCollector;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
-import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
+import org.hibernate.sql.JoinType;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.type.spi.EntityType;
 
 /**
@@ -91,20 +85,10 @@ public class CollectionIndexEntityImpl<J>
 	}
 
 	@Override
-	public TableGroup buildTableGroup(
-			TableSpace tableSpace, SqlAliasBaseManager sqlAliasBaseManager, FromClauseIndex fromClauseIndex) {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
-	public QueryResult generateReturn(
-			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
-	public Fetch generateFetch(
-			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
-		throw new NotYetImplementedException(  );
+	public void applyTableReferenceJoins(
+			JoinType joinType,
+			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
+			TableReferenceJoinCollector collector) {
+		getEntityPersister().applyTableReferenceJoins( joinType, sqlAliasBase, collector );
 	}
 }

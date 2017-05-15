@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 
@@ -18,7 +18,7 @@ public class SqmRoot extends AbstractSqmFrom {
 			SqmFromElementSpace fromElementSpace,
 			String uid,
 			String alias,
-			EntityValuedExpressableType entityReference) {
+			EntityPersister entityReference) {
 		super(
 				fromElementSpace,
 				uid,
@@ -27,20 +27,20 @@ public class SqmRoot extends AbstractSqmFrom {
 				entityReference
 		);
 
-		getBinding().injectExportedFromElement( this );
+		getNavigableReference().injectExportedFromElement( this );
 	}
 
 	@Override
-	public SqmEntityReference getBinding() {
-		return (SqmEntityReference) super.getBinding();
+	public SqmEntityReference getNavigableReference() {
+		return (SqmEntityReference) super.getNavigableReference();
 	}
 
 	public String getEntityName() {
-		return getBinding().getReferencedNavigable().getEntityName();
+		return getNavigableReference().getReferencedNavigable().getEntityName();
 	}
 
 	@Override
-	public EntityValuedExpressableType getIntrinsicSubclassIndicator() {
+	public EntityPersister getIntrinsicSubclassEntityPersister() {
 		// a root FromElement cannot indicate a subclass intrinsically (as part of its declaration)
 		return null;
 	}

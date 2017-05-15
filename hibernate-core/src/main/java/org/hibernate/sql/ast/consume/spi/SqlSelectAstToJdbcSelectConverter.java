@@ -39,17 +39,15 @@ import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
-import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReferenceExpression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeElementReferenceExpression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeIndexReferenceExpression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReferenceExpression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeElementReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeIndexReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiationArgument;
 import org.hibernate.sql.ast.tree.spi.from.FromClause;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.FilterPredicate;
@@ -76,7 +74,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class SqlSelectAstToJdbcSelectConverter {
+public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker {
 	private static final Logger log = Logger.getLogger( SqlSelectAstToJdbcSelectConverter.class );
 
 	// todo : rename SqlSelectAstToJdbcSelectConverter
@@ -137,15 +135,27 @@ public class SqlSelectAstToJdbcSelectConverter {
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * External access to appending SQL fragments
+	 */
+	private final SqlAppender sqlAppender = new SqlAppender() {
+		@Override
+		public void appendSql(String fragment) {
+			SqlSelectAstToJdbcSelectConverter.this.appendSql( fragment );
+		}
+	};
+
 	private void appendSql(String fragment) {
 		sqlBuffer.append( fragment );
 	}
 
+	@Override
 	public void visitSelectQuery(SelectStatement selectQuery) {
 		visitQuerySpec( selectQuery.getQuerySpec() );
 
 	}
 
+	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
 		visitSelectClause( querySpec.getSelectClause() );
 		visitFromClause( querySpec.getFromClause() );
@@ -181,6 +191,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ORDER BY clause
 
+	@Override
 	public void visitSortSpecification(SortSpecification sortSpecification) {
 		sortSpecification.getSortExpression().accept( this );
 
@@ -203,6 +214,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// LIMIT/OFFSET clause
 
+	@Override
 	public void visitLimitOffsetClause(QuerySpec querySpec) {
 		if ( querySpec.getOffsetClauseExpression() != null ) {
 			appendSql( " offset " );
@@ -220,6 +232,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SELECT clause
 
+	@Override
 	public void visitSelectClause(SelectClause selectClause) {
 		boolean previouslyInSelections = currentlyInSelections;
 		currentlyInSelections = true;
@@ -245,6 +258,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// FROM clause
 
+	@Override
 	public void visitFromClause(FromClause fromClause) {
 		appendSql( " from " );
 
@@ -256,14 +270,18 @@ public class SqlSelectAstToJdbcSelectConverter {
 		}
 	}
 
+	@Override
 	public void visitTableSpace(TableSpace tableSpace) {
+		// todo (6.0) : possibly have a way for Dialect to influence rendering the from-clause nodes.
+		//		at what level?  FromClause?  TableSpace?
 		visitTableGroup( tableSpace.getRootTableGroup() );
 
 		for ( TableGroupJoin tableGroupJoin : tableSpace.getJoinedTableGroups() ) {
 			appendSql( " " );
 			appendSql( tableGroupJoin.getJoinType().getText() );
-			appendSql( " join " );
+			appendSql( " join (" );
 			visitTableGroup( tableGroupJoin.getJoinedGroup() );
+			appendSql( ") " );
 
 			boolean wasPreviouslyInPredicate = currentlyInPredicate;
 			currentlyInPredicate = true;
@@ -280,30 +298,17 @@ public class SqlSelectAstToJdbcSelectConverter {
 
 	}
 
+	@Override
 	public void visitTableGroup(TableGroup tableGroup) {
-		visitTableBinding( tableGroup.getRootTableReference() );
-
-		for ( TableReferenceJoin tableJoin : tableGroup.getTableReferenceJoins() ) {
-			appendSql( " " );
-			appendSql( tableJoin.getJoinType().getText() );
-			appendSql( " join " );
-			visitTableBinding( tableJoin.getJoinedTableBinding() );
-			if ( tableJoin.getJoinPredicate() != null && !tableJoin.getJoinPredicate().isEmpty() ) {
-				appendSql( " on " );
-				tableJoin.getJoinPredicate().accept( this );
-			}
-		}
-	}
-
-	public void visitTableBinding(TableReference tableBinding) {
-		appendSql( tableBinding.getTable().getTableExpression() + " as " + tableBinding.getIdentificationVariable() );
+		tableGroup.render( sqlAppender, this );
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Expressions
 
-	public void visitSingularAttributeReference(SingularAttributeReferenceExpression attributeExpression) {
+	@Override
+	public void visitSingularAttributeReference(SingularAttributeReference attributeExpression) {
 		// todo : this needs to operate differently in different contexts (mainly for associations)
 		//		e.g...
 		//			1) In the select clause we should render the complete column bindings for associations
@@ -311,12 +316,12 @@ public class SqlSelectAstToJdbcSelectConverter {
 		renderColumnBindings( attributeExpression.getColumnReferences() );
 	}
 
-	private void renderColumnBindings(List<org.hibernate.sql.ast.tree.spi.from.ColumnReference> columnBindings) {
+	private void renderColumnBindings(List<ColumnReference> columnBindings) {
 		if ( currentlyInPredicate && columnBindings.size() > 1 ) {
 			appendSql( "(" );
 		}
 
-		for ( org.hibernate.sql.ast.tree.spi.from.ColumnReference columnBinding : columnBindings ) {
+		for ( ColumnReference columnBinding : columnBindings ) {
 			appendSql( columnBinding.getColumn().render( columnBinding.getIdentificationVariable() ) );
 		}
 
@@ -325,35 +330,42 @@ public class SqlSelectAstToJdbcSelectConverter {
 		}
 	}
 
-	public void visitEntityExpression(EntityReferenceExpression entityExpression) {
+	@Override
+	public void visitEntityExpression(EntityReference entityExpression) {
 		renderColumnBindings( entityExpression.getColumnReferences() );
 	}
 
-	public void visitPluralAttributeElement(PluralAttributeElementReferenceExpression elementExpression) {
+	@Override
+	public void visitPluralAttributeElement(PluralAttributeElementReference elementExpression) {
 		renderColumnBindings( elementExpression.getColumnReferences() );
 
 	}
 
-	public void visitPluralAttributeIndex(PluralAttributeIndexReferenceExpression indexExpression) {
+	@Override
+	public void visitPluralAttributeIndex(PluralAttributeIndexReference indexExpression) {
 		renderColumnBindings( indexExpression.getColumnReferences() );
 	}
 
+	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
 		appendSql( columnReference.getColumn().render( columnReference.getIdentificationVariable() ) );
 	}
 
+	@Override
 	public void visitAvgFunction(AvgFunction avgFunction) {
 		appendSql( "avg(" );
 		avgFunction.getArgument().accept( this );
 		appendSql( ")" );
 	}
 
+	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		arithmeticExpression.getLeftHandOperand().accept( this );
 		appendSql( arithmeticExpression.getOperation().getOperatorSqlText() );
 		arithmeticExpression.getRightHandOperand().accept( this );
 	}
 
+	@Override
 	public void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
 		appendSql( "case " );
 		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
@@ -368,6 +380,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( " end" );
 	}
 
+	@Override
 	public void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression) {
 		appendSql( "case " );
 		caseSimpleExpression.getFixture().accept( this );
@@ -383,11 +396,13 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( " end" );
 	}
 
+	@Override
 	public void visitColumnBindingExpression(ColumnReference columnReference) {
 		// need to find a better way to do this
 		appendSql( columnReference.getColumn().render( columnReference.getIdentificationVariable() ) );
 	}
 
+	@Override
 	public void visitCoalesceFunction(CoalesceFunction coalesceExpression) {
 		appendSql( "coalesce(" );
 		String separator = "";
@@ -400,6 +415,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( ")" );
 	}
 
+	@Override
 	public void visitConcatFunction(ConcatFunction concatExpression) {
 		appendSql( "concat(" );
 		concatExpression.getLeftHandOperand().accept( this );
@@ -408,6 +424,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( ")" );
 	}
 
+	@Override
 	public void visitCountFunction(CountFunction countFunction) {
 		appendSql( "count(" );
 		if ( countFunction.isDistinct() ) {
@@ -417,6 +434,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( ")" );
 	}
 
+	@Override
 	public void visitCountStarFunction(CountStarFunction function) {
 		appendSql( "count(" );
 		if ( function.isDistinct() ) {
@@ -425,6 +443,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( "*)" );
 	}
 
+	@Override
 	public void visitDynamicInstantiation(DynamicInstantiation<?> dynamicInstantiation) {
 		for ( DynamicInstantiationArgument argument : dynamicInstantiation.getArguments() ) {
 			// renders the SQL selections
@@ -432,6 +451,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		}
 	}
 
+	@Override
 	public void visitMaxFunction(MaxFunction maxFunction) {
 		appendSql( "max(" );
 		if ( maxFunction.isDistinct() ) {
@@ -441,6 +461,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( ")" );
 	}
 
+	@Override
 	public void visitMinFunction(MinFunction minFunction) {
 		appendSql( "min(" );
 		if ( minFunction.isDistinct() ) {
@@ -450,6 +471,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( ")" );
 	}
 
+	@Override
 	public void visitNamedParameter(NamedParameter namedParameter) {
 		parameterBinders.add( namedParameter.getParameterBinder() );
 
@@ -474,6 +496,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		}
 	}
 
+	@Override
 	public void visitNonStandardFunctionExpression(NonStandardFunction functionExpression) {
 		// todo : look up function registry entry (maybe even when building the SQL tree)
 		appendSql( functionExpression.getFunctionName() );
@@ -489,6 +512,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		}
 	}
 
+	@Override
 	public void visitNullifFunction(NullifFunction function) {
 		appendSql( "nullif(" );
 		function.getFirstArgument().accept( this );
@@ -497,6 +521,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( ")" );
 	}
 
+	@Override
 	public void visitPositionalParameter(PositionalParameter positionalParameter) {
 		parameterBinders.add( positionalParameter.getParameterBinder() );
 
@@ -521,6 +546,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		}
 	}
 
+	@Override
 	public void visitQueryLiteral(QueryLiteral queryLiteral) {
 		final QueryLiteralRendering queryLiteralRendering = persistenceContext.getFactory()
 				.getSessionFactoryOptions()
@@ -600,6 +626,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		}
 	}
 
+	@Override
 	public void visitSumFunction(SumFunction sumFunction) {
 		appendSql( "sum(" );
 		if ( sumFunction.isDistinct() ) {
@@ -609,6 +636,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( ")" );
 	}
 
+	@Override
 	public void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression) {
 		if ( unaryOperationExpression.getOperator() == UnaryOperation.Operator.PLUS ) {
 			appendSql( "+" );
@@ -623,6 +651,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Predicates
 
+	@Override
 	public void visitBetweenPredicate(BetweenPredicate betweenPredicate) {
 		betweenPredicate.getExpression().accept( this );
 		if ( betweenPredicate.isNegated() ) {
@@ -634,10 +663,12 @@ public class SqlSelectAstToJdbcSelectConverter {
 		betweenPredicate.getUpperBound().accept( this );
 	}
 
+	@Override
 	public void visitFilterPredicate(FilterPredicate filterPredicate) {
 		throw new NotYetImplementedException();
 	}
 
+	@Override
 	public void visitGroupedPredicate(GroupedPredicate groupedPredicate) {
 		if ( groupedPredicate.isEmpty() ) {
 			return;
@@ -648,6 +679,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( ")" );
 	}
 
+	@Override
 	public void visitInListPredicate(InListPredicate inListPredicate) {
 		inListPredicate.getTestExpression().accept( this );
 		if ( inListPredicate.isNegated() ) {
@@ -668,6 +700,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( ")" );
 	}
 
+	@Override
 	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
 		inSubQueryPredicate.getTestExpression().accept( this );
 		if ( inSubQueryPredicate.isNegated() ) {
@@ -678,6 +711,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( ")" );
 	}
 
+	@Override
 	public void visitJunction(Junction junction) {
 		if ( junction.isEmpty() ) {
 			return;
@@ -691,6 +725,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		}
 	}
 
+	@Override
 	public void visitLikePredicate(LikePredicate likePredicate) {
 		likePredicate.getMatchExpression().accept( this );
 		if ( likePredicate.isNegated() ) {
@@ -704,6 +739,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		}
 	}
 
+	@Override
 	public void visitNegatedPredicate(NegatedPredicate negatedPredicate) {
 		if ( negatedPredicate.isEmpty() ) {
 			return;
@@ -714,6 +750,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		appendSql( ")" );
 	}
 
+	@Override
 	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
 		nullnessPredicate.getExpression().accept( this );
 		if ( nullnessPredicate.isNegated() ) {
@@ -724,6 +761,7 @@ public class SqlSelectAstToJdbcSelectConverter {
 		}
 	}
 
+	@Override
 	public void visitRelationalPredicate(RelationalPredicate relationalPredicate) {
 		relationalPredicate.getLeftHandExpression().accept( this );
 		appendSql( relationalPredicate.getOperator().sqlText() );

@@ -214,6 +214,6 @@ public class FromElementBuilder {
 			log.debug( "Alias registration for implicit FromElement alias : " + alias );
 		}
 
-		aliasRegistry.registerAlias( sqmFrom.getBinding() );
+		aliasRegistry.registerAlias( sqmFrom.getNavigableReference() );
 	}
 }

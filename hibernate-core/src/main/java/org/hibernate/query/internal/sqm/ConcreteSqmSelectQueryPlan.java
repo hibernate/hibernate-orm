@@ -88,7 +88,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 //						sqm.getQuerySpec().getSelectClause().getSelections()
 //								.stream()
 //								.map( selection -> (TupleElement<?>) new TupleElementImpl(
-//										( (SqmTypeImplementor) selection.getExpression().getExpressionType() ).getOrmType().getReturnedClass(),
+//										( (SqmTypeImplementor) selection.asExpression().getExpressionType() ).getOrmType().getReturnedClass(),
 //										selection.getAlias()
 //								) )
 //								.collect( Collectors.toList() )

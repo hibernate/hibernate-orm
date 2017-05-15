@@ -13,7 +13,7 @@ import org.hibernate.persister.common.spi.SingularPersistentAttribute.SingularAt
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.spi.ResolutionContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableSourceReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 
@@ -53,7 +53,7 @@ public class PathResolverJoinPredicateImpl extends PathResolverBasicImpl {
 	}
 
 	protected void validateIntermediateAttributeJoin(
-			SqmNavigableSourceReference sourceBinding,
+			SqmNavigableContainerReference sourceBinding,
 			PersistentAttribute joinedAttribute) {
 		super.validateIntermediateAttributeJoin( sourceBinding, joinedAttribute );
 

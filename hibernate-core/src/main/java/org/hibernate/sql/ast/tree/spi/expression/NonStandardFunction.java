@@ -15,7 +15,6 @@ import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
-import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.type.spi.BasicType;
@@ -79,10 +78,7 @@ public class NonStandardFunction implements ScalarFunction {
 	}
 
 	@Override
-	public Selection createSelection(
-			Expression selectedExpression,
-			String resultVariable,
-			ColumnReferenceResolver columnReferenceResolver) {
+	public Selection createSelection(Expression selectedExpression, String resultVariable) {
 		return new BasicValuedNonNavigableSelection(
 				selectedExpression,
 				resultVariable,

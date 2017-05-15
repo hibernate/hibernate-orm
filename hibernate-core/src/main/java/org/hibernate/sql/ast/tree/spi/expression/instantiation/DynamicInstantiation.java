@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.ast.tree.spi.expression.instantiation;
 
 import java.lang.reflect.Constructor;
@@ -16,6 +15,7 @@ import java.util.Set;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.ArgumentReader;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultAssemblerConstructorImpl;
@@ -26,12 +26,11 @@ import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultDynamicInstantiationImpl;
-import org.hibernate.sql.ast.tree.internal.AbstractSelection;
-import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultGenerator;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.internal.NonNavigableSelectionSupport;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
@@ -119,31 +118,25 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 
 	private QueryResultDynamicInstantiationImpl queryReturn;
 
-
 	@Override
-	public Selection createSelection(
-			Expression selectedExpression,
-			String resultVariable,
-			ColumnReferenceResolver columnReferenceResolver) {
+	public Selection createSelection(Expression selectedExpression, String resultVariable) {
 		assert selectedExpression == this;
 
 		return new DynamicInstantiationSelection(
 				this,
-				resultVariable,
-				columnReferenceResolver
+				resultVariable
 		);
 	}
 
-	private static class DynamicInstantiationSelection extends AbstractSelection {
+	private static class DynamicInstantiationSelection extends NonNavigableSelectionSupport {
 		private final DynamicInstantiationQueryResultGenerator queryResultGenerator;
 
 		public DynamicInstantiationSelection(
 				DynamicInstantiation dynamicInstantiation,
-				String resultVariable,
-				ColumnReferenceResolver columnReferenceResolver) {
+				String resultVariable) {
 			super( dynamicInstantiation, resultVariable );
 
-			this.queryResultGenerator = new DynamicInstantiationQueryResultGenerator( this, columnReferenceResolver );
+			this.queryResultGenerator = new DynamicInstantiationQueryResultGenerator( this );
 		}
 
 		@Override
@@ -159,13 +152,9 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 
 	private static class DynamicInstantiationQueryResultGenerator implements QueryResultGenerator {
 		private final DynamicInstantiationSelection dynamicInstantiationSelection;
-		private final ColumnReferenceResolver columnReferenceResolver;
 
-		public DynamicInstantiationQueryResultGenerator(
-				DynamicInstantiationSelection dynamicInstantiationSelection,
-				ColumnReferenceResolver columnReferenceResolver) {
+		public DynamicInstantiationQueryResultGenerator(DynamicInstantiationSelection dynamicInstantiationSelection) {
 			this.dynamicInstantiationSelection = dynamicInstantiationSelection;
-			this.columnReferenceResolver = columnReferenceResolver;
 		}
 
 		private <T> DynamicInstantiation<T> getDynamicInstantiation() {
@@ -175,7 +164,6 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 
 		@Override
 		public QueryResult generateQueryResult(
-				ColumnReferenceResolver columnReferenceResolver,
 				SqlSelectionResolver sqlSelectionResolver,
 				QueryResultCreationContext creationContext) {
 			boolean areAllArgumentsAliased = true;
@@ -196,7 +184,7 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 						areAnyArgumentsAliased = true;
 					}
 
-					argumentReaders.add( argument.buildArgumentReader( columnReferenceResolver, sqlSelectionResolver, creationContext ) );
+					argumentReaders.add( argument.buildArgumentReader( sqlSelectionResolver, creationContext ) );
 				}
 			}
 

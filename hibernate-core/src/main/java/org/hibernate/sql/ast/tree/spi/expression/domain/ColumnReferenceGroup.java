@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 
 import java.util.List;
 
-import org.hibernate.sql.ast.tree.spi.from.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 
 /**
  * Encapsulates a group of ColumnReference references.

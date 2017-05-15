@@ -6,13 +6,17 @@
  */
 package org.hibernate.persister.entity.spi;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
@@ -36,13 +40,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.persister.collection.spi.CollectionElement;
+import org.hibernate.persister.collection.spi.TableReferenceJoinCollector;
 import org.hibernate.persister.common.NavigableRole;
-import org.hibernate.persister.common.spi.JoinColumnMapping;
-import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
+import org.hibernate.persister.common.spi.ForeignKey;
+import org.hibernate.persister.common.spi.JoinedTableBinding;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableContainer;
-import org.hibernate.persister.common.spi.JoinedTableBinding;
+import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.entity.internal.AbstractIdentifiableType;
 import org.hibernate.persister.entity.internal.IdentifierDescriptorCompositeAggregated;
@@ -54,17 +58,33 @@ import org.hibernate.persister.exec.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.persister.queryable.spi.RootTableGroupContext;
 import org.hibernate.persister.queryable.spi.SqlAliasBaseResolver;
-import org.hibernate.persister.queryable.spi.TableGroupJoinContext;
-import org.hibernate.persister.queryable.spi.TableGroupResolver;
+import org.hibernate.persister.queryable.spi.TableGroupContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.sql.JoinType;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.consume.results.internal.SqlSelectionGroupImpl;
+import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroupEmpty;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultEntityImpl;
+import org.hibernate.sql.ast.produce.result.spi.Fetch;
+import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager.SqlAliasBase;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroup;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
+import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.ast.tree.spi.select.EntityValuedSelectable;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -452,20 +472,20 @@ public abstract class AbstractEntityPersister<T>
 
 
 	@Override
-	public EntityTableGroup applyRootTableGroup(
+	public EntityTableGroup createRootTableGroup(
 			NavigableReferenceInfo navigableReferenceInfo,
 			RootTableGroupContext tableGroupContext,
 			SqlAliasBaseResolver sqlAliasBaseResolver) {
 		assert navigableReferenceInfo.getReferencedNavigable() instanceof EntityValuedNavigable;
 		assert ( (EntityValuedNavigable) navigableReferenceInfo ).getEntityPersister() == this;
+		// it is a root (supposedly)
+		assert navigableReferenceInfo.getNavigableContainerReferenceInfo() == null;
 
 		final EntityTableGroup group = createEntityTableGroup(
 				navigableReferenceInfo,
-				tableGroupContext.getTableSpace(),
+				tableGroupContext,
 				sqlAliasBaseResolver
 		);
-
-		tableGroupContext.getTableSpace().setRootTableGroup( group );
 
 		// todo (6.0) - apply filters - which needs access to Session, or at least its LoadQueryInfluencers
 		//		the filter conditions would be added to the SQL-AST's where-clause via tableGroupContext
@@ -476,66 +496,214 @@ public abstract class AbstractEntityPersister<T>
 	}
 
 	@Override
-	public TableGroupJoin applyTableGroupJoin(
+	public EntityTableGroup createEntityTableGroup(
 			NavigableReferenceInfo navigableReferenceInfo,
-			SqmJoinType joinType,
-			TableGroupJoinContext tableGroupJoinContext,
-			TableGroupResolver tableGroupResolutionContext,
+			TableGroupContext tableGroupContext,
 			SqlAliasBaseResolver sqlAliasBaseResolver) {
-		assert navigableReferenceInfo.getReferencedNavigable() instanceof EntityValuedNavigable;
-		assert navigableReferenceInfo.getReferencedNavigable() instanceof JoinablePersistentAttribute
-				|| navigableReferenceInfo.getReferencedNavigable() instanceof CollectionElement;
-		assert ( (EntityValuedNavigable) navigableReferenceInfo ).getEntityPersister() == this;
-		assert navigableReferenceInfo.getSourceReferenceInfo() != null;
+		final SqlAliasBase sqlAliasBase = sqlAliasBaseResolver.getSqlAliasBase( navigableReferenceInfo );
 
-		final EntityTableGroup group = createEntityTableGroup(
+		final TableReference rootTableReference = resolveRootTableReference( sqlAliasBase );
+
+		final List<TableReferenceJoin> joins = new ArrayList<>(  );
+		resolveTableReferenceJoins( rootTableReference, sqlAliasBase, joins::add );
+
+		return new EntityTableGroup(
+				tableGroupContext.getTableSpace(),
+				this,
 				navigableReferenceInfo,
-				tableGroupJoinContext.getTableSpace(),
-				sqlAliasBaseResolver
-		);
-
-		// todo (6.0) - apply filters - but which again needs access to Session, or at least its LoadQueryInfluencers
-		//		- see above note in #applyTableGroup
-		//		- here, though, we'd apply the predicate to the TableGroupJoin's predicate instead
-
-		// create the join predicate
-		final Predicate joinPredicate;
-		TableGroup lhsTableGroup = tableGroupResolutionContext.resolveTableGroup( navigableReferenceInfo.getSourceReferenceInfo().getUniqueIdentifier() );
-		final List<JoinColumnMapping> joinColumnMappings = ( (JoinablePersistentAttribute<?, ?>) navigableReferenceInfo.getReferencedNavigable() )
-				.getJoinColumnMappings();
-		if ( joinColumnMappings.size() == 1 ) {
-			joinPredicate = createJoinPredicate( joinColumnMappings.get( 0 ), lhsTableGroup, group );
-		}
-		else {
-			joinPredicate = new Junction( Junction.Nature.CONJUNCTION );
-			for ( JoinColumnMapping joinColumnMapping : joinColumnMappings ) {
-				( (Junction) joinPredicate ).add( createJoinPredicate( joinColumnMapping, lhsTableGroup, group ) );
-			}
-		}
-
-		// todo (6.0) : the null here is the join predicate - need to build it
-		//		however the
-		// todo (6.0) : create a "FilterableNavigable" or somesuch
-		TableGroupJoin tableGroupJoin = new TableGroupJoin(
-				joinType,
-				group,
-				joinPredicate
-		);
-
-		tableGroupJoinContext.getTableSpace().addJoinedTableGroup( tableGroupJoin );
-
-		return tableGroupJoin;
-
-	}
-
-	private Predicate createJoinPredicate(
-			JoinColumnMapping joinColumnMapping,
-			TableGroup lhsTableGroup,
-			EntityTableGroup rhsTableGroup) {
-		return new RelationalPredicate(
-				RelationalPredicate.Operator.EQUAL,
-				lhsTableGroup.resolveColumnReference( joinColumnMapping.getLeftHandSideColumn() ),
-				rhsTableGroup.resolveColumnReference( joinColumnMapping.getRightHandSideColumn() )
+				// todo (6.0) :
+				null,
+				rootTableReference,
+				joins
 		);
 	}
+
+	private TableReference resolveRootTableReference(SqlAliasBase sqlAliasBase) {
+		return new TableReference( getRootTable(), sqlAliasBase.generateNewAlias() );
+	}
+
+	private void resolveTableReferenceJoins(
+			TableReference rootTableReference,
+			SqlAliasBase sqlAliasBase,
+			Consumer<TableReferenceJoin> collector) {
+		getSecondaryTableBindings()
+				.stream()
+				.map( joinedTableBinding -> createTableReferenceJoin( joinedTableBinding, rootTableReference, sqlAliasBase ) )
+				.forEach( collector );
+	}
+
+	private TableReferenceJoin createTableReferenceJoin(
+			JoinedTableBinding joinedTableBinding,
+			TableReference rootTableReference,
+			SqlAliasBase sqlAliasBase) {
+		final TableReference joinedTableReference = new TableReference(
+				joinedTableBinding.getTargetTable(),
+				sqlAliasBase.generateNewAlias()
+		);
+
+		return new TableReferenceJoin(
+				joinedTableBinding.isOptional() ? SqmJoinType.LEFT : SqmJoinType.INNER,
+				joinedTableReference,
+				generateJoinPredicate( rootTableReference, joinedTableReference, joinedTableBinding.getJoinPredicateColumnMappings() )
+		);
+	}
+
+	private Predicate generateJoinPredicate(
+			TableReference rootTableReference,
+			TableReference joinedTableReference,
+			ForeignKey.ColumnMappings joinPredicateColumnMappings) {
+		assert rootTableReference.getTable() == joinPredicateColumnMappings.getTargetTable();
+		assert joinedTableReference.getTable() == joinPredicateColumnMappings.getReferringTable();
+		assert !joinPredicateColumnMappings.getColumnMappings().isEmpty();
+
+		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );
+
+		for ( ForeignKey.ColumnMapping columnMapping : joinPredicateColumnMappings.getColumnMappings() ) {
+			conjunction.add(
+					new RelationalPredicate(
+							RelationalPredicate.Operator.EQUAL,
+							new ColumnReference( columnMapping.getTargetColumn(), rootTableReference ),
+							new ColumnReference( columnMapping.getReferringColumn(), joinedTableReference )
+					)
+			);
+		}
+
+		return conjunction;
+	}
+
+	@Override
+	public void applyTableReferenceJoins(
+			TableReference lhs,
+			JoinType joinType,
+			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
+			TableReferenceJoinCollector collector) {
+		TableReference root = resolveRootTableReference( sqlAliasBase );
+		collector.addRoot( root );
+		resolveTableReferenceJoins( root, sqlAliasBase, collector::collectTableReferenceJoin );
+	}
+
+
+//	public TableGroupJoin applyTableGroupJoin(
+//			NavigableReferenceInfo navigableReferenceInfo,
+//			SqmJoinType joinType,
+//			TableGroupJoinContext tableGroupJoinContext,
+//			TableGroupResolver tableGroupResolutionContext,
+//			SqlAliasBaseResolver sqlAliasBaseResolver) {
+//		assert navigableReferenceInfo.getReferencedNavigable() instanceof EntityValuedNavigable;
+//		assert navigableReferenceInfo.getReferencedNavigable() instanceof JoinablePersistentAttribute
+//				|| navigableReferenceInfo.getReferencedNavigable() instanceof CollectionElement;
+//		assert ( (EntityValuedNavigable) navigableReferenceInfo ).getEntityPersister() == this;
+//		assert navigableReferenceInfo.getNavigableContainerReferenceInfo() != null;
+//
+//		final EntityTableGroup group = createEntityTableGroup(
+//				navigableReferenceInfo,
+//				tableGroupJoinContext.getTableSpace(),
+//				sqlAliasBaseResolver
+//		);
+//
+//		// todo (6.0) - apply filters - but which again needs access to Session, or at least its LoadQueryInfluencers
+//		//		- see above note in #applyTableGroup
+//		//		- here, though, we'd apply the predicate to the TableGroupJoin's predicate instead
+//
+//		// create the join predicate
+//		final Predicate joinPredicate;
+//		TableGroup lhsTableGroup = tableGroupResolutionContext.resolveTableGroup( navigableReferenceInfo.getNavigableContainerReferenceInfo().getUniqueIdentifier() );
+//		final List<JoinColumnMapping> joinColumnMappings = ( (JoinablePersistentAttribute<?, ?>) navigableReferenceInfo.getReferencedNavigable() )
+//				.getJoinColumnMappings();
+//		if ( joinColumnMappings.size() == 1 ) {
+//			joinPredicate = createJoinPredicate( joinColumnMappings.get( 0 ), lhsTableGroup, group );
+//		}
+//		else {
+//			joinPredicate = new Junction( Junction.Nature.CONJUNCTION );
+//			for ( JoinColumnMapping joinColumnMapping : joinColumnMappings ) {
+//				( (Junction) joinPredicate ).add( createJoinPredicate( joinColumnMapping, lhsTableGroup, group ) );
+//			}
+//		}
+//
+//		// todo (6.0) : the null here is the join predicate - need to build it
+//		//		however the
+//		// todo (6.0) : create a "FilterableNavigable" or somesuch
+//		TableGroupJoin tableGroupJoin = new TableGroupJoin(
+//				joinType,
+//				group,
+//				joinPredicate
+//		);
+//
+//		tableGroupJoinContext.getTableSpace().addJoinedTableGroup( tableGroupJoin );
+//
+//		return tableGroupJoin;
+//
+//	}
+//
+//	private Predicate createJoinPredicate(
+//			JoinColumnMapping joinColumnMapping,
+//			TableGroup lhsTableGroup,
+//			EntityTableGroup rhsTableGroup) {
+//		return new RelationalPredicate(
+//				RelationalPredicate.Operator.EQUAL,
+//				lhsTableGroup.resolveColumnReference( joinColumnMapping.getLeftHandSideColumn() ),
+//				rhsTableGroup.resolveColumnReference( joinColumnMapping.getRightHandSideColumn() )
+//		);
+//	}
+
+	@Override
+	public QueryResult generateReturn(
+			NavigableReference selectedExpression,
+			String resultVariable,
+			ColumnReferenceSource columnReferenceSource,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		return new QueryResultEntityImpl(
+				selectedExpression,
+				this,
+				resultVariable,
+				buildSqlSelectionGroupMap( creationContext, selectedExpression ),
+				selectedExpression.getNavigablePath(),
+				selectedExpression.getContributedColumnReferenceSource()
+		);
+	}
+
+	@Override
+	public Fetch generateFetch(
+			FetchParent fetchParent,
+			NavigableReference selectedExpression,
+			String resultVariable,
+			ColumnReferenceSource columnReferenceResolver,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		throw new NotYetImplementedException(  );
+	}
+
+	private Map<PersistentAttribute, SqlSelectionGroup> buildSqlSelectionGroupMap(
+			QueryResultCreationContext resolutionContext,
+			NavigableReference selectedExpression) {
+		final Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap = new HashMap<>();
+
+		final LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> columnBindingGroupMap =
+				( (EntityValuedSelectable) selectedExpression.getSelectable() ).getColumnReferenceGroupMap();
+
+		for ( Map.Entry<PersistentAttribute, ColumnReferenceGroup> entry : columnBindingGroupMap.entrySet() ) {
+			sqlSelectionGroupMap.put(
+					entry.getKey(),
+					toSqlSelectionGroup( entry.getValue(), resolutionContext )
+			);
+		}
+
+		return sqlSelectionGroupMap;
+	}
+
+	private SqlSelectionGroup toSqlSelectionGroup(ColumnReferenceGroup columnReferenceGroup, QueryResultCreationContext resolutionContext) {
+		if ( columnReferenceGroup.getColumnReferences().isEmpty() ) {
+			return SqlSelectionGroupEmpty.INSTANCE;
+		}
+
+		final SqlSelectionResolver sqlSelectionResolver = null;
+
+		final SqlSelectionGroupImpl sqlSelectionGroup = new SqlSelectionGroupImpl();
+		for ( ColumnReference columnReference : columnReferenceGroup.getColumnReferences() ) {
+			sqlSelectionGroup.addSqlSelection( sqlSelectionResolver.resolveSqlSelection( columnReference ) );
+		}
+		return sqlSelectionGroup;
+	}
+
 }

@@ -12,7 +12,7 @@ import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 /**
  * @author Steve Ebersole
  */
-public interface SqmEmbeddableTypedReference extends SqmNavigableSourceReference, SqmFromExporter {
+public interface SqmEmbeddableTypedReference extends SqmNavigableContainerReference, SqmFromExporter {
 	@Override
 	EmbeddedValuedNavigable getReferencedNavigable();
 }

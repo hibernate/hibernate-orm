@@ -20,4 +20,6 @@ public interface QueryResultCreationContext {
 	SessionFactoryImplementor getSessionFactory();
 
 	NavigablePath currentNavigablePath();
+
+	boolean shouldCreateShallowEntityResult();
 }

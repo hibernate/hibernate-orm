@@ -15,10 +15,16 @@ import org.hibernate.sql.ast.tree.spi.select.Selectable;
  */
 public interface Expression {
 	/**
-	 * Access the type for this expression.
+	 * Access the type for this expression.  See {@link ExpressableType}
+	 * for more detailed description.
 	 */
 	ExpressableType getType();
 
+	/**
+	 * For expressions that may be part of the SELECT clause, return the
+	 * "selectable" representation of that expression.  Again, see
+	 * {@link Selectable} for mode detailed description
+	 */
 	Selectable getSelectable();
 
 	void accept(SqlSelectAstToJdbcSelectConverter walker);

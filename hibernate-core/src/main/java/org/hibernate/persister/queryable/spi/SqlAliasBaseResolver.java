@@ -6,9 +6,11 @@
  */
 package org.hibernate.persister.queryable.spi;
 
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+
 /**
  * @author Steve Ebersole
  */
 public interface SqlAliasBaseResolver {
-	String getSqlAliasBase(NavigableReferenceInfo navigableReferenceInfo);
+	SqlAliasBaseManager.SqlAliasBase getSqlAliasBase(NavigableReferenceInfo navigableReferenceInfo);
 }

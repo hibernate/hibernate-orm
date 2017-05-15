@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.tree.expression.domain;
 import java.util.Collection;
 
 import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -31,7 +31,7 @@ public interface SqmNavigableReference extends SqmExpression, NavigableReference
 	/**
 	 * Get the Navigable reference that is the source ("lhs") of this reference.
 	 */
-	SqmNavigableSourceReference getSourceReference();
+	SqmNavigableContainerReference getSourceReference();
 
 	/**
 	 * The Navigable represented by this reference.
@@ -47,7 +47,7 @@ public interface SqmNavigableReference extends SqmExpression, NavigableReference
 
 	// JPA downcast (TREAT .. AS ..) support
 
-	SqmNavigableReference treatAs(EntityValuedExpressableType target);
+	SqmNavigableReference treatAs(EntityPersister target);
 
 	void addDowncast(SqmDowncast downcast);
 

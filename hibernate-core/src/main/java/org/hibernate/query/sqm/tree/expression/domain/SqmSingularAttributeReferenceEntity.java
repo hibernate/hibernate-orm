@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 public class SqmSingularAttributeReferenceEntity extends AbstractSqmSingularAttributeReference implements
 		SqmEntityTypedReference {
 	public SqmSingularAttributeReferenceEntity(
-			SqmNavigableSourceReference domainReferenceBinding,
+			SqmNavigableContainerReference domainReferenceBinding,
 			SingularPersistentAttributeEntity boundNavigable) {
 		super( domainReferenceBinding, boundNavigable );
 	}

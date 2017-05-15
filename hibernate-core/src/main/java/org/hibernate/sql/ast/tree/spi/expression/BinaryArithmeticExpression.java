@@ -7,15 +7,14 @@
 
 package org.hibernate.sql.ast.tree.spi.expression;
 
+import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
-import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
-import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
@@ -25,13 +24,13 @@ public class BinaryArithmeticExpression
 	private final Operation operation;
 	private final Expression lhsOperand;
 	private final Expression rhsOperand;
-	private final BasicType resultType;
+	private final BasicValuedExpressableType resultType;
 
 	public BinaryArithmeticExpression(
 			Operation operation,
 			Expression lhsOperand,
 			Expression rhsOperand,
-			BasicType resultType) {
+			BasicValuedExpressableType resultType) {
 		this.operation = operation;
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
@@ -39,7 +38,7 @@ public class BinaryArithmeticExpression
 	}
 
 	@Override
-	public BasicType getType() {
+	public BasicValuedExpressableType getType() {
 		return resultType;
 	}
 
@@ -54,20 +53,21 @@ public class BinaryArithmeticExpression
 	}
 
 	@Override
+	public SqlSelectionReader getSqlSelectionReader() {
+		return new SqlSelectionReaderImpl( getType() );
+	}
+
+	@Override
 	public Selection createSelection(
 			Expression selectedExpression,
-			String resultVariable,
-			ColumnReferenceResolver columnReferenceResolver) {
+			String resultVariable) {
+		assert selectedExpression == this;
+
 		return new BasicValuedNonNavigableSelection(
 				selectedExpression,
 				resultVariable,
 				this
 		);
-	}
-
-	@Override
-	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( getType() );
 	}
 
 	public enum Operation {

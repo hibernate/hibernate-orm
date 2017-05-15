@@ -9,7 +9,6 @@ package org.hibernate.persister.common.internal;
 
 import java.util.List;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
@@ -21,16 +20,25 @@ import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.EntityValuedNavigable;
+import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
+import org.hibernate.persister.queryable.spi.SqlAliasBaseResolver;
+import org.hibernate.persister.queryable.spi.JoinedTableGroupContext;
+import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
-import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.internal.NavigableSelection;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.EntityType;
 
 
@@ -152,14 +160,6 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public List<JoinColumnMapping> getJoinColumnMappings() {
-		if ( joinColumnMappings == null ) {
-			this.joinColumnMappings = getContainer().resolveJoinColumnMappings( this );
-		}
-		return joinColumnMappings;
-	}
-
-	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}
@@ -170,25 +170,45 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public TableGroup buildTableGroup(
-			TableSpace tableSpace,
-			SqlAliasBaseManager sqlAliasBaseManager,
-			FromClauseIndex fromClauseIndex) {
-		throw new NotYetImplementedException(  );
+	public Selection createSelection(Expression selectedExpression, String resultVariable) {
+		assert selectedExpression instanceof NavigableReference;
+		return new NavigableSelection( (NavigableReference) selectedExpression, resultVariable );
 	}
 
 	@Override
 	public QueryResult generateReturn(
-			QueryResultCreationContext returnResolutionContext,
-			TableGroup tableGroup) {
-		throw new NotYetImplementedException(  );
+			NavigableReference selectedExpression,
+			String resultVariable,
+			ColumnReferenceSource columnReferenceSource,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		return entityPersister.generateReturn(
+				selectedExpression,
+				resultVariable,
+				columnReferenceSource,
+				sqlSelectionResolver,
+				creationContext
+		);
 	}
 
 	@Override
 	public Fetch generateFetch(
-			QueryResultCreationContext returnResolutionContext,
-			TableGroup tableGroup,
-			FetchParent fetchParent) {
+			FetchParent fetchParent,
+			NavigableReference selectedExpression,
+			String resultVariable,
+			ColumnReferenceSource columnReferenceResolver,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public TableGroupJoin applyTableGroupJoin(
+			NavigableReferenceInfo navigableReferenceInfo,
+			SqmJoinType joinType,
+			JoinedTableGroupContext tableGroupJoinContext,
+			TableGroupResolver tableGroupResolutionContext,
+			SqlAliasBaseResolver sqlAliasBaseResolver) {
 		throw new NotYetImplementedException(  );
 	}
 }

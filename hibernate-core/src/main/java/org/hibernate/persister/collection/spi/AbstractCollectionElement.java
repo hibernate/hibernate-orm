@@ -10,6 +10,10 @@ import java.util.List;
 
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.ForeignKey;
+import org.hibernate.sql.JoinType;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -47,7 +51,6 @@ public abstract class AbstractCollectionElement<J,T extends Type<J>> implements 
 		return getOrmType().getName();
 	}
 
-	@Override
 	public T getOrmType() {
 		return ormType;
 	}
@@ -65,5 +68,13 @@ public abstract class AbstractCollectionElement<J,T extends Type<J>> implements 
 	@Override
 	public String asLoggableText() {
 		return NAVIGABLE_NAME;
+	}
+
+	@Override
+	public void applyTableReferenceJoins(
+			JoinType joinType,
+			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
+			TableReferenceJoinCollector collector) {
+		// only relevant for ONE-TO-MANY and MANY-TO-MANY - noop in the general case
 	}
 }

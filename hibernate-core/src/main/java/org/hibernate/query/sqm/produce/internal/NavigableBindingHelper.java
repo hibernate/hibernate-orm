@@ -50,7 +50,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceBasic;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceEmbeddable;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceEntity;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableSourceReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
@@ -81,7 +81,7 @@ public class NavigableBindingHelper {
 		return exporter.getExportedFromElement() == null ? null : exporter.getExportedFromElement() .getContainingSpace();
 	}
 
-	public static SqmNavigableReference createNavigableBinding(SqmNavigableSourceReference source, Navigable navigable) {
+	public static SqmNavigableReference createNavigableBinding(SqmNavigableContainerReference source, Navigable navigable) {
 		if ( navigable instanceof IdentifierDescriptor ) {
 			assert source instanceof SqmEntityTypedReference;
 			return createEntityIdentiferBinding( (SqmEntityTypedReference) source, (IdentifierDescriptor) navigable );
@@ -119,14 +119,14 @@ public class NavigableBindingHelper {
 	}
 
 	private static SqmPluralAttributeReference createPluralAttributeBinding(
-			SqmNavigableSourceReference lhs,
+			SqmNavigableContainerReference lhs,
 			PluralPersistentAttribute pluralAttribute) {
 		return new SqmPluralAttributeReference( lhs, pluralAttribute );
 	}
 
 
 	public static SqmSingularAttributeReference createSingularAttributeBinding(
-			SqmNavigableSourceReference sourceBinding,
+			SqmNavigableContainerReference sourceBinding,
 			SingularPersistentAttribute attribute) {
 		switch ( attribute.getAttributeTypeClassification() ) {
 			case BASIC: {
@@ -155,7 +155,7 @@ public class NavigableBindingHelper {
 	}
 
 	public static SqmCollectionElementReference createCollectionElementBinding(
-			SqmNavigableSourceReference source,
+			SqmNavigableContainerReference source,
 			CollectionElement elementDescriptor) {
 		assert source instanceof SqmPluralAttributeReference;
 		final SqmPluralAttributeReference pluralAttributeBinding = (SqmPluralAttributeReference) source;
@@ -185,7 +185,7 @@ public class NavigableBindingHelper {
 
 	public static SqmCollectionElementReference createCollectionElementBinding(
 			CollectionPartBindingType bindingType,
-			SqmNavigableSourceReference source,
+			SqmNavigableContainerReference source,
 			CollectionElement elementDescriptor) {
 		assert source instanceof SqmPluralAttributeReference;
 		final SqmPluralAttributeReference pluralAttributeBinding = (SqmPluralAttributeReference) source;
@@ -238,7 +238,7 @@ public class NavigableBindingHelper {
 	}
 
 	public static SqmCollectionIndexReference createCollectionIndexBinding(
-			SqmNavigableSourceReference source,
+			SqmNavigableContainerReference source,
 			CollectionIndex indexDescriptor) {
 		assert source instanceof SqmPluralAttributeReference;
 		final SqmPluralAttributeReference pluralAttributeBinding = (SqmPluralAttributeReference) source;
@@ -263,7 +263,7 @@ public class NavigableBindingHelper {
 
 	public static SqmCollectionIndexReference createCollectionIndexBinding(
 			CollectionPartBindingType bindingType,
-			SqmNavigableSourceReference source,
+			SqmNavigableContainerReference source,
 			CollectionIndex indexDescriptor) {
 		assert source instanceof SqmPluralAttributeReference;
 		final SqmPluralAttributeReference pluralAttributeBinding = (SqmPluralAttributeReference) source;

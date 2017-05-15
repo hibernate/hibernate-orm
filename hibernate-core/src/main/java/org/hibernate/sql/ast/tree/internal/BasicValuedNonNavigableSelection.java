@@ -17,13 +17,8 @@ import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
  *
  * @author Steve Ebersole
  */
-public class BasicValuedNonNavigableSelection extends AbstractBasicValuedSelection {
-	public BasicValuedNonNavigableSelection(
-			Expression selectedExpression,
-			String resultVariable,
-			QueryResultGenerator queryResultGenerator) {
-		super( selectedExpression, resultVariable, queryResultGenerator );
-	}
+public class BasicValuedNonNavigableSelection extends NonNavigableSelectionSupport {
+	private final QueryResultGenerator queryResultGenerator;
 
 	public BasicValuedNonNavigableSelection(
 			Expression selectedExpression,
@@ -32,12 +27,25 @@ public class BasicValuedNonNavigableSelection extends AbstractBasicValuedSelecti
 		this(
 				selectedExpression,
 				resultVariable,
-				(columnReferenceResolver, sqlSelectionResolver, creationContext) -> new QueryResultScalarImpl(
+				(sqlSelectionResolver, creationContext) -> new QueryResultScalarImpl(
 						selectedExpression,
 						sqlSelectionResolver.resolveSqlSelection( sqlSelectable ),
 						resultVariable,
 						(BasicValuedExpressableType) selectedExpression.getType()
 				)
 		);
+	}
+
+	public BasicValuedNonNavigableSelection(
+			Expression selectedExpression,
+			String resultVariable,
+			QueryResultGenerator queryResultGenerator) {
+		super( selectedExpression, resultVariable );
+		this.queryResultGenerator = queryResultGenerator;
+	}
+
+	@Override
+	protected QueryResultGenerator getQueryResultGenerator() {
+		return queryResultGenerator;
 	}
 }

@@ -9,15 +9,17 @@ package org.hibernate.persister.collection.spi;
 import java.util.List;
 
 import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.common.spi.ForeignKey;
 import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.persister.common.spi.TypeExporter;
+import org.hibernate.sql.JoinType;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
-public interface CollectionIndex<J,T extends Type<J>>
-		extends TypeExporter<J>, Navigable<J> {
+public interface CollectionIndex<J,T extends Type<J>> extends Navigable<J> {
 
 	String NAVIGABLE_NAME = "{index}";
 
@@ -31,8 +33,10 @@ public interface CollectionIndex<J,T extends Type<J>>
 
 	IndexClassification getClassification();
 
-	List<Column> getColumns();
+	void applyTableReferenceJoins(
+			JoinType joinType,
+			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
+			TableReferenceJoinCollector collector);
 
-	@Override
-	T getOrmType();
+	List<Column> getColumns();
 }

@@ -6,26 +6,35 @@
  */
 package org.hibernate.sql.ast.tree.spi.from;
 
-import java.util.List;
-
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Table;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.consume.spi.SqlAppender;
+import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReferenceExpression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**
  * Group together related {@link TableReference} references (generally related by EntityPersister or CollectionPersister),
  *
  * @author Steve Ebersole
  */
-public interface TableGroup extends ColumnReferenceSource, NavigableReferenceExpression {
+public interface TableGroup extends ColumnReferenceSource {
+	/**
+	 * Get the TableSpace that contains this group.  Allows walking "up"
+	 * the tree.
+	 */
 	TableSpace getTableSpace();
-	String getUid();
-	String getAliasBase();
-	TableReference getRootTableReference();
-	List<TableReferenceJoin> getTableReferenceJoins();
 
-	TableReference locateTableReference(Table table);
-	ColumnReference resolveColumnReference(Column column);
+	/**
+	 * Retrieve the Expression representation of this TableGroup.  This
+	 * Expression can then be used in other clauses to refer to this
+	 * TableGroup
+	 */
+	NavigableReference asExpression();
+
+	/**
+	 * Perform rendering of this group into the passed SQL appender.
+	 */
+	void render(SqlAppender sqlAppender, SqlSelectAstWalker walker);
 }

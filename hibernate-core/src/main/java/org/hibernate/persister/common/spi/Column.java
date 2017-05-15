@@ -22,6 +22,8 @@ public interface Column {
 
 	// todo : nullable, size, etc
 
+	// todo : org.hibernate.annotations.ColumnTransformer#read and org.hibernate.annotations.ColumnTransformer#write?
+
 	String toLoggableString();
 
 	String render(String identificationVariable);

@@ -11,7 +11,6 @@ package org.hibernate.sql.ast.produce.result.spi;
  */
 public interface QueryResultGenerator {
 	QueryResult generateQueryResult(
-			ColumnReferenceResolver columnReferenceResolver,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext);
 }

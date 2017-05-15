@@ -11,8 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.persister.queryable.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.internal.NavigableBindingHelper;
@@ -43,8 +43,8 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SubQuerySqmExpression;
 import org.hibernate.query.sqm.tree.expression.UnaryOperationSqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableSourceReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.expression.function.AvgFunctionSqmExpression;
@@ -99,7 +99,7 @@ public class QuerySplitter {
 		// root.  Use that restriction to locate the unmapped polymorphic reference
 		SqmRoot unmappedPolymorphicReference = null;
 		for ( SqmFromElementSpace fromElementSpace : statement.getQuerySpec().getFromClause().getFromElementSpaces() ) {
-			if ( PolymorphicEntityValuedExpressableType.class.isInstance( fromElementSpace.getRoot().getBinding().getReferencedNavigable() ) ) {
+			if ( PolymorphicEntityValuedExpressableType.class.isInstance( fromElementSpace.getRoot().getNavigableReference().getReferencedNavigable() ) ) {
 				unmappedPolymorphicReference = fromElementSpace.getRoot();
 			}
 		}
@@ -108,7 +108,7 @@ public class QuerySplitter {
 			return new SqmSelectStatement[] { statement };
 		}
 
-		final PolymorphicEntityValuedExpressableType<?> unmappedPolymorphicDescriptor = (PolymorphicEntityValuedExpressableType) unmappedPolymorphicReference.getBinding().getReferencedNavigable();
+		final PolymorphicEntityValuedExpressableType<?> unmappedPolymorphicDescriptor = (PolymorphicEntityValuedExpressableType) unmappedPolymorphicReference.getNavigableReference().getReferencedNavigable();
 		final SqmSelectStatement[] expanded = new SqmSelectStatement[ unmappedPolymorphicDescriptor.getImplementors().size() ];
 
 		int i = -1;
@@ -128,7 +128,7 @@ public class QuerySplitter {
 	@SuppressWarnings("unchecked")
 	private static class UnmappedPolymorphismReplacer extends BaseSemanticQueryWalker {
 		private final SqmRoot unmappedPolymorphicFromElement;
-		private final EntityValuedExpressableType mappedDescriptor;
+		private final EntityPersister mappedDescriptor;
 
 		private Map<SqmFrom,SqmFrom> sqmFromSqmCopyMap = new HashMap<>();
 		private Map<SqmNavigableReference, SqmNavigableReference> navigableBindingCopyMap = new HashMap<>();
@@ -136,7 +136,7 @@ public class QuerySplitter {
 		private UnmappedPolymorphismReplacer(
 				SqmSelectStatement selectStatement,
 				SqmRoot unmappedPolymorphicFromElement,
-				EntityValuedExpressableType mappedDescriptor) {
+				EntityPersister mappedDescriptor) {
 			this.unmappedPolymorphicFromElement = unmappedPolymorphicFromElement;
 			this.mappedDescriptor = mappedDescriptor;
 		}
@@ -228,7 +228,7 @@ public class QuerySplitter {
 
 		@Override
 		public SqmRoot visitRootEntityFromElement(SqmRoot rootEntityFromElement) {
-			final SqmNavigableSourceReference existingCopy = (SqmNavigableSourceReference) navigableBindingCopyMap.get( rootEntityFromElement.getBinding() );
+			final SqmNavigableContainerReference existingCopy = (SqmNavigableContainerReference) navigableBindingCopyMap.get( rootEntityFromElement.getNavigableReference() );
 			if ( existingCopy != null ) {
 				return (SqmRoot) existingCopy.getExportedFromElement();
 			}
@@ -254,16 +254,16 @@ public class QuerySplitter {
 						currentFromElementSpaceCopy,
 						rootEntityFromElement.getUniqueIdentifier(),
 						rootEntityFromElement.getIdentificationVariable(),
-						rootEntityFromElement.getBinding().getReferencedNavigable()
+						rootEntityFromElement.getNavigableReference().getReferencedNavigable().getEntityPersister()
 				);
 			}
-			navigableBindingCopyMap.put( rootEntityFromElement.getBinding(), copy.getBinding() );
+			navigableBindingCopyMap.put( rootEntityFromElement.getNavigableReference(), copy.getNavigableReference() );
 			return copy;
 		}
 
 		@Override
 		public SqmCrossJoin visitCrossJoinedFromElement(SqmCrossJoin joinedFromElement) {
-			final SqmNavigableSourceReference existingCopy = (SqmNavigableSourceReference) navigableBindingCopyMap.get( joinedFromElement.getBinding() );
+			final SqmNavigableContainerReference existingCopy = (SqmNavigableContainerReference) navigableBindingCopyMap.get( joinedFromElement.getNavigableReference() );
 			if ( existingCopy != null ) {
 				return (SqmCrossJoin) existingCopy.getExportedFromElement();
 			}
@@ -276,15 +276,15 @@ public class QuerySplitter {
 					currentFromElementSpaceCopy,
 					joinedFromElement.getUniqueIdentifier(),
 					joinedFromElement.getIdentificationVariable(),
-					joinedFromElement.getBinding().getReferencedNavigable()
+					joinedFromElement.getNavigableReference().getReferencedNavigable().getEntityPersister()
 			);
-			navigableBindingCopyMap.put( joinedFromElement.getBinding(), copy.getBinding() );
+			navigableBindingCopyMap.put( joinedFromElement.getNavigableReference(), copy.getNavigableReference() );
 			return copy;
 		}
 
 		@Override
 		public SqmEntityJoin visitQualifiedEntityJoinFromElement(SqmEntityJoin joinedFromElement) {
-			final SqmNavigableSourceReference existingCopy = (SqmNavigableSourceReference) navigableBindingCopyMap.get( joinedFromElement.getBinding() );
+			final SqmNavigableContainerReference existingCopy = (SqmNavigableContainerReference) navigableBindingCopyMap.get( joinedFromElement.getNavigableReference() );
 			if ( existingCopy != null ) {
 				return (SqmEntityJoin) existingCopy.getExportedFromElement();
 			}
@@ -297,16 +297,16 @@ public class QuerySplitter {
 					currentFromElementSpaceCopy,
 					joinedFromElement.getUniqueIdentifier(),
 					joinedFromElement.getIdentificationVariable(),
-					joinedFromElement.getBinding().getReferencedNavigable(),
+					joinedFromElement.getNavigableReference().getReferencedNavigable().getEntityPersister(),
 					joinedFromElement.getJoinType()
 			);
-			navigableBindingCopyMap.put( joinedFromElement.getBinding(), copy.getBinding() );
+			navigableBindingCopyMap.put( joinedFromElement.getNavigableReference(), copy.getNavigableReference() );
 			return copy;
 		}
 
 		@Override
 		public SqmAttributeJoin visitQualifiedAttributeJoinFromElement(SqmAttributeJoin joinedFromElement) {
-			final SqmSingularAttributeReference existingCopy = (SqmSingularAttributeReference) navigableBindingCopyMap.get( joinedFromElement.getBinding() );
+			final SqmSingularAttributeReference existingCopy = (SqmSingularAttributeReference) navigableBindingCopyMap.get( joinedFromElement.getNavigableReference() );
 			if ( existingCopy != null ) {
 				return (SqmAttributeJoin) existingCopy.getExportedFromElement();
 			}
@@ -315,7 +315,7 @@ public class QuerySplitter {
 				throw new ParsingException( "Current FromElementSpace copy was null" );
 			}
 
-			if ( joinedFromElement.getAttributeBinding().getExportedFromElement() == null ) {
+			if ( joinedFromElement.getAttributeReference().getExportedFromElement() == null ) {
 				throw new ParsingException( "Could not determine attribute join's LHS for copy" );
 			}
 
@@ -323,14 +323,14 @@ public class QuerySplitter {
 		}
 
 		private SqmAttributeJoin makeCopy(SqmAttributeJoin fromElement) {
-			assert fromElement.getAttributeBinding().getSourceReference() != null;
+			assert fromElement.getAttributeReference().getSourceReference() != null;
 
 			if ( fromElement == null ) {
 				return null;
 			}
 
-			final SqmNavigableSourceReference sourceBindingCopy = (SqmNavigableSourceReference) navigableBindingCopyMap.get(
-					fromElement.getAttributeBinding().getSourceReference()
+			final SqmNavigableContainerReference sourceBindingCopy = (SqmNavigableContainerReference) navigableBindingCopyMap.get(
+					fromElement.getAttributeReference().getSourceReference()
 			);
 
 			if ( sourceBindingCopy == null ) {
@@ -341,7 +341,7 @@ public class QuerySplitter {
 
 			final SqmAttributeReference attributeBindingCopy = (SqmAttributeReference) NavigableBindingHelper.createNavigableBinding(
 					sourceBindingCopy,
-					fromElement.getAttributeBinding().getReferencedNavigable()
+					fromElement.getAttributeReference().getReferencedNavigable()
 			);
 
 			final SqmAttributeJoin copy = new SqmAttributeJoin(
@@ -349,11 +349,11 @@ public class QuerySplitter {
 					attributeBindingCopy,
 					fromElement.getUniqueIdentifier(),
 					fromElement.getIdentificationVariable(),
-					fromElement.getIntrinsicSubclassIndicator(),
+					fromElement.getIntrinsicSubclassEntityPersister(),
 					fromElement.getJoinType(),
 					fromElement.isFetched()
 			);
-			navigableBindingCopyMap.put( fromElement.getAttributeBinding(), copy.getAttributeBinding() );
+			navigableBindingCopyMap.put( fromElement.getAttributeReference(), copy.getAttributeReference() );
 			return copy;
 		}
 
@@ -512,7 +512,7 @@ public class QuerySplitter {
 			assert !navigableBindingCopyMap.containsKey( attributeReference );
 
 			final SqmAttributeJoin originalJoin = (SqmAttributeJoin) sqmFromSqmCopyMap.get( attributeReference.getExportedFromElement() );
-			final SqmNavigableSourceReference sourceBindingCopy = (SqmNavigableSourceReference) navigableBindingCopyMap.get(
+			final SqmNavigableContainerReference sourceBindingCopy = (SqmNavigableContainerReference) navigableBindingCopyMap.get(
 					attributeReference.getSourceReference()
 			);
 
@@ -522,7 +522,7 @@ public class QuerySplitter {
 
 			final SqmSingularAttributeReference attributeBindingCopy = NavigableBindingHelper.createSingularAttributeBinding(
 					sourceBindingCopy,
-					attributeReference.getReferencedNavigable()
+					(SingularPersistentAttribute) attributeReference.getReferencedNavigable()
 			);
 			navigableBindingCopyMap.put( attributeReference, attributeBindingCopy );
 			return attributeBindingCopy;

@@ -38,12 +38,12 @@ public class OrderByResolutionContext implements ResolutionContext, FromElementL
 	public SqmNavigableReference findNavigableBindingByIdentificationVariable(String identificationVariable) {
 		for ( SqmFromElementSpace fromElementSpace : fromClause.getFromElementSpaces() ) {
 			if ( fromElementSpace.getRoot().getIdentificationVariable().equals( identificationVariable ) ) {
-				return fromElementSpace.getRoot().getBinding();
+				return fromElementSpace.getRoot().getNavigableReference();
 			}
 
 			for ( SqmJoin joinedFromElement : fromElementSpace.getJoins() ) {
 				if ( joinedFromElement.getIdentificationVariable().equals( identificationVariable ) ) {
-					return joinedFromElement.getBinding();
+					return joinedFromElement.getNavigableReference();
 				}
 			}
 		}
@@ -56,12 +56,12 @@ public class OrderByResolutionContext implements ResolutionContext, FromElementL
 	public SqmNavigableReference findNavigableBindingExposingAttribute(String attributeName) {
 		for ( SqmFromElementSpace fromElementSpace : fromClause.getFromElementSpaces() ) {
 			if ( exposesAttribute( fromElementSpace.getRoot(), attributeName ) ) {
-				return fromElementSpace.getRoot().getBinding();
+				return fromElementSpace.getRoot().getNavigableReference();
 			}
 
 			for ( SqmJoin joinedFromElement : fromElementSpace.getJoins() ) {
 				if ( exposesAttribute( joinedFromElement, attributeName ) ) {
-					return joinedFromElement.getBinding();
+					return joinedFromElement.getNavigableReference();
 				}
 			}
 		}
@@ -71,7 +71,7 @@ public class OrderByResolutionContext implements ResolutionContext, FromElementL
 	}
 
 	private boolean exposesAttribute(SqmFrom sqmFrom, String attributeName) {
-		final Navigable navigable = sqmFrom.getBinding().getReferencedNavigable();
+		final Navigable navigable = sqmFrom.getNavigableReference().getReferencedNavigable();
 		return NavigableContainer.class.isInstance( navigable )
 				&& ( (NavigableContainer) navigable ).findNavigable( attributeName ) != null;
 	}

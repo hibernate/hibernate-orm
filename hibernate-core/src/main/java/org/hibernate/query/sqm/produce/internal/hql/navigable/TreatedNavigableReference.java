@@ -13,7 +13,7 @@ import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.domain.AbstractSqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableSourceReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.from.SqmDowncast;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
@@ -21,7 +21,7 @@ import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 /**
  * Models an "incidental downcast", as opposed to an intrinsic downcast.  An
  * intrinsic downcast occurs in the from-clause - the downcast target becomes
- * an intrinsic part of the FromElement (see {@link SqmFrom#getIntrinsicSubclassIndicator()}.
+ * an intrinsic part of the FromElement (see {@link SqmFrom#getIntrinsicSubclassEntityPersister()}.
  * An incidental downcast, on the other hand, occurs outside the from-clause.
  * <p/>
  * For example,
@@ -34,7 +34,7 @@ import org.hibernate.query.sqm.tree.from.SqmFromExporter;
  * @author Steve Ebersole
  */
 public class TreatedNavigableReference extends AbstractSqmNavigableReference implements SqmNavigableReference,
-		SqmNavigableSourceReference {
+		SqmNavigableContainerReference {
 	private final SqmNavigableReference baseBinding;
 	private final EntityValuedExpressableType subclassIndicator;
 
@@ -55,7 +55,7 @@ public class TreatedNavigableReference extends AbstractSqmNavigableReference imp
 	}
 
 	@Override
-	public SqmNavigableSourceReference getSourceReference() {
+	public SqmNavigableContainerReference getSourceReference() {
 		return baseBinding.getSourceReference();
 	}
 

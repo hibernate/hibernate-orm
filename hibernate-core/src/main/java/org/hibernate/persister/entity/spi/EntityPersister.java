@@ -32,9 +32,11 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.collection.spi.TableReferenceJoinCollector;
+import org.hibernate.persister.common.spi.ForeignKey;
+import org.hibernate.persister.common.spi.JoinedTableBinding;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableContainer;
-import org.hibernate.persister.common.spi.JoinedTableBinding;
 import org.hibernate.persister.common.spi.Table;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.entity.MultiLoadOptions;
@@ -42,14 +44,17 @@ import org.hibernate.persister.exec.spi.EntityLocker;
 import org.hibernate.persister.exec.spi.MultiIdEntityLoader;
 import org.hibernate.persister.exec.spi.SingleIdEntityLoader;
 import org.hibernate.persister.exec.spi.SingleUniqueKeyEntityLoader;
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.persister.queryable.spi.RootTableGroupContext;
 import org.hibernate.persister.queryable.spi.RootTableGroupProducer;
 import org.hibernate.persister.queryable.spi.SqlAliasBaseResolver;
+import org.hibernate.persister.queryable.spi.TableGroupContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.sql.JoinType;
+import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.spi.Type;
@@ -72,9 +77,8 @@ import org.hibernate.type.spi.Type;
  */
 @Incubating
 public interface EntityPersister<T>
-		extends EntityValuedExpressableType<T>, NavigableContainer<T>, EmbeddedContainer<T>,
-				RootTableGroupProducer, OptimisticCacheSource,
-				IdentifiableTypeImplementor<T>, EntityType<T> {
+		extends EntityValuedNavigable<T>, NavigableContainer<T>, EmbeddedContainer<T>,
+				RootTableGroupProducer, OptimisticCacheSource, IdentifiableTypeImplementor<T>, EntityType<T> {
 
 	// todo (6.0) : ? - can OptimisticCacheSource stuff go away?
 	// 		It was added for caches like JBoss Tree Cache that supported MVCC-based
@@ -218,26 +222,16 @@ public interface EntityPersister<T>
 
 
 	@Override
-	EntityTableGroup applyRootTableGroup(
+	EntityTableGroup createRootTableGroup(
 			NavigableReferenceInfo navigableReferenceInfo,
 			RootTableGroupContext tableGroupContext,
 			SqlAliasBaseResolver sqlAliasBaseResolver);
 
-	default EntityTableGroup createEntityTableGroup(
+	EntityTableGroup createEntityTableGroup(
 			NavigableReferenceInfo navigableReferenceInfo,
-			TableSpace tableSpace,
-			SqlAliasBaseResolver sqlAliasBaseResolver) {
-		final EntityTableGroup group = new EntityTableGroup(
-				tableSpace,
-				navigableReferenceInfo.getUniqueIdentifier(),
-				sqlAliasBaseResolver.getSqlAliasBase( navigableReferenceInfo ),
-				this,
-				navigableReferenceInfo.getNavigablePath()
-		);
+			TableGroupContext tableGroupContext,
+			SqlAliasBaseResolver sqlAliasBaseResolver);
 
-
-		return group;
-	}
 
 	/**
 	 * Access to the root table for this entity.
@@ -950,4 +944,9 @@ public interface EntityPersister<T>
 	int[] resolveAttributeIndexes(String[] attributeNames);
 
 	boolean canUseReferenceCacheEntries();
+
+	void applyTableReferenceJoins(
+			JoinType joinType,
+			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
+			TableReferenceJoinCollector collector);
 }

@@ -16,7 +16,7 @@ public abstract class AbstractSqmSingularAttributeReference
 		extends AbstractSqmAttributeReference<SingularPersistentAttribute>
 		implements SqmSingularAttributeReference {
 	public AbstractSqmSingularAttributeReference(
-			SqmNavigableSourceReference domainReferenceBinding,
+			SqmNavigableContainerReference domainReferenceBinding,
 			SingularPersistentAttribute boundNavigable) {
 		super( domainReferenceBinding, boundNavigable );
 	}

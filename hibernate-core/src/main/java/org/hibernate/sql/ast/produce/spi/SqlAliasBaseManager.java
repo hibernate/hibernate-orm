@@ -23,9 +23,9 @@ import org.hibernate.type.spi.Type;
  */
 public class SqlAliasBaseManager implements SqlAliasBaseResolver {
 
-	interface SqlAliasBase {
+	public interface SqlAliasBase {
 		String getAliasStem();
-		String newAlias();
+		String generateNewAlias();
 	}
 
 

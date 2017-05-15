@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.ast.tree.internal;
 
-import org.hibernate.sql.ast.produce.result.spi.ColumnReferenceResolver;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultGenerator;
@@ -17,11 +16,11 @@ import org.hibernate.sql.ast.tree.spi.select.Selection;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSelection implements Selection {
+public abstract class NonNavigableSelectionSupport implements Selection {
 	private final Expression selectedExpression;
 	private final String resultVariable;
 
-	public AbstractSelection(
+	public NonNavigableSelectionSupport(
 			Expression selectedExpression,
 			String resultVariable) {
 		this.selectedExpression = selectedExpression;
@@ -42,13 +41,8 @@ public abstract class AbstractSelection implements Selection {
 
 	@Override
 	public QueryResult createQueryResult(
-			ColumnReferenceResolver columnReferenceResolver,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return getQueryResultGenerator().generateQueryResult(
-				columnReferenceResolver,
-				sqlSelectionResolver,
-				creationContext
-		);
+		return getQueryResultGenerator().generateQueryResult( sqlSelectionResolver, creationContext );
 	}
 }

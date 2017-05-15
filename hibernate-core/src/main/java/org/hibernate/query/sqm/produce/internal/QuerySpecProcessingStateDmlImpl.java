@@ -52,14 +52,14 @@ public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessing
 	@Override
 	public SqmNavigableReference findNavigableBindingByIdentificationVariable(String identificationVariable) {
 		return fromClause.fromElementSpace.getRoot().getIdentificationVariable().equals( identificationVariable )
-				? fromClause.fromElementSpace.getRoot().getBinding()
+				? fromClause.fromElementSpace.getRoot().getNavigableReference()
 				: null;
 	}
 
 	@Override
 	public SqmNavigableReference findNavigableBindingExposingAttribute(String attributeName) {
 		if ( rootExposesAttribute( attributeName ) ) {
-			return fromClause.fromElementSpace.getRoot().getBinding();
+			return fromClause.fromElementSpace.getRoot().getNavigableReference();
 		}
 		else {
 			return null;
@@ -67,7 +67,7 @@ public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessing
 	}
 
 	private boolean rootExposesAttribute(String attributeName) {
-		return null != fromClause.fromElementSpace.getRoot().getBinding().getReferencedNavigable().findNavigable( attributeName );
+		return null != fromClause.fromElementSpace.getRoot().getNavigableReference().getReferencedNavigable().findNavigable( attributeName );
 	}
 
 	@Override

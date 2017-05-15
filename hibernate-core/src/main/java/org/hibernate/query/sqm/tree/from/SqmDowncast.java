@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.persister.entity.spi.EntityPersister;
 
 /**
  * Models information about a downcast (TREAT AS).
@@ -14,19 +14,19 @@ import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
  * @author Steve Ebersole
  */
 public class SqmDowncast {
-	private final EntityValuedExpressableType downcastTarget;
+	private final EntityPersister downcastTarget;
 	private boolean intrinsic;
 
-	public SqmDowncast(EntityValuedExpressableType downcastTarget) {
+	public SqmDowncast(EntityPersister downcastTarget) {
 		this( downcastTarget, false );
 	}
 
-	public SqmDowncast(EntityValuedExpressableType downcastTarget, boolean intrinsic) {
+	public SqmDowncast(EntityPersister downcastTarget, boolean intrinsic) {
 		this.downcastTarget = downcastTarget;
 		this.intrinsic = intrinsic;
 	}
 
-	public EntityValuedExpressableType getTargetType() {
+	public EntityPersister getTargetType() {
 		return downcastTarget;
 	}
 

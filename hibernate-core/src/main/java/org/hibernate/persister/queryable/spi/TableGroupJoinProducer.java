@@ -34,7 +34,7 @@ public interface TableGroupJoinProducer {
 	TableGroupJoin applyTableGroupJoin(
 			NavigableReferenceInfo navigableReferenceInfo,
 			SqmJoinType joinType,
-			TableGroupJoinContext tableGroupJoinContext,
+			JoinedTableGroupContext tableGroupJoinContext,
 			TableGroupResolver tableGroupResolutionContext,
 			SqlAliasBaseResolver sqlAliasBaseResolver);
 }

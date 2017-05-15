@@ -6,14 +6,13 @@
  */
 package org.hibernate.persister.queryable.spi;
 
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public interface BasicValuedExpressableType<T> extends ExpressableType<T>, SqlSelectable {
+public interface BasicValuedExpressableType<T> extends ExpressableType<T> {
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;

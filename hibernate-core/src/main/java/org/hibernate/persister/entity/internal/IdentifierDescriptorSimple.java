@@ -12,26 +12,20 @@ import org.hibernate.mapping.Property;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.IdentifiableTypeImplementor;
 import org.hibernate.persister.entity.spi.IdentifierDescriptor;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReferenceExpression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReferenceExpression;
-import org.hibernate.sql.ast.tree.spi.from.ColumnReference;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.SelectableBasicTypeImpl;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -108,86 +102,18 @@ public class IdentifierDescriptorSimple<O,J>
 	}
 
 	@Override
-	public QueryResult generateReturn(
-			QueryResultCreationContext returnResolutionContext,
-			TableGroup tableGroup) {
-		return new SelectableImpl( this, returnResolutionContext, tableGroup ).toQueryReturn( returnResolutionContext, null );
+	public Selection createSelection(Expression selectedExpression, String resultVariable) {
+		assert selectedExpression instanceof NavigableReference;
+		return new NavigableSelection( (NavigableReference) selectedExpression, resultVariable );
 	}
 
 	@Override
-	public Fetch generateFetch(
-			QueryResultCreationContext returnResolutionContext,
-			TableGroup tableGroup,
-			FetchParent fetchParent) {
-		throw new UnsupportedOperationException();
-	}
-
-
-
-
-	private static class SelectableImpl implements Selectable, NavigableReferenceExpression {
-		private final SingularAttributeReferenceExpression expressionDelegate;
-		private final SelectableBasicTypeImpl selectableDelegate;
-		private final NavigablePath navigablePath;
-
-		public SelectableImpl(
-				IdentifierDescriptorSimple idDescriptor,
-				QueryResultCreationContext returnResolutionContext,
-				TableGroup tableGroup) {
-			this.navigablePath = returnResolutionContext.currentNavigablePath().append( idDescriptor.getNavigableName() );
-
-			this.expressionDelegate = new SingularAttributeReferenceExpression(
-					tableGroup,
-					idDescriptor,
-					navigablePath
-			);
-			this.selectableDelegate = new SelectableBasicTypeImpl(
-					this,
-					getColumnReferences().get( 0 ),
-					getType()
-			);
-		}
-
-		@Override
-		public BasicType getType() {
-			return (BasicType) expressionDelegate.getType();
-		}
-
-		@Override
-		public Selectable getSelectable() {
-			return this;
-		}
-
-		@Override
-		public void accept(SqlSelectAstToJdbcSelectConverter walker) {
-			// todo (6.0) : do we need a separate "visitEntityIdentifier" method(s)?
-
-			walker.visitSingularAttributeReference( expressionDelegate );
-		}
-
-		@Override
-		public Expression getSelectedExpression() {
-			return expressionDelegate;
-		}
-
-		@Override
-		public QueryResult toQueryReturn(QueryResultCreationContext returnResolutionContext, String resultVariable) {
-			return selectableDelegate.toQueryReturn( returnResolutionContext, resultVariable );
-		}
-
-		@Override
-		public Navigable getNavigable() {
-			return expressionDelegate.getNavigable();
-		}
-
-		@Override
-		public NavigablePath getNavigablePath() {
-			return expressionDelegate.getNavigablePath();
-		}
-
-		@Override
-		public List<ColumnReference> getColumnReferences() {
-			return expressionDelegate.getColumnReferences();
-		}
+	public QueryResult generateReturn(
+			NavigableReference selectedExpression,
+			String resultVariable,
+			ColumnReferenceSource columnReferenceSource,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		return getIdAttribute().generateReturn( selectedExpression, resultVariable, columnReferenceSource, sqlSelectionResolver, creationContext );
 	}
 }

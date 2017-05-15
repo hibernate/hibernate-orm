@@ -81,12 +81,12 @@ public class ConversionHelper {
 	public static EntityPersister extractEntityPersister(
 			SqmAttributeJoin joinedFromElement,
 			SessionFactoryImplementor factory) {
-		if ( joinedFromElement.getIntrinsicSubclassIndicator() != null ) {
-			return (EntityPersister) joinedFromElement.getIntrinsicSubclassIndicator();
+		if ( joinedFromElement.getIntrinsicSubclassEntityPersister() != null ) {
+			return (EntityPersister) joinedFromElement.getIntrinsicSubclassEntityPersister();
 		}
 
 		// assume the fact that the attribute/type are entity has already been validated
-		final EntityType entityType = (EntityType) ( ( SingularPersistentAttribute) joinedFromElement.getAttributeBinding().getReferencedNavigable() ).getOrmType();
+		final EntityType entityType = (EntityType) ( ( SingularPersistentAttribute) joinedFromElement.getAttributeReference().getReferencedNavigable() ).getOrmType();
 		final String entityName = entityType.getAssociatedEntityName();
 		return factory.getTypeConfiguration().resolveEntityPersister( entityName );
 	}

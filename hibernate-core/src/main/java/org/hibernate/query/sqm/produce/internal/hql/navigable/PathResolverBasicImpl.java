@@ -13,7 +13,7 @@ import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.produce.spi.ResolutionContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableSourceReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.from.SqmDowncast;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 
@@ -44,7 +44,7 @@ public class PathResolverBasicImpl extends AbstractNavigableBindingResolver {
 	}
 
 	@Override
-	public SqmNavigableReference resolvePath(SqmNavigableSourceReference sourceBinding, String... pathParts) {
+	public SqmNavigableReference resolvePath(SqmNavigableContainerReference sourceBinding, String... pathParts) {
 		return resolveTreatedPath( sourceBinding, null, pathParts );
 	}
 
@@ -72,7 +72,7 @@ public class PathResolverBasicImpl extends AbstractNavigableBindingResolver {
 			// we had a dot-identifier sequence...
 
 			// see if the root is an identification variable
-			final SqmNavigableSourceReference identifiedBinding = (SqmNavigableSourceReference) context().getFromElementLocator()
+			final SqmNavigableContainerReference identifiedBinding = (SqmNavigableContainerReference) context().getFromElementLocator()
 					.findNavigableBindingByIdentificationVariable( pathParts[0] );
 			if ( identifiedBinding != null ) {
 				validatePathRoot( identifiedBinding );
@@ -80,7 +80,7 @@ public class PathResolverBasicImpl extends AbstractNavigableBindingResolver {
 			}
 
 			// otherwise see if the root might be the name of an attribute exposed from a FromElement
-			final SqmNavigableSourceReference root = (SqmNavigableSourceReference) context().getFromElementLocator()
+			final SqmNavigableContainerReference root = (SqmNavigableContainerReference) context().getFromElementLocator()
 					.findNavigableBindingExposingAttribute( pathParts[0] );
 			if ( root != null ) {
 				validatePathRoot( root );
@@ -101,7 +101,7 @@ public class PathResolverBasicImpl extends AbstractNavigableBindingResolver {
 			final SqmNavigableReference root = context().getFromElementLocator().findNavigableBindingExposingAttribute( pathParts[0] );
 			if ( root != null ) {
 				// todo : consider passing along subclassIndicator
-				return resolveTerminalAttributeBinding( (SqmNavigableSourceReference) root, pathParts[0], subclassIndicator );
+				return resolveTerminalAttributeBinding( (SqmNavigableContainerReference) root, pathParts[0], subclassIndicator );
 			}
 		}
 
@@ -113,15 +113,15 @@ public class PathResolverBasicImpl extends AbstractNavigableBindingResolver {
 
 	@Override
 	public SqmNavigableReference resolveTreatedPath(
-			SqmNavigableSourceReference sourceBinding,
+			SqmNavigableContainerReference sourceBinding,
 			EntityValuedExpressableType subclassIndicator,
 			String... pathParts) {
-		final SqmNavigableSourceReference intermediateJoinBindings = resolveAnyIntermediateAttributePathJoins( sourceBinding, pathParts );
+		final SqmNavigableContainerReference intermediateJoinBindings = resolveAnyIntermediateAttributePathJoins( sourceBinding, pathParts );
 		return resolveTerminalAttributeBinding( intermediateJoinBindings, pathParts[pathParts.length-1] );
 	}
 
 	protected SqmNavigableReference resolveTerminalAttributeBinding(
-			SqmNavigableSourceReference sourceBinding,
+			SqmNavigableContainerReference sourceBinding,
 			String terminalName) {
 		return resolveTerminalAttributeBinding(
 				sourceBinding,
@@ -131,7 +131,7 @@ public class PathResolverBasicImpl extends AbstractNavigableBindingResolver {
 	}
 
 	protected SqmNavigableReference resolveTerminalAttributeBinding(
-			SqmNavigableSourceReference sourceBinding,
+			SqmNavigableContainerReference sourceBinding,
 			String terminalName,
 			EntityValuedExpressableType intrinsicSubclassIndicator) {
 		final Navigable navigable = resolveNavigable( sourceBinding, terminalName );
@@ -183,12 +183,12 @@ public class PathResolverBasicImpl extends AbstractNavigableBindingResolver {
 				"Resolved terminal as from-element alias : %s",
 				exporter.getExportedFromElement().getIdentificationVariable()
 		);
-		return exporter.getExportedFromElement().getBinding();
+		return exporter.getExportedFromElement().getNavigableReference();
 	}
 
 	protected SqmNavigableReference resolveTreatedTerminal(
 			ResolutionContext context,
-			SqmNavigableSourceReference lhs,
+			SqmNavigableContainerReference lhs,
 			String terminalName,
 			EntityValuedExpressableType subclassIndicator) {
 		final Navigable joinedAttribute = resolveNavigable( lhs, terminalName );

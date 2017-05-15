@@ -22,6 +22,7 @@ import org.hibernate.sql.ast.consume.results.spi.InitializerCollector;
 import org.hibernate.sql.ast.consume.results.spi.InitializerParent;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 
 /**
  * Standard ReturnEntity impl
@@ -42,8 +43,8 @@ public class QueryResultEntityImpl extends AbstractFetchParent implements QueryR
 			String resultVariable,
 			Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap,
 			NavigablePath navigablePath,
-			String tableGroupUid) {
-		super( navigablePath, tableGroupUid );
+			ColumnReferenceSource columnReferenceSource) {
+		super( navigablePath, columnReferenceSource );
 		this.expression = expression;
 		this.entityPersister = entityPersister;
 		this.resultVariable = resultVariable;

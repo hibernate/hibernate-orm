@@ -15,7 +15,7 @@ import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.internal.NavigableBindingHelper;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableSourceReference;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import org.jboss.logging.Logger;
@@ -33,7 +33,7 @@ public class ParsingContext {
 	private final ImplicitAliasGenerator aliasGenerator = new ImplicitAliasGenerator();
 	private final Map<String,SqmFrom> globalFromElementMap = new HashMap<>();
 
-	private Map<SqmNavigableSourceReference,Map<Navigable,SqmNavigableReference>> navigableReferenceMapBySource;
+	private Map<SqmNavigableContainerReference,Map<Navigable,SqmNavigableReference>> navigableReferenceMapBySource;
 
 	public ParsingContext(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -88,7 +88,7 @@ public class ParsingContext {
 		}
 	}
 
-	public SqmNavigableReference getCachedNavigableBinding(SqmNavigableSourceReference source, Navigable navigable) {
+	public SqmNavigableReference getCachedNavigableBinding(SqmNavigableContainerReference source, Navigable navigable) {
 		if ( navigableReferenceMapBySource == null ) {
 			return null;
 		}
@@ -103,7 +103,7 @@ public class ParsingContext {
 	}
 
 	public SqmNavigableReference findOrCreateNavigableBinding(
-			SqmNavigableSourceReference lhs,
+			SqmNavigableContainerReference lhs,
 			String navigableName) {
 		final Navigable sqmNavigable = lhs.getReferencedNavigable().findNavigable( navigableName );
 
@@ -122,7 +122,7 @@ public class ParsingContext {
 	}
 
 	public SqmNavigableReference findOrCreateNavigableBinding(
-			SqmNavigableSourceReference lhs,
+			SqmNavigableContainerReference lhs,
 			Navigable navigable) {
 		Map<Navigable,SqmNavigableReference> bindingsMap = null;
 

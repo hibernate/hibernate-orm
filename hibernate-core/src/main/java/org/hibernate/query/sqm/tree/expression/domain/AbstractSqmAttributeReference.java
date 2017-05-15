@@ -21,13 +21,13 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 		extends AbstractSqmNavigableReference
 		implements SqmAttributeReference, SqmFromExporter {
 
-	private final SqmNavigableSourceReference sourceReference;
+	private final SqmNavigableContainerReference sourceReference;
 	private final A attribute;
 	private final NavigablePath navigablePath;
 
 	private SqmAttributeJoin join;
 
-	public AbstractSqmAttributeReference(SqmNavigableSourceReference sourceReference, A attribute) {
+	public AbstractSqmAttributeReference(SqmNavigableContainerReference sourceReference, A attribute) {
 		if ( sourceReference == null ) {
 			throw new IllegalArgumentException( "Source for AttributeBinding cannot be null" );
 		}
@@ -44,8 +44,8 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 	@SuppressWarnings("unchecked")
 	public AbstractSqmAttributeReference(SqmAttributeJoin join) {
 		this(
-				join.getBinding().getSourceReference(),
-				(A) join.getAttributeBinding().getReferencedNavigable()
+				join.getNavigableReference().getSourceReference(),
+				(A) join.getAttributeReference().getReferencedNavigable()
 		);
 		injectExportedFromElement( join );
 	}
@@ -59,7 +59,7 @@ public abstract class AbstractSqmAttributeReference<A extends PersistentAttribut
 	}
 
 	@Override
-	public SqmNavigableSourceReference getSourceReference() {
+	public SqmNavigableContainerReference getSourceReference() {
 		// attribute binding must have a source
 		return sourceReference;
 	}

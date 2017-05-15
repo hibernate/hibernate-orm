@@ -12,9 +12,6 @@ import org.hibernate.persister.collection.spi.CollectionPersister;
  * @author Steve Ebersole
  */
 public interface PluralPersistentAttribute<O,C,E>
-		extends PersistentAttribute<O,C>, NavigableContainer<C>, TypeExporter<C>, javax.persistence.metamodel.PluralAttribute<O,C,E> {
-	@Override
-	org.hibernate.type.spi.CollectionType<O,C,E> getOrmType();
-
+		extends PersistentAttribute<O,C>, NavigableContainer<C>, javax.persistence.metamodel.PluralAttribute<O,C,E> {
 	CollectionPersister<O,C,E> getCollectionPersister();
 }

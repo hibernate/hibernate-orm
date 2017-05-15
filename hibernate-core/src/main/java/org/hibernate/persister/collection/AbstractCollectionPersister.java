@@ -90,6 +90,11 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.queryable.spi.JoinedTableGroupContext;
+import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
+import org.hibernate.persister.queryable.spi.RootTableGroupContext;
+import org.hibernate.persister.queryable.spi.SqlAliasBaseResolver;
+import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.internal.CompositionSingularSubAttributesHelper;
 import org.hibernate.persister.walking.internal.StandardAnyTypeDefinition;
@@ -103,11 +108,15 @@ import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager.SqlAliasBase;
 import org.hibernate.sql.ast.tree.spi.from.CollectionTableGroup;
+import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
@@ -876,6 +885,28 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 			);
 		}
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	@Override
 	public CollectionTableGroup buildTableGroup(

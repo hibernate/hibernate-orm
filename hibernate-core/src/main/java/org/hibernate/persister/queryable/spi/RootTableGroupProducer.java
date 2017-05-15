@@ -27,7 +27,7 @@ public interface RootTableGroupProducer {
 	 *
 	 * @return The generated EntityTableGroup
 	 */
-	TableGroup applyRootTableGroup(
+	TableGroup createRootTableGroup(
 			NavigableReferenceInfo navigableReferenceInfo,
 			RootTableGroupContext tableGroupContext,
 			SqlAliasBaseResolver sqlAliasBaseResolver);

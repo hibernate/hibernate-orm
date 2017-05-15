@@ -10,7 +10,7 @@ import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.PluralPersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.queryable.spi.ExpressableType;
-import org.hibernate.persister.queryable.spi.NavigableSourceReferenceInfo;
+import org.hibernate.persister.queryable.spi.NavigableContainerReferenceInfo;
 import org.hibernate.query.spi.NavigablePath;
 
 /**
@@ -64,7 +64,7 @@ public abstract class AbstractSqmCollectionElementReference extends AbstractSqmN
 	}
 
 	@Override
-	public NavigableSourceReferenceInfo getSourceReferenceInfo() {
+	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
 		return getPluralAttributeBinding();
 	}
 

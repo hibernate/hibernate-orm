@@ -303,11 +303,6 @@ public abstract class AbstractEntityPersister<T>
 	}
 
 	@Override
-	public String getTypeName() {
-		return getJavaTypeDescriptor().getTypeName();
-	}
-
-	@Override
 	public EntityPersister<T> getEntityPersister() {
 		return this;
 	}
@@ -573,10 +568,11 @@ public abstract class AbstractEntityPersister<T>
 
 	@Override
 	public void applyTableReferenceJoins(
-			TableReference lhs,
 			JoinType joinType,
 			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector collector) {
+		// todo (6.0) : NOTE the LHS is no longer passed in because we changed the expectation such that the caller would be the one creating the TableReference
+
 		TableReference root = resolveRootTableReference( sqlAliasBase );
 		collector.addRoot( root );
 		resolveTableReferenceJoins( root, sqlAliasBase, collector::collectTableReferenceJoin );
@@ -647,7 +643,7 @@ public abstract class AbstractEntityPersister<T>
 //	}
 
 	@Override
-	public QueryResult generateReturn(
+	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
 			ColumnReferenceSource columnReferenceSource,

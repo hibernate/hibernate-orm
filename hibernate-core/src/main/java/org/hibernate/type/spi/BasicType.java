@@ -32,7 +32,9 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
  * @since 6.0
  */
 public interface BasicType<T>
-		extends Type<T>, ExpressableType<T>, ParameterizedType, javax.persistence.metamodel.BasicType<T>, BasicValuedExpressableType<T> {
+		extends Type<T>, ExpressableType<T>, ParameterizedType,
+		javax.persistence.metamodel.BasicType<T>, BasicValuedExpressableType<T> {
+
 	BasicTypeRegistry.Key getRegistryKey();
 
 	@Override
@@ -45,19 +47,6 @@ public interface BasicType<T>
 	 * from JDBC ResultSets
 	 */
 	SqlSelectionReader<T> getSqlSelectionReader();
-
-	@Override
-	default String getName() {
-		return getTypeName();
-	}
-
-	@Override
-	default String getTypeName() {
-		return "BasicTypeImpl(" +
-				getJavaTypeDescriptor().getTypeName() + ", " +
-				getColumnMapping().getSqlTypeDescriptor().getSqlType() + " [" +
-				(getMutabilityPlan() == null ? "<no-mutability-plan>" : getMutabilityPlan().getClass().getSimpleName() ) + "])";
-	}
 
 	@Override
 	default Class<T> getJavaType() {

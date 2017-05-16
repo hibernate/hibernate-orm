@@ -68,7 +68,6 @@ import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -192,7 +191,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 				// * create Return and Fetches
 
 
-				queryReturn = rootNavigable.generateReturn( this, tableGroup );
+				queryReturn = rootNavigable.generateQueryResult( this, tableGroup );
 
 				// finally visit any potential fetches
 				visitNavigables( rootNavigable, (FetchParent) queryReturn, tableGroup );

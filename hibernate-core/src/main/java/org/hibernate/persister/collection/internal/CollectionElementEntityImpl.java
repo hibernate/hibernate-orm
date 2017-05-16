@@ -9,61 +9,56 @@ package org.hibernate.persister.collection.internal;
 import java.util.List;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.persister.collection.spi.AbstractCollectionElement;
 import org.hibernate.persister.collection.spi.CollectionElementEntity;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.collection.spi.TableReferenceJoinCollector;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.ForeignKey;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.JoinType;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
-import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.type.spi.EntityType;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class CollectionElementEntityImpl<J>
-		extends AbstractCollectionElement<J,EntityType<J>>
+		extends AbstractCollectionElement<J>
 		implements CollectionElementEntity<J> {
 
 	private final ElementClassification elementClassification;
+	private final EntityPersister<J> entityPersister;
 
 	public CollectionElementEntityImpl(
 			CollectionPersister persister,
 			Collection mappingBinding,
-			EntityType<J> ormType,
 			ElementClassification elementClassification,
-			List<Column> columns) {
-		super( persister, ormType, columns );
+			List<Column> columns,
+			PersisterCreationContext creationContext) {
+		super( persister, columns );
 		this.elementClassification = elementClassification;
-	}
 
-	@Override
-	public EntityType<J> getOrmType() {
-		return super.getOrmType();
+		// todo (6.0) : we know this call will blow up until we figure out timing of persister creation
+		final ToOne value = (ToOne) mappingBinding.getElement();
+		this.entityPersister = creationContext.getTypeConfiguration().findEntityPersister( value.getReferencedEntityName() );
 	}
 
 	@Override
 	public EntityPersister<J> getEntityPersister() {
-		return getOrmType().getEntityPersister();
-	}
-
-	@Override
-	public Navigable findNavigable(String navigableName) {
-		return getEntityPersister().findNavigable( navigableName );
+		return entityPersister;
 	}
 
 	@Override
@@ -87,8 +82,43 @@ public class CollectionElementEntityImpl<J>
 	}
 
 	@Override
+	public <N> Navigable<N> findNavigable(String navigableName) {
+		return getEntityPersister().findNavigable( navigableName );
+	}
+
+	@Override
+	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
+		return getEntityPersister().findDeclaredNavigable( navigableName );
+	}
+
+	@Override
+	public List<Navigable> getNavigables() {
+		return getEntityPersister().getNavigables();
+	}
+
+	@Override
+	public List<Navigable> getDeclaredNavigables() {
+		return getEntityPersister().getDeclaredNavigables();
+	}
+
+	@Override
+	public void visitNavigables(NavigableVisitationStrategy visitor) {
+		getEntityPersister().visitNavigables( visitor );
+	}
+
+	@Override
+	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
+		getEntityPersister().visitDeclaredNavigables( visitor );
+	}
+
+	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitCollectionElementEntity( this );
+	}
+
+	@Override
+	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
+		return getEntityPersister().getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -97,5 +127,34 @@ public class CollectionElementEntityImpl<J>
 			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector collector) {
 		getEntityPersister().applyTableReferenceJoins( joinType, sqlAliasBase, collector );
+	}
+
+	@Override
+	public Fetch generateFetch(
+			FetchParent fetchParent,
+			NavigableReference selectedExpression,
+			String resultVariable,
+			ColumnReferenceSource columnReferenceResolver,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public QueryResult generateQueryResult(
+			NavigableReference selectedExpression,
+			String resultVariable,
+			ColumnReferenceSource columnReferenceSource,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		// delegate to the persister because here we are returning
+		// 		the entities that make up the referenced collection's elements
+		return getEntityPersister().generateQueryResult(
+				selectedExpression,
+				resultVariable,
+				columnReferenceSource,
+				sqlSelectionResolver,
+				creationContext
+		);
 	}
 }

@@ -6,13 +6,13 @@
  */
 package org.hibernate.persister.common.spi;
 
+import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSingularPersistentAttribute<O,J, T extends Type<J>>
+public abstract class AbstractSingularPersistentAttribute<O,J>
 		extends AbstractPersistentAttribute<O,J>
 		implements SingularPersistentAttribute<O,J> {
 	private final boolean nullable;
@@ -22,18 +22,15 @@ public abstract class AbstractSingularPersistentAttribute<O,J, T extends Type<J>
 			ManagedTypeImplementor<O> attributeContainer,
 			String name,
 			PropertyAccess propertyAccess,
-			T ormType,
+			ExpressableType<J> expressableType,
 			Disposition disposition,
 			boolean nullable) {
-		super( attributeContainer, name, ormType, propertyAccess );
+		super( attributeContainer, name, expressableType.getJavaTypeDescriptor(), propertyAccess );
 		this.disposition = disposition;
 		this.nullable = nullable;
 	}
 
-	@Override
-	public String getTypeName() {
-		return getOrmType().getName();
-	}
+
 
 	@Override
 	public Disposition getDisposition() {
@@ -71,7 +68,7 @@ public abstract class AbstractSingularPersistentAttribute<O,J, T extends Type<J>
 	}
 
 	@Override
-	public javax.persistence.metamodel.Type getType() {
+	public javax.persistence.metamodel.Type<J> getType() {
 		return this;
 	}
 
@@ -81,7 +78,7 @@ public abstract class AbstractSingularPersistentAttribute<O,J, T extends Type<J>
 	}
 
 	@Override
-	public Class getBindableJavaType() {
-		return getOrmType().getJavaType();
+	public Class<J> getBindableJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
 	}
 }

@@ -114,7 +114,7 @@ public class VersionDescriptorImpl<O,J>
 	}
 
 	@Override
-	public QueryResult generateReturn(
+	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
 			ColumnReferenceSource columnReferenceSource,

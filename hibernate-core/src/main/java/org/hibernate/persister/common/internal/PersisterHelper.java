@@ -350,7 +350,6 @@ public class PersisterHelper {
 				.getService( PropertyAccessStrategyResolver.class );
 
 		String accessName = attributeMapping.getPropertyAccessorName();
-		attributeMapping.
 		if ( accessName == null ) {
 			if ( clazz == null || java.util.Map.class.equals( clazz ) ) {
 				accessName = "map";
@@ -370,9 +369,9 @@ public class PersisterHelper {
 				entityMode
 		);
 
-		final PropertyAccessStrategy accessStrategy = accessStrategyResolver.resolvePropertyAccessStrategy(
-
-		);
+//		final PropertyAccessStrategy accessStrategy = accessStrategyResolver.resolvePropertyAccessStrategy(
+//
+//		);
 		final PropertyAccessStrategy strategy = attributeMapping.getPropertyAccessStrategy( attributeMapping.getPersistentClass().getMappedClass() );
 		return strategy.buildPropertyAccess( attributeMapping.getPersistentClass().getMappedClass(), attributeMapping.getName() );
 	}

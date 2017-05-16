@@ -9,13 +9,13 @@ package org.hibernate.sql.ast.consume.results.internal;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.hibernate.EntityMode;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.ast.consume.results.spi.RowProcessingState;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
-import org.hibernate.type.spi.EmbeddedType;
+import org.hibernate.sql.ast.consume.results.spi.RowProcessingState;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 
 /**
  * @author Steve Ebersole
@@ -23,16 +23,16 @@ import org.hibernate.type.spi.EmbeddedType;
 public class QueryResultAssemblerComposite implements QueryResultAssembler {
 	private final QueryResultCompositeImpl returnComposite;
 	private final List<SqlSelection> sqlSelections;
-	private final EmbeddedType compositeType;
+	private final EmbeddedPersister embeddedPersister;
 
 	public QueryResultAssemblerComposite(
 			QueryResultCompositeImpl returnComposite,
 			List<SqlSelection> sqlSelections,
-			EmbeddedType compositeType) {
+			EmbeddedPersister embeddedPersister) {
 
 		this.returnComposite = returnComposite;
 		this.sqlSelections = sqlSelections;
-		this.compositeType = compositeType;
+		this.embeddedPersister = embeddedPersister;
 	}
 
 	@Override
@@ -48,13 +48,14 @@ public class QueryResultAssemblerComposite implements QueryResultAssembler {
 			values[i] = rowProcessingState.getJdbcValues()[ sqlSelections.get( i ).getValuesArrayPosition() ];
 		}
 
-		try {
-			final Object result = compositeType.getReturnedClass().newInstance();
-			compositeType.setPropertyValues( result, values, EntityMode.POJO );
-			return result;
-		}
-		catch (Exception e) {
-			throw new RuntimeException( "Unable to instantiate composite : " +  compositeType.getReturnedClass().getName(), e );
-		}
+		throw new NotYetImplementedException(  );
+//		try {
+//			final Object result = embeddedPersister.getReturnedClass().newInstance();
+//			embeddedPersister.setPropertyValues( result, values, EntityMode.POJO );
+//			return result;
+//		}
+//		catch (Exception e) {
+//			throw new RuntimeException( "Unable to instantiate composite : " +  embeddedPersister.getReturnedClass().getName(), e );
+//		}
 	}
 }

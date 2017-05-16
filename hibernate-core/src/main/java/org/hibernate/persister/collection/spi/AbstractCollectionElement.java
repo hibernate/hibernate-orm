@@ -10,27 +10,21 @@ import java.util.List;
 
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.ForeignKey;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractCollectionElement<J,T extends Type<J>> implements CollectionElement<J,T> {
+public abstract class AbstractCollectionElement<J> implements CollectionElement<J> {
 	private final CollectionPersister persister;
-	private final T ormType;
 	private final List<Column> columns;
 	private final NavigableRole navigableRole;
 
 	public AbstractCollectionElement(
 			CollectionPersister persister,
-			T ormType,
 			List<Column> columns) {
 		this.persister = persister;
-		this.ormType = ormType;
 		this.columns = columns;
 
 		this.navigableRole = persister.getNavigableRole().append( NAVIGABLE_NAME );
@@ -47,22 +41,13 @@ public abstract class AbstractCollectionElement<J,T extends Type<J>> implements 
 	}
 
 	@Override
-	public String getTypeName() {
-		return getOrmType().getName();
-	}
-
-	public T getOrmType() {
-		return ormType;
-	}
-
-	@Override
 	public List<Column> getColumns() {
 		return columns;
 	}
 
 	@Override
 	public Class<J> getJavaType() {
-		return ormType.getJavaType();
+		return getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override

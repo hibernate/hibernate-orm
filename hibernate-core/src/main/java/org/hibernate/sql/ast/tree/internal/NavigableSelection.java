@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.ast.tree.internal;
 
-import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
@@ -39,7 +38,7 @@ public class NavigableSelection implements Selection {
 	public QueryResult createQueryResult(
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return getSelectedExpression().getNavigable().generateReturn(
+		return getSelectedExpression().getNavigable().generateQueryResult(
 				getSelectedExpression(),
 				getResultVariable(),
 				getSelectedExpression().getContributedColumnReferenceSource(),

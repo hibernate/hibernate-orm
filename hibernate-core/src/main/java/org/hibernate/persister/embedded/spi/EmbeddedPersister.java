@@ -6,23 +6,18 @@
  */
 package org.hibernate.persister.embedded.spi;
 
-import java.util.Collections;
 import java.util.List;
 import javax.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.mapping.Component;
-import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
-import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
-import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * Mapping for an embedded value.  Represents a specific usage of an embeddable/composite
@@ -30,7 +25,7 @@ import org.hibernate.type.spi.EmbeddedType;
  * @author Steve Ebersole
  */
 public interface EmbeddedPersister<T>
-		extends ManagedTypeImplementor<T>, TypeExporter<T>, EmbeddedContainer<T>, EmbeddableType<T>,
+		extends ManagedTypeImplementor<T>, EmbeddedContainer<T>, EmbeddableType<T>,
 		EmbeddedValuedNavigable<T> {
 
 	Class[] STANDARD_CTOR_SIGNATURE = new Class[] {
@@ -89,17 +84,14 @@ public interface EmbeddedPersister<T>
 	EmbeddedContainer<?> getContainer();
 
 	@Override
-	EmbeddedType<T> getOrmType();
-
-	@Override
 	default String getTypeName() {
-		return getOrmType().getJavaTypeDescriptor().getTypeName();
+		return getContainer().getJavaTypeDescriptor().getTypeName();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	default Class<T> getJavaType() {
-		return (Class<T>) getOrmType().getJavaTypeDescriptor().getJavaType();
+		return (Class<T>) getContainer().getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override
@@ -110,11 +102,6 @@ public interface EmbeddedPersister<T>
 	@Override
 	default TableGroup resolveTableGroup(NavigableReferenceInfo embeddedReferenceInfo, TableGroupResolver tableGroupResolver) {
 		return getContainer().resolveTableGroup( embeddedReferenceInfo, tableGroupResolver );
-	}
-
-	@Override
-	default List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute) {
-		return Collections.emptyList();
 	}
 
 	@Override

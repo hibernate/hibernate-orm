@@ -7,10 +7,9 @@
 package org.hibernate.persister.collection.spi;
 
 import org.hibernate.persister.entity.spi.EntityValuedNavigable;
-import org.hibernate.type.spi.EntityType;
 
 /**
  * @author Steve Ebersole
  */
-public interface CollectionElementEntity<E> extends CollectionElement<E,EntityType<E>>, EntityValuedNavigable<E> {
+public interface CollectionElementEntity<E> extends CollectionElement<E>, EntityValuedNavigable<E> {
 }

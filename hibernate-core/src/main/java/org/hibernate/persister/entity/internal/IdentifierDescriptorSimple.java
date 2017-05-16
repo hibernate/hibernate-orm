@@ -21,18 +21,15 @@ import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.internal.NavigableSelection;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
 public class IdentifierDescriptorSimple<O,J>
-		extends AbstractSingularPersistentAttribute<O,J,BasicType<J>>
+		extends AbstractSingularPersistentAttribute<O,J>
 		implements IdentifierDescriptor<O,J>, SingularPersistentAttribute<O,J> {
 	private final EntityHierarchy hierarchy;
 	private final List<Column> columns;
@@ -54,11 +51,6 @@ public class IdentifierDescriptorSimple<O,J>
 		);
 		this.hierarchy = hierarchy;
 		this.columns = columns;
-	}
-
-	@Override
-	public BasicType getIdType() {
-		return (BasicType) getOrmType();
 	}
 
 	@Override
@@ -102,18 +94,12 @@ public class IdentifierDescriptorSimple<O,J>
 	}
 
 	@Override
-	public Selection createSelection(Expression selectedExpression, String resultVariable) {
-		assert selectedExpression instanceof NavigableReference;
-		return new NavigableSelection( (NavigableReference) selectedExpression, resultVariable );
-	}
-
-	@Override
-	public QueryResult generateReturn(
+	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
 			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return getIdAttribute().generateReturn( selectedExpression, resultVariable, columnReferenceSource, sqlSelectionResolver, creationContext );
+		return getIdAttribute().generateQueryResult( selectedExpression, resultVariable, columnReferenceSource, sqlSelectionResolver, creationContext );
 	}
 }

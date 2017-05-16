@@ -11,11 +11,9 @@ import java.util.List;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
-import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.common.spi.VirtualPersistentAttribute;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
@@ -25,11 +23,8 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.internal.NavigableSelection;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.EmbeddedType;
 
@@ -55,7 +50,7 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 				entityHierarchy.getRootEntityPersister(),
 				NAVIGABLE_NAME,
 				PropertyAccessStrategyEmbeddedImpl.INSTANCE.buildPropertyAccess( null, NAVIGABLE_NAME ),
-				embeddedPersister.getOrmType(),
+				embeddedPersister,
 				Disposition.ID,
 				false
 		);
@@ -66,11 +61,6 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 	@Override
 	public List<Column> getColumns() {
 		return embeddedPersister.collectColumns();
-	}
-
-	@Override
-	public EmbeddedType getIdType() {
-		return embeddedPersister.getOrmType();
 	}
 
 	@Override
@@ -143,34 +133,23 @@ public class IdentifierDescriptorCompositeNonAggregated<O,J>
 	}
 
 	@Override
-	public List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute) {
-		return getContainer().resolveJoinColumnMappings( persistentAttribute );
-	}
-
-	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
 	}
 
 	@Override
-	public QueryResult generateReturn(
+	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
 			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return embeddedPersister.generateReturn(
+		return embeddedPersister.generateQueryResult(
 				selectedExpression,
 				resultVariable,
 				columnReferenceSource,
 				sqlSelectionResolver,
 				creationContext
 		);
-	}
-
-	@Override
-	public Selection createSelection(Expression selectedExpression, String resultVariable) {
-		assert selectedExpression instanceof NavigableSelection;
-		return new NavigableSelection( (NavigableReference) selectedExpression, resultVariable );
 	}
 }

@@ -104,7 +104,7 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 	}
 
 	@Override
-	public EmbeddedPersister getEmbeddablePersister() {
+	public EmbeddedPersister getEmbeddedPersister() {
 		return this;
 	}
 

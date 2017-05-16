@@ -9,9 +9,10 @@ package org.hibernate.persister.entity.spi;
 import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.persister.queryable.spi.Fetchable;
-import org.hibernate.persister.queryable.spi.Returnable;
 
 /**
+ * Specialization of Navigable(Container) for any entity-valued Navigable
+ *
  * @author Steve Ebersole
  */
 public interface EntityValuedNavigable<J> extends EntityValuedExpressableType<J>, NavigableContainer<J>, Fetchable {

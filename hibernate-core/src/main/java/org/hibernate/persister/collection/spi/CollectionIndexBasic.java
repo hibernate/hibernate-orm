@@ -6,13 +6,14 @@
  */
 package org.hibernate.persister.collection.spi;
 
-import org.hibernate.persister.common.spi.ConvertibleNavigable;
-import org.hibernate.type.spi.BasicType;
+import org.hibernate.persister.common.BasicValuedNavigable;
 
 /**
  * @author Steve Ebersole
  */
-public interface CollectionIndexBasic<T> extends CollectionIndex<T,BasicType<T>>, ConvertibleNavigable<T> {
+public interface CollectionIndexBasic<T> extends CollectionIndex<T>, BasicValuedNavigable<T> {
 	@Override
-	BasicType<T> getOrmType();
+	default IndexClassification getClassification() {
+		return IndexClassification.BASIC;
+	}
 }

@@ -21,7 +21,6 @@ public interface EntityValuedExpressableType<T> extends ExpressableType<T>, Navi
 
 	EntityPersister<T> getEntityPersister();
 
-	String getTypeName();
 	String getEntityName();
 	String getJpaEntityName();
 

@@ -49,7 +49,7 @@ public class CollectionIndexEmbeddedImpl<J>
 	}
 
 	@Override
-	public EmbeddedPersister getEmbeddablePersister() {
+	public EmbeddedPersister getEmbeddedPersister() {
 		return getOrmType().getEmbeddablePersister();
 	}
 
@@ -60,7 +60,7 @@ public class CollectionIndexEmbeddedImpl<J>
 
 	@Override
 	public Navigable findNavigable(String navigableName) {
-		return getEmbeddablePersister().findNavigable( navigableName );
+		return getEmbeddedPersister().findNavigable( navigableName );
 	}
 
 	@Override

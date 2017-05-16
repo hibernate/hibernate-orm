@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.ast.tree.spi.select;
 
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.EntityValuedNavigable;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.internal.EntityValuedNavigableSelection;
+import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroup;
@@ -97,7 +96,7 @@ public class EntityValuedSelectable implements Selectable {
 
 		final List<Column> columns;
 		if ( persistentAttribute instanceof SingularPersistentAttributeEmbedded ) {
-			columns = ( (SingularPersistentAttributeEmbedded) singularAttribute ).getEmbeddablePersister().collectColumns();
+			columns = ( (SingularPersistentAttributeEmbedded) singularAttribute ).getEmbeddedPersister().collectColumns();
 		}
 		else {
 			columns = singularAttribute.getColumns();
@@ -131,16 +130,11 @@ public class EntityValuedSelectable implements Selectable {
 	@Override
 	public Selection createSelection(Expression selectedExpression, String resultVariable) {
 		assert selectedExpression instanceof NavigableReference;
-		final NavigableReference navigableReferenceExpression = (NavigableReference) selectedExpression;
+		final NavigableReference navigableReference = (NavigableReference) selectedExpression;
 
-		assert navigableReferenceExpression.getNavigable() instanceof EntityValuedNavigable;
-		final EntityValuedNavigable entityValuedNavigable = (EntityValuedNavigable) navigableReferenceExpression.getNavigable();
+		assert navigableReference.getNavigable() instanceof EntityValuedNavigable;
 
-		return new EntityValuedNavigableSelection(
-				navigableReferenceExpression,
-				entityValuedNavigable.getEntityPersister(),
-				resultVariable
-		);
+		return new NavigableSelection( navigableReference, resultVariable );
 	}
 
 }

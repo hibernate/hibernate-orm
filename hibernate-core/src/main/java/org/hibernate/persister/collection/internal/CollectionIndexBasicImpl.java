@@ -9,7 +9,6 @@ package org.hibernate.persister.collection.internal;
 import java.util.List;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.persister.collection.spi.AbstractCollectionIndex;
@@ -17,36 +16,40 @@ import org.hibernate.persister.collection.spi.CollectionIndexBasic;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
-import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.BasicType;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
 public class CollectionIndexBasicImpl<J>
-		extends AbstractCollectionIndex<J, BasicType<J>>
+		extends AbstractCollectionIndex<J>
 		implements CollectionIndexBasic<J> {
-	private static final Logger log = Logger.getLogger( CollectionIndexBasicImpl.class );
 
+	private final BasicType<J> basicType;
+	private final Column column;
 	private final AttributeConverterDefinition attributeConverter;
 
 	public CollectionIndexBasicImpl(
 			CollectionPersister persister,
 			IndexedCollection mappingBinding,
-			BasicType<J> ormType,
 			List<Column> columns) {
-		super( persister, ormType, columns );
+		super( persister, columns );
 
 		final SimpleValue simpleValueMapping = (SimpleValue) mappingBinding.getIndex();
 		this.attributeConverter = simpleValueMapping.getAttributeConverterDescriptor();
+
+		// todo (6.0) : SimpleValue -> BasicType
+		this.basicType = null;
+
+		assert columns != null && columns.size() == 1;
+		this.column = columns.get( 0 );
 	}
 
 	@Override
@@ -60,32 +63,34 @@ public class CollectionIndexBasicImpl<J>
 	}
 
 	@Override
-	public BasicJavaDescriptor getJavaTypeDescriptor() {
-		return null;
-	}
-
-	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitCollectionIndexBasic( this );
 	}
 
 	@Override
-	public QueryResult generateReturn(
-			QueryResultCreationContext returnResolutionContext,
-			TableGroup tableGroup) {
-		throw new NotYetImplementedException(  );
+	public Column getBoundColumn() {
+		return column;
 	}
 
 	@Override
-	public Fetch generateFetch(
-			QueryResultCreationContext returnResolutionContext,
-			TableGroup tableGroup,
-			FetchParent fetchParent) {
-		throw new NotYetImplementedException(  );
+	public BasicType<J> getBasicType() {
+		return basicType;
 	}
 
 	@Override
-	public IndexClassification getClassification() {
-		return IndexClassification.BASIC;
+	public QueryResult generateQueryResult(
+			NavigableReference selectedExpression,
+			String resultVariable,
+			ColumnReferenceSource columnReferenceSource,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		return new QueryResultScalarImpl(
+				selectedExpression,
+				sqlSelectionResolver.resolveSqlSelection(
+						columnReferenceSource.resolveColumnReference( column )
+				),
+				resultVariable,
+				this
+	  	);
 	}
 }

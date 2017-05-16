@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.queryable.spi;
 
+import org.hibernate.persister.common.spi.ForeignKey;
 import org.hibernate.persister.common.spi.Navigable;
 
 /**
@@ -14,5 +15,10 @@ import org.hibernate.persister.common.spi.Navigable;
  * @author Steve Ebersole
  */
 public interface Joinable<T> extends Navigable<T>, TableGroupJoinProducer {
-
+	/**
+	 * Intended for metadata-tive purposes.  Internally Hibernate never uses this
+	 * method, since the specific Joinable Navigables simply incorporate these
+	 * into their corresponding TableGroupJoin#predicate and QueryResult.
+	 */
+	ForeignKey.ColumnMappings getJoinColumnMappings();
 }

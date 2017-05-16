@@ -88,6 +88,8 @@ public class ForeignKey {
 		Table getReferringTable();
 		Table getTargetTable();
 		List<ColumnMapping> getColumnMappings();
+
+		// todo (6.0) : consider exposing org.hibernate.type.ForeignKeyDirection here
 	}
 
 	public interface ColumnMapping {

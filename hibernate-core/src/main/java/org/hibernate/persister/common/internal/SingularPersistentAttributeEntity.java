@@ -4,25 +4,23 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.persister.common.internal;
 
 import java.util.List;
 
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.JoinColumnMapping;
+import org.hibernate.persister.common.spi.ForeignKey.ColumnMappings;
 import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
-import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.entity.spi.EntityValuedNavigable;
+import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.persister.queryable.spi.JoinedTableGroupContext;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.persister.queryable.spi.SqlAliasBaseResolver;
-import org.hibernate.persister.queryable.spi.JoinedTableGroupContext;
 import org.hibernate.persister.queryable.spi.TableGroupResolver;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -39,39 +37,37 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.EntityType;
 
 
 /**
  * @author Steve Ebersole
  */
 public class SingularPersistentAttributeEntity<O,J>
-		extends AbstractSingularPersistentAttribute<O,J,EntityType<J>>
+		extends AbstractSingularPersistentAttribute<O,J>
 		implements JoinablePersistentAttribute<O,J>, EntityValuedNavigable<J> {
+
 	private final SingularAttributeClassification classification;
-	private final EntityPersister entityPersister;
-	private final List<Column> columns;
+	private final EntityPersister<J> entityPersister;
+	private final ColumnMappings joinColumnMappings;
+
 	private final NavigableRole navigableRole;
 
-	private List<JoinColumnMapping> joinColumnMappings;
 
 	public SingularPersistentAttributeEntity(
-			ManagedTypeImplementor declaringType,
+			ManagedTypeImplementor<O> declaringType,
 			String name,
 			PropertyAccess propertyAccess,
 			SingularAttributeClassification classification,
-			EntityType ormType,
+			EntityValuedExpressableType<J> ormType,
 			Disposition disposition,
-			EntityPersister entityPersister,
-			List<Column> columns) {
+			EntityPersister<J> entityPersister,
+			ColumnMappings joinColumnMappings) {
 		super( declaringType, name, propertyAccess, ormType, disposition, true );
 		this.classification = classification;
 		this.entityPersister = entityPersister;
-		this.navigableRole = declaringType.getNavigableRole().append( name );
+		this.joinColumnMappings = joinColumnMappings;
 
-		// columns should be the rhs columns I believe.
-		//		todo : add an assertion based on whatever this should be...
-		this.columns = columns;
+		this.navigableRole = declaringType.getNavigableRole().append( name );
 	}
 
 	@Override
@@ -91,12 +87,17 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
+	public EntityValuedExpressableType<J> getType() {
+		return (EntityValuedExpressableType<J>) super.getType();
+	}
+
+	@Override
 	public String getJpaEntityName() {
 		return entityPersister.getJpaEntityName();
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
 		return entityPersister.getJavaTypeDescriptor();
 	}
 
@@ -121,11 +122,6 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute) {
-		return null;
-	}
-
-	@Override
 	public boolean isAssociation() {
 		return true;
 	}
@@ -137,10 +133,6 @@ public class SingularPersistentAttributeEntity<O,J>
 	@Override
 	public SingularAttributeClassification getAttributeTypeClassification() {
 		return classification;
-	}
-
-	public List<Column> getColumns() {
-		return columns;
 	}
 
 	@Override
@@ -176,13 +168,13 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public QueryResult generateReturn(
+	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
 			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return entityPersister.generateReturn(
+		return entityPersister.generateQueryResult(
 				selectedExpression,
 				resultVariable,
 				columnReferenceSource,
@@ -210,5 +202,20 @@ public class SingularPersistentAttributeEntity<O,J>
 			TableGroupResolver tableGroupResolutionContext,
 			SqlAliasBaseResolver sqlAliasBaseResolver) {
 		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public ColumnMappings getJoinColumnMappings() {
+		return joinColumnMappings;
+	}
+
+	@Override
+	public List<Navigable> getNavigables() {
+		return entityPersister.getNavigables();
+	}
+
+	@Override
+	public List<Navigable> getDeclaredNavigables() {
+		return entityPersister.getDeclaredNavigables();
 	}
 }

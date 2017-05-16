@@ -13,26 +13,39 @@ import java.util.List;
  */
 public interface NavigableContainer<T> extends Navigable<T> {
 	/**
-	 * Find a Navigable by name.  Returns {@code null} if the given
-	 * "navigable name" cannot be resolved.
-	 *
-	 * @param navigableName The name to resolve relative to this source/container.
-	 *
-	 * @return The resolve navigable, or {@code null}
+	 * Find a Navigable by name.  Returns {@code null} if a Navigable of the given
+	 * name cannot be found.
+	 * <p/>
+	 * This form returns Navigables declared here as well as Navigables declared
+	 * on the super.
 	 */
 	<N> Navigable<N> findNavigable(String navigableName);
 
+	/**
+	 * Find a Navigable by name.  Returns {@code null} if a Navigable of the given
+	 * name cannot be found.
+	 * <p/>
+	 * This form limits the returned Navigables to just those declared on this container.
+	 */
 	<N> Navigable<N> findDeclaredNavigable(String navigableName);
 
+	/**
+	 * Get all (declared+super) Navigables
+	 */
+	List<Navigable> getNavigables();
+
+	/**
+	 * Get all declared Navigabled
+	 */
+	List<Navigable> getDeclaredNavigables();
+
+	/**
+	 * Navigable visitation across all (declared+super) contained Navigables
+	 */
 	void visitNavigables(NavigableVisitationStrategy visitor);
 
+	/**
+	 * Navigable visitation across all declared, contained Navigables
+	 */
 	void visitDeclaredNavigables(NavigableVisitationStrategy visitor);
-
-	// todo (6.0) : overload this for entity- and collection-valued attributes
-	//		but that requires splitting SingularAttributeEntity into interface/impl
-	//		and moving the interface into SPI
-	//
-	// todo (6.0) : may want to do this completely differently.
-	// 		As-is, this leaks into places it should not.
-	List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute);
 }

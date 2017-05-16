@@ -17,11 +17,11 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
-import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.BasicTypeRegistry;
@@ -100,7 +100,7 @@ public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T
 
 	@Override
 	public String asLoggableText() {
-		return "BasicType(" + getTypeName() + ")";
+		return "BasicType(" + getJavaType() + ")";
 	}
 
 	@Override
@@ -134,27 +134,26 @@ public class BasicTypeImpl<T> extends AbstractTypeImpl<T> implements BasicType<T
 	@Override
 	public T extractParameterValue(
 			CallableStatement statement,
-			int jdbcParameterIndex,
-			SharedSessionContractImplementor session) throws SQLException {
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+			int jdbcParameterIndex) throws SQLException {
 		return getColumnMapping().getSqlTypeDescriptor().getExtractor( getJavaTypeDescriptor() ).extract(
 				statement,
 				jdbcParameterIndex,
-				session
+				jdbcValuesSourceProcessingState.getPersistenceContext()
 		);
 	}
 
 	@Override
 	public T extractParameterValue(
 			CallableStatement statement,
-			String jdbcParameterName,
-			SharedSessionContractImplementor session) throws SQLException {
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
+			String jdbcParameterName) throws SQLException {
 		return getColumnMapping().getSqlTypeDescriptor().getExtractor( getJavaTypeDescriptor() ).extract(
 				statement,
 				jdbcParameterName,
-				session
+				jdbcValuesSourceProcessingState.getPersistenceContext()
 		);
 	}
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -6,23 +6,14 @@
  */
 package org.hibernate.persister.common.spi;
 
-import java.util.List;
-
 /**
- * DomainDescriptor that can define persistent attributes
+ * Essentially an extension of NavigableContainer (and ManagedType logically).
  *
  * @author Steve Ebersole
  */
 public interface AttributeContainer extends NavigableContainer {
-	// todo : what else would be useful here?
-
+	/**
+	 * Access to the super type
+	 */
 	AttributeContainer getSuperAttributeContainer();
-
-	List<PersistentAttribute> getNonIdentifierAttributes();
-	PersistentAttribute findAttribute(String name);
-
-	// todo : overload this for entity- and collection-valued attributes
-	//		but that requires splitting SingularAttributeEntity into interface/impl
-	//		and moving the interface into SPI
-	List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute);
 }

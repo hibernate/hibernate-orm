@@ -77,11 +77,6 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements Polymorphi
 	}
 
 	@Override
-	public String getTypeName() {
-		return getEntityName();
-	}
-
-	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}
@@ -140,11 +135,6 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements Polymorphi
 	}
 
 	@Override
-	public List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute) {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return javaType;
 	}
@@ -155,7 +145,7 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements Polymorphi
 	}
 
 	@Override
-	public QueryResult generateReturn(
+	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
 			ColumnReferenceSource columnReferenceSource,

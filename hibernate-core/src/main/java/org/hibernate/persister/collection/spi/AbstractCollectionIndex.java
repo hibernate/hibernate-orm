@@ -10,24 +10,19 @@ import java.util.List;
 
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.ForeignKey;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractCollectionIndex<J, T extends Type<J>> implements CollectionIndex<J,T> {
+public abstract class AbstractCollectionIndex<J> implements CollectionIndex<J> {
 	private final CollectionPersister persister;
-	private final T ormType;
 	private final List<Column> columns;
 	private final NavigableRole navigableRole;
 
-	public AbstractCollectionIndex(CollectionPersister persister, T ormType, List<Column> columns) {
+	public AbstractCollectionIndex(CollectionPersister persister, List<Column> columns) {
 		this.persister = persister;
-		this.ormType = ormType;
 		this.columns = columns;
 		this.navigableRole = persister.getNavigableRole().append( NAVIGABLE_NAME );
 	}
@@ -42,18 +37,9 @@ public abstract class AbstractCollectionIndex<J, T extends Type<J>> implements C
 		return navigableRole;
 	}
 
-	public T getOrmType() {
-		return ormType;
-	}
-
-	@Override
-	public String getTypeName() {
-		return getOrmType().getName();
-	}
-
 	@Override
 	public Class<J> getJavaType() {
-		return getOrmType().getJavaType();
+		return getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override
@@ -68,7 +54,7 @@ public abstract class AbstractCollectionIndex<J, T extends Type<J>> implements C
 
 	@Override
 	public String asLoggableText() {
-		return "PluralAttributeIndex(" + persister.getRole() + " [" + getTypeName() + "])";
+		return "PluralAttributeIndex(" + persister.getRole() + " [" + getJavaType() + "])";
 	}
 
 	@Override

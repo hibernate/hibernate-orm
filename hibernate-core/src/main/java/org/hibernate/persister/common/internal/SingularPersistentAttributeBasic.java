@@ -13,44 +13,81 @@ import java.util.List;
 import org.hibernate.persister.common.BasicValuedNavigable;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.ConvertibleNavigable;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
+import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public class SingularPersistentAttributeBasic<O,J> extends AbstractSingularPersistentAttribute<O, J, BasicType<J>>
-		implements ConvertibleNavigable<J>, BasicValuedNavigable<J> {
-	private static final Logger log = Logger.getLogger( SingularPersistentAttributeBasic.class );
+public class SingularPersistentAttributeBasic<O,J>
+		extends AbstractSingularPersistentAttribute<O, J>
+		implements BasicValuedNavigable<J> {
 
 	private final Column boundColumn;
-
+	private final BasicType<J> basicType;
 	private AttributeConverterDefinition attributeConverterInfo;
 
 	public SingularPersistentAttributeBasic(
-			ManagedTypeImplementor declaringType,
+			ManagedTypeImplementor<O> declaringType,
 			String name,
 			PropertyAccess propertyAccess,
-			BasicType<J> ormType,
+			BasicValuedExpressableType<J> expressableType,
 			Disposition disposition,
 			AttributeConverterDefinition attributeConverterInfo,
 			List<Column> columns) {
-		super( declaringType, name, propertyAccess, ormType, disposition, true );
+		super( declaringType, name, propertyAccess, expressableType, disposition, true );
 
 		assert columns.size() == 1;
 
 		this.attributeConverterInfo = attributeConverterInfo;
 		this.boundColumn = columns.get( 0 );
+
+		// todo (6.0) : resolve SimpleValue -> BasicType
+		this.basicType = null;
 	}
 
 	@Override
 	public SingularAttributeClassification getAttributeTypeClassification() {
 		return SingularAttributeClassification.BASIC;
+	}
+
+	@Override
+	public BasicValuedExpressableType<J> getType() {
+		return (BasicValuedExpressableType<J>) super.getType();
+	}
+
+	@Override
+	public BasicJavaDescriptor<J> getJavaTypeDescriptor() {
+		return (BasicJavaDescriptor<J>) super.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public QueryResult generateQueryResult(
+			NavigableReference selectedExpression,
+			String resultVariable,
+			ColumnReferenceSource columnReferenceSource,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		return new QueryResultScalarImpl(
+				selectedExpression,
+				sqlSelectionResolver.resolveSqlSelection(
+						columnReferenceSource.resolveColumnReference( boundColumn )
+				),
+				resultVariable,
+				getType()
+	  	);
 	}
 
 	@Override
@@ -81,5 +118,15 @@ public class SingularPersistentAttributeBasic<O,J> extends AbstractSingularPersi
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;
+	}
+
+	@Override
+	public void visitNavigable(NavigableVisitationStrategy visitor) {
+		visitor.visitSingularAttributeBasic( this );
+	}
+
+	@Override
+	public BasicType<J> getBasicType() {
+		return basicType;
 	}
 }

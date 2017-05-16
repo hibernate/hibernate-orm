@@ -18,6 +18,9 @@ configurations {
     tests {
         description = 'Configuration for the produced test jar'
     }
+    asciidoclet {
+        description = 'Configuration needed to enable the Asciidoctor JavaDoc doclet'
+    }
 }
 
 dependencies {
@@ -109,7 +112,25 @@ dependencies {
 
     testCompile libraries.jboss_ejb_spec_jar
     testCompile libraries.jboss_annotation_spec_jar
+
+    asciidoclet 'org.asciidoctor:asciidoclet:1.+'
 }
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Asciidoclet support
+javadoc {
+    options.docletpath = configurations.asciidoclet.files.asType(List)
+    options.doclet = 'org.asciidoctor.Asciidoclet'
+    options.overview = rootProject.file( "shared/javadoc/overview.html" ).absolutePath
+    options.addStringOption "-base-dir", "${projectDir}"
+    options.addStringOption "-attribute",
+            "name=${project.name}," +
+            "version=${project.version}," +
+            "title-link=http://example.com[${project.name} ${project.version}]"
+}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 mavenPom {
     name = 'Core Hibernate O/RM functionality'

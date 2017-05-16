@@ -33,7 +33,6 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.collection.spi.TableReferenceJoinCollector;
-import org.hibernate.persister.common.spi.ForeignKey;
 import org.hibernate.persister.common.spi.JoinedTableBinding;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableContainer;
@@ -51,7 +50,6 @@ import org.hibernate.persister.queryable.spi.SqlAliasBaseResolver;
 import org.hibernate.persister.queryable.spi.TableGroupContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.JoinType;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
@@ -214,7 +212,14 @@ public interface EntityPersister<T>
 	 */
 	EntityLocker getLocker(LockOptions lockOptions, SharedSessionContractImplementor session);
 
-
+	/**
+	 * Apply the Tables mapped by this entity to the collector as TableReferences; return
+	 * the root table for the added joined tables for the caller to use as a join target.
+	 */
+	void applyTableReferenceJoins(
+			JoinType joinType,
+			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
+			TableReferenceJoinCollector collector);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -944,9 +949,4 @@ public interface EntityPersister<T>
 	int[] resolveAttributeIndexes(String[] attributeNames);
 
 	boolean canUseReferenceCacheEntries();
-
-	void applyTableReferenceJoins(
-			JoinType joinType,
-			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
-			TableReferenceJoinCollector collector);
 }

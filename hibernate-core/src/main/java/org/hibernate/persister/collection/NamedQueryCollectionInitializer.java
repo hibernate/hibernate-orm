@@ -20,6 +20,8 @@ import org.hibernate.query.spi.NativeQueryImplementor;
 /**
  * A wrapper around a named query.
  *
+ * todo (6.0) : this is essentially a NativeQuery + QueryResultCollection + QueryResultAssemblerCollection + CollectionReferenceInitialzer
+ *
  * @author Gavin King
  */
 public final class NamedQueryCollectionInitializer implements CollectionInitializer {

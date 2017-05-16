@@ -8,6 +8,7 @@ package org.hibernate.persister.embedded.spi;
 
 import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.queryable.spi.EmbeddedValueExpressableType;
+import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
  * Describes parts of the domain model that can be composite values.
@@ -18,5 +19,8 @@ public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType
 	@Override
 	EmbeddedContainer getContainer();
 
-	EmbeddedPersister getEmbeddablePersister();
+	EmbeddedPersister<J> getEmbeddedPersister();
+
+	@Override
+	EmbeddableJavaDescriptor<J> getJavaTypeDescriptor();
 }

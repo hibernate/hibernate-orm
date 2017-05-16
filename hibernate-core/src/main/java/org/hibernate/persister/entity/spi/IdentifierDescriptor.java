@@ -11,14 +11,11 @@ import java.util.List;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
-import org.hibernate.type.spi.Type;
 
 /**
  * @author Steve Ebersole
  */
 public interface IdentifierDescriptor<O,J> extends Navigable<J>, SingularPersistentAttribute<O,J> {
-	Type getIdType();
-
 	/**
 	 * Is this identifier defined by a single attribute on the entity?
 	 * <p/>

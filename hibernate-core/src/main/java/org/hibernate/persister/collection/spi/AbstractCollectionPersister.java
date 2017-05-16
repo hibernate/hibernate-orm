@@ -156,7 +156,7 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <J,T extends Type<J>> CollectionIndex<J,T> resolveIndexDescriptor(
+	private static <J,T extends Type<J>> CollectionIndex<J> resolveIndexDescriptor(
 			CollectionPersister persister,
 			Collection collectionBinding,
 			Table separateCollectionTable,
@@ -328,7 +328,9 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 			collectionTableReference = null;
 		}
 
-		final ElementColumnReferenceSource elementTableGroup = new ElementColumnReferenceSource();
+		final ElementColumnReferenceSource elementTableGroup = new ElementColumnReferenceSource(
+				navigableReferenceInfo.getUniqueIdentifier()
+		);
 		getElementDescriptor().applyTableReferenceJoins(
 				JoinType.LEFT_OUTER_JOIN,
 				sqlAliasBase,
@@ -337,7 +339,9 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 
 		final IndexColumnReferenceSource indexTableGroup;
 		if ( getIndexDescriptor() != null ) {
-			indexTableGroup = new IndexColumnReferenceSource();
+			indexTableGroup = new IndexColumnReferenceSource(
+					navigableReferenceInfo.getUniqueIdentifier()
+			);
 			getIndexDescriptor().applyTableReferenceJoins(
 					JoinType.LEFT_OUTER_JOIN,
 					sqlAliasBase,

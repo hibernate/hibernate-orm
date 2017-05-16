@@ -7,13 +7,11 @@
 package org.hibernate.persister.collection.spi;
 
 import org.hibernate.persister.common.BasicValuedNavigable;
-import org.hibernate.persister.common.spi.ConvertibleNavigable;
-import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
 public interface CollectionElementBasic<J>
-		extends CollectionElement<J,BasicType<J>>, ConvertibleNavigable<J>, BasicValuedNavigable<J> {
+		extends CollectionElement<J>, BasicValuedNavigable<J> {
 
 }

@@ -55,7 +55,14 @@ public interface SingularPersistentAttribute<O,T>
 	 */
 	Disposition getDisposition();
 
-	List<Column> getColumns();
+	/**
+	 * todo (6.0) : Again, consider removing this.
+	 * 		It is never used by Hibernate code - since we now encapsulate the usage of these
+	 * 		as we build TableGroups and Selections/QueryResults/etc.
+	 */
+	default List<Column> getColumns() {
+		return null;
+	}
 
 	boolean isNullable();
 }

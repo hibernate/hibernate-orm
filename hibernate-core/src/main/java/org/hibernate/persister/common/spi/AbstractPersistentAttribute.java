@@ -11,16 +11,15 @@ import java.lang.reflect.Member;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.Type;
 
 /**
  * Base class for Attribute implementations
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractPersistentAttribute<O,T> implements PersistentAttribute<O,T> {
+public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttribute<O,J> {
 	private final ManagedTypeImplementor<O> container;
-	private final Type<T> ormType;
+	private final JavaTypeDescriptor<J> javaTypeDescriptor;
 	private final PropertyAccess access;
 
 	private final NavigableRole navigableRole;
@@ -28,10 +27,10 @@ public abstract class AbstractPersistentAttribute<O,T> implements PersistentAttr
 	public AbstractPersistentAttribute(
 			ManagedTypeImplementor<O> container,
 			String name,
-			Type<T> ormType,
+			JavaTypeDescriptor<J> javaTypeDescriptor,
 			PropertyAccess access) {
 		this.container = container;
-		this.ormType = ormType;
+		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.access = access;
 
 		this.navigableRole = container.getNavigableRole().append( name );
@@ -53,12 +52,8 @@ public abstract class AbstractPersistentAttribute<O,T> implements PersistentAttr
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getOrmType().getJavaTypeDescriptor();
-	}
-
-	public Type<T> getOrmType() {
-		return ormType;
+	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
+		return javaTypeDescriptor;
 	}
 
 	@Override

@@ -6,45 +6,42 @@
  */
 package org.hibernate.sql.ast.produce.result.internal;
 
-import java.util.List;
-
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.select.SelectableEmbeddedTypeImpl;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultComposite;
+import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.sql.ast.consume.results.internal.QueryResultAssemblerComposite;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
-import org.hibernate.type.spi.EmbeddedType;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultComposite;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**
  * @author Steve Ebersole
  */
 public class QueryResultCompositeImpl implements QueryResultComposite {
-	private final SelectableEmbeddedTypeImpl selectableEmbeddedType;
+	private final NavigableReference selectedExpression;
 	private final String resultVariable;
-	private final EmbeddedType compositeType;
+
+	private final EmbeddedPersister persister;
 
 	private final QueryResultAssembler assembler;
 
 	public QueryResultCompositeImpl(
-			SelectableEmbeddedTypeImpl selectableEmbeddedType,
+			NavigableReference selectedExpression,
 			String resultVariable,
-			List<SqlSelection> sqlSelections,
-			EmbeddedType compositeType) {
-		this.selectableEmbeddedType = selectableEmbeddedType;
+			EmbeddedPersister<?> embeddedPersister) {
+		this.selectedExpression = selectedExpression;
 		this.resultVariable = resultVariable;
-		this.compositeType = compositeType;
+		this.persister = embeddedPersister;
 
 		this.assembler = new QueryResultAssemblerComposite(
 				this,
-				sqlSelections,
-				compositeType
+				null,
+				embeddedPersister
 		);
 	}
 
 	@Override
 	public Expression getSelectedExpression() {
-		return selectableEmbeddedType.getSelectedExpression();
+		return selectedExpression;
 	}
 
 	@Override
@@ -54,7 +51,7 @@ public class QueryResultCompositeImpl implements QueryResultComposite {
 
 	@Override
 	public Class getReturnedJavaType() {
-		return compositeType.getReturnedClass();
+		return persister.getJavaType();
 	}
 
 	@Override

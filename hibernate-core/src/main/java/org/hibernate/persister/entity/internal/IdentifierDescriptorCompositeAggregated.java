@@ -13,11 +13,9 @@ import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.JoinColumnMapping;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
-import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
@@ -53,7 +51,7 @@ public class IdentifierDescriptorCompositeAggregated<O,J>
 				entityHierarchy.getRootEntityPersister(),
 				idAttribute.getName(),
 				PersisterHelper.resolvePropertyAccess( entityHierarchy.getRootEntityPersister(), idAttribute, creationContext ),
-				embeddedPersister.getOrmType(),
+				embeddedPersister,
 				Disposition.ID,
 				false
 		);
@@ -152,24 +150,13 @@ public class IdentifierDescriptorCompositeAggregated<O,J>
 	}
 
 	@Override
-	public List<JoinColumnMapping> resolveJoinColumnMappings(PersistentAttribute persistentAttribute) {
-		return getContainer().resolveJoinColumnMappings( persistentAttribute );
-	}
-
-	@Override
-	public Selection createSelection(Expression selectedExpression, String resultVariable) {
-		assert selectedExpression instanceof NavigableReference;
-		return new NavigableSelection( (NavigableReference) selectedExpression, resultVariable );
-	}
-
-	@Override
-	public QueryResult generateReturn(
+	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
 			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return embeddedPersister.generateReturn(
+		return embeddedPersister.generateQueryResult(
 				selectedExpression,
 				resultVariable,
 				columnReferenceSource,

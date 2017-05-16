@@ -59,6 +59,11 @@ public class DB2390Dialect extends DB2Dialect {
 		}
 
 		@Override
+		public boolean supportsLimitOffset() {
+			return false;
+		}
+
+		@Override
 		public boolean useMaxForLimit() {
 			return true;
 		}

@@ -76,22 +76,12 @@ public interface EmbeddedPersister<T>
 	EmbeddableJavaDescriptor<T> getJavaTypeDescriptor();
 
 	@Override
-	default PersistenceType getPersistenceType() {
-		return PersistenceType.EMBEDDABLE;
-	}
-
-	@Override
 	EmbeddedContainer<?> getContainer();
-
-	@Override
-	default String getTypeName() {
-		return getContainer().getJavaTypeDescriptor().getTypeName();
-	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	default Class<T> getJavaType() {
-		return (Class<T>) getContainer().getJavaTypeDescriptor().getJavaType();
+		return getJavaTypeDescriptor().getJavaType();
 	}
 
 	@Override
@@ -106,6 +96,6 @@ public interface EmbeddedPersister<T>
 
 	@Override
 	default String asLoggableText() {
-		return "EmbeddableMapper(" + getTypeName() + " [" + getRoleName() + "])";
+		return "EmbeddableMapper(" + getJavaType() + " [" + getRoleName() + "])";
 	}
 }

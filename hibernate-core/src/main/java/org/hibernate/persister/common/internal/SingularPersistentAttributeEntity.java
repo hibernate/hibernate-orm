@@ -71,11 +71,6 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.ENTITY;
-	}
-
-	@Override
 	public PersistentAttributeType getPersistentAttributeType() {
 		// assume ManyToOne for now
 		return PersistentAttributeType.MANY_TO_ONE;

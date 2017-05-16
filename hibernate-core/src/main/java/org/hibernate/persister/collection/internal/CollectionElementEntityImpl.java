@@ -77,11 +77,6 @@ public class CollectionElementEntityImpl<J>
 	}
 
 	@Override
-	public Type.PersistenceType getPersistenceType() {
-		return Type.PersistenceType.ENTITY;
-	}
-
-	@Override
 	public <N> Navigable<N> findNavigable(String navigableName) {
 		return getEntityPersister().findNavigable( navigableName );
 	}

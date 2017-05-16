@@ -5396,16 +5396,6 @@ public abstract class AbstractEntityPersister<T>
 	}
 
 	@Override
-	public javax.persistence.metamodel.Type.PersistenceType getPersistenceType() {
-		return javax.persistence.metamodel.Type.PersistenceType.ENTITY;
-	}
-
-	@Override
-	public SqmDomainTypeEntity getExportedDomainType() {
-		return this;
-	}
-
-	@Override
 	public String asLoggableText() {
 		return "EntityPersister(`" + getEntityName() + "`)";
 	}

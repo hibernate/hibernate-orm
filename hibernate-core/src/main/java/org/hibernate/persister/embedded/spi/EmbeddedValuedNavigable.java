@@ -6,6 +6,8 @@
  */
 package org.hibernate.persister.embedded.spi;
 
+import javax.persistence.metamodel.Type;
+
 import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.queryable.spi.EmbeddedValueExpressableType;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -23,4 +25,9 @@ public interface EmbeddedValuedNavigable<J> extends EmbeddedValueExpressableType
 
 	@Override
 	EmbeddableJavaDescriptor<J> getJavaTypeDescriptor();
+
+	@Override
+	default Type.PersistenceType getPersistenceType() {
+		return Type.PersistenceType.EMBEDDABLE;
+	}
 }

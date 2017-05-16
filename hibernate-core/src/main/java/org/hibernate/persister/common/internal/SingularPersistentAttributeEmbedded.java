@@ -29,7 +29,6 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -83,11 +82,6 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	@Override
 	public PersistentAttributeType getPersistentAttributeType() {
 		return PersistentAttributeType.EMBEDDED;
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.EMBEDDABLE;
 	}
 
 	@Override

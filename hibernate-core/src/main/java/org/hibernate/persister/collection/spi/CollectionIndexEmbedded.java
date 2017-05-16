@@ -12,5 +12,8 @@ import org.hibernate.persister.embedded.spi.EmbeddedValuedNavigable;
  * @author Steve Ebersole
  */
 public interface CollectionIndexEmbedded<J> extends CollectionIndex<J>, EmbeddedValuedNavigable<J> {
-
+	@Override
+	default IndexClassification getClassification() {
+		return IndexClassification.EMBEDDABLE;
+	}
 }

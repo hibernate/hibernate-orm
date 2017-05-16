@@ -7,9 +7,7 @@
 package org.hibernate.persister.collection.internal;
 
 import java.util.List;
-import javax.persistence.metamodel.Type;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.persister.collection.spi.AbstractCollectionIndex;
 import org.hibernate.persister.collection.spi.CollectionIndexEmbedded;
@@ -18,54 +16,64 @@ import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
-import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.type.spi.EmbeddedType;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class CollectionIndexEmbeddedImpl<J>
-		extends AbstractCollectionIndex<J,EmbeddedType<J>>
+		extends AbstractCollectionIndex<J>
 		implements CollectionIndexEmbedded<J> {
+	private final EmbeddedPersister embeddedPersister;
+
 	public CollectionIndexEmbeddedImpl(
 			CollectionPersister persister,
-			IndexedCollection mappingBInding,
-			EmbeddedType<J> ormType,
+			IndexedCollection mapping,
 			List<Column> columns) {
-		super( persister, ormType, columns );
+		super( persister, columns );
+
+		this.embeddedPersister = null;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public EmbeddedType<J> getOrmType() {
-		return super.getOrmType();
+	public EmbeddedPersister<J> getEmbeddedPersister() {
+		return embeddedPersister;
 	}
 
 	@Override
-	public EmbeddedPersister getEmbeddedPersister() {
-		return getOrmType().getEmbeddablePersister();
-	}
-
-	@Override
-	public Type.PersistenceType getPersistenceType() {
-		return Type.PersistenceType.EMBEDDABLE;
-	}
-
-	@Override
-	public Navigable findNavigable(String navigableName) {
+	public <N> Navigable<N> findNavigable(String navigableName) {
 		return getEmbeddedPersister().findNavigable( navigableName );
 	}
 
 	@Override
-	public IndexClassification getClassification() {
-		return IndexClassification.EMBEDDABLE;
+	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
+		return getEmbeddedPersister().findDeclaredNavigable( navigableName );
+	}
+
+	@Override
+	public List<Navigable> getNavigables() {
+		return getEmbeddedPersister().getNavigables();
+	}
+
+	@Override
+	public List<Navigable> getDeclaredNavigables() {
+		return getEmbeddedPersister().getDeclaredNavigables();
+	}
+
+	@Override
+	public void visitNavigables(NavigableVisitationStrategy visitor) {
+		getEmbeddedPersister().visitNavigables( visitor );
+	}
+
+	@Override
+	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
+		getEmbeddedPersister().visitDeclaredNavigables( visitor );
 	}
 
 	@Override
@@ -74,25 +82,18 @@ public class CollectionIndexEmbeddedImpl<J>
 	}
 
 	@Override
-	public TableGroup buildTableGroup(
-			TableSpace tableSpace,
-			SqlAliasBaseManager sqlAliasBaseManager,
-			FromClauseIndex fromClauseIndex) {
-		throw new NotYetImplementedException(  );
+	public EmbeddableJavaDescriptor<J> getJavaTypeDescriptor() {
+		return getEmbeddedPersister().getJavaTypeDescriptor();
 	}
 
 	@Override
-	public QueryResult generateReturn(
-			QueryResultCreationContext returnResolutionContext,
-			TableGroup tableGroup) {
-		throw new NotYetImplementedException(  );
+	public QueryResult generateQueryResult(
+			NavigableReference selectedExpression,
+			String resultVariable,
+			ColumnReferenceSource columnReferenceSource,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		return new QueryResultCompositeImpl( selectedExpression, resultVariable, getEmbeddedPersister() );
 	}
 
-	@Override
-	public Fetch generateFetch(
-			QueryResultCreationContext returnResolutionContext,
-			TableGroup tableGroup,
-			FetchParent fetchParent) {
-		throw new NotYetImplementedException(  );
-	}
 }

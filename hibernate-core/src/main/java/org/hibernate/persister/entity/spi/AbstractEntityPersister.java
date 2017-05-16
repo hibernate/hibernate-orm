@@ -313,11 +313,6 @@ public abstract class AbstractEntityPersister<T>
 	}
 
 	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.ENTITY;
-	}
-
-	@Override
 	public <Y> SingularAttribute<? super T, Y> getId(Class<Y> type) {
 		return getHierarchy().getIdentifierDescriptor();
 	}

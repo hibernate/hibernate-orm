@@ -13,11 +13,6 @@ import org.hibernate.persister.embedded.spi.EmbeddedValuedNavigable;
  */
 public interface CollectionElementEmbedded<J> extends CollectionElement<J>, EmbeddedValuedNavigable<J> {
 	@Override
-	default PersistenceType getPersistenceType() {
-		return PersistenceType.EMBEDDABLE;
-	}
-
-	@Override
 	default ElementClassification getClassification() {
 		return ElementClassification.EMBEDDABLE;
 	}

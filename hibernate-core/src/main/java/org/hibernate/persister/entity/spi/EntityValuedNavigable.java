@@ -6,9 +6,12 @@
  */
 package org.hibernate.persister.entity.spi;
 
+import javax.persistence.metamodel.Type;
+
 import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.persister.queryable.spi.Fetchable;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * Specialization of Navigable(Container) for any entity-valued Navigable
@@ -16,4 +19,11 @@ import org.hibernate.persister.queryable.spi.Fetchable;
  * @author Steve Ebersole
  */
 public interface EntityValuedNavigable<J> extends EntityValuedExpressableType<J>, NavigableContainer<J>, Fetchable {
+	@Override
+	default Type.PersistenceType getPersistenceType() {
+		return Type.PersistenceType.ENTITY;
+	}
+
+	EntityJavaDescriptor<J> getJavaTypeDescriptor();
+
 }

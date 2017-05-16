@@ -1275,14 +1275,14 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Type.html[`@Type`] annotation is used to specify the Hibernate https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/Type.html[`@Type`] used by the current annotated basic attribute.
 
-See the <<chapters/domain/basic_types.adoc#collections-comma-delimited-collection-example, `@Type` mapping>> section for more info.
+See the <<chapters/domain/basic_types.adoc#basic-custom-type-BitSetType-mapping-example, `@Type` mapping>> section for more info.
 
 [[annotations-hibernate-typedef]]
 ==== `@TypeDef`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TypeDef.html[`@TypeDef`] annotation is used to specify a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/Type.html[`@Type`] definition which can later be reused for multiple basic attribute mappings.
 
-//TODO: Add example
+See the <<chapters/domain/basic_types.adoc#basic-custom-type-BitSetTypeDef-mapping-example, `@TypeDef` mapping>> section for more info.
 
 [[annotations-hibernate-typedefs]]
 ==== `@TypeDefs`

@@ -313,6 +313,17 @@ include::{sourcedir}/basic/BitSetTypeTest.java[tags=basic-custom-type-BitSetType
 ----
 ====
 
+Alternatively, use can use a `@TypeDef` ans skip the registration phase:
+
+[[basic-custom-type-BitSetTypeDef-mapping-example]]
+.Using `@TypeDef` to register a custom Type
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/BitSetTypeDefTest.java[tags=basic-custom-type-BitSetTypeDef-mapping-example]
+----
+====
+
 To validate this new `BasicType` implementation, we can test it as follows:
 
 [[basic-custom-type-BitSetType-persistence-example]]

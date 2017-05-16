@@ -18,8 +18,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
-import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -457,12 +455,6 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 			SessionImplementor s1Implementor = (SessionImplementor) s1;
 			assertTrue( s1Implementor.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
 
-			// Assert that the same Connection will be used for s1's entire transaction
-			assertEquals(
-					PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION,
-					( (JdbcSessionOwner) s1Implementor ).getJdbcSessionContext().getPhysicalConnectionHandlingMode()
-			);
-
 			// Get the Connection s1 will use.
 			final Connection connection1 = s1Implementor.connection();
 
@@ -476,10 +468,6 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 				// Check same assertions for s2 as was done for s1.
 				SessionImplementor s2Implementor = (SessionImplementor) s2;
 				assertTrue( s2Implementor.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
-				assertEquals(
-						PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION,
-						( (JdbcSessionOwner) s2Implementor ).getJdbcSessionContext().getPhysicalConnectionHandlingMode()
-				);
 
 				// Get the Connection s2 will use.
 				Connection connection2 = s2Implementor.connection();

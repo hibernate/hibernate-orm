@@ -15,7 +15,6 @@ import org.hibernate.mapping.Value;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
-import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.Type;
 
 import org.dom4j.Element;
@@ -24,56 +23,30 @@ import org.dom4j.Element;
  * Generates metadata for basic properties: immutable types (including enums).
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public final class BasicMetadataGenerator {
 
-	@SuppressWarnings({"unchecked"})
 	boolean addBasic(
-			Element parent, PropertyAuditingData propertyAuditingData,
-			Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
-		final Type type = value.getType();
+			Element parent,
+			PropertyAuditingData propertyAuditingData,
+			Value value,
+			SimpleMapperBuilder mapper,
+			boolean insertable,
+			boolean key) {
 
-		if ( type instanceof BasicType
-				|| type instanceof SerializableToBlobType
-				|| "org.hibernate.type.PrimitiveByteArrayBlobType".equals( type.getClass().getName() ) ) {
+		if ( value.getType() instanceof BasicType ) {
 			if ( parent != null ) {
-				final boolean addNestedType = (value instanceof SimpleValue)
-						&& ( (SimpleValue) value ).getTypeParameters() != null;
-
-				String typeName = type.getName();
-				if ( typeName == null ) {
-					typeName = type.getClass().getName();
-				}
-
-				final Element propMapping = MetadataTools.addProperty(
+				final Element propMapping = buildProperty(
 						parent,
-						propertyAuditingData.getName(),
-						addNestedType ? null : typeName,
-						propertyAuditingData.isForceInsertable() || insertable,
+						propertyAuditingData,
+						value,
+						insertable,
 						key
 				);
-				MetadataTools.addColumns( propMapping, value.getColumnIterator() );
 
-				if ( addNestedType ) {
-					final Properties typeParameters = ( (SimpleValue) value ).getTypeParameters();
-					final Element typeMapping = propMapping.addElement( "type" );
-					typeMapping.addAttribute( "name", typeName );
-
-					if ( "org.hibernate.type.EnumType".equals( typeName ) ) {
-						// Proper handling of enumeration type
-						mapEnumerationType( typeMapping, type, typeParameters );
-					}
-					else {
-						// By default copying all Hibernate properties
-						for ( Object object : typeParameters.keySet() ) {
-							final String keyType = (String) object;
-							final String property = typeParameters.getProperty( keyType );
-
-							if ( property != null ) {
-								typeMapping.addElement( "param" ).addAttribute( "name", keyType ).setText( property );
-							}
-						}
-					}
+				if ( isAddNestedType( value ) ) {
+					applyNestedType( (SimpleValue) value, propMapping );
 				}
 			}
 
@@ -81,12 +54,11 @@ public final class BasicMetadataGenerator {
 			if ( mapper != null ) {
 				mapper.add( propertyAuditingData.getPropertyData() );
 			}
-		}
-		else {
-			return false;
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	private void mapEnumerationType(Element parent, Type type, Properties parameters) {
@@ -96,20 +68,18 @@ public final class BasicMetadataGenerator {
 					.setText( parameters.getProperty( EnumType.ENUM ) );
 		}
 		else {
-			parent.addElement( "param" ).addAttribute( "name", EnumType.ENUM ).setText(
-					type.getReturnedClass()
-							.getName()
-			);
+			parent.addElement( "param" )
+					.addAttribute( "name", EnumType.ENUM )
+					.setText( type.getReturnedClass().getName() );
 		}
 		if ( parameters.getProperty( EnumType.NAMED ) != null ) {
-			parent.addElement( "param" ).addAttribute( "name", EnumType.NAMED ).setText(
-					parameters.getProperty(
-							EnumType.NAMED
-					)
-			);
+			parent.addElement( "param" )
+					.addAttribute( "name", EnumType.NAMED )
+					.setText( parameters.getProperty( EnumType.NAMED ) );
 		}
 		else {
-			parent.addElement( "param" ).addAttribute( "name", EnumType.NAMED )
+			parent.addElement( "param" )
+					.addAttribute( "name", EnumType.NAMED )
 					.setText( "" + !( (EnumType) ( (CustomType) type ).getUserType() ).isOrdinal() );
 		}
 	}
@@ -142,5 +112,64 @@ public final class BasicMetadataGenerator {
 		}
 
 		return true;
+	}
+
+	private boolean isAddNestedType(Value value) {
+		if ( value instanceof SimpleValue ) {
+			if ( ( (SimpleValue) value ).getTypeParameters() != null ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private Element buildProperty(
+			Element parent,
+			PropertyAuditingData propertyAuditingData,
+			Value value,
+			boolean insertable,
+			boolean key) {
+		final Element propMapping = MetadataTools.addProperty(
+				parent,
+				propertyAuditingData.getName(),
+				isAddNestedType( value ) ? null : getBasicTypeName( value.getType() ),
+				propertyAuditingData.isForceInsertable() || insertable,
+				key
+		);
+
+		MetadataTools.addColumns( propMapping, value.getColumnIterator() );
+
+		return propMapping;
+	}
+
+	private void applyNestedType(SimpleValue value, Element propertyMapping) {
+		final Properties typeParameters = value.getTypeParameters();
+		final Element typeMapping = propertyMapping.addElement( "type" );
+		final String typeName = getBasicTypeName( value.getType() );
+
+		typeMapping.addAttribute( "name", typeName );
+
+		if ( EnumType.class.getName().equals( typeName ) ) {
+			// Proper handling of enumeration type
+			mapEnumerationType( typeMapping, value.getType(), typeParameters );
+		}
+		else {
+			// By default copying all Hibernate properties
+			for ( Object object : typeParameters.keySet() ) {
+				final String keyType = (String) object;
+				final String property = typeParameters.getProperty( keyType );
+				if ( property != null ) {
+					typeMapping.addElement( "param" ).addAttribute( "name", keyType ).setText( property );
+				}
+			}
+		}
+	}
+
+	private String getBasicTypeName(Type type) {
+		String typeName = type.getName();
+		if ( typeName == null ) {
+			typeName = type.getClass().getName();
+		}
+		return typeName;
 	}
 }

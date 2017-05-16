@@ -1980,7 +1980,7 @@ Therefore, the `@JoinFormula` annotation is used to define a custom join associa
 [[mapping-JoinColumnOrFormula]]
 ==== `@JoinColumnOrFormula` mapping
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key when we need to tak into consideration a column value as well as a `@JoinFormula`.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/JoinColumnOrFormula.html[`@JoinColumnOrFormula`] annotation is used to customize the join between a child Foreign Key and a parent row Primary Key when we need to take into consideration a column value as well as a `@JoinFormula`.
 
 [[mapping-JoinColumnOrFormula-example]]
 .`@JoinColumnOrFormula` mapping usage
@@ -1996,7 +1996,7 @@ include::{extrasdir}/basic/mapping-JoinColumnOrFormula-example.sql[]
 ----
 ====
 
-The `country` association in the `User` entity is mapped by the `language` property value and the the associated `Country` `is_default` column value.
+The `country` association in the `User` entity is mapped by the `language` property value and the associated `Country` `is_default` column value.
 
 Considering we have the following entities:
 

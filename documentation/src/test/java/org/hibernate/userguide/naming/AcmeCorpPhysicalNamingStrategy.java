@@ -40,7 +40,7 @@ public class AcmeCorpPhysicalNamingStrategy implements PhysicalNamingStrategy {
 	@Override
 	public Identifier toPhysicalSchemaName(Identifier name, JdbcEnvironment jdbcEnvironment) {
 		// Acme naming standards do not apply to schema names
-		return null;
+		return name;
 	}
 
 	@Override

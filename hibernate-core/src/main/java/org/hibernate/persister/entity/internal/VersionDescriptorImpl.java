@@ -67,11 +67,6 @@ public class VersionDescriptorImpl<O,J>
 	}
 
 	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
-	}
-
-	@Override
 	public String getUnsavedValue() {
 		return unsavedValue;
 	}

@@ -6,8 +6,8 @@
  */
 package org.hibernate.persister.collection.internal;
 
+import java.util.Collections;
 import java.util.List;
-import javax.persistence.metamodel.Type;
 
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.SimpleValue;
@@ -16,6 +16,7 @@ import org.hibernate.persister.collection.spi.CollectionIndexBasic;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
@@ -39,22 +40,16 @@ public class CollectionIndexBasicImpl<J>
 	public CollectionIndexBasicImpl(
 			CollectionPersister persister,
 			IndexedCollection mappingBinding,
-			List<Column> columns) {
-		super( persister, columns );
+			PersisterCreationContext creationContext) {
+		super( persister );
 
 		final SimpleValue simpleValueMapping = (SimpleValue) mappingBinding.getIndex();
+		this.column  = creationContext.resolveColumn( simpleValueMapping );
+
 		this.attributeConverter = simpleValueMapping.getAttributeConverterDescriptor();
 
 		// todo (6.0) : SimpleValue -> BasicType
 		this.basicType = null;
-
-		assert columns != null && columns.size() == 1;
-		this.column = columns.get( 0 );
-	}
-
-	@Override
-	public Type.PersistenceType getPersistenceType() {
-		return Type.PersistenceType.BASIC;
 	}
 
 	@Override
@@ -70,6 +65,11 @@ public class CollectionIndexBasicImpl<J>
 	@Override
 	public Column getBoundColumn() {
 		return column;
+	}
+
+	@Override
+	public List<Column> getColumns() {
+		return Collections.singletonList( getBoundColumn() );
 	}
 
 	@Override

@@ -27,4 +27,6 @@ public interface EmbeddedMapping extends ManagedTypeMapping, ValueMappingContain
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
 	}
+
+	String getEmbeddableClassName();
 }

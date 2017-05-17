@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.collection.internal;
 
+import java.util.Collections;
 import java.util.List;
 import javax.persistence.metamodel.Type;
 
@@ -16,6 +17,8 @@ import org.hibernate.persister.collection.spi.CollectionElementBasic;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
+import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
@@ -41,13 +44,16 @@ public class CollectionElementBasicImpl<J>
 	public CollectionElementBasicImpl(
 			CollectionPersister persister,
 			Collection mappingBinding,
-			List<Column> columns) {
-		super( persister, columns );
-
-		assert columns != null && columns.size() == 1;
-		this.column = columns.get( 0 );
+			PersisterCreationContext creationContext) {
+		super( persister );
 
 		final SimpleValue simpleElementValueMapping = (SimpleValue) mappingBinding.getElement();
+
+		this.column = creationContext.resolveColumn( simpleElementValueMapping );
+
+		// todo (6.0) : resolve SimpleValue -> BasicType
+		this.basicType = null;
+
 		this.attributeConverter = simpleElementValueMapping.getAttributeConverterDescriptor();
 
 		log.debugf(
@@ -56,14 +62,6 @@ public class CollectionElementBasicImpl<J>
 				getContainer().getRole(),
 				this.attributeConverter
 		);
-
-		// todo (6.0) : resolve SimpleValue -> BasicType
-		this.basicType = null;
-	}
-
-	@Override
-	public Type.PersistenceType getPersistenceType() {
-		return Type.PersistenceType.BASIC;
 	}
 
 	@Override
@@ -93,11 +91,23 @@ public class CollectionElementBasicImpl<J>
 			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return null;
+		return new QueryResultScalarImpl(
+				selectedExpression,
+				sqlSelectionResolver.resolveSqlSelection(
+						columnReferenceSource.resolveColumnReference( getBoundColumn() )
+				),
+				resultVariable,
+				getBasicType()
+		);
 	}
 
 	@Override
 	public Column getBoundColumn() {
 		return column;
+	}
+
+	@Override
+	public List<Column> getColumns() {
+		return Collections.singletonList( getBoundColumn() );
 	}
 }

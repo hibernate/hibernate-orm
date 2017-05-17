@@ -9,6 +9,7 @@ package org.hibernate.persister.collection.spi;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.cache.CacheException;
@@ -164,33 +165,33 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 			return null;
 		}
 
-		final IndexedCollection indexedCollectionBinding = (IndexedCollection) collectionBinding;
-		final Value indexValueMapping = indexedCollectionBinding.getIndex();
+		final IndexedCollection indexedCollectionMapping = (IndexedCollection) collectionBinding;
+		final Value indexValueMapping = indexedCollectionMapping.getIndex();
 		final Type<J> indexType = indexValueMapping.getType();
 		// todo (6.0) : collect index columns
-		final List<Column> columns = collectIndexColumns( persister, indexedCollectionBinding, separateCollectionTable, creationContext );
+		final List<Column> columns = collectIndexColumns( persister, indexedCollectionMapping, separateCollectionTable, creationContext );
 
-		if ( indexValueMapping instanceof SimpleValue ) {
-			return new CollectionIndexBasicImpl(
-					persister,
-					indexedCollectionBinding,
-					columns
-			);
-		}
-		else if ( indexValueMapping instanceof Component ) {
-			return new CollectionIndexEmbeddedImpl(
-					persister,
-					indexedCollectionBinding,
-					columns
-			);
-		}
-		else if ( indexValueMapping instanceof OneToMany
+		if ( indexValueMapping instanceof OneToMany
 				|| indexValueMapping instanceof ManyToOne ) {
 			// NOTE : ManyToOne is used to signify the index is a many-to-many
 			return new CollectionIndexEntityImpl(
 					persister,
-					indexedCollectionBinding,
-					columns
+					indexedCollectionMapping,
+					creationContext
+			);
+		}
+		else if ( indexValueMapping instanceof EmbeddedValueMapping ) {
+			return new CollectionIndexEmbeddedImpl(
+					persister,
+					indexedCollectionMapping,
+					creationContext
+			);
+		}
+		else if ( indexValueMapping instanceof SimpleValue ) {
+			return new CollectionIndexBasicImpl(
+					persister,
+					indexedCollectionMapping,
+					creationContext
 			);
 		}
 		else {
@@ -247,62 +248,28 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 		else if ( elementType.isComponentType() ) {
 			assert separateCollectionTable != null;
 
-			final java.util.List<Column> columns = PersisterHelper.makeValues(
-					creationContext.getSessionFactory(),
-					elementType,
-					collectionBinding.getColumnIterator(),
-					separateCollectionTable
-			);
-
 			return new CollectionElementEmbeddedImpl(
 					collectionPersister,
 					collectionBinding,
-					columns
+					creationContext
 			);
 		}
 		else if ( elementType.isEntityType() ) {
-			final EntityPersister elementPersister = ( (EntityType) elementType ).getEntityPersister();
-			final Table table;
-			if ( separateCollectionTable != null ) {
-				// assume it is a many-to-many
-				// todo (6.0) : should this allow multiple Tables to cater to collections?
-				table = separateCollectionTable;
-			}
-			else {
-				table = elementPersister.getRootTable();
-			}
-
-			final java.util.List<Column> columns = PersisterHelper.makeValues(
-					creationContext.getSessionFactory(),
-					elementType,
-					collectionBinding.getElement().getColumnIterator(),
-					table
-			);
-
 			return new CollectionElementEntityImpl(
 					collectionPersister,
 					collectionBinding,
 					separateCollectionTable == null
 							? ElementClassification.MANY_TO_MANY
 							: ElementClassification.ONE_TO_MANY,
-					columns,
 					creationContext
 			);
 		}
 		else {
 			assert separateCollectionTable != null;
-
-			final java.util.List<Column> columns = PersisterHelper.makeValues(
-					creationContext.getSessionFactory(),
-					elementType,
-					collectionBinding.getElement().getColumnIterator(),
-					separateCollectionTable
-			);
-
 			return new CollectionElementBasicImpl(
 					collectionPersister,
 					collectionBinding,
-					columns
+					creationContext
 			);
 		}
 	}

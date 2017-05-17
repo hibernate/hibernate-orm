@@ -116,11 +116,6 @@ public class SingularPersistentAttributeBasic<O,J>
 	}
 
 	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
-	}
-
-	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitSingularAttributeBasic( this );
 	}

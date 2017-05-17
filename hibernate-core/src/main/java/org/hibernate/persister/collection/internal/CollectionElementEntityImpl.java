@@ -7,7 +7,6 @@
 package org.hibernate.persister.collection.internal;
 
 import java.util.List;
-import javax.persistence.metamodel.Type;
 
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.ToOne;
@@ -30,7 +29,7 @@ import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -46,12 +45,10 @@ public class CollectionElementEntityImpl<J>
 			CollectionPersister persister,
 			Collection mappingBinding,
 			ElementClassification elementClassification,
-			List<Column> columns,
 			PersisterCreationContext creationContext) {
-		super( persister, columns );
+		super( persister );
 		this.elementClassification = elementClassification;
 
-		// todo (6.0) : we know this call will blow up until we figure out timing of persister creation
 		final ToOne value = (ToOne) mappingBinding.getElement();
 		this.entityPersister = creationContext.getTypeConfiguration().findEntityPersister( value.getReferencedEntityName() );
 	}
@@ -112,7 +109,7 @@ public class CollectionElementEntityImpl<J>
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
+	public EntityJavaDescriptor<J> getJavaTypeDescriptor() {
 		return getEntityPersister().getJavaTypeDescriptor();
 	}
 
@@ -122,6 +119,11 @@ public class CollectionElementEntityImpl<J>
 			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector collector) {
 		getEntityPersister().applyTableReferenceJoins( joinType, sqlAliasBase, collector );
+	}
+
+	@Override
+	public List<Column> getColumns() {
+		throw new NotYetImplementedException();
 	}
 
 	@Override

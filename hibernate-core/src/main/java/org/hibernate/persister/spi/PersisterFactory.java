@@ -12,7 +12,6 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
@@ -44,7 +43,7 @@ public interface PersisterFactory extends Service {
 	 *
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
-	EntityPersister createEntityPersister(
+	<J> EntityPersister<J> createEntityPersister(
 			PersistentClass entityBinding,
 			EntityRegionAccessStrategy entityCacheAccessStrategy,
 			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
@@ -82,7 +81,7 @@ public interface PersisterFactory extends Service {
 	 *
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
-	EmbeddedPersister createEmbeddablePersister(
+	<J> EmbeddedPersister<J> createEmbeddablePersister(
 			EmbeddedValueMapping embeddedValueMapping,
 			EmbeddedContainer source,
 			String localName,

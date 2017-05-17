@@ -6,10 +6,7 @@
  */
 package org.hibernate.persister.collection.spi;
 
-import java.util.List;
-
 import org.hibernate.persister.common.NavigableRole;
-import org.hibernate.persister.common.spi.Column;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 
@@ -18,15 +15,10 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
  */
 public abstract class AbstractCollectionElement<J> implements CollectionElement<J> {
 	private final CollectionPersister persister;
-	private final List<Column> columns;
 	private final NavigableRole navigableRole;
 
-	public AbstractCollectionElement(
-			CollectionPersister persister,
-			List<Column> columns) {
+	public AbstractCollectionElement(CollectionPersister persister) {
 		this.persister = persister;
-		this.columns = columns;
-
 		this.navigableRole = persister.getNavigableRole().append( NAVIGABLE_NAME );
 	}
 
@@ -38,11 +30,6 @@ public abstract class AbstractCollectionElement<J> implements CollectionElement<
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
-	}
-
-	@Override
-	public List<Column> getColumns() {
-		return columns;
 	}
 
 	@Override

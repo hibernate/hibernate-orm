@@ -7,7 +7,6 @@
 package org.hibernate.persister.collection.internal;
 
 import java.util.List;
-import javax.persistence.metamodel.Type;
 
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.persister.collection.spi.AbstractCollectionIndex;
@@ -18,9 +17,10 @@ import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
-import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.JoinType;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultEntityImpl;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
@@ -31,8 +31,6 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.EntityType;
 
 /**
  * @author Steve Ebersole
@@ -46,8 +44,8 @@ public class CollectionIndexEntityImpl<J>
 	public CollectionIndexEntityImpl(
 			CollectionPersister persister,
 			IndexedCollection mappingBinding,
-			List<Column> columns) {
-		super( persister, columns );
+			PersisterCreationContext creationContext) {
+		super( persister );
 
 		this.entityPersister = null;
 		this.navigableRole = persister.getNavigableRole().append( NAVIGABLE_NAME );
@@ -120,6 +118,11 @@ public class CollectionIndexEntityImpl<J>
 			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector collector) {
 		getEntityPersister().applyTableReferenceJoins( joinType, sqlAliasBase, collector );
+	}
+
+	@Override
+	public List<Column> getColumns() {
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override

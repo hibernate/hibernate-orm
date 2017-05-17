@@ -8,6 +8,7 @@ package org.hibernate.persister.collection.internal;
 
 import java.util.List;
 
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.persister.collection.spi.AbstractCollectionIndex;
 import org.hibernate.persister.collection.spi.CollectionIndexEmbedded;
@@ -16,6 +17,7 @@ import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
@@ -30,15 +32,24 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 public class CollectionIndexEmbeddedImpl<J>
 		extends AbstractCollectionIndex<J>
 		implements CollectionIndexEmbedded<J> {
-	private final EmbeddedPersister embeddedPersister;
+	private final EmbeddedPersister<J> embeddedPersister;
+	private final List<Column> columns;
 
 	public CollectionIndexEmbeddedImpl(
 			CollectionPersister persister,
 			IndexedCollection mapping,
-			List<Column> columns) {
-		super( persister, columns );
+			PersisterCreationContext creationContext) {
+		super( persister );
 
-		this.embeddedPersister = null;
+		this.embeddedPersister = creationContext.getPersisterFactory().createEmbeddablePersister(
+				(EmbeddedValueMapping) mapping.getIndex(),
+				persister,
+				NAVIGABLE_NAME,
+				creationContext
+		);
+
+		this.columns = getEmbeddedPersister().collectColumns();
+
 	}
 
 	@Override
@@ -96,4 +107,8 @@ public class CollectionIndexEmbeddedImpl<J>
 		return new QueryResultCompositeImpl( selectedExpression, resultVariable, getEmbeddedPersister() );
 	}
 
+	@Override
+	public List<Column> getColumns() {
+		return columns;
+	}
 }

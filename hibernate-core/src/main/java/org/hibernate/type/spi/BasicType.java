@@ -65,11 +65,6 @@ public interface BasicType<T>
 	}
 
 	@Override
-	default PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
-	}
-
-	@Override
 	default ColumnMapping[] getColumnMappings() {
 		return new ColumnMapping[] { getColumnMapping() };
 	}

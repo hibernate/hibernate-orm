@@ -7,9 +7,11 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.HibernateException;
+import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 
 /**
  * @author Steve Ebersole
@@ -48,8 +50,13 @@ public class LiteralNullSqmExpression implements LiteralSqmExpression<Void> {
 
 	private static BasicValuedExpressableType NULL_TYPE = new BasicValuedExpressableType() {
 		@Override
-		public String getTypeName() {
-			return "<null-type>";
+		public NavigableRole getNavigableRole() {
+			return null;
+		}
+
+		@Override
+		public AttributeConverterDefinition getAttributeConverter() {
+			return null;
 		}
 
 		@Override

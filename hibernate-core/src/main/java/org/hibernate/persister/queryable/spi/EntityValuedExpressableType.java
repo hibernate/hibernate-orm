@@ -8,6 +8,7 @@ package org.hibernate.persister.queryable.spi;
 
 import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * Common contract for any Navigable whose type is an entity.
@@ -27,4 +28,7 @@ public interface EntityValuedExpressableType<T> extends ExpressableType<T>, Navi
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.ENTITY;
 	}
+
+	@Override
+	EntityJavaDescriptor<T> getJavaTypeDescriptor();
 }

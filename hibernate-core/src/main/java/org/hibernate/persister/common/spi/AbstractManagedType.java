@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.common.spi;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -111,13 +112,18 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 	@Override
-	public List<Navigable> getNavigables(boolean includeMetaNavigables) {
-		return null;
+	public List<Navigable> getNavigables() {
+		final ArrayList<Navigable> navigables = new ArrayList<>();
+		navigables.addAll( declaredAttributesByName.values() );
+		if ( getSuperclassType() != null ) {
+			navigables.addAll( getSuperclassType().getNavigables() );
+		}
+		return navigables;
 	}
 
 	@Override
-	public List<Navigable> getDeclaredNavigables(boolean includeMetaNavigables) {
-		return null;
+	public List<Navigable> getDeclaredNavigables() {
+		return new ArrayList<>( declaredAttributesByName.values() );
 	}
 
 	@Override

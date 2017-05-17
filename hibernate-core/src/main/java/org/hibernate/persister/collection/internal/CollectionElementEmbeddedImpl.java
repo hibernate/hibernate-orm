@@ -8,6 +8,7 @@ package org.hibernate.persister.collection.internal;
 
 import java.util.List;
 
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.mapping.Collection;
 import org.hibernate.persister.collection.spi.AbstractCollectionElement;
 import org.hibernate.persister.collection.spi.CollectionElementEmbedded;
@@ -16,15 +17,13 @@ import org.hibernate.persister.common.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.internal.NavigableSelection;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
@@ -35,15 +34,24 @@ public class CollectionElementEmbeddedImpl<J>
 		implements CollectionElementEmbedded<J> {
 
 	private final EmbeddedPersister<J> embeddedPersister;
+	private final List<Column> columnList;
 
 	public CollectionElementEmbeddedImpl(
 			CollectionPersister persister,
-			Collection mappingBinding,
-			List<Column> columns) {
-		super( persister, columns );
+			Collection mapping,
+			PersisterCreationContext creationContext) {
+		super( persister );
+
 
 		// todo (6.0) : transform the EmbeddedValueMapping representing the collection element into a EmbeddedPersister
-		this.embeddedPersister = null;
+
+		this.embeddedPersister = creationContext.getPersisterFactory().createEmbeddablePersister(
+				(EmbeddedValueMapping) mapping.getElement(),
+				persister,
+				NAVIGABLE_NAME,
+				creationContext
+		);
+		this.columnList = embeddedPersister.collectColumns();
 	}
 
 	@Override
@@ -102,5 +110,10 @@ public class CollectionElementEmbeddedImpl<J>
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new QueryResultCompositeImpl( selectedExpression, resultVariable, embeddedPersister );
+	}
+
+	@Override
+	public List<Column> getColumns() {
+		return columnList;
 	}
 }

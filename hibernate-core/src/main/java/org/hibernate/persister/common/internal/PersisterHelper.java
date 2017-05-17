@@ -16,6 +16,7 @@ import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -69,6 +70,109 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  */
 public class PersisterHelper {
+
+
+
+	public static <O,N> PersistentAttribute<O,N> buildAttribute(
+			PersisterCreationContext creationContext,
+			ManagedTypeImplementor<O> container,
+			PersistentAttributeMapping attributeMapping) {
+		if ( attributeMapping.getValueMapping() instanceof Collection ) {
+			return buildPluralAttribute(
+					creationContext,
+					container,
+					attributeMapping
+			);
+		}
+		else {
+			return buildSingularAttribute(
+					creationContext,
+					container,
+					attributeMapping
+			);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <O,N> AbstractPersistentAttribute<O,N> buildSingularAttribute(
+			PersisterCreationContext creationContext,
+			ManagedTypeImplementor<O> source,
+			PersistentAttributeMapping attributeMapping) {
+		if ( attributeMapping.getValueMapping() instanceof Any ) {
+			throw new NotYetImplementedException();
+		}
+		else if ( attributeMapping.getValueMapping() instanceof EmbeddedValueMapping ) {
+			return new SingularPersistentAttributeEmbedded<>(
+					source,
+					attributeMapping.getName(),
+					resolvePropertyAccess( source, attributeMapping, creationContext ),
+					Disposition.NORMAL,
+					creationContext.getPersisterFactory().createEmbeddablePersister(
+							(Component) attributeMapping.getValueMapping(),
+							source,
+							attributeMapping.getName(),
+							creationContext
+					)
+			);
+		}
+		else if ( attributeMapping.getValueMapping() instanceof ToOne ) {
+			final ToOne toOne = (ToOne) attributeMapping.getValueMapping();
+
+			if ( attributeMapping.getValueMapping() instanceof OneToOne ) {
+				// the Classification here should be ONE_TO_ONE which could represent either a real PK one-to-one
+				//		or a unique-FK one-to-one (logical).  If this is a real one-to-one then we should have
+				//		no columns passed here and should instead use the LHS (source) PK column(s)
+				assert columns == null || columns.size() == 0;
+				columns = ( (EntityPersister) source ).getHierarchy().getIdentifierDescriptor().getColumns();
+			}
+			assert columns != null && columns.size() > 0;
+
+			return new SingularPersistentAttributeEntity(
+					source,
+					attributeMapping.getName(),
+					resolvePropertyAccess( creationContext, attributeMapping ),
+					attributeMapping.getValueMapping() instanceof OneToOne || ( (ManyToOne) attributeMapping.getValueMapping() ).isLogicalOneToOne()
+							? SingularAttributeClassification.ONE_TO_ONE
+							: SingularAttributeClassification.MANY_TO_ONE,
+					makeEntityType( creationContext, toOne ),
+					Disposition.NORMAL,
+					creationContext.getTypeConfiguration().findEntityPersister( toOne.getReferencedEntityName() ),
+					columns
+			);
+		}
+		else {
+			assert attributeMapping.getValueMapping() instanceof SimpleValue;
+
+			final SimpleValue simpleValue = (SimpleValue) attributeMapping.getValueMapping();
+
+			final AttributeConverterDefinition attributeConverterInfo = simpleValue.getAttributeConverterDescriptor();
+
+			return new SingularPersistentAttributeBasic<>(
+					source,
+					attributeMapping.getName(),
+					resolvePropertyAccess( creationContext, attributeMapping ),
+					resolveBasicType( creationContext, simpleValue ),
+					Disposition.NORMAL,
+					attributeConverterInfo,
+					columns
+			);
+
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	public static org.hibernate.loader.PropertyPath convert(SqmPropertyPath propertyPath) {
 		if ( propertyPath.getParent() == null ) {

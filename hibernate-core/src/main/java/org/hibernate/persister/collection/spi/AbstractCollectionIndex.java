@@ -18,12 +18,10 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
  */
 public abstract class AbstractCollectionIndex<J> implements CollectionIndex<J> {
 	private final CollectionPersister persister;
-	private final List<Column> columns;
 	private final NavigableRole navigableRole;
 
-	public AbstractCollectionIndex(CollectionPersister persister, List<Column> columns) {
+	public AbstractCollectionIndex(CollectionPersister persister) {
 		this.persister = persister;
-		this.columns = columns;
 		this.navigableRole = persister.getNavigableRole().append( NAVIGABLE_NAME );
 	}
 
@@ -45,11 +43,6 @@ public abstract class AbstractCollectionIndex<J> implements CollectionIndex<J> {
 	@Override
 	public String getNavigableName() {
 		return NAVIGABLE_NAME;
-	}
-
-	@Override
-	public List<Column> getColumns() {
-		return columns;
 	}
 
 	@Override

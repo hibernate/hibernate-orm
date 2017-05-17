@@ -12,10 +12,10 @@ import org.hibernate.naming.Identifier;
  * @author Steve Ebersole
  */
 public class QualifiedNameImpl extends QualifiedNameParser.NameParts implements QualifiedName {
-	public QualifiedNameImpl(MappedNamespace.Name schemaName, Identifier objectName) {
+	public QualifiedNameImpl(NamespaceName namespaceName, Identifier objectName) {
 		this(
-				schemaName.getCatalog(),
-				schemaName.getSchema(),
+				namespaceName.getCatalog(),
+				namespaceName.getSchema(),
 				objectName
 		);
 	}

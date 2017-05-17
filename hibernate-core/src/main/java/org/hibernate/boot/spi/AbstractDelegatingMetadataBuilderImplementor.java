@@ -76,12 +76,6 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Abs
 	}
 
 	@Override
-	public MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy) {
-		delegate.applyPhysicalNamingStrategy( namingStrategy );
-		return getThis();
-	}
-
-	@Override
 	public MetadataBuilder applySharedCacheMode(SharedCacheMode cacheMode) {
 		delegate.applySharedCacheMode( cacheMode );
 		return getThis();

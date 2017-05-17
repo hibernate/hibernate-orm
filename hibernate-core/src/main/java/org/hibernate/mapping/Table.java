@@ -80,11 +80,11 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 
 	public Table(
 			MappedNamespace namespace,
-			Identifier physicalTableName,
+			Identifier tableName,
 			boolean isAbstract) {
-		this.catalog = namespace.getPhysicalName().getCatalog();
-		this.schema = namespace.getPhysicalName().getSchema();
-		this.name = physicalTableName;
+		this.catalog = namespace.getCatalogName();
+		this.schema = namespace.getSchemaName();
+		this.name = tableName;
 		this.isAbstract = isAbstract;
 	}
 
@@ -99,17 +99,17 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		this.isAbstract = isAbstract;
 	}
 
-	public Table(MappedNamespace namespace, Identifier physicalTableName, String subselect, boolean isAbstract) {
-		this.catalog = namespace.getPhysicalName().getCatalog();
-		this.schema = namespace.getPhysicalName().getSchema();
-		this.name = physicalTableName;
+	public Table(MappedNamespace namespace, Identifier tableName, String subselect, boolean isAbstract) {
+		this.catalog = namespace.getCatalogName();
+		this.schema = namespace.getSchemaName();
+		this.name = tableName;
 		this.subselect = subselect;
 		this.isAbstract = isAbstract;
 	}
 
 	public Table(MappedNamespace namespace, String subselect, boolean isAbstract) {
-		this.catalog = namespace.getPhysicalName().getCatalog();
-		this.schema = namespace.getPhysicalName().getSchema();
+		this.catalog = namespace.getCatalogName();
+		this.schema = namespace.getSchemaName();
 		this.subselect = subselect;
 		this.isAbstract = isAbstract;
 	}

@@ -32,7 +32,7 @@ import org.hibernate.mapping.Table;
  */
 public class RelationalObjectBinder {
 	private final Database database;
-	private final PhysicalNamingStrategy physicalNamingStrategy;
+//	private final PhysicalNamingStrategy physicalNamingStrategy;
 
 	public interface ColumnNamingDelegate {
 		Identifier determineImplicitName(LocalMetadataBuildingContext context);
@@ -40,7 +40,7 @@ public class RelationalObjectBinder {
 
 	public RelationalObjectBinder(MetadataBuildingContext buildingContext) {
 		this.database = buildingContext.getMetadataCollector().getDatabase();
-		this.physicalNamingStrategy = buildingContext.getBuildingOptions().getPhysicalNamingStrategy();
+//		this.physicalNamingStrategy = buildingContext.getBuildingOptions().getPhysicalNamingStrategy();
 	}
 
 	public void bindColumnOrFormula(

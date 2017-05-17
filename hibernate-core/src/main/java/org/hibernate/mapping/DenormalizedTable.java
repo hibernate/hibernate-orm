@@ -29,19 +29,19 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 		includedTable.setHasDenormalizedTables();
 	}
 
-	public DenormalizedTable(MappedNamespace namespace, Identifier physicalTableName, boolean isAbstract, MappedTable includedTable) {
-		super( namespace, physicalTableName, isAbstract );
+	public DenormalizedTable(MappedNamespace namespace, Identifier tableName, boolean isAbstract, MappedTable includedTable) {
+		super( namespace, tableName, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
 	public DenormalizedTable(
 			MappedNamespace namespace,
-			Identifier physicalTableName,
+			Identifier tableName,
 			String subselectFragment,
 			boolean isAbstract,
 			MappedTable includedTable) {
-		super( namespace, physicalTableName, subselectFragment, isAbstract );
+		super( namespace, tableName, subselectFragment, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}

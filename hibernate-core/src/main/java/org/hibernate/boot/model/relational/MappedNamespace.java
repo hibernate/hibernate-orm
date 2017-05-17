@@ -27,14 +27,12 @@ import org.hibernate.naming.spi.RelationalNamespace;
 public class MappedNamespace implements RelationalNamespace<MappedTable, MappedSequence> {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( MappedNamespace.class );
 
-	private final Database database;
 	private final NamespaceName name;
 
 	private Map<Identifier, MappedTable> tables = new TreeMap<>();
 	private Map<Identifier, MappedSequence> sequences = new TreeMap<>();
 
-	public MappedNamespace(Database database, NamespaceName name) {
-		this.database = database;
+	public MappedNamespace(NamespaceName name) {
 		this.name = name;
 
 		log.debugf( "Created database namespace [logicalName=%s]", name.toString() );
@@ -84,8 +82,7 @@ public class MappedNamespace implements RelationalNamespace<MappedTable, MappedS
 			return existing;
 		}
 
-		final Identifier physicalTableName = database.getPhysicalNamingStrategy().toPhysicalTableName( logicalTableName, database.getJdbcEnvironment() );
-		Table table = new Table( this, physicalTableName, isAbstract );
+		Table table = new Table( this, logicalTableName, isAbstract );
 		tables.put( logicalTableName, table );
 		return table;
 
@@ -98,8 +95,7 @@ public class MappedNamespace implements RelationalNamespace<MappedTable, MappedS
 			return (DenormalizedMappedTable) existing;
 		}
 
-		final Identifier physicalTableName = database.getPhysicalNamingStrategy().toPhysicalTableName( logicalTableName, database.getJdbcEnvironment() );
-		DenormalizedTable table = new DenormalizedTable( this, physicalTableName, isAbstract, includedTable );
+		DenormalizedTable table = new DenormalizedTable( this, logicalTableName, isAbstract, includedTable );
 		tables.put( logicalTableName, table );
 		return table;
 	}
@@ -113,12 +109,10 @@ public class MappedNamespace implements RelationalNamespace<MappedTable, MappedS
 			throw new HibernateException( "Sequence was already registered with that name [" + logicalName.toString() + "]" );
 		}
 
-		final Identifier physicalName = database.getPhysicalNamingStrategy().toPhysicalSequenceName( logicalName, database.getJdbcEnvironment() );
-
 		Sequence sequence = new Sequence(
 				getName().getCatalog(),
 				getName().getSchema(),
-				physicalName,
+				logicalName,
 				initialValue,
 				increment
 		);

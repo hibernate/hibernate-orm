@@ -51,8 +51,8 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 			Set<String> dialectScopes) {
 		this(
 				dialectScopes,
-				extractName( namespace.getPhysicalName().getCatalog() ),
-				extractName( namespace.getPhysicalName().getSchema() ),
+				extractName( namespace.getCatalogName() ),
+				extractName( namespace.getSchemaName() ),
 				createStrings,
 				dropStrings
 		);

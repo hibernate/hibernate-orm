@@ -67,7 +67,7 @@ public class Database {
 
 	private MappedNamespace makeNamespace(NamespaceName name) {
 		MappedNamespace namespace;
-		namespace = new MappedNamespace( this, name );
+		namespace = new MappedNamespace( name );
 		namespaceMap.put( name, namespace );
 		return namespace;
 	}

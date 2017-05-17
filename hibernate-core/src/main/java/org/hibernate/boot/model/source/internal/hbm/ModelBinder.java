@@ -805,16 +805,16 @@ public class ModelBinder {
 			// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
 			params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, objectNameNormalizer);
 
-			if ( database.getDefaultNamespace().getPhysicalName().getSchema() != null ) {
+			if ( database.getDefaultNamespace().getSchemaName() != null ) {
 				params.setProperty(
 						PersistentIdentifierGenerator.SCHEMA,
-						database.getDefaultNamespace().getPhysicalName().getSchema().render( database.getDialect() )
+						database.getDefaultNamespace().getSchemaName().render( database.getDialect() )
 				);
 			}
-			if ( database.getDefaultNamespace().getPhysicalName().getCatalog() != null ) {
+			if ( database.getDefaultNamespace().getCatalogName() != null ) {
 				params.setProperty(
 						PersistentIdentifierGenerator.CATALOG,
-						database.getDefaultNamespace().getPhysicalName().getCatalog().render( database.getDialect() )
+						database.getDefaultNamespace().getCatalogName().render( database.getDialect() )
 				);
 			}
 

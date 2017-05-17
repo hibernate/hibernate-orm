@@ -7,6 +7,7 @@
 package org.hibernate.tool.schema.extract.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.boot.model.relational.NamespaceName;
 import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
@@ -28,7 +29,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return {@code true} indicates a schema with the given name already exists
 	 */
-	boolean schemaExists(MappedNamespace.Name schema);
+	boolean schemaExists(NamespaceName schema);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -49,7 +50,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return The table information.  May return {@code null} if not found.
 	 */
-	TableInformation getTableInformation(MappedNamespace.Name schemaName, Identifier tableName);
+	TableInformation getTableInformation(NamespaceName schemaName, Identifier tableName);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -86,12 +87,12 @@ public interface DatabaseInformation {
 	/**
 	 * Obtain reference to the named SequenceInformation
 	 *
-	 * @param schemaName The name of the schema the table belongs to
+	 * @param namespaceName The name of the namespace the table belongs to
 	 * @param sequenceName The sequence name
 	 *
 	 * @return The sequence information.  May return {@code null} if not found.
 	 */
-	SequenceInformation getSequenceInformation(MappedNamespace.Name schemaName, Identifier sequenceName);
+	SequenceInformation getSequenceInformation(NamespaceName namespaceName, Identifier sequenceName);
 
 	/**
 	 * Obtain reference to the named SequenceInformation

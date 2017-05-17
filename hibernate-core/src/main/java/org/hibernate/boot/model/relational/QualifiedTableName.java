@@ -16,8 +16,8 @@ public class QualifiedTableName extends QualifiedNameImpl {
 		super( catalogName, schemaName, tableName );
 	}
 
-	public QualifiedTableName(MappedNamespace.Name schemaName, Identifier tableName) {
-		super( schemaName, tableName );
+	public QualifiedTableName(NamespaceName namespaceName, Identifier tableName) {
+		super( namespaceName, tableName );
 	}
 
 	public Identifier getTableName() {

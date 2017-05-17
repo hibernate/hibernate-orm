@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.boot.model.relational.NamespaceName;
 import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
@@ -40,7 +41,7 @@ public class DatabaseInformationImpl
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			MappedNamespace.Name defaultNamespace) throws SQLException {
+			NamespaceName defaultNamespace) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
 
 		this.extractionContext = new ImprovedExtractionContextImpl(
@@ -83,7 +84,7 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public boolean schemaExists(MappedNamespace.Name namespace) {
+	public boolean schemaExists(NamespaceName namespace) {
 		return extractor.schemaExists( namespace.getCatalog(), namespace.getSchema() );
 	}
 
@@ -97,7 +98,7 @@ public class DatabaseInformationImpl
 
 	@Override
 	public TableInformation getTableInformation(
-			MappedNamespace.Name namespace,
+			NamespaceName namespace,
 			Identifier tableName) {
 		return getTableInformation( new QualifiedTableName( namespace, tableName ) );
 	}
@@ -117,7 +118,7 @@ public class DatabaseInformationImpl
 
 	@Override
 	public NameSpaceTablesInformation getTablesInformation(MappedNamespace namespace) {
-		return extractor.getTables( namespace.getPhysicalName().getCatalog(), namespace.getPhysicalName().getSchema() );
+		return extractor.getTables( namespace.getName().getCatalog(), namespace.getName().getSchema() );
 	}
 
 	@Override
@@ -129,8 +130,8 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public SequenceInformation getSequenceInformation(MappedNamespace.Name schemaName, Identifier sequenceName) {
-		return getSequenceInformation( new QualifiedSequenceName( schemaName, sequenceName ) );
+	public SequenceInformation getSequenceInformation(NamespaceName namespaceName, Identifier sequenceName) {
+		return getSequenceInformation( new QualifiedSequenceName( namespaceName, sequenceName ) );
 	}
 
 	@Override

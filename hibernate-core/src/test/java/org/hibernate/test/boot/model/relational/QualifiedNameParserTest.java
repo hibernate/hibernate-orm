@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.boot.model.relational;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 
 import org.junit.Test;

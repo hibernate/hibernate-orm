@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.queryable.spi;
 
-import org.hibernate.persister.common.spi.ForeignKey;
+import org.hibernate.persister.model.relational.spi.ForeignKey;
 import org.hibernate.persister.common.spi.Navigable;
 
 /**

@@ -8,8 +8,8 @@ package org.hibernate.sql.ast.tree.spi.from;
 
 import java.util.List;
 
-import org.hibernate.persister.common.spi.Table;
-import org.hibernate.persister.common.spi.UnionSubclassTable;
+import org.hibernate.persister.model.relational.spi.Table;
+import org.hibernate.persister.model.relational.spi.UnionSubclassTable;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;

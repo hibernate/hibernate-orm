@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.persister.common.internal.SingularPersistentAttributeEmbedded;
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;

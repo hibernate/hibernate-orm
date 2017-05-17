@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.naming;
 
 import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.naming.Identifier;
 
 /**
  * Context for determining the implicit name of a "join column" (think

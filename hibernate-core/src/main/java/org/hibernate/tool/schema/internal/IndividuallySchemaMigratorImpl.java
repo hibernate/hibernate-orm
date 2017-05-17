@@ -9,9 +9,9 @@ package org.hibernate.tool.schema.internal;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
@@ -46,7 +46,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 			boolean tryToCreateCatalogs,
 			boolean tryToCreateSchemas,
 			Set<Identifier> exportedCatalogs,
-			Namespace namespace,
+			MappedNamespace namespace,
 			GenerationTarget[] targets) {
 		final NameSpaceTablesInformation tablesInformation =
 				new NameSpaceTablesInformation( metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper() );

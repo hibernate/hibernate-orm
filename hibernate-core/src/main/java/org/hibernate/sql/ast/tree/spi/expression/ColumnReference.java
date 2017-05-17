@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree.spi.expression;
 
 import java.util.Locale;
 
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;

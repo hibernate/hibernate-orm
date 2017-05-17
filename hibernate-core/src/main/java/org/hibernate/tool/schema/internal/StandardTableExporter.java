@@ -12,7 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.QualifiedName;

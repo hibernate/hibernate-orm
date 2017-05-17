@@ -7,6 +7,8 @@
 package org.hibernate.persister.common.spi;
 
 import org.hibernate.mapping.Join;
+import org.hibernate.persister.model.relational.spi.ForeignKey;
+import org.hibernate.persister.model.relational.spi.Table;
 
 /**
  * Used to represent both secondary tables and table joins used in joined inheritance.

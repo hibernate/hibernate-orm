@@ -31,7 +31,7 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -113,8 +113,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	public MetadataBuilderImpl(MetadataSources sources, StandardServiceRegistry serviceRegistry, ClassmateContext classmateContext) {
 		this.sources = sources;
-		this.bootstrapContext = new BootstrapContextImpl( serviceRegistry, classmateContext );
 		this.options = new MetadataBuildingOptionsImpl( serviceRegistry );
+		this.bootstrapContext = new BootstrapContextImpl( serviceRegistry, classmateContext, options );
 
 		for ( MetadataSourcesContributor contributor :
 				sources.getServiceRegistry()

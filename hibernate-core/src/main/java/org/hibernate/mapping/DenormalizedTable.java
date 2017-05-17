@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.DenormalizedMappedTable;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.internal.util.collections.JoinedIterator;
 
 /**
@@ -29,14 +29,14 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 		includedTable.setHasDenormalizedTables();
 	}
 
-	public DenormalizedTable(Namespace namespace, Identifier physicalTableName, boolean isAbstract, MappedTable includedTable) {
+	public DenormalizedTable(MappedNamespace namespace, Identifier physicalTableName, boolean isAbstract, MappedTable includedTable) {
 		super( namespace, physicalTableName, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
 	public DenormalizedTable(
-			Namespace namespace,
+			MappedNamespace namespace,
 			Identifier physicalTableName,
 			String subselectFragment,
 			boolean isAbstract,
@@ -46,7 +46,7 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 		includedTable.setHasDenormalizedTables();
 	}
 
-	public DenormalizedTable(Namespace namespace, String subselect, boolean isAbstract, MappedTable includedTable) {
+	public DenormalizedTable(MappedNamespace namespace, String subselect, boolean isAbstract, MappedTable includedTable) {
 		super( namespace, subselect, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
@@ -107,7 +107,7 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 	}
 
 	@Override
-	public PrimaryKey getPrimaryKey() {
+	public MappedPrimaryKey getPrimaryKey() {
 		return includedTable.getPrimaryKey();
 	}
 

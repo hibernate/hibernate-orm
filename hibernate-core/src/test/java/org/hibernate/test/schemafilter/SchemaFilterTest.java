@@ -10,8 +10,8 @@ import javax.persistence.Id;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.naming.Identifier;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
@@ -155,7 +155,7 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 	private static class TestSchemaFilter implements SchemaFilter {
 
 		@Override
-		public boolean includeNamespace(Namespace namespace) {
+		public boolean includeNamespace(MappedNamespace namespace) {
 			// exclude schema "the_schema_2"
 			Identifier identifier = namespace.getName().getSchema();
 			if ( identifier != null ) {

@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.model.naming;
 
-import org.hibernate.dialect.Dialect;
+import org.hibernate.naming.Identifier;
 
 /**
  * Implementation of the ImplicitNamingStrategy contract which conforms to the

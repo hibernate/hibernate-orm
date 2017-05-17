@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.naming;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.naming.Identifier;
 
 /**
  * Models an identifier (name), retrieved from the database.

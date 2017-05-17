@@ -12,8 +12,8 @@ import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.naming.Identifier;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -50,14 +50,14 @@ public class QualifiedTableNamingTest extends BaseNonConfigCoreFunctionalTestCas
 
 	@Test
 	public void testQualifiedNameSeparator() throws Exception {
-		Namespace.Name namespaceName = new Namespace.Name(
+		MappedNamespace.Name namespaceName = new MappedNamespace.Name(
 				Identifier.toIdentifier( "DB1" ),
 				Identifier.toIdentifier( "PUBLIC" )
 		);
 
 		String expectedName = null;
 
-		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
+		for ( MappedNamespace namespace : metadata().getDatabase().getNamespaces() ) {
 			if ( !namespace.getName().equals( namespaceName ) ) {
 				continue;
 			}

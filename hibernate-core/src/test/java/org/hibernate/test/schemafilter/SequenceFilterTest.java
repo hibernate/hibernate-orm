@@ -22,7 +22,7 @@ import org.hamcrest.Description;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
@@ -155,7 +155,7 @@ public class SequenceFilterTest extends BaseUnitTestCase {
 	private static class TestSchemaFilter implements SchemaFilter {
 
 		@Override
-		public boolean includeNamespace(Namespace namespace) {
+		public boolean includeNamespace(MappedNamespace namespace) {
 			return true;
 		}
 

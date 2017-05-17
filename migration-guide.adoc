@@ -17,6 +17,15 @@ Additionally, `hibernate-envers` has been made part of `hibernate-core` and bett
 from an API perspective.
 
 
+== Known integration impacts
+
+	* The move to drive schema tooling based on the runtime relational model affects the various
+	 	`org.hibernate.tool.schema.spi` delegates in that we have to now pass `?` instead of
+	 	`org.hibernate.boot.Metadata`.
+	* The creation of `org.hibernate.naming` and moving logical and physical naming strategies
+		there cause a need for custom implementors to change source
+
+
 == Removed deprecations
 
 === Legacy criteria support (`org.hibernate.criterion` package mainly)

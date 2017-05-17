@@ -11,10 +11,10 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
-import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.ForeignKey;
+import org.hibernate.persister.model.relational.spi.Column;
+import org.hibernate.persister.model.relational.spi.ForeignKey;
 import org.hibernate.persister.common.spi.JoinColumnMapping;
-import org.hibernate.persister.common.spi.Table;
+import org.hibernate.persister.model.relational.spi.Table;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.spi.EntityPersister;
 

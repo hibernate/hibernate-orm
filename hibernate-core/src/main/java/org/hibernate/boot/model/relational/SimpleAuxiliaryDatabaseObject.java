@@ -8,7 +8,7 @@ package org.hibernate.boot.model.relational;
 
 import java.util.Set;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
@@ -32,7 +32,7 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	private final String[] dropStrings;
 
 	public SimpleAuxiliaryDatabaseObject(
-			Namespace namespace,
+			MappedNamespace namespace,
 			String createString,
 			String dropString,
 			Set<String> dialectScopes) {
@@ -45,7 +45,7 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	}
 
 	public SimpleAuxiliaryDatabaseObject(
-			Namespace namespace,
+			MappedNamespace namespace,
 			String[] createStrings,
 			String[] dropStrings,
 			Set<String> dialectScopes) {

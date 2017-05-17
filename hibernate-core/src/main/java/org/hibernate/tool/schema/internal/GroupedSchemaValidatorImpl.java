@@ -8,7 +8,7 @@ package org.hibernate.tool.schema.internal;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
@@ -34,7 +34,7 @@ public class GroupedSchemaValidatorImpl extends AbstractSchemaValidator {
 			Metadata metadata,
 			DatabaseInformation databaseInformation,
 			ExecutionOptions options,
-			Dialect dialect, Namespace namespace) {
+			Dialect dialect, MappedNamespace namespace) {
 
 		final NameSpaceTablesInformation tables = databaseInformation.getTablesInformation( namespace );
 		for ( MappedTable table : namespace.getTables() ) {

@@ -22,7 +22,7 @@ public class NamedAuxiliaryDatabaseObject
 
 	public NamedAuxiliaryDatabaseObject(
 			String name,
-			Namespace namespace,
+			MappedNamespace namespace,
 			String createString,
 			String dropString,
 			Set<String> dialectScopes) {
@@ -32,7 +32,7 @@ public class NamedAuxiliaryDatabaseObject
 
 	public NamedAuxiliaryDatabaseObject(
 			String name,
-			Namespace namespace,
+			MappedNamespace namespace,
 			String[] createStrings,
 			String[] dropStrings,
 			Set<String> dialectScopes) {

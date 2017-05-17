@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.naming;
 
+import org.hibernate.naming.Identifier;
+
 /**
  * Used to help determine the implicit name of columns which are part of a primary-key,
  * well simultaneously being part of a foreign-key (join).  Generally, this happens in:<ul>

@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;

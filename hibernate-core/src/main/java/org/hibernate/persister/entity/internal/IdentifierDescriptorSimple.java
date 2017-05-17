@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityHierarchy;

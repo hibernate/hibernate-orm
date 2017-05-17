@@ -224,3 +224,14 @@ Unresolved/undecided design questions.
 
 * Test (and possibly implement) the combination stuff discussed on a hibernate-semantic-query repo PR submitted by Gunnar,
  		as outlined in the following comment : https://github.com/hibernate/hibernate-semantic-query/pull/3#issuecomment-145553684
+
+
+== People to thank
+
+* Andrea
+* Chris
+* Gail
+* Vlad
+* Christian
+* Perf team
+* community

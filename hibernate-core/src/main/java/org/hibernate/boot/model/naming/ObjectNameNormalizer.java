@@ -9,6 +9,7 @@ package org.hibernate.boot.model.naming;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.naming.Identifier;
 
 /**
  * Provides centralized normalization of how database object names are handled.

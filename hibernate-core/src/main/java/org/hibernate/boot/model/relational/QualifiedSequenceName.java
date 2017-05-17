@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.model.relational;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 
 /**
  * @author Steve Ebersole
@@ -16,7 +16,7 @@ public class QualifiedSequenceName extends QualifiedNameImpl {
 		super( catalogName, schemaName, sequenceName );
 	}
 
-	public QualifiedSequenceName(Namespace.Name schemaName, Identifier sequenceName) {
+	public QualifiedSequenceName(MappedNamespace.Name schemaName, Identifier sequenceName) {
 		super( schemaName, sequenceName );
 	}
 

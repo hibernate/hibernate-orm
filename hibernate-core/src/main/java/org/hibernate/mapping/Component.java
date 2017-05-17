@@ -83,6 +83,21 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Mana
 		return componentClassName;
 	}
 
+	@Override
+	public EntityMode getRepresentationMode() {
+		if ( tuplizerImpls == null || tuplizerImpls.isEmpty() ) {
+			return null;
+		}
+
+		assert tuplizerImpls.size() == 1;
+		return tuplizerImpls.keySet().iterator().next();
+	}
+
+	@Override
+	public String getExplicitTuplizerClassName() {
+		return null;
+	}
+
 	public int getPropertySpan() {
 		return properties.size();
 	}

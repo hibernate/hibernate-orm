@@ -38,7 +38,7 @@ import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
@@ -46,7 +46,7 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.model.type.spi.BasicTypeProducer;
@@ -510,7 +510,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public java.util.Collection<MappedTable> collectMappedTableMappings() {
 		ArrayList<MappedTable> tables = new ArrayList<>();
-		for ( Namespace namespace : getDatabase().getNamespaces() ) {
+		for ( MappedNamespace namespace : getDatabase().getNamespaces() ) {
 			tables.addAll( namespace.getTables() );
 		}
 		return tables;
@@ -772,7 +772,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			String name,
 			String subselectFragment,
 			boolean isAbstract) {
-		final Namespace namespace = getDatabase().locateNamespace(
+		final MappedNamespace namespace = getDatabase().locateNamespace(
 				getDatabase().toIdentifier( catalogName ),
 				getDatabase().toIdentifier( schemaName )
 		);
@@ -810,7 +810,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			boolean isAbstract,
 			String subselectFragment,
 			MappedTable includedTable) throws DuplicateMappingException {
-		final Namespace namespace = getDatabase().locateNamespace(
+		final MappedNamespace namespace = getDatabase().locateNamespace(
 				getDatabase().toIdentifier( catalogName ),
 				getDatabase().toIdentifier( schemaName )
 		);

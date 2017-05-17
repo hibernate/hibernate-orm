@@ -11,9 +11,9 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
-import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.Table;
-import org.hibernate.persister.common.spi.UnionSubclassTable;
+import org.hibernate.persister.model.relational.spi.Column;
+import org.hibernate.persister.model.relational.spi.Table;
+import org.hibernate.persister.model.relational.spi.UnionSubclassTable;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;

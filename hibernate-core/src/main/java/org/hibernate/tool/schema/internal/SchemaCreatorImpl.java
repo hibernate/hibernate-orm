@@ -16,14 +16,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -222,7 +222,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		// first, create each catalog/schema
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
 			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
-			for ( Namespace namespace : database.getNamespaces() ) {
+			for ( MappedNamespace namespace : database.getNamespaces() ) {
 
 				if ( !schemaFilter.includeNamespace( namespace ) ) {
 					continue;
@@ -275,7 +275,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		// then, create all schema objects (tables, sequences, constraints, etc) in each schema
-		for ( Namespace namespace : database.getNamespaces() ) {
+		for ( MappedNamespace namespace : database.getNamespaces() ) {
 
 			if ( !schemaFilter.includeNamespace( namespace ) ) {
 				continue;
@@ -357,7 +357,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		//NOTE : Foreign keys must be created *afterQuery* all tables of all namespaces for cross namespace fks. see HHH-10420
-		for ( Namespace namespace : database.getNamespaces() ) {
+		for ( MappedNamespace namespace : database.getNamespaces() ) {
 			// NOTE : Foreign keys must be created *afterQuery* unique keys for numerous DBs.  See HHH-8390
 
 			if ( !schemaFilter.includeNamespace( namespace ) ) {

@@ -14,7 +14,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.persister.collection.spi.AbstractCollectionIndex;
 import org.hibernate.persister.collection.spi.CollectionIndexBasic;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;

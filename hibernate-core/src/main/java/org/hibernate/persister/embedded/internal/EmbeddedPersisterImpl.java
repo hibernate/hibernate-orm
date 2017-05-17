@@ -8,6 +8,8 @@ package org.hibernate.persister.embedded.internal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.EntityMode;
 import org.hibernate.boot.model.domain.EmbeddedMapping;
@@ -19,7 +21,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.common.spi.AbstractManagedType;
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.common.spi.PersistentAttribute;
@@ -44,6 +46,9 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 	private final EmbeddedContainer container;
 	private final NavigableRole navigableRole;
 
+	private final EntityMode representationMode;
+	private final Tuplizer tuplizer;
+
 	public EmbeddedPersisterImpl(
 			EmbeddedMapping embeddedMapping,
 			EmbeddedContainer container,
@@ -54,6 +59,27 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 		this.navigableRole = container.getNavigableRole().append( localName );
 
 		setTypeConfiguration( creationContext.getTypeConfiguration() );
+
+		this.representationMode = embeddedMapping.getValueMapping().getRepresentationMode();
+		this.tuplizer = resolveTuplizer( embeddedMapping.getValueMapping(), creationContext );
+	}
+
+	private Tuplizer resolveTuplizer(
+			EmbeddedValueMapping embeddedValueMapping,
+			PersisterCreationContext creationContext) {
+		final String explicitTuplizerClassName = embeddedValueMapping.getExplicitTuplizerClassName();
+		if ( StringHelper.isNotEmpty( explicitTuplizerClassName ) ) {
+			return creationContext.getComponentTuplizerFactory().constructTuplizer(
+					explicitTuplizerClassName,
+					embeddedValueMapping
+			);
+		}
+		else {
+			return creationContext.getComponentTuplizerFactory().constructDefaultTuplizer(
+					embeddedValueMapping.getRepresentationMode(),
+					embeddedValueMapping
+			);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -89,6 +115,8 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 		bindAttributes( embeddedValueMapping, creationContext );
 	}
 
+	private final Map<PersistentAttribute,List<Column>> columnsByPersistentAttribute = new ConcurrentHashMap<>();
+
 	@SuppressWarnings("AccessStaticViaInstance")
 	private void bindAttributes(EmbeddedValueMapping embeddedValueMapping, PersisterCreationContext creationContext) {
 		for ( PersistentAttributeMapping attributeMapping : embeddedValueMapping.getDeclaredPersistentAttributes() ) {
@@ -101,7 +129,11 @@ public class EmbeddedPersisterImpl<T> extends AbstractManagedType<T> implements 
 			addAttribute( persistentAttribute );
 
 			// todo (6.0) : need to capture the List<Column> per attribute.
-			//		- not sure how
+			// 		^^ why?  why do we need this?  It does not seem necessary atm, although I forget what I was thinking here
+			columnsByPersistentAttribute.put(
+					persistentAttribute,
+					creationContext.resolveColumns( attributeMapping )
+			);
 		}
 	}
 

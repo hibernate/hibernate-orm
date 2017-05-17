@@ -10,8 +10,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.naming.Identifier;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -40,7 +40,7 @@ public class DatabaseInformationImpl
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			Namespace.Name defaultNamespace) throws SQLException {
+			MappedNamespace.Name defaultNamespace) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
 
 		this.extractionContext = new ImprovedExtractionContextImpl(
@@ -83,7 +83,7 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public boolean schemaExists(Namespace.Name namespace) {
+	public boolean schemaExists(MappedNamespace.Name namespace) {
 		return extractor.schemaExists( namespace.getCatalog(), namespace.getSchema() );
 	}
 
@@ -97,7 +97,7 @@ public class DatabaseInformationImpl
 
 	@Override
 	public TableInformation getTableInformation(
-			Namespace.Name namespace,
+			MappedNamespace.Name namespace,
 			Identifier tableName) {
 		return getTableInformation( new QualifiedTableName( namespace, tableName ) );
 	}
@@ -116,7 +116,7 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public NameSpaceTablesInformation getTablesInformation(Namespace namespace) {
+	public NameSpaceTablesInformation getTablesInformation(MappedNamespace namespace) {
 		return extractor.getTables( namespace.getPhysicalName().getCatalog(), namespace.getPhysicalName().getSchema() );
 	}
 
@@ -129,7 +129,7 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public SequenceInformation getSequenceInformation(Namespace.Name schemaName, Identifier sequenceName) {
+	public SequenceInformation getSequenceInformation(MappedNamespace.Name schemaName, Identifier sequenceName) {
 		return getSequenceInformation( new QualifiedSequenceName( schemaName, sequenceName ) );
 	}
 

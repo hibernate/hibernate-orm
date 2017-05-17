@@ -9,6 +9,7 @@ package org.hibernate.boot.model.naming;
 import java.io.Serializable;
 
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.naming.Identifier;
 
 /**
  * Standard implementation of the PhysicalNamingStrategy contract.

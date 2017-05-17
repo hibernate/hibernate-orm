@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.entity.spi;
 
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 
 /**
  * @author Steve Ebersole

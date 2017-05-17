@@ -6,7 +6,7 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 
 /**
  * @author Steve Ebersole

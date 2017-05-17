@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.persister.common.spi.ForeignKey.ColumnMappings;
+import org.hibernate.persister.model.relational.spi.ForeignKey.ColumnMappings;
 import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.Navigable;

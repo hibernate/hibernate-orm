@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.spi.from;
 
-import org.hibernate.persister.common.spi.Table;
+import org.hibernate.persister.model.relational.spi.Table;
 
 /**
  * Represents a reference to a table (derived or physical) in a query's from clause.

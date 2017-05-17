@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.model.relational;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 
 /**
  * Models the qualified name of a database object.  Some things to keep in

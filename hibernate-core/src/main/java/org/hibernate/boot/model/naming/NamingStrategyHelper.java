@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.naming;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.naming.Identifier;
 
 /**
  * Helper contract for dealing with naming strategies.

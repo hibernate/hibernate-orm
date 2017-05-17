@@ -14,7 +14,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -61,7 +61,7 @@ public class SequenceExportTest extends BaseUnitTestCase {
 
 		int namespaceCount = 0;
 		int sequenceCount = 0;
-		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+		for ( MappedNamespace namespace : metadata.getDatabase().getNamespaces() ) {
 			namespaceCount++;
 			for ( Sequence sequence : namespace.getSequences() ) {
 				sequenceCount++;
@@ -83,7 +83,7 @@ public class SequenceExportTest extends BaseUnitTestCase {
 
 		int namespaceCount = 0;
 		int sequenceCount = 0;
-		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+		for ( MappedNamespace namespace : metadata.getDatabase().getNamespaces() ) {
 			namespaceCount++;
 			for ( Sequence sequence : namespace.getSequences() ) {
 				sequenceCount++;

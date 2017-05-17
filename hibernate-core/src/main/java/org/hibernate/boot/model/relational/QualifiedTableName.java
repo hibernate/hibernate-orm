@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.model.relational;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 
 /**
  * @author Steve Ebersole
@@ -16,7 +16,7 @@ public class QualifiedTableName extends QualifiedNameImpl {
 		super( catalogName, schemaName, tableName );
 	}
 
-	public QualifiedTableName(Namespace.Name schemaName, Identifier tableName) {
+	public QualifiedTableName(MappedNamespace.Name schemaName, Identifier tableName) {
 		super( schemaName, tableName );
 	}
 

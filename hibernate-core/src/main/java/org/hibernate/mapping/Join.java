@@ -102,7 +102,7 @@ public class Join implements AttributeContainer, Serializable, MappedTableJoin {
 
 	public void createPrimaryKey() {
 		//Primary key constraint
-		PrimaryKey pk = new PrimaryKey( table );
+		MappedPrimaryKey pk = new MappedPrimaryKey( table );
 		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		table.setPrimaryKey(pk);
 

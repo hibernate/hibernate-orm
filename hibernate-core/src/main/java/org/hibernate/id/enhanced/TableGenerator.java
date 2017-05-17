@@ -20,10 +20,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.dialect.Dialect;
@@ -43,7 +43,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.PrimaryKey;
+import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.spi.Type;
@@ -661,7 +661,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	public void registerExportables(Database database) {
 		final Dialect dialect = database.getJdbcEnvironment().getDialect();
 
-		final Namespace namespace = database.locateNamespace(
+		final MappedNamespace namespace = database.locateNamespace(
 				qualifiedTableName.getCatalogName(),
 				qualifiedTableName.getSchemaName()
 		);
@@ -682,7 +682,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 			table.addColumn( segmentColumn );
 
 			// lol
-			table.setPrimaryKey( new PrimaryKey( table ) );
+			table.setPrimaryKey( new MappedPrimaryKey( table ) );
 			table.getPrimaryKey().addColumn( segmentColumn );
 
 			final Column valueColumn = new ExportableColumn(

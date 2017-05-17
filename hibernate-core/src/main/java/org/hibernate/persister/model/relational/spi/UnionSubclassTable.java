@@ -4,8 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
-package org.hibernate.persister.common.spi;
+package org.hibernate.persister.model.relational.spi;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,7 +15,7 @@ import org.hibernate.MappingException;
 /**
  * @author Steve Ebersole
  */
-public class UnionSubclassTable implements Table {
+public class UnionSubclassTable extends AbstractTable implements Table {
 	private final String unionQuery;
 	private final PhysicalTable physicalTable;
 	private final UnionSubclassTable superTable;
@@ -24,7 +23,9 @@ public class UnionSubclassTable implements Table {
 	public UnionSubclassTable(
 			String unionQuery,
 			PhysicalTable physicalTable,
-			UnionSubclassTable superTable) {
+			UnionSubclassTable superTable,
+			boolean isAbstract) {
+		super( isAbstract );
 		this.unionQuery = unionQuery;
 		this.physicalTable = physicalTable;
 		this.superTable = superTable;

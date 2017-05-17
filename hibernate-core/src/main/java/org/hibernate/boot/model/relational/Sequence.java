@@ -7,7 +7,7 @@
 package org.hibernate.boot.model.relational;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 
 /**
  * Models a database {@code SEQUENCE}.

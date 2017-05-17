@@ -16,13 +16,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -220,7 +220,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			);
 		}
 
-		for ( Namespace namespace : database.getNamespaces() ) {
+		for ( MappedNamespace namespace : database.getNamespaces() ) {
 
 			if ( !schemaFilter.includeNamespace( namespace ) ) {
 				continue;
@@ -269,7 +269,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		if ( tryToDropCatalogs || tryToDropSchemas ) {
 			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
 
-			for ( Namespace namespace : database.getNamespaces() ) {
+			for ( MappedNamespace namespace : database.getNamespaces() ) {
 
 				if ( !schemaFilter.includeNamespace( namespace ) ) {
 					continue;
@@ -306,7 +306,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	private void applyConstraintDropping(
-			Namespace namespace,
+			MappedNamespace namespace,
 			Metadata metadata,
 			Formatter formatter,
 			ExecutionOptions options,

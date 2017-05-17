@@ -20,7 +20,7 @@ import java.util.StringTokenizer;
 import org.hibernate.JDBCException;
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.naming.DatabaseIdentifier;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;

@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.persistence.EntityGraph;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
@@ -35,11 +34,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
-import org.hibernate.boot.model.relational.DenormalizedMappedTable;
-import org.hibernate.boot.model.relational.DerivedMappedTable;
-import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.boot.model.relational.PhysicalMappedTable;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -49,7 +44,6 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
@@ -65,13 +59,12 @@ import org.hibernate.jpa.graph.internal.SubgraphImpl;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.common.internal.DatabaseModelImpl;
-import org.hibernate.persister.common.spi.DatabaseModel;
-import org.hibernate.persister.common.spi.DerivedTable;
-import org.hibernate.persister.common.spi.PhysicalTable;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.model.relational.internal.DatabaseModelImpl;
+import org.hibernate.persister.model.relational.spi.DatabaseModel;
+import org.hibernate.persister.model.relational.spi.DatabaseModelProducer;
 import org.hibernate.persister.queryable.internal.PolymorphicEntityValuedExpressableTypeImpl;
 import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
@@ -81,7 +74,9 @@ import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralSqmExpression;
 import org.hibernate.tuple.component.ComponentMetamodel;
+import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CustomCollectionType;
 import org.hibernate.type.EmbeddedComponentType;
@@ -97,6 +92,7 @@ import org.hibernate.type.descriptor.java.spi.MappedSuperclassJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.internal.ArrayType;
 import org.hibernate.type.internal.BagType;
+import org.hibernate.type.internal.DatabaseObjectResolutionContextImpl;
 import org.hibernate.type.internal.IdentifierBagType;
 import org.hibernate.type.internal.ListType;
 import org.hibernate.type.internal.MapType;
@@ -140,8 +136,6 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	private final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
 	private final SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
 	private final BasicTypeRegistry basicTypeRegistry;
-
-	private final DatabaseModelImpl databaseModel  = new DatabaseModelImpl();
 
 	private final Map<String,EntityPersister<?>> entityPersisterMap = new ConcurrentHashMap<>();
 	private final Set<EntityHierarchy> entityHierarchies = ConcurrentHashMap.newKeySet();
@@ -548,8 +542,15 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		scope.setSessionFactory( factory );
 		factory.addObserver( this );
 
-		populateDatabaseModel( mappingMetadata );
+		// part of this populateDatabaseModel process needs to be keeping a dictionary (or multiple)
+		//		to be used to resolve Tables and Columns later via PersisterCreationContext
 
+
+		final DatabaseObjectResolutionContextImpl dbObjectResolver = new DatabaseObjectResolutionContextImpl();
+		final DatabaseModel databaseModel = new DatabaseModelProducer( getMetadataBuildingContext() ).produceDatabaseModel(
+				mappingMetadata.getDatabase(),
+				dbObjectResolver
+		);
 
 		final PersisterFactory persisterFactory = factory.getServiceRegistry().getService( PersisterFactory.class );
 
@@ -570,6 +571,11 @@ public class TypeConfiguration implements SessionFactoryObserver {
 			}
 
 			@Override
+			public DatabaseObjectResolver getDatabaseObjectResolver() {
+				return dbObjectResolver;
+			}
+
+			@Override
 			public TypeConfiguration getTypeConfiguration() {
 				return TypeConfiguration.this;
 			}
@@ -577,6 +583,16 @@ public class TypeConfiguration implements SessionFactoryObserver {
 			@Override
 			public PersisterFactory getPersisterFactory() {
 				return persisterFactory;
+			}
+
+			@Override
+			public EntityTuplizerFactory getEntityTuplizerFactory() {
+				return getMetadataBuildingContext().getBootstrapContext().getEntityTuplizerFactory();
+			}
+
+			@Override
+			public ComponentTuplizerFactory getComponentTuplizerFactory() {
+				return getMetadataBuildingContext().getBootstrapContext().getComponentTuplizerFactory();
 			}
 
 			@Override
@@ -698,36 +714,6 @@ public class TypeConfiguration implements SessionFactoryObserver {
 						namedEntityGraph,
 						subgraph
 				);
-			}
-		}
-	}
-
-	private void populateDatabaseModel(MetadataImplementor mappingMetadata) {
-		// todo : ? - apply PhysicalNamingStrategy here, rather than as we create the "mapping model"?
-
-		// todo : we need DatabaseModel to incorporate catalogs/schemas in some fashion
-		//		either like org.hibernate.boot.model.relational.Database does
-		//		or via catalogs/schemas-specific names
-		for ( Namespace namespace : mappingMetadata.getDatabase().getNamespaces() ) {
-			for ( MappedTable mappedTable : namespace.getTables() ) {
-				final org.hibernate.persister.common.spi.Table table;
-				if ( mappedTable instanceof DenormalizedMappedTable ) {
-					// this is akin to a UnionSubclassTable
-					throw new NotYetImplementedException( "DenormalizedTable support not yet implemented" );
-				}
-				else if ( mappedTable instanceof DerivedMappedTable ) {
-					table = new DerivedTable( ( (DerivedMappedTable) mappedTable ).getSqlSelect(), mappedTable.isAbstract() );
-				}
-				else {
-					final PhysicalMappedTable physicalMappedTable = (PhysicalMappedTable) mappedTable;
-					final JdbcEnvironment jdbcEnvironment = getSessionFactory().getJdbcServices().getJdbcEnvironment();
-					final String qualifiedTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-							physicalMappedTable.getLogicalName(),
-							jdbcEnvironment.getDialect()
-					);
-					table = new PhysicalTable( qualifiedTableName, mappedTable.isAbstract() );
-				}
-				databaseModel.registerTable( table );
 			}
 		}
 	}

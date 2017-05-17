@@ -8,7 +8,7 @@ package org.hibernate.persister.collection.spi;
 
 import java.util.List;
 
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager.SqlAliasBase;
@@ -35,5 +35,6 @@ public interface CollectionElement<J> extends Navigable<J> {
 			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector collector);
 
+	// todo (6.0) : another place to consider removing generic access to columns
 	List<Column> getColumns();
 }

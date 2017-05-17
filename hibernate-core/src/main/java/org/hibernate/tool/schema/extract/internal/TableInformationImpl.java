@@ -9,7 +9,7 @@ package org.hibernate.tool.schema.extract.internal;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;

@@ -25,7 +25,7 @@ import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.PluralPersistentAttribute;
-import org.hibernate.persister.common.spi.Table;
+import org.hibernate.persister.model.relational.spi.Table;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.exec.spi.CollectionLoader;

@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.domain;
 
+import org.hibernate.EntityMode;
+
 /**
  * Models an embeddable-valued mapping such as an {@link javax.persistence.Embedded} or
  * a {@link javax.persistence.ElementCollection}
@@ -13,5 +15,6 @@ package org.hibernate.boot.model.domain;
  * @author Steve Ebersole
  */
 public interface EmbeddedValueMapping extends ValueMapping, ManagedTypeMapping {
-
+	EntityMode getRepresentationMode();
+	String getExplicitTuplizerClassName();
 }

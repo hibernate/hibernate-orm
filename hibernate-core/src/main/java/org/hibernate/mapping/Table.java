@@ -19,11 +19,11 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
@@ -55,7 +55,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 	 */
 	private Map<String, MappedColumn> columns = new LinkedHashMap();
 	private KeyValue idValue;
-	private PrimaryKey primaryKey;
+	private MappedPrimaryKey primaryKey;
 	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>();
 	private Map<String, Index> indexes = new LinkedHashMap<>();
 	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
@@ -79,7 +79,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 	}
 
 	public Table(
-			Namespace namespace,
+			MappedNamespace namespace,
 			Identifier physicalTableName,
 			boolean isAbstract) {
 		this.catalog = namespace.getPhysicalName().getCatalog();
@@ -99,7 +99,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		this.isAbstract = isAbstract;
 	}
 
-	public Table(Namespace namespace, Identifier physicalTableName, String subselect, boolean isAbstract) {
+	public Table(MappedNamespace namespace, Identifier physicalTableName, String subselect, boolean isAbstract) {
 		this.catalog = namespace.getPhysicalName().getCatalog();
 		this.schema = namespace.getPhysicalName().getSchema();
 		this.name = physicalTableName;
@@ -107,7 +107,7 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 		this.isAbstract = isAbstract;
 	}
 
-	public Table(Namespace namespace, String subselect, boolean isAbstract) {
+	public Table(MappedNamespace namespace, String subselect, boolean isAbstract) {
 		this.catalog = namespace.getPhysicalName().getCatalog();
 		this.schema = namespace.getPhysicalName().getSchema();
 		this.subselect = subselect;
@@ -637,12 +637,12 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 	}
 
 	@Override
-	public PrimaryKey getPrimaryKey() {
+	public MappedPrimaryKey getPrimaryKey() {
 		return primaryKey;
 	}
 
 	@Override
-	public void setPrimaryKey(PrimaryKey primaryKey) {
+	public void setPrimaryKey(MappedPrimaryKey primaryKey) {
 		this.primaryKey = primaryKey;
 	}
 

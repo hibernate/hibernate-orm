@@ -8,14 +8,13 @@ package org.hibernate.persister.collection.internal;
 
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.metamodel.Type;
 
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.persister.collection.spi.AbstractCollectionElement;
 import org.hibernate.persister.collection.spi.CollectionElementBasic;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;

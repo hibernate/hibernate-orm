@@ -8,6 +8,7 @@ package org.hibernate.persister.common.spi;
 
 import java.util.List;
 
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.queryable.spi.ExpressableType;
 
 /**

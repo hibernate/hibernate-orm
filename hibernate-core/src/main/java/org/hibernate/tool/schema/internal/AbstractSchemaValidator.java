@@ -10,10 +10,10 @@ import java.util.Iterator;
 import java.util.Locale;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
@@ -84,13 +84,13 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			DatabaseInformation databaseInformation,
 			ExecutionOptions options,
 			Dialect dialect) {
-		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+		for ( MappedNamespace namespace : metadata.getDatabase().getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				validateTables( metadata, databaseInformation, options, dialect, namespace );
 			}
 		}
 
-		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+		for ( MappedNamespace namespace : metadata.getDatabase().getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				for ( MappedSequence sequence : namespace.getSequences() ) {
 					if ( schemaFilter.includeSequence( sequence ) ) {
@@ -108,7 +108,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			DatabaseInformation databaseInformation,
 			ExecutionOptions options,
-			Dialect dialect, Namespace namespace);
+			Dialect dialect, MappedNamespace namespace);
 
 	protected void validateTable(
 			MappedTable table,

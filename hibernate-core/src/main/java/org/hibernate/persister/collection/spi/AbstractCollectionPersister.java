@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -24,7 +24,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.ManyToOne;
@@ -42,10 +41,9 @@ import org.hibernate.persister.collection.internal.IndexColumnReferenceSource;
 import org.hibernate.persister.collection.spi.CollectionElement.ElementClassification;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.internal.PersisterHelper;
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
-import org.hibernate.persister.common.spi.Table;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.persister.model.relational.spi.Table;
 import org.hibernate.persister.queryable.spi.JoinedTableGroupContext;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.persister.queryable.spi.RootTableGroupContext;
@@ -59,7 +57,6 @@ import org.hibernate.sql.ast.tree.spi.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -130,7 +127,7 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
-		final Namespace defaultNamespace = creationContext.getMetadata().getDatabase().getDefaultNamespace();
+		final MappedNamespace defaultNamespace = creationContext.getMetadata().getDatabase().getDefaultNamespace();
 		final String defaultCatalogName = defaultNamespace == null ? null : defaultNamespace.getName().getCatalog().render( dialect );
 		final String defaultSchemaName = defaultNamespace == null ? null : defaultNamespace.getName().getSchema().render( dialect );
 

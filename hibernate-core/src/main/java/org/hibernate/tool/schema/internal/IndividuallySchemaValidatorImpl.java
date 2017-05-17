@@ -8,7 +8,7 @@ package org.hibernate.tool.schema.internal;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -35,7 +35,7 @@ public class IndividuallySchemaValidatorImpl extends AbstractSchemaValidator {
 			DatabaseInformation databaseInformation,
 			ExecutionOptions options,
 			Dialect dialect,
-			Namespace namespace) {
+			MappedNamespace namespace) {
 		for ( MappedTable table : namespace.getTables() ) {
 			if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
 				final TableInformation tableInformation = databaseInformation.getTableInformation(

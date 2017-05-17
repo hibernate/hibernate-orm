@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.entity.internal;
 
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.entity.spi.TenantDiscrimination;
 
 /**

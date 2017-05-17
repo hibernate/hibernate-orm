@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.collection.spi.CollectionIndex;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.type.spi.Type;
 
 /**

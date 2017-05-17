@@ -13,7 +13,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.persister.collection.spi.AbstractCollectionElement;
 import org.hibernate.persister.collection.spi.CollectionElementEmbedded;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;

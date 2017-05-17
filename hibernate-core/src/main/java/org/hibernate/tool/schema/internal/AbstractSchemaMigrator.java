@@ -13,13 +13,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -145,7 +145,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			boolean tryToCreateCatalogs,
 			boolean tryToCreateSchemas,
 			Set<Identifier> exportedCatalogs,
-			Namespace namespace, GenerationTarget[] targets);
+			MappedNamespace namespace, GenerationTarget[] targets);
 
 	private void performMigration(
 			Metadata metadata,
@@ -197,9 +197,9 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				tryToCreateCatalogs = true;
 			}
 		}
-		final Map<Namespace, NameSpaceTablesInformation> tablesInformation = new HashMap<>();
+		final Map<MappedNamespace, NameSpaceTablesInformation> tablesInformation = new HashMap<>();
 		Set<Identifier> exportedCatalogs = new HashSet<>();
-		for ( Namespace namespace : database.getNamespaces() ) {
+		for ( MappedNamespace namespace : database.getNamespaces() ) {
 			final NameSpaceTablesInformation nameSpaceTablesInformation = performTablesMigration(
 					metadata,
 					existingDatabase,
@@ -235,7 +235,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 
 		//NOTE : Foreign keys must be created *afterQuery* all tables of all namespaces for cross namespace fks. see HHH-10420
-		for ( Namespace namespace : database.getNamespaces() ) {
+		for ( MappedNamespace namespace : database.getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				final NameSpaceTablesInformation nameSpaceTablesInformation = tablesInformation.get( namespace );
 				for ( MappedTable table : namespace.getTables() ) {
@@ -479,7 +479,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Formatter formatter,
 			boolean tryToCreateCatalogs,
 			boolean tryToCreateSchemas,
-			Set<Identifier> exportedCatalogs, Namespace namespace, GenerationTarget[] targets) {
+			Set<Identifier> exportedCatalogs, MappedNamespace namespace, GenerationTarget[] targets) {
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
 			if ( tryToCreateCatalogs ) {
 				final Identifier catalogLogicalName = namespace.getName().getCatalog();

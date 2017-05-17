@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
 import org.hibernate.persister.entity.spi.DiscriminatorDescriptor;

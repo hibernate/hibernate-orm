@@ -11,7 +11,7 @@ import javax.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.mapping.Component;
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.persister.queryable.spi.TableGroupResolver;

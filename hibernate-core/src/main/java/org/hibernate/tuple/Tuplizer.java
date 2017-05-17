@@ -38,6 +38,10 @@ import org.hibernate.property.access.spi.Getter;
  * @author Steve Ebersole
  */
 public interface Tuplizer {
+	// todo (6.0) : make the 2 tuplizer factory contracts to BootstrapContext.
+	//		at the same time, look for possible improvements to the
+	// 		factory and Tuplizer contracts
+
 	/**
 	 * Extract the current values contained on the given entity.
 	 *

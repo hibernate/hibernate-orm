@@ -36,7 +36,8 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 		buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 		bootstrapContext = new BootstrapContextImpl(
 				serviceRegistry,
-				null
+				null,
+				options
 		);
 		mappingDefaults = new MetadataBuilderImpl.MappingDefaultsImpl( serviceRegistry );
 		metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext,buildingOptions );

@@ -33,11 +33,14 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.tuple.component.ComponentTuplizerFactory;
+import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -58,10 +61,14 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private final TypeConfiguration typeConfiguration;
 	private final BasicTypeProducerRegistryImpl basicTypeProducerRegistry;
 
+	private final EntityTuplizerFactory entityTuplizerFactory;
+	private final ComponentTuplizerFactory componentTuplizerFactory;
+
 	private final ClassLoaderAccessImpl classLoaderAccess;
 
 	private final JavaReflectionManager hcannReflectionManager;
 	private final ClassmateContext classmateContext;
+	private final MetadataBuildingOptions metadataBuildingOptions;
 
 	private boolean isJpaBootstrap;
 
@@ -77,15 +84,25 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 
-	public BootstrapContextImpl(StandardServiceRegistry serviceRegistry, ClassmateContext classmateContext) {
+	public BootstrapContextImpl(
+			StandardServiceRegistry serviceRegistry,
+			ClassmateContext classmateContext,
+			MetadataBuildingOptions metadataBuildingOptions) {
 		this.serviceRegistry = serviceRegistry;
 		this.classmateContext = classmateContext;
+		this.metadataBuildingOptions = metadataBuildingOptions;
 
 		this.typeConfiguration = new TypeConfiguration();
+
+		this.entityTuplizerFactory = generateEntityTuplizerFactory();
+		this.componentTuplizerFactory = generateComponentTuplizerFactory();
+
 		this.basicTypeProducerRegistry = new BasicTypeProducerRegistryImpl( typeConfiguration );
 
-		this.classLoaderAccess = new ClassLoaderAccessImpl( serviceRegistry.getService( ClassLoaderService.class ) );
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		this.classLoaderAccess = new ClassLoaderAccessImpl( classLoaderService );
 		this.hcannReflectionManager = generateHcannReflectionManager();
+
 
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
@@ -109,6 +126,14 @@ public class BootstrapContextImpl implements BootstrapContext {
 				ArchiveDescriptorFactory.class,
 				configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
 		);
+	}
+
+	private EntityTuplizerFactory generateEntityTuplizerFactory() {
+		return new EntityTuplizerFactory( this );
+	}
+
+	private ComponentTuplizerFactory generateComponentTuplizerFactory() {
+		return new ComponentTuplizerFactory( this );
 	}
 
 	private JavaReflectionManager generateHcannReflectionManager() {
@@ -146,6 +171,21 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public StandardServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
+	}
+
+	@Override
+	public MetadataBuildingOptions getMetadataBuildingOptions() {
+		return metadataBuildingOptions;
+	}
+
+	@Override
+	public EntityTuplizerFactory getEntityTuplizerFactory() {
+		return entityTuplizerFactory;
+	}
+
+	@Override
+	public ComponentTuplizerFactory getComponentTuplizerFactory() {
+		return componentTuplizerFactory;
 	}
 
 	@Override

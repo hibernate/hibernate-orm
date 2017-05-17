@@ -13,10 +13,10 @@ import java.util.List;
 
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.persister.common.NavigableRole;
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
-import org.hibernate.persister.common.spi.PhysicalColumn;
+import org.hibernate.persister.model.relational.spi.PhysicalColumn;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.RowIdDescriptor;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;

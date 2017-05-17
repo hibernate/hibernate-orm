@@ -12,7 +12,7 @@ import java.util.Locale;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;

@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.common;
 
-import org.hibernate.persister.common.spi.Column;
+import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;

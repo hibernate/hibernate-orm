@@ -7,8 +7,8 @@
 package org.hibernate.tool.schema.extract.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.naming.Identifier;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 
@@ -28,7 +28,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return {@code true} indicates a schema with the given name already exists
 	 */
-	boolean schemaExists(Namespace.Name schema);
+	boolean schemaExists(MappedNamespace.Name schema);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -49,7 +49,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return The table information.  May return {@code null} if not found.
 	 */
-	TableInformation getTableInformation(Namespace.Name schemaName, Identifier tableName);
+	TableInformation getTableInformation(MappedNamespace.Name schemaName, Identifier tableName);
 
 	/**
 	 * Obtain reference to the named TableInformation
@@ -61,13 +61,13 @@ public interface DatabaseInformation {
 	TableInformation getTableInformation(QualifiedTableName tableName);
 
 	/**
-	 * Obtain reference to all the {@link TableInformation) for a given {@link Namespace}
+	 * Obtain reference to all the {@link TableInformation) for a given {@link MappedNamespace }
 	 *
-	 * @param namespace The {@link Namespace} which contains the {@link TableInformation)
+	 * @param namespace The {@link MappedNamespace } which contains the {@link TableInformation)
 	 *
 	 * @return a {@link NameSpaceTablesInformation}
 	 */
-	NameSpaceTablesInformation getTablesInformation(Namespace namespace);
+	NameSpaceTablesInformation getTablesInformation(MappedNamespace namespace);
 
 	/**
 	 * Obtain reference to the named SequenceInformation
@@ -91,7 +91,7 @@ public interface DatabaseInformation {
 	 *
 	 * @return The sequence information.  May return {@code null} if not found.
 	 */
-	SequenceInformation getSequenceInformation(Namespace.Name schemaName, Identifier sequenceName);
+	SequenceInformation getSequenceInformation(MappedNamespace.Name schemaName, Identifier sequenceName);
 
 	/**
 	 * Obtain reference to the named SequenceInformation

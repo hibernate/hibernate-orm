@@ -18,7 +18,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.mapping.KeyValue;
 
 import org.hibernate.testing.DialectChecks;
@@ -71,7 +71,7 @@ public class IdentityGeneratorExtendsTest extends BaseCoreFunctionalTestCase {
 		final Metadata metadata = builder.build();
 
 
-		for ( final Namespace ns : metadata.getDatabase().getNamespaces() ) {
+		for ( final MappedNamespace ns : metadata.getDatabase().getNamespaces() ) {
 			for ( final org.hibernate.mapping.Table table : ns.getTables() ) {
 				final KeyValue value = table.getIdentifierValue();
 				assertNotNull( "IdentifierValue was null", value );

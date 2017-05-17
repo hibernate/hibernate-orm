@@ -11,14 +11,14 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.PrimaryKey;
+import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 
@@ -169,9 +169,9 @@ public interface MappedTable extends Exportable, Loggable {
 
 	boolean hasPrimaryKey();
 
-	PrimaryKey getPrimaryKey();
+	MappedPrimaryKey getPrimaryKey();
 
-	void setPrimaryKey(PrimaryKey primaryKey);
+	void setPrimaryKey(MappedPrimaryKey primaryKey);
 
 	void addInitCommand(InitCommand command);
 }

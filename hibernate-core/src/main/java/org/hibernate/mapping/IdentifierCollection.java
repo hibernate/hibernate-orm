@@ -35,7 +35,7 @@ public abstract class IdentifierCollection extends Collection {
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
+			MappedPrimaryKey pk = new MappedPrimaryKey( getCollectionTable() );
 			pk.addColumns( getIdentifier().getColumnIterator() );
 			getCollectionTable().setPrimaryKey(pk);
 		}

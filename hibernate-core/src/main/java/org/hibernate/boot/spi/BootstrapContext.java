@@ -23,6 +23,8 @@ import org.hibernate.boot.model.type.spi.BasicTypeResolverRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.tuple.component.ComponentTuplizerFactory;
+import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -37,6 +39,10 @@ import org.jboss.jandex.IndexView;
 public interface BootstrapContext {
 	StandardServiceRegistry getServiceRegistry();
 
+	TypeConfiguration getTypeConfiguration();
+
+	MetadataBuildingOptions getMetadataBuildingOptions();
+
 	boolean isJpaBootstrap();
 
 	/**
@@ -45,11 +51,13 @@ public interface BootstrapContext {
 	 */
 	void markAsJpaBootstrap();
 
-	TypeConfiguration getTypeConfiguration();
-
 	BasicTypeProducerRegistry getBasicTypeProducerRegistry();
 
 	BasicTypeResolverRegistry getBasicTypeResolverRegistry();
+
+	EntityTuplizerFactory getEntityTuplizerFactory();
+
+	ComponentTuplizerFactory getComponentTuplizerFactory();
 
 	/**
 	 * Access the temporary ClassLoader passed to us as defined by

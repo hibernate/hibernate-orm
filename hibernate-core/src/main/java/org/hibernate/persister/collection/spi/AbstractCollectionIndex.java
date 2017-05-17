@@ -6,10 +6,7 @@
  */
 package org.hibernate.persister.collection.spi;
 
-import java.util.List;
-
 import org.hibernate.persister.common.NavigableRole;
-import org.hibernate.persister.common.spi.Column;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 

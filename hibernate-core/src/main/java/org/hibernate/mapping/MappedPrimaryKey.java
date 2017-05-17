@@ -19,10 +19,10 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class PrimaryKey extends Constraint {
-	private static final Logger log = Logger.getLogger( PrimaryKey.class );
+public class MappedPrimaryKey extends Constraint {
+	private static final Logger log = Logger.getLogger( MappedPrimaryKey.class );
 
-	public PrimaryKey(MappedTable table){
+	public MappedPrimaryKey(MappedTable table){
 		setTable( table );
 	}
 

@@ -13,9 +13,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.spi.EntityPersister;
@@ -34,6 +36,10 @@ public class EntityTuplizerFactory implements Serializable {
 	public static final Class[] ENTITY_TUP_CTOR_SIG = new Class[] { EntityPersister.class, EntityMapping.class };
 
 	private Map<EntityMode,Class<? extends EntityTuplizer>> defaultImplClassByMode = buildBaseMapping();
+
+	public EntityTuplizerFactory(BootstrapContext bootstrapContext) {
+
+	}
 
 	/**
 	 * Method allowing registration of the tuplizer class to use as default for a particular entity-mode.

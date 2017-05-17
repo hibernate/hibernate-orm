@@ -13,11 +13,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.boot.internal.ClassLoaderAccessImpl;
+import org.hibernate.boot.internal.BootstrapContextImpl;
+import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 
@@ -29,15 +28,14 @@ import org.hibernate.mapping.Component;
 public class ComponentTuplizerFactory implements Serializable {
 	private static final Class[] COMPONENT_TUP_CTOR_SIG = new Class[] { Component.class };
 
-	private Map<EntityMode,Class<? extends ComponentTuplizer>> defaultImplClassByMode = buildBaseMapping();
+	private final BootstrapContextImpl bootstrapContext;
+	private final Map<EntityMode,Class<? extends ComponentTuplizer>> defaultImplClassByMode = buildBaseMapping();
 
-	private final ClassLoaderAccess classLoaderAccess;
+	public ComponentTuplizerFactory(BootstrapContextImpl bootstrapContext) {
+		this.bootstrapContext = bootstrapContext;
 
-	public ComponentTuplizerFactory(MetadataBuildingOptions metadataBuildingOptions) {
-		classLoaderAccess = new ClassLoaderAccessImpl(
-				metadataBuildingOptions.g,
-				metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class )
-		);
+		// todo (6.0) : add default tuplizer mappings to MetadataBuildingContext and access/use here to populate map
+		//bootstrapContext.getMetadataBuildingOptions()...
 	}
 
 	/**
@@ -68,9 +66,10 @@ public class ComponentTuplizerFactory implements Serializable {
 	 * {@link Constructor#newInstance} call fails.
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public ComponentTuplizer constructTuplizer(String tuplizerClassName, Component metadata) {
+	public ComponentTuplizer constructTuplizer(String tuplizerClassName, EmbeddedValueMapping metadata) {
 		try {
-			Class<? extends ComponentTuplizer> tuplizerClass = classLoaderAccess.classForName( tuplizerClassName );
+			final ClassLoaderService cls = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
+			Class<? extends ComponentTuplizer> tuplizerClass = cls.classForName( tuplizerClassName );
 			return constructTuplizer( tuplizerClass, metadata );
 		}
 		catch ( ClassLoadingException e ) {
@@ -88,7 +87,7 @@ public class ComponentTuplizerFactory implements Serializable {
 	 *
 	 * @throws HibernateException if the {@link java.lang.reflect.Constructor#newInstance} call fails.
 	 */
-	public ComponentTuplizer constructTuplizer(Class<? extends ComponentTuplizer> tuplizerClass, Component metadata) {
+	public ComponentTuplizer constructTuplizer(Class<? extends ComponentTuplizer> tuplizerClass, EmbeddedValueMapping metadata) {
 		Constructor<? extends ComponentTuplizer> constructor = getProperConstructor( tuplizerClass );
 		assert constructor != null : "Unable to locate proper constructor for tuplizer [" + tuplizerClass.getName() + "]";
 		try {
@@ -110,7 +109,7 @@ public class ComponentTuplizerFactory implements Serializable {
 	 * @throws HibernateException If no default tuplizer found for that entity-mode; may be re-thrown from
 	 * {@link #constructTuplizer} too.
 	 */
-	public ComponentTuplizer constructDefaultTuplizer(EntityMode entityMode, Component metadata) {
+	public ComponentTuplizer constructDefaultTuplizer(EntityMode entityMode, EmbeddedValueMapping metadata) {
 		Class<? extends ComponentTuplizer> tuplizerClass = defaultImplClassByMode.get( entityMode );
 		if ( tuplizerClass == null ) {
 			throw new HibernateException( "could not determine default tuplizer class to use [" + entityMode + "]" );
@@ -147,7 +146,7 @@ public class ComponentTuplizerFactory implements Serializable {
 	}
 
 	private static Map<EntityMode,Class<? extends ComponentTuplizer>> buildBaseMapping() {
-		Map<EntityMode,Class<? extends ComponentTuplizer>> map = new ConcurrentHashMap<EntityMode,Class<? extends ComponentTuplizer>>();
+		Map<EntityMode,Class<? extends ComponentTuplizer>> map = new ConcurrentHashMap<>();
 		map.put( EntityMode.POJO, PojoComponentTuplizer.class );
 		map.put( EntityMode.MAP, DynamicMapComponentTuplizer.class );
 		return map;

@@ -90,7 +90,7 @@ is logically contained on a QuerySpec (`org.hibernate.sql.ast.tree.spi.QuerySpec
 a top-level select and a sub-query select.  The FromClause is made up of the following parts, bottom-up:
 
 TableReference:: `org.hibernate.sql.ast.tree.spi.from.TableReference` - Models a single Table
-(`org.hibernate.persister.common.spi.Table`) reference.
+(`org.hibernate.persister.model.relational.spi.Table`) reference.
 
 TableGroup:: `org.hibernate.sql.ast.tree.spi.from.TableGroup` - Represents a related group of TableReference instances,
 generally grouped by a common Navigable reference.  E.g. The EntityTableGroup includes TableReferences for all of the

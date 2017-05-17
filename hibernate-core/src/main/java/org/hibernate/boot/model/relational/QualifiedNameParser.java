@@ -7,8 +7,8 @@
 package org.hibernate.boot.model.relational;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.IllegalIdentifierException;
+import org.hibernate.naming.Identifier;
+import org.hibernate.naming.IllegalIdentifierException;
 import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**

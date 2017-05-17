@@ -6,11 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.spi.from;
 
-import org.hibernate.persister.common.spi.Column;
-import org.hibernate.persister.common.spi.Table;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
-import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 

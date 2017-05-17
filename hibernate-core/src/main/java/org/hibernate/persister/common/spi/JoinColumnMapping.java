@@ -7,6 +7,8 @@
 
 package org.hibernate.persister.common.spi;
 
+import org.hibernate.persister.model.relational.spi.Column;
+
 /**
  * Represents one column mapping as part of a join restriction
  * from a mapped association.

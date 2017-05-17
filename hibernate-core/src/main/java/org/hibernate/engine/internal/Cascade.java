@@ -345,7 +345,7 @@ public final class Cascade {
 			final Object anything,
 			final CollectionType type) {
 		final CollectionPersister persister = eventSource.getFactory().getTypeConfiguration().findCollectionPersister( type.getRole() );
-		final Type elemType = (Type) persister.getElementDescriptor().getOrmType();
+		final Type elemType = (Type) persister.getElementType();
 
 		CascadePoint elementsCascadePoint = cascadePoint;
 		if ( cascadePoint == CascadePoint.AFTER_INSERT_BEFORE_DELETE ) {

@@ -9,6 +9,7 @@ package org.hibernate.dialect.unique;
 import java.util.Iterator;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.UniqueKey;
@@ -39,8 +40,8 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	}
 
 	@Override
-	public String getTableCreationUniqueConstraintsFragment(org.hibernate.mapping.Table table) {
-		return "";
+	public String getTableCreationUniqueConstraintsFragment(MappedTable table) {
+		return null;
 	}
 
 	@Override

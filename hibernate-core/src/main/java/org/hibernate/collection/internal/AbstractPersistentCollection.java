@@ -173,7 +173,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	protected Type getElementType(CollectionPersister persister) {
-		return persister.getOrmType();
+		return (Type) persister.getElementType();
 	}
 
 	/**
@@ -711,7 +711,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			whereType = persister.getIndexType();
 		}
 		else {
-			whereType = persister.getElementDescriptor().getOrmType();
+			whereType = (Type) persister.getElementType();
 		}
 		if ( whereType instanceof EmbeddedType ) {
 			EmbeddedType componentIndexType = (EmbeddedType) whereType;
@@ -1154,7 +1154,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 		public void replace(CollectionPersister persister, Map copyCache) {
 			if ( addedValue != null ) {
-				addedValue = getReplacement( persister.getElementDescriptor().getOrmType(), addedValue, copyCache );
+				addedValue = getReplacement( (Type) persister.getElementType(), addedValue, copyCache );
 			}
 		}
 

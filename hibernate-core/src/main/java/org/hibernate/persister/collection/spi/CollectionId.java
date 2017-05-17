@@ -15,7 +15,7 @@ import org.hibernate.type.spi.Type;
 /**
  * @author Steve Ebersole
  */
-public class CollectionId implements TypeExporter {
+public class CollectionId {
 	private final BasicType type;
 	private final IdentifierGenerator generator;
 
@@ -24,10 +24,6 @@ public class CollectionId implements TypeExporter {
 		this.generator = generator;
 	}
 
-	@Override
-	public Type getOrmType() {
-		return type;
-	}
 
 	public IdentifierGenerator getGenerator() {
 		return generator;

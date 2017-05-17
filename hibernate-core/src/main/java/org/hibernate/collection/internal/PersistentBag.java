@@ -19,6 +19,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.CollectionType;
 import org.hibernate.type.spi.Type;
 
 /**

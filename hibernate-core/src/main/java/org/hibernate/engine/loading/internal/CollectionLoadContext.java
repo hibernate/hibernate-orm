@@ -28,7 +28,6 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
@@ -341,7 +340,7 @@ public class CollectionLoadContext {
 		boolean isPutFromLoad = true;
 		if ( persister.isAssociation() ) {
 			for ( Serializable id : entry.getState() ) {
-				EntityPersister entityPersister = ( (QueryableCollection) persister ).getElementPersister();
+				EntityPersister entityPersister = persister.getElementType()..getElementPersister();
 				if ( session.getPersistenceContext().wasInsertedDuringTransaction( entityPersister, id ) ) {
 					isPutFromLoad = false;
 					break;

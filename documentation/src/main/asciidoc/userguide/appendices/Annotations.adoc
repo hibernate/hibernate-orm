@@ -1222,7 +1222,7 @@ See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Subselect.html[`@Subselect`] annotation is used to specify an immutable and read-only entity using a custom SQL `SELECT` statement.
 
-//TODO: Add example
+See the <<chapters/domain/entity.adoc#entity-sql-query-mapping, Mapping the entity to a SQL query>> section for more info.
 
 [[annotations-hibernate-synchronize]]
 ==== `@Synchronize`
@@ -1233,14 +1233,14 @@ With this information in place, Hibernate will properly trigger an entity flush 
 
 Therefore, the `@Synchronize` annotation prevents the derived entity from returning stale data when executing entity queries against the `@Subselect` entity.
 
-//TODO: Add example
+See the <<chapters/domain/entity.adoc#entity-sql-query-mapping, Mapping the entity to a SQL query>> section for more info.
 
 [[annotations-hibernate-table]]
 ==== `@Table`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Table.html[`@Table`] annotation is used to specify additional information to a JPA <<annotations-hibernate-table>> annotation, like custom `INSERT`, `UPDATE` or `DELETE` statements or a specific https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/FetchMode.html[`FetchMode`].
 
-//TODO: Add example
+See the <<chapters/query/native/Native.adoc#sql-custom-crud-secondary-table-example, `@SecondaryTable` mapping>> section for more info about Hibernate-specific `@Table` mapping.
 
 [[annotations-hibernate-tables]]
 ==== `@Tables`
@@ -1248,8 +1248,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tables.html[`@Tables`] annotation is used to group multiple <<annotations-hibernate-table>> annotations.
 
 [[annotations-hibernate-target]]
-==== `@Target`
-
+==== `@Target`Se
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify an explicit target implementation when the current annotated association is using an interface type.
 
 See the <<chapters/domain/basic_types.adoc#mapping-Target,`@Target` mapping>> section for more info.

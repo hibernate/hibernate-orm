@@ -1,6 +1,7 @@
 ﻿[[entity]]
 === Entity types
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/locking
+:sourcedir-locking: ../../../../../test/java/org/hibernate/userguide/locking
+:sourcedir-mapping: ../../../../../test/java/org/hibernate/userguide/mapping/basic
 :extrasdir: extras
 
 .Usage of the word _entity_
@@ -335,7 +336,7 @@ There are 4 available OptimisticLockTypes:
 ====
 [source,java]
 ----
-include::{sourcedir}/OptimisticLockTypeAllTest.java[tag=locking-optimistic-lock-type-all-example,indent=0]
+include::{sourcedir-locking}/OptimisticLockTypeAllTest.java[tag=locking-optimistic-lock-type-all-example,indent=0]
 ----
 ====
 
@@ -346,7 +347,7 @@ When you need to modify the `Person` entity above:
 ====
 [source,java]
 ----
-include::{sourcedir}/OptimisticLockTypeAllTest.java[tag=locking-optimistic-lock-type-all-update-example,indent=0]
+include::{sourcedir-locking}/OptimisticLockTypeAllTest.java[tag=locking-optimistic-lock-type-all-update-example,indent=0]
 ----
 
 [source,SQL]
@@ -376,7 +377,7 @@ since the entity was loaded in the currently running Persistence Context.
 ====
 [source,java]
 ----
-include::{sourcedir}/OptimisticLockTypeDirtyTest.java[tag=locking-optimistic-lock-type-dirty-example,indent=0]
+include::{sourcedir-locking}/OptimisticLockTypeDirtyTest.java[tag=locking-optimistic-lock-type-dirty-example,indent=0]
 ----
 ====
 
@@ -387,7 +388,7 @@ When you need to modify the `Person` entity above:
 ====
 [source,java]
 ----
-include::{sourcedir}/OptimisticLockTypeDirtyTest.java[tag=locking-optimistic-lock-type-dirty-update-example,indent=0]
+include::{sourcedir-locking}/OptimisticLockTypeDirtyTest.java[tag=locking-optimistic-lock-type-dirty-update-example,indent=0]
 ----
 
 [source,SQL]
@@ -408,3 +409,49 @@ When using `OptimisticLockType.DIRTY`, you should also use `@DynamicUpdate` beca
 and also the `@SelectBeforeUpdate` annotation so that detached entities are properly handled by the
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#update-java.lang.Object-[`Session#update(entity)`] operation.
 ====
+
+[[entity-sql-query-mapping]]
+==== Mapping the entity to a SQL query
+
+You can map an entity to a SQL query using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Subselect.html[`@Subselect`] annotation.
+
+[[mapping-Subselect-example]]
+.`@Subselect` entity mapping
+====
+[source,java]
+----
+include::{sourcedir-mapping}/SubselectTest.java[tag=mapping-Subselect-example,indent=0]
+----
+====
+
+In the example above, the `Account` entity does not retain any balance since every account operation is registered as an `AccountTransaction`.
+To find the `Account` balance, we need to query the `AccountSummary` which shares the same identifier with the `Account` entity.
+
+However, the `AccountSummary` is not mapped to a physical table, but to an SQL query.
+
+So, if we have the following `AccountTransaction` record, the `AccountSummary` balance will mach the proper amount of money in this `Account`.
+
+[[mapping-Subselect-entity-find-example]]
+.Finding a `@Subselect` entity
+====
+[source,java]
+----
+include::{sourcedir-mapping}/SubselectTest.java[tag=mapping-Subselect-entity-find-example,indent=0]
+----
+====
+
+If we add a new `AccountTransaction` entity and refresh the `AccountSummary` entity, the balance is updated accordingly:
+
+[[mapping-Subselect-refresh-find-example]]
+.Refreshing a `@Subselect` entity
+====
+[source,java]
+----
+include::{sourcedir-mapping}/SubselectTest.java[tag=mapping-Subselect-entity-refresh-example,indent=0]
+----
+====
+
+The goala of the `@Synchronize` annotation in the `AccountSummary` entity mapping is to instruct Hibernate which database tables are needed by the
+underlying `@Subselect` SQL query. This way, when executing a HQL or JPQL which selects from the `AccountSummary` entity,
+Hibernate will trigger a Persistence Context flush if there are pending `Account`, `Client` or `AccountTransaction` entity state transitions.
+

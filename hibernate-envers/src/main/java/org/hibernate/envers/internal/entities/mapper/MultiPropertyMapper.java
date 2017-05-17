@@ -32,8 +32,8 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 	private final Map<String, PropertyData> propertyDatas;
 
 	public MultiPropertyMapper() {
-		properties = Tools.newHashMap();
-		propertyDatas = Tools.newHashMap();
+		properties = Tools.newLinkedHashMap();
+		propertyDatas = Tools.newLinkedHashMap();
 	}
 
 	@Override

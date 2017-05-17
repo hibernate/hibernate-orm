@@ -137,6 +137,11 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 
     public AuditQuery addOrder(AuditOrder order) {
         hasOrder = true;
+
+        // [HHH-9997] Allows users to prevent 'order by' being automatically added without changing the api
+        if (order == null)
+            return this;
+
         Pair<String, Boolean> orderData = order.getData(verCfg);
 		String propertyName = CriteriaTools.determinePropertyName( verCfg, versionsReader, entityName, orderData.getFirst() );
         qb.addOrder(propertyName, orderData.getSecond());

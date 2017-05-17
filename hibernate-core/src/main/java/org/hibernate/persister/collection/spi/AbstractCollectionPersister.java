@@ -58,7 +58,6 @@ import org.hibernate.sql.ast.tree.spi.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 
@@ -175,7 +174,6 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 			return new CollectionIndexBasicImpl(
 					persister,
 					indexedCollectionBinding,
-					(BasicType<J>) indexType,
 					columns
 			);
 		}
@@ -183,7 +181,6 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 			return new CollectionIndexEmbeddedImpl(
 					persister,
 					indexedCollectionBinding,
-					(EmbeddedType) indexType,
 					columns
 			);
 		}
@@ -193,7 +190,6 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 			return new CollectionIndexEntityImpl(
 					persister,
 					indexedCollectionBinding,
-					(EntityType) indexType,
 					columns
 			);
 		}
@@ -261,7 +257,6 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 			return new CollectionElementEmbeddedImpl(
 					collectionPersister,
 					collectionBinding,
-					(EmbeddedType) elementType,
 					columns
 			);
 		}
@@ -287,11 +282,11 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 			return new CollectionElementEntityImpl(
 					collectionPersister,
 					collectionBinding,
-					(EntityType) elementType,
 					separateCollectionTable == null
 							? ElementClassification.MANY_TO_MANY
 							: ElementClassification.ONE_TO_MANY,
-					columns
+					columns,
+					creationContext
 			);
 		}
 		else {
@@ -307,7 +302,6 @@ public abstract class AbstractCollectionPersister<O,C,E> implements CollectionPe
 			return new CollectionElementBasicImpl(
 					collectionPersister,
 					collectionBinding,
-					(BasicType) elementType,
 					columns
 			);
 		}

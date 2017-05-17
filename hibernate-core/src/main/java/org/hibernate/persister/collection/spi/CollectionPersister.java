@@ -22,12 +22,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.PluralPersistentAttribute;
 import org.hibernate.persister.common.spi.Table;
-import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.exec.spi.CollectionLoader;
@@ -76,7 +74,6 @@ import org.hibernate.type.spi.Type;
  *     </li>
  * </ol>
  *
- * @see QueryableCollection
  * @see org.hibernate.collection.spi.PersistentCollection
  * @author Gavin King
  */
@@ -169,9 +166,6 @@ public interface CollectionPersister<O,C,E>
 	 * @todo (6.0) what args?
 	 */
 	CollectionLoader getLoader();
-
-	@Override
-	org.hibernate.type.spi.CollectionType<O,C,E> getOrmType();
 
 	Table getSeparateCollectionTable();
 

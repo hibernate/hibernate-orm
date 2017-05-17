@@ -39,7 +39,13 @@ public class TopLimitHandler extends AbstractLimitHandler {
 	public boolean supportsLimitOffset() {
 		return supportsVariableLimit;
 	}
-	
+
+	@Override
+	public boolean supportsVariableLimit() {
+		return supportsVariableLimit;
+	}
+
+	@Override
 	public boolean bindLimitParametersFirst() {
 		return bindLimitParametersFirst;
 	}
@@ -56,14 +62,14 @@ public class TopLimitHandler extends AbstractLimitHandler {
 
 		StringBuilder sb = new StringBuilder( sql.length() + 8 )
 				.append( sql );
-		
+
 		if ( supportsVariableLimit ) {
 			sb.insert( insertionPoint, " TOP ? " );
 		}
 		else {
 			sb.insert( insertionPoint, " TOP " + getMaxOrLimit( selection ) + " " );
 		}
-		
+
 		return sb.toString();
 	}
 }

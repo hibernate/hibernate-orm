@@ -333,6 +333,19 @@ public final class MetadataTools {
 
 				if ( changeToKey ) {
 					property.setName( "key-" + property.getName() );
+
+					// HHH-11463 when cloning a many-to-one to be a key-many-to-one, the FK attribute
+					// should be explicitly set to 'none' or added to be 'none' to avoid issues with
+					// making references to the main schema.
+					if ( property.getName().equals( "key-many-to-one" ) ) {
+						final Attribute foreignKey = property.attribute( "foreign-key" );
+						if ( foreignKey == null ) {
+							property.addAttribute( "foreign-key", "none" );
+						}
+						else {
+							foreignKey.setValue( "none" );
+						}
+					}
 				}
 
 				if ( "property".equals( property.getName() ) ) {

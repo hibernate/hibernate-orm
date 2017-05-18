@@ -43,6 +43,7 @@ import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.spi.IdentifiableTypeImplementor;
 import org.hibernate.persister.entity.spi.IdentifierDescriptor;
+import org.hibernate.persister.queryable.spi.SqlSelectPlanBuildingContext;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;

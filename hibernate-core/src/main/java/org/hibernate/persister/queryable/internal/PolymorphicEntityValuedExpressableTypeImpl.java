@@ -7,6 +7,7 @@
 package org.hibernate.persister.queryable.internal;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -114,6 +115,16 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements Polymorphi
 		//		feature is beyond the JPA spec, so adherence to the spec
 		//		here is not important.
 		return findNavigable( navigableName );
+	}
+
+	@Override
+	public List<Navigable> getNavigables() {
+		return null;
+	}
+
+	@Override
+	public List<Navigable> getDeclaredNavigables() {
+		return null;
 	}
 
 	@Override

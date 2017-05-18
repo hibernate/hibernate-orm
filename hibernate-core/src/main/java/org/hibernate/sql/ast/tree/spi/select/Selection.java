@@ -6,15 +6,17 @@
  */
 package org.hibernate.sql.ast.tree.spi.select;
 
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
 
 /**
  * @author Steve Ebersole
  */
-public interface Selection {
+public interface Selection extends SqlAstNode {
 	Expression getSelectedExpression();
 
 	String getResultVariable();
@@ -22,4 +24,9 @@ public interface Selection {
 	QueryResult createQueryResult(
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext);
+
+	@Override
+	default void accept(SqlAstWalker  sqlTreeWalker) {
+		sqlTreeWalker.visitSelection( this );
+	}
 }

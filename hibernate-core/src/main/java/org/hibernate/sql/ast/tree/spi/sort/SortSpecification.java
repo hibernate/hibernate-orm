@@ -6,13 +6,15 @@
  */
 package org.hibernate.sql.ast.tree.spi.sort;
 
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.query.sqm.tree.order.SqmSortOrder;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
 
 /**
  * @author Steve Ebersole
  */
-public class SortSpecification {
+public class SortSpecification implements SqlAstNode {
 	private final Expression sortExpression;
 	private final String collation;
 	private final SqmSortOrder sortOrder;
@@ -33,5 +35,10 @@ public class SortSpecification {
 
 	public SqmSortOrder getSortOrder() {
 		return sortOrder;
+	}
+
+	@Override
+	public void accept(SqlAstWalker sqlTreeWalker) {
+		sqlTreeWalker.visitSortSpecification( this );
 	}
 }

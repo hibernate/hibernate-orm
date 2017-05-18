@@ -7,13 +7,13 @@
 package org.hibernate.sql.ast.tree.spi.expression;
 
 import org.hibernate.metamodel.queryable.spi.ExpressableType;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 
 /**
  * @author Steve Ebersole
  */
-public interface Expression {
+public interface Expression extends SqlAstNode {
 	/**
 	 * Access the type for this expression.  See {@link ExpressableType}
 	 * for more detailed description.
@@ -26,6 +26,4 @@ public interface Expression {
 	 * {@link Selectable} for mode detailed description
 	 */
 	Selectable getSelectable();
-
-	void accept(SqlSelectAstToJdbcSelectConverter walker);
 }

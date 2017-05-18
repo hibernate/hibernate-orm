@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 
 /**
  * @author Steve Ebersole
@@ -50,7 +50,7 @@ public class PluralAttributeIndexReference implements NavigableReference {
 	}
 
 	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
+	public void accept(SqlAstWalker walker) {
 		walker.visitPluralAttributeIndex( this );
 	}
 

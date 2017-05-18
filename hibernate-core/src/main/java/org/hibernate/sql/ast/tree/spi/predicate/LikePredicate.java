@@ -7,8 +7,8 @@
 
 package org.hibernate.sql.ast.tree.spi.predicate;
 
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 
 /**
  * @author Steve Ebersole
@@ -62,7 +62,7 @@ public class LikePredicate implements Predicate {
 	}
 
 	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter sqlTreeWalker) {
+	public void accept(SqlAstWalker  sqlTreeWalker) {
 		sqlTreeWalker.visitLikePredicate( this );
 	}
 }

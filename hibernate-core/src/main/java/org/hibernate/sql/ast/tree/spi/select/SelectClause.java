@@ -11,10 +11,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
+
 /**
  * @author Steve Ebersole
  */
-public class SelectClause {
+public class SelectClause implements SqlAstNode {
 	// todo : do we need List<Selection> anymore?
 	// 		the Selection stuff was only needed to build Return (ResolvedReturn) and readers and such.
 	//		but since that is now done while building the AST[1] we might no longer need that here.
@@ -60,5 +63,10 @@ public class SelectClause {
 
 	public void addSqlSelection(SqlSelection sqlSelection) {
 		sqlSelections.add( sqlSelection );
+	}
+
+	@Override
+	public void accept(SqlAstWalker  sqlTreeWalker) {
+		sqlTreeWalker.visitSelectClause( this );
 	}
 }

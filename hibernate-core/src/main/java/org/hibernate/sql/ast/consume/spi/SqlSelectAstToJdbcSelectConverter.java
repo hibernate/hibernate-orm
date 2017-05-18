@@ -77,8 +77,6 @@ import org.jboss.logging.Logger;
 public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker {
 	private static final Logger log = Logger.getLogger( SqlSelectAstToJdbcSelectConverter.class );
 
-	// todo : rename SqlSelectAstToJdbcSelectConverter
-
 	/**
 	 * Perform interpretation of a select query, returning the SqlSelectInterpretation
 	 *
@@ -138,12 +136,7 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker {
 	/**
 	 * External access to appending SQL fragments
 	 */
-	private final SqlAppender sqlAppender = new SqlAppender() {
-		@Override
-		public void appendSql(String fragment) {
-			SqlSelectAstToJdbcSelectConverter.this.appendSql( fragment );
-		}
-	};
+	private final SqlAppender sqlAppender = SqlSelectAstToJdbcSelectConverter.this::appendSql;
 
 	private void appendSql(String fragment) {
 		sqlBuffer.append( fragment );
@@ -397,7 +390,7 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker {
 	}
 
 	@Override
-	public void visitColumnBindingExpression(ColumnReference columnReference) {
+	public void visitColumnReferenceExpression(ColumnReference columnReference) {
 		// need to find a better way to do this
 		appendSql( columnReference.getColumn().render( columnReference.getIdentificationVariable() ) );
 	}

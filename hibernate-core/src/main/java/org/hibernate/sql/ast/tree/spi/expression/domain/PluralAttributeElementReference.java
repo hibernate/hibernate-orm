@@ -10,7 +10,7 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 /**
@@ -19,17 +19,17 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 public class PluralAttributeElementReference implements NavigableReference {
 	private final NavigableContainerReference collectionReference;
 
-	private final PersistentCollectionMetadata collectionPersister;
+	private final PersistentCollectionMetadata collectionMetadata;
 	private final ColumnReferenceSource columnReferenceSource;
 	private final NavigablePath navigablePath;
 
 	public PluralAttributeElementReference(
 			NavigableContainerReference collectionReference,
-			PersistentCollectionMetadata collectionPersister,
+			PersistentCollectionMetadata collectionMetadata,
 			TableGroup columnReferenceSource,
 			NavigablePath navigablePath) {
 		this.collectionReference = collectionReference;
-		this.collectionPersister = collectionPersister;
+		this.collectionMetadata = collectionMetadata;
 		this.columnReferenceSource = columnReferenceSource;
 		this.navigablePath = navigablePath;
 	}
@@ -45,7 +45,7 @@ public class PluralAttributeElementReference implements NavigableReference {
 	}
 
 	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
+	public void accept(SqlAstWalker walker) {
 		walker.visitPluralAttributeElement( this );
 	}
 
@@ -66,6 +66,6 @@ public class PluralAttributeElementReference implements NavigableReference {
 
 	@Override
 	public CollectionElement getNavigable() {
-		return collectionPersister.getElementDescriptor();
+		return collectionMetadata.getElementDescriptor();
 	}
 }

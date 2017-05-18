@@ -7,12 +7,14 @@
 package org.hibernate.sql.ast.tree.spi.from;
 
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
 
 /**
  * @author Steve Ebersole
  */
-public class TableGroupJoin {
+public class TableGroupJoin implements SqlAstNode {
 	private final SqmJoinType joinType;
 	private final TableGroup joinedGroup;
 	private final Predicate predicate;
@@ -38,4 +40,8 @@ public class TableGroupJoin {
 		return predicate;
 	}
 
+	@Override
+	public void accept(SqlAstWalker  sqlTreeWalker) {
+		sqlTreeWalker.visitTableGroupJoin( this );
+	}
 }

@@ -20,97 +20,47 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.loader.plan.build.internal.returns.CollectionReturnImpl;
-import org.hibernate.loader.plan.build.internal.returns.EntityReturnImpl;
-import org.hibernate.loader.plan.build.spi.ExpandingEntityIdentifierDescription;
-import org.hibernate.loader.plan.build.spi.ExpandingFetchSource;
-import org.hibernate.loader.plan.build.spi.ExpandingQuerySpaces;
-import org.hibernate.loader.plan.spi.AttributeFetch;
-import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
-import org.hibernate.loader.plan.spi.CollectionFetchableElement;
-import org.hibernate.loader.plan.spi.CollectionFetchableIndex;
-import org.hibernate.loader.plan.spi.CollectionReference;
-import org.hibernate.loader.plan.spi.CollectionReturn;
-import org.hibernate.loader.plan.spi.CompositeAttributeFetch;
-import org.hibernate.loader.plan.spi.CompositeFetch;
-import org.hibernate.loader.plan.spi.EntityFetch;
-import org.hibernate.loader.plan.spi.EntityReference;
-import org.hibernate.loader.plan.spi.EntityReturn;
-import org.hibernate.loader.plan.spi.FetchSource;
-import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementBasic;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.persister.entity.Joinable;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
-import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.persister.walking.internal.FetchStrategyHelper;
-import org.hibernate.persister.walking.spi.AnyMappingDefinition;
-import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.AssociationKey;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.CollectionDefinition;
-import org.hibernate.persister.walking.spi.CollectionElementDefinition;
-import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
-import org.hibernate.persister.walking.spi.EntityDefinition;
-import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
-import org.hibernate.persister.walking.spi.WalkingException;
-import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
+import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKey;
+import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
+import org.hibernate.sql.ast.produce.spi.NavigablePathStack;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
+import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
-import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
-import org.jboss.logging.MDC;
 
 /**
- * Abstract SqlSelectPlanBuilder implementation to help implementors.
-
- * A LoadPlanBuildingAssociationVisitationStrategy is a strategy for building a LoadPlan.
- * LoadPlanBuildingAssociationVisitationStrategy is also a AssociationVisitationStrategy, which is used in
- * conjunction with visiting associations via walking metamodel definitions.
+ * Abstract MetamodelDrivenSqlSelectPlanBuilder to help implementations
+ * that need to walk the run-time metamodel and build a SqlSelectPlan (SQL AST for
+ * SELECT queries).
  * <p/>
- * So this strategy defines a AssociationVisitationStrategy that walks the metamodel-defined associations afterQuery
- * which is can then build a LoadPlan based on the visited associations. {@link #determineFetchStrategy} is the
- * main decision point that determines if an association is walked.
+ * Specifically, this class helps builds the {@link SqlSelectPlan} and its single {@link QueryResult}
  *
  * @author Steve Ebersole
- *
- * @see MetamodelDrivenSqlSelectPlanBuilder
- * @see NavigableVisitationStrategy
  */
 public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
-		implements MetamodelDrivenSqlSelectPlanBuilder, NavigableVisitationStrategy, SqlSelectPlanBuildingContext,
-		SqlSelectionResolver {
+		implements MetamodelDrivenSqlSelectPlanBuilder, SqlAstBuildingContext, SqlSelectionResolver {
 	private static final Logger log = Logger.getLogger( AbstractMetamodelDrivenSqlSelectPlanBuilder.class );
-	private static final String MDC_KEY = "hibernateSqlSelectPlanWalkPath";
 
-	private final SqlSelectPlanBuildingContext buildingContext;
+	private final SqlAstBuildingContext buildingContext;
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final LockOptions lockOptions;
 
-
-	// todo (6.0) : see org.hibernate.sql.convert.spi.SqmSelectToSqlAstConverter.
-	// todo (6.0) : would also be good to share as much as possible with SqmSelectToSqlAstConverter
-
-	// essentially this needs to combine the ideas from SqmSelectToSqlAstConverter and the LoadPlan
-	// 		builders.  May also need ideas from SemanticQueryBuilder
-	//		from SQM (QuerySpecProcessingState, stacks, etc)
-
-	// todo (6.0) : do we need a stack of QuerySpecs?
 
 	private final FromClauseIndex fromClauseIndex = new FromClauseIndex();
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
@@ -141,7 +91,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	 * @param lockOptions The requested locking profile
 	 */
 	public AbstractMetamodelDrivenSqlSelectPlanBuilder(
-			SqlSelectPlanBuildingContext buildingContext,
+			SqlAstBuildingContext buildingContext,
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions) {
 		this.buildingContext = buildingContext;
@@ -1057,50 +1007,4 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	}
 
 
-	/**
-	 * Specialized stack implementation which simultaneously manages the stack of
-	 * PropertyPath references as well as the logging MDC value based on the current
-	 * PropertyPath node.
-	 * <p/>
-	 * Due to the recursive calls needed for processing a Navigable graph it is generally
-	 * beneficial to see exactly where we are in the graph walking as part of log messages.
-	 * This MDC hook provides this capability.
-	 */
-	public static class NavigablePathStack {
-		private ArrayDeque<NavigablePath> internalStack = new ArrayDeque<>();
-
-		public void push(Navigable navigable) {
-			assert navigable != null;
-
-			final NavigablePath navigablePath;
-			if ( internalStack.isEmpty() ) {
-				navigablePath = new NavigablePath( navigable.getNavigableName() );
-			}
-			else {
-				navigablePath = internalStack.peekFirst().append( navigable.getNavigableName() );
-			}
-			internalStack.addFirst( navigablePath );
-
-			MDC.put( MDC_KEY, navigablePath.getFullPath() );
-		}
-
-		public void pop() {
-			assert !internalStack.isEmpty();
-
-			internalStack.removeFirst();
-
-			final NavigablePath newHead = internalStack.peekFirst();
-			final String mdcRep = newHead == null ? "<no-path>" : newHead.getFullPath();
-			MDC.put( MDC_KEY, mdcRep );
-		}
-
-		public void clear() {
-			MDC.remove( MDC_KEY );
-
-			if ( !internalStack.isEmpty() ) {
-				log.debug( "propertyPathStack not empty upon completion of visitation; mis-matched push/pop?" );
-				internalStack.clear();
-			}
-		}
-	}
 }

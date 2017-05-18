@@ -6,21 +6,23 @@
  */
 package org.hibernate.sql.ast.tree.spi;
 
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.from.FromClause;
-import org.hibernate.sql.ast.tree.spi.predicate.Junction;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.select.SelectClause;
-import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.from.FromClause;
+import org.hibernate.sql.ast.tree.spi.predicate.Junction;
+import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
+import org.hibernate.sql.ast.tree.spi.select.SelectClause;
+import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
+
 /**
  * @author Steve Ebersole
  */
-public class QuerySpec {
+public class QuerySpec implements SqlAstNode {
 	private final boolean isRoot;
 
 	private final FromClause fromClause = new FromClause();
@@ -114,5 +116,10 @@ public class QuerySpec {
 			throw new UnsupportedOperationException( "Cannot set offset-clause expression after already set" );
 		}
 		this.offsetClauseExpression = offsetExpression;
+	}
+
+	@Override
+	public void accept(SqlAstWalker sqlTreeWalker) {
+		sqlTreeWalker.visitQuerySpec( this );
 	}
 }

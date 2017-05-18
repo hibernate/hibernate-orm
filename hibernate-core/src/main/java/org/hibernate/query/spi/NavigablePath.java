@@ -20,12 +20,12 @@ public class NavigablePath {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
 
 	private final NavigablePath parent;
-	private final String property;
+	private final String localName;
 	private final String fullPath;
 
 	public NavigablePath(NavigablePath parent, String navigableName) {
 		this.parent = parent;
-		this.property = navigableName;
+		this.localName = navigableName;
 
 		// the _identifierMapper is a "hidden" property on entities with composite keys.
 		// concatenating it will prevent the path from correctly being used to look up
@@ -52,8 +52,8 @@ public class NavigablePath {
 		}
 	}
 
-	public NavigablePath(String property) {
-		this( null, property );
+	public NavigablePath(String localName) {
+		this( null, localName );
 	}
 
 	public NavigablePath() {
@@ -68,8 +68,8 @@ public class NavigablePath {
 		return parent;
 	}
 
-	public String getProperty() {
-		return property;
+	public String getLocalName() {
+		return localName;
 	}
 
 	public String getFullPath() {
@@ -77,7 +77,7 @@ public class NavigablePath {
 	}
 
 	public boolean isRoot() {
-		return parent == null && StringHelper.isEmpty( property );
+		return parent == null && StringHelper.isEmpty( localName );
 	}
 
 	@Override

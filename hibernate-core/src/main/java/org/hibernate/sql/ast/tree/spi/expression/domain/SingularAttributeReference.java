@@ -11,7 +11,7 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.queryable.spi.ExpressableType;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 
 /**
@@ -45,7 +45,7 @@ public class SingularAttributeReference implements NavigableReference {
 	}
 
 	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
+	public void accept(SqlAstWalker walker) {
 		walker.visitSingularAttributeReference( this );
 	}
 

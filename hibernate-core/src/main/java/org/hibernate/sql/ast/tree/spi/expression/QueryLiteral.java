@@ -8,7 +8,7 @@
 package org.hibernate.sql.ast.tree.spi.expression;
 
 import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -27,7 +27,7 @@ public class QueryLiteral extends AbstractLiteral {
 	}
 
 	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
+	public void accept(SqlAstWalker  walker) {
 		walker.visitQueryLiteral( this );
 	}
 }

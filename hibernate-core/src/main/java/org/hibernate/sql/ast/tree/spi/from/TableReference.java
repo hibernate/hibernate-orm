@@ -7,13 +7,15 @@
 package org.hibernate.sql.ast.tree.spi.from;
 
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
 
 /**
  * Represents a reference to a table (derived or physical) in a query's from clause.
  *
  * @author Steve Ebersole
  */
-public class TableReference {
+public class TableReference implements SqlAstNode {
 	private final Table table;
 	private final String identificationVariable;
 
@@ -28,5 +30,10 @@ public class TableReference {
 
 	public String getIdentificationVariable() {
 		return identificationVariable;
+	}
+
+	@Override
+	public void accept(SqlAstWalker  sqlTreeWalker) {
+		sqlTreeWalker.visitTableReference( this );
 	}
 }

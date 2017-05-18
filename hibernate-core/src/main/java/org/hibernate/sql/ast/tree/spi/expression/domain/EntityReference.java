@@ -9,9 +9,9 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.select.EntityValuedSelectable;
+import org.hibernate.sql.ast.tree.spi.select.Selectable;
 
 /**
  * @author Andrea Boriero
@@ -105,7 +105,7 @@ public class EntityReference implements NavigableContainerReference {
 	}
 
 	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
+	public void accept(SqlAstWalker walker) {
 		walker.visitEntityExpression( this );
 	}
 }

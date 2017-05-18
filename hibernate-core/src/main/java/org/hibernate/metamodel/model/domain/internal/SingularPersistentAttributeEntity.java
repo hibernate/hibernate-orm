@@ -8,20 +8,19 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.metamodel.model.relational.spi.ForeignKey.ColumnMappings;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.JoinablePersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.NavigableEntityValued;
+import org.hibernate.metamodel.model.domain.spi.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey.ColumnMappings;
 import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.metamodel.queryable.spi.JoinedTableGroupContext;
 import org.hibernate.metamodel.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.metamodel.queryable.spi.SqlAliasBaseResolver;
-import org.hibernate.metamodel.queryable.spi.TableGroupResolver;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.sql.NotYetImplementedException;
@@ -194,7 +193,6 @@ public class SingularPersistentAttributeEntity<O,J>
 			NavigableReferenceInfo navigableReferenceInfo,
 			SqmJoinType joinType,
 			JoinedTableGroupContext tableGroupJoinContext,
-			TableGroupResolver tableGroupResolutionContext,
 			SqlAliasBaseResolver sqlAliasBaseResolver) {
 		throw new NotYetImplementedException(  );
 	}

@@ -14,7 +14,7 @@ import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.metamodel.queryable.spi.ExpressableType;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
@@ -59,7 +59,7 @@ public class ColumnReference implements Expression, SqlSelectable {
 	}
 
 	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter interpreter) {
+	public void accept(SqlAstWalker  interpreter) {
 		interpreter.visitColumnReference( this );
 	}
 

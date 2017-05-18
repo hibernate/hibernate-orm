@@ -10,10 +10,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
+
 /**
  * @author Steve Ebersole
  */
-public class FromClause {
+public class FromClause implements SqlAstNode {
 	private final List<TableSpace> tableSpaces = new ArrayList<>();
 
 	public FromClause() {
@@ -31,5 +34,10 @@ public class FromClause {
 
 	public void addTableSpace(TableSpace tableSpace) {
 		tableSpaces.add( tableSpace );
+	}
+
+	@Override
+	public void accept(SqlAstWalker  sqlTreeWalker) {
+		sqlTreeWalker.visitFromClause( this );
 	}
 }

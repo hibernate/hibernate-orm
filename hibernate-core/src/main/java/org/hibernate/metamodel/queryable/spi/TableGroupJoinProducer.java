@@ -35,6 +35,5 @@ public interface TableGroupJoinProducer {
 			NavigableReferenceInfo navigableReferenceInfo,
 			SqmJoinType joinType,
 			JoinedTableGroupContext tableGroupJoinContext,
-			TableGroupResolver tableGroupResolutionContext,
 			SqlAliasBaseResolver sqlAliasBaseResolver);
 }

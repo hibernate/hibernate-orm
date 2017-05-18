@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
 
 import org.jboss.logging.Logger;
 
@@ -24,7 +26,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class TableSpace {
+public class TableSpace implements SqlAstNode {
 	private static final Logger log = Logger.getLogger( TableSpace.class );
 
 	private final FromClause fromClause;
@@ -72,5 +74,10 @@ public class TableSpace {
 			joinedTableGroups = new ArrayList<>();
 		}
 		joinedTableGroups.add( join );
+	}
+
+	@Override
+	public void accept(SqlAstWalker  sqlTreeWalker) {
+		sqlTreeWalker.visitTableSpace( this );
 	}
 }

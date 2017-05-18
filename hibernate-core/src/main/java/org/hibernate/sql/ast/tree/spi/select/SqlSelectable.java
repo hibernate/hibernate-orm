@@ -7,7 +7,6 @@
 package org.hibernate.sql.ast.tree.spi.select;
 
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 
 /**
  * Unifying contract for things that are selectable at the SQL level.
@@ -16,7 +15,4 @@ import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
  */
 public interface SqlSelectable {
 	SqlSelectionReader getSqlSelectionReader();
-
-	// todo (6.0) : i believe accept should be more at the Selection/Exprssion level
-	void accept(SqlSelectAstToJdbcSelectConverter interpreter);
 }

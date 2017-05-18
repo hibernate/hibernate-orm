@@ -8,8 +8,8 @@ package org.hibernate.sql.ast.tree.spi.expression;
 
 
 import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 
 /**
  * @author Steve Ebersole
@@ -22,7 +22,7 @@ public class CountStarFunction extends AbstractAggregateFunction {
 	private static Expression STAR = new StarExpression();
 
 	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
+	public void accept(SqlAstWalker  walker) {
 		walker.visitCountStarFunction( this );
 	}
 
@@ -33,7 +33,7 @@ public class CountStarFunction extends AbstractAggregateFunction {
 		}
 
 		@Override
-		public void accept(SqlSelectAstToJdbcSelectConverter walker) {
+		public void accept(SqlAstWalker  walker) {
 		}
 
 		@Override

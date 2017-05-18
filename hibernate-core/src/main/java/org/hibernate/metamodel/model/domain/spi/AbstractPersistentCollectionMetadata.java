@@ -30,23 +30,22 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.internal.CollectionElementBasicImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionElementEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionElementEntityImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionIndexBasicImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionIndexEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionIndexEntityImpl;
-import org.hibernate.metamodel.queryable.spi.ElementColumnReferenceSource;
-import org.hibernate.metamodel.queryable.spi.IndexColumnReferenceSource;
 import org.hibernate.metamodel.model.domain.internal.PersisterHelper;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.metamodel.queryable.spi.ElementColumnReferenceSource;
+import org.hibernate.metamodel.queryable.spi.IndexColumnReferenceSource;
 import org.hibernate.metamodel.queryable.spi.JoinedTableGroupContext;
 import org.hibernate.metamodel.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.metamodel.queryable.spi.RootTableGroupContext;
 import org.hibernate.metamodel.queryable.spi.SqlAliasBaseResolver;
-import org.hibernate.metamodel.queryable.spi.TableGroupResolver;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
@@ -322,7 +321,6 @@ public abstract class AbstractPersistentCollectionMetadata<O,C,E> implements Per
 			NavigableReferenceInfo navigableReferenceInfo,
 			SqmJoinType joinType,
 			JoinedTableGroupContext tableGroupJoinContext,
-			TableGroupResolver tableGroupResolutionContext,
 			SqlAliasBaseResolver sqlAliasBaseResolver) {
 		return null;
 	}

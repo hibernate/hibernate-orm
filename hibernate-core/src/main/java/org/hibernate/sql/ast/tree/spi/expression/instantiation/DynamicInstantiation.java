@@ -22,7 +22,7 @@ import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultA
 import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultAssemblerListImpl;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultAssemblerMapImpl;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultDynamicInstantiationImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
@@ -106,7 +106,7 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 	}
 
 	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
+	public void accept(SqlAstWalker walker) {
 		walker.visitDynamicInstantiation( this );
 	}
 
@@ -146,6 +146,11 @@ public class DynamicInstantiation<T> implements Expression, Selectable {
 		@Override
 		protected QueryResultGenerator getQueryResultGenerator() {
 			return queryResultGenerator;
+		}
+
+		@Override
+		public void accept(SqlAstWalker sqlTreeWalker) {
+			sqlTreeWalker.visitSelection( this );
 		}
 	}
 

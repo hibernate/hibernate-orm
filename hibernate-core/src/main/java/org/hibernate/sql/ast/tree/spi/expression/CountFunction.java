@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.tree.spi.expression;
 
 import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 
 /**
  * @author Steve Ebersole
@@ -18,7 +18,7 @@ public class CountFunction extends AbstractAggregateFunction {
 	}
 
 	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter walker) {
+	public void accept(SqlAstWalker  walker) {
 		walker.visitCountFunction( this );
 	}
 }

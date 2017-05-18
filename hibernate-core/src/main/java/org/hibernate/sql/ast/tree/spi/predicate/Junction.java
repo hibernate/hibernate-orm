@@ -10,7 +10,7 @@ package org.hibernate.sql.ast.tree.spi.predicate;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 
 /**
  * @author Steve Ebersole
@@ -52,7 +52,7 @@ public class Junction implements Predicate {
 	}
 
 	@Override
-	public void accept(SqlSelectAstToJdbcSelectConverter sqlTreeWalker) {
+	public void accept(SqlAstWalker  sqlTreeWalker) {
 		sqlTreeWalker.visitJunction( this );
 	}
 }

@@ -19,20 +19,20 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.hql.internal.ast.tree.OrderByClause;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.JoinablePersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.metamodel.queryable.spi.JoinedTableGroupContext;
 import org.hibernate.metamodel.queryable.spi.RootTableGroupContext;
+import org.hibernate.metamodel.queryable.spi.TableGroupResolver;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSemanticQueryWalker;
@@ -116,6 +116,7 @@ import org.hibernate.sql.ast.produce.result.spi.QueryResultDynamicInstantiation;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 import org.hibernate.sql.ast.tree.spi.Clause;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -182,43 +183,45 @@ public class SqmSelectToSqlAstConverter
 	 *
 	 * @param statement The SQM SelectStatement to interpret
 	 * @param queryOptions The options to be applied to the interpretation
-	 * @param callback to be formally defined
-	 * other forms of Query execution would pass {@code false}
+	 * @param sqlAstBuildingContext Contextual information ("parameter object") for
+	 * information needed as a SQL AST is produced
 	 *
 	 * @return The interpretation
 	 */
 	public static SqlSelectPlan interpret(
 			SqmSelectStatement statement,
-			SharedSessionContractImplementor persistenceContext,
 			QueryOptions queryOptions,
-			Callback callback) {
-		final SqmSelectToSqlAstConverter walker = new SqmSelectToSqlAstConverter(
-				persistenceContext.getFactory(),
-				queryOptions,
-				callback
-		);
-		return walker.interpret( statement );
+			SqlAstBuildingContext sqlAstBuildingContext) {
+		return new SqmSelectToSqlAstConverter( queryOptions, sqlAstBuildingContext )
+				.interpret( statement );
 	}
 
-	private final SessionFactoryImplementor factory;
+
+	private final SqlAstBuildingContext sqlAstBuildingContext;
 	private final QueryOptions queryOptions;
-	private final Callback callback;
+
 
 	private final FromClauseIndex fromClauseIndex = new FromClauseIndex();
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
 	private final Stack<Clause> currentClauseStack = new Stack<>();
 	private final Stack<QuerySpec> querySpecStack = new Stack<>();
-	private int querySpecDepth = 0;
+	private final Stack<Shallowness> shallownessStack = new Stack<>( Shallowness.NONE );
 
 	private final List<QueryResult> queryReturns = new ArrayList<>();
 
+	private enum Shallowness {
+		NONE,
+		CTOR,
+		FUNCTION,
+		SUBQUERY;
+	}
+
+
 	private SqmSelectToSqlAstConverter(
-			SessionFactoryImplementor factory,
 			QueryOptions queryOptions,
-			Callback callback) {
-		this.factory = factory;
+			SqlAstBuildingContext sqlAstBuildingContext) {
 		this.queryOptions = queryOptions;
-		this.callback = callback;
+		this.sqlAstBuildingContext = sqlAstBuildingContext;
 	}
 
 	private SqlSelectPlan interpret(SqmSelectStatement statement) {
@@ -230,22 +233,13 @@ public class SqmSelectToSqlAstConverter
 
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
-		return null;
+		return sqlAstBuildingContext.getSessionFactory();
 	}
 
 	@Override
 	public NavigablePath currentNavigablePath() {
 		return navigablePathStack.getCurrent();
 	}
-
-	private enum Shallowness {
-		NONE,
-		CTOR,
-		FUNCTION,
-		SUBQUERY;
-	}
-
-	private final Stack<Shallowness> shallownessStack = new Stack<>( Shallowness.NONE );
 
 	@Override
 	public boolean shouldCreateShallowEntityResult() {
@@ -276,9 +270,8 @@ public class SqmSelectToSqlAstConverter
 	@Override
 	public SelectStatement visitSelectStatement(SqmSelectStatement statement) {
 		final QuerySpec querySpec = visitQuerySpec( statement.getQuerySpec() );
-		final SelectStatement sqlAst = new SelectStatement( querySpec );
 
-		return sqlAst;
+		return new SelectStatement( querySpec );
 	}
 
 	@Override
@@ -299,8 +292,6 @@ public class SqmSelectToSqlAstConverter
 	public QuerySpec visitQuerySpec(SqmQuerySpec querySpec) {
 		final QuerySpec astQuerySpec = new QuerySpec( querySpecStack.isEmpty() );
 		querySpecStack.push( astQuerySpec );
-		querySpecDepth++;
-
 		fromClauseIndex.pushFromClause( astQuerySpec.getFromClause() );
 
 		try {
@@ -363,7 +354,6 @@ public class SqmSelectToSqlAstConverter
 			return astQuerySpec;
 		}
 		finally {
-			querySpecDepth--;
 			assert querySpecStack.pop() == astQuerySpec;
 			assert fromClauseIndex.popFromClause() == astQuerySpec.getFromClause();
 		}
@@ -427,6 +417,11 @@ public class SqmSelectToSqlAstConverter
 					public void addRestriction(Predicate predicate) {
 						currentQuerySpec().addRestriction( predicate );
 					}
+
+					@Override
+					public TableGroupResolver getTableGroupResolver() {
+						return fromClauseIndex;
+					}
 				},
 				sqlAliasBaseManager
 		);
@@ -459,8 +454,12 @@ public class SqmSelectToSqlAstConverter
 					public TableSpace getTableSpace() {
 						return tableSpace;
 					}
+
+					@Override
+					public TableGroupResolver getTableGroupResolver() {
+						return fromClauseIndex;
+					}
 				},
-				fromClauseIndex,
 				sqlAliasBaseManager
 		);
 
@@ -489,6 +488,11 @@ public class SqmSelectToSqlAstConverter
 					@Override
 					public TableSpace getTableSpace() {
 						return tableSpace;
+					}
+
+					@Override
+					public TableGroupResolver getTableGroupResolver() {
+						return fromClauseIndex;
 					}
 				},
 				sqlAliasBaseManager
@@ -1212,6 +1216,12 @@ public class SqmSelectToSqlAstConverter
 
 	@Override
 	public SqlSelectionGroup resolveSqlSelectionGroup(Navigable navigable) {
+		// need something like:
+		final Map<QuerySpec,Map<Navigable,SqlSelectionGroup>> sqlSelectionGroupMapByQuerySpec = new HashMap<>();
+		// but that requires exposing SqlSelectables from Navigable or being able to ask Navigable
+		//		for a "SqlSelectableGroup"
+		// or ask it to build the SqlSelectionGroup passing in this (as SqlSelectionResolver)
+		//		and having it resolve the individual selectables building a SqlSelectionGroup
 		return null;
 	}
 

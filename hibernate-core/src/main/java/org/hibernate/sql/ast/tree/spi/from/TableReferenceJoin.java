@@ -6,16 +6,18 @@
  */
 package org.hibernate.sql.ast.tree.spi.from;
 
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.produce.IllegalJoinSpecificationException;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.IllegalJoinSpecificationException;
+import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
 
 /**
  * Represents a join to a {@link TableReference}; roughly equivalent to a SQL join.
  *
  * @author Steve Ebersole
  */
-public class TableReferenceJoin {
+public class TableReferenceJoin implements SqlAstNode {
 	private final SqmJoinType joinType;
 	private final TableReference joinedTableBinding;
 	private final Predicate predicate;
@@ -42,5 +44,10 @@ public class TableReferenceJoin {
 
 	public Predicate getJoinPredicate() {
 		return predicate;
+	}
+
+	@Override
+	public void accept(SqlAstWalker  sqlTreeWalker) {
+		sqlTreeWalker.visitTableReferenceJoin( this );
 	}
 }

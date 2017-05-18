@@ -16,28 +16,36 @@ import java.util.LinkedList;
  * @author Steve Ebersole
  */
 public class Stack<T> {
-	private LinkedList<T> stack = new LinkedList<>();
+	private LinkedList<T> internalStack = new LinkedList<>();
 
 	public Stack() {
 	}
 
 	public Stack(T initial) {
-		stack.add( initial );
+		internalStack.add( initial );
 	}
 
 	public void push(T newCurrent) {
-		stack.addFirst( newCurrent );
+		internalStack.addFirst( newCurrent );
 	}
 
 	public T pop() {
-		return stack.removeFirst();
+		return internalStack.removeFirst();
 	}
 
 	public T getCurrent() {
-		return stack.peek();
+		return internalStack.peek();
+	}
+
+	public int depth() {
+		return internalStack.size();
 	}
 
 	public boolean isEmpty() {
-		return stack.isEmpty();
+		return internalStack.isEmpty();
+	}
+
+	public void clear() {
+		internalStack.clear();
 	}
 }

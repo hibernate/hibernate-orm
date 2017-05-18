@@ -2746,6 +2746,16 @@ public abstract class AbstractEntityPersister
 			final SharedSessionContractImplementor session,
 			int index) throws SQLException {
 		if ( rowId != null ) {
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev(
+					String.format(
+						"binding parameter [%s] as ROWID - [%s]",
+						index,
+						rowId
+					)
+				);
+			}
+
 			ps.setObject( index, rowId );
 			return 1;
 		}

@@ -328,6 +328,13 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 			rowId = concreteEntityPersister.hasRowId()
 					? resultSet.getObject( entityReferenceAliases.getColumnAliases().getRowIdAlias() )
 					: null;
+
+			if ( rowId != null && log.isTraceEnabled() ) {
+				log.tracev(
+						"extracted ROWID value: {0}",
+						rowId
+				);
+			}
 		}
 		catch (SQLException e) {
 			throw context.getSession().getFactory().getServiceRegistry().getService( JdbcServices.class ).getSqlExceptionHelper().convert(

@@ -1139,7 +1139,7 @@ For instance, Oracle defines the https://docs.oracle.com/cd/B19306_01/server.102
 
 According to Oracle documentation, `ROWID` is the fastest way to access a single row from a table.
 
-//TODO: Add example
+See the <<chapters/domain/identifiers.adoc#identifiers-rowid, `@RowId` mapping>> section for more info.
 
 [[annotations-hibernate-selectbeforeupdate]]
 ==== `@SelectBeforeUpdate`
@@ -1178,7 +1178,7 @@ The `SourceType` offers two options:
 DB:: Get the timestamp from the database.
 VM:: Get the timestamp from the current JVM.
 
-//TODO: Add example
+See the <<chapters/locking/Locking.adoc#locking-optimistic-version-timestamp-source-mapping-example, Database-generated version timestamp mapping>> section for more info.
 
 [[annotations-hibernate-sqldelete]]
 ==== `@SQLDelete`

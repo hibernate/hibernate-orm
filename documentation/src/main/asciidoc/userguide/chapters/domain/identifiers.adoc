@@ -470,3 +470,34 @@ include::{extrasdir}/id/CompositeIdAssociationPrimaryKeyJoinColumn.java[]
 ====
 Unlike `@MapsId`, the application developer is responsible for ensuring that the identifier and the many-to-one (or one-to-one) association are in sync.
 ====
+
+[[identifiers-rowid]]
+==== @RowId
+
+If you annotate a given entity with the `@RowId` annotation and the underlying database supports fetching a record by ROWID (e.g. Oracle),
+then Hibernate can use the `ROWID` pseudo-column for CRUD operations.
+
+[[identifiers-rowid-mapping]]
+.`@RowId` entity maapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/RowIdTest.java[tag=identifiers-rowid-mapping]
+----
+====
+
+Now, when fetching an entity and modifying it, Hibernate uses the `ROWID` pseudo-column for the UPDATE SQL statement.
+
+[[identifiers-rowid-example]]
+.`@RowId` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/RowIdTest.java[tag=identifiers-rowid-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/id/identifiers-rowid-example.sql[]
+----
+====

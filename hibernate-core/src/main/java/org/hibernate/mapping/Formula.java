@@ -24,10 +24,8 @@ public class Formula implements Selectable, Serializable {
 	private static int formulaUniqueInteger;
 
 	private String formula;
-	private int uniqueInteger;
 
 	public Formula() {
-		uniqueInteger = formulaUniqueInteger++;
 	}
 
 	public Formula(String formula) {
@@ -56,16 +54,6 @@ public class Formula implements Selectable, Serializable {
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment) {
 		return new DerivedColumn( runtimeTable, formula );
-	}
-
-	@Override
-	public String getAlias(Dialect dialect) {
-		return "formula" + Integer.toString(uniqueInteger) + '_';
-	}
-
-	@Override
-	public String getAlias(Dialect dialect, Table table) {
-		return getAlias(dialect);
 	}
 
 	public String getFormula() {

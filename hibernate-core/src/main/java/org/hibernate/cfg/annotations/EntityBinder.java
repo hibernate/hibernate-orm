@@ -632,9 +632,7 @@ public class EntityBinder {
 		context.getMetadataCollector().addEntityTableXref(
 				persistentClass.getEntityName(),
 				context.getMetadataCollector().getDatabase().toIdentifier(
-						context.getMetadataCollector().getLogicalTableName(
-								superTableXref.getPrimaryTable()
-						)
+						superTableXref.getPrimaryTable().getName()
 				),
 				superTableXref.getPrimaryTable(),
 				superTableXref

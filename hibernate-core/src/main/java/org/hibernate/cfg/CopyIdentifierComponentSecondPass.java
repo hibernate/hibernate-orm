@@ -179,13 +179,9 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 				final Ejb3JoinColumn joinColumn;
 				String logicalColumnName = null;
 				if ( isExplicitReference ) {
-					final String columnName = column.getName();
-					logicalColumnName = buildingContext.getMetadataCollector().getLogicalColumnName(
-							referencedPersistentClass.getTable(),
-							columnName
-					);
+					final String columnName = column.getText();
 					//JPA 2 requires referencedColumnNames to be case insensitive
-					joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase(Locale.ROOT ) );
+					joinColumn = columnByReferencedName.get( columnName.toLowerCase(Locale.ROOT ) );
 				}
 				else {
 					joinColumn = columnByReferencedName.get( "" + index.get() );

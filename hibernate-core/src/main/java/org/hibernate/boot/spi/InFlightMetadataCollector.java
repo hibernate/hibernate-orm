@@ -218,24 +218,6 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// stuff needed for annotation binding :(
 
-	void addTableNameBinding(Identifier logicalName, MappedTable table);
-	void addTableNameBinding(
-			String schema,
-			String catalog,
-			String logicalName,
-			String realTableName,
-			MappedTable denormalizedSuperTable);
-	String getLogicalTableName(MappedTable ownerTable);
-	String getPhysicalTableName(Identifier logicalName);
-	String getPhysicalTableName(String logicalName);
-
-	void addColumnNameBinding(MappedTable table, Identifier logicalColumnName, Column column);
-	void addColumnNameBinding(MappedTable table, String logicalColumnName, Column column);
-	String getPhysicalColumnName(MappedTable table, Identifier logicalName) throws MappingException;
-	String getPhysicalColumnName(MappedTable table, String logicalName) throws MappingException;
-	String getLogicalColumnName(MappedTable table, Identifier physicalName);
-	String getLogicalColumnName(MappedTable table, String physicalName);
-
 	void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
 	void addDefaultQuery(NamedQueryDefinition queryDefinition);

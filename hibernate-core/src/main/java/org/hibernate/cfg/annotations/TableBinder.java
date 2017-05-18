@@ -679,13 +679,9 @@ public class TableBinder {
 						//for each PK column, find the associated FK column.
 						col = (org.hibernate.mapping.Column) idColItr.next();
 						for (Ejb3JoinColumn joinCol : columns) {
-							String referencedColumn = joinCol.getReferencedColumn();
-							referencedColumn = buildingContext.getMetadataCollector().getPhysicalColumnName(
-									table,
-									referencedColumn
-							);
+							final Identifier referencedColumn = Identifier.toIdentifier( joinCol.getReferencedColumn());
 							//In JPA 2 referencedColumnName is case insensitive
-							if ( referencedColumn.equalsIgnoreCase( col.getQuotedName( buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment().getDialect() ) ) ) {
+							if ( referencedColumn.equals( col.getName() ) ) {
 								//proper join column
 								if ( joinCol.isNameDeferred() ) {
 									joinCol.linkValueUsingDefaultColumnNaming(

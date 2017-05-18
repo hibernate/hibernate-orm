@@ -14,8 +14,6 @@ import org.hibernate.dialect.function.SQLFunctionRegistry;
  * Models the commonality between a column and a formula (computed value).
  */
 public interface Selectable extends MappedColumn {
-	String getAlias(Dialect dialect);
-	String getAlias(Dialect dialect, Table table);
 	boolean isFormula();
 	String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry);
 	String getText(Dialect dialect);

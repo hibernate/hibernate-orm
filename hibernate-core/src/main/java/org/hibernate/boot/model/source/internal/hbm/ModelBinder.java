@@ -562,11 +562,7 @@ public class ModelBinder {
 
 		entitySource.getLocalMetadataBuildingContext().getMetadataCollector().addEntityTableXref(
 				entitySource.getEntityNamingSource().getEntityName(),
-				database.toIdentifier(
-						entitySource.getLocalMetadataBuildingContext().getMetadataCollector().getLogicalTableName(
-								entityDescriptor.getTable()
-						)
-				),
+				database.toIdentifier( entityDescriptor.getTable().getName() ),
 				entityDescriptor.getTable(),
 				superEntityTableXref
 		);
@@ -636,7 +632,7 @@ public class ModelBinder {
 					@Override
 					public Identifier determineImplicitName(LocalMetadataBuildingContext context) {
 						final Column column = primaryTable.getPrimaryKey().getColumn( count++ );
-						return database.toIdentifier( column.getQuotedName() );
+						return column.getName();
 					}
 				}
 		);
@@ -2830,8 +2826,6 @@ public class ModelBinder {
 		} 
 
 		table.setComment(tableSpecSource.getComment());
-
-		mappingDocument.getMetadataCollector().addTableNameBinding( logicalTableName, table );
 
 		return table;
 	}

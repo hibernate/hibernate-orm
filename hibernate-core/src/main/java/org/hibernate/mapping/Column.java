@@ -15,10 +15,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.naming.Identifier;
-import org.hibernate.persister.model.relational.spi.PhysicalColumn;
-import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.sql.Template;
 import org.hibernate.type.spi.Type;
 
@@ -38,7 +35,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private int scale = DEFAULT_SCALE;
 	private Value value;
 	private int typeIndex;
-	private String name;
+	private Identifier name;
 	private boolean nullable = true;
 	private boolean unique;
 	private String sqlType;
@@ -55,6 +52,10 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	public Column(String columnName) {
+		setName( Identifier.toIdentifier( columnName ) );
+	}
+
+	public Column(Identifier columnName) {
 		setName( columnName );
 	}
 
@@ -74,75 +75,17 @@ public class Column implements Selectable, Serializable, Cloneable {
 		this.value = value;
 	}
 
-	public String getName() {
+	public Identifier getName() {
 		return name;
 	}
 
-	public void setName(String name) {
-		if (
-				StringHelper.isNotEmpty( name ) &&
-						Dialect.QUOTE.indexOf( name.charAt( 0 ) ) > -1 //TODO: deprecated, remove eventually
-				) {
-			quoted = true;
-			this.name = name.substring( 1, name.length() - 1 );
-		}
-		else {
-			this.name = name;
-		}
+	public void setName(Identifier columnName) {
+		this.name = columnName;
+		this.quoted = columnName.isQuoted();
 	}
 
-	/**
-	 * returns quoted name as it would be in the mapping file.
-	 */
 	public String getQuotedName() {
-		return quoted ?
-				"`" + name + "`" :
-				name;
-	}
-
-	public String getQuotedName(Dialect d) {
-		return quoted ?
-				d.openQuote() + name + d.closeQuote() :
-				name;
-	}
-
-	@Override
-	public String getAlias(Dialect dialect) {
-		final int lastLetter = StringHelper.lastIndexOfLetter( name );
-		final String suffix = Integer.toString( uniqueInteger ) + '_';
-
-		String alias = name;
-		if ( lastLetter == -1 ) {
-			alias = "column";
-		}
-		else if ( name.length() > lastLetter + 1 ) {
-			alias = name.substring( 0, lastLetter + 1 );
-		}
-
-		boolean useRawName = name.length() + suffix.length() <= dialect.getMaxAliasLength()
-				&& !quoted && !name.toLowerCase( Locale.ROOT ).equals( "rowid" );
-		if ( !useRawName ) {
-			if ( suffix.length() >= dialect.getMaxAliasLength() ) {
-				throw new MappingException(
-						String.format(
-								"Unique suffix [%s] length must be less than maximum [%d]",
-								suffix, dialect.getMaxAliasLength()
-						)
-				);
-			}
-			if ( alias.length() + suffix.length() > dialect.getMaxAliasLength() ) {
-				alias = alias.substring( 0, dialect.getMaxAliasLength() - suffix.length() );
-			}
-		}
-		return alias + suffix;
-	}
-
-	/**
-	 * Generate a column alias that is unique across multiple tables
-	 */
-	@Override
-	public String getAlias(Dialect dialect, Table table) {
-		return getAlias( dialect ) + table.getUniqueInteger() + '_';
+		return name.render();
 	}
 
 	public boolean isNullable() {
@@ -170,7 +113,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		//used also for generation of FK names!
 		return isQuoted() ?
 				name.hashCode() :
-				name.toLowerCase( Locale.ROOT ).hashCode();
+				name.getText().toLowerCase( Locale.ROOT ).hashCode();
 	}
 
 	@Override
@@ -187,9 +130,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 			return true;
 		}
 
-		return isQuoted() ?
-				name.equals( column.name ) :
-				name.equalsIgnoreCase( column.name );
+		return name.equals( column.name );
 	}
 
 	public int getSqlTypeCode(Mapping mapping) throws MappingException {
@@ -275,7 +216,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
 		return hasCustomRead()
 				? Template.renderWhereStringTemplate( customRead, dialect, functionRegistry )
-				: Template.TEMPLATE + '.' + getQuotedName( dialect );
+				: Template.TEMPLATE + '.' + name.render( dialect );
 	}
 
 	public boolean hasCustomRead() {
@@ -283,7 +224,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	public String getReadExpr(Dialect dialect) {
-		return hasCustomRead() ? customRead : getQuotedName( dialect );
+		return hasCustomRead() ? customRead : name.render( dialect );
 	}
 
 	public String getWriteExpr() {
@@ -297,12 +238,12 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	@Override
 	public String getText(Dialect d) {
-		return getQuotedName( d );
+		return name.getText();
 	}
 
 	@Override
 	public String getText() {
-		return getName();
+		return name.render( Dialect.getDialect() );
 	}
 
 	@Override
@@ -367,7 +308,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	public String getCanonicalName() {
-		return quoted ? name : name.toLowerCase( Locale.ROOT );
+		return name.getCanonicalName();
 	}
 
 	/**
@@ -380,7 +321,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		copy.setScale( scale );
 		copy.setValue( value );
 		copy.setTypeIndex( typeIndex );
-		copy.setName( getQuotedName() );
+		copy.setName( name );
 		copy.setNullable( nullable );
 		copy.setPrecision( precision );
 		copy.setUnique( unique );

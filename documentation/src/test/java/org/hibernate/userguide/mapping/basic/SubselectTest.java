@@ -235,12 +235,12 @@ public class SubselectTest extends BaseEntityManagerFunctionalTestCase {
 	@Subselect(
 		"select " +
 		"	a.id as id, " +
-		"	c.first_name||' '||c.last_name as clientName, " +
+		"	concat(concat(c.first_name, ' '), c.last_name) as clientName, " +
 		"	sum(at.cents) as balance " +
 		"from account a " +
 		"join client c on c.id = a.client_id " +
 		"join account_transaction at on a.id = at.account_id " +
-		"group by a.id, c.first_name||' '||c.last_name"
+		"group by a.id, concat(concat(c.first_name, ' '), c.last_name)"
 	)
 	@Synchronize( {"client", "account", "account_transaction"} )
 	public static class AccountSummary {

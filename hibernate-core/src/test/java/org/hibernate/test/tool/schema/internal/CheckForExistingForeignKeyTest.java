@@ -37,29 +37,32 @@ import org.mockito.Mockito;
 
 /**
  * @author Milo van der Zee
- *
  */
 public class CheckForExistingForeignKeyTest {
+
 	private class SchemaMigrator extends AbstractSchemaMigrator {
+
 		/**
 		 * Needed constructor.
 		 */
 		public SchemaMigrator() {
-			super(null, null);
+			super( null, null );
 		}
 
 		/**
 		 * Needed implementation. Not used in test.
 		 */
 		@Override
-		protected NameSpaceTablesInformation performTablesMigration(Metadata metadata, DatabaseInformation existingDatabase, ExecutionOptions options, Dialect dialect,
-																	Formatter formatter, Set<String> exportIdentifiers, boolean tryToCreateCatalogs, boolean tryToCreateSchemas,
-																	Set<Identifier> exportedCatalogs, Namespace namespace, GenerationTarget[] targets) {
+		protected NameSpaceTablesInformation performTablesMigration(Metadata metadata, DatabaseInformation existingDatabase, ExecutionOptions options,
+				Dialect dialect,
+				Formatter formatter, Set<String> exportIdentifiers, boolean tryToCreateCatalogs, boolean tryToCreateSchemas,
+				Set<Identifier> exportedCatalogs, Namespace namespace, GenerationTarget[] targets) {
 			return null;
 		}
 	}
 
 	private class ColumnReferenceMappingImpl implements ColumnReferenceMapping {
+
 		private ColumnInformation referencingColumnMetadata;
 		private ColumnInformation referencedColumnMetadata;
 
@@ -80,6 +83,7 @@ public class CheckForExistingForeignKeyTest {
 	}
 
 	private class IdentifierHelperImpl implements IdentifierHelper {
+
 		@Override
 		public Identifier normalizeQuoting(Identifier identifier) {
 			return null;
@@ -122,7 +126,8 @@ public class CheckForExistingForeignKeyTest {
 	}
 
 	/**
-	 * If the key has no name it should never be found. Result is that those keys are always recreated. But keys always have a name so this is no problem.
+	 * If the key has no name it should never be found. Result is that those keys are always recreated. But keys always
+	 * have a name so this is no problem.
 	 * 
 	 * @throws NoSuchMethodException - error
 	 * @throws SecurityException - error
@@ -131,16 +136,17 @@ public class CheckForExistingForeignKeyTest {
 	 * @throws InvocationTargetException - error
 	 */
 	@Test
-	public void testForeignKeyWithoutName() throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	public void testForeignKeyWithoutName()
+			throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		// Get the private method
-		Method method = AbstractSchemaMigrator.class.getDeclaredMethod("checkForExistingForeignKey", ForeignKey.class, TableInformation.class);
-		method.setAccessible(true);
+		Method method = AbstractSchemaMigrator.class.getDeclaredMethod( "checkForExistingForeignKey", ForeignKey.class, TableInformation.class );
+		method.setAccessible( true );
 
 		// foreignKey name with same name should match
 		ForeignKey foreignKey = new ForeignKey();
-		TableInformation tableInformation = new TableInformationImpl(null, null, null, false, null);
-		boolean found = (boolean)method.invoke(new SchemaMigrator(), foreignKey, tableInformation);
-		Assert.assertFalse("Key should not be found", found);
+		TableInformation tableInformation = new TableInformationImpl( null, null, null, false, null );
+		boolean found = (boolean) method.invoke( new SchemaMigrator(), foreignKey, tableInformation );
+		Assert.assertFalse( "Key should not be found", found );
 	}
 
 	/**
@@ -153,22 +159,23 @@ public class CheckForExistingForeignKeyTest {
 	 * @throws InvocationTargetException - error
 	 */
 	@Test
-	public void testMissingTableInformation() throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	public void testMissingTableInformation()
+			throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		// Get the private method
-		Method method = AbstractSchemaMigrator.class.getDeclaredMethod("checkForExistingForeignKey", ForeignKey.class, TableInformation.class);
-		method.setAccessible(true);
+		Method method = AbstractSchemaMigrator.class.getDeclaredMethod( "checkForExistingForeignKey", ForeignKey.class, TableInformation.class );
+		method.setAccessible( true );
 
 		// foreignKey name with same name should match
 		ForeignKey foreignKey = new ForeignKey();
-		foreignKey.setName("objectId2id");
-		boolean found = (boolean)method.invoke(new SchemaMigrator(), foreignKey, null);
-		Assert.assertFalse("Key should not be found", found);
+		foreignKey.setName( "objectId2id" );
+		boolean found = (boolean) method.invoke( new SchemaMigrator(), foreignKey, null );
+		Assert.assertFalse( "Key should not be found", found );
 	}
 
 	/**
 	 * Check detection of existing foreign keys with the same name exists.
 	 * 
-	 * @throws SecurityException - error 
+	 * @throws SecurityException - error
 	 * @throws NoSuchMethodException - error
 	 * @throws InvocationTargetException - error
 	 * @throws IllegalArgumentException - error
@@ -176,35 +183,36 @@ public class CheckForExistingForeignKeyTest {
 	 * @throws NoSuchFieldException - error
 	 */
 	@Test
-	public void testKeyWithSameNameExists()	throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
-											NoSuchFieldException {
+	public void testKeyWithSameNameExists()
+			throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
+			NoSuchFieldException {
 		// Get the private method
-		Method method = AbstractSchemaMigrator.class.getDeclaredMethod("checkForExistingForeignKey", ForeignKey.class, TableInformation.class);
-		method.setAccessible(true);
+		Method method = AbstractSchemaMigrator.class.getDeclaredMethod( "checkForExistingForeignKey", ForeignKey.class, TableInformation.class );
+		method.setAccessible( true );
 
 		ForeignKey foreignKey = new ForeignKey();
-		foreignKey.setName("objectId2id");
-		foreignKey.addColumn(new Column("id"));
-		foreignKey.setReferencedTable(new Table("table2"));
+		foreignKey.setName( "objectId2id" );
+		foreignKey.addColumn( new Column( "id" ) );
+		foreignKey.setReferencedTable( new Table( "table2" ) );
 
-		InformationExtractor informationExtractor = Mockito.mock(InformationExtractor.class);
+		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );
 		IdentifierHelper identifierHelper = new IdentifierHelperImpl();
 		List<ForeignKeyInformation> fks = new ArrayList<>();
-		fks.add(new ForeignKeyInformationImpl(new Identifier("objectId2id", false), new ArrayList<>()));
-		Mockito.when(informationExtractor.getForeignKeys(Mockito.any())).thenReturn(fks);
-		Name schemaName = new Name(new Identifier("-", false), new Identifier("-", false));
-		QualifiedTableName tableName = new QualifiedTableName(schemaName, new Identifier("-", false));
-		TableInformation tableInformation = new TableInformationImpl(informationExtractor, identifierHelper, tableName, false, null);
+		fks.add( new ForeignKeyInformationImpl( new Identifier( "objectId2id", false ), new ArrayList<>() ) );
+		Mockito.when( informationExtractor.getForeignKeys( Mockito.any() ) ).thenReturn( fks );
+		Name schemaName = new Name( new Identifier( "-", false ), new Identifier( "-", false ) );
+		QualifiedTableName tableName = new QualifiedTableName( schemaName, new Identifier( "-", false ) );
+		TableInformation tableInformation = new TableInformationImpl( informationExtractor, identifierHelper, tableName, false, null );
 
 		// foreignKey name with same name should match
-		boolean found = (boolean)method.invoke(new SchemaMigrator(), foreignKey, tableInformation);
-		Assert.assertTrue("Key should be found", found);
+		boolean found = (boolean) method.invoke( new SchemaMigrator(), foreignKey, tableInformation );
+		Assert.assertTrue( "Key should be found", found );
 	}
 
 	/**
 	 * Check detection of existing foreign keys with the same name exists.
 	 * 
-	 * @throws SecurityException - error 
+	 * @throws SecurityException - error
 	 * @throws NoSuchMethodException - error
 	 * @throws InvocationTargetException - error
 	 * @throws IllegalArgumentException - error
@@ -212,35 +220,37 @@ public class CheckForExistingForeignKeyTest {
 	 * @throws NoSuchFieldException - error
 	 */
 	@Test
-	public void testKeyWithSameNameNotExists()	throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
-												NoSuchFieldException {
+	public void testKeyWithSameNameNotExists()
+			throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
+			NoSuchFieldException {
 		// Get the private method
-		Method method = AbstractSchemaMigrator.class.getDeclaredMethod("checkForExistingForeignKey", ForeignKey.class, TableInformation.class);
-		method.setAccessible(true);
+		Method method = AbstractSchemaMigrator.class.getDeclaredMethod( "checkForExistingForeignKey", ForeignKey.class, TableInformation.class );
+		method.setAccessible( true );
 
 		ForeignKey foreignKey = new ForeignKey();
-		foreignKey.setName("objectId2id_1");
-		foreignKey.addColumn(new Column("id"));
-		foreignKey.setReferencedTable(new Table("table2"));
+		foreignKey.setName( "objectId2id_1" );
+		foreignKey.addColumn( new Column( "id" ) );
+		foreignKey.setReferencedTable( new Table( "table2" ) );
 
-		InformationExtractor informationExtractor = Mockito.mock(InformationExtractor.class);
+		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );
 		IdentifierHelper identifierHelper = new IdentifierHelperImpl();
 		List<ForeignKeyInformation> fks = new ArrayList<>();
-		fks.add(new ForeignKeyInformationImpl(new Identifier("objectId2id_2", false), new ArrayList<>()));
-		Mockito.when(informationExtractor.getForeignKeys(Mockito.any())).thenReturn(fks);
-		Name schemaName = new Name(new Identifier("-", false), new Identifier("-", false));
-		QualifiedTableName tableName = new QualifiedTableName(schemaName, new Identifier("-", false));
-		TableInformation tableInformation = new TableInformationImpl(informationExtractor, identifierHelper, tableName, false, null);
+		fks.add( new ForeignKeyInformationImpl( new Identifier( "objectId2id_2", false ), new ArrayList<>() ) );
+		Mockito.when( informationExtractor.getForeignKeys( Mockito.any() ) ).thenReturn( fks );
+		Name schemaName = new Name( new Identifier( "-", false ), new Identifier( "-", false ) );
+		QualifiedTableName tableName = new QualifiedTableName( schemaName, new Identifier( "-", false ) );
+		TableInformation tableInformation = new TableInformationImpl( informationExtractor, identifierHelper, tableName, false, null );
 
 		// foreignKey name with same name should match
-		boolean found = (boolean)method.invoke(new SchemaMigrator(), foreignKey, tableInformation);
-		Assert.assertFalse("Key should not be found", found);
+		boolean found = (boolean) method.invoke( new SchemaMigrator(), foreignKey, tableInformation );
+		Assert.assertFalse( "Key should not be found", found );
 	}
 
 	/**
-	 * Check detection of existing foreign key with the same mappings for a simple mapping (table1.objectId => table2.id).
+	 * Check detection of existing foreign key with the same mappings for a simple mapping (table1.objectId =>
+	 * table2.id).
 	 * 
-	 * @throws SecurityException - error 
+	 * @throws SecurityException - error
 	 * @throws NoSuchMethodException - error
 	 * @throws InvocationTargetException - error
 	 * @throws IllegalArgumentException - error
@@ -248,36 +258,37 @@ public class CheckForExistingForeignKeyTest {
 	 * @throws NoSuchFieldException - error
 	 */
 	@Test
-	public void testCheckForExistingForeignKeyOne2One()	throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
-														InvocationTargetException, NoSuchFieldException {
+	public void testCheckForExistingForeignKeyOne2One() throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
+			InvocationTargetException, NoSuchFieldException {
 		// Get the private method
-		Method method = AbstractSchemaMigrator.class.getDeclaredMethod("checkForExistingForeignKey", ForeignKey.class, TableInformation.class);
-		method.setAccessible(true);
+		Method method = AbstractSchemaMigrator.class.getDeclaredMethod( "checkForExistingForeignKey", ForeignKey.class, TableInformation.class );
+		method.setAccessible( true );
 
 		ForeignKey foreignKey = new ForeignKey();
-		foreignKey.setName("objectId2id_1"); // Make sure the match is not successful based on key name
-		foreignKey.addColumn(new Column("id"));
-		foreignKey.setReferencedTable(new Table("table2"));
+		foreignKey.setName( "objectId2id_1" ); // Make sure the match is not successful based on key name
+		foreignKey.addColumn( new Column( "id" ) );
+		foreignKey.setReferencedTable( new Table( "table2" ) );
 
-		Name schemaName = new Name(new Identifier("-", false), new Identifier("-", false));
-		InformationExtractor informationExtractor = Mockito.mock(InformationExtractor.class);
+		Name schemaName = new Name( new Identifier( "-", false ), new Identifier( "-", false ) );
+		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );
 		IdentifierHelper identifierHelper = new IdentifierHelperImpl();
 		List<ForeignKeyInformation> fks = new ArrayList<>();
-		fks.add(getForeignKeyInformation("table2", "id", "object2Id_2"));
-		Mockito.when(informationExtractor.getForeignKeys(Mockito.any())).thenReturn(fks);
-		QualifiedTableName tableName = new QualifiedTableName(schemaName, new Identifier("-", false));
-		TableInformation tableInformation = new TableInformationImpl(informationExtractor, identifierHelper, tableName, false, null);
+		fks.add( getForeignKeyInformation( "table2", "id", "object2Id_2" ) );
+		Mockito.when( informationExtractor.getForeignKeys( Mockito.any() ) ).thenReturn( fks );
+		QualifiedTableName tableName = new QualifiedTableName( schemaName, new Identifier( "-", false ) );
+		TableInformation tableInformation = new TableInformationImpl( informationExtractor, identifierHelper, tableName, false, null );
 		AbstractSchemaMigrator schemaMigrator = new SchemaMigrator();
 
 		// Check single-column-key to single-column-key, existing (table1.objectId => table2.id)
-		boolean found = (boolean)method.invoke(schemaMigrator, foreignKey, tableInformation);
-		Assert.assertTrue("Key should be found", found);
+		boolean found = (boolean) method.invoke( schemaMigrator, foreignKey, tableInformation );
+		Assert.assertTrue( "Key should be found", found );
 	}
 
 	/**
-	 * Check detection of not existing foreign key with the same mappings for a simple mapping (table1.objectId => table2.id).
+	 * Check detection of not existing foreign key with the same mappings for a simple mapping (table1.objectId =>
+	 * table2.id).
 	 * 
-	 * @throws SecurityException - error 
+	 * @throws SecurityException - error
 	 * @throws NoSuchMethodException - error
 	 * @throws InvocationTargetException - error
 	 * @throws IllegalArgumentException - error
@@ -285,32 +296,32 @@ public class CheckForExistingForeignKeyTest {
 	 * @throws NoSuchFieldException - error
 	 */
 	@Test
-	public void testCheckForNotExistingForeignKeyOne2One()	throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
-															InvocationTargetException, NoSuchFieldException {
+	public void testCheckForNotExistingForeignKeyOne2One() throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
+			InvocationTargetException, NoSuchFieldException {
 		// Get the private method
-		Method method = AbstractSchemaMigrator.class.getDeclaredMethod("checkForExistingForeignKey", ForeignKey.class, TableInformation.class);
-		method.setAccessible(true);
+		Method method = AbstractSchemaMigrator.class.getDeclaredMethod( "checkForExistingForeignKey", ForeignKey.class, TableInformation.class );
+		method.setAccessible( true );
 
 		ForeignKey foreignKey = new ForeignKey();
-		foreignKey.setName("objectId2id_1"); // Make sure the match is not successful based on key name
-		foreignKey.addColumn(new Column("id"));
-		foreignKey.setReferencedTable(new Table("table2"));
+		foreignKey.setName( "objectId2id_1" ); // Make sure the match is not successful based on key name
+		foreignKey.addColumn( new Column( "id" ) );
+		foreignKey.setReferencedTable( new Table( "table2" ) );
 
-		Name schemaName = new Name(new Identifier("-", false), new Identifier("-", false));
-		InformationExtractor informationExtractor = Mockito.mock(InformationExtractor.class);
+		Name schemaName = new Name( new Identifier( "-", false ), new Identifier( "-", false ) );
+		InformationExtractor informationExtractor = Mockito.mock( InformationExtractor.class );
 		IdentifierHelper identifierHelper = new IdentifierHelperImpl();
 		List<ForeignKeyInformation> fks = new ArrayList<>();
-		fks.add(getForeignKeyInformation("table2", "blah", "blahKey_001"));
-		fks.add(getForeignKeyInformation("table3", "id", "blahKey_002"));
-		fks.add(getForeignKeyInformation("table3", "blah", "blahKey_003"));
-		Mockito.when(informationExtractor.getForeignKeys(Mockito.any())).thenReturn(fks);
-		QualifiedTableName tableName = new QualifiedTableName(schemaName, new Identifier("-", false));
-		TableInformation tableInformation = new TableInformationImpl(informationExtractor, identifierHelper, tableName, false, null);
+		fks.add( getForeignKeyInformation( "table2", "blah", "blahKey_001" ) );
+		fks.add( getForeignKeyInformation( "table3", "id", "blahKey_002" ) );
+		fks.add( getForeignKeyInformation( "table3", "blah", "blahKey_003" ) );
+		Mockito.when( informationExtractor.getForeignKeys( Mockito.any() ) ).thenReturn( fks );
+		QualifiedTableName tableName = new QualifiedTableName( schemaName, new Identifier( "-", false ) );
+		TableInformation tableInformation = new TableInformationImpl( informationExtractor, identifierHelper, tableName, false, null );
 		AbstractSchemaMigrator schemaMigrator = new SchemaMigrator();
 
 		// Check single-column-key to single-column-key, existing (table1.objectId => table2.id)
-		boolean found = (boolean)method.invoke(schemaMigrator, foreignKey, tableInformation);
-		Assert.assertFalse("Key should not be found", found);
+		boolean found = (boolean) method.invoke( schemaMigrator, foreignKey, tableInformation );
+		Assert.assertFalse( "Key should not be found", found );
 	}
 
 	/**
@@ -321,24 +332,26 @@ public class CheckForExistingForeignKeyTest {
 	 */
 	private ForeignKeyInformation getForeignKeyInformation(String referencedTableName, String referencingColumnName, String keyName) {
 		List<ColumnReferenceMapping> columnMappingList = new ArrayList<>();
-		ColumnInformation referencingColumnMetadata = getColumnInformation("-", referencingColumnName);
-		ColumnInformation referencedColumnMetadata = getColumnInformation(referencedTableName, "-");
-		ColumnReferenceMapping columnReferenceMapping = new ColumnReferenceMappingImpl(referencingColumnMetadata, referencedColumnMetadata);
-		columnMappingList.add(columnReferenceMapping);
-		ForeignKeyInformationImpl foreignKeyInformation = new ForeignKeyInformationImpl(new Identifier(keyName, false), columnMappingList);
+		ColumnInformation referencingColumnMetadata = getColumnInformation( "-", referencingColumnName );
+		ColumnInformation referencedColumnMetadata = getColumnInformation( referencedTableName, "-" );
+		ColumnReferenceMapping columnReferenceMapping = new ColumnReferenceMappingImpl( referencingColumnMetadata, referencedColumnMetadata );
+		columnMappingList.add( columnReferenceMapping );
+		ForeignKeyInformationImpl foreignKeyInformation = new ForeignKeyInformationImpl( new Identifier( keyName, false ), columnMappingList );
 		return foreignKeyInformation;
 	}
 
 	private ColumnInformation getColumnInformation(String tableName, String columnName) {
-		Name schemaName = new Name(new Identifier("-", false), new Identifier("-", false));
-		TableInformation containingTableInformation = new TableInformationImpl(null, null, new QualifiedTableName(schemaName, new Identifier(tableName, false)), false, null);
-		Identifier columnIdentifier = new Identifier(columnName, false);
+		Name schemaName = new Name( new Identifier( "-", false ), new Identifier( "-", false ) );
+		TableInformation containingTableInformation = new TableInformationImpl( null, null,
+				new QualifiedTableName( schemaName, new Identifier( tableName, false ) ), false, null );
+		Identifier columnIdentifier = new Identifier( columnName, false );
 		int typeCode = 0;
 		String typeName = null;
 		int columnSize = 0;
 		int decimalDigits = 0;
 		TruthValue nullable = null;
-		ColumnInformationImpl columnInformation = new ColumnInformationImpl(containingTableInformation, columnIdentifier, typeCode, typeName, columnSize, decimalDigits, nullable);
+		ColumnInformationImpl columnInformation = new ColumnInformationImpl( containingTableInformation, columnIdentifier, typeCode, typeName, columnSize,
+				decimalDigits, nullable );
 		return columnInformation;
 	}
 }

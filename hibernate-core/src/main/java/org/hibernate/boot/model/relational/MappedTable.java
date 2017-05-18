@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
@@ -20,6 +21,8 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.persister.model.relational.internal.InflightTable;
+import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 
 /**
@@ -174,4 +177,6 @@ public interface MappedTable extends Exportable, Loggable {
 	void setPrimaryKey(MappedPrimaryKey primaryKey);
 
 	void addInitCommand(InitCommand command);
+
+	InflightTable generateRuntimeTable(PhysicalNamingStrategy namingStrategy, JdbcEnvironment jdbcEnvironment);
 }

@@ -4,14 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.persister.collection.spi;
+package org.hibernate.persister.common.internal;
 
-import org.hibernate.persister.common.spi.BasicValuedNavigable;
+import org.hibernate.persister.common.spi.MappedSuperclassImplementor;
 
 /**
  * @author Steve Ebersole
  */
-public interface CollectionElementBasic<J>
-		extends CollectionElement<J>, BasicValuedNavigable<J> {
-
+public class MappedSuperclassImpl<J> implements MappedSuperclassImplementor<J> {
 }

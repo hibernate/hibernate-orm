@@ -9,15 +9,16 @@ package org.hibernate.persister.entity.spi;
 import javax.persistence.metamodel.IdentifiableType;
 
 import org.hibernate.EntityMode;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.common.spi.MappedSuperclassImplementor;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.tuple.Tuplizer;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
  * Hibernate extension SPI for working with {@link IdentifiableType} implementations, which includes
- * both mapped-superclasses {@link org.hibernate.persister.common.spi.MappedSuperclassImplementor}
+ * both mapped-superclasses {@link MappedSuperclassImplementor}
  * and {@link EntityPersister}
  *
  * @author Steve Ebersole
@@ -54,7 +55,7 @@ public interface IdentifiableTypeImplementor<T> extends ManagedTypeImplementor<T
 	void finishInstantiation(
 			EntityHierarchy entityHierarchy,
 			IdentifiableTypeImplementor<? super T> superType,
-			IdentifiableTypeMappingImplementor bootMapping,
+			IdentifiableTypeMapping bootMapping,
 			PersisterCreationContext creationContext);
 
 	void completeInitialization(

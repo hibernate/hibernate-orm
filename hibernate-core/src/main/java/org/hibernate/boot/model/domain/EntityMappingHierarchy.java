@@ -8,12 +8,13 @@ package org.hibernate.boot.model.domain;
 
 import org.hibernate.EntityMode;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.mapping.RootClass;
 
 /**
  * @author Steve Ebersole
  */
 public interface EntityMappingHierarchy {
-	IdentifiableTypeMapping getRootType();
+	RootClass getRootType();
 
 	// todo (6.0) id, version, etc here
 	//		have existing "root" info methods delegate here - allows tools to keep working.

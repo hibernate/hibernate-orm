@@ -35,7 +35,7 @@ public abstract class AbstractTable implements InflightTable {
 	}
 
 	@Override
-	public void addColumn(Column column) {
+	public void addColumn(Column column, InflightTable runtimeTable) {
 		columnMap.put( column.getExpression(), column );
 	}
 

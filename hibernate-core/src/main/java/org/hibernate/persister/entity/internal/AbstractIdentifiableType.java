@@ -28,9 +28,8 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 	private EntityHierarchy entityHierarchy;
 	private IdentifiableTypeImplementor<? super T> superclassType;
 
-	public AbstractIdentifiableType(EntityHierarchy entityHierarchy, IdentifiableJavaDescriptor<T> javaTypeDescriptor) {
+	public AbstractIdentifiableType(IdentifiableJavaDescriptor<T> javaTypeDescriptor) {
 		super( javaTypeDescriptor );
-		this.entityHierarchy = entityHierarchy;
 	}
 
 	@Override

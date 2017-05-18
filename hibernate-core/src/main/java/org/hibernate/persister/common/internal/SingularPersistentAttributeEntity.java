@@ -8,7 +8,7 @@ package org.hibernate.persister.common.internal;
 
 import java.util.List;
 
-import org.hibernate.persister.common.NavigableRole;
+import org.hibernate.persister.common.spi.NavigableRole;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.model.relational.spi.ForeignKey.ColumnMappings;
 import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
@@ -36,6 +36,7 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 
@@ -92,7 +93,7 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
+	public EntityJavaDescriptor<J> getJavaTypeDescriptor() {
 		return entityPersister.getJavaTypeDescriptor();
 	}
 

@@ -6,6 +6,10 @@
  */
 package org.hibernate.boot.model.relational;
 
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.persister.model.relational.spi.*;
+import org.hibernate.persister.model.relational.spi.Sequence;
+
 /**
  * @author Steve Ebersole
  */
@@ -23,4 +27,6 @@ public interface MappedSequence extends Exportable, Loggable {
 	int getIncrementSize();
 
 	void validate(int initialValue, int incrementSize);
+
+	Sequence generateRuntimeSequence(PhysicalNamingStrategy namingStrategy, JdbcEnvironment jdbcEnvironment);
 }

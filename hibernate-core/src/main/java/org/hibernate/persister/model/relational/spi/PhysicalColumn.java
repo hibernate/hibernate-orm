@@ -6,21 +6,23 @@
  */
 package org.hibernate.persister.model.relational.spi;
 
+import org.hibernate.naming.Identifier;
+
 /**
  * @author Steve Ebersole
  */
 public class PhysicalColumn implements Column {
 	private final Table table;
-	private final String name;
+	private final Identifier name;
 	private final int jdbcType;
 
-	public PhysicalColumn(Table table, String name, int jdbcType) {
+	public PhysicalColumn(Table table, Identifier name, int jdbcType) {
 		this.table = table;
 		this.name = name;
 		this.jdbcType = jdbcType;
 	}
 
-	public String getName() {
+	public Identifier getName() {
 		return name;
 	}
 
@@ -31,10 +33,9 @@ public class PhysicalColumn implements Column {
 
 	@Override
 	public String getExpression() {
-		return name;
+		return name.getCanonicalName();
 	}
 
-	@Override
 	public int getJdbcType() {
 		return jdbcType;
 	}

@@ -12,12 +12,10 @@ package org.hibernate.persister.model.relational.spi;
 public class DerivedColumn implements Column {
 	private final Table table;
 	private final String expression;
-	private final int jdbcType;
 
-	public DerivedColumn(Table table, String expression, int jdbcType) {
+	public DerivedColumn(Table table, String expression) {
 		this.table = table;
 		this.expression = expression;
-		this.jdbcType = jdbcType;
 	}
 
 	public String getExpression() {
@@ -27,11 +25,6 @@ public class DerivedColumn implements Column {
 	@Override
 	public Table getSourceTable() {
 		return table;
-	}
-
-	@Override
-	public int getJdbcType() {
-		return jdbcType;
 	}
 
 	@Override

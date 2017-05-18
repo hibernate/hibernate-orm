@@ -7,9 +7,6 @@
 package org.hibernate.persister.common.spi;
 
 import org.hibernate.loader.plan.spi.FetchSource;
-import org.hibernate.persister.collection.internal.CollectionElementBasicImpl;
-import org.hibernate.persister.collection.internal.CollectionElementEntityImpl;
-import org.hibernate.persister.collection.internal.CollectionIndexBasicImpl;
 import org.hibernate.persister.collection.spi.CollectionElementBasic;
 import org.hibernate.persister.collection.spi.CollectionElementEmbedded;
 import org.hibernate.persister.collection.spi.CollectionElementEntity;

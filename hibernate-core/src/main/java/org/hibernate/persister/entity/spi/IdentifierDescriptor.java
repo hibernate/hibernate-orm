@@ -8,6 +8,7 @@ package org.hibernate.persister.entity.spi;
 
 import java.util.List;
 
+import org.hibernate.persister.common.spi.VirtualPersistentAttribute;
 import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.SingularPersistentAttribute;
@@ -29,7 +30,7 @@ public interface IdentifierDescriptor<O,J> extends Navigable<J>, SingularPersist
 	 * Get a SingularPersistentAttribute representation of the identifier.
 	 * <p/>
 	 * Note that for the case of a non-aggregated composite identifier this returns a
-	 * "virtual" attribute mapping ({@link org.hibernate.persister.common.spi.VirtualPersistentAttribute})
+	 * "virtual" attribute mapping ({@link VirtualPersistentAttribute})
 	 */
 	SingularPersistentAttribute<O,J> getIdAttribute();
 

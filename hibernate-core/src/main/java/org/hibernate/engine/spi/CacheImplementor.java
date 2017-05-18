@@ -10,6 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
@@ -92,6 +93,9 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	 * @return All cache region names
 	 */
 	String[] getSecondLevelCacheRegionNames();
+
+	// todo (6.0) : much of the code (below) related to regions and access-strategies needs to change per changes planned
+	//		see HHH-11356
 
 	/**
 	 * Find the "access strategy" for the named entity cache region.

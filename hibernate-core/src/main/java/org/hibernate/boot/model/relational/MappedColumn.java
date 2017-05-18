@@ -6,6 +6,11 @@
  */
 package org.hibernate.boot.model.relational;
 
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.persister.model.relational.spi.Column;
+import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
+import org.hibernate.persister.model.relational.spi.Table;
+
 /**
  * Models any mapped "selectable reference".  This might be a reference to a
  * physical column or a derived value (formula)
@@ -18,6 +23,11 @@ public interface MappedColumn {
 	 * a derived columns, this would be the formula expression.
 	 */
 	String getText();
+
+	Column generateRuntimeColumn(
+			Table runtimeTable,
+			PhysicalNamingStrategy namingStrategy,
+			JdbcEnvironment jdbcEnvironment);
 
 	// todo (6.0) : others as deemed appropriate - see o.h.mapping.Selectable
 }

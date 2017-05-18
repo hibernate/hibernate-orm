@@ -10,18 +10,21 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.DenormalizedMappedTable;
-import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.naming.Identifier;
+import org.hibernate.persister.model.relational.internal.InflightTable;
+import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
 
 /**
  * @author Gavin King
  */
 @SuppressWarnings("unchecked")
 public class DenormalizedTable extends Table implements DenormalizedMappedTable {
-
 	private final MappedTable includedTable;
 
 	public DenormalizedTable(Table includedTable) {
@@ -50,6 +53,15 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 		super( namespace, subselect, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
+	}
+
+
+	@Override
+	public InflightTable generateRuntimeTable(
+			PhysicalNamingStrategy namingStrategy,
+			JdbcEnvironment jdbcEnvironment) {
+		// todo (6.0) : build the UnionSubclassTable
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override

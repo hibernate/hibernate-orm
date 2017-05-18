@@ -16,9 +16,6 @@ public interface Column {
 
 	String getExpression();
 
-	// todo : SqlTypeDescriptor would be better
-	int getJdbcType();
-
 	// todo : nullable, size, etc
 
 	// todo : org.hibernate.annotations.ColumnTransformer#read and org.hibernate.annotations.ColumnTransformer#write?

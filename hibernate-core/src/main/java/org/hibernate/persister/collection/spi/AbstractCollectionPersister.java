@@ -39,7 +39,7 @@ import org.hibernate.persister.collection.internal.CollectionIndexEntityImpl;
 import org.hibernate.persister.collection.internal.ElementColumnReferenceSource;
 import org.hibernate.persister.collection.internal.IndexColumnReferenceSource;
 import org.hibernate.persister.collection.spi.CollectionElement.ElementClassification;
-import org.hibernate.persister.common.NavigableRole;
+import org.hibernate.persister.common.spi.NavigableRole;
 import org.hibernate.persister.common.internal.PersisterHelper;
 import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;

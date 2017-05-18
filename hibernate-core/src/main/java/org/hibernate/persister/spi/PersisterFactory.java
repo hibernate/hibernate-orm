@@ -8,13 +8,16 @@ package org.hibernate.persister.spi;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.MappedSuperclassMapping;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.persister.common.internal.MappedSuperclassImpl;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.persister.common.spi.MappedSuperclassImplementor;
 import org.hibernate.persister.embedded.spi.EmbeddedContainer;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
@@ -34,7 +37,7 @@ public interface PersisterFactory extends Service {
 	 * reference is good for linking references together, etc.  The persister will be fully
 	 * initialized later via its {@link EntityPersister#afterInitialize} method during {@link #finishUp}
 	 *
-	 * @param entityBinding The mapping information describing the entity
+	 * @param bootMapping The mapping information describing the entity
 	 * @param entityCacheAccessStrategy The cache access strategy for the entity region
 	 * @param naturalIdCacheAccessStrategy The cache access strategy for the entity's natural-id cross-ref region
 	 * @param creationContext Access to additional information needed to create an EntityPersister
@@ -44,10 +47,18 @@ public interface PersisterFactory extends Service {
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
 	<J> EntityPersister<J> createEntityPersister(
-			PersistentClass entityBinding,
+			EntityMapping bootMapping,
 			EntityRegionAccessStrategy entityCacheAccessStrategy,
 			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
 			PersisterCreationContext creationContext) throws HibernateException;
+
+	default <J> MappedSuperclassImplementor<J> createMappedSuperclass(
+			MappedSuperclassMapping bootMapping,
+			EntityRegionAccessStrategy entityCacheAccessStrategy,
+			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
+			PersisterCreationContext creationContext) throws HibernateException {
+		return new MappedSuperclassImpl<>();
+	}
 
 	/**
 	 * Create a collection persister instance.

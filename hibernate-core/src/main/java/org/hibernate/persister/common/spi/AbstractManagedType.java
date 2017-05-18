@@ -29,7 +29,8 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T>, TypeConfigurationAware, SubclassTypesAware<T> {
+public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T>, TypeConfigurationAware,
+		SubclassTypesAware<T> {
 	private static final Logger log = Logger.getLogger( AbstractManagedType.class );
 
 	// todo (6.0) : I think we can just drop the mutabilityPlan and comparator for managed types

@@ -9,7 +9,7 @@ package org.hibernate.persister.common.internal;
 
 import java.util.List;
 
-import org.hibernate.persister.common.NavigableRole;
+import org.hibernate.persister.common.spi.NavigableRole;
 import org.hibernate.persister.common.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;

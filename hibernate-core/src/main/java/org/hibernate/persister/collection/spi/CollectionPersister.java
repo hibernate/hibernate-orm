@@ -22,7 +22,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.persister.common.NavigableRole;
+import org.hibernate.persister.common.spi.NavigableRole;
 import org.hibernate.persister.common.spi.ManagedTypeImplementor;
 import org.hibernate.persister.common.spi.PluralPersistentAttribute;
 import org.hibernate.persister.model.relational.spi.Table;

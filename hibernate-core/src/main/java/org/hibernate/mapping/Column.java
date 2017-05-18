@@ -13,8 +13,12 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.naming.Identifier;
+import org.hibernate.persister.model.relational.spi.PhysicalColumn;
+import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.sql.Template;
 import org.hibernate.type.spi.Type;
 
@@ -299,6 +303,19 @@ public class Column implements Selectable, Serializable, Cloneable {
 	@Override
 	public String getText() {
 		return getName();
+	}
+
+	@Override
+	public org.hibernate.persister.model.relational.spi.Column generateRuntimeColumn(
+			org.hibernate.persister.model.relational.spi.Table runtimeTable,
+			PhysicalNamingStrategy namingStrategy,
+			JdbcEnvironment jdbcEnvironment) {
+
+		final Identifier physicalName = namingStrategy.toPhysicalColumnName(
+				getName(),
+				jdbcEnvironment
+		);
+		return new PhysicalColumn( runtimeTable, physicalName, getSqlTypeCode() );
 	}
 
 	public int getPrecision() {

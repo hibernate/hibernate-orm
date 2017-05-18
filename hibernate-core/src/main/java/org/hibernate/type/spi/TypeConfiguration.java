@@ -21,10 +21,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.EntityGraph;
-import javax.persistence.NamedAttributeNode;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.NamedSubgraph;
-import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -34,16 +30,11 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
@@ -51,32 +42,18 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpa.graph.internal.AbstractGraphNode;
-import org.hibernate.jpa.graph.internal.AttributeNodeImpl;
-import org.hibernate.jpa.graph.internal.EntityGraphImpl;
-import org.hibernate.jpa.graph.internal.SubgraphImpl;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.model.relational.internal.DatabaseModelImpl;
-import org.hibernate.persister.model.relational.spi.DatabaseModel;
-import org.hibernate.persister.model.relational.spi.DatabaseModelProducer;
 import org.hibernate.persister.queryable.internal.PolymorphicEntityValuedExpressableTypeImpl;
 import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.persister.queryable.spi.PolymorphicEntityValuedExpressableType;
-import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralSqmExpression;
 import org.hibernate.tuple.component.ComponentMetamodel;
-import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CustomCollectionType;
 import org.hibernate.type.EmbeddedComponentType;
@@ -92,19 +69,18 @@ import org.hibernate.type.descriptor.java.spi.MappedSuperclassJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.internal.ArrayType;
 import org.hibernate.type.internal.BagType;
-import org.hibernate.type.internal.DatabaseObjectResolutionContextImpl;
 import org.hibernate.type.internal.IdentifierBagType;
 import org.hibernate.type.internal.ListType;
 import org.hibernate.type.internal.MapType;
 import org.hibernate.type.internal.OrderedMapType;
 import org.hibernate.type.internal.OrderedSetType;
+import org.hibernate.type.internal.RuntimeModelCreationProcess;
 import org.hibernate.type.internal.SetType;
 import org.hibernate.type.internal.SortedMapType;
 import org.hibernate.type.internal.SortedSetType;
 import org.hibernate.usertype.ParameterizedType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
-import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
 
 /**
  * Defines a set of available Type instances as isolated from other configurations.  The
@@ -534,188 +510,10 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	public void scope(SessionFactoryImplementor factory) {
 		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactory [%s]", this, factory );
 
-		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting(
-				factory.getProperties()
-		);
-		final MetadataImplementor mappingMetadata = getMetadataBuildingContext().getMetadataCollector();
-
 		scope.setSessionFactory( factory );
 		factory.addObserver( this );
 
-		// part of this populateDatabaseModel process needs to be keeping a dictionary (or multiple)
-		//		to be used to resolve Tables and Columns later via PersisterCreationContext
-
-
-		final DatabaseObjectResolutionContextImpl dbObjectResolver = new DatabaseObjectResolutionContextImpl();
-		final DatabaseModel databaseModel = new DatabaseModelProducer( getMetadataBuildingContext() ).produceDatabaseModel(
-				mappingMetadata.getDatabase(),
-				dbObjectResolver
-		);
-
-		final PersisterFactory persisterFactory = factory.getServiceRegistry().getService( PersisterFactory.class );
-
-		final PersisterCreationContext persisterCreationContext = new PersisterCreationContext() {
-			@Override
-			public SessionFactoryImplementor getSessionFactory() {
-				return factory;
-			}
-
-			@Override
-			public MetadataImplementor getMetadata() {
-				return mappingMetadata;
-			}
-
-			@Override
-			public DatabaseModel getDatabaseModel() {
-				return databaseModel;
-			}
-
-			@Override
-			public DatabaseObjectResolver getDatabaseObjectResolver() {
-				return dbObjectResolver;
-			}
-
-			@Override
-			public TypeConfiguration getTypeConfiguration() {
-				return TypeConfiguration.this;
-			}
-
-			@Override
-			public PersisterFactory getPersisterFactory() {
-				return persisterFactory;
-			}
-
-			@Override
-			public EntityTuplizerFactory getEntityTuplizerFactory() {
-				return getMetadataBuildingContext().getBootstrapContext().getEntityTuplizerFactory();
-			}
-
-			@Override
-			public ComponentTuplizerFactory getComponentTuplizerFactory() {
-				return getMetadataBuildingContext().getBootstrapContext().getComponentTuplizerFactory();
-			}
-
-			@Override
-			public void registerEntityPersister(EntityPersister entityPersister) {
-				TypeConfiguration.this.register( entityPersister );
-			}
-
-			@Override
-			public void registerCollectionPersister(CollectionPersister collectionPersister) {
-				TypeConfiguration.this.register( collectionPersister );
-			}
-
-			@Override
-			public void registerEmbeddablePersister(EmbeddedPersister embeddablePersister) {
-				TypeConfiguration.this.register( embeddablePersister );
-			}
-		};
-
-		for ( final PersistentClass model : mappingMetadata.getEntityBindings() ) {
-			final EntityRegionAccessStrategy accessStrategy = getSessionFactory().getCache().determineEntityRegionAccessStrategy(
-					model
-			);
-
-			final NaturalIdRegionAccessStrategy naturalIdAccessStrategy = getSessionFactory().getCache().determineNaturalIdRegionAccessStrategy(
-					model
-			);
-
-			persisterFactory.createEntityPersister(
-					model,
-					accessStrategy,
-					naturalIdAccessStrategy,
-					persisterCreationContext
-			);
-		}
-
-		persisterFactory.finishUp( persisterCreationContext );
-
-		// make sure we got a CollectionPersister for every mapping collection binding
-		for ( final org.hibernate.mapping.Collection model : mappingMetadata.getCollectionBindings() ) {
-			if ( findCollectionPersister( model.getRole() ) == null ) {
-				throw new HibernateException( "Collection role not properly materialized to CollectionPersister : " + model.getRole() );
-			}
-		}
-
-		applyNamedEntityGraphs( mappingMetadata.getNamedEntityGraphs().values() );
-	}
-
-	@SuppressWarnings("unchecked")
-	private void applyNamedEntityGraphs(java.util.Collection<NamedEntityGraphDefinition> namedEntityGraphs) {
-		for ( NamedEntityGraphDefinition definition : namedEntityGraphs ) {
-			log.debugf(
-					"Applying named entity graph [name=%s, entity-name=%s, jpa-entity-name=%s",
-					definition.getRegisteredName(),
-					definition.getEntityName(),
-					definition.getJpaEntityName()
-			);
-			final javax.persistence.metamodel.EntityType entityType = findEntityPersister( definition.getEntityName() );
-			if ( entityType == null ) {
-				throw new IllegalArgumentException(
-						"Attempted to register named entity graph [" + definition.getRegisteredName()
-								+ "] for unknown entity ["+ definition.getEntityName() + "]"
-
-				);
-			}
-			final EntityGraphImpl entityGraph = new EntityGraphImpl(
-					definition.getRegisteredName(),
-					entityType,
-					this.getSessionFactory()
-			);
-
-			final NamedEntityGraph namedEntityGraph = definition.getAnnotation();
-
-			if ( namedEntityGraph.includeAllAttributes() ) {
-				for ( Object attributeObject : entityType.getAttributes() ) {
-					entityGraph.addAttributeNodes( (Attribute) attributeObject );
-				}
-			}
-
-			if ( namedEntityGraph.attributeNodes() != null ) {
-				applyNamedAttributeNodes( namedEntityGraph.attributeNodes(), namedEntityGraph, entityGraph );
-			}
-
-			entityGraphMap.put( definition.getRegisteredName(), entityGraph );
-		}
-	}
-
-	private void applyNamedAttributeNodes(
-			NamedAttributeNode[] namedAttributeNodes,
-			NamedEntityGraph namedEntityGraph,
-			AbstractGraphNode graphNode) {
-		for ( NamedAttributeNode namedAttributeNode : namedAttributeNodes ) {
-			final String value = namedAttributeNode.value();
-			AttributeNodeImpl attributeNode = graphNode.addAttribute( value );
-			if ( StringHelper.isNotEmpty( namedAttributeNode.subgraph() ) ) {
-				final SubgraphImpl subgraph = attributeNode.makeSubgraph();
-				applyNamedSubgraphs(
-						namedEntityGraph,
-						namedAttributeNode.subgraph(),
-						subgraph
-				);
-			}
-			if ( StringHelper.isNotEmpty( namedAttributeNode.keySubgraph() ) ) {
-				final SubgraphImpl subgraph = attributeNode.makeKeySubgraph();
-
-				applyNamedSubgraphs(
-						namedEntityGraph,
-						namedAttributeNode.keySubgraph(),
-						subgraph
-				);
-			}
-		}
-	}
-
-	private void applyNamedSubgraphs(NamedEntityGraph namedEntityGraph, String subgraphName, SubgraphImpl subgraph) {
-		for ( NamedSubgraph namedSubgraph : namedEntityGraph.subgraphs() ) {
-			if ( subgraphName.equals( namedSubgraph.name() ) ) {
-				applyNamedAttributeNodes(
-						namedSubgraph.attributeNodes(),
-						namedEntityGraph,
-						subgraph
-				);
-			}
-		}
+		new RuntimeModelCreationProcess( factory, getMetadataBuildingContext() ).execute();
 	}
 
 	@Override

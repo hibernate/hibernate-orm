@@ -16,7 +16,6 @@ import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.JoinedSubclass;
@@ -27,8 +26,6 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.Value;
 import org.hibernate.persister.common.internal.PersisterHelper;
-import org.hibernate.persister.model.relational.spi.Column;
-import org.hibernate.persister.model.relational.spi.Table;
 import org.hibernate.persister.entity.spi.DiscriminatorDescriptor;
 import org.hibernate.persister.entity.spi.EntityHierarchy;
 import org.hibernate.persister.entity.spi.EntityPersister;
@@ -38,13 +35,18 @@ import org.hibernate.persister.entity.spi.InheritanceStrategy;
 import org.hibernate.persister.entity.spi.RowIdDescriptor;
 import org.hibernate.persister.entity.spi.TenantDiscrimination;
 import org.hibernate.persister.entity.spi.VersionDescriptor;
+import org.hibernate.persister.model.relational.spi.Column;
+import org.hibernate.persister.model.relational.spi.Table;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.type.spi.BasicType;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
 public class EntityHierarchyImpl implements EntityHierarchy {
+	private static final Logger log = Logger.getLogger( EntityHierarchyImpl.class );
 
 	private final EntityPersister rootEntityPersister;
 	private final EntityRegionAccessStrategy caching;
@@ -70,6 +72,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			RootClass rootEntityBinding,
 			EntityRegionAccessStrategy caching,
 			NaturalIdRegionAccessStrategy naturalIdCaching) {
+		log.debugf( "Creating EntityHierarchy root EntityPersister : %s", rootEntityPersister );
+
 		this.rootEntityPersister = rootEntityPersister;
 		this.caching = caching;
 		this.naturalIdCaching = naturalIdCaching;
@@ -108,19 +112,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	private static Table resolveIdentifierTable(PersisterCreationContext creationContext, RootClass rootEntityBinding) {
-		final JdbcEnvironment jdbcEnvironment = creationContext.getSessionFactory().getJdbcServices().getJdbcEnvironment();
-		final org.hibernate.mapping.Table mappingTable = rootEntityBinding.getIdentityTable();
-		if ( mappingTable.getSubselect() != null ) {
-			return creationContext.getDatabaseModel().findDerivedTable( mappingTable.getSubselect() );
-		}
-		else {
-			final String name = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-					mappingTable.getQualifiedTableName(),
-					jdbcEnvironment.getDialect()
-			);
-			return creationContext.getDatabaseModel().findPhysicalTable( name );
-
-		}
+		return creationContext.getDatabaseObjectResolver().resolveTable( rootEntityBinding.getIdentityTable() );
 	}
 
 	@SuppressWarnings("unchecked")

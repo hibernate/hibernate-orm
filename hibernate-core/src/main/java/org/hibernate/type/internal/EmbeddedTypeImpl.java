@@ -20,7 +20,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.common.NavigableRole;
+import org.hibernate.persister.common.spi.NavigableRole;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.type.ForeignKeyDirection;

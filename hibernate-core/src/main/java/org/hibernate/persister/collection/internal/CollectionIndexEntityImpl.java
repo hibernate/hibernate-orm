@@ -13,7 +13,7 @@ import org.hibernate.persister.collection.spi.AbstractCollectionIndex;
 import org.hibernate.persister.collection.spi.CollectionIndexEntity;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.collection.spi.TableReferenceJoinCollector;
-import org.hibernate.persister.common.NavigableRole;
+import org.hibernate.persister.common.spi.NavigableRole;
 import org.hibernate.persister.model.relational.spi.Column;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;

@@ -7,17 +7,14 @@
 package org.hibernate.persister.queryable.internal;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.persister.common.NavigableRole;
-import org.hibernate.persister.common.spi.JoinColumnMapping;
+import org.hibernate.persister.common.spi.NavigableRole;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.common.spi.NavigableVisitationStrategy;
-import org.hibernate.persister.common.spi.PersistentAttribute;
 import org.hibernate.persister.entity.spi.EntityPersister;
 import org.hibernate.persister.queryable.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;

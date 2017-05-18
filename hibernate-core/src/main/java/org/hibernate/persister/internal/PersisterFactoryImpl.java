@@ -16,11 +16,11 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Component;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
@@ -118,6 +118,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 				naturalIdCacheAccessStrategy,
 				creationContext
 		);
+
 
 		entityHierarchyNode.setEntityPersister( entityPersister );
 
@@ -222,11 +223,11 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 
 	private EntityHierarchyNode interpretSuperTypeNode(PersistentClass entityBinding) {
 		if ( entityBinding.getSuperMappedSuperclass() != null ) {
-			// If entityBinding#getSuperMappedSuperclass() is not null, that is the direct super type
+			// If identifiableTypeMapping#getSuperMappedSuperclass() is not null, that is the direct super type
 			return interpretMappedSuperclass( entityBinding.getSuperMappedSuperclass() );
 		}
 		else if ( entityBinding.getSuperclass() != null ) {
-			// else, if entityBinding#getSuperTypeMapping() is not null, that is the direct super type
+			// else, if identifiableTypeMapping#getSuperTypeMapping() is not null, that is the direct super type
 			// 		in this case we want to create the TypeHierarchyNode (if not already there), but not the persisters...
 			// 		that will happen on later call to
 			final String superTypeName = entityBinding.getSuperclass().getEntityName();
@@ -386,17 +387,17 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	// Inner classes
 
 	public static class EntityHierarchyNode {
-		private final PersistentClass entityBinding;
+		private final IdentifiableTypeMapping identifiableTypeMapping;
 
 		private EntityPersister entityPersister;
 		private Set<EntityHierarchyNode> subEntityNodes;
 
-		public EntityHierarchyNode(PersistentClass entityBinding) {
-			this.entityBinding = entityBinding;
+		public EntityHierarchyNode(PersistentClass identifiableTypeMapping) {
+			this.identifiableTypeMapping = identifiableTypeMapping;
 		}
 
-		public PersistentClass getEntityBinding() {
-			return entityBinding;
+		public IdentifiableTypeMapping getIdentifiableTypeMapping() {
+			return identifiableTypeMapping;
 		}
 
 		public EntityPersister getEntityPersister() {
@@ -423,7 +424,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			}
 
 			// initialize the EntityPersister represented by this hierarchy node
-			getEntityPersister().finishInitialization( superType, entityBinding , creationContext );
+			getEntityPersister().finishInitialization( superType, identifiableTypeMapping, creationContext );
 			getEntityPersister().postInstantiate();
 
 			if ( subEntityNodes != null ) {
@@ -445,13 +446,13 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 
 			EntityHierarchyNode that = (EntityHierarchyNode) o;
 
-			return entityBinding.getEntityName().equals( that.entityBinding.getEntityName() );
+			return identifiableTypeMapping.getEntityName().equals( that.identifiableTypeMapping.getEntityName() );
 
 		}
 
 		@Override
 		public int hashCode() {
-			return entityBinding.getEntityName().hashCode();
+			return identifiableTypeMapping.getEntityName().hashCode();
 		}
 	}
 

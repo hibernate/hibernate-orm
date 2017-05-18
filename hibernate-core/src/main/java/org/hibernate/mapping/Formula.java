@@ -10,6 +10,10 @@ import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.persister.model.relational.spi.Column;
+import org.hibernate.persister.model.relational.spi.DerivedColumn;
+import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.sql.Template;
 
 /**
@@ -44,6 +48,14 @@ public class Formula implements Selectable, Serializable {
 	@Override
 	public String getText() {
 		return getFormula();
+	}
+
+	@Override
+	public Column generateRuntimeColumn(
+			org.hibernate.persister.model.relational.spi.Table runtimeTable,
+			PhysicalNamingStrategy namingStrategy,
+			JdbcEnvironment jdbcEnvironment) {
+		return new DerivedColumn( runtimeTable, formula );
 	}
 
 	@Override

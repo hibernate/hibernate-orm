@@ -6,7 +6,6 @@
  */
 package org.hibernate.persister.common.spi;
 
-import java.util.Optional;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;

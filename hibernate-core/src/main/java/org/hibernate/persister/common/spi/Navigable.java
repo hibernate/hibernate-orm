@@ -6,7 +6,6 @@
  */
 package org.hibernate.persister.common.spi;
 
-import org.hibernate.persister.common.NavigableRole;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;

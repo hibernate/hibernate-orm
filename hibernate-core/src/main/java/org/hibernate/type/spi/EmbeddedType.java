@@ -13,7 +13,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.common.NavigableRole;
+import org.hibernate.persister.common.spi.NavigableRole;
 import org.hibernate.persister.queryable.spi.ExpressableType;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;

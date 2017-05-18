@@ -27,10 +27,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.MappedTableJoin;
-import org.hibernate.boot.model.relational.DenormalizedMappedTable;
-import org.hibernate.boot.model.relational.DerivedMappedTable;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.PhysicalMappedTable;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
@@ -41,13 +38,11 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.persister.collection.spi.TableReferenceJoinCollector;
-import org.hibernate.persister.common.NavigableRole;
-import org.hibernate.persister.model.relational.spi.ForeignKey;
+import org.hibernate.persister.common.spi.NavigableRole;
 import org.hibernate.persister.common.spi.JoinedTableBinding;
 import org.hibernate.persister.common.spi.Navigable;
 import org.hibernate.persister.common.spi.NavigableContainer;
 import org.hibernate.persister.common.spi.PersistentAttribute;
-import org.hibernate.persister.model.relational.spi.Table;
 import org.hibernate.persister.entity.internal.AbstractIdentifiableType;
 import org.hibernate.persister.entity.internal.IdentifierDescriptorCompositeAggregated;
 import org.hibernate.persister.entity.internal.IdentifierDescriptorSimple;
@@ -55,6 +50,8 @@ import org.hibernate.persister.exec.spi.EntityLocker;
 import org.hibernate.persister.exec.spi.MultiIdEntityLoader;
 import org.hibernate.persister.exec.spi.SingleIdEntityLoader;
 import org.hibernate.persister.exec.spi.SingleUniqueKeyEntityLoader;
+import org.hibernate.persister.model.relational.spi.ForeignKey;
+import org.hibernate.persister.model.relational.spi.Table;
 import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.persister.queryable.spi.RootTableGroupContext;
 import org.hibernate.persister.queryable.spi.SqlAliasBaseResolver;
@@ -115,12 +112,11 @@ public abstract class AbstractEntityPersister<T>
 
 	@SuppressWarnings("UnnecessaryBoxing")
 	public AbstractEntityPersister(
-			EntityHierarchy entityHierarchy,
 			EntityMapping entityMapping,
 			EntityRegionAccessStrategy cacheAccessStrategy,
 			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 			PersisterCreationContext creationContext) throws HibernateException {
-		super( entityHierarchy, resolveJavaTypeDescriptor( creationContext, entityMapping ) );
+		super( resolveJavaTypeDescriptor( creationContext, entityMapping ) );
 
 		this.factory = creationContext.getSessionFactory();
 		this.cacheAccessStrategy = cacheAccessStrategy;
@@ -131,7 +127,7 @@ public abstract class AbstractEntityPersister<T>
 		this.rootTable = resolveRootTable( entityMapping, creationContext );
 		this.secondaryTableBindings = resolveSecondaryTableBindings( entityMapping, creationContext );
 
-		if ( entityHierarchy.getEntityMode() == EntityMode.POJO ) {
+		if ( entityMapping.getEntityMode() == EntityMode.POJO ) {
 			this.bytecodeEnhancementMetadata = BytecodeEnhancementMetadataPojoImpl.from( entityMapping );
 		}
 		else {
@@ -163,18 +159,7 @@ public abstract class AbstractEntityPersister<T>
 	}
 
 	private Table resolveTable(MappedTable mappedTable, PersisterCreationContext creationContext) {
-		if ( mappedTable instanceof DerivedMappedTable ) {
-			final DerivedMappedTable derivedMappedTable = (DerivedMappedTable) mappedTable;
-			return creationContext.getDatabaseModel().findDerivedTable( derivedMappedTable.getSqlSelect() );
-		}
-		else if ( mappedTable instanceof DenormalizedMappedTable ) {
-			final DenormalizedMappedTable denormalizedMappedTable = (DenormalizedMappedTable) mappedTable;
-			return creationContext.getDatabaseModel().findPhysicalTable( denormalizedMappedTable.getName() );
-		}
-
-		// else it is a PhysicalMappedTable
-		final PhysicalMappedTable physicalMappedTable = (PhysicalMappedTable) mappedTable;
-		return creationContext.getDatabaseModel().findPhysicalTable( physicalMappedTable.getName() );
+		return creationContext.getDatabaseObjectResolver().resolveTable( mappedTable );
 	}
 
 	private List<JoinedTableBinding> resolveSecondaryTableBindings(

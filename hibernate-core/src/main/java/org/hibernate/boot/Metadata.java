@@ -6,11 +6,15 @@
  */
 package org.hibernate.boot;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
@@ -66,14 +70,32 @@ public interface Metadata extends Mapping {
 	 */
 	Database getDatabase();
 
+	java.util.Collection<EntityMappingHierarchy> getEntityHierarchies();
+
 	/**
 	 * Retrieves the PersistentClass entity metadata representation for known all entities.
-	 *
+	 * <p>
 	 * Returned collection is immutable
 	 *
 	 * @return All PersistentClass representations.
+	 *
+	 * @deprecated Use {@link #getEntityMappings} instead.  Or depending on usage,
+	 * {@link #getEntityHierarchies} is usually more appropriate
 	 */
+	@Deprecated
 	java.util.Collection<PersistentClass> getEntityBindings();
+
+	/**
+	 * Retrieves the EntityMapping metadata representation for known all
+	 * entities. The returned collection is immutable.
+	 * <p/>
+	 * Note that {@link #getEntityHierarchies} is usually more appropriate
+	 *
+	 * @return All PersistentClass representations.
+	 */
+	default java.util.Collection<EntityMapping> getEntityMappings() {
+		return getEntityBindings().stream().collect( Collectors.toList() );
+	}
 
 	/**
 	 * Retrieves the PersistentClass entity mapping metadata representation for

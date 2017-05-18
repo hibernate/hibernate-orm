@@ -19,6 +19,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.MappedColumn;
@@ -30,6 +31,10 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.persister.model.relational.internal.InflightTable;
+import org.hibernate.persister.model.relational.spi.DerivedTable;
+import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
+import org.hibernate.persister.model.relational.spi.PhysicalTable;
 import org.hibernate.tool.hbm2ddl.ColumnMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
@@ -979,5 +984,16 @@ public class Table implements MappedTable, RelationalModel, Serializable {
 	public String getUid() {
 		// todo (6.0) what makes snese to impl this??
 		throw new NotYetImplementedException();
+	}
+
+	@Override
+	public InflightTable generateRuntimeTable(
+			PhysicalNamingStrategy namingStrategy,
+			JdbcEnvironment jdbcEnvironment) {
+		if ( getSubselect() != null ) {
+			return new DerivedTable( getSubselect(), isAbstract() );
+		}
+
+		return new PhysicalTable( getNameIdentifier(), isAbstract());
 	}
 }

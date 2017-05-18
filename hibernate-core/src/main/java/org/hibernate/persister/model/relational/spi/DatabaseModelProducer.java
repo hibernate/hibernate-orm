@@ -10,20 +10,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.DenormalizedMappedTable;
-import org.hibernate.boot.model.relational.DerivedMappedTable;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.PhysicalMappedTable;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.MappedPrimaryKey;
-import org.hibernate.naming.Identifier;
 import org.hibernate.persister.model.relational.internal.DatabaseModelImpl;
 import org.hibernate.persister.model.relational.internal.InflightTable;
 import org.hibernate.persister.model.relational.internal.NamespaceImpl;
@@ -36,40 +30,14 @@ import org.hibernate.persister.model.relational.internal.NamespaceImpl;
  * @author Andrea Boriero
  */
 public class DatabaseModelProducer {
-	private final MetadataBuildingContext metadataBuildingContext;
-
-	private final BootstrapContext bootstrapContext;
 	private final PhysicalNamingStrategy namingStrategy;
 	private final JdbcEnvironment jdbcEnvironment;
 
-	public DatabaseModelProducer(MetadataBuildingContext metadataBuildingContext) {
-		this.metadataBuildingContext = metadataBuildingContext;
-
-		this.bootstrapContext = metadataBuildingContext.getBootstrapContext();
+	public DatabaseModelProducer(BootstrapContext bootstrapContext) {
 		this.namingStrategy = bootstrapContext.getMetadataBuildingOptions().getPhysicalNamingStrategy();
 		this.jdbcEnvironment = bootstrapContext.getServiceRegistry()
 				.getService( JdbcServices.class )
 				.getJdbcEnvironment();
-	}
-
-	public interface Callback {
-		default void namespaceBuilt(MappedNamespace mappedNamespace, Namespace namespace) {
-		}
-
-		default void tableBuilt(MappedTable mappedTable, Table table) {
-		}
-
-		default void columnBuilt(MappedColumn mappedColumn, Column column) {
-		}
-
-		default void primaryKeyBuilt(MappedPrimaryKey bootPk, PrimaryKey runtimePk) {
-		}
-
-		default void foreignKeyBuilt(ForeignKey fk) {
-		}
-
-		default void sequenceBuilt(Sequence sequence) {
-		}
 	}
 
 	public DatabaseModel produceDatabaseModel(Database database, Callback callback) {
@@ -117,13 +85,20 @@ public class DatabaseModelProducer {
 				MappedNamespace bootModelNamespace,
 				NamespaceImpl runtimeModelNamespace) {
 			for ( MappedTable mappedTable : bootModelNamespace.getTables() ) {
-				final InflightTable runtimeTable = generateTable( mappedTable );
+				final InflightTable runtimeTable = mappedTable.generateRuntimeTable(
+						namingStrategy,
+						jdbcEnvironment
+				);
 				runtimeModelNamespace.addTable( runtimeTable );
 
 				final Map<MappedColumn,Column> tableColumnXref = new HashMap<>();
 
 				for ( MappedColumn mappedColumn : mappedTable.getMappedColumns() ) {
-					final Column column = generateColumn( mappedColumn );
+					final Column column = mappedColumn.generateRuntimeColumn(
+							runtimeTable,
+							namingStrategy,
+							jdbcEnvironment
+					);
 					runtimeTable.addColumn( column );
 					callback.columnBuilt( mappedColumn, column );
 					tableColumnXref.put( mappedColumn, column );
@@ -145,50 +120,37 @@ public class DatabaseModelProducer {
 
 		}
 
-		private Column generateColumn(MappedColumn mappedColumn) {
-			return null;
-		}
-
-		private InflightTable generateTable(MappedTable mappedTable) {
-			if ( mappedTable instanceof DenormalizedMappedTable ) {
-				// todo (6.0) : build the UnionSubclassTable
-				throw new NotYetImplementedException(  );
-			}
-
-			if ( mappedTable instanceof DerivedMappedTable ) {
-				final DerivedMappedTable derivedTableMapping = (DerivedMappedTable) mappedTable;
-				return new DerivedTable( derivedTableMapping.getSqlSelect(), derivedTableMapping.isAbstract() );
-			}
-
-			if ( mappedTable instanceof PhysicalMappedTable ) {
-				final PhysicalMappedTable physicalTableMapping = (PhysicalMappedTable) mappedTable;
-				final Identifier physicalName = namingStrategy.toPhysicalTableName(
-						physicalTableMapping.getNameIdentifier(),
-						jdbcEnvironment
-				);
-				return new PhysicalTable( physicalName, mappedTable.isAbstract() );
-			}
-
-			throw new IllegalArgumentException( "Unknown how to generate runtime Table for given MappedTable [" + mappedTable + "]" );
-		}
-
 		private void processSequences(
 				MappedNamespace bootModelNamespace,
 				NamespaceImpl runtimeModelNamespace) {
 			for ( MappedSequence mappedSequence : bootModelNamespace.getSequences() ) {
-				final Sequence runtimeSequence = generateSequence( mappedSequence );
+				final Sequence runtimeSequence = mappedSequence.generateRuntimeSequence(
+						namingStrategy,
+						jdbcEnvironment
+				);
 				runtimeModelNamespace.addSequence( runtimeSequence );
 				callback.sequenceBuilt( runtimeSequence );
 			}
 		}
+	}
 
-		private Sequence generateSequence(MappedSequence mappedSequence) {
-			final Identifier physicalName = namingStrategy.toPhysicalSequenceName(
-					mappedSequence.getLogicalName().getSequenceName(),
-					jdbcEnvironment
-			);
+	public interface Callback {
+		default void namespaceBuilt(MappedNamespace mappedNamespace, Namespace namespace) {
+		}
 
-			throw new NotYetImplementedException(  );
+		default void tableBuilt(MappedTable mappedTable, Table table) {
+		}
+
+		default void columnBuilt(MappedColumn mappedColumn, Column column) {
+		}
+
+		default void primaryKeyBuilt(MappedPrimaryKey bootPk, PrimaryKey runtimePk) {
+		}
+
+		default void foreignKeyBuilt(ForeignKey fk) {
+		}
+
+		default void sequenceBuilt(Sequence sequence) {
 		}
 	}
 }

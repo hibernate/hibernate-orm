@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.collection.spi;
 
-import org.hibernate.persister.common.BasicValuedNavigable;
+import org.hibernate.persister.common.spi.BasicValuedNavigable;
 
 /**
  * @author Steve Ebersole

@@ -8,7 +8,6 @@ package org.hibernate.jpa.graph.internal;
 
 import java.util.List;
 import javax.persistence.AttributeNode;
-import javax.persistence.EntityGraph;
 import javax.persistence.Subgraph;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
@@ -25,7 +24,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
  *
  * @author Steve Ebersole
  */
-public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGraph<T>, EntityGraphImplementor<T> {
+public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGraphImplementor<T> {
 	private final String name;
 	private final EntityType<T> entityType;
 

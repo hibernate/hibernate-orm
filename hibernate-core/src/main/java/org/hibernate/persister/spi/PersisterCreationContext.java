@@ -8,6 +8,7 @@ package org.hibernate.persister.spi;
 
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.persister.collection.spi.CollectionPersister;
 import org.hibernate.persister.embedded.spi.EmbeddedPersister;
 import org.hibernate.persister.entity.spi.EntityPersister;
@@ -28,7 +29,9 @@ public interface PersisterCreationContext {
 
 	TypeConfiguration getTypeConfiguration();
 	MetadataImplementor getMetadata();
+
 	DatabaseModel getDatabaseModel();
+	DatabaseObjectResolver getDatabaseObjectResolver();
 
 	PersisterFactory getPersisterFactory();
 	EntityTuplizerFactory getEntityTuplizerFactory();
@@ -37,6 +40,4 @@ public interface PersisterCreationContext {
 	void registerEntityPersister(EntityPersister entityPersister);
 	void registerCollectionPersister(CollectionPersister collectionPersister);
 	void registerEmbeddablePersister(EmbeddedPersister embeddablePersister);
-
-	DatabaseObjectResolver getDatabaseObjectResolver();
 }

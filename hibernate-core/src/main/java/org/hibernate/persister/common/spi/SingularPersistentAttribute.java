@@ -9,13 +9,12 @@ package org.hibernate.persister.common.spi;
 import java.util.List;
 
 import org.hibernate.persister.model.relational.spi.Column;
-import org.hibernate.persister.queryable.spi.ExpressableType;
 
 /**
  * @author Steve Ebersole
  */
 public interface SingularPersistentAttribute<O,T>
-		extends PersistentAttribute<O,T>, ExpressableType<T>, javax.persistence.metamodel.SingularAttribute<O,T> {
+		extends PersistentAttribute<O,T>, javax.persistence.metamodel.SingularAttribute<O,T> {
 
 	/**
 	 * Classifications of the singularity

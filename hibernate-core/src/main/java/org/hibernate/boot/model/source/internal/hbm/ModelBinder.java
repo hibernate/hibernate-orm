@@ -3414,7 +3414,7 @@ public class ModelBinder {
 //								return implicitNamingStrategy.determineJoinColumnName(
 //										new ImplicitJoinColumnNameSource() {
 //											private final PersistentClass pc = mappingDocument.getMetadataCollector()
-//													.getEntityBinding( elementSource.getReferencedEntityName() );
+//													.getIdentifiableTypeMapping( elementSource.getReferencedEntityName() );
 //											private final EntityNaming referencedEntityNaming = new EntityNamingSourceImpl(
 //													pc
 //											);

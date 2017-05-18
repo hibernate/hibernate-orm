@@ -13,15 +13,11 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * Encapsulates the type of any Navigable in the application's model (our runtime view of it).
  * <p/>
  * One aspect of a DomainType is to describe this model type in regards producing
- * and consuming SQM and SQL AST queries.
+ * and consuming SQM and SQL AST queries via ExpressableType
  *
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
 public interface DomainType<J> extends ExpressableType<J> {
-	// todo (6.0) : consider adding a `Expressable` type as a factory for Expression objects in regards to the domain model.
-	//		e.g.,
-	//		Expressable#createExpression(..)
-
 	JavaTypeDescriptor<J> getJavaTypeDescriptor();
 }

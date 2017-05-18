@@ -135,7 +135,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 		this.options = new SessionFactoryOptionsStateStandardImpl(
 				metadata.getMetadataBuildingOptions().getServiceRegistry(),
-				bootstrapContext.isJpaBootstrap()
+				bootstrapContext
 		);
 
 		if ( metadata.getSqlFunctionMap() != null ) {
@@ -573,7 +573,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private EntityNotFoundDelegate entityNotFoundDelegate;
 		private boolean identifierRollbackEnabled;
 		private EntityMode defaultEntityMode;
-		private EntityTuplizerFactory entityTuplizerFactory = new EntityTuplizerFactory();
+		private EntityTuplizerFactory entityTuplizerFactory;
 		private boolean checkNullability;
 		private boolean initializeLazyStateOutsideTransactions;
 		private MultiTableBulkIdStrategy multiTableBulkIdStrategy;
@@ -628,9 +628,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 		public SessionFactoryOptionsStateStandardImpl(
 				StandardServiceRegistry serviceRegistry,
-				boolean jpaBootstrap) {
+				BootstrapContext context) {
+			this.entityTuplizerFactory = new EntityTuplizerFactory( context );
 			this.serviceRegistry = serviceRegistry;
-			this.jpaBootstrap = jpaBootstrap;
+			this.jpaBootstrap = context.isJpaBootstrap();
 
 			final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 			ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );

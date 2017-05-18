@@ -3066,7 +3066,7 @@ public final class AnnotationBinder {
 			}
 			else {
 				Iterator idColumns = identifier.getColumnIterator();
-				List<String> idColumnNames = new ArrayList<String>();
+				List<String> idColumnNames = new ArrayList<>();
 				org.hibernate.mapping.Column currentColumn;
 				if ( identifier.getColumnSpan() != joinColumns.length ) {
 					mapToPK = false;

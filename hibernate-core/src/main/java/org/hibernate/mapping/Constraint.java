@@ -29,7 +29,7 @@ import org.hibernate.engine.spi.Mapping;
  * @author Gavin King
  * @author Brett Meyer
  */
-public abstract class Constraint implements RelationalModel, Exportable, Serializable {
+public abstract class Constraint implements Exportable, Serializable {
 
 	private String name;
 	private final ArrayList<Column> columns = new ArrayList<>();
@@ -64,14 +64,14 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		Column[] alphabeticalColumns = columns.clone();
 		Arrays.sort( alphabeticalColumns, ColumnComparator.INSTANCE );
 		for ( Column column : alphabeticalColumns ) {
-			String columnName = column == null ? "" : column.getName();
+			String columnName = column == null ? "" : column.getName().getText();
 			sb.append( "column`" ).append( columnName ).append( "`" );
 		}
 		return prefix + hashedName( sb.toString() );
 	}
 
 	/**
-	 * Helper method for {@link #generateName(String, Table, Column...)}.
+	 * Helper method for {@link #generateName(String, MappedTable, Column...)} .
 	 *
 	 * @return String The generated name
 	 */
@@ -172,43 +172,9 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return true;
 	}
 
-	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		if ( isGenerated( dialect ) ) {
-			return String.format(
-					Locale.ROOT,
-					"alter table %s drop constraint %s",
-					getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ),
-					dialect.quote( getName() )
-			);
-		}
-		else {
-			return null;
-		}
-	}
-
-	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
-		if ( isGenerated( dialect ) ) {
-			// Certain dialects (ex: HANA) don't support FKs as expected, but other constraints can still be created.
-			// If that's the case, hasAlterTable() will be true, but getAddForeignKeyConstraintString will return
-			// empty string.  Prevent blank "alter table" statements.
-			String constraintString = sqlConstraintString( dialect, getName(), defaultCatalog, defaultSchema );
-			if ( !StringHelper.isEmpty( constraintString ) ) {
-				return "alter table " + getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema )
-						+ constraintString;
-			}
-		}
-		return null;
-	}
-
 	public List<Column> getColumns() {
 		return columns;
 	}
-
-	public abstract String sqlConstraintString(
-			Dialect d,
-			String constraintName,
-			String defaultCatalog,
-			String defaultSchema);
 
 	public String toString() {
 		return getClass().getName() + '(' + getTable().getName() + getColumns() + ") as " + name;

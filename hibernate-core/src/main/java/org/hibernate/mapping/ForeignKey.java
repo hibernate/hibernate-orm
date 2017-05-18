@@ -73,8 +73,8 @@ public class ForeignKey extends Constraint {
 		Iterator columnItr = getColumnIterator();
 		int i = 0;
 		while ( columnItr.hasNext() ) {
-			columnNames[i] = ( (Column) columnItr.next() ).getQuotedName( dialect );
-			referencedColumnNames[i] = referencedColumnItr.next().getQuotedName( dialect );
+			columnNames[i] = ( (Column) columnItr.next() ).getName().render( dialect );
+			referencedColumnNames[i] = referencedColumnItr.next().getName().render( dialect );
 			i++;
 		}
 

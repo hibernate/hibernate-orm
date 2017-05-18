@@ -169,6 +169,10 @@ public class Ejb3Column {
 		this.logicalColumnName = logicalColumnName;
 	}
 
+	public void setLogicalColumnName(String logicalColumnName) {
+		this.logicalColumnName = buildLogicalName( logicalColumnName );
+	}
+
 	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName;
 	}
@@ -444,6 +448,7 @@ public class Ejb3Column {
 				context
 		);
 	}
+
 	public static Ejb3Column[] buildColumnFromAnnotation(
 			javax.persistence.Column[] anns,
 			org.hibernate.annotations.Formula formulaAnn,
@@ -573,6 +578,10 @@ public class Ejb3Column {
 		return database.getJdbcEnvironment()
 				.getIdentifierHelper()
 				.toIdentifier( name );
+	}
+
+	private Identifier buildLogicalName(String name) {
+		return buildLogicalName( context.getMetadataCollector().getDatabase(), name );
 	}
 
 	private static void applyColumnDefault(Ejb3Column column, PropertyData inferredData) {

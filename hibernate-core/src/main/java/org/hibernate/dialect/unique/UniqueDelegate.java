@@ -43,7 +43,7 @@ public interface UniqueDelegate {
 	 * @return The fragment (usually "unique"), empty string indicates the uniqueness will be indicated using a
 	 * different approach
 	 */
-	public String getColumnDefinitionUniquenessFragment(org.hibernate.mapping.Column column);
+	String getColumnDefinitionUniquenessFragment(org.hibernate.mapping.Column column);
 
 	/**
 	 * Get the fragment that can be used to apply unique constraints as part of table creation.  The implementation
@@ -58,7 +58,7 @@ public interface UniqueDelegate {
 	 * @return The fragment, typically in the form {@code ", unique(col1, col2), unique( col20)"}.  NOTE: The leading
 	 * comma is important!
 	 */
-	public String getTableCreationUniqueConstraintsFragment(MappedTable table);
+	String getTableCreationUniqueConstraintsFragment(MappedTable table);
 
 	/**
 	 * Get the SQL ALTER TABLE command to be used to create the given UniqueKey.
@@ -68,7 +68,7 @@ public interface UniqueDelegate {
 	 *
 	 * @return The ALTER TABLE command
 	 */
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata);
+	String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata);
 
 	/**
 	 * Get the SQL ALTER TABLE command to be used to drop the given UniqueKey.
@@ -78,6 +78,6 @@ public interface UniqueDelegate {
 	 *
 	 * @return The ALTER TABLE command
 	 */
-	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata);
+	String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata);
 
 }

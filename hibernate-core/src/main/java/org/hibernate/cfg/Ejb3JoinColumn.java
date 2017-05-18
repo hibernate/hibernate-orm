@@ -628,9 +628,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			}
 		}
 		else if ( ownerSide ) {
-			final String logicalTableName = getBuildingContext().getMetadataCollector().getLogicalTableName(
-					referencedEntity.getTable()
-			);
+			final String logicalTableName = referencedEntity.getTable().getName();
 
 			final ImplicitJoinColumnNameSource.Nature implicitNamingNature;
 			if ( JPA2ElementCollection ) {
@@ -708,9 +706,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			}
 		}
 		else {
-			final Identifier logicalTableName = database.toIdentifier(
-					getBuildingContext().getMetadataCollector().getLogicalTableName( referencedEntity.getTable() )
-			);
+			final Identifier logicalTableName = referencedEntity.getTable().getNameIdentifier();
 
 			// is an intra-entity hierarchy table join so copy the name by default
 			columnIdentifier = implicitNamingStrategy.determinePrimaryKeyJoinColumnName(

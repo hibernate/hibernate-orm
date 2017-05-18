@@ -29,9 +29,9 @@ public interface Mapping {
 	 * @deprecated temporary solution 
 	 */
 	@Deprecated
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory();
+	IdentifierGeneratorFactory getIdentifierGeneratorFactory();
 
-	public Type getIdentifierType(String className) throws MappingException;
-	public String getIdentifierPropertyName(String className) throws MappingException;
-	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException;
+	Type getIdentifierType(String className) throws MappingException;
+	String getIdentifierPropertyName(String className) throws MappingException;
+	Type getReferencedPropertyType(String className, String propertyName) throws MappingException;
 }

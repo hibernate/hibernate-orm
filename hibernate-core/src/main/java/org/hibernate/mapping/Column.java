@@ -15,7 +15,10 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.naming.Identifier;
+import org.hibernate.persister.model.relational.spi.PhysicalColumn;
+import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.sql.Template;
 import org.hibernate.type.spi.Type;
 
@@ -86,6 +89,10 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	public String getQuotedName() {
 		return name.render();
+	}
+
+	public String getQuotedName(Dialect d) {
+		return name.render( d );
 	}
 
 	public boolean isNullable() {
@@ -256,7 +263,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 				getName(),
 				jdbcEnvironment
 		);
-		return new PhysicalColumn( runtimeTable, physicalName, getSqlTypeCode() );
+		return new org.hibernate.metamodel.model.relational.spi.PhysicalColumn(runtimeTable,physicalName,get);
 	}
 
 	public int getPrecision() {

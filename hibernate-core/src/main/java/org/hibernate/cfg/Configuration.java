@@ -160,7 +160,8 @@ public class Configuration {
 		namedProcedureCallMap = new HashMap<>(  );
 
 		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
-		entityTuplizerFactory = new EntityTuplizerFactory();
+
+		entityTuplizerFactory = new EntityTuplizerFactory(bootstrapContext);
 		interceptor = EmptyInterceptor.INSTANCE;
 		properties = new Properties(  );
 		properties.putAll( standardServiceRegistryBuilder.getSettings());

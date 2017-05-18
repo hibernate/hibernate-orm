@@ -5,8 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.tool.hbm2ddl;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
+import org.hibernate.metamodel.model.relational.spi.Column;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

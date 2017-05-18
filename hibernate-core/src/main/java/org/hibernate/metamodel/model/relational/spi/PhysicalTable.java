@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.relational.spi;
 
+import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.naming.Identifier;
 
 /**
@@ -13,12 +14,21 @@ import org.hibernate.naming.Identifier;
  *
  * @author Steve Ebersole
  */
-public class PhysicalTable extends AbstractTable implements Table {
-	private final Identifier tableName;
+public class PhysicalTable extends AbstractTable implements Table, Exportable {
 
-	public PhysicalTable(Identifier tableName, boolean isAbstract) {
+	private final Identifier tableName;
+	private final Identifier catalogName;
+	private final Identifier schemaName;
+
+	public PhysicalTable(Identifier catalogName,
+						 Identifier schemaName,
+						 Identifier tableName,
+						 boolean isAbstract) {
 		super( isAbstract );
+
 		this.tableName = tableName;
+		this.catalogName = catalogName;
+		this.schemaName = schemaName;
 	}
 
 	public Identifier getTableName() {
@@ -33,5 +43,34 @@ public class PhysicalTable extends AbstractTable implements Table {
 	@Override
 	public String toString() {
 		return "PhysicalTable(" + tableName + ")";
+	}
+
+	@Override
+	public String getExportIdentifier() {
+		return qualify(
+				render( catalogName ),
+				render( schemaName ),
+				tableName.render()
+		);
+	}
+
+	/**
+	 * @deprecated Should use {@link  org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
+	 * obtained from {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment}
+	 */
+	@Deprecated
+	public static String qualify(String catalog, String schema, String table) {
+		StringBuilder qualifiedName = new StringBuilder();
+		if ( catalog != null ) {
+			qualifiedName.append( catalog ).append( '.' );
+		}
+		if ( schema != null ) {
+			qualifiedName.append( schema ).append( '.' );
+		}
+		return qualifiedName.append( table ).toString();
+	}
+
+	private String render(Identifier identifier) {
+		return identifier == null ? null : identifier.render();
 	}
 }

@@ -528,8 +528,6 @@ public class TableBinder {
 			table.addCheckConstraint( constraints );
 		}
 
-		buildingContext.getMetadataCollector().addTableNameBinding( logicalName, table );
-
 		return table;
 	}
 

@@ -163,13 +163,6 @@ public interface MappedTable extends Exportable, Loggable {
 
 	Iterator<UniqueKey> getUniqueKeyIterator();
 
-	Iterator sqlAlterStrings(
-			Dialect dialect,
-			Mapping p,
-			TableInformation tableInfo,
-			String defaultCatalog,
-			String defaultSchema) throws HibernateException;
-
 	boolean hasPrimaryKey();
 
 	MappedPrimaryKey getPrimaryKey();

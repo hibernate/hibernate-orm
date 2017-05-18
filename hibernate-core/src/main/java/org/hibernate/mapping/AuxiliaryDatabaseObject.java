@@ -16,7 +16,7 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Steve Ebersole
  */
-public interface AuxiliaryDatabaseObject extends RelationalModel, Serializable {
+public interface AuxiliaryDatabaseObject extends Serializable {
 	/**
 	 * Add the given dialect name to the scope of dialects to which
 	 * this database object applies.

@@ -444,37 +444,40 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 	}
 
 	/**
-	 * Check if the ForeignKey already exists. First check based on definition and if that is not matched check if a key with the exact 
-	 * same name exists. Keys with the same name are presumed to be functional equal.
+	 * Check if the ForeignKey already exists. First check based on definition and if that is not matched check if a key
+	 * with the exact same name exists. Keys with the same name are presumed to be functional equal.
 	 * 
 	 * @param foreignKey - ForeignKey, new key to be created
 	 * @param tableInformation - TableInformation, information of existing keys
 	 * @return boolean, true if key already exists
 	 */
 	private boolean checkForExistingForeignKey(ForeignKey foreignKey, TableInformation tableInformation) {
-		if (foreignKey.getName() == null || tableInformation == null) {
+		if ( foreignKey.getName() == null || tableInformation == null ) {
 			return false;
 		}
 
-		final String referencingColumn = foreignKey.getColumn(0).getName();
+		final String referencingColumn = foreignKey.getColumn( 0 ).getName();
 		final String referencedTable = foreignKey.getReferencedTable().getName();
 
 		/*
-		 * Find existing keys based on referencing column and referencedTable. "referencedColumnName" is not checked because that always is the
-		 * primary key of the "referencedTable".
+		 * Find existing keys based on referencing column and referencedTable. "referencedColumnName" is not checked
+		 * because that always is the primary key of the "referencedTable".
 		 */
 		Predicate<ColumnReferenceMapping> mappingPredicate = m -> {
 			String existingReferencingColumn = m.getReferencingColumnMetadata().getColumnIdentifier().getText();
 			String existingReferencedTable = m.getReferencedColumnMetadata().getContainingTableInformation().getName().getTableName().getCanonicalName();
-			return referencingColumn.equals(existingReferencingColumn) && referencedTable.equals(existingReferencedTable);
+			return referencingColumn.equals( existingReferencingColumn ) && referencedTable.equals( existingReferencedTable );
 		};
-		Stream<ForeignKeyInformation> keyStream = StreamSupport.stream(tableInformation.getForeignKeys().spliterator(), false);
-		Stream<ColumnReferenceMapping> mappingStream = keyStream.flatMap(key -> StreamSupport.stream(key.getColumnReferenceMappings().spliterator(), false));
-		boolean found = mappingStream.anyMatch(mappingPredicate);
-		if (found) return true;
+		Stream<ForeignKeyInformation> keyStream = StreamSupport.stream( tableInformation.getForeignKeys().spliterator(), false );
+		Stream<ColumnReferenceMapping> mappingStream = keyStream.flatMap( k -> StreamSupport.stream( k.getColumnReferenceMappings().spliterator(), false ) );
+		boolean found = mappingStream.anyMatch( mappingPredicate );
+		if ( found ) {
+			return true;
+		}
 
-		// And at the end just compare the name of the key. If a key with the same name exists we assume the function is also the same...
-		return tableInformation.getForeignKey(Identifier.toIdentifier(foreignKey.getName())) != null;
+		// And at the end just compare the name of the key. If a key with the same name exists we assume the function is
+		// also the same...
+		return tableInformation.getForeignKey( Identifier.toIdentifier( foreignKey.getName() ) ) != null;
 	}
 
 	protected void checkExportIdentifier(Exportable exportable, Set<String> exportIdentifiers) {

@@ -99,6 +99,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.naming.Identifier;
 
 import org.jboss.logging.Logger;
 
@@ -1299,7 +1300,7 @@ public abstract class CollectionBinder {
 				column.setMappedBy(
 						collValue.getOwner().getEntityName(),
 						collValue.getOwner().getJpaEntityName(),
-						buildingContext.getMetadataCollector().getLogicalTableName( ownerTable ),
+						ownerTable.getName(),
 						mappedByProperty
 				);
 //				String header = ( mappedByProperty == null ) ? mappings.getLogicalTableName( ownerTable ) : mappedByProperty;
@@ -1311,13 +1312,11 @@ public abstract class CollectionBinder {
 						collValue.getOwner().getClassName(),
 						collValue.getOwner().getEntityName(),
 						collValue.getOwner().getJpaEntityName(),
-						buildingContext.getMetadataCollector().getLogicalTableName( collValue.getOwner().getTable() ),
+						collValue.getOwner().getTable().getName(),
 						collectionEntity != null ? collectionEntity.getClassName() : null,
 						collectionEntity != null ? collectionEntity.getEntityName() : null,
 						collectionEntity != null ? collectionEntity.getJpaEntityName() : null,
-						collectionEntity != null ? buildingContext.getMetadataCollector().getLogicalTableName(
-								collectionEntity.getTable()
-						) : null,
+						collectionEntity != null ? collectionEntity.getTable().getName() : null,
 						joinColumns[0].getPropertyName()
 				);
 			}
@@ -1520,7 +1519,7 @@ public abstract class CollectionBinder {
 					//not following the spec but more clean
 					column.setNullable( true );
 					column.setLength( Ejb3Column.DEFAULT_COLUMN_LENGTH );
-					column.setLogicalColumnName( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
+					column.setLogicalColumnName( Identifier.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME ) );
 					//TODO create an EMPTY_JOINS collection
 					column.setJoins( new HashMap<String, Join>() );
 					column.setBuildingContext( buildingContext );

@@ -11,7 +11,6 @@ import java.util.List;
 
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.naming.Identifier;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.source.spi.ColumnSource;
 import org.hibernate.boot.model.source.spi.DerivedValueSource;
@@ -32,7 +31,6 @@ import org.hibernate.mapping.Table;
  */
 public class RelationalObjectBinder {
 	private final Database database;
-//	private final PhysicalNamingStrategy physicalNamingStrategy;
 
 	public interface ColumnNamingDelegate {
 		Identifier determineImplicitName(LocalMetadataBuildingContext context);
@@ -119,19 +117,10 @@ public class RelationalObjectBinder {
 			logicalName = columnNamingDelegate.determineImplicitName( sourceDocument );
 		}
 
-		final Identifier physicalName = physicalNamingStrategy.toPhysicalColumnName(
-				logicalName,
-				database.getJdbcEnvironment()
-		);
-		column.setName( physicalName.render( database.getDialect() ) );
+		column.setName( logicalName );
 
 		if ( table != null ) {
 			table.addColumn( column );
-			sourceDocument.getMetadataCollector().addColumnNameBinding(
-					table,
-					logicalName,
-					column
-			);
 		}
 
 		if ( columnSource.getSizeSource() != null ) {

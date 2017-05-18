@@ -13,6 +13,7 @@ import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.mapping.RootClass;
 
 /**
  * @author Chris Cranford
@@ -36,8 +37,8 @@ public class EntityMappingHierarchyImpl implements EntityMappingHierarchyImpleme
 	}
 
 	@Override
-	public IdentifiableTypeMapping getRootType() {
-		return this.rootIdentifiableType;
+	public RootClass getRootType() {
+		return (RootClass) this.rootIdentifiableType;
 	}
 
 	@Override

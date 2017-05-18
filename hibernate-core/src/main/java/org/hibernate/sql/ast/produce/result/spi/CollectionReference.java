@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.result.spi;
 
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 
 /**
  * Represents a reference to a persistent collection either as a Return or as a {@link FetchCollectionAttribute}.
@@ -19,7 +19,7 @@ public interface CollectionReference {
 	 *
 	 * @return The CollectionPersister.
 	 */
-	CollectionPersister getCollectionPersister();
+	PersistentCollectionMetadata getCollectionPersister();
 
 	/**
 	 * Retrieve the metadata about the index of this collection *as a FetchSource*.  Will return

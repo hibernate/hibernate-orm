@@ -8,13 +8,13 @@ package org.hibernate.cache.spi;
 
 import java.util.Comparator;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * Contract for sources of optimistically lockable data sent to the second level
  * cache.
  * <p/>
- * Note currently {@link EntityPersister}s are
+ * Note currently {@link EntityTypeImplementor}s are
  * the only viable source.
  *
  * @author Steve Ebersole

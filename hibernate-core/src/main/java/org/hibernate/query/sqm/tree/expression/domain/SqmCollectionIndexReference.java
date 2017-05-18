@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**

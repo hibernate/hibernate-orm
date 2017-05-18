@@ -15,7 +15,7 @@ import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.OldNaturalIdCacheKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.spi.Type;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 public class NaturalIdCacheKeyTest {
     @Test
     public void testSerializationRoundTrip() throws Exception {
-        final EntityPersister entityPersister = mock(EntityPersister.class);
+        final EntityTypeImplementor entityPersister = mock( EntityTypeImplementor.class);
         final SessionImplementor sessionImplementor = mock(SessionImplementor.class);
         final SessionFactoryImplementor sessionFactoryImplementor = mock(SessionFactoryImplementor.class);
         final Type mockType = mock(Type.class);

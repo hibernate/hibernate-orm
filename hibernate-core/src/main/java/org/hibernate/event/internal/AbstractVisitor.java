@@ -9,7 +9,7 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
@@ -121,7 +121,7 @@ public abstract class AbstractVisitor {
 	 * @param persister
 	 * @throws HibernateException
 	 */
-	void process(Object object, EntityPersister persister)
+	void process(Object object, EntityTypeImplementor persister)
 	throws HibernateException {
 		processEntityPropertyValues(
 			persister.getPropertyValues( object ),

@@ -27,8 +27,8 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.jboss.logging.Logger;
@@ -67,7 +67,7 @@ public class CollectionCacheInvalidator
 	}
 
 	@Override
-	public boolean requiresPostCommitHanding(EntityPersister persister) {
+	public boolean requiresPostCommitHanding(EntityTypeImplementor persister) {
 		return true;
 	}
 
@@ -96,7 +96,7 @@ public class CollectionCacheInvalidator
 		eventListenerRegistry.appendListeners( EventType.POST_UPDATE, this );
 	}
 
-	private void evictCache(Object entity, EntityPersister persister, EventSource session, Object[] oldState) {
+	private void evictCache(Object entity, EntityTypeImplementor persister, EventSource session, Object[] oldState) {
 		try {
 			SessionFactoryImplementor factory = persister.getFactory();
 
@@ -105,7 +105,7 @@ public class CollectionCacheInvalidator
 				return;
 			}
 			for ( String role : collectionRoles ) {
-				final CollectionPersister collectionPersister = factory.getTypeConfiguration().findCollectionPersister( role );
+				final PersistentCollectionMetadata collectionPersister = factory.getTypeConfiguration().findCollectionPersister( role );
 				if ( !collectionPersister.hasCache() ) {
 					// ignore collection if no caching is used
 					continue;
@@ -163,7 +163,7 @@ public class CollectionCacheInvalidator
 		return id;
 	}
 
-	private void evict(Serializable id, CollectionPersister collectionPersister, EventSource session) {
+	private void evict(Serializable id, PersistentCollectionMetadata collectionPersister, EventSource session) {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debug( "Evict CollectionRegion " + collectionPersister.getRole() + " for id " + id );
 		}
@@ -179,7 +179,7 @@ public class CollectionCacheInvalidator
 	//execute the same process as invalidation with collection operations
 	private static final class CollectionEvictCacheAction extends CollectionAction {
 		protected CollectionEvictCacheAction(
-				CollectionPersister persister,
+				PersistentCollectionMetadata persister,
 				PersistentCollection collection,
 				Serializable key,
 				SharedSessionContractImplementor session) {

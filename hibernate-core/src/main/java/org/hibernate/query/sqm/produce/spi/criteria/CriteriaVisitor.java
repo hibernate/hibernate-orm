@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.produce.spi.criteria;
 
 import java.util.List;
 
-import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.produce.spi.ParsingContext;
 import org.hibernate.query.sqm.produce.spi.criteria.from.JpaFrom;
 import org.hibernate.query.sqm.produce.spi.criteria.from.JpaRoot;

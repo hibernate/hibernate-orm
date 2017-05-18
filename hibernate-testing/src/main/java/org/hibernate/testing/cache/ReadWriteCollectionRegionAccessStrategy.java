@@ -11,7 +11,7 @@ import java.util.Comparator;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 
 /**
  * @author Strong Liu
@@ -46,7 +46,7 @@ class ReadWriteCollectionRegionAccessStrategy extends AbstractReadWriteAccessStr
 	}
 
 	@Override
-	public Object generateCacheKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	public Object generateCacheKey(Object id, PersistentCollectionMetadata persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		return region.getRegionFactory().getCacheKeysFactory().createCollectionKey( id, persister, factory, tenantIdentifier );
 	}
 

@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.produce.internal.hql;
 
-import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.persister.common.spi.NavigableContainer;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.internal.FromElementBuilder;
 import org.hibernate.query.sqm.produce.spi.FromElementLocator;

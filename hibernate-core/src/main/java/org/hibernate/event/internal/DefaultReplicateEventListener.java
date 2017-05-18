@@ -24,9 +24,8 @@ import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -60,7 +59,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			return;
 		}
 
-		EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
+		EntityTypeImplementor persister = source.getEntityPersister( event.getEntityName(), entity );
 
 		// get the id from the object
 		/*if ( persister.isUnsaved(entity, source) ) {
@@ -159,7 +158,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			Object entity,
 			Serializable id,
 			Object[] values,
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			SessionImplementor source) {
 		return false;
 	}
@@ -173,7 +172,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			Object entity,
 			Serializable id,
 			Object version,
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			ReplicationMode replicationMode,
 			EventSource source) throws HibernateException {
 
@@ -200,7 +199,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 
 	private void cascadeAfterReplicate(
 			Object entity,
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			ReplicationMode replicationMode,
 			EventSource source) {
 		source.getPersistenceContext().incrementCascadeLevel();

@@ -16,8 +16,8 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
-import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
-import org.hibernate.persister.queryable.spi.TableGroupResolver;
+import org.hibernate.metamodel.queryable.spi.NavigableReferenceInfo;
+import org.hibernate.metamodel.queryable.spi.TableGroupResolver;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;

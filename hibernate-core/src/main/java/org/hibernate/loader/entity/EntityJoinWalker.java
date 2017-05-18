@@ -20,7 +20,7 @@ import org.hibernate.loader.AbstractEntityJoinWalker;
 import org.hibernate.loader.OuterJoinableAssociation;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.spi.AssociationType;
@@ -132,12 +132,12 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 		public void associationProcessed(OuterJoinableAssociation oja, int position) {
 			associationsByAlias.put( oja.getRhsAlias(), oja );
 			positionsByAlias.put( oja.getRhsAlias(), position );
-			EntityPersister entityPersister = null;
+			EntityTypeImplementor entityPersister = null;
 			if ( oja.getJoinableType().isCollectionType() ) {
 				entityPersister = ( ( QueryableCollection) oja.getJoinable() ).getElementPersister();
 			}
 			else if ( oja.getJoinableType().isEntityType() ) {
-				entityPersister = ( EntityPersister ) oja.getJoinable();
+				entityPersister = (EntityTypeImplementor) oja.getJoinable();
 			}
 			if ( entityPersister != null
 					&& entityPersister.getIdentifierType().isComponentType()
@@ -166,12 +166,12 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 				final ArrayList<Integer> keyManyToOneTargetIndices = new ArrayList<Integer>();
 				// for each association with a composite id containing key-many-to-one(s), find the bidirectional side of
 				// each key-many-to-one (if exists) to see if it is eager as well.  If so, we need to track the indices
-				EntityPersister entityPersister = null;
+				EntityTypeImplementor entityPersister = null;
 				if ( joinWithCompositeId.getJoinableType().isCollectionType() ) {
 					entityPersister = ( ( QueryableCollection) joinWithCompositeId.getJoinable() ).getElementPersister();
 				}
 				else if ( joinWithCompositeId.getJoinableType().isEntityType() ) {
-					entityPersister = ( EntityPersister ) joinWithCompositeId.getJoinable();
+					entityPersister = (EntityTypeImplementor) joinWithCompositeId.getJoinable();
 				}
 
 				findKeyManyToOneTargetIndices(

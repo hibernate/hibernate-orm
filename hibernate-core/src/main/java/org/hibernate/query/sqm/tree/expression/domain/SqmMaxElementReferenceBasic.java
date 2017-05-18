@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.collection.spi.CollectionElementBasic;
-import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.CollectionElementBasic;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 
 /**
@@ -47,6 +47,6 @@ public class SqmMaxElementReferenceBasic
 
 	@Override
 	public Navigable getReferencedNavigable() {
-		return getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getElementDescriptor();
+		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
 	}
 }

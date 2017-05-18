@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * Represents a <tt>pre-update</tt> event, which occurs just prior to
@@ -37,7 +37,7 @@ public class PreUpdateEvent extends AbstractPreDatabaseOperationEvent {
 			Serializable id,
 			Object[] state,
 			Object[] oldState,
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			EventSource source) {
 		super( source, entity, id, persister );
 		this.state = state;

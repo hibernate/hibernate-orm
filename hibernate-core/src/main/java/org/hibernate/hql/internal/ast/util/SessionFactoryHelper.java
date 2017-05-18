@@ -21,7 +21,7 @@ import org.hibernate.hql.internal.ast.tree.SqlNode;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
@@ -136,7 +136,7 @@ public class SessionFactoryHelper {
 	 *
 	 * @throws MappingException
 	 */
-	public EntityPersister findEntityPersisterByName(String name) throws MappingException {
+	public EntityTypeImplementor findEntityPersisterByName(String name) throws MappingException {
 		// First, try to get the persister using the given name directly.
 		try {
 			return sfi.getMetamodel().entityPersister( name );
@@ -163,8 +163,8 @@ public class SessionFactoryHelper {
 	 *
 	 * @throws SemanticException Indicates the persister could not be found
 	 */
-	public EntityPersister requireClassPersister(String name) throws SemanticException {
-		EntityPersister cp;
+	public EntityTypeImplementor requireClassPersister(String name) throws SemanticException {
+		EntityTypeImplementor cp;
 		try {
 			cp = findEntityPersisterByName( name );
 			if ( cp == null ) {

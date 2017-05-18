@@ -18,9 +18,9 @@ import javax.persistence.metamodel.ManagedType;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
-import org.hibernate.persister.common.spi.MappedSuperclassImplementor;
-import org.hibernate.persister.embedded.spi.EmbeddedPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.MappedSuperclassImplementor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -69,7 +69,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <X> EntityType<X> entity(Class<X> cls) {
-		final EntityPersister entityPersister = getTypeConfiguration().findEntityPersister( cls );
+		final EntityTypeImplementor entityPersister = getTypeConfiguration().findEntityPersister( cls );
 		if ( entityPersister == null ) {
 			throw new IllegalArgumentException( "Not an entity: " + cls );
 		}
@@ -79,12 +79,12 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <X> ManagedType<X> managedType(Class<X> cls) {
-		final EntityPersister entityPersister = getTypeConfiguration().findEntityPersister( cls );
+		final EntityTypeImplementor entityPersister = getTypeConfiguration().findEntityPersister( cls );
 		if ( entityPersister != null ) {
 			return entityPersister;
 		}
 
-		final EmbeddedPersister embeddablePersister = getTypeConfiguration().findEmbeddablePersister( cls );
+		final EmbeddedTypeImplementor embeddablePersister = getTypeConfiguration().findEmbeddablePersister( cls );
 		if ( embeddablePersister != null ) {
 			return embeddablePersister;
 		}
@@ -100,7 +100,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <X> EmbeddableType<X> embeddable(Class<X> cls) {
-		final EmbeddedPersister embeddablePersister = getTypeConfiguration().findEmbeddablePersister( cls );
+		final EmbeddedTypeImplementor embeddablePersister = getTypeConfiguration().findEmbeddablePersister( cls );
 		if ( embeddablePersister != null ) {
 			return embeddablePersister;
 		}

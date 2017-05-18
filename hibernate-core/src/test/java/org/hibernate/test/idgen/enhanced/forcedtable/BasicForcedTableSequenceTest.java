@@ -13,7 +13,7 @@ import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.NoopOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableStructure;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -30,7 +30,7 @@ public class BasicForcedTableSequenceTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNormalBoundary() {
-		EntityPersister persister = sessionFactory().getEntityPersister( Entity.class.getName() );
+		EntityTypeImplementor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		assertTrue(
 				"sequence style generator was not used",
 				SequenceStyleGenerator.class.isInstance( persister.getIdentifierGenerator() )

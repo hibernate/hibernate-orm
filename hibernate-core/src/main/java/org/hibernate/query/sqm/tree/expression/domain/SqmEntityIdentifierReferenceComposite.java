@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.entity.spi.IdentifierDescriptorComposite;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -19,9 +19,9 @@ public class SqmEntityIdentifierReferenceComposite
 		implements SqmEntityIdentifierReference, SqmEmbeddableTypedReference {
 
 	private final SqmEntityTypedReference sourceBinding;
-	private final IdentifierDescriptorComposite navigable;
+	private final EntityIdentifierComposite navigable;
 
-	public SqmEntityIdentifierReferenceComposite(SqmEntityTypedReference sourceBinding, IdentifierDescriptorComposite navigable) {
+	public SqmEntityIdentifierReferenceComposite(SqmEntityTypedReference sourceBinding, EntityIdentifierComposite navigable) {
 		this.sourceBinding = sourceBinding;
 		this.navigable = navigable;
 	}
@@ -42,7 +42,7 @@ public class SqmEntityIdentifierReferenceComposite
 	}
 
 	@Override
-	public IdentifierDescriptorComposite getReferencedNavigable() {
+	public EntityIdentifierComposite getReferencedNavigable() {
 		return navigable;
 	}
 
@@ -52,12 +52,12 @@ public class SqmEntityIdentifierReferenceComposite
 	}
 
 	@Override
-	public IdentifierDescriptorComposite getExpressionType() {
+	public EntityIdentifierComposite getExpressionType() {
 		return getReferencedNavigable();
 	}
 
 	@Override
-	public IdentifierDescriptorComposite getInferableType() {
+	public EntityIdentifierComposite getInferableType() {
 		return getReferencedNavigable();
 	}
 

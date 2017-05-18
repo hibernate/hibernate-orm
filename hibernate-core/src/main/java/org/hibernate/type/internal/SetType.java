@@ -13,7 +13,7 @@ import java.util.HashSet;
 import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 
 /**
  * @author Andrea Boriero
@@ -29,7 +29,7 @@ public class SetType extends AbstractCollectionType {
 
 	@Override
 	public PersistentCollection instantiate(
-			SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
+			SharedSessionContractImplementor session, PersistentCollectionMetadata persister, Serializable key) {
 		return new PersistentSet( session );
 	}
 

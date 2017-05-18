@@ -15,7 +15,7 @@ import java.util.Map;
 import org.hibernate.collection.internal.PersistentMap;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 
 /**
  * @author Andrea Boriero
@@ -31,7 +31,7 @@ public class MapType extends AbstractCollectionType {
 
 	@Override
 	public PersistentCollection instantiate(
-			SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
+			SharedSessionContractImplementor session, PersistentCollectionMetadata persister, Serializable key) {
 		return new PersistentMap( session );
 	}
 
@@ -55,7 +55,7 @@ public class MapType extends AbstractCollectionType {
 	@Override
 	protected Object replaceElements(
 			Object original, Object target, Object owner, Map copyCache, SharedSessionContractImplementor session) {
-		final CollectionPersister cp = getCollectionPersister();
+		final PersistentCollectionMetadata cp = getCollectionPersister();
 
 		java.util.Map result = (java.util.Map) target;
 		result.clear();

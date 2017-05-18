@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.PluralPersistentAttribute;
-import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.queryable.spi.NavigableContainerReferenceInfo;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.queryable.spi.NavigableContainerReferenceInfo;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
@@ -52,7 +52,7 @@ public class SqmPluralAttributeReference
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return getReferencedNavigable().getCollectionPersister().getPersistenceType();
+		return getReferencedNavigable().getPersistentCollectionMetadata().getPersistenceType();
 	}
 
 	@Override
@@ -71,7 +71,7 @@ public class SqmPluralAttributeReference
 	}
 
 	@Override
-	public EntityPersister getIntrinsicSubclassEntityPersister() {
+	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
 		throw new NotYetImplementedException(  );
 	}
 }

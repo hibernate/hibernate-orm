@@ -13,15 +13,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 
 import org.jboss.logging.Logger;
 
@@ -33,7 +32,7 @@ import org.jboss.logging.Logger;
 public class EntityTuplizerFactory implements Serializable {
 	private static final Logger log = Logger.getLogger( EntityTuplizerFactory.class );
 
-	public static final Class[] ENTITY_TUP_CTOR_SIG = new Class[] { EntityPersister.class, EntityMapping.class };
+	public static final Class[] ENTITY_TUP_CTOR_SIG = new Class[] { EntityTypeImplementor.class, EntityMapping.class };
 
 	private Map<EntityMode,Class<? extends EntityTuplizer>> defaultImplClassByMode = buildBaseMapping();
 
@@ -70,9 +69,9 @@ public class EntityTuplizerFactory implements Serializable {
 	public EntityTuplizer createTuplizer(
 			String explicitTuplizerClassName,
 			EntityMode entityMode,
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			EntityMapping entityMapping,
-			PersisterCreationContext persisterCreationContext) {
+			RuntimeModelCreationContext persisterCreationContext) {
 		final Class<? extends EntityTuplizer> explicitTuplizerClass;
 
 		if ( StringHelper.isEmpty( explicitTuplizerClassName ) ) {
@@ -85,7 +84,7 @@ public class EntityTuplizerFactory implements Serializable {
 		return createTuplizer( explicitTuplizerClass, entityMode, entityPersister, entityMapping, persisterCreationContext );
 	}
 
-	private Class<? extends EntityTuplizer> locateTuplizerClass(String tuplizerClassName, PersisterCreationContext persisterCreationContext) {
+	private Class<? extends EntityTuplizer> locateTuplizerClass(String tuplizerClassName, RuntimeModelCreationContext persisterCreationContext) {
 		try {
 			final ClassLoaderService cls = persisterCreationContext.getSessionFactory().getServiceRegistry().getService( ClassLoaderService.class );
 			return cls.classForName( tuplizerClassName );
@@ -98,9 +97,9 @@ public class EntityTuplizerFactory implements Serializable {
 	public EntityTuplizer createTuplizer(
 			Class<? extends EntityTuplizer> explicitTuplizerClass,
 			EntityMode entityMode,
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			EntityMapping entityMapping,
-			PersisterCreationContext persisterCreationContext) {
+			RuntimeModelCreationContext persisterCreationContext) {
 		final Class<? extends EntityTuplizer> tuplizerClass;
 		if ( explicitTuplizerClass == null ) {
 			tuplizerClass = locateDefaultTuplizerClass( entityMode, persisterCreationContext );
@@ -114,7 +113,7 @@ public class EntityTuplizerFactory implements Serializable {
 
 	private Class<? extends EntityTuplizer> locateDefaultTuplizerClass(
 			EntityMode entityMode,
-			PersisterCreationContext persisterCreationContext) {
+			RuntimeModelCreationContext persisterCreationContext) {
 		final Class<? extends EntityTuplizer> tuplizerClass = defaultImplClassByMode.get( entityMode );
 
 		if ( tuplizerClass == null ) {
@@ -126,9 +125,9 @@ public class EntityTuplizerFactory implements Serializable {
 
 	private EntityTuplizer constructTuplizer(
 			Class<? extends EntityTuplizer> tuplizerClass,
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			EntityMapping entityMapping,
-			PersisterCreationContext persisterCreationContext) {
+			RuntimeModelCreationContext persisterCreationContext) {
 		final Constructor<? extends EntityTuplizer> constructor = getProperConstructor( tuplizerClass );
 		if ( constructor == null ) {
 			throw new HibernateException( "Unable to locate proper constructor for tuplizer [" + tuplizerClass.getName() + "]" );

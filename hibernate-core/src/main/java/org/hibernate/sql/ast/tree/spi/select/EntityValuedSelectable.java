@@ -12,12 +12,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.persister.common.internal.SingularPersistentAttributeEmbedded;
-import org.hibernate.persister.model.relational.spi.Column;
-import org.hibernate.persister.common.spi.PersistentAttribute;
-import org.hibernate.persister.common.spi.SingularPersistentAttribute;
-import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.entity.spi.EntityValuedNavigable;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.NavigableEntityValued;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
@@ -35,7 +35,7 @@ public class EntityValuedSelectable implements Selectable {
 	private final Expression expression;
 	private final NavigablePath navigablePath;
 	private final ColumnReferenceSource columnBindingSource;
-	private final EntityPersister<?> entityPersister;
+	private final EntityTypeImplementor<?> entityPersister;
 
 	private final LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> columnReferenceGroupMap;
 	private final boolean isShallow;
@@ -44,7 +44,7 @@ public class EntityValuedSelectable implements Selectable {
 			Expression expression,
 			NavigablePath navigablePath,
 			ColumnReferenceSource columnBindingSource,
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			boolean isShallow) {
 		this.expression = expression;
 		this.navigablePath = navigablePath;
@@ -132,7 +132,7 @@ public class EntityValuedSelectable implements Selectable {
 		assert selectedExpression instanceof NavigableReference;
 		final NavigableReference navigableReference = (NavigableReference) selectedExpression;
 
-		assert navigableReference.getNavigable() instanceof EntityValuedNavigable;
+		assert navigableReference.getNavigable() instanceof NavigableEntityValued;
 
 		return new NavigableSelection( navigableReference, resultVariable );
 	}

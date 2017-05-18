@@ -13,7 +13,7 @@ import java.util.Properties;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
 
@@ -36,7 +36,7 @@ public class DefaultableListType implements UserCollectionType, ParameterizedTyp
 	@Override
 	public PersistentCollection instantiate(
 			SharedSessionContractImplementor session,
-			CollectionPersister persister) {
+			PersistentCollectionMetadata persister) {
 		return new PersistentDefaultableList( session );
 	}
 
@@ -65,7 +65,7 @@ public class DefaultableListType implements UserCollectionType, ParameterizedTyp
 	public Object replaceElements(
 			Object original,
 			Object target,
-			CollectionPersister persister,
+			PersistentCollectionMetadata persister,
 			Object owner,
 			Map copyCache,
 			SharedSessionContractImplementor session) {

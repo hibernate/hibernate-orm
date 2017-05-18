@@ -14,7 +14,7 @@ import java.util.TreeMap;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -55,7 +55,7 @@ public class PersistentSortedSet extends PersistentSet implements SortedSet {
 	}
 
 	@SuppressWarnings({"unchecked", "UnusedParameters"})
-	protected Serializable snapshot(CollectionPersister persister, EntityMode entityMode)
+	protected Serializable snapshot(PersistentCollectionMetadata persister, EntityMode entityMode)
 			throws HibernateException {
 		final TreeMap clonedSet = new TreeMap( comparator );
 		for ( Object setElement : set ) {

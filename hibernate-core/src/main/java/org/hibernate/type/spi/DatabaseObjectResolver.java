@@ -8,8 +8,8 @@ package org.hibernate.type.spi;
 
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.persister.model.relational.spi.Column;
-import org.hibernate.persister.model.relational.spi.Table;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.Table;
 
 /**
  * @author Steve Ebersole

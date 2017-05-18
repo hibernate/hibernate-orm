@@ -17,8 +17,8 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.naming.Identifier;
-import org.hibernate.persister.model.relational.internal.InflightTable;
-import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
+import org.hibernate.metamodel.model.relational.internal.InflightTable;
+import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 
 /**
  * @author Gavin King

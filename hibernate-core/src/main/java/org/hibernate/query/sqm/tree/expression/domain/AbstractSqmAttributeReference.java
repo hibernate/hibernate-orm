@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.PersistentAttribute;
-import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;

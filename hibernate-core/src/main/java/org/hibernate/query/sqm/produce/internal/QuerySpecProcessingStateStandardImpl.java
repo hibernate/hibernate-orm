@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.produce.internal;
 
-import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.produce.spi.AliasRegistry;
 import org.hibernate.query.sqm.produce.spi.FromElementLocator;
 import org.hibernate.query.sqm.produce.spi.ParsingContext;

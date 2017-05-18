@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.internal;
 
-import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultGenerator;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;

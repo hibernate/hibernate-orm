@@ -22,7 +22,7 @@ import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.AbstractEntityJoinWalker;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
@@ -252,7 +252,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 
 		if ( !checkForSqlAlias && joinable.isCollection() ) {
 			// is it a collection-of-other (component or value) ?
-			CollectionPersister collectionPersister = (CollectionPersister) joinable;
+			PersistentCollectionMetadata collectionPersister = (PersistentCollectionMetadata) joinable;
 			Type elementType = collectionPersister.getElementType();
 			if ( elementType.isComponentType() || !elementType.isEntityType() ) {
 				checkForSqlAlias = true;

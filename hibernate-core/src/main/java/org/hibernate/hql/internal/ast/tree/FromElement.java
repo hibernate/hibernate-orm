@@ -28,7 +28,7 @@ import org.hibernate.param.DynamicFilterParameterSpecification;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.DiscriminatorMetadata;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.spi.EntityType;
@@ -119,7 +119,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	public void initializeEntity(
 			FromClause fromClause,
 			String className,
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			EntityType type,
 			String classAlias,
 			String tableAlias) {
@@ -133,7 +133,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 			String tableAlias,
 			String className,
 			String classAlias,
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			EntityType type) {
 		if ( initialized ) {
 			throw new IllegalStateException( "Already initialized!!" );
@@ -148,7 +148,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		LOG.debugf( "%s : %s (%s) -> %s", fromClause, className, classAlias == null ? "<no alias>" : classAlias, tableAlias );
 	}
 
-	public EntityPersister getEntityPersister() {
+	public EntityTypeImplementor getEntityPersister() {
 		return elementType.getEntityPersister();
 	}
 
@@ -347,7 +347,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 			propertyName = getEntityPersister().getIdentifierPropertyName();
 		}
 		else {
-			propertyName = EntityPersister.ENTITY_ID;
+			propertyName = EntityTypeImplementor.ENTITY_ID;
 		}
 
 		if ( getWalker().getStatementType() == HqlSqlTokenTypes.SELECT ) {

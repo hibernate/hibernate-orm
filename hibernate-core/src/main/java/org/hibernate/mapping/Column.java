@@ -247,8 +247,8 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	@Override
-	public org.hibernate.persister.model.relational.spi.Column generateRuntimeColumn(
-			org.hibernate.persister.model.relational.spi.Table runtimeTable,
+	public org.hibernate.metamodel.model.relational.spi.Column generateRuntimeColumn(
+			org.hibernate.metamodel.model.relational.spi.Table runtimeTable,
 			PhysicalNamingStrategy namingStrategy,
 			JdbcEnvironment jdbcEnvironment) {
 

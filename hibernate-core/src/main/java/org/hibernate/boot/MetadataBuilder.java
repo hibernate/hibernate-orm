@@ -21,7 +21,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
+import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.type.spi.BasicTypeRegistry;
 
 import org.jboss.jandex.IndexView;

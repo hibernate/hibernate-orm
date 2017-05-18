@@ -22,8 +22,8 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
-import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.QueryException;

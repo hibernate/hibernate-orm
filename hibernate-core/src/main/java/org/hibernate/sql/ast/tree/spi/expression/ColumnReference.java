@@ -9,9 +9,9 @@ package org.hibernate.sql.ast.tree.spi.expression;
 
 import java.util.Locale;
 
-import org.hibernate.persister.model.relational.spi.Column;
-import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
-import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;

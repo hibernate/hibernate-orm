@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression.domain;
 
-import org.hibernate.persister.common.spi.NavigableContainer;
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 
 /**
  * @author Steve Ebersole

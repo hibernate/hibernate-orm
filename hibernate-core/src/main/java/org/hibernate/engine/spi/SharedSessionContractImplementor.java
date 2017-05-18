@@ -27,8 +27,8 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -41,8 +41,8 @@ import org.hibernate.type.spi.Type;
 /**
  * Defines the internal contract shared between {@link org.hibernate.Session} and
  * {@link org.hibernate.StatelessSession} as used by other parts of Hibernate (such as
- * {@link Type}, {@link EntityPersister} and
- * {@link CollectionPersister} implementors
+ * {@link Type}, {@link EntityTypeImplementor} and
+ * {@link PersistentCollectionMetadata} implementors
  *
  * A Session, through this interface and SharedSessionContractImplementor, implements:<ul>
  *     <li>
@@ -173,7 +173,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return The entity key
 	 */
-	EntityKey generateEntityKey(Serializable id, EntityPersister persister);
+	EntityKey generateEntityKey(Serializable id, EntityTypeImplementor persister);
 
 	/**
 	 * Retrieves the interceptor currently in use by this event source.
@@ -257,7 +257,7 @@ public interface SharedSessionContractImplementor
 	 * @param entityName optional entity name
 	 * @param object the entity instance
 	 */
-	EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException;
+	EntityTypeImplementor getEntityPersister(String entityName, Object object) throws HibernateException;
 
 	/**
 	 * Get the entity instance associated with the given <tt>Key</tt>,

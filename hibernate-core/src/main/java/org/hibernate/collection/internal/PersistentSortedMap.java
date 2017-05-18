@@ -17,7 +17,7 @@ import java.util.TreeMap;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -58,7 +58,7 @@ public class PersistentSortedMap extends PersistentMap implements SortedMap {
 	}
 
 	@SuppressWarnings({"unchecked", "UnusedParameters"})
-	protected Serializable snapshot(CollectionPersister persister, EntityMode entityMode) throws HibernateException {
+	protected Serializable snapshot(PersistentCollectionMetadata persister, EntityMode entityMode) throws HibernateException {
 		final TreeMap clonedMap = new TreeMap( comparator );
 		for ( Object o : map.entrySet() ) {
 			final Entry e = (Entry) o;

@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
 /**

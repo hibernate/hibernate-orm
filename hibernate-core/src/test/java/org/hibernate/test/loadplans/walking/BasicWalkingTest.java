@@ -13,7 +13,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import java.util.List;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
 
 import org.junit.Test;
@@ -31,7 +31,7 @@ public class BasicWalkingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testIt() {
-		EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata(Message.class);
+		EntityTypeImplementor ep = (EntityTypeImplementor) sessionFactory().getClassMetadata( Message.class);
 		MetamodelGraphWalker.visitEntity( new NavigableVisitationStrategyLoggingImpl(), ep );
 	}
 

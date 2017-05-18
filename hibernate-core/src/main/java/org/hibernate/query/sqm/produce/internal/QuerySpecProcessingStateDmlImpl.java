@@ -9,8 +9,8 @@ package org.hibernate.query.sqm.produce.internal;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.persister.embedded.spi.EmbeddedValuedNavigable;
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.NavigableEmbeddedValued;
+import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.produce.spi.AliasRegistry;
 import org.hibernate.query.sqm.produce.spi.FromElementLocator;
 import org.hibernate.query.sqm.produce.spi.ParsingContext;
@@ -152,7 +152,7 @@ public class QuerySpecProcessingStateDmlImpl extends AbstractQuerySpecProcessing
 				SqmJoinType joinType,
 				boolean fetched,
 				boolean canReuseImplicitJoins) {
-			if ( EmbeddedValuedNavigable.class.isInstance( attributeBinding.getReferencedNavigable() ) ) {
+			if ( NavigableEmbeddedValued.class.isInstance( attributeBinding.getReferencedNavigable() ) ) {
 				return super.buildAttributeJoin(
 						attributeBinding,
 						alias,

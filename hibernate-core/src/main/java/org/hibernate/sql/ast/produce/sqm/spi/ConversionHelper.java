@@ -10,8 +10,8 @@ package org.hibernate.sql.ast.produce.sqm.spi;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.common.spi.SingularPersistentAttribute;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.NotYetImplementedException;
@@ -78,11 +78,11 @@ public class ConversionHelper {
 	private ConversionHelper() {
 	}
 
-	public static EntityPersister extractEntityPersister(
+	public static EntityTypeImplementor extractEntityPersister(
 			SqmAttributeJoin joinedFromElement,
 			SessionFactoryImplementor factory) {
 		if ( joinedFromElement.getIntrinsicSubclassEntityPersister() != null ) {
-			return (EntityPersister) joinedFromElement.getIntrinsicSubclassEntityPersister();
+			return (EntityTypeImplementor) joinedFromElement.getIntrinsicSubclassEntityPersister();
 		}
 
 		// assume the fact that the attribute/type are entity has already been validated

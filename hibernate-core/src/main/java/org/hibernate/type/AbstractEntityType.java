@@ -24,7 +24,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
@@ -59,7 +59,7 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 	 *
 	 * @see #getAssociatedEntityPersister
 	 */
-	private transient volatile EntityPersister associatedEntityPersister;
+	private transient volatile EntityTypeImplementor associatedEntityPersister;
 
 	private transient Class returnedClass;
 
@@ -308,7 +308,7 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 
 	@Override
 	public int getHashCode(Object value) {
-		EntityPersister persister = getAssociatedEntityPersister( typeConfiguration.getSessionFactory() );
+		EntityTypeImplementor persister = getAssociatedEntityPersister( typeConfiguration.getSessionFactory() );
 		if ( !persister.canExtractIdOutOfEntity() ) {
 			return super.getHashCode( value );
 		}
@@ -336,7 +336,7 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 			return x == y;
 		}
 
-		EntityPersister persister = getAssociatedEntityPersister( factory );
+		EntityTypeImplementor persister = getAssociatedEntityPersister( factory );
 		if ( !persister.canExtractIdOutOfEntity() ) {
 			return super.isEqual( x, y );
 		}
@@ -417,8 +417,8 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 		return getAssociatedEntityPersister( factory ).getIdentifierType();
 	}
 
-	protected EntityPersister getAssociatedEntityPersister(final SessionFactoryImplementor factory) {
-		final EntityPersister persister = associatedEntityPersister;
+	protected EntityTypeImplementor getAssociatedEntityPersister(final SessionFactoryImplementor factory) {
+		final EntityTypeImplementor persister = associatedEntityPersister;
 		//The following branch implements a simple lazy-initialization, but rather than the canonical
 		//form it returns the local variable to avoid a second volatile read: associatedEntityPersister
 		//needs to be volatile as the initialization might happen by a different thread than the readers.
@@ -443,7 +443,7 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 			return null;
 		}
 		else {
-			EntityPersister entityPersister = getAssociatedEntityPersister( session.getFactory() );
+			EntityTypeImplementor entityPersister = getAssociatedEntityPersister( session.getFactory() );
 			Object propertyValue = entityPersister.getPropertyValue( value, uniqueKeyPropertyName );
 			// We now have the value of the property-ref we reference.  However,
 			// we need to dig a little deeper, as that property might also be
@@ -473,7 +473,7 @@ public abstract class AbstractEntityType extends AbstractType implements EntityT
 			return "null";
 		}
 
-		final EntityPersister persister = getAssociatedEntityPersister( factory );
+		final EntityTypeImplementor persister = getAssociatedEntityPersister( factory );
 		if ( !persister.getEntityTuplizer().isInstance( value ) ) {
 			// it should be the id type...
 			if ( persister.getIdentifierType().getReturnedClass().isInstance( value ) ) {

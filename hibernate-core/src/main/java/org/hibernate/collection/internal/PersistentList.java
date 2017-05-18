@@ -18,7 +18,7 @@ import java.util.ListIterator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -61,7 +61,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
+	public Serializable getSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
 		final ArrayList clonedList = new ArrayList( list.size() );
 		for ( Object element : list ) {
 			final Object deepCopy = getElementType( persister ).getMutabilityPlan().deepCopy( element );
@@ -77,7 +77,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
+	public boolean equalsSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
 		final Type elementType = getElementType( persister );
 		final List sn = (List) getSnapshot();
 		if ( sn.size()!=this.list.size() ) {
@@ -99,7 +99,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
+	public void beforeInitialize(PersistentCollectionMetadata persister, int anticipatedSize) {
 		this.list = (List) persister.getOrmType().instantiate( anticipatedSize );
 	}
 
@@ -366,7 +366,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object readFrom(ResultSet rs, CollectionPersister persister, CollectionAliases descriptor, Object owner)
+	public Object readFrom(ResultSet rs, PersistentCollectionMetadata persister, CollectionAliases descriptor, Object owner)
 			throws HibernateException, SQLException {
 		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() ) ;
 		final int index = (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
@@ -382,13 +382,13 @@ public class PersistentList extends AbstractPersistentCollection implements List
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Iterator entries(CollectionPersister persister) {
+	public Iterator entries(PersistentCollectionMetadata persister) {
 		return list.iterator();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner)
+	public void initializeFromCache(PersistentCollectionMetadata persister, Serializable disassembled, Object owner)
 			throws HibernateException {
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;
@@ -400,7 +400,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Serializable disassemble(CollectionPersister persister) throws HibernateException {
+	public Serializable disassemble(PersistentCollectionMetadata persister) throws HibernateException {
 		final int length = list.size();
 		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
@@ -411,7 +411,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
+	public Iterator getDeletes(PersistentCollectionMetadata persister, boolean indexIsFormula) throws HibernateException {
 		final List deletes = new ArrayList();
 		final List sn = (List) getSnapshot();
 		int end;
@@ -450,7 +450,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	public Object getIndex(Object entry, int i, CollectionPersister persister) {
+	public Object getIndex(Object entry, int i, PersistentCollectionMetadata persister) {
 		return i;
 	}
 

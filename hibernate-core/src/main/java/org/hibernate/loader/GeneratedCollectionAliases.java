@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 
 /**
  * CollectionAliases which handles the logic of selecting user provided aliases (via return-property),
@@ -27,7 +27,7 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 	private final String identifierAlias;
 	private Map userProvidedAliases;
 
-	public GeneratedCollectionAliases(Map userProvidedAliases, CollectionPersister persister, String suffix) {
+	public GeneratedCollectionAliases(Map userProvidedAliases, PersistentCollectionMetadata persister, String suffix) {
 		this.suffix = suffix;
 		this.userProvidedAliases = userProvidedAliases;
 
@@ -52,7 +52,7 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 		);
 	}
 
-	public GeneratedCollectionAliases(CollectionPersister persister, String string) {
+	public GeneratedCollectionAliases(PersistentCollectionMetadata persister, String string) {
 		this( Collections.EMPTY_MAP, persister, string );
 	}
 

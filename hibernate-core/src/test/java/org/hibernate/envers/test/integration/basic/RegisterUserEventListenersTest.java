@@ -18,7 +18,7 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
@@ -79,7 +79,7 @@ public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase
 		}
 
 		@Override
-		public boolean requiresPostCommitHanding(EntityPersister persister) {
+		public boolean requiresPostCommitHanding(EntityTypeImplementor persister) {
 			return true;
 		}
 

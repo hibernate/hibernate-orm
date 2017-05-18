@@ -33,7 +33,7 @@ import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.Loader;
 import org.hibernate.loader.spi.AfterLoadAction;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
@@ -266,7 +266,7 @@ public class CustomLoader extends Loader {
 		else if ( ownerDescriptor instanceof CollectionReturn ) {
 			CollectionReturn collRtn = (CollectionReturn) ownerDescriptor;
 			String role = collRtn.getOwnerEntityName() + "." + collRtn.getOwnerProperty();
-			CollectionPersister persister = getFactory().getTypeConfiguration().findCollectionPersister( role );
+			PersistentCollectionMetadata persister = getFactory().getTypeConfiguration().findCollectionPersister( role );
 			EntityType ownerType = (EntityType) persister.getElementType();
 			entityName = ownerType.getAssociatedEntityName();
 		}
@@ -317,7 +317,7 @@ public class CustomLoader extends Loader {
 	}
 
 	@Override
-	protected CollectionPersister[] getCollectionPersisters() {
+	protected PersistentCollectionMetadata[] getCollectionPersisters() {
 		return collectionPersisters;
 	}
 

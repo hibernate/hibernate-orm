@@ -13,7 +13,7 @@ import java.util.Map;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.AuditService;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -23,7 +23,7 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 	private final Map<String, Object> data;
 	private final boolean changes;
 
-	private final EntityPersister entityPersister;
+	private final EntityTypeImplementor entityPersister;
 	private final Object[] oldState;
 	private final Object[] newState;
 
@@ -32,7 +32,7 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 			String entityName,
 			AuditService auditService,
 			Serializable id,
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			Object[] newState,
 			Object[] oldState) {
 		super( sessionImplementor, entityName, auditService, id, RevisionType.MOD );

@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.result.spi;
 
-import org.hibernate.persister.common.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.query.spi.NavigablePath;
 
 /**

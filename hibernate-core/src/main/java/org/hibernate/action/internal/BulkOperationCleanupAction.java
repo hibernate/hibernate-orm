@@ -22,8 +22,8 @@ import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.Queryable;
 
 /**
@@ -71,7 +71,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			final Set<String> roles = factory.getTypeConfiguration().getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( roles != null ) {
 				for ( String role : roles ) {
-					final CollectionPersister collectionPersister = factory.getTypeConfiguration()
+					final PersistentCollectionMetadata collectionPersister = factory.getTypeConfiguration()
 							.findCollectionPersister( role );
 					if ( collectionPersister.hasCache() ) {
 						collectionCleanups.add( new CollectionCleanup( collectionPersister.getCacheAccessStrategy() ) );
@@ -88,7 +88,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * set of affected table spaces.  This differs from {@link #BulkOperationCleanupAction(SharedSessionContractImplementor, Queryable[])}
 	 * in that here we have the affected <strong>table names</strong>.  From those
 	 * we deduce the entity persisters which are affected based on the defined
-	 * {@link EntityPersister#getQuerySpaces() table spaces}; and from there, we
+	 * {@link EntityTypeImplementor#getQuerySpaces() table spaces}; and from there, we
 	 * determine the affected collection regions based on any collections
 	 * in which those entity persisters participate as elements/keys/etc.
 	 *
@@ -101,7 +101,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		spacesList.addAll( tableSpaces );
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		for ( EntityPersister persister : factory.getTypeConfiguration().getEntityPersisters() ) {
+		for ( EntityTypeImplementor persister : factory.getTypeConfiguration().getEntityPersisters() ) {
 			final String[] entitySpaces = (String[]) persister.getQuerySpaces();
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
 				spacesList.addAll( Arrays.asList( entitySpaces ) );
@@ -116,7 +116,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				final Set<String> roles = session.getFactory().getTypeConfiguration().getCollectionRolesByEntityParticipant( persister.getEntityName() );
 				if ( roles != null ) {
 					for ( String role : roles ) {
-						final CollectionPersister collectionPersister = factory.getTypeConfiguration().findCollectionPersister( role );
+						final PersistentCollectionMetadata collectionPersister = factory.getTypeConfiguration().findCollectionPersister( role );
 						if ( collectionPersister.hasCache() ) {
 							collectionCleanups.add(
 									new CollectionCleanup( collectionPersister.getCacheAccessStrategy() )

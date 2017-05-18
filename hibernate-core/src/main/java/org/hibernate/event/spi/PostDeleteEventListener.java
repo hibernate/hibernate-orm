@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * Called afterQuery deleting an item from the datastore
@@ -18,5 +18,5 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 public interface PostDeleteEventListener extends Serializable {
 	public void onPostDelete(PostDeleteEvent event);
 
-	public boolean requiresPostCommitHanding(EntityPersister persister);
+	public boolean requiresPostCommitHanding(EntityTypeImplementor persister);
 }

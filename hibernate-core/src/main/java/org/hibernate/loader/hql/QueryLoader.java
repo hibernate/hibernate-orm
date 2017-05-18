@@ -37,7 +37,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.BasicLoader;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.param.ParameterSpecification;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Lockable;
@@ -242,7 +242,7 @@ public class QueryLoader extends BasicLoader {
 	 * return a non-null value
 	 */
 	@Override
-	protected CollectionPersister[] getCollectionPersisters() {
+	protected PersistentCollectionMetadata[] getCollectionPersisters() {
 		return collectionPersisters;
 	}
 

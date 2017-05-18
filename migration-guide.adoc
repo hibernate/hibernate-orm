@@ -17,6 +17,26 @@ Additionally, `hibernate-envers` has been made part of `hibernate-core` and bett
 from an API perspective.
 
 
+== Major changes
+
+	* Query and SQL execution performance (HHH-11358, HHH-10954)
+	* Maven group/artifact id changes (HHH-11444)
+	* Re-write of Hibernate's run-time metamodel (HHH-11358, HHH-10873)
+		* persister -> metamodel
+		* introduction of run-time relational model as first class citizen
+	* Improvements in boot-time model and its creation as well as processing into runtime-model
+		* Introduction of `BootstrapContext`
+		* Introduction of `TypeConfiguration` (which has run-time impact as well)
+		* Initial re-design of Hibernate's boot-time model.  This will continue in 7.0 as we transition to
+			Jandex as the basis for annotation and XML processing
+	* Schema tooling is now based on this run-time relational model instead of the boot-time model.  Leads
+		to better application of `PhysicalNamingStrategy` - delayed until we begin building the run-time
+		relational model (HHH-11760)
+	* Cache provider SPI changes (HHH-11356)
+	* Envers folded into `hibernate-core` proper - allows for more seamless "integration" (HHH-10755)
+
+
+
 == Known integration impacts
 
 	* The move to drive schema tooling based on the runtime relational model affects the various
@@ -24,14 +44,19 @@ from an API perspective.
 	 	`org.hibernate.boot.Metadata`.
 	* The creation of `org.hibernate.naming` and moving logical and physical naming strategies
 		there cause a need for custom implementors to change source
+	* PersisterCreationContext -> RuntimeModelCreationContext
+	* PersisterFactory -> RuntimeModelNodeFactory
+	* PersisterClassResolver -> RuntimeModelNodeClassResolver
+	* `org.hibernate.persister` moved to `org.hibernate.metamodel`.  Also most references
+		to "persister" are replaced with "more appropriate names"
+	* `org.hibernate.mapping` deprecated in favor of the new `org.hibernate.boot.model` package
 
 
 == Removed deprecations
 
-=== Legacy criteria support (`org.hibernate.criterion` package mainly)
+	* Legacy criteria support (`org.hibernate.criterion` package mainly) - The legacy Hibernate criteria API
+		as a whole has been deprecated all the way back to ?.  Time to clean up
 
-
-The legacy Hibernate criteria API as a whole has been deprecated all the way back to
 
 == Things that (might) make sense in a boot-only ServiceRegistry
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 
 /**

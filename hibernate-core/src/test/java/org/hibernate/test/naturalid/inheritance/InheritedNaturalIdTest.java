@@ -9,7 +9,7 @@ package org.hibernate.test.naturalid.inheritance;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -31,7 +31,7 @@ public class InheritedNaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-10360")
 	public void testNaturalIdNullability() {
-		final EntityPersister persister = sessionFactory().getEntityPersister( User.class.getName() );
+		final EntityTypeImplementor persister = sessionFactory().getEntityPersister( User.class.getName() );
 		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 		// nullability is not specified, so it should be nullable by annotations-specific default
 		assertTrue( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "uid" )] );

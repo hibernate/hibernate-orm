@@ -11,8 +11,8 @@ import java.io.Serializable;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -69,7 +69,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#1]
 	 */
 	public static String infoString(
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			Object id, 
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
@@ -117,7 +117,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#1]
 	 */
 	public static String infoString(
-			EntityPersister persister, 
+			EntityTypeImplementor persister,
 			Object id, 
 			Type identifierType,
 			SessionFactoryImplementor factory) {
@@ -151,7 +151,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#<1,2,3>]
 	 */
 	public static String infoString(
-			EntityPersister persister, 
+			EntityTypeImplementor persister,
 			Serializable[] ids, 
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
@@ -182,7 +182,7 @@ public final class MessageHelper {
 	 * @param persister The persister.
 	 * @return An info string, in the form [FooBar]
 	 */
-	public static String infoString(EntityPersister persister) {
+	public static String infoString(EntityTypeImplementor persister) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if ( persister == null ) {
@@ -237,7 +237,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
 	public static String collectionInfoString( 
-			CollectionPersister persister,
+			PersistentCollectionMetadata persister,
 			PersistentCollection collection,
 			Serializable collectionKey,
 			SharedSessionContractImplementor session ) {
@@ -282,7 +282,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [Foo.bars#<1,2,3>]
 	 */
 	public static String collectionInfoString(
-			CollectionPersister persister, 
+			PersistentCollectionMetadata persister,
 			Serializable[] ids, 
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
@@ -315,7 +315,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
 	public static String collectionInfoString(
-			CollectionPersister persister, 
+			PersistentCollectionMetadata persister,
 			Serializable id, 
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
@@ -340,7 +340,7 @@ public final class MessageHelper {
 	}
 	
 	private static void addIdToCollectionInfoString(
-			CollectionPersister persister,
+			PersistentCollectionMetadata persister,
 			Serializable id,
 			SessionFactoryImplementor factory,
 			StringBuilder s ) {

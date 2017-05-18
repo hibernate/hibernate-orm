@@ -16,7 +16,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Ejb3DiscriminatorColumn;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 
 import org.hibernate.testing.TestForIssue;
@@ -82,7 +82,7 @@ public class JoinedSubclassWithImplicitDiscriminatorTest extends BaseCoreFunctio
 
 	@Test
 	public void metadataAssertions() {
-		EntityPersister p = sessionFactory().getEntityPersister( Dog.class.getName() );
+		EntityTypeImplementor p = sessionFactory().getEntityPersister( Dog.class.getName() );
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister dogPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( Ejb3DiscriminatorColumn.DEFAULT_DISCRIMINATOR_TYPE, dogPersister.getDiscriminatorType().getName() );

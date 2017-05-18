@@ -28,7 +28,7 @@ import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.TypeHelper;
 
 /**
@@ -71,7 +71,7 @@ public final class EntityUpdateAction extends EntityAction {
 			final Object nextVersion,
 			final Object instance,
 			final Object rowId,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final SharedSessionContractImplementor session) {
 		super( session, id, instance, persister );
 		this.state = state;
@@ -93,7 +93,7 @@ public final class EntityUpdateAction extends EntityAction {
 	}
 
 	private Object[] determinePreviousNaturalIdValues(
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			Object[] previousState,
 			SharedSessionContractImplementor session,
 			Serializable id) {
@@ -111,7 +111,7 @@ public final class EntityUpdateAction extends EntityAction {
 	@Override
 	public void execute() throws HibernateException {
 		final Serializable id = getId();
-		final EntityPersister persister = getPersister();
+		final EntityTypeImplementor persister = getPersister();
 		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();
 
@@ -215,7 +215,7 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private boolean cacheUpdate(EntityPersister persister, Object previousVersion, Object ck) {
+	private boolean cacheUpdate(EntityTypeImplementor persister, Object previousVersion, Object ck) {
 		final SharedSessionContractImplementor session = getSession();
 		try {
 			session.getEventListenerManager().cachePutStart();
@@ -309,7 +309,7 @@ public final class EntityUpdateAction extends EntityAction {
 
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws CacheException {
-		final EntityPersister persister = getPersister();
+		final EntityTypeImplementor persister = getPersister();
 		if ( persister.hasCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(

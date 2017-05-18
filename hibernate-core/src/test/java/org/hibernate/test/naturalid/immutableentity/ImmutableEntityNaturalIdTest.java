@@ -12,7 +12,7 @@ import org.hibernate.Transaction;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
@@ -50,7 +50,7 @@ public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-10360")
 	public void testNaturalIdNullability() {
-		final EntityPersister persister = sessionFactory().getEntityPersister( Building.class.getName() );
+		final EntityTypeImplementor persister = sessionFactory().getEntityPersister( Building.class.getName() );
 		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 		// nullability is not specified, so they should be nullable by annotations-specific default
 		assertTrue( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "address" )] );

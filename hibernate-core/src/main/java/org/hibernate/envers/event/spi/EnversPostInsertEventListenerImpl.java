@@ -12,7 +12,7 @@ import org.hibernate.envers.internal.synchronization.work.AddWorkUnit;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * Envers-specific entity (post) insertion event listener
@@ -60,7 +60,7 @@ public class EnversPostInsertEventListenerImpl extends BaseEnversEventListener i
 	}
 
 	@Override
-	public boolean requiresPostCommitHanding(EntityPersister persister) {
+	public boolean requiresPostCommitHanding(EntityTypeImplementor persister) {
 		return getAuditService().getEntityBindings().isVersioned( persister.getEntityName() );
 	}
 }

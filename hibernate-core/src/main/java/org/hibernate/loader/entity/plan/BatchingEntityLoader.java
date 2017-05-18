@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.Loader;
 import org.hibernate.loader.entity.UniqueEntityLoader;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.spi.Type;
 
@@ -37,13 +37,13 @@ import org.jboss.logging.Logger;
 public abstract class BatchingEntityLoader implements UniqueEntityLoader {
 	private static final Logger log = Logger.getLogger( BatchingEntityLoader.class );
 
-	private final EntityPersister persister;
+	private final EntityTypeImplementor persister;
 
-	public BatchingEntityLoader(EntityPersister persister) {
+	public BatchingEntityLoader(EntityTypeImplementor persister) {
 		this.persister = persister;
 	}
 
-	public EntityPersister persister() {
+	public EntityTypeImplementor persister() {
 		return persister;
 	}
 

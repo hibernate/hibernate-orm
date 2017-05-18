@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.collection.spi.CollectionElement;
-import org.hibernate.persister.collection.spi.CollectionElementEmbedded;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.CollectionElementEmbedded;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
@@ -29,7 +29,7 @@ public class SqmMinElementReferenceEmbedded extends AbstractSpecificSqmElementRe
 
 	@Override
 	public CollectionElement getExpressionType() {
-		return getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getElementDescriptor();
+		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
 	}
 
 	@Override

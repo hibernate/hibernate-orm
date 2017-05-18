@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.collection.spi.CollectionElementEmbedded;
+import org.hibernate.metamodel.model.domain.spi.CollectionElementEmbedded;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -25,7 +25,7 @@ public class SqmIndexedElementReferenceEmbedded
 
 	@Override
 	public CollectionElementEmbedded getReferencedNavigable() {
-		return (CollectionElementEmbedded) getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getElementDescriptor();
+		return (CollectionElementEmbedded) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
 	}
 
 	@Override

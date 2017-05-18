@@ -17,7 +17,7 @@ import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * Provides query splitting methods, which were originally in QueryTranslator.
@@ -68,7 +68,7 @@ public final class QuerySplitter {
 			return new String[] { query };
 		}
 		ArrayList<String> placeholders = new ArrayList<>();
-		ArrayList<EntityPersister<?>> replacements = new ArrayList<>();
+		ArrayList<EntityTypeImplementor<?>> replacements = new ArrayList<>();
 		StringBuilder templateQuery = new StringBuilder( 40 );
 
 		int start = getStartingPositionFor( tokens, templateQuery );
@@ -117,7 +117,7 @@ public final class QuerySplitter {
 			if ( process ) {
 				String importedClassName = getImportedClass( token, factory );
 				if ( importedClassName != null ) {
-					Set<EntityPersister<?>> implementors = factory.getTypeConfiguration().getImplementors( importedClassName );
+					Set<EntityTypeImplementor<?>> implementors = factory.getTypeConfiguration().getImplementors( importedClassName );
 					token = "$clazz" + count++ + "$";
 					if ( !implementors.isEmpty() ) {
 						placeholders.add( token );

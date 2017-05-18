@@ -13,7 +13,7 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
@@ -78,7 +78,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 *
 	 * @throws HibernateException
 	 */
-	void removeCollection(CollectionPersister role, Serializable collectionKey, EventSource source)
+	void removeCollection(PersistentCollectionMetadata role, Serializable collectionKey, EventSource source)
 			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
@@ -99,7 +99,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 *
 	 * @return The value from the owner that identifies the grouping into the collection
 	 */
-	final Serializable extractCollectionKeyFromOwner(CollectionPersister role) {
+	final Serializable extractCollectionKeyFromOwner(PersistentCollectionMetadata role) {
 		if ( role.getCollectionType().useLHSPrimaryKey() ) {
 			return ownerIdentifier;
 		}

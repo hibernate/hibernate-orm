@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * A base class for entity insert actions.
@@ -47,7 +47,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			Object[] state,
 			Object instance,
 			boolean isVersionIncrementDisabled,
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			SharedSessionContractImplementor session) {
 		super( session, id, instance, persister );
 		this.state = state;

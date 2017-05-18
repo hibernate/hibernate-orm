@@ -12,7 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -42,7 +42,7 @@ public class OnReplicateVisitor extends ReattachVisitor {
 		}
 
 		final EventSource session = getSession();
-		final CollectionPersister persister = session.getFactory().getTypeConfiguration().findCollectionPersister( type.getRole() );
+		final PersistentCollectionMetadata persister = session.getFactory().getTypeConfiguration().findCollectionPersister( type.getRole() );
 
 		if ( isUpdate ) {
 			removeCollection( persister, extractCollectionKeyFromOwner( persister ), session );

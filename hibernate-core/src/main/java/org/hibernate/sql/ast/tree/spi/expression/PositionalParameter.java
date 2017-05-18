@@ -12,7 +12,7 @@ import java.sql.SQLException;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;

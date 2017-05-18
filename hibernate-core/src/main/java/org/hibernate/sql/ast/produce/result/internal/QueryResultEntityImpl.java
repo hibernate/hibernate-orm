@@ -8,8 +8,8 @@ package org.hibernate.sql.ast.produce.result.internal;
 
 import java.util.Map;
 
-import org.hibernate.persister.common.spi.PersistentAttribute;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.query.spi.NavigablePath;
@@ -31,7 +31,7 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
  */
 public class QueryResultEntityImpl extends AbstractFetchParent implements QueryResultEntity {
 	private final Expression expression;
-	private final EntityPersister entityPersister;
+	private final EntityTypeImplementor entityPersister;
 	private final String resultVariable;
 
 	private final QueryResultAssemblerEntity assembler;
@@ -39,7 +39,7 @@ public class QueryResultEntityImpl extends AbstractFetchParent implements QueryR
 
 	public QueryResultEntityImpl(
 			Expression expression,
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			String resultVariable,
 			Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap,
 			NavigablePath navigablePath,
@@ -59,7 +59,7 @@ public class QueryResultEntityImpl extends AbstractFetchParent implements QueryR
 	}
 
 	@Override
-	public EntityPersister getEntityPersister() {
+	public EntityTypeImplementor getEntityPersister() {
 		return entityPersister;
 	}
 

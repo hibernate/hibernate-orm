@@ -28,7 +28,7 @@ import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 import org.junit.Test;
 
@@ -52,7 +52,7 @@ public class EntityAssociationResultSetProcessorTest extends BaseCoreFunctionalT
 
 	@Test
 	public void testManyToOneEntityProcessing() throws Exception {
-		final EntityPersister entityPersister = sessionFactory().getEntityPersister( Message.class.getName() );
+		final EntityTypeImplementor entityPersister = sessionFactory().getEntityPersister( Message.class.getName() );
 
 		// create some test data
 		Session session = openSession();
@@ -134,7 +134,7 @@ public class EntityAssociationResultSetProcessorTest extends BaseCoreFunctionalT
 
 	@Test
 	public void testNestedManyToOneEntityProcessing() throws Exception {
-		final EntityPersister entityPersister = sessionFactory().getEntityPersister( ReportedMessage.class.getName() );
+		final EntityTypeImplementor entityPersister = sessionFactory().getEntityPersister( ReportedMessage.class.getName() );
 
 		// create some test data
 		Session session = openSession();

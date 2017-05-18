@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.produce.result.internal;
 
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.persister.common.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.sql.ast.produce.result.spi.FetchCompositeAttribute;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.consume.results.internal.CompositeReferenceInitializerImpl;

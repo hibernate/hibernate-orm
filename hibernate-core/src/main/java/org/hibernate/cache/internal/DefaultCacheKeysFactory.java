@@ -9,8 +9,8 @@ package org.hibernate.cache.internal;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -41,15 +41,15 @@ import org.hibernate.type.spi.Type;
  */
 public class DefaultCacheKeysFactory {
 
-	public static Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	public static Object createCollectionKey(Object id, PersistentCollectionMetadata persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		return new OldCacheKeyImplementation( id, persister.getKeyType(), persister.getRole(), tenantIdentifier );
 	}
 
-	public static Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	public static Object createEntityKey(Object id, EntityTypeImplementor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		return new OldCacheKeyImplementation( id, persister.getIdentifierType(), persister.getRootEntityName(), tenantIdentifier );
 	}
 
-	public static Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
+	public static Object createNaturalIdKey(Object[] naturalIdValues, EntityTypeImplementor persister, SharedSessionContractImplementor session) {
 		return new OldNaturalIdCacheKey( naturalIdValues,  persister.getPropertyTypes(), persister.getNaturalIdentifierProperties(), persister.getRootEntityName(), session );
 	}
 
@@ -67,17 +67,17 @@ public class DefaultCacheKeysFactory {
 
 	public static CacheKeysFactory INSTANCE = new CacheKeysFactory() {
 		@Override
-		public Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		public Object createCollectionKey(Object id, PersistentCollectionMetadata persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 			return DefaultCacheKeysFactory.createCollectionKey(id, persister, factory, tenantIdentifier);
 		}
 
 		@Override
-		public Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+		public Object createEntityKey(Object id, EntityTypeImplementor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 			return DefaultCacheKeysFactory.createEntityKey(id, persister, factory, tenantIdentifier);
 		}
 
 		@Override
-		public Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
+		public Object createNaturalIdKey(Object[] naturalIdValues, EntityTypeImplementor persister, SharedSessionContractImplementor session) {
 			return DefaultCacheKeysFactory.createNaturalIdKey(naturalIdValues, persister, session);
 		}
 

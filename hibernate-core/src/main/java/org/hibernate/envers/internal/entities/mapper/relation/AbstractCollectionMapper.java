@@ -31,7 +31,7 @@ import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.I
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.property.access.spi.Setter;
 
 /**
@@ -159,7 +159,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 			// the same value in both collections.  Using #isSame, these will be seen as differing elements and
 			// changes to the collection will be returned.
 			if ( !( newColl instanceof PersistentMap ) ) {
-				final CollectionPersister collectionPersister = collectionEntry.getCurrentPersister();
+				final PersistentCollectionMetadata collectionPersister = collectionEntry.getCurrentPersister();
 				if ( collectionPersister != null && !collectionPersister.hasIndex() ) {
 					return mapCollectionChanges( session, newColl, oldColl, id, collectionPersister );
 				}
@@ -336,7 +336,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 			PersistentCollection newColl,
 			Serializable oldColl,
 			Serializable id,
-			CollectionPersister collectionPersister) {
+			PersistentCollectionMetadata collectionPersister) {
 
 		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<PersistentCollectionChangeData>();
 

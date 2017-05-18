@@ -17,14 +17,14 @@ import java.util.Locale;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.persister.collection.spi.CollectionElement;
-import org.hibernate.persister.collection.spi.CollectionPersister.CollectionClassification;
-import org.hibernate.persister.common.spi.NavigableContainer;
-import org.hibernate.persister.common.spi.PluralPersistentAttribute;
-import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
-import org.hibernate.persister.queryable.spi.ExpressableType;
-import org.hibernate.persister.queryable.spi.PolymorphicEntityValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata.CollectionClassification;
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.queryable.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.query.sqm.LiteralNumberFormatException;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.ParsingException;
@@ -392,7 +392,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		SqmExpression selectExpression = visitSelectExpression( ctx.selectExpression() );
 		if ( selectExpression instanceof SqmPluralAttributeReference ) {
 			final SqmPluralAttributeReference pluralAttributeBinding = (SqmPluralAttributeReference) selectExpression;
-			final CollectionElement elementReference = pluralAttributeBinding.getReferencedNavigable().getCollectionPersister().getElementDescriptor();
+			final CollectionElement elementReference = pluralAttributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
 			switch ( elementReference.getClassification() ) {
 				case ANY: {
 					throw new NotYetImplementedException(  );
@@ -1477,7 +1477,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 
 		final SqmPluralAttributeReference attributeBinding = (SqmPluralAttributeReference) pathResolution;
 		if ( !PluralPersistentAttribute.class.isInstance( attributeBinding.getReferencedNavigable() )
-				|| attributeBinding.getReferencedNavigable().getCollectionPersister().getIndexDescriptor() == null ) {
+				|| attributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getIndexDescriptor() == null ) {
 			throw new SemanticException(
 					"Index operator only valid for indexed collections (maps, lists, arrays) : " +
 							attributeBinding.getReferencedNavigable()
@@ -1485,12 +1485,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		}
 
 		final PluralPersistentAttribute attRef = attributeBinding.getReferencedNavigable();
-		final CollectionElement elementReference = attributeBinding.getReferencedNavigable().getCollectionPersister().getElementDescriptor();
+		final CollectionElement elementReference = attributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
 
 		final SqmExpression indexExpression = (SqmExpression) ctx.expression().accept( this );
 
 		// todo : would be nice to validate the index's type against the Collection-index's type
-		assertAreSame( attributeBinding.getReferencedNavigable().getCollectionPersister().getIndexDescriptor(), indexExpression.getExpressionType() );
+		assertAreSame( attributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getIndexDescriptor(), indexExpression.getExpressionType() );
 
 		// determine the kind of IndexedElementBinding to create
 		final SqmRestrictedCollectionElementReference indexedReference;
@@ -1540,7 +1540,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 							attributeBinding.getSourceReference().asLoggableText(),
 							attributeBinding.getReferencedNavigable().getAttributeName(),
 							ctx.path().getText(),
-							attRef.getCollectionPersister().getElementDescriptor().getClassification().name()
+							attRef.getPersistentCollectionMetadata().getElementDescriptor().getClassification().name()
 					)
 			);
 		}
@@ -1591,13 +1591,13 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		resolveAttributeJoinIfNot( pathResolution );
 		return NavigableBindingHelper.createCollectionIndexBinding(
 				pathResolution,
-				pathResolution.getReferencedNavigable().getCollectionPersister().getIndexDescriptor()
+				pathResolution.getReferencedNavigable().getPersistentCollectionMetadata().getIndexDescriptor()
 		);
 	}
 
 	private SqmPluralAttributeReference asMap(SqmNavigableReference binding) {
 		SqmPluralAttributeReference attributeBinding = asPluralAttribute( binding );
-		if ( attributeBinding.getReferencedNavigable().getCollectionPersister().getCollectionClassification() != CollectionClassification.MAP ) {
+		if ( attributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getCollectionClassification() != CollectionClassification.MAP ) {
 			throw new SemanticException( "Expecting persistent Map reference, but found : " + binding );
 		}
 
@@ -1609,7 +1609,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		final SqmPluralAttributeReference attributeBinding = asPluralAttribute( (SqmNavigableReference) ctx.collectionReference().accept( this ) );
 
 		if ( parsingContext.getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
-			if ( attributeBinding.getReferencedNavigable().getCollectionPersister().getCollectionClassification() != CollectionClassification.MAP ) {
+			if ( attributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getCollectionClassification() != CollectionClassification.MAP ) {
 				throw new StrictJpaComplianceViolation(
 						"Encountered application of value() function to path expression which does not " +
 								"resolve to a persistent Map, but strict JPQL compliance was requested. specified "
@@ -1623,7 +1623,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 
 		return NavigableBindingHelper.createCollectionElementBinding(
 				attributeBinding,
-				attributeBinding.getReferencedNavigable().getCollectionPersister().getElementDescriptor()
+				attributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor()
 		);
 	}
 
@@ -2355,17 +2355,17 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 
 		return NavigableBindingHelper.createCollectionIndexBinding(
 				attributeBinding,
-				attributeBinding.getReferencedNavigable().getCollectionPersister().getIndexDescriptor()
+				attributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getIndexDescriptor()
 		);
 	}
 
 	private boolean isIndexedPluralAttribute(SqmPluralAttributeReference attributeBinding) {
-		return attributeBinding.getReferencedNavigable().getCollectionPersister().getCollectionClassification() == CollectionClassification.MAP
-				|| attributeBinding.getReferencedNavigable().getCollectionPersister().getCollectionClassification() == CollectionClassification.LIST;
+		return attributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getCollectionClassification() == CollectionClassification.MAP
+				|| attributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getCollectionClassification() == CollectionClassification.LIST;
 	}
 
 	private boolean isList(SqmPluralAttributeReference attributeBinding) {
-		return attributeBinding.getReferencedNavigable().getCollectionPersister().getCollectionClassification() == CollectionClassification.LIST;
+		return attributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getCollectionClassification() == CollectionClassification.LIST;
 	}
 
 	@Override
@@ -2384,7 +2384,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		}
 
 		final SqmPluralAttributeReference pluralAttributeBinding = asPluralAttribute( (SqmNavigableReference) ctx.path().accept( this ) );
-		switch ( pluralAttributeBinding.getReferencedNavigable().getCollectionPersister().getElementDescriptor().getClassification() ) {
+		switch ( pluralAttributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor().getClassification() ) {
 			case BASIC: {
 				return new SqmMinElementReferenceBasic( pluralAttributeBinding );
 			}
@@ -2416,7 +2416,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 			);
 		}
 
-		switch ( attributeBinding.getReferencedNavigable().getCollectionPersister().getIndexDescriptor().getClassification() ) {
+		switch ( attributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getIndexDescriptor().getClassification() ) {
 			case BASIC: {
 				return new SqmMaxIndexReferenceBasic( attributeBinding );
 			}
@@ -2448,7 +2448,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 			);
 		}
 
-		switch ( attributeBinding.getReferencedNavigable().getCollectionPersister().getIndexDescriptor().getClassification() ) {
+		switch ( attributeBinding.getReferencedNavigable().getPersistentCollectionMetadata().getIndexDescriptor().getClassification() ) {
 			case BASIC: {
 				return new SqmMinIndexReferenceBasic( attributeBinding );
 			}

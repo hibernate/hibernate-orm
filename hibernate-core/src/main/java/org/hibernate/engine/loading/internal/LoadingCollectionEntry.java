@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -20,13 +20,13 @@ import org.hibernate.pretty.MessageHelper;
  */
 public class LoadingCollectionEntry {
 	private final ResultSet resultSet;
-	private final CollectionPersister persister;
+	private final PersistentCollectionMetadata persister;
 	private final Serializable key;
 	private final PersistentCollection collection;
 
 	LoadingCollectionEntry(
 			ResultSet resultSet,
-			CollectionPersister persister,
+			PersistentCollectionMetadata persister,
 			Serializable key,
 			PersistentCollection collection) {
 		this.resultSet = resultSet;
@@ -39,7 +39,7 @@ public class LoadingCollectionEntry {
 		return resultSet;
 	}
 
-	public CollectionPersister getPersister() {
+	public PersistentCollectionMetadata getPersister() {
 		return persister;
 	}
 

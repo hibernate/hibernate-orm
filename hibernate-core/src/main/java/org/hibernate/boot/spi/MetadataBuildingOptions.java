@@ -15,7 +15,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
-import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
+import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 
 /**
  * Describes the options used while building the Metadata object (during

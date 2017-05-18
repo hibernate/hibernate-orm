@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -52,7 +52,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 
 	@Test
 	public void testUseOfDirectReferencesInCache() throws Exception {
-		EntityPersister persister = (EntityPersister) sessionFactory().getClassMetadata( MyEnhancedReferenceData.class );
+		EntityTypeImplementor persister = (EntityTypeImplementor) sessionFactory().getClassMetadata( MyEnhancedReferenceData.class );
 		assertFalse( persister.isMutable() );
 		assertTrue( persister.buildCacheEntry( null, null, null, null ).isReferenceEntry() );
 		assertFalse( persister.hasProxy() );

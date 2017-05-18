@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.collection.spi.CollectionIndexEntity;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndexEntity;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import org.jboss.logging.Logger;

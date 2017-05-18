@@ -14,7 +14,7 @@ import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.internal.CollectionSubqueryFactory;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
@@ -187,7 +187,7 @@ public class PathExpressionParser implements Parser {
 		//NOTE: we avoid joining to the next table if the named property is just the foreign key value
 
 		//if its "id"
-		boolean isIdShortcut = EntityPersister.ENTITY_ID.equals( propertyName )
+		boolean isIdShortcut = EntityTypeImplementor.ENTITY_ID.equals( propertyName )
 				&& propertyType.isReferenceToPrimaryKey();
 
 		//or its the id property name
@@ -253,7 +253,7 @@ public class PathExpressionParser implements Parser {
 
 	private String getPropertyPath() {
 		if ( currentProperty == null ) {
-			return EntityPersister.ENTITY_ID;
+			return EntityTypeImplementor.ENTITY_ID;
 		}
 		else {
 			if ( componentPath.length() > 0 ) {

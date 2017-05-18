@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.result.spi;
 
-import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.query.spi.NavigablePath;
 
 /**

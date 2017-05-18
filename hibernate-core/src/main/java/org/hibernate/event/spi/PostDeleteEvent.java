@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * Occurs afterQuery deleting an item from the datastore
@@ -17,7 +17,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
  */
 public class PostDeleteEvent extends AbstractEvent {
 	private Object entity;
-	private EntityPersister persister;
+	private EntityTypeImplementor persister;
 	private Serializable id;
 	private Object[] deletedState;
 	
@@ -25,7 +25,7 @@ public class PostDeleteEvent extends AbstractEvent {
 			Object entity, 
 			Serializable id,
 			Object[] deletedState,
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			EventSource source
 	) {
 		super(source);
@@ -38,7 +38,7 @@ public class PostDeleteEvent extends AbstractEvent {
 	public Serializable getId() {
 		return id;
 	}
-	public EntityPersister getPersister() {
+	public EntityTypeImplementor getPersister() {
 		return persister;
 	}
 	public Object getEntity() {

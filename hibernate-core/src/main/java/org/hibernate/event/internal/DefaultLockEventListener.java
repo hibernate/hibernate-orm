@@ -21,7 +21,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LockEvent;
 import org.hibernate.event.spi.LockEventListener;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 import org.jboss.logging.Logger;
 
@@ -66,7 +66,7 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 		
 		EntityEntry entry = source.getPersistenceContext().getEntry(entity);
 		if (entry==null) {
-			final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
+			final EntityTypeImplementor persister = source.getEntityPersister( event.getEntityName(), entity );
 			final Serializable id = persister.getIdentifier( entity, source );
 			if ( !ForeignKeys.isNotTransient( event.getEntityName(), entity, Boolean.FALSE, source ) ) {
 				throw new TransientObjectException(
@@ -82,7 +82,7 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 		upgradeLock( entity, entry, event.getLockOptions(), event.getSession() );
 	}
 	
-	private void cascadeOnLock(LockEvent event, EntityPersister persister, Object entity) {
+	private void cascadeOnLock(LockEvent event, EntityTypeImplementor persister, Object entity) {
 		EventSource source = event.getSession();
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {

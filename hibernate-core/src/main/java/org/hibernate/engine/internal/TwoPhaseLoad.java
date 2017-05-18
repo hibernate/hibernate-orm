@@ -30,7 +30,7 @@ import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
@@ -70,7 +70,7 @@ public final class TwoPhaseLoad {
 	 * @param session The Session
 	 */
 	public static void postHydrate(
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final Serializable id,
 			final Object[] values,
 			final Object rowId,
@@ -132,7 +132,7 @@ public final class TwoPhaseLoad {
 			final SharedSessionContractImplementor session,
 			final PreLoadEvent preLoadEvent) throws HibernateException {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		final EntityPersister persister = entityEntry.getPersister();
+		final EntityTypeImplementor persister = entityEntry.getPersister();
 		final Serializable id = entityEntry.getId();
 		final Object[] hydratedState = entityEntry.getLoadedState();
 
@@ -335,7 +335,7 @@ public final class TwoPhaseLoad {
 	public static void addUninitializedEntity(
 			final EntityKey key,
 			final Object object,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final LockMode lockMode,
 			final SharedSessionContractImplementor session) {
 		session.getPersistenceContext().addEntity(
@@ -364,7 +364,7 @@ public final class TwoPhaseLoad {
 	public static void addUninitializedCachedEntity(
 			final EntityKey key,
 			final Object object,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final LockMode lockMode,
 			final Object version,
 			final SharedSessionContractImplementor session) {

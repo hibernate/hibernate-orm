@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.produce.spi.criteria.path;
 
-import org.hibernate.persister.common.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 
 /**
  * @author Steve Ebersole

@@ -37,8 +37,8 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -117,7 +117,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public boolean containsEntity(String entityName, Serializable identifier) {
-		EntityPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
+		EntityTypeImplementor p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
 		if ( p.hasCache() ) {
 			EntityRegionAccessStrategy cache = p.getCacheAccessStrategy();
 			Object key = cache.generateCacheKey( identifier, p, sessionFactory, null ); // have to assume non tenancy
@@ -135,7 +135,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictEntity(String entityName, Serializable identifier) {
-		EntityPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
+		EntityTypeImplementor p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
 		if ( p.hasCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
@@ -156,7 +156,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictEntityRegion(String entityName) {
-		EntityPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
+		EntityTypeImplementor p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
 		if ( p.hasCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Evicting second-level cache: %s", p.getEntityName() );
@@ -177,7 +177,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictNaturalIdRegion(String entityName) {
-		EntityPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
+		EntityTypeImplementor p = sessionFactory.getMetamodel().getTypeConfiguration().findEntityPersister( entityName );
 		if ( p.hasNaturalIdCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Evicting natural-id cache: %s", p.getEntityName() );
@@ -193,7 +193,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public boolean containsCollection(String role, Serializable ownerIdentifier) {
-		CollectionPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findCollectionPersister( role );
+		PersistentCollectionMetadata p = sessionFactory.getMetamodel().getTypeConfiguration().findCollectionPersister( role );
 		if ( p.hasCache() ) {
 			CollectionRegionAccessStrategy cache = p.getCacheAccessStrategy();
 			Object key = cache.generateCacheKey( ownerIdentifier, p, sessionFactory, null ); // have to assume non tenancy
@@ -206,7 +206,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictCollection(String role, Serializable ownerIdentifier) {
-		CollectionPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findCollectionPersister( role );
+		PersistentCollectionMetadata p = sessionFactory.getMetamodel().getTypeConfiguration().findCollectionPersister( role );
 		if ( p.hasCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
@@ -222,7 +222,7 @@ public class CacheImpl implements CacheImplementor {
 
 	@Override
 	public void evictCollectionRegion(String role) {
-		CollectionPersister p = sessionFactory.getMetamodel().getTypeConfiguration().findCollectionPersister( role );
+		PersistentCollectionMetadata p = sessionFactory.getMetamodel().getTypeConfiguration().findCollectionPersister( role );
 		if ( p.hasCache() ) {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Evicting second-level cache: %s", p.getRole() );

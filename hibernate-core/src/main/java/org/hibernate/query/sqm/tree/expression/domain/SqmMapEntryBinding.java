@@ -6,10 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.type.spi.Type;
 
 /**
  * Represents the ENTRY() function for obtaining the map entries from a {@code Map}-typed association.

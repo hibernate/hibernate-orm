@@ -11,8 +11,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
-import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;

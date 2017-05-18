@@ -21,8 +21,8 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.persister.model.relational.internal.InflightTable;
-import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
+import org.hibernate.metamodel.model.relational.internal.InflightTable;
+import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 
 /**

@@ -6,12 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.entity.spi.IdentifierDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 
 /**
  * @author Steve Ebersole
  */
 public interface SqmEntityIdentifierReference extends SqmNavigableReference {
 	@Override
-	IdentifierDescriptor getReferencedNavigable();
+	EntityIdentifier getReferencedNavigable();
 }

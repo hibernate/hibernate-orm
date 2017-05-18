@@ -22,7 +22,7 @@ import org.hibernate.Session;
 import org.hibernate.collection.internal.PersistentList;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.testing.TestForIssue;
@@ -45,7 +45,7 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-5732"  )
 	public void testInverseListIndex() {
 		// make sure no one changes the mapping
-		final CollectionPersister collectionPersister = sessionFactory().getCollectionPersister( ListOwner.class.getName() + ".children" );
+		final PersistentCollectionMetadata collectionPersister = sessionFactory().getCollectionPersister( ListOwner.class.getName() + ".children" );
 		assertTrue( collectionPersister.isInverse() );
 
 		// do some creations...
@@ -106,7 +106,7 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-5732"  )
 	public void testInverseListIndex2() {
 		// make sure no one changes the mapping
-		final CollectionPersister collectionPersister = sessionFactory().getCollectionPersister( Order.class.getName() + ".lineItems" );
+		final PersistentCollectionMetadata collectionPersister = sessionFactory().getCollectionPersister( Order.class.getName() + ".lineItems" );
 		assertTrue( collectionPersister.isInverse() );
 
 		// do some creations...

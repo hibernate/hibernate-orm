@@ -26,7 +26,7 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
 
@@ -42,7 +42,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	protected final Serializable id;
 	protected Object[] loadedState;
 	protected Object version;
-	protected final EntityPersister persister; // permanent but we only need the entityName state in a non transient way
+	protected final EntityTypeImplementor persister; // permanent but we only need the entityName state in a non transient way
 	protected transient EntityKey cachedEntityKey; // cached EntityKey (lazy-initialized)
 	protected final transient Object rowId;
 	protected final transient PersistenceContext persistenceContext;
@@ -87,7 +87,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final EntityMode entityMode,
 			final String tenantId,
 			final boolean disableVersionIncrement,
@@ -105,7 +105,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final boolean disableVersionIncrement,
 			final PersistenceContext persistenceContext) {
 		setCompressedValue( EnumState.STATUS, status );
@@ -234,7 +234,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public EntityPersister getPersister() {
+	public EntityTypeImplementor getPersister() {
 		return persister;
 	}
 

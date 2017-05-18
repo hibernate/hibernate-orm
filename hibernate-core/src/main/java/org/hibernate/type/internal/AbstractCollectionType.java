@@ -31,7 +31,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.ForeignKeyDirection;
@@ -104,7 +104,7 @@ public abstract class AbstractCollectionType extends AbstractTypeImpl implements
 
 		if ( !getReturnedClass().isInstance( value ) && !PersistentCollection.class.isInstance( value ) ) {
 			// its most likely the collection-key
-			final CollectionPersister persister = getCollectionPersister();
+			final PersistentCollectionMetadata persister = getCollectionPersister();
 			if ( persister.getKeyType().getReturnedClass().isInstance( value ) ) {
 				return roleName + "#" + getCollectionPersister( ).getKeyType().toLoggableString( value, factory );
 			}
@@ -318,7 +318,7 @@ public abstract class AbstractCollectionType extends AbstractTypeImpl implements
 	}
 
 	@Override
-	public CollectionPersister getCollectionPersister() {
+	public PersistentCollectionMetadata getCollectionPersister() {
 		return typeConfiguration.findCollectionPersister( roleName );
 	}
 

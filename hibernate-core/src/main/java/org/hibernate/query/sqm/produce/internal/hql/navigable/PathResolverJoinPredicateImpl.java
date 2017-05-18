@@ -6,10 +6,10 @@
  */
 package org.hibernate.query.sqm.produce.internal.hql.navigable;
 
-import org.hibernate.persister.common.spi.PersistentAttribute;
-import org.hibernate.persister.common.spi.PluralPersistentAttribute;
-import org.hibernate.persister.common.spi.SingularPersistentAttribute;
-import org.hibernate.persister.common.spi.SingularPersistentAttribute.SingularAttributeClassification;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.SingularAttributeClassification;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.produce.spi.ResolutionContext;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
@@ -17,7 +17,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerRefer
 import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 
-import static org.hibernate.persister.collection.spi.CollectionElement.*;
+import static org.hibernate.metamodel.model.domain.spi.CollectionElement.*;
 
 /**
  * PathResolver implementation for paths found in a join predicate.
@@ -70,9 +70,9 @@ public class PathResolverJoinPredicateImpl extends PathResolverBasicImpl {
 		}
 		else {
 			final PluralPersistentAttribute attrRef = (PluralPersistentAttribute) joinedAttribute;
-			if ( attrRef.getCollectionPersister().getElementDescriptor().getClassification() == ElementClassification.ANY
-					|| attrRef.getCollectionPersister().getElementDescriptor().getClassification() == ElementClassification.ONE_TO_MANY
-					|| attrRef.getCollectionPersister().getElementDescriptor().getClassification() == ElementClassification.MANY_TO_MANY ) {
+			if ( attrRef.getPersistentCollectionMetadata().getElementDescriptor().getClassification() == ElementClassification.ANY
+					|| attrRef.getPersistentCollectionMetadata().getElementDescriptor().getClassification() == ElementClassification.ONE_TO_MANY
+					|| attrRef.getPersistentCollectionMetadata().getElementDescriptor().getClassification() == ElementClassification.MANY_TO_MANY ) {
 				throw new SemanticException(
 						"On-clause predicate of a qualified join cannot contain implicit collection joins : " +
 								joinedAttribute.getAttributeName()

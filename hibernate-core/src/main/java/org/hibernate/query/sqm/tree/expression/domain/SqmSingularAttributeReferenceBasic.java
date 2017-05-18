@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.internal.SingularPersistentAttributeBasic;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 
 /**

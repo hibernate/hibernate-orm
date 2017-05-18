@@ -21,7 +21,7 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -30,7 +30,7 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gavin King
  */
 public abstract class CollectionAction implements Executable, Serializable, Comparable {
-	private transient CollectionPersister persister;
+	private transient PersistentCollectionMetadata persister;
 	private transient SharedSessionContractImplementor session;
 	private final PersistentCollection collection;
 
@@ -38,7 +38,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	private final String collectionRole;
 
 	protected CollectionAction(
-			final CollectionPersister persister,
+			final PersistentCollectionMetadata persister,
 			final PersistentCollection collection, 
 			final Serializable key, 
 			final SharedSessionContractImplementor session) {
@@ -106,7 +106,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		return persister.getCollectionSpaces();
 	}
 
-	protected final CollectionPersister getPersister() {
+	protected final PersistentCollectionMetadata getPersister() {
 		return persister;
 	}
 
@@ -162,10 +162,10 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 
 	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {
 		private final Serializable key;
-		private final CollectionPersister persister;
+		private final PersistentCollectionMetadata persister;
 		private final SoftLock lock;
 
-		private CacheCleanupProcess(Serializable key, CollectionPersister persister, SoftLock lock) {
+		private CacheCleanupProcess(Serializable key, PersistentCollectionMetadata persister, SoftLock lock) {
 			this.key = key;
 			this.persister = persister;
 			this.lock = lock;

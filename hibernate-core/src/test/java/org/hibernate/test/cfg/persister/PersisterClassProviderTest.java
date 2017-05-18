@@ -11,7 +11,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.SessionFactoryRegistry;
-import org.hibernate.persister.spi.PersisterClassResolver;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -45,7 +45,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 
 		serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
-				.addService( PersisterClassResolver.class, new GoofyPersisterClassProvider() )
+				.addService( RuntimeModelNodeClassResolver.class, new GoofyRuntimeModelNodeClassProvider() )
 				.build();
 		cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
@@ -57,7 +57,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		catch ( MappingException e ) {
 			assertEquals(
 					"The entity persister should be overridden",
-					GoofyPersisterClassProvider.NoopEntityPersister.class,
+					GoofyRuntimeModelNodeClassProvider.NoopEntityPersister.class,
 					( (GoofyException) e.getCause() ).getValue()
 			);
 		}
@@ -72,7 +72,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		cfg.addAnnotatedClass( Window.class );
 		serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
-				.addService( PersisterClassResolver.class, new GoofyPersisterClassProvider() )
+				.addService( RuntimeModelNodeClassResolver.class, new GoofyRuntimeModelNodeClassProvider() )
 				.build();
 		try {
 			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
@@ -82,7 +82,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		catch ( MappingException e ) {
 			assertEquals(
 					"The collection persister should be overridden but not the entity persister",
-					GoofyPersisterClassProvider.NoopCollectionPersister.class,
+					GoofyRuntimeModelNodeClassProvider.NoopCollectionPersister.class,
 					( (GoofyException) e.getCause() ).getValue() );
 		}
 		finally {
@@ -95,7 +95,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		cfg.addAnnotatedClass( Palmtree.class );
 		serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
-				.addService( PersisterClassResolver.class, new GoofyPersisterClassProvider() )
+				.addService( RuntimeModelNodeClassResolver.class, new GoofyRuntimeModelNodeClassProvider() )
 				.build();
 		try {
 			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
@@ -105,7 +105,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		catch ( MappingException e ) {
 			assertEquals(
 					"The entity persisters should be overridden in a class hierarchy",
-					GoofyPersisterClassProvider.NoopEntityPersister.class,
+					GoofyRuntimeModelNodeClassProvider.NoopEntityPersister.class,
 					( (GoofyException) e.getCause() ).getValue() );
 		}
 		finally {

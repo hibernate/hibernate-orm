@@ -14,8 +14,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
@@ -68,7 +68,7 @@ public class WrapVisitor extends ProxyVisitor {
 			return null;
 		}
 		else {
-			CollectionPersister persister = session.getFactory().getTypeConfiguration().findCollectionPersister( collectionType.getRole() );
+			PersistentCollectionMetadata persister = session.getFactory().getTypeConfiguration().findCollectionPersister( collectionType.getRole() );
 
 			final PersistenceContext persistenceContext = session.getPersistenceContext();
 			//TODO: move into collection type, so we can use polymorphism!
@@ -134,7 +134,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	void process(Object object, EntityPersister persister) throws HibernateException {
+	void process(Object object, EntityTypeImplementor persister) throws HibernateException {
 		final Object[] values = persister.getPropertyValues( object );
 		final Type[] types = persister.getPropertyTypes();
 		processEntityPropertyValues( values, types );

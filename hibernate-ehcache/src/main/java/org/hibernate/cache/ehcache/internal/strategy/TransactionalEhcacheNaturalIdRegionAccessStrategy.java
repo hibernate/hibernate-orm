@@ -17,7 +17,7 @@ import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * JTA NaturalIdRegionAccessStrategy.
@@ -137,7 +137,7 @@ public class TransactionalEhcacheNaturalIdRegionAccessStrategy
 	}
 
 	@Override
-	public Object generateCacheKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
+	public Object generateCacheKey(Object[] naturalIdValues, EntityTypeImplementor persister, SharedSessionContractImplementor session) {
 		return DefaultCacheKeysFactory.createNaturalIdKey(naturalIdValues, persister, session);
 	}
 

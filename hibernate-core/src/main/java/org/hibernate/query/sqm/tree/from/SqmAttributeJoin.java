@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;
@@ -36,7 +36,7 @@ public class SqmAttributeJoin
 			SqmAttributeReference attributeBinding,
 			String uid,
 			String alias,
-			EntityPersister intrinsicSubclassIndicator,
+			EntityTypeImplementor intrinsicSubclassIndicator,
 			SqmJoinType joinType,
 			boolean fetched) {
 		super(

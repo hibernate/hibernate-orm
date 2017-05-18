@@ -35,8 +35,8 @@ import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.IdentitySet;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.PostgresUUIDType;
@@ -145,7 +145,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 								final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
 
 								if ( entry != null ) {
-									final CollectionPersister persister = entry.getLoadedPersister();
+									final PersistentCollectionMetadata persister = entry.getLoadedPersister();
 									if ( persister.isExtraLazy() ) {
 										if ( hasQueuedOperations() ) {
 											session.flush();
@@ -172,7 +172,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		return false;
 	}
 
-	protected Type getElementType(CollectionPersister persister) {
+	protected Type getElementType(PersistentCollectionMetadata persister) {
 		return (Type) persister.getElementType();
 	}
 
@@ -285,7 +285,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 						@Override
 						public Boolean doWork() {
 							final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
-							final CollectionPersister persister = entry.getLoadedPersister();
+							final PersistentCollectionMetadata persister = entry.getLoadedPersister();
 							if ( persister.isExtraLazy() ) {
 								if ( hasQueuedOperations() ) {
 									session.flush();
@@ -313,7 +313,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 						@Override
 						public Boolean doWork() {
 							final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
-							final CollectionPersister persister = entry.getLoadedPersister();
+							final PersistentCollectionMetadata persister = entry.getLoadedPersister();
 							if ( persister.isExtraLazy() ) {
 								if ( hasQueuedOperations() ) {
 									session.flush();
@@ -345,7 +345,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				@Override
 				public Object doWork() {
 					final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
-					final CollectionPersister persister = entry.getLoadedPersister();
+					final PersistentCollectionMetadata persister = entry.getLoadedPersister();
 					isExtraLazy = persister.isExtraLazy();
 					if ( isExtraLazy ) {
 						if ( hasQueuedOperations() ) {
@@ -481,7 +481,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * @param copyCache - mapping from entity in the process of being
 	 *                    merged to managed copy.
 	 */
-	public final void replaceQueuedOperationValues(CollectionPersister persister, Map copyCache) {
+	public final void replaceQueuedOperationValues(PersistentCollectionMetadata persister, Map copyCache) {
 		for ( DelayedOperation operation : operationQueue ) {
 			if ( ValueDelayedOperation.class.isInstance( operation ) ) {
 				( (ValueDelayedOperation) operation ).replace( persister, copyCache );
@@ -694,7 +694,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	@Override
-	public boolean needsRecreate(CollectionPersister persister) {
+	public boolean needsRecreate(PersistentCollectionMetadata persister) {
 		// Workaround for situations like HHH-7072.  If the collection element is a component that consists entirely
 		// of nullable properties, we currently have to forcefully recreate the entire collection.  See the use
 		// of hasNotNullableColumns in the AbstractCollectionPersister constructor for more info.  In order to delete
@@ -799,11 +799,11 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	@Override
-	public void preInsert(CollectionPersister persister) throws HibernateException {
+	public void preInsert(PersistentCollectionMetadata persister) throws HibernateException {
 	}
 
 	@Override
-	public void afterRowInsert(CollectionPersister persister, Object entry, int i) throws HibernateException {
+	public void afterRowInsert(PersistentCollectionMetadata persister, Object entry, int i) throws HibernateException {
 	}
 
 	@Override
@@ -1140,7 +1140,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	protected interface ValueDelayedOperation extends DelayedOperation {
-		void replace(CollectionPersister collectionPersister, Map copyCache);
+		void replace(PersistentCollectionMetadata collectionPersister, Map copyCache);
 	}
 
 	protected abstract class AbstractValueDelayedOperation implements ValueDelayedOperation {
@@ -1152,7 +1152,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			this.orphan = orphan;
 		}
 
-		public void replace(CollectionPersister persister, Map copyCache) {
+		public void replace(PersistentCollectionMetadata persister, Map copyCache) {
 			if ( addedValue != null ) {
 				addedValue = getReplacement( (Type) persister.getElementType(), addedValue, copyCache );
 			}
@@ -1195,7 +1195,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			return oldElements;
 		}
 
-		final EntityPersister entityPersister = session.getFactory().getEntityPersister( entityName );
+		final EntityTypeImplementor entityPersister = session.getFactory().getEntityPersister( entityName );
 		final Type idType = entityPersister.getIdentifierType();
 		final boolean useIdDirect = mayUseIdDirect( idType );
 
@@ -1259,7 +1259,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			SharedSessionContractImplementor session) {
 
 		if ( entityInstance != null && ForeignKeys.isNotTransient( entityName, entityInstance, null, session ) ) {
-			final EntityPersister entityPersister = session.getFactory().getEntityPersister( entityName );
+			final EntityTypeImplementor entityPersister = session.getFactory().getEntityPersister( entityName );
 			final Type idType = entityPersister.getIdentifierType();
 
 			final Serializable idOfCurrent = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, entityInstance, session );

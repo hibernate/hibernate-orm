@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.AbstractEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.TypeHelper;
 
@@ -42,7 +42,7 @@ public abstract class AbstractReassociateEventListener implements Serializable {
 	 *
 	 * @return An EntityEntry representing the entity within this session.
 	 */
-	protected final EntityEntry reassociate(AbstractEvent event, Object object, Serializable id, EntityPersister persister) {
+	protected final EntityEntry reassociate(AbstractEvent event, Object object, Serializable id, EntityTypeImplementor persister) {
 
 		if ( log.isTraceEnabled() ) {
 			log.tracev(

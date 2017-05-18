@@ -28,7 +28,7 @@ import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.spi.Type;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -124,7 +124,7 @@ public class EncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFunct
 		session.getTransaction().commit();
 		session.close();
 
-		final EntityPersister entityPersister = sessionFactory().getEntityPersister( CardField.class.getName() );
+		final EntityTypeImplementor entityPersister = sessionFactory().getEntityPersister( CardField.class.getName() );
 
 		final List results = getResults(
 				entityPersister,
@@ -165,7 +165,7 @@ public class EncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFunct
 		session.close();
 	}
 
-	private List getResults(final EntityPersister entityPersister, final Callback callback) {
+	private List getResults(final EntityTypeImplementor entityPersister, final Callback callback) {
 		final LoadPlan plan = Helper.INSTANCE.buildLoadPlan( sessionFactory(), entityPersister );
 
 		final LoadQueryDetails queryDetails = Helper.INSTANCE.buildLoadQueryDetails( plan, sessionFactory() );

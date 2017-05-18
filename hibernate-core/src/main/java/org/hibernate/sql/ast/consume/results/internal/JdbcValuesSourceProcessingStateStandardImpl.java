@@ -32,7 +32,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
@@ -87,7 +87,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	@Override
-	public void registerLoadingEntity(EntityKey entityKey, EntityPersister persister, Object entityInstance, Object[] hydratedState) {
+	public void registerLoadingEntity(EntityKey entityKey, EntityTypeImplementor persister, Object entityInstance, Object[] hydratedState) {
 		if ( loadingEntityMap == null ) {
 			loadingEntityMap = new HashMap<>();
 		}
@@ -226,7 +226,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			final PreLoadEvent preLoadEvent) throws HibernateException {
 		// see if there is a hydrating entity for this
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		final EntityPersister persister = entityEntry.getPersister();
+		final EntityTypeImplementor persister = entityEntry.getPersister();
 		final Serializable id = entityEntry.getId();
 		final Object[] hydratedState = entityEntry.getLoadedState();
 
@@ -397,14 +397,14 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 	private static class LoadingEntity {
 		private final EntityKey entityKey;
-		private final EntityPersister persister;
+		private final EntityTypeImplementor persister;
 		private final Object entityInstance;
 		private final Object rowId;
 		private final Object[] hydratedEntityState;
 
 		public LoadingEntity(
 				EntityKey entityKey,
-				EntityPersister persister,
+				EntityTypeImplementor persister,
 				Object entityInstance,
 				Object rowId,
 				Object[] hydratedEntityState) {

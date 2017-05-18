@@ -22,7 +22,7 @@ import org.hibernate.metamodel.internal.Helper;
 import org.hibernate.metamodel.internal.PluralAttributeImpl;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.Type;
 
@@ -132,7 +132,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		final Joinable joinable = attributeType.getAssociatedJoinable( sessionFactory() );
 
 		if ( joinable.isCollection() ) {
-			final EntityPersister elementEntityPersister = ( (QueryableCollection) joinable ).getElementPersister();
+			final EntityTypeImplementor elementEntityPersister = ( (QueryableCollection) joinable ).getElementPersister();
 			if ( type == null ) {
 				type = elementEntityPersister.getMappedClass();
 			}
@@ -150,7 +150,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 			}
 		}
 		else {
-			final EntityPersister entityPersister = (EntityPersister) joinable;
+			final EntityTypeImplementor entityPersister = (EntityTypeImplementor) joinable;
 			if ( type == null ) {
 				type = entityPersister.getMappedClass();
 			}
@@ -194,7 +194,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 	 * @return {@code true} indicates it is treatable as such; {@code false} indicates it is not
 	 */
 	@SuppressWarnings("unchecked")
-	private boolean isTreatableAs(EntityPersister entityPersister, Class type) {
+	private boolean isTreatableAs(EntityTypeImplementor entityPersister, Class type) {
 		return type.isAssignableFrom( entityPersister.getMappedClass() );
 	}
 
@@ -238,7 +238,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		}
 
 		final AssociationType indexAssociationType = (AssociationType) indexType;
-		final EntityPersister indexEntityPersister = (EntityPersister) indexAssociationType.getAssociatedJoinable( sessionFactory() );
+		final EntityTypeImplementor indexEntityPersister = (EntityTypeImplementor) indexAssociationType.getAssociatedJoinable( sessionFactory() );
 
 		if ( type == null ) {
 			type = indexEntityPersister.getMappedClass();

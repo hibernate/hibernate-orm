@@ -17,7 +17,7 @@ import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
 
@@ -181,7 +181,7 @@ public class Example implements Criterion {
 	@Override
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) {
 		final StringBuilder buf = new StringBuilder().append( '(' );
-		final EntityPersister meta = criteriaQuery.getFactory().getEntityPersister(
+		final EntityTypeImplementor meta = criteriaQuery.getFactory().getEntityPersister(
 				criteriaQuery.getEntityName( criteria )
 		);
 		final String[] propertyNames = meta.getPropertyNames();
@@ -240,7 +240,7 @@ public class Example implements Criterion {
 
 	@Override
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) {
-		final EntityPersister meta = criteriaQuery.getFactory().getEntityPersister(
+		final EntityTypeImplementor meta = criteriaQuery.getFactory().getEntityPersister(
 				criteriaQuery.getEntityName( criteria )
 		);
 		final String[] propertyNames = meta.getPropertyNames();
@@ -312,7 +312,7 @@ public class Example implements Criterion {
 	}
 
 	private EntityMode getEntityMode(Criteria criteria, CriteriaQuery criteriaQuery) {
-		final EntityPersister meta = criteriaQuery.getFactory().getEntityPersister(
+		final EntityTypeImplementor meta = criteriaQuery.getFactory().getEntityPersister(
 				criteriaQuery.getEntityName( criteria )
 		);
 		final EntityMode result = meta.getEntityMode();

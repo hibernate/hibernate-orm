@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 
 /**

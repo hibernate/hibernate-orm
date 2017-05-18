@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * An EntityEntry implementation for mutable entities.
@@ -40,7 +40,7 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final EntityMode entityMode,
 			final String tenantId,
 			final boolean disableVersionIncrement,
@@ -58,7 +58,7 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final boolean disableVersionIncrement,
 			final PersistenceContext persistenceContext) {
 		super( status, loadedState, rowId, id, version, lockMode, existsInDatabase, persister,

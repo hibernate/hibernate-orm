@@ -13,7 +13,7 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -33,7 +33,7 @@ public final class EntityKey implements Serializable {
 
 	private final Serializable identifier;
 	private final int hashCode;
-	private final EntityPersister persister;
+	private final EntityTypeImplementor persister;
 
 	/**
 	 * Construct a unique identifier for an entity class instance.
@@ -45,7 +45,7 @@ public final class EntityKey implements Serializable {
 	 * @param id The entity id
 	 * @param persister The entity persister
 	 */
-	public EntityKey(Serializable id, EntityPersister persister) {
+	public EntityKey(Serializable id, EntityTypeImplementor persister) {
 		this.persister = persister;
 		if ( id == null ) {
 			throw new AssertionFailure( "null identifier" );
@@ -141,7 +141,7 @@ public final class EntityKey implements Serializable {
 	public static EntityKey deserialize(ObjectInputStream ois, SessionFactoryImplementor sessionFactory) throws IOException, ClassNotFoundException {
 		final Serializable id = (Serializable) ois.readObject();
 		final String entityName = (String) ois.readObject();
-		final EntityPersister entityPersister = sessionFactory.getEntityPersister( entityName );
+		final EntityTypeImplementor entityPersister = sessionFactory.getEntityPersister( entityName );
 		return new EntityKey(id, entityPersister);
 	}
 }

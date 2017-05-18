@@ -13,7 +13,7 @@ import org.hibernate.cache.jcache.JCacheCollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 
 /**
  * @author Alex Snaps
@@ -27,7 +27,7 @@ public class NonStrictCollectionRegionAccessStrategy
 	}
 
 	@Override
-	public Object generateCacheKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	public Object generateCacheKey(Object id, PersistentCollectionMetadata persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		return DefaultCacheKeysFactory.createCollectionKey( id, persister, factory, tenantIdentifier );
 	}
 

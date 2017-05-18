@@ -15,7 +15,7 @@ import org.hibernate.MappingException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.UserCollectionType;
@@ -59,7 +59,7 @@ public class CustomCollectionType extends CollectionType {
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key)
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, PersistentCollectionMetadata persister, Serializable key)
 	throws HibernateException {
 		return userType.instantiate( session, persister );
 	}
@@ -97,7 +97,7 @@ public class CustomCollectionType extends CollectionType {
 	@Override
 	public Object replaceElements(Object original, Object target, Object owner, Map copyCache, SharedSessionContractImplementor session)
 	throws HibernateException {
-		CollectionPersister cp = session.getFactory().getMetamodel().collectionPersister( getRole() );
+		PersistentCollectionMetadata cp = session.getFactory().getMetamodel().collectionPersister( getRole() );
 		return userType.replaceElements(original, target, cp, owner, copyCache, session);
 	}
 

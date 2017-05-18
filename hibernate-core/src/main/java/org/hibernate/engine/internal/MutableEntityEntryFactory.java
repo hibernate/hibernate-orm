@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * Factory for the safe approach implementation of {@link org.hibernate.engine.spi.EntityEntry}.
@@ -41,7 +41,7 @@ public class MutableEntityEntryFactory implements EntityEntryFactory {
 			Object version,
 			LockMode lockMode,
 			boolean existsInDatabase,
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			boolean disableVersionIncrement,
 			PersistenceContext persistenceContext) {
 		return new MutableEntityEntry(

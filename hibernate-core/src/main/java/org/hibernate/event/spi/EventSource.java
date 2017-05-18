@@ -14,7 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * @author Gavin King
@@ -30,7 +30,7 @@ public interface EventSource extends SessionImplementor {
 	 * Instantiate an entity instance, using either an interceptor,
 	 * or the given persister
 	 */
-	Object instantiate(EntityPersister persister, Serializable id) throws HibernateException;
+	Object instantiate(EntityTypeImplementor persister, Serializable id) throws HibernateException;
 
 	/**
 	 * Force an immediate flush

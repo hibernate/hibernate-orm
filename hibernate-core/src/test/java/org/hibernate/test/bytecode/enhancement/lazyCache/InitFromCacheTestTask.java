@@ -9,7 +9,7 @@ package org.hibernate.test.bytecode.enhancement.lazyCache;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 import org.hibernate.testing.cache.BaseRegion;
 
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 public class InitFromCacheTestTask extends AbstractCachingTestTask {
 	@Override
 	public void execute() {
-		EntityPersister p = sessionFactory().getEntityPersister( Document.class.getName() );
+		EntityTypeImplementor p = sessionFactory().getEntityPersister( Document.class.getName() );
 		assertTrue( p.hasCache() );
 		BaseRegion region = (BaseRegion) p.getCacheAccessStrategy().getRegion();
 

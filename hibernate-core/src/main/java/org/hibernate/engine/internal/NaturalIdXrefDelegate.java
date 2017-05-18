@@ -19,7 +19,7 @@ import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -37,7 +37,7 @@ public class NaturalIdXrefDelegate {
 	private static final Logger LOG = Logger.getLogger( NaturalIdXrefDelegate.class );
 
 	private final StatefulPersistenceContext persistenceContext;
-	private final ConcurrentHashMap<EntityPersister, NaturalIdResolutionCache> naturalIdResolutionCacheMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<EntityTypeImplementor, NaturalIdResolutionCache> naturalIdResolutionCacheMap = new ConcurrentHashMap<>();
 
 	/**
 	 * Constructs a NaturalIdXrefDelegate
@@ -68,7 +68,7 @@ public class NaturalIdXrefDelegate {
 	 *
 	 * @return {@code true} if a new entry was actually added; {@code false} otherwise.
 	 */
-	public boolean cacheNaturalIdCrossReference(EntityPersister persister, Serializable pk, Object[] naturalIdValues) {
+	public boolean cacheNaturalIdCrossReference(EntityTypeImplementor persister, Serializable pk, Object[] naturalIdValues) {
 		validateNaturalId( persister, naturalIdValues );
 
 		NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
@@ -91,7 +91,7 @@ public class NaturalIdXrefDelegate {
 	 * 
 	 * @return The cached values, if any.  May be different from incoming values.
 	 */
-	public Object[] removeNaturalIdCrossReference(EntityPersister persister, Serializable pk, Object[] naturalIdValues) {
+	public Object[] removeNaturalIdCrossReference(EntityTypeImplementor persister, Serializable pk, Object[] naturalIdValues) {
 		persister = locatePersisterForKey( persister );
 		validateNaturalId( persister, naturalIdValues );
 
@@ -131,7 +131,7 @@ public class NaturalIdXrefDelegate {
 	 * 
 	 * @return {@code true} if the given naturalIdValues match the current cached values; {@code false} otherwise.
 	 */
-	public boolean sameAsCached(EntityPersister persister, Serializable pk, Object[] naturalIdValues) {
+	public boolean sameAsCached(EntityTypeImplementor persister, Serializable pk, Object[] naturalIdValues) {
 		final NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
 		return entityNaturalIdResolutionCache != null
 				&& entityNaturalIdResolutionCache.sameAsCached( pk, naturalIdValues );
@@ -145,7 +145,7 @@ public class NaturalIdXrefDelegate {
 	 * 
 	 * @return The root persister.
 	 */
-	protected EntityPersister locatePersisterForKey(EntityPersister persister) {
+	protected EntityTypeImplementor locatePersisterForKey(EntityTypeImplementor persister) {
 		return persistenceContext.getSession().getFactory().getEntityPersister( persister.getRootEntityName() );
 	}
 
@@ -158,7 +158,7 @@ public class NaturalIdXrefDelegate {
 	 * @param persister The persister representing the entity type.
 	 * @param naturalIdValues The natural id values
 	 */
-	protected void validateNaturalId(EntityPersister persister, Object[] naturalIdValues) {
+	protected void validateNaturalId(EntityTypeImplementor persister, Object[] naturalIdValues) {
 		if ( !persister.hasNaturalIdentifier() ) {
 			throw new IllegalArgumentException( "Entity did not define a natrual-id" );
 		}
@@ -175,7 +175,7 @@ public class NaturalIdXrefDelegate {
 	 * 
 	 * @return The corresponding cross-referenced natural id values, or {@code null} if none 
 	 */
-	public Object[] findCachedNaturalId(EntityPersister persister, Serializable pk) {
+	public Object[] findCachedNaturalId(EntityTypeImplementor persister, Serializable pk) {
 		persister = locatePersisterForKey( persister );
 		final NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
 		if ( entityNaturalIdResolutionCache == null ) {
@@ -202,7 +202,7 @@ public class NaturalIdXrefDelegate {
 	 * 		{@link PersistenceContext.NaturalIdHelper#INVALID_NATURAL_ID_REFERENCE},
 	 * 		or {@code null} if none 
 	 */
-	public Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues) {
+	public Serializable findCachedNaturalIdResolution(EntityTypeImplementor persister, Object[] naturalIdValues) {
 		persister = locatePersisterForKey( persister );
 		validateNaturalId( persister, naturalIdValues );
 
@@ -290,7 +290,7 @@ public class NaturalIdXrefDelegate {
 	 * 
 	 * @see org.hibernate.NaturalIdLoadAccess#setSynchronizationEnabled
 	 */
-	public Collection<Serializable> getCachedPkResolutions(EntityPersister persister) {
+	public Collection<Serializable> getCachedPkResolutions(EntityTypeImplementor persister) {
 		persister = locatePersisterForKey( persister );
 
 		Collection<Serializable> pks = null;
@@ -318,7 +318,7 @@ public class NaturalIdXrefDelegate {
 	 *
 	 * @see org.hibernate.NaturalIdLoadAccess#setSynchronizationEnabled
 	 */
-	public void stashInvalidNaturalIdReference(EntityPersister persister, Object[] invalidNaturalIdValues) {
+	public void stashInvalidNaturalIdReference(EntityTypeImplementor persister, Object[] invalidNaturalIdValues) {
 		persister = locatePersisterForKey( persister );
 
 		final NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
@@ -343,12 +343,12 @@ public class NaturalIdXrefDelegate {
 	 * Used to put natural id values into collections.  Useful mainly to apply equals/hashCode implementations.
 	 */
 	private static class CachedNaturalId implements Serializable {
-		private final EntityPersister persister;
+		private final EntityTypeImplementor persister;
 		private final Object[] values;
 		private final Type[] naturalIdTypes;
 		private int hashCode;
 
-		public CachedNaturalId(EntityPersister persister, Object[] values) {
+		public CachedNaturalId(EntityTypeImplementor persister, Object[] values) {
 			this.persister = persister;
 			this.values = values;
 
@@ -410,7 +410,7 @@ public class NaturalIdXrefDelegate {
 	 * Represents the persister-specific cross-reference cache.
 	 */
 	private static class NaturalIdResolutionCache implements Serializable {
-		private final EntityPersister persister;
+		private final EntityTypeImplementor persister;
 		private final Type[] naturalIdTypes;
 
 		private Map<Serializable, CachedNaturalId> pkToNaturalIdMap = new ConcurrentHashMap<>();
@@ -418,7 +418,7 @@ public class NaturalIdXrefDelegate {
 
 		private List<CachedNaturalId> invalidNaturalIdList;
 
-		private NaturalIdResolutionCache(EntityPersister persister) {
+		private NaturalIdResolutionCache(EntityTypeImplementor persister) {
 			this.persister = persister;
 
 			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
@@ -429,7 +429,7 @@ public class NaturalIdXrefDelegate {
 			}
 		}
 
-		public EntityPersister getPersister() {
+		public EntityTypeImplementor getPersister() {
 			return persister;
 		}
 

@@ -16,7 +16,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
@@ -50,7 +50,7 @@ public class EntityTypeImpl extends AbstractIdentifiableType implements EntityTy
 	}
 
 	@Override
-	public EntityPersister getEntityPersister() {
+	public EntityTypeImplementor getEntityPersister() {
 		return getTypeConfiguration().findEntityPersister( getEntityName() );
 	}
 

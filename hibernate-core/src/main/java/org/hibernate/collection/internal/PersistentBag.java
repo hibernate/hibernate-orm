@@ -18,9 +18,7 @@ import java.util.ListIterator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.CollectionType;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -84,13 +82,13 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	}
 
 	@Override
-	public Iterator entries(CollectionPersister persister) {
+	public Iterator entries(PersistentCollectionMetadata persister) {
 		return bag.iterator();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object readFrom(ResultSet rs, CollectionPersister persister, CollectionAliases descriptor, Object owner)
+	public Object readFrom(ResultSet rs, PersistentCollectionMetadata persister, CollectionAliases descriptor, Object owner)
 			throws HibernateException, SQLException {
 		// note that if we load this collection from a cartesian product
 		// the multiplicity would be broken ... so use an idbag instead
@@ -102,12 +100,12 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	}
 
 	@Override
-	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
+	public void beforeInitialize(PersistentCollectionMetadata persister, int anticipatedSize) {
 		this.bag = (List) persister.getOrmType().instantiate( anticipatedSize );
 	}
 
 	@Override
-	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
+	public boolean equalsSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
 		final Type elementType = getElementType( persister );
 		final List sn = (List) getSnapshot();
 		if ( sn.size() != bag.size() ) {
@@ -142,7 +140,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Serializable getSnapshot(CollectionPersister persister)
+	public Serializable getSnapshot(PersistentCollectionMetadata persister)
 			throws HibernateException {
 		final ArrayList clonedList = new ArrayList( bag.size() );
 		for ( Object item : bag ) {
@@ -158,7 +156,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	}
 
 	@Override
-	public Serializable disassemble(CollectionPersister persister)
+	public Serializable disassemble(PersistentCollectionMetadata persister)
 			throws HibernateException {
 		final int length = bag.size();
 		final Serializable[] result = new Serializable[length];
@@ -170,7 +168,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner)
+	public void initializeFromCache(PersistentCollectionMetadata persister, Serializable disassembled, Object owner)
 			throws HibernateException {
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;
@@ -184,7 +182,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	}
 
 	@Override
-	public boolean needsRecreate(CollectionPersister persister) {
+	public boolean needsRecreate(PersistentCollectionMetadata persister) {
 		return !persister.isOneToMany();
 	}
 
@@ -199,7 +197,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
+	public Iterator getDeletes(PersistentCollectionMetadata persister, boolean indexIsFormula) throws HibernateException {
 		final Type elementType = getElementType( persister );
 		final ArrayList deletes = new ArrayList();
 		final List sn = (List) getSnapshot();
@@ -391,7 +389,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	}
 
 	@Override
-	public Object getIndex(Object entry, int i, CollectionPersister persister) {
+	public Object getIndex(Object entry, int i, PersistentCollectionMetadata persister) {
 		throw new UnsupportedOperationException("Bags don't have indexes");
 	}
 

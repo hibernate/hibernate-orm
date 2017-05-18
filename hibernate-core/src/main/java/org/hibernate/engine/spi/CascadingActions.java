@@ -19,7 +19,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.EntityType;
@@ -373,7 +373,7 @@ public class CascadingActions {
 		public void noCascade(
 				EventSource session,
 				Object parent,
-				EntityPersister persister,
+				EntityTypeImplementor persister,
 				Type propertyType,
 				int propertyIndex) {
 			if ( propertyType.getClassification().equals( Type.Classification.ENTITY ) ) {
@@ -461,7 +461,7 @@ public class CascadingActions {
 		}
 
 		@Override
-		public void noCascade(EventSource session, Object parent, EntityPersister persister, Type propertyType, int propertyIndex) {
+		public void noCascade(EventSource session, Object parent, EntityTypeImplementor persister, Type propertyType, int propertyIndex) {
 		}
 
 		@Override

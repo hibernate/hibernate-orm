@@ -6,11 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.persister.common.spi.PluralPersistentAttribute;
-import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.queryable.spi.ExpressableType;
-import org.hibernate.persister.queryable.spi.NavigableContainerReferenceInfo;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.queryable.spi.NavigableContainerReferenceInfo;
 import org.hibernate.query.spi.NavigablePath;
 
 /**
@@ -40,7 +40,7 @@ public abstract class AbstractSqmCollectionElementReference extends AbstractSqmN
 
 	@Override
 	public Navigable getReferencedNavigable() {
-		return getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getElementDescriptor();
+		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
 	}
 
 	@Override
@@ -82,7 +82,7 @@ public abstract class AbstractSqmCollectionElementReference extends AbstractSqmN
 	}
 
 	@Override
-	public EntityPersister getIntrinsicSubclassEntityPersister() {
+	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
 		// for most element classifications, there is none
 		return null;
 	}

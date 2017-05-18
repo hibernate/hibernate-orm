@@ -12,7 +12,7 @@ import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -103,7 +103,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		int canDirtyCheckCount = 0;
 
 		@Override
-		public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session) {
+		public boolean canDirtyCheck(Object entity, EntityTypeImplementor persister, Session session) {
 			canDirtyCheckCount++;
 			System.out.println( "canDirtyCheck called" );
 			return Thing.class.isInstance( entity );
@@ -112,7 +112,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		int isDirtyCount = 0;
 
 		@Override
-		public boolean isDirty(Object entity, EntityPersister persister, Session session) {
+		public boolean isDirty(Object entity, EntityTypeImplementor persister, Session session) {
 			isDirtyCount++;
 			System.out.println( "isDirty called" );
 			return ! Thing.class.cast( entity ).changedValues.isEmpty();
@@ -121,7 +121,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		int resetDirtyCount = 0;
 
 		@Override
-		public void resetDirty(Object entity, EntityPersister persister, Session session) {
+		public void resetDirty(Object entity, EntityTypeImplementor persister, Session session) {
 			resetDirtyCount++;
 			System.out.println( "resetDirty called" );
 			Thing.class.cast( entity ).changedValues.clear();
@@ -130,7 +130,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		int findDirtyCount = 0;
 
 		@Override
-		public void findDirty(final Object entity, EntityPersister persister, Session session, DirtyCheckContext dirtyCheckContext) {
+		public void findDirty(final Object entity, EntityTypeImplementor persister, Session session, DirtyCheckContext dirtyCheckContext) {
 			findDirtyCount++;
 			System.out.println( "findDirty called" );
 			dirtyCheckContext.doDirtyChecking(

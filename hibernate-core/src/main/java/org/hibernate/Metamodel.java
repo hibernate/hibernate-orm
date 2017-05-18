@@ -10,7 +10,7 @@ import java.util.List;
 import javax.persistence.EntityGraph;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -31,7 +31,7 @@ public interface Metamodel extends javax.persistence.metamodel.Metamodel {
 	@Override
 	@SuppressWarnings("unchecked")
 	default <X> EntityType<X> entity(Class<X> cls) {
-		final EntityPersister entityPersister = getTypeConfiguration().findEntityPersister( cls );
+		final EntityTypeImplementor entityPersister = getTypeConfiguration().findEntityPersister( cls );
 		if ( entityPersister == null ) {
 			// per JPA, this condition needs to be an (illegal argument) exception
 			throw new IllegalArgumentException( "Not an entity: " + cls );

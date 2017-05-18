@@ -13,7 +13,7 @@ import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.produce.spi.criteria.JpaExpression;
 
 /**

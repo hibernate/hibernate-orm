@@ -15,7 +15,7 @@ import javax.validation.TraversableResolver;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.Type;
@@ -32,8 +32,8 @@ public class HibernateTraversableResolver implements TraversableResolver {
 	private Set<String> associations;
 
 	public HibernateTraversableResolver(
-			EntityPersister persister,
-			ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister, 
+			EntityTypeImplementor persister,
+			ConcurrentHashMap<EntityTypeImplementor, Set<String>> associationsPerEntityPersister,
 			SessionFactoryImplementor factory) {
 		this.associations = associationsPerEntityPersister.get( persister );
 		if (this.associations == null) {

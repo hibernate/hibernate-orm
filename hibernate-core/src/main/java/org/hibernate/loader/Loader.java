@@ -67,8 +67,8 @@ import org.hibernate.internal.ScrollableResultsImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.spi.AfterLoadAction;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
@@ -163,7 +163,7 @@ public abstract class Loader {
 	 * An (optional) persister for a collection to be initialized; only
 	 * collection loaders return a non-null value
 	 */
-	protected CollectionPersister[] getCollectionPersisters() {
+	protected PersistentCollectionMetadata[] getCollectionPersisters() {
 		return null;
 	}
 
@@ -873,7 +873,7 @@ public abstract class Loader {
 
 		//TODO: make this handle multiple collection roles!
 
-		final CollectionPersister[] collectionPersisters = getCollectionPersisters();
+		final PersistentCollectionMetadata[] collectionPersisters = getCollectionPersisters();
 		if ( collectionPersisters != null ) {
 
 			final CollectionAliases[] descriptors = getCollectionAliases();
@@ -890,7 +890,7 @@ public abstract class Loader {
 						row[collectionOwners[i]] :
 						null; //if null, owner will be retrieved from session
 
-				final CollectionPersister collectionPersister = collectionPersisters[i];
+				final PersistentCollectionMetadata collectionPersister = collectionPersisters[i];
 				final Serializable key;
 				if ( owner == null ) {
 					key = null;
@@ -1112,9 +1112,9 @@ public abstract class Loader {
 			final boolean readOnly,
 			List<AfterLoadAction> afterLoadActions) throws HibernateException {
 
-		final CollectionPersister[] collectionPersisters = getCollectionPersisters();
+		final PersistentCollectionMetadata[] collectionPersisters = getCollectionPersisters();
 		if ( collectionPersisters != null ) {
-			for ( CollectionPersister collectionPersister : collectionPersisters ) {
+			for ( PersistentCollectionMetadata collectionPersister : collectionPersisters ) {
 				if ( collectionPersister.isArray() ) {
 					//for arrays, we should end the collection load beforeQuery resolving
 					//the entities, since the actual array instances are not instantiated
@@ -1147,7 +1147,7 @@ public abstract class Loader {
 		}
 
 		if ( collectionPersisters != null ) {
-			for ( CollectionPersister collectionPersister : collectionPersisters ) {
+			for ( PersistentCollectionMetadata collectionPersister : collectionPersisters ) {
 				if ( !collectionPersister.isArray() ) {
 					//for sets, we should end the collection load afterQuery resolving
 					//the entities, since we might call hashCode() on the elements
@@ -1184,7 +1184,7 @@ public abstract class Loader {
 	private void endCollectionLoad(
 			final Object resultSetId,
 			final SharedSessionContractImplementor session,
-			final CollectionPersister collectionPersister) {
+			final PersistentCollectionMetadata collectionPersister) {
 		//this is a query and we are loading multiple instances of the same collection role
 		session.getPersistenceContext()
 				.getLoadContexts()
@@ -1322,7 +1322,7 @@ public abstract class Loader {
 	private void readCollectionElement(
 			final Object optionalOwner,
 			final Serializable optionalKey,
-			final CollectionPersister persister,
+			final PersistentCollectionMetadata persister,
 			final CollectionAliases descriptor,
 			final ResultSet rs,
 			final SharedSessionContractImplementor session)
@@ -1404,8 +1404,8 @@ public abstract class Loader {
 			// this is a collection initializer, so we must create a collection
 			// for each of the passed-in keys, to account for the possibility
 			// that the collection is empty and has no rows in the result set
-			CollectionPersister[] collectionPersisters = getCollectionPersisters();
-			for ( CollectionPersister collectionPersister : collectionPersisters ) {
+			PersistentCollectionMetadata[] collectionPersisters = getCollectionPersisters();
+			for ( PersistentCollectionMetadata collectionPersister : collectionPersisters ) {
 				for ( Serializable key : keys ) {
 					//handle empty collections
 					if ( debugEnabled ) {
@@ -2186,7 +2186,7 @@ public abstract class Loader {
 			final Object optionalObject,
 			final String optionalEntityName,
 			final Serializable optionalIdentifier,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			LockOptions lockOptions) throws HibernateException {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Loading entity: %s", MessageHelper.infoString( persister, id, identifierType, getFactory() ) );
@@ -2235,7 +2235,7 @@ public abstract class Loader {
 			final Object index,
 			final Type keyType,
 			final Type indexType,
-			final EntityPersister persister) throws HibernateException {
+			final EntityTypeImplementor persister) throws HibernateException {
 		LOG.debug( "Loading collection element by index" );
 
 		List result;
@@ -2273,7 +2273,7 @@ public abstract class Loader {
 			final Object optionalObject,
 			final String optionalEntityName,
 			final Serializable optionalId,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			LockOptions lockOptions) throws HibernateException {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Batch loading entity: %s", MessageHelper.infoString( persister, ids, getFactory() ) );
@@ -2563,7 +2563,7 @@ public abstract class Loader {
 		return result;
 	}
 
-	private EntityPersister getEntityPersister(EntityType entityType) {
+	private EntityTypeImplementor getEntityPersister(EntityType entityType) {
 		return factory.getTypeConfiguration().findEntityPersister( entityType.getAssociatedEntityName() );
 	}
 

@@ -7,7 +7,7 @@
 package org.hibernate.tuple.entity;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.tuple.component.AbstractCompositionAttribute;
@@ -21,7 +21,7 @@ public class EntityBasedCompositionAttribute
 		implements CompositionDefinition {
 
 	public EntityBasedCompositionAttribute(
-			EntityPersister source,
+			EntityTypeImplementor source,
 			SessionFactoryImplementor factory,
 			int attributeNumber,
 			String attributeName,
@@ -31,7 +31,7 @@ public class EntityBasedCompositionAttribute
 	}
 
 	@Override
-	protected EntityPersister locateOwningPersister() {
-		return (EntityPersister) getSource();
+	protected EntityTypeImplementor locateOwningPersister() {
+		return (EntityTypeImplementor) getSource();
 	}
 }

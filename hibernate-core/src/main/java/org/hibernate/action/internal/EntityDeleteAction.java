@@ -23,7 +23,7 @@ import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * The action for performing an entity deletion.
@@ -52,7 +52,7 @@ public class EntityDeleteAction extends EntityAction {
 			final Object[] state,
 			final Object version,
 			final Object instance,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final boolean isCascadeDeleteEnabled,
 			final SessionImplementor session) {
 		super( session, id, instance, persister );
@@ -71,7 +71,7 @@ public class EntityDeleteAction extends EntityAction {
 	@Override
 	public void execute() throws HibernateException {
 		final Serializable id = getId();
-		final EntityPersister persister = getPersister();
+		final EntityTypeImplementor persister = getPersister();
 		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();
 
@@ -186,7 +186,7 @@ public class EntityDeleteAction extends EntityAction {
 
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws HibernateException {
-		EntityPersister entityPersister = getPersister();
+		EntityTypeImplementor entityPersister = getPersister();
 		if ( entityPersister.hasCache() ) {
 			EntityRegionAccessStrategy cache = entityPersister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(

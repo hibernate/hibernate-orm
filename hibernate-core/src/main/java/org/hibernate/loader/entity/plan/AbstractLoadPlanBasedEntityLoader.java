@@ -30,7 +30,7 @@ import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.spi.Type;
@@ -107,7 +107,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			final Object optionalObject,
 			final String optionalEntityName,
 			final Serializable optionalId,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			LockOptions lockOptions) throws HibernateException {
 
 		if ( log.isDebugEnabled() ) {

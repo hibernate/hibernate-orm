@@ -26,7 +26,7 @@ import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
@@ -45,14 +45,14 @@ class FromElementType {
 
 	private FromElement fromElement;
 	private EntityType entityType;
-	private EntityPersister persister;
+	private EntityTypeImplementor persister;
 	private QueryableCollection queryableCollection;
 	private CollectionPropertyMapping collectionPropertyMapping;
 	private JoinSequence joinSequence;
 	private String collectionSuffix;
 	private ParameterSpecification indexCollectionSelectorParamSpec;
 
-	public FromElementType(FromElement fromElement, EntityPersister persister, EntityType entityType) {
+	public FromElementType(FromElement fromElement, EntityTypeImplementor persister, EntityType entityType) {
 		this.fromElement = fromElement;
 		this.persister = persister;
 		this.entityType = entityType;
@@ -81,7 +81,7 @@ class FromElementType {
 		collectionSuffix = suffix;
 	}
 
-	public EntityPersister getEntityPersister() {
+	public EntityTypeImplementor getEntityPersister() {
 		return persister;
 	}
 
@@ -127,9 +127,9 @@ class FromElementType {
 	 */
 	String renderScalarIdentifierSelect(int i) {
 		checkInitialized();
-		String[] cols = getPropertyMapping( EntityPersister.ENTITY_ID ).toColumns(
+		String[] cols = getPropertyMapping( EntityTypeImplementor.ENTITY_ID ).toColumns(
 				getTableAlias(),
-				EntityPersister.ENTITY_ID
+				EntityTypeImplementor.ENTITY_ID
 		);
 		StringBuilder buf = new StringBuilder();
 		// For property references generate <tablealias>.<columnname> as <projectionalias>
@@ -335,7 +335,7 @@ class FromElementType {
 
 			for ( String treatAsSubclassName : treatAsDeclarations ) {
 				try {
-					EntityPersister subclassPersister = fromElement.getSessionFactoryHelper().requireClassPersister(
+					EntityTypeImplementor subclassPersister = fromElement.getSessionFactoryHelper().requireClassPersister(
 							treatAsSubclassName
 					);
 					this.treatAsDeclarations.add( subclassPersister.getEntityName() );
@@ -555,7 +555,7 @@ class FromElementType {
 
 		if ( queryableCollection.getElementType().isComponentType() ) {
 			// Collection of components.
-			if ( propertyName.equals( EntityPersister.ENTITY_ID ) ) {
+			if ( propertyName.equals( EntityTypeImplementor.ENTITY_ID ) ) {
 				return (PropertyMapping) queryableCollection.getOwnerEntityPersister();
 			}
 		}

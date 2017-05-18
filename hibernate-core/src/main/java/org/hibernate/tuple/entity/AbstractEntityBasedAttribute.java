@@ -7,7 +7,7 @@
 package org.hibernate.tuple.entity;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.tuple.AbstractNonIdentifierAttribute;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.spi.Type;
@@ -17,7 +17,7 @@ import org.hibernate.type.spi.Type;
  */
 public abstract class AbstractEntityBasedAttribute extends AbstractNonIdentifierAttribute {
 	protected AbstractEntityBasedAttribute(
-			EntityPersister source,
+			EntityTypeImplementor source,
 			SessionFactoryImplementor sessionFactory,
 			int attributeNumber,
 			String attributeName,
@@ -27,7 +27,7 @@ public abstract class AbstractEntityBasedAttribute extends AbstractNonIdentifier
 	}
 
 	@Override
-	public EntityPersister getSource() {
-		return (EntityPersister) super.getSource();
+	public EntityTypeImplementor getSource() {
+		return (EntityTypeImplementor) super.getSource();
 	}
 }

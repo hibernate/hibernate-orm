@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.entity.spi.IdentifierDescriptorSimple;
-import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 
@@ -19,9 +19,9 @@ public class SqmEntityIdentifierReferenceSimple
 		implements SqmEntityIdentifierReference {
 
 	private final SqmEntityTypedReference source;
-	private final IdentifierDescriptorSimple entityIdentifier;
+	private final EntityIdentifierSimple entityIdentifier;
 
-	public SqmEntityIdentifierReferenceSimple(SqmEntityTypedReference source, IdentifierDescriptorSimple entityIdentifier) {
+	public SqmEntityIdentifierReferenceSimple(SqmEntityTypedReference source, EntityIdentifierSimple entityIdentifier) {
 		this.source = source;
 		this.entityIdentifier = entityIdentifier;
 	}
@@ -52,7 +52,7 @@ public class SqmEntityIdentifierReferenceSimple
 	}
 
 	@Override
-	public IdentifierDescriptorSimple getReferencedNavigable() {
+	public EntityIdentifierSimple getReferencedNavigable() {
 		return entityIdentifier;
 	}
 

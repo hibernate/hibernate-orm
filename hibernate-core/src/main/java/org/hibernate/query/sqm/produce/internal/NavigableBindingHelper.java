@@ -6,18 +6,18 @@
  */
 package org.hibernate.query.sqm.produce.internal;
 
-import org.hibernate.persister.collection.spi.CollectionElement;
-import org.hibernate.persister.collection.spi.CollectionIndex;
-import org.hibernate.persister.common.internal.SingularPersistentAttributeBasic;
-import org.hibernate.persister.common.internal.SingularPersistentAttributeEmbedded;
-import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
-import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.persister.common.spi.PluralPersistentAttribute;
-import org.hibernate.persister.common.spi.SingularPersistentAttribute;
-import org.hibernate.persister.entity.spi.IdentifierDescriptor;
-import org.hibernate.persister.entity.spi.IdentifierDescriptorComposite;
-import org.hibernate.persister.entity.spi.IdentifierDescriptorSimple;
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierComposite;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
+import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -82,9 +82,9 @@ public class NavigableBindingHelper {
 	}
 
 	public static SqmNavigableReference createNavigableBinding(SqmNavigableContainerReference source, Navigable navigable) {
-		if ( navigable instanceof IdentifierDescriptor ) {
+		if ( navigable instanceof EntityIdentifier ) {
 			assert source instanceof SqmEntityTypedReference;
-			return createEntityIdentiferBinding( (SqmEntityTypedReference) source, (IdentifierDescriptor) navigable );
+			return createEntityIdentiferBinding( (SqmEntityTypedReference) source, (EntityIdentifier) navigable );
 		}
 		else if ( navigable instanceof SingularPersistentAttribute ) {
 			return createSingularAttributeBinding( source, (SingularPersistentAttribute) navigable );
@@ -109,12 +109,12 @@ public class NavigableBindingHelper {
 
 	private static SqmEntityIdentifierReference createEntityIdentiferBinding(
 			SqmEntityTypedReference sourceBinding,
-			IdentifierDescriptor navigable) {
-		if ( navigable instanceof IdentifierDescriptorSimple ) {
-			return new SqmEntityIdentifierReferenceSimple( sourceBinding, (IdentifierDescriptorSimple) navigable );
+			EntityIdentifier navigable) {
+		if ( navigable instanceof EntityIdentifierSimple ) {
+			return new SqmEntityIdentifierReferenceSimple( sourceBinding, (EntityIdentifierSimple) navigable );
 		}
 		else {
-			return new SqmEntityIdentifierReferenceComposite( sourceBinding, (IdentifierDescriptorComposite) navigable );
+			return new SqmEntityIdentifierReferenceComposite( sourceBinding, (EntityIdentifierComposite) navigable );
 		}
 	}
 

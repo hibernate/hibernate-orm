@@ -8,7 +8,7 @@ package org.hibernate.cache.spi.access;
 
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 
 /**
  * Contract for managing transactional and concurrent access to cached collection
@@ -34,13 +34,13 @@ public interface CollectionRegionAccessStrategy extends RegionAccessStrategy {
 	 * @param tenantIdentifier the tenant id, or null if multi-tenancy is not being used.
 	 * @return a key which can be used to identify this collection on this same region
 	 */
-	public Object generateCacheKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier);
+	public Object generateCacheKey(Object id, PersistentCollectionMetadata persister, SessionFactoryImplementor factory, String tenantIdentifier);
 
 	/**
-	 * Performs reverse operation to {@link #generateCacheKey(Object, CollectionPersister, SessionFactoryImplementor, String)}
+	 * Performs reverse operation to {@link #generateCacheKey(Object, PersistentCollectionMetadata, SessionFactoryImplementor, String)}
 	 *
-	 * @param cacheKey key previously returned from {@link #generateCacheKey(Object, CollectionPersister, SessionFactoryImplementor, String)}
-	 * @return original key passed to {@link #generateCacheKey(Object, CollectionPersister, SessionFactoryImplementor, String)}
+	 * @param cacheKey key previously returned from {@link #generateCacheKey(Object, PersistentCollectionMetadata, SessionFactoryImplementor, String)}
+	 * @return original key passed to {@link #generateCacheKey(Object, PersistentCollectionMetadata, SessionFactoryImplementor, String)}
 	 */
 	public Object getCacheKeyId(Object cacheKey);
 

@@ -43,9 +43,9 @@ import org.hibernate.loader.custom.NonScalarReturn;
 import org.hibernate.loader.custom.Return;
 import org.hibernate.loader.custom.RootReturn;
 import org.hibernate.loader.custom.ScalarReturn;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.persister.collection.SQLLoadableCollection;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.SQLLoadable;
 import org.hibernate.type.spi.EntityType;
@@ -73,10 +73,10 @@ public class SQLQueryReturnProcessor {
 	private final Map alias2Return = new HashMap();
 	private final Map alias2OwnerAlias = new HashMap();
 
-	private final Map<String,EntityPersister> alias2Persister = new HashMap<String,EntityPersister>();
+	private final Map<String,EntityTypeImplementor> alias2Persister = new HashMap<String,EntityTypeImplementor>();
 	private final Map alias2Suffix = new HashMap();
 
-	private final Map<String,CollectionPersister> alias2CollectionPersister = new HashMap<String,CollectionPersister>();
+	private final Map<String,PersistentCollectionMetadata> alias2CollectionPersister = new HashMap<String,PersistentCollectionMetadata>();
 	private final Map alias2CollectionSuffix = new HashMap();
 
 	private final Map entityPropertyResultMaps = new HashMap();
@@ -133,14 +133,14 @@ public class SQLQueryReturnProcessor {
 		}
 
 		public void collectQuerySpaces(Collection<String> spaces) {
-			for ( EntityPersister persister : alias2Persister.values() ) {
+			for ( EntityTypeImplementor persister : alias2Persister.values() ) {
 				Collections.addAll( spaces, (String[]) persister.getQuerySpaces() );
 			}
-			for ( CollectionPersister persister : alias2CollectionPersister.values() ) {
+			for ( PersistentCollectionMetadata persister : alias2CollectionPersister.values() ) {
 				final Type elementType = persister.getElementType();
 				if ( elementType.isEntityType() && ! elementType.isAnyType() ) {
 					final Joinable joinable = ( (EntityType) elementType ).getAssociatedJoinable( factory );
-					Collections.addAll( spaces, (String[]) ( (EntityPersister) joinable ).getQuerySpaces() );
+					Collections.addAll( spaces, (String[]) ( (EntityTypeImplementor) joinable ).getQuerySpaces() );
 				}
 			}
 		}
@@ -355,7 +355,7 @@ public class SQLQueryReturnProcessor {
 	}
 
 	private SQLLoadable getSQLLoadable(String entityName) throws MappingException {
-		EntityPersister persister = factory.getEntityPersister( entityName );
+		EntityTypeImplementor persister = factory.getEntityPersister( entityName );
 		if ( !(persister instanceof SQLLoadable) ) {
 			throw new MappingException( "class persister is not SQLLoadable: " + entityName );
 		}

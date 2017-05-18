@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.tree.spi.expression.domain;
 
 import java.util.List;
 
-import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;

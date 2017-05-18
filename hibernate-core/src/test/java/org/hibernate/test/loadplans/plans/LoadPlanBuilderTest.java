@@ -29,8 +29,8 @@ import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.Fetch;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.Return;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
@@ -51,7 +51,7 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testSimpleBuild() {
-		EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata(Message.class);
+		EntityTypeImplementor ep = (EntityTypeImplementor) sessionFactory().getClassMetadata( Message.class);
 		SqlSelectPlanBuilder strategy = new SqlSelectPlanBuilder(
 				sessionFactory(),
 				LoadQueryInfluencers.NONE,
@@ -74,7 +74,7 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCascadeBasedBuild() {
-		EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata(Message.class);
+		EntityTypeImplementor ep = (EntityTypeImplementor) sessionFactory().getClassMetadata( Message.class);
 		NavigableVisitationStrategyCascadeStyleLoadPlanBuildingImpl strategy = new NavigableVisitationStrategyCascadeStyleLoadPlanBuildingImpl(
 				CascadingActions.MERGE,
 				sessionFactory(),
@@ -98,7 +98,7 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCollectionInitializerCase() {
-		CollectionPersister cp = sessionFactory().getCollectionPersister( Poster.class.getName() + ".messages" );
+		PersistentCollectionMetadata cp = sessionFactory().getCollectionPersister( Poster.class.getName() + ".messages" );
 		SqlSelectPlanBuilder strategy = new SqlSelectPlanBuilder(
 				sessionFactory(),
 				LoadQueryInfluencers.NONE,

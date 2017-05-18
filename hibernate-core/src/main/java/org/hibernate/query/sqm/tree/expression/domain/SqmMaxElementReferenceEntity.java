@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.collection.spi.CollectionElementEntity;
+import org.hibernate.metamodel.model.domain.spi.CollectionElementEntity;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -34,7 +34,7 @@ public class SqmMaxElementReferenceEntity
 
 	@Override
 	public CollectionElementEntity getExpressionType() {
-		return (CollectionElementEntity) getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getElementDescriptor();
+		return (CollectionElementEntity) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
 	}
 
 	@Override

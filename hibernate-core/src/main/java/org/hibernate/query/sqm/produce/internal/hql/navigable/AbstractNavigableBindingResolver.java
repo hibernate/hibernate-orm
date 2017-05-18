@@ -8,12 +8,12 @@ package org.hibernate.query.sqm.produce.internal.hql.navigable;
 
 import java.util.Locale;
 
-import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.persister.common.spi.SingularPersistentAttribute;
-import org.hibernate.persister.common.spi.SingularPersistentAttribute.SingularAttributeClassification;
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.SingularAttributeClassification;
+import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.SemanticException;
-import org.hibernate.persister.queryable.NavigableResolutionException;
+import org.hibernate.metamodel.queryable.NavigableResolutionException;
 import org.hibernate.query.sqm.produce.spi.ResolutionContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmAttributeReference;

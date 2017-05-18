@@ -11,7 +11,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.type.spi.EntityType;
 
@@ -25,7 +25,7 @@ import org.hibernate.type.spi.EntityType;
  */
 public abstract class OuterJoinLoader extends BasicLoader {
 	protected Loadable[] persisters;
-	protected CollectionPersister[] collectionPersisters;
+	protected PersistentCollectionMetadata[] collectionPersisters;
 	protected int[] collectionOwners;
 	protected String[] aliases;
 	private LockOptions lockOptions;
@@ -90,7 +90,7 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		return aliases;
 	}
 
-	protected final CollectionPersister[] getCollectionPersisters() {
+	protected final PersistentCollectionMetadata[] getCollectionPersisters() {
 		return collectionPersisters;
 	}
 

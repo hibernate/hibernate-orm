@@ -17,11 +17,11 @@ import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MarkerObject;
-import org.hibernate.persister.common.spi.PersistentAttribute;
-import org.hibernate.persister.common.spi.PluralPersistentAttribute;
-import org.hibernate.persister.common.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.sql.ast.produce.result.spi.EntityReference;
 import org.hibernate.sql.ast.consume.ExecutionException;
 import org.hibernate.sql.ast.consume.results.spi.EntityReferenceInitializer;
@@ -44,7 +44,7 @@ public abstract class AbstractEntityReferenceInitializer
 
 	// in-flight processing state.  reset after each row
 	private Object identifierHydratedState;
-	private EntityPersister concretePersister;
+	private EntityTypeImplementor concretePersister;
 	private EntityKey entityKey;
 	private Object entityInstance;
 
@@ -179,7 +179,7 @@ public abstract class AbstractEntityReferenceInitializer
 
 		final Object[] hydratedState = new Object[ numberOfNonIdentifierAttributes ];
 		int i = 0;
-		for ( PersistentAttribute<?,?> persistentAttribute : ( (EntityPersister<?>) concretePersister ).getPersistentAttributes() ) {
+		for ( PersistentAttribute<?,?> persistentAttribute : ( (EntityTypeImplementor<?>) concretePersister ).getPersistentAttributes() ) {
 			// todo : need to account for non-eager entities by calling something other than Type#resolve (which loads the entity)
 			//		something akin to org.hibernate.persister.entity.AbstractEntityPersister.hydrate() but that operates on Object[], not ResultSet
 			//
@@ -254,10 +254,10 @@ public abstract class AbstractEntityReferenceInitializer
 		);
 	}
 
-	private EntityPersister resolveConcreteEntityPersister(
+	private EntityTypeImplementor resolveConcreteEntityPersister(
 			RowProcessingState rowProcessingState,
 			SharedSessionContractImplementor persistenceContext) throws WrongClassException {
-		final EntityPersister persister = getEntityReference().getEntityPersister();
+		final EntityTypeImplementor persister = getEntityReference().getEntityPersister();
 		if ( persister.getHierarchy().getDiscriminatorDescriptor() == null ) {
 			return persister;
 		}

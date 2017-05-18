@@ -11,13 +11,13 @@ import java.io.Serializable;
 import org.hibernate.MappingException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 
 /**
  * @author Steve Ebersole
  */
 public interface CollectionType<O,C,E> extends Type<C> {
-	CollectionPersister<O,C,E> getCollectionPersister();
+	PersistentCollectionMetadata<O,C,E> getCollectionPersister();
 
 	@Override
 	default Classification getClassification() {
@@ -39,7 +39,7 @@ public interface CollectionType<O,C,E> extends Type<C> {
 		return null;
 	}
 
-	PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key);
+	PersistentCollection instantiate(SharedSessionContractImplementor session, PersistentCollectionMetadata persister, Serializable key);
 
 	/**
 	 * Instantiate an empty instance of the "underlying" collection (not a wrapper),

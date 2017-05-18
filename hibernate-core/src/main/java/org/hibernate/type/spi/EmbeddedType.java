@@ -13,9 +13,9 @@ import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.common.spi.NavigableRole;
-import org.hibernate.persister.queryable.spi.ExpressableType;
-import org.hibernate.persister.embedded.spi.EmbeddedPersister;
+import org.hibernate.metamodel.model.domain.spi.NavigableRole;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
@@ -31,7 +31,7 @@ public interface EmbeddedType<J> extends ManagedType<J>, ExpressableType, TypeCo
 		return getNavigableRole().getFullPath();
 	}
 
-	<T> EmbeddedPersister<T> getEmbeddablePersister();
+	<T> EmbeddedTypeImplementor<T> getEmbeddablePersister();
 
 	@Override
 	EmbeddableJavaDescriptor<J> getJavaTypeDescriptor();

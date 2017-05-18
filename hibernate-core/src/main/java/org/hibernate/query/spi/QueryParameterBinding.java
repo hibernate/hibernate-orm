@@ -11,7 +11,7 @@ import java.util.Collection;
 import javax.persistence.TemporalType;
 
 import org.hibernate.Incubating;
-import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
 import org.hibernate.type.spi.Type;
 
 /**

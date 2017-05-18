@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
-import org.hibernate.persister.queryable.spi.NavigableContainerReferenceInfo;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.NavigableContainerReferenceInfo;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -105,7 +105,7 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 	}
 
 	@Override
-	public EntityPersister getIntrinsicSubclassEntityPersister() {
+	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
 		return exportedFromElement.getIntrinsicSubclassEntityPersister();
 	}
 

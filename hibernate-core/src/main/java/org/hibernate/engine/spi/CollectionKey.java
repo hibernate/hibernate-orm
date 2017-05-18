@@ -12,7 +12,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.hibernate.EntityMode;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.spi.Type;
 
@@ -29,7 +29,7 @@ public final class CollectionKey implements Serializable {
 	private final int hashCode;
 	private EntityMode entityMode;
 
-	public CollectionKey(CollectionPersister persister, Serializable key) {
+	public CollectionKey(PersistentCollectionMetadata persister, Serializable key) {
 		this(
 				persister.getRole(),
 				key,
@@ -39,7 +39,7 @@ public final class CollectionKey implements Serializable {
 		);
 	}
 
-	public CollectionKey(CollectionPersister persister, Serializable key, EntityMode em) {
+	public CollectionKey(PersistentCollectionMetadata persister, Serializable key, EntityMode em) {
 		this( persister.getRole(), key, persister.getKeyType(), em, persister.getFactory() );
 	}
 

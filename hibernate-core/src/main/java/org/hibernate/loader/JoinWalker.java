@@ -25,9 +25,9 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -61,7 +61,7 @@ public class JoinWalker {
 	protected Loadable[] persisters;
 	protected int[] owners;
 	protected EntityType[] ownerAssociationTypes;
-	protected CollectionPersister[] collectionPersisters;
+	protected PersistentCollectionMetadata[] collectionPersisters;
 	protected int[] collectionOwners;
 	protected String[] aliases;
 	protected LockOptions lockOptions;
@@ -120,11 +120,11 @@ public class JoinWalker {
 		this.collectionOwners = collectionOwners;
 	}
 
-	public CollectionPersister[] getCollectionPersisters() {
+	public PersistentCollectionMetadata[] getCollectionPersisters() {
 		return collectionPersisters;
 	}
 
-	public void setCollectionPersisters(CollectionPersister[] collectionPersisters) {
+	public void setCollectionPersisters(PersistentCollectionMetadata[] collectionPersisters) {
 		this.collectionPersisters = collectionPersisters;
 	}
 
@@ -746,7 +746,7 @@ public class JoinWalker {
 				//TODO: look at the owning property and check that it 
 				//      isn't lazy (by instrumentation)
 				EntityType entityType = (EntityType) type;
-				EntityPersister persister = getFactory().getEntityPersister( entityType.getAssociatedEntityName() );
+				EntityTypeImplementor persister = getFactory().getEntityPersister( entityType.getAssociatedEntityName() );
 				return !persister.hasProxy();
 			}
 			else {
@@ -1028,7 +1028,7 @@ public class JoinWalker {
 		final int collections = countCollectionPersisters( associations );
 
 		collectionOwners = collections == 0 ? null : new int[collections];
-		collectionPersisters = collections == 0 ? null : new CollectionPersister[collections];
+		collectionPersisters = collections == 0 ? null : new PersistentCollectionMetadata[collections];
 		collectionSuffixes = BasicLoader.generateSuffixes( joins + 1, collections );
 
 		this.lockOptions = lockOptions;

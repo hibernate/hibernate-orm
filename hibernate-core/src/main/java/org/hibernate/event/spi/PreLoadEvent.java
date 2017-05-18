@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 /**
@@ -20,7 +20,7 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 	private Object entity;
 	private Object[] state;
 	private Serializable id;
-	private EntityPersister persister;
+	private EntityTypeImplementor persister;
 
 	public PreLoadEvent(EventSource session) {
 		super(session);
@@ -35,7 +35,7 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 		return id;
 	}
 	
-	public EntityPersister getPersister() {
+	public EntityTypeImplementor getPersister() {
 		return persister;
 	}
 	
@@ -53,7 +53,7 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 		return this;
 	}
 	
-	public PreLoadEvent setPersister(EntityPersister persister) {
+	public PreLoadEvent setPersister(EntityTypeImplementor persister) {
 		this.persister = persister;
 		return this;
 	}

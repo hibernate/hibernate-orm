@@ -29,7 +29,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.testing.RequiresDialect;
@@ -306,7 +306,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-5732")
 	public void testInverseIndex() {
-		final CollectionPersister transactionsPersister = sessionFactory().getCollectionPersister(
+		final PersistentCollectionMetadata transactionsPersister = sessionFactory().getCollectionPersister(
 				BankAccount.class.getName() + ".transactions" );
 		assertTrue( transactionsPersister.isInverse() );
 

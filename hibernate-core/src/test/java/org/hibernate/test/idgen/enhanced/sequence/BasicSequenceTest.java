@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -30,7 +30,7 @@ public class BasicSequenceTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNormalBoundary() {
-		EntityPersister persister = sessionFactory().getEntityPersister( Entity.class.getName() );
+		EntityTypeImplementor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );
 		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) persister.getIdentifierGenerator();
 
@@ -61,7 +61,7 @@ public class BasicSequenceTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-6790")
 	public void testSequencePerEntity() {
 		final String overriddenEntityName = "SpecialEntity";
-		EntityPersister persister = sessionFactory().getEntityPersister( overriddenEntityName );
+		EntityTypeImplementor persister = sessionFactory().getEntityPersister( overriddenEntityName );
 		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );
 		SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();
 		assertEquals( overriddenEntityName + SequenceStyleGenerator.DEF_SEQUENCE_SUFFIX, generator.getDatabaseStructure().getName() );

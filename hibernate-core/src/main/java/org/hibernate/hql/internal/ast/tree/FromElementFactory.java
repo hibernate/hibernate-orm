@@ -16,7 +16,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
@@ -88,7 +88,7 @@ public class FromElementFactory implements SqlTokenTypes {
 			}
 		}
 
-		final EntityPersister entityPersister = fromClause.getSessionFactoryHelper().requireClassPersister( path );
+		final EntityTypeImplementor entityPersister = fromClause.getSessionFactoryHelper().requireClassPersister( path );
 
 		final FromElement elem = createAndAddFromElement(
 				path,
@@ -113,7 +113,7 @@ public class FromElementFactory implements SqlTokenTypes {
 
 		// Create an DotNode AST for the path and resolve it.
 		FromElement fromElement = evaluateFromElementPath( path, classAlias );
-		EntityPersister entityPersister = fromElement.getEntityPersister();
+		EntityTypeImplementor entityPersister = fromElement.getEntityPersister();
 
 		// If the first identifier in the path refers to the class alias (not the class name), then this
 		// is a correlated subselect.  If it's a correlated sub-select, use the existing table alias.  Otherwise
@@ -252,7 +252,7 @@ public class FromElementFactory implements SqlTokenTypes {
 			elem.applyTreatAsDeclarations( fromClause.getWalker().getTreatAsDeclarationsByPath( joinPath ) );
 		}
 
-		EntityPersister entityPersister = elem.getEntityPersister();
+		EntityTypeImplementor entityPersister = elem.getEntityPersister();
 		int numberOfTables = entityPersister.getQuerySpaces().length;
 		if ( numberOfTables > 1 && implied && !elem.useFromFragment() ) {
 			LOG.debug( "createEntityJoin() : Implied multi-table entity join" );
@@ -306,10 +306,10 @@ public class FromElementFactory implements SqlTokenTypes {
 		SessionFactoryHelper sfh = fromClause.getSessionFactoryHelper();
 		FromElement destination = null;
 		String tableAlias = null;
-		EntityPersister entityPersister = queryableCollection.getElementPersister();
+		EntityTypeImplementor entityPersister = queryableCollection.getElementPersister();
 		tableAlias = fromClause.getAliasGenerator().createName( entityPersister.getEntityName() );
 		String associatedEntityName = entityPersister.getEntityName();
-		EntityPersister targetEntityPersister = sfh.requireClassPersister( associatedEntityName );
+		EntityTypeImplementor targetEntityPersister = sfh.requireClassPersister( associatedEntityName );
 		// Create the FROM element for the target (the elements of the collection).
 		destination = createAndAddFromElement(
 				associatedEntityName,
@@ -424,7 +424,7 @@ public class FromElementFactory implements SqlTokenTypes {
 			EntityType type,
 			boolean manyToMany) throws SemanticException {
 		//  origin, path, implied, columns, classAlias,
-		EntityPersister entityPersister = fromClause.getSessionFactoryHelper().requireClassPersister( entityClass );
+		EntityTypeImplementor entityPersister = fromClause.getSessionFactoryHelper().requireClassPersister( entityClass );
 		FromElement destination = createAndAddFromElement(
 				entityClass,
 				classAlias,
@@ -481,7 +481,7 @@ public class FromElementFactory implements SqlTokenTypes {
 	private FromElement createAndAddFromElement(
 			String className,
 			String classAlias,
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			EntityType type,
 			String tableAlias) {
 		if ( !( entityPersister instanceof Joinable ) ) {
@@ -496,7 +496,7 @@ public class FromElementFactory implements SqlTokenTypes {
 			FromElement element,
 			String className,
 			String classAlias,
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			EntityType type,
 			String tableAlias) {
 		if ( tableAlias == null ) {
@@ -506,7 +506,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		element.initializeEntity( fromClause, className, entityPersister, type, classAlias, tableAlias );
 	}
 
-	private FromElement createFromElement(EntityPersister entityPersister) {
+	private FromElement createFromElement(EntityTypeImplementor entityPersister) {
 		Joinable joinable = (Joinable) entityPersister;
 		String text = joinable.getTableName();
 		AST ast = createFromElement( text );

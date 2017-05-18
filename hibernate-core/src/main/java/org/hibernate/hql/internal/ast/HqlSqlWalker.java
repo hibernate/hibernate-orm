@@ -74,7 +74,7 @@ import org.hibernate.param.ParameterSpecification;
 import org.hibernate.param.PositionalParameterSpecification;
 import org.hibernate.param.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.spi.AssociationType;
@@ -371,7 +371,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		//
 		// so make the proper interpretation here...
 
-		final EntityPersister entityJoinReferencedPersister = resolveEntityJoinReferencedPersister( path );
+		final EntityTypeImplementor entityJoinReferencedPersister = resolveEntityJoinReferencedPersister( path );
 		if ( entityJoinReferencedPersister != null ) {
 			// `path` referenced an entity
 			final EntityJoinFromElement join = createEntityJoin(
@@ -435,7 +435,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 	}
 
-	private EntityPersister resolveEntityJoinReferencedPersister(AST path) {
+	private EntityTypeImplementor resolveEntityJoinReferencedPersister(AST path) {
 		if ( path.getType() == IDENT ) {
 			final IdentNode pathIdentNode = (IdentNode) path;
 			String name = path.getText();
@@ -457,7 +457,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	private EntityJoinFromElement createEntityJoin(
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			AST aliasNode,
 			int joinType,
 			AST propertyFetch,

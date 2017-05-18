@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.id.enhanced.HiLoOptimizer;
 import org.hibernate.id.enhanced.TableGenerator;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
@@ -29,7 +29,7 @@ public class HiLoTableTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNormalBoundary() {
-		EntityPersister persister = sessionFactory().getEntityPersister( Entity.class.getName() );
+		EntityTypeImplementor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		assertClassAssignability( TableGenerator.class, persister.getIdentifierGenerator().getClass() );
 		TableGenerator generator = ( TableGenerator ) persister.getIdentifierGenerator();
 		assertClassAssignability( HiLoOptimizer.class, generator.getOptimizer().getClass() );

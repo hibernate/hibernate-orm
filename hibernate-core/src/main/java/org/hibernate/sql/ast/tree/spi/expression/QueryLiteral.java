@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
 

@@ -13,7 +13,7 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.spi.Type;
 
@@ -101,7 +101,7 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 	private Type getPropertyType(SessionImplementor session, String entityName, String propertyName) {
 		// rather than rely on QueryException from calling getPropertyType(), this allows a non-failure way
 		// to determine whether to return null or lookup the value safely.
-		final EntityPersister persister = session.getSessionFactory().getTypeConfiguration().findEntityPersister( entityName );
+		final EntityTypeImplementor persister = session.getSessionFactory().getTypeConfiguration().findEntityPersister( entityName );
 		for ( String name : persister.getPropertyNames() ) {
 			if ( name.equals( propertyName ) ) {
 				return persister.getPropertyType( propertyName );

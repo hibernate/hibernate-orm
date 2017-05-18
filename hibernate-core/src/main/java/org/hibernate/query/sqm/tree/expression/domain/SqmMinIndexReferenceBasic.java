@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 
 /**
@@ -20,7 +20,7 @@ public class SqmMinIndexReferenceBasic extends AbstractSpecificSqmCollectionInde
 
 	@Override
 	public ExpressableType getExpressionType() {
-		return getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getIndexDescriptor();
+		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getIndexDescriptor();
 	}
 
 	@Override

@@ -14,10 +14,10 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
-import org.hibernate.persister.spi.HydratedCompoundValueHandler;
+import org.hibernate.tuple.HydratedCompoundValueHandler;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.persister.walking.internal.StandardAnyTypeDefinition;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
@@ -44,7 +44,7 @@ public class EntityBasedAssociationAttribute
 
 
 	public EntityBasedAssociationAttribute(
-			EntityPersister source,
+			EntityTypeImplementor source,
 			SessionFactoryImplementor sessionFactory,
 			int attributeNumber,
 			String attributeName,
@@ -141,7 +141,7 @@ public class EntityBasedAssociationAttribute
 		if ( getAssociationNature() == AssociationNature.COLLECTION ) {
 			throw new IllegalStateException( "Cannot treat collection-valued attribute as entity type" );
 		}
-		return (EntityPersister) getJoinable();
+		return (EntityTypeImplementor) getJoinable();
 	}
 
 	@Override
@@ -157,7 +157,7 @@ public class EntityBasedAssociationAttribute
 
 	@Override
 	public FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath) {
-		final EntityPersister owningPersister = getSource().getEntityPersister();
+		final EntityTypeImplementor owningPersister = getSource().getEntityPersister();
 
 		FetchStyle style = FetchStrategyHelper.determineFetchStyleByProfile(
 				loadQueryInfluencers,

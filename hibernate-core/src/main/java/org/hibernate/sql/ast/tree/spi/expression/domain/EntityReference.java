@@ -6,8 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression.domain;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
@@ -25,7 +25,7 @@ public class EntityReference implements NavigableContainerReference {
 
 	// todo (6.0) : see org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference and SqmRoot ctor
 
-	private final EntityPersister entityPersister;
+	private final EntityTypeImplementor entityPersister;
 	private final NavigableContainerReference navigableContainerReference;
 	private final EntityValuedExpressableType expressionType;
 	private final NavigablePath propertyPath;
@@ -39,7 +39,7 @@ public class EntityReference implements NavigableContainerReference {
 	 */
 	public EntityReference(
 			ColumnReferenceSource columnReferenceSource,
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			NavigablePath propertyPath,
 			boolean isShallow) {
 		this( columnReferenceSource, entityPersister, null, entityPersister, propertyPath, isShallow );
@@ -50,7 +50,7 @@ public class EntityReference implements NavigableContainerReference {
 	 */
 	public EntityReference(
 			ColumnReferenceSource columnReferenceSource,
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			NavigableContainerReference navigableContainerReference,
 			EntityValuedExpressableType expressionType,
 			NavigablePath propertyPath,
@@ -70,7 +70,7 @@ public class EntityReference implements NavigableContainerReference {
 		);
 	}
 
-	public EntityPersister getEntityPersister() {
+	public EntityTypeImplementor getEntityPersister() {
 		return entityPersister;
 	}
 
@@ -80,7 +80,7 @@ public class EntityReference implements NavigableContainerReference {
 	}
 
 	@Override
-	public EntityPersister getNavigable() {
+	public EntityTypeImplementor getNavigable() {
 		return getEntityPersister();
 	}
 

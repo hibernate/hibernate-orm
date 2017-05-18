@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.consume.results.internal;
 
 import java.sql.SQLException;
 
-import org.hibernate.persister.common.spi.ConvertibleNavigable;
+import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultScalar;
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingOptions;

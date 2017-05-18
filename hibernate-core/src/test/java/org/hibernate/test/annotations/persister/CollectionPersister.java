@@ -11,7 +11,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.mapping.Collection;
 import org.hibernate.persister.collection.OneToManyPersister;
-import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 
 /**
  * @author Shawn Clowater
@@ -20,7 +20,7 @@ public class CollectionPersister extends OneToManyPersister {
 	public CollectionPersister(
 			Collection collectionBinding,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
-			PersisterCreationContext creationContext) throws MappingException, CacheException {
+			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
 	}
 }

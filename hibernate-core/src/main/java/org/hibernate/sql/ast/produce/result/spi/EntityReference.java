@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.result.spi;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.sql.ast.consume.results.spi.InitializerSource;
 
 /**
@@ -20,7 +20,7 @@ public interface EntityReference extends FetchParent, InitializerSource {
 	 *
 	 * @return The EntityPersister.
 	 */
-	EntityPersister getEntityPersister();
+	EntityTypeImplementor getEntityPersister();
 
 	/**
 	 * Get the description of the entity's identifier, specific to this query

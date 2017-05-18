@@ -23,7 +23,7 @@ import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.spi.Type;
 
 import org.junit.Test;
@@ -65,8 +65,8 @@ public class NonEncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFu
 		t.commit();
 		s.close();
 
-		final EntityPersister personPersister = sessionFactory().getEntityPersister( Person.class.getName() );
-		final EntityPersister addressPersister = sessionFactory().getEntityPersister( Address.class.getName() );
+		final EntityTypeImplementor personPersister = sessionFactory().getEntityPersister( Person.class.getName() );
+		final EntityTypeImplementor addressPersister = sessionFactory().getEntityPersister( Address.class.getName() );
 
 		{
 			final List results = getResults(
@@ -138,7 +138,7 @@ public class NonEncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFu
 		s.close();
 	}
 
-	private List getResults(final EntityPersister entityPersister, final Callback callback) {
+	private List getResults(final EntityTypeImplementor entityPersister, final Callback callback) {
 		final LoadPlan plan = Helper.INSTANCE.buildLoadPlan( sessionFactory(), entityPersister );
 
 		final LoadQueryDetails queryDetails = Helper.INSTANCE.buildLoadQueryDetails( plan, sessionFactory() );

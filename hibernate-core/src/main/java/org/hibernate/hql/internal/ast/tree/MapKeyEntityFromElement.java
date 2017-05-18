@@ -12,7 +12,7 @@ import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.spi.EntityType;
@@ -54,7 +54,7 @@ public class MapKeyEntityFromElement extends FromElement {
 		}
 
 		final EntityType indexEntityType = (EntityType) indexType;
-		final EntityPersister indexEntityPersister = (EntityPersister) indexEntityType.getAssociatedJoinable( sf );
+		final EntityTypeImplementor indexEntityPersister = (EntityTypeImplementor) indexEntityType.getAssociatedJoinable( sf );
 
 		final String rhsAlias = walker.getAliasGenerator().createName( indexEntityPersister.getEntityName() );
 		final boolean useThetaJoin = collectionFromElement.getJoinSequence().isThetaStyle();

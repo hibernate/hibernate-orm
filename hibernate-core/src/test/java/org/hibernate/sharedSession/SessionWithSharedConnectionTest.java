@@ -13,7 +13,7 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -189,7 +189,7 @@ public class SessionWithSharedConnectionTest extends BaseCoreFunctionalTestCase 
 					}
 
 					@Override
-					public boolean requiresPostCommitHanding(EntityPersister persister) {
+					public boolean requiresPostCommitHanding(EntityTypeImplementor persister) {
 						return true;
 					}
 				}

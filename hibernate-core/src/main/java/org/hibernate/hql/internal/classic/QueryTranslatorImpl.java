@@ -47,7 +47,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.BasicLoader;
 import org.hibernate.loader.spi.AfterLoadAction;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
@@ -649,7 +649,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		// initialize the Set of queried identifier spaces (ie. tables)
 		Iterator iter = collections.values().iterator();
 		while ( iter.hasNext() ) {
-			CollectionPersister p = getCollectionPersister( (String) iter.next() );
+			PersistentCollectionMetadata p = getCollectionPersister( (String) iter.next() );
 			addQuerySpaces( p.getCollectionSpaces() );
 		}
 		iter = typeMap.keySet().iterator();
@@ -868,8 +868,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	}
 
 	@Override
-	public CollectionPersister[] getCollectionPersisters() {
-		return collectionPersister == null ? null : new CollectionPersister[] {collectionPersister};
+	public PersistentCollectionMetadata[] getCollectionPersisters() {
+		return collectionPersister == null ? null : new PersistentCollectionMetadata[] {collectionPersister};
 	}
 
 	@Override

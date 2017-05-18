@@ -18,7 +18,7 @@ import org.hibernate.collection.internal.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -36,7 +36,7 @@ public class ArrayType extends AbstractCollectionType {
 
 	@Override
 	public PersistentCollection instantiate(
-			SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
+			SharedSessionContractImplementor session, PersistentCollectionMetadata persister, Serializable key) {
 		return new PersistentArrayHolder( session, persister );
 	}
 

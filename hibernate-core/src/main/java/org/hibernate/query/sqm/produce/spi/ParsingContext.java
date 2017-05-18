@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.common.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.internal.NavigableBindingHelper;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;

@@ -6,7 +6,7 @@
  */
 package org.hibernate.loader.collection;
 
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.persister.collection.QueryableCollection;
 
 /**
@@ -27,7 +27,7 @@ public abstract class BatchingCollectionInitializer implements CollectionInitial
 		this.collectionPersister = collectionPersister;
 	}
 
-	public CollectionPersister getCollectionPersister() {
+	public PersistentCollectionMetadata getCollectionPersister() {
 		return collectionPersister;
 	}
 

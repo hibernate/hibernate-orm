@@ -11,7 +11,7 @@ import java.util.Iterator;
 import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.walking.spi.AssociationKey;
@@ -215,7 +215,7 @@ public abstract class AbstractCompositionAttribute
 		};
 	}
 
-	protected abstract EntityPersister locateOwningPersister();
+	protected abstract EntityTypeImplementor locateOwningPersister();
 
 	@Override
 	protected String loggableMetadata() {

@@ -102,14 +102,12 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.internal.MetamodelImpl;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryInterpretations;
-import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
@@ -325,7 +323,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
 					// resolve the persister owning the fetch
 					final String entityName = getImportedClassName( mappingFetch.getEntity() );
-					final EntityPersister owner = entityName == null
+					final EntityTypeImplementor owner = entityName == null
 							? null
 							: typeConfiguration.findEntityPersister( entityName );
 					if ( owner == null ) {

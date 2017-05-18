@@ -25,7 +25,7 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 
@@ -77,7 +77,7 @@ public class EnumeratedWithMappedSuperclassTest extends BaseUnitTestCase {
 
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) metadata.buildSessionFactory();
 		try {
-			EntityPersister p = sf.getEntityPersister( AddressLevel.class.getName() );
+			EntityTypeImplementor p = sf.getEntityPersister( AddressLevel.class.getName() );
 			CustomType runtimeType = assertTyping( CustomType.class, p.getPropertyType( "nature" ) );
 			EnumType runtimeEnumType = assertTyping( EnumType.class, runtimeType.getUserType() );
 			assertEquals( Types.VARCHAR, runtimeEnumType.sqlTypes()[0] );

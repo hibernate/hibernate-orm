@@ -18,8 +18,8 @@ import javax.persistence.criteria.CriteriaUpdate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
@@ -30,8 +30,8 @@ import org.hibernate.type.descriptor.spi.WrapperOptions;
 
 /**
  * Defines the "internal contract" for {@link Session} and other parts of Hibernate such as
- * {@link Type}, {@link EntityPersister}
- * and {@link CollectionPersister} implementations.
+ * {@link Type}, {@link EntityTypeImplementor}
+ * and {@link PersistentCollectionMetadata} implementations.
  *
  * A Session, through this interface and SharedSessionContractImplementor, implements:<ul>
  *     <li>
@@ -64,7 +64,7 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 
 	ActionQueue getActionQueue();
 
-	Object instantiate(EntityPersister persister, Serializable id) throws HibernateException;
+	Object instantiate(EntityTypeImplementor persister, Serializable id) throws HibernateException;
 
 	void forceFlush(EntityEntry e) throws HibernateException;
 

@@ -18,7 +18,7 @@ import javax.persistence.Table;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 
 import org.hibernate.testing.TestForIssue;
@@ -89,7 +89,7 @@ public class JoinedSubclassWithIgnoredExplicitDiscriminatorTest extends BaseCore
 
 	@Test
 	public void metadataAssertions() {
-		EntityPersister p = sessionFactory().getEntityPersister( Dog.class.getName() );
+		EntityTypeImplementor p = sessionFactory().getEntityPersister( Dog.class.getName() );
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister dogPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "integer", dogPersister.getDiscriminatorType().getName() );

@@ -41,7 +41,7 @@ import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
 import org.junit.Test;
@@ -201,7 +201,7 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 		session.close();
 	}
 
-	private List<?> getResults(EntityPersister entityPersister ) {
+	private List<?> getResults(EntityTypeImplementor entityPersister ) {
 		final LoadPlan plan = Helper.INSTANCE.buildLoadPlan( sessionFactory(), entityPersister );
 
 		final LoadQueryDetails queryDetails = Helper.INSTANCE.buildLoadQueryDetails( plan, sessionFactory() );

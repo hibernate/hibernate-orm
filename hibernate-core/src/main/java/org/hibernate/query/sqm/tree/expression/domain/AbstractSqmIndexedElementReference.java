@@ -6,10 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.persister.collection.spi.CollectionElement;
-import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.queryable.spi.NavigableContainerReferenceInfo;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.queryable.spi.NavigableContainerReferenceInfo;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
@@ -39,7 +39,7 @@ public abstract class AbstractSqmIndexedElementReference
 
 	@Override
 	public Navigable getReferencedNavigable() {
-		return getPluralAttributeBinding().getReferencedNavigable().getCollectionPersister().getElementDescriptor();
+		return getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getElementDescriptor();
 	}
 
 	@Override
@@ -86,7 +86,7 @@ public abstract class AbstractSqmIndexedElementReference
 	}
 
 	@Override
-	public EntityPersister getIntrinsicSubclassEntityPersister() {
+	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
 		// for most element classifications, there is none
 		return null;
 	}

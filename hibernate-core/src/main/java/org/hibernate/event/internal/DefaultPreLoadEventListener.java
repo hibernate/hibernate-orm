@@ -8,7 +8,7 @@ package org.hibernate.event.internal;
 
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * Called beforeQuery injecting property values into a newly
@@ -19,7 +19,7 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 public class DefaultPreLoadEventListener implements PreLoadEventListener {
 	
 	public void onPreLoad(PreLoadEvent event) {
-		EntityPersister persister = event.getPersister();
+		EntityTypeImplementor persister = event.getPersister();
 		event.getSession()
 			.getInterceptor()
 			.onLoad( 

@@ -6,8 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression.domain;
 
-import org.hibernate.persister.collection.spi.CollectionIndex;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 
@@ -19,12 +19,12 @@ public class PluralAttributeIndexReference implements NavigableReference {
 	private final ColumnReferenceSource columnReferenceSource;
 	private final NavigablePath navigablePath;
 
-	private final CollectionPersister collectionPersister;
+	private final PersistentCollectionMetadata collectionPersister;
 
 
 	public PluralAttributeIndexReference(
 			NavigableContainerReference containerReference,
-			CollectionPersister collectionPersister,
+			PersistentCollectionMetadata collectionPersister,
 			ColumnReferenceSource columnReferenceSource,
 			NavigablePath navigablePath) {
 		this.containerReference = containerReference;

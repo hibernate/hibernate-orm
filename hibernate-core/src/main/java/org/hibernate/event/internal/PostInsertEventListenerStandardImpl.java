@@ -11,7 +11,7 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.CallbackType;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * Standard implementation of the PostInsertEventListener contract
@@ -34,7 +34,7 @@ public class PostInsertEventListenerStandardImpl implements PostInsertEventListe
 	}
 
 	@Override
-	public boolean requiresPostCommitHanding(EntityPersister persister) {
+	public boolean requiresPostCommitHanding(EntityTypeImplementor persister) {
 		return callbackRegistry.hasRegisteredCallbacks( persister.getMappedClass(), CallbackType.POST_PERSIST );
 	}
 }

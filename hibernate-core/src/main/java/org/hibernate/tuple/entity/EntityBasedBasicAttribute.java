@@ -7,7 +7,7 @@
 package org.hibernate.tuple.entity;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.spi.Type;
 
@@ -16,7 +16,7 @@ import org.hibernate.type.spi.Type;
  */
 public class EntityBasedBasicAttribute extends AbstractEntityBasedAttribute {
 	public EntityBasedBasicAttribute(
-			EntityPersister source,
+			EntityTypeImplementor source,
 			SessionFactoryImplementor factory,
 			int attributeNumber,
 			String attributeName,

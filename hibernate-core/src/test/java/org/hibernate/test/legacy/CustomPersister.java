@@ -43,9 +43,9 @@ import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.entity.MultiLoadOptions;
-import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.loader.spi.MultiLoadOptions;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
@@ -55,7 +55,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.VersionType;
 
-public class CustomPersister implements EntityPersister {
+public class CustomPersister implements EntityTypeImplementor {
 
 	private static final Hashtable INSTANCES = new Hashtable();
 	private static final IdentifierGenerator GENERATOR = new UUIDHexGenerator();
@@ -68,7 +68,7 @@ public class CustomPersister implements EntityPersister {
 			PersistentClass model,
 			EntityRegionAccessStrategy cacheAccessStrategy,
 			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-			PersisterCreationContext creationContext) {
+			RuntimeModelCreationContext creationContext) {
 		this.factory = creationContext.getSessionFactory();
 		this.entityMetamodel = new EntityMetamodel( model, this, factory );
 	}
@@ -230,7 +230,7 @@ public class CustomPersister implements EntityPersister {
 		( ( Custom ) entity ).id = ( String ) currentId;
 	}
 
-	public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
+	public EntityTypeImplementor getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
 		return this;
 	}
 
@@ -261,35 +261,35 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	/**
-	 * @see EntityPersister#hasIdentifierProperty()
+	 * @see EntityTypeImplementor#hasIdentifierProperty()
 	 */
 	public boolean hasIdentifierProperty() {
 		return true;
 	}
 
 	/**
-	 * @see EntityPersister#isVersioned()
+	 * @see EntityTypeImplementor#isVersioned()
 	 */
 	public boolean isVersioned() {
 		return false;
 	}
 
 	/**
-	 * @see EntityPersister#getVersionType()
+	 * @see EntityTypeImplementor#getVersionType()
 	 */
 	public Type getVersionType() {
 		return null;
 	}
 
 	/**
-	 * @see EntityPersister#getVersionProperty()
+	 * @see EntityTypeImplementor#getVersionProperty()
 	 */
 	public int getVersionProperty() {
 		return 0;
 	}
 
 	/**
-	 * @see EntityPersister#getIdentifierGenerator()
+	 * @see EntityTypeImplementor#getIdentifierGenerator()
 	 */
 	public IdentifierGenerator getIdentifierGenerator()
 	throws HibernateException {
@@ -297,7 +297,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	/**
-	 * @see EntityPersister#load(Serializable, Object, org.hibernate.LockOptions , SharedSessionContractImplementor)
+	 * @see EntityTypeImplementor#load(Serializable, Object, org.hibernate.LockOptions , SharedSessionContractImplementor)
 	 */
 	public Object load(
 		Serializable id,
@@ -314,7 +314,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	/**
-	 * @see EntityPersister#load(Serializable, Object, LockMode, SharedSessionContractImplementor)
+	 * @see EntityTypeImplementor#load(Serializable, Object, LockMode, SharedSessionContractImplementor)
 	 */
 	public Object load(
 		Serializable id,
@@ -356,7 +356,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	/**
-	 * @see EntityPersister#lock(Serializable, Object, Object, LockMode, SharedSessionContractImplementor)
+	 * @see EntityTypeImplementor#lock(Serializable, Object, Object, LockMode, SharedSessionContractImplementor)
 	 */
 	public void lock(
 		Serializable id,
@@ -370,7 +370,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	/**
-	 * @see EntityPersister#lock(Serializable, Object, Object, LockMode, SharedSessionContractImplementor)
+	 * @see EntityTypeImplementor#lock(Serializable, Object, Object, LockMode, SharedSessionContractImplementor)
 	 */
 	public void lock(
 		Serializable id,
@@ -410,7 +410,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	/**
-	 * @see EntityPersister
+	 * @see EntityTypeImplementor
 	 */
 	public void update(
 		Serializable id,
@@ -434,35 +434,35 @@ public class CustomPersister implements EntityPersister {
 	private static final boolean[] GENERATION = new boolean[] { false };
 
 	/**
-	 * @see EntityPersister#getPropertyTypes()
+	 * @see EntityTypeImplementor#getPropertyTypes()
 	 */
 	public Type[] getPropertyTypes() {
 		return TYPES;
 	}
 
 	/**
-	 * @see EntityPersister#getPropertyNames()
+	 * @see EntityTypeImplementor#getPropertyNames()
 	 */
 	public String[] getPropertyNames() {
 		return NAMES;
 	}
 
 	/**
-	 * @see EntityPersister#getPropertyCascadeStyles()
+	 * @see EntityTypeImplementor#getPropertyCascadeStyles()
 	 */
 	public CascadeStyle[] getPropertyCascadeStyles() {
 		return null;
 	}
 
 	/**
-	 * @see EntityPersister#getIdentifierType()
+	 * @see EntityTypeImplementor#getIdentifierType()
 	 */
 	public Type getIdentifierType() {
 		return StandardBasicTypes.STRING;
 	}
 
 	/**
-	 * @see EntityPersister#getIdentifierPropertyName()
+	 * @see EntityTypeImplementor#getIdentifierPropertyName()
 	 */
 	public String getIdentifierPropertyName() {
 		return "id";
@@ -497,7 +497,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	/**
-	 * @see EntityPersister#getClassMetadata()
+	 * @see EntityTypeImplementor#getClassMetadata()
 	 */
 	public ClassMetadata getClassMetadata() {
 		return null;
@@ -512,7 +512,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	/**
-	 * @see EntityPersister#getPropertyInsertability()
+	 * @see EntityTypeImplementor#getPropertyInsertability()
 	 */
 	public boolean[] getPropertyInsertability() {
 		return MUTABILITY;
@@ -700,7 +700,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public EntityPersister getEntityPersister() {
+	public EntityTypeImplementor getEntityPersister() {
 		return this;
 	}
 

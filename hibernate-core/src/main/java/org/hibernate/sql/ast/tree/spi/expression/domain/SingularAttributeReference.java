@@ -7,9 +7,9 @@
 
 package org.hibernate.sql.ast.tree.spi.expression.domain;
 
-import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.persister.common.spi.SingularPersistentAttribute;
-import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;

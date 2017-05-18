@@ -12,7 +12,7 @@ import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.internal.synchronization.work.ModWorkUnit;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * Envers-specific entity (post) update event listener
@@ -64,7 +64,7 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversEventListener i
 	private Object[] postUpdateDBState(PostUpdateEvent event) {
 		final Object[] newDbState = event.getState().clone();
 		if ( event.getOldState() != null ) {
-			final EntityPersister entityPersister = event.getPersister();
+			final EntityTypeImplementor entityPersister = event.getPersister();
 			for ( int i = 0; i < entityPersister.getPropertyNames().length; ++i ) {
 				if ( !entityPersister.getPropertyUpdateability()[i] ) {
 					// Assuming that PostUpdateEvent#getOldState() returns database state of the record beforeQuery modification.
@@ -77,7 +77,7 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversEventListener i
 	}
 
 	@Override
-	public boolean requiresPostCommitHanding(EntityPersister persister) {
+	public boolean requiresPostCommitHanding(EntityTypeImplementor persister) {
 		return getAuditService().getEntityBindings().isVersioned( persister.getEntityName() );
 	}
 }

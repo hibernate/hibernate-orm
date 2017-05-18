@@ -14,7 +14,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 
-import org.hibernate.persister.common.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;

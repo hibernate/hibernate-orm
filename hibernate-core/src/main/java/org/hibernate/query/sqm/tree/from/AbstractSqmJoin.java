@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 
@@ -21,7 +21,7 @@ public abstract class AbstractSqmJoin extends AbstractSqmFrom implements SqmJoin
 			String uid,
 			String alias,
 			SqmNavigableReference navigableBinding,
-			EntityPersister intrinsicSubclassIndicator,
+			EntityTypeImplementor intrinsicSubclassIndicator,
 			SqmJoinType joinType) {
 		super( fromElementSpace, uid, alias, navigableBinding, intrinsicSubclassIndicator );
 		this.joinType = joinType;

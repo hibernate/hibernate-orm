@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.TypeHelper;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * Structured CacheEntry format for entities.  Used to store the entry into the second-level cache
@@ -25,14 +25,14 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 	public static final String SUBCLASS_KEY = "_subclass";
 	public static final String VERSION_KEY = "_version";
 
-	private EntityPersister persister;
+	private EntityTypeImplementor persister;
 
 	/**
 	 * Constructs a StructuredCacheEntry strategy
 	 *
 	 * @param persister The persister whose data needs to be structured.
 	 */
-	public StructuredCacheEntry(EntityPersister persister) {
+	public StructuredCacheEntry(EntityTypeImplementor persister) {
 		this.persister = persister;
 	}
 
@@ -42,7 +42,7 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 		final Map map = (Map) structured;
 		final String subclass = (String) map.get( SUBCLASS_KEY );
 		final Object version = map.get( VERSION_KEY );
-		final EntityPersister subclassPersister = factory.getEntityPersister( subclass );
+		final EntityTypeImplementor subclassPersister = factory.getEntityPersister( subclass );
 		final String[] names = subclassPersister.getPropertyNames();
 		final Serializable[] state = new Serializable[names.length];
 		for ( int i = 0; i < names.length; i++ ) {

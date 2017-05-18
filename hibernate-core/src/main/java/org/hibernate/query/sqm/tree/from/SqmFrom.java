@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.persister.queryable.spi.TableGroupInfoSource;
+import org.hibernate.metamodel.queryable.spi.TableGroupInfoSource;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 

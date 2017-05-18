@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.consume.results.internal;
 
 import java.util.Map;
 
-import org.hibernate.persister.common.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.sql.ast.produce.result.spi.EntityReference;
 import org.hibernate.sql.ast.consume.results.spi.EntityReferenceInitializer;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;

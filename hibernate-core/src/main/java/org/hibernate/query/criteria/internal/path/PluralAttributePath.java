@@ -18,7 +18,7 @@ import javax.persistence.metamodel.Type;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.JpaPathSourceImplementor;
 import org.hibernate.query.sqm.produce.spi.criteria.path.JpaPluralAttributePath;
@@ -31,7 +31,7 @@ import org.hibernate.query.sqm.produce.spi.criteria.path.JpaPluralAttributePath;
  */
 public class PluralAttributePath<X> extends AbstractPathImpl<X> implements JpaPluralAttributePath, Serializable {
 	private final PluralAttribute<?,X,?> attribute;
-	private final CollectionPersister persister;
+	private final PersistentCollectionMetadata persister;
 
 	public PluralAttributePath(
 			CriteriaBuilderImpl criteriaBuilder,
@@ -42,7 +42,7 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements JpaPl
 		this.persister = resolvePersister( criteriaBuilder, attribute );
 	}
 
-	private CollectionPersister resolvePersister(CriteriaBuilderImpl criteriaBuilder, PluralAttribute attribute) {
+	private PersistentCollectionMetadata resolvePersister(CriteriaBuilderImpl criteriaBuilder, PluralAttribute attribute) {
 		SessionFactoryImplementor sfi = criteriaBuilder.getEntityManagerFactory();
 		return sfi.getTypeConfiguration().findCollectionPersister( resolveRole( attribute ) );
 	}
@@ -122,7 +122,7 @@ public class PluralAttributePath<X> extends AbstractPathImpl<X> implements JpaPl
 	}
 
 	@SuppressWarnings({ "UnusedDeclaration" })
-	public CollectionPersister getPersister() {
+	public PersistentCollectionMetadata getPersister() {
 		return persister;
 	}
 

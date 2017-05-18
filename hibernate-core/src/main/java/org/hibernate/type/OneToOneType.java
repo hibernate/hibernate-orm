@@ -16,7 +16,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -55,7 +55,7 @@ public class OneToOneType extends AbstractEntityType {
 	@Override
 	public boolean isNull(Object owner, SharedSessionContractImplementor session) {
 		if ( propertyName != null ) {
-			final EntityPersister ownerPersister = session.getFactory().getTypeConfiguration().findEntityPersister( entityName );
+			final EntityTypeImplementor ownerPersister = session.getFactory().getTypeConfiguration().findEntityPersister( entityName );
 			final Serializable id = session.getContextEntityIdentifier( owner );
 			final EntityKey entityKey = session.generateEntityKey( id, ownerPersister );
 			return session.getPersistenceContext().isPropertyNull( entityKey, getPropertyName() );

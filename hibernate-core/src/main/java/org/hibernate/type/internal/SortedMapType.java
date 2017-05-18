@@ -13,7 +13,7 @@ import java.util.TreeMap;
 import org.hibernate.collection.internal.PersistentSortedMap;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 
 /**
  * @author Andrea Boriero
@@ -26,7 +26,7 @@ public class SortedMapType extends MapType {
 	@Override
 	public PersistentCollection instantiate(
 			SharedSessionContractImplementor session,
-			CollectionPersister persister,
+			PersistentCollectionMetadata persister,
 			Serializable key) {
 		PersistentSortedMap map = new PersistentSortedMap( session );
 		map.setComparator( getComparator() );

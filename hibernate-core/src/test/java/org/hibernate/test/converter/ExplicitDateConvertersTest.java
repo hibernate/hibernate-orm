@@ -14,7 +14,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.Session;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
@@ -80,7 +80,7 @@ public class ExplicitDateConvertersTest extends BaseNonConfigCoreFunctionalTestC
 
 	@Test
 	public void testSimpleConvertUsage() throws MalformedURLException {
-		final EntityPersister ep = sessionFactory().getEntityPersister( Entity1.class.getName() );
+		final EntityTypeImplementor ep = sessionFactory().getEntityPersister( Entity1.class.getName() );
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final AttributeConverterTypeAdapter type = assertTyping(
 				AttributeConverterTypeAdapter.class,

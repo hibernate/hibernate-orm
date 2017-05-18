@@ -19,7 +19,7 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.type.spi.ColumnMapping;
 import org.hibernate.type.spi.Type;
@@ -175,7 +175,7 @@ public class ManyToOneType extends AbstractEntityType {
 	private void scheduleBatchLoadIfNeeded(Serializable id, SharedSessionContractImplementor session) throws MappingException {
 		//cannot batch fetch by unique key (property-ref associations)
 		if ( uniqueKeyPropertyName == null && id != null ) {
-			final EntityPersister persister = getAssociatedEntityPersister( session.getFactory() );
+			final EntityTypeImplementor persister = getAssociatedEntityPersister( session.getFactory() );
 			if ( persister.isBatchLoadable() ) {
 				final EntityKey entityKey = session.generateEntityKey( id, persister );
 				if ( !session.getPersistenceContext().containsEntity( entityKey ) ) {

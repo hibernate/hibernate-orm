@@ -42,14 +42,14 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.embedded.spi.EmbeddedPersister;
-import org.hibernate.persister.entity.spi.EntityHierarchy;
-import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.queryable.internal.PolymorphicEntityValuedExpressableTypeImpl;
-import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
-import org.hibernate.persister.queryable.spi.PolymorphicEntityValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.queryable.internal.PolymorphicEntityValuedExpressableTypeImpl;
+import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralSqmExpression;
 import org.hibernate.tuple.component.ComponentMetamodel;
@@ -113,10 +113,10 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	private final SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
 	private final BasicTypeRegistry basicTypeRegistry;
 
-	private final Map<String,EntityPersister<?>> entityPersisterMap = new ConcurrentHashMap<>();
+	private final Map<String,EntityTypeImplementor<?>> entityPersisterMap = new ConcurrentHashMap<>();
 	private final Set<EntityHierarchy> entityHierarchies = ConcurrentHashMap.newKeySet();
-	private final Map<String,CollectionPersister<?,?,?>> collectionPersisterMap = new ConcurrentHashMap<>();
-	private final Map<String,EmbeddedPersister<?>> embeddablePersisterMap = new ConcurrentHashMap<>();
+	private final Map<String,PersistentCollectionMetadata<?,?,?>> collectionPersisterMap = new ConcurrentHashMap<>();
+	private final Map<String,EmbeddedTypeImplementor<?>> embeddablePersisterMap = new ConcurrentHashMap<>();
 
 	private final Map<String,String> importMap = new ConcurrentHashMap<>();
 	private final Set<EntityNameResolver> entityNameResolvers = ConcurrentHashMap.newKeySet();
@@ -202,7 +202,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
-		final EntityPersister<? extends T> entityPersister = findEntityPersister( entityClass );
+		final EntityTypeImplementor<? extends T> entityPersister = findEntityPersister( entityClass );
 		if ( entityPersister == null ) {
 			throw new IllegalArgumentException( "Given class is not an entity : " + entityClass.getName() );
 		}
@@ -229,14 +229,14 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	/**
 	 * Retrieve all EntityPersisters, keyed by entity-name
 	 */
-	public Map<String,EntityPersister<?>> getEntityPersisterMap() {
+	public Map<String,EntityTypeImplementor<?>> getEntityPersisterMap() {
 		return Collections.unmodifiableMap( entityPersisterMap );
 	}
 
 	/**
 	 * Retrieve all EntityPersisters
 	 */
-	public Collection<EntityPersister<?>> getEntityPersisters() {
+	public Collection<EntityTypeImplementor<?>> getEntityPersisters() {
 		return entityPersisterMap.values();
 	}
 
@@ -244,18 +244,18 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	 * Retrieve an EntityPersister by entity-name.  Returns {@code null} if not known.
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> EntityPersister<T> findEntityPersister(String entityName) {
+	public <T> EntityTypeImplementor<T> findEntityPersister(String entityName) {
 		if ( importMap.containsKey( entityName ) ) {
 			entityName = importMap.get( entityName );
 		}
-		return (EntityPersister<T>) entityPersisterMap.get( entityName );
+		return (EntityTypeImplementor<T>) entityPersisterMap.get( entityName );
 	}
 
 	/**
 	 * Retrieve an EntityPersister by entity-name.  Throws exception if not known.
 	 */
-	public <T> EntityPersister<T> resolveEntityPersister(String entityName) throws UnknownEntityTypeException {
-		final EntityPersister<T> resolved = findEntityPersister( entityName );
+	public <T> EntityTypeImplementor<T> resolveEntityPersister(String entityName) throws UnknownEntityTypeException {
+		final EntityTypeImplementor<T> resolved = findEntityPersister( entityName );
 		if ( resolved != null ) {
 			return resolved;
 		}
@@ -263,8 +263,8 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		throw new UnknownEntityTypeException( "Could not resolve EntityPersister by entity name [" + entityName + "]" );
 	}
 
-	public <T> EntityPersister<? extends T> findEntityPersister(Class<T> javaType) {
-		EntityPersister<? extends T> entityPersister = findEntityPersister( javaType.getName() );
+	public <T> EntityTypeImplementor<? extends T> findEntityPersister(Class<T> javaType) {
+		EntityTypeImplementor<? extends T> entityPersister = findEntityPersister( javaType.getName() );
 		if ( entityPersister == null ) {
 			JavaTypeDescriptor javaTypeDescriptor = getJavaTypeDescriptorRegistry().getDescriptor( javaType );
 			if ( javaTypeDescriptor != null && javaTypeDescriptor instanceof MappedSuperclassJavaDescriptor ) {
@@ -278,8 +278,8 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		return entityPersister;
 	}
 
-	public <T> EntityPersister<? extends T> resolveEntityPersister(Class<T> javaType) {
-		final EntityPersister<? extends T> entityPersister = findEntityPersister( javaType );
+	public <T> EntityTypeImplementor<? extends T> resolveEntityPersister(Class<T> javaType) {
+		final EntityTypeImplementor<? extends T> entityPersister = findEntityPersister( javaType );
 		if ( entityPersister == null ) {
 			throw new UnknownEntityTypeException( "Could not resolve EntityPersister by Java type [" + javaType.getName() + "]" );
 		}
@@ -293,14 +293,14 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	/**
 	 * Retrieve all CollectionPersisters, keyed by role (path)
 	 */
-	public Map<String,CollectionPersister<?,?,?>> getCollectionPersisterMap() {
+	public Map<String,PersistentCollectionMetadata<?,?,?>> getCollectionPersisterMap() {
 		return Collections.unmodifiableMap( collectionPersisterMap );
 	}
 
 	/**
 	 * Retrieve all CollectionPersisters
 	 */
-	public Collection<CollectionPersister<?,?,?>> getCollectionPersisters() {
+	public Collection<PersistentCollectionMetadata<?,?,?>> getCollectionPersisters() {
 		return collectionPersisterMap.values();
 	}
 
@@ -308,8 +308,8 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	 * Locate a CollectionPersister by role (path).  Returns {@code null} if not known
 	 */
 	@SuppressWarnings("unchecked")
-	public <O,C,E> CollectionPersister<O,C,E> findCollectionPersister(String roleName) {
-		return (CollectionPersister<O, C, E>) collectionPersisterMap.get( roleName );
+	public <O,C,E> PersistentCollectionMetadata<O,C,E> findCollectionPersister(String roleName) {
+		return (PersistentCollectionMetadata<O, C, E>) collectionPersisterMap.get( roleName );
 	}
 
 	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
@@ -321,16 +321,16 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// EmbeddablePersister access
 
-	public Collection<EmbeddedPersister<?>> getEmbeddablePersisters() {
+	public Collection<EmbeddedTypeImplementor<?>> getEmbeddablePersisters() {
 		return embeddablePersisterMap.values();
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> EmbeddedPersister<T> findEmbeddablePersister(String roleName) {
-		return (EmbeddedPersister<T>) embeddablePersisterMap.get( roleName );
+	public <T> EmbeddedTypeImplementor<T> findEmbeddablePersister(String roleName) {
+		return (EmbeddedTypeImplementor<T>) embeddablePersisterMap.get( roleName );
 	}
 
-	public <T> EmbeddedPersister<T> findEmbeddablePersister(Class<T> javaType) {
+	public <T> EmbeddedTypeImplementor<T> findEmbeddablePersister(Class<T> javaType) {
 		final JavaTypeDescriptor javaTypeDescriptor = getJavaTypeDescriptorRegistry().getDescriptor( javaType );
 		if ( javaType == null || !EmbeddableJavaDescriptor.class.isInstance( javaTypeDescriptor ) ) {
 			return null;
@@ -357,7 +357,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 			entityName = importMap.get( entityName );
 		}
 
-		final EntityPersister namedPersister = findEntityPersister( entityName );
+		final EntityTypeImplementor namedPersister = findEntityPersister( entityName );
 		if ( namedPersister != null ) {
 			return namedPersister;
 		}
@@ -403,7 +403,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 			return (EntityValuedExpressableType<T>) polymorphicEntityReferenceMap.get( jtd );
 		}
 
-		final Set<EntityPersister<?>> implementors = getImplementors( javaType );
+		final Set<EntityTypeImplementor<?>> implementors = getImplementors( javaType );
 		if ( !implementors.isEmpty() ) {
 			final PolymorphicEntityValuedExpressableTypeImpl entityReference = new PolymorphicEntityValuedExpressableTypeImpl(
 					jtd,
@@ -417,16 +417,16 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	@SuppressWarnings("unchecked")
-	public Set<EntityPersister<?>> getImplementors(Class javaType) {
+	public Set<EntityTypeImplementor<?>> getImplementors(Class javaType) {
 		// if the javaType refers directly to an EntityPersister by Class name, return just it.
-		final EntityPersister<?> exactMatch = getEntityPersisterMap().get( javaType.getName() );
+		final EntityTypeImplementor<?> exactMatch = getEntityPersisterMap().get( javaType.getName() );
 		if ( exactMatch != null ) {
 			return Collections.singleton( exactMatch );
 		}
 
-		final HashSet<EntityPersister<?>> matchingPersisters = new HashSet<>();
+		final HashSet<EntityTypeImplementor<?>> matchingPersisters = new HashSet<>();
 
-		for ( EntityPersister entityPersister : getEntityPersisterMap().values() ) {
+		for ( EntityTypeImplementor entityPersister : getEntityPersisterMap().values() ) {
 			if ( entityPersister.getJavaType() == null ) {
 				continue;
 			}
@@ -821,7 +821,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SF-based initialization
 
-	public void register(EntityPersister entityPersister) {
+	public void register(EntityTypeImplementor entityPersister) {
 		entityPersisterMap.put( entityPersister.getEntityName(), entityPersister );
 		entityHierarchies.add( entityPersister.getHierarchy() );
 
@@ -862,7 +862,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		registerEntityNameResolvers( entityPersister );
 	}
 
-	public void register(CollectionPersister collectionPersister) {
+	public void register(PersistentCollectionMetadata collectionPersister) {
 		collectionPersisterMap.put( collectionPersister.getNavigableRole().getFullPath(), collectionPersister );
 
 		if ( collectionPersister.getIndexDescriptor() != null
@@ -885,7 +885,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		}
 	}
 
-	public void register(EmbeddedPersister embeddablePersister) {
+	public void register(EmbeddedTypeImplementor embeddablePersister) {
 		embeddablePersisterMap.put( embeddablePersister.getRoleName(), embeddablePersister );
 
 		final Set<String> roles = embeddedRolesByEmbeddableType.computeIfAbsent(
@@ -895,7 +895,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		roles.add( embeddablePersister.getNavigableRole().getNavigableName() );
 	}
 
-	private void registerEntityNameResolvers(EntityPersister persister) {
+	private void registerEntityNameResolvers(EntityTypeImplementor persister) {
 		if ( persister.getEntityMetamodel() == null || persister.getEntityMetamodel().getTuplizer() == null ) {
 			return;
 		}

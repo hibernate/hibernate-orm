@@ -9,11 +9,14 @@ This categorization follows the http://https://en.wikipedia.org/wiki/MoSCoW_meth
 
 * HHH-10954 - Integrate SQM into upstream ORM
 * HHH-10873 - Type systems consolidation + org.hibernate.type refactoring
-* HHH-11263 - Introduce BootstrapContext
+* HHH-11263 - Improvements in boot-time model and its creation as well as processing into runtime-model
 * HHH-11356 - Adjust the 2nd-Cache SPIs to better reflect supported uses
 * HHH-11391	- Improved metadata about a basic-typed value
 * HHH-11358 - Changes to persister contracts
 * HHH-11478 - General package restructuring
+* HHH-11697 - Remove QueryTranslator and friends in preference of new SQM-based "translation"
+* HHH-10755 - Fold hiberate-envers into hibernate-core
+* HHH-11444 - Rename groupId and artifactIds
 
 
 == Must
@@ -61,6 +64,7 @@ As always the "trigger" for Beta1 is (relatively) stable API.
 * Make sure we have added `@since 6.0` to all major API/SPI contracts we have added in 6.0 dev.  Also,
  	add `@Incubating` to those where appropriate.  ? - Is it valid to apply the `@Incubating` annotation
  	at the package level?
+* CollectionTuplizer (see "Open questions" discussion below) or some way to handle role of CollectionType.
 
 
 === Alpha2
@@ -218,6 +222,54 @@ Unresolved/undecided design questions.
 * Allow controlling "JPA strict compliance" per-query (hint)?
 * New boot-time mapping contracts based on "managed type" classifications... keep in `org.hibernate.mapping`,
 	or move to `org.hibernate.boot.model.domain`?
+* Replacement for CollectionType -> initial thought is to have a "tuplizer" for collections, e.g.
++
+--
+	/**
+	 * Encapsulates collection type specific behavior/information
+	 * <p/>
+	 * NOTE : the name "tuplizer" was chosen as this really serves
+	 * same logical purpose as the entity and component tuplizers
+	 * do entities and components respectively.
+	 */
+	interface CollectionTuplizer<C> {
+		/**
+		 * Access to the type of the collection.  This
+		 * is expected to be an interface.  Used to create
+		 * a registry against which we can resolve the
+		 * reflected attribute type.  E.g. an attribute
+		 * defined as `List` would be resolved to the
+		 * CollectionTuplizer that deals with lists
+		 */
+		Class<C> getCollectionJavaType();
+
+		/**
+		 * Create an empty instance of the collection wrapper
+		 */
+		PersistentCollection<C> create(int anticipatedSize);
+
+		/**
+		 * Wrap an existing "raw" view of the collection
+		 */
+		PersistentCollection<C> wrap(Object rawCollection);
+
+		/**
+		 * Creates the representation of this plural attribute
+		 * according to the runtime domain model view.
+		 */
+		<O> PluralPersistentAttribute<O,C,?> generatePluralAttribute();
+
+		// anything else?  element comparator, etc?
+	}
+--
+* Should `VirtualPersistentAttribute` logically be a `VirtualNavigable`?  By very nature of
+	the fact that it is virtual means it is not a "real" attribute - so why does it make
+	sense to model as such.  TBH I think that idea was added before Navigable was developed.
+	E.g. this comes up in 3 places:
+	* `NonAggregatedCompositeEntityIdentifier`
+	* `DiscriminatorDescriptor`
+	* back-refs
+
 
 
 == Misc

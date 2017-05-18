@@ -8,11 +8,11 @@ package org.hibernate.sql.ast.tree.spi.from;
 
 import java.util.List;
 
-import org.hibernate.persister.model.relational.spi.Table;
-import org.hibernate.persister.model.relational.spi.UnionSubclassTable;
-import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.queryable.spi.EntityValuedExpressableType;
-import org.hibernate.persister.queryable.spi.NavigableReferenceInfo;
+import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.metamodel.model.relational.spi.UnionSubclassTable;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.NavigableReferenceInfo;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
@@ -29,7 +29,7 @@ import org.hibernate.sql.ast.tree.spi.select.Selection;
  * @author Steve Ebersole
  */
 public class EntityTableGroup extends AbstractTableGroup implements Selectable {
-	private final EntityPersister entityPersister;
+	private final EntityTypeImplementor entityPersister;
 	private final TableReference rootTableReference;
 	private final List<TableReferenceJoin> tableReferenceJoins;
 
@@ -37,7 +37,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 
 	public EntityTableGroup(
 			TableSpace tableSpace,
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			NavigableReferenceInfo navigableReferenceInfo,
 			NavigableContainerReference navigableContainerReference,
 			TableReference rootTableReference,
@@ -57,7 +57,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 		);
 	}
 
-	public EntityPersister getPersister() {
+	public EntityTypeImplementor getPersister() {
 		return entityPersister;
 	}
 

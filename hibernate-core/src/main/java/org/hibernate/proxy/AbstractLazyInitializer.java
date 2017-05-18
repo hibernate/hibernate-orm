@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 import org.jboss.logging.Logger;
 
@@ -109,7 +109,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				session = s;
 				if ( readOnlyBeforeAttachedToSession == null ) {
 					// use the default read-only/modifiable setting
-					final EntityPersister persister = s.getFactory().getEntityPersister( entityName );
+					final EntityTypeImplementor persister = s.getFactory().getEntityPersister( entityName );
 					setReadOnly( s.getPersistenceContext().isDefaultReadOnly() || !persister.isMutable() );
 				}
 				else {
@@ -312,7 +312,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		errorIfReadOnlySettingNotAvailable();
 		// only update if readOnly is different from current setting
 		if ( this.readOnly != readOnly ) {
-			final EntityPersister persister = session.getFactory().getEntityPersister( entityName );
+			final EntityTypeImplementor persister = session.getFactory().getEntityPersister( entityName );
 			if ( !persister.isMutable() && !readOnly ) {
 				throw new IllegalStateException( "cannot make proxies for immutable entities modifiable" );
 			}

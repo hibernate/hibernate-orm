@@ -18,7 +18,7 @@ import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
@@ -348,7 +348,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		}
 
 		if ( !implicitJoin ) {
-			EntityPersister entityPersister = elem.getEntityPersister();
+			EntityTypeImplementor entityPersister = elem.getEntityPersister();
 			if ( entityPersister != null ) {
 				getWalker().addQuerySpaces( entityPersister.getQuerySpaces() );
 			}
@@ -573,7 +573,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	 *         primary key; false otherwise.
 	 */
 	private boolean isReferenceToPrimaryKey(String propertyName, EntityType owningType) {
-		EntityPersister persister = getSessionFactoryHelper()
+		EntityTypeImplementor persister = getSessionFactoryHelper()
 				.getFactory()
 				.getEntityPersister( owningType.getAssociatedEntityName() );
 		if ( persister.getEntityMetamodel().hasNonIdentifierPropertyNamedId() ) {
@@ -584,7 +584,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		// 1) the property-name matches the explicitly identifier property name
 		// 2) the property-name matches the implicit 'id' property name
 		// the referenced node text is the special 'id'
-		if ( EntityPersister.ENTITY_ID.equals( propertyName ) ) {
+		if ( EntityTypeImplementor.ENTITY_ID.equals( propertyName ) ) {
 			return owningType.isReferenceToPrimaryKey();
 		}
 		String keyPropertyName = getSessionFactoryHelper().getIdentifierOrUniqueKeyPropertyName( owningType );

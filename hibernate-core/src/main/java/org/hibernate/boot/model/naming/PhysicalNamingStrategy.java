@@ -15,8 +15,8 @@ package org.hibernate.boot.model.naming;
  *
  * @author Steve Ebersole
  *
- * @deprecated Use {@link org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy} instead
+ * @deprecated Use {@link org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy} instead
  */
 @Deprecated
-public interface PhysicalNamingStrategy extends org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy {
+public interface PhysicalNamingStrategy extends org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy {
 }

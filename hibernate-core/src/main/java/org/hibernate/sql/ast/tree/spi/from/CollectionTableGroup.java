@@ -11,11 +11,11 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
-import org.hibernate.persister.collection.internal.ElementColumnReferenceSource;
-import org.hibernate.persister.collection.internal.IndexColumnReferenceSource;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.model.relational.spi.Column;
-import org.hibernate.persister.model.relational.spi.Table;
+import org.hibernate.metamodel.queryable.spi.ElementColumnReferenceSource;
+import org.hibernate.metamodel.queryable.spi.IndexColumnReferenceSource;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
@@ -28,7 +28,7 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
  * @author Steve Ebersole
  */
 public class CollectionTableGroup implements TableGroup {
-	private final CollectionPersister persister;
+	private final PersistentCollectionMetadata persister;
 
 	private final TableSpace tableSpace;
 	private final String uniqueIdentifier;
@@ -37,7 +37,7 @@ public class CollectionTableGroup implements TableGroup {
 	private final IndexColumnReferenceSource indexTableGroup;
 
 	public CollectionTableGroup(
-			CollectionPersister persister,
+			PersistentCollectionMetadata persister,
 			TableSpace tableSpace,
 			String uniqueIdentifier,
 			TableReference collectionTableReference,
@@ -51,7 +51,7 @@ public class CollectionTableGroup implements TableGroup {
 		this.indexTableGroup = indexTableGroup;
 	}
 
-	public CollectionPersister getPersister() {
+	public PersistentCollectionMetadata getPersister() {
 		return persister;
 	}
 

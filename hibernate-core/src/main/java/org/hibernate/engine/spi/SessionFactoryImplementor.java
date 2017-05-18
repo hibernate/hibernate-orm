@@ -38,18 +38,15 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
-import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.collections.streams.StreamUtils;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryInterpretations;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
-import org.hibernate.query.sqm.produce.spi.SemanticQueryProducer;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.spi.Type;
@@ -337,7 +334,7 @@ public interface SessionFactoryImplementor
 	 * instead
 	 */
 	@Deprecated
-	default EntityPersister getEntityPersister(String entityName) throws MappingException {
+	default EntityTypeImplementor getEntityPersister(String entityName) throws MappingException {
 		return getTypeConfiguration().resolveEntityPersister( entityName );
 	}
 
@@ -347,7 +344,7 @@ public interface SessionFactoryImplementor
 	 * instead
 	 */
 	@Deprecated
-	default Map<String,EntityPersister<?>> getEntityPersisters() {
+	default Map<String,EntityTypeImplementor<?>> getEntityPersisters() {
 		return getTypeConfiguration().getEntityPersisterMap();
 	}
 
@@ -357,8 +354,8 @@ public interface SessionFactoryImplementor
 	 * instead
 	 */
 	@Deprecated
-	default CollectionPersister getCollectionPersister(String role) throws MappingException {
-		final CollectionPersister<?,?,?> collectionPersister = getTypeConfiguration().findCollectionPersister( role );
+	default PersistentCollectionMetadata getCollectionPersister(String role) throws MappingException {
+		final PersistentCollectionMetadata<?,?,?> collectionPersister = getTypeConfiguration().findCollectionPersister( role );
 		if ( collectionPersister == null ) {
 			throw new MappingException( "Could not locate CollectionPersister for given role [" + role + "]" );
 		}
@@ -371,7 +368,7 @@ public interface SessionFactoryImplementor
 	 * instead
 	 */
 	@Deprecated
-	default Map<String, CollectionPersister<?,?,?>> getCollectionPersisters() {
+	default Map<String, PersistentCollectionMetadata<?,?,?>> getCollectionPersisters() {
 		return getTypeConfiguration().getCollectionPersisterMap();
 	}
 
@@ -391,7 +388,7 @@ public interface SessionFactoryImplementor
 	 * instead
 	 */
 	@Deprecated
-	default EntityPersister locateEntityPersister(Class byClass) {
+	default EntityTypeImplementor locateEntityPersister(Class byClass) {
 		return getTypeConfiguration().resolveEntityPersister( byClass );
 	}
 
@@ -401,7 +398,7 @@ public interface SessionFactoryImplementor
 	 * instead
 	 */
 	@Deprecated
-	default EntityPersister locateEntityPersister(String byName) {
+	default EntityTypeImplementor locateEntityPersister(String byName) {
 		return getTypeConfiguration().resolveEntityPersister( byName );
 	}
 
@@ -424,7 +421,7 @@ public interface SessionFactoryImplementor
 			entityName = importedName;
 		}
 
-		final EntityPersister referencedPersister = getTypeConfiguration().findEntityPersister( entityName );
+		final EntityTypeImplementor referencedPersister = getTypeConfiguration().findEntityPersister( entityName );
 		if ( referencedPersister != null ) {
 			return new String[] { referencedPersister.getEntityName() };
 		}
@@ -434,8 +431,8 @@ public interface SessionFactoryImplementor
 			final Class implementee = getServiceRegistry().getService( ClassLoaderService.class )
 					.classForName( entityName );
 
-			final Set<EntityPersister<?>> implementors = getTypeConfiguration().getImplementors( implementee );
-			final Stream<String> implementorNames = implementors.stream().map( EntityPersister::getEntityName );
+			final Set<EntityTypeImplementor<?>> implementors = getTypeConfiguration().getImplementors( implementee );
+			final Stream<String> implementorNames = implementors.stream().map( EntityTypeImplementor::getEntityName );
 			return implementorNames.collect( StreamUtils.toStringArray() );
 		}
 		catch (Exception e) {
@@ -454,7 +451,7 @@ public interface SessionFactoryImplementor
 			name = importMap.get( name );
 		}
 
-		final EntityPersister entityPersister = getTypeConfiguration().resolveEntityPersister( name );
+		final EntityTypeImplementor entityPersister = getTypeConfiguration().resolveEntityPersister( name );
 		if ( entityPersister != null ) {
 			return entityPersister.getEntityName();
 		}

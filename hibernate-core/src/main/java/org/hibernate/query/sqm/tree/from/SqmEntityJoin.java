@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
@@ -24,7 +24,7 @@ public class SqmEntityJoin
 			SqmFromElementSpace fromElementSpace,
 			String uid,
 			String alias,
-			EntityPersister joinedEntityDescriptor,
+			EntityTypeImplementor joinedEntityDescriptor,
 			SqmJoinType joinType) {
 		super(
 				fromElementSpace,

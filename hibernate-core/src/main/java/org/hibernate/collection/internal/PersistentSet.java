@@ -19,7 +19,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.type.spi.Type;
 
 
@@ -74,7 +74,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
+	public Serializable getSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
 		final HashMap clonedSet = new HashMap( set.size() );
 		for ( Object aSet : set ) {
 			final Object copied = getElementType( persister ).getMutabilityPlan().deepCopy( aSet );
@@ -90,7 +90,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
+	public boolean equalsSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
 		final Type elementType = getElementType( persister );
 		final java.util.Map sn = (java.util.Map) getSnapshot();
 		if ( sn.size()!=set.size() ) {
@@ -113,13 +113,13 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
+	public void beforeInitialize(PersistentCollectionMetadata persister, int anticipatedSize) {
 		this.set = (Set) persister.getOrmType().instantiate( anticipatedSize );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner)
+	public void initializeFromCache(PersistentCollectionMetadata persister, Serializable disassembled, Object owner)
 			throws HibernateException {
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;
@@ -304,7 +304,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	@SuppressWarnings("unchecked")
 	public Object readFrom(
 			ResultSet rs,
-			CollectionPersister persister,
+			PersistentCollectionMetadata persister,
 			CollectionAliases descriptor,
 			Object owner) throws HibernateException, SQLException {
 		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
@@ -332,13 +332,13 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Iterator entries(CollectionPersister persister) {
+	public Iterator entries(PersistentCollectionMetadata persister) {
 		return set.iterator();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Serializable disassemble(CollectionPersister persister) throws HibernateException {
+	public Serializable disassemble(PersistentCollectionMetadata persister) throws HibernateException {
 		final Serializable[] result = new Serializable[ set.size() ];
 		final Iterator itr = set.iterator();
 		int i=0;
@@ -350,7 +350,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
+	public Iterator getDeletes(PersistentCollectionMetadata persister, boolean indexIsFormula) throws HibernateException {
 		final Type elementType = getElementType( persister );
 		final java.util.Map sn = (java.util.Map) getSnapshot();
 		final ArrayList deletes = new ArrayList( sn.size() );
@@ -401,7 +401,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object getIndex(Object entry, int i, CollectionPersister persister) {
+	public Object getIndex(Object entry, int i, PersistentCollectionMetadata persister) {
 		throw new UnsupportedOperationException("Sets don't have indexes");
 	}
 

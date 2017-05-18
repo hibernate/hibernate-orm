@@ -23,8 +23,8 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
@@ -188,7 +188,7 @@ public class Util {
 			Class... resultClasses) {
 		int i = 0;
 		for ( Class resultClass : resultClasses ) {
-			final EntityPersister persister = context.getSessionFactory().getTypeConfiguration().findEntityPersister( resultClass.getName() );
+			final EntityTypeImplementor persister = context.getSessionFactory().getTypeConfiguration().findEntityPersister( resultClass.getName() );
 			context.addQuerySpaces( (String[]) persister.getQuerySpaces() );
 			context.addQueryReturns(
 					new QueryResultEntityImpl(
@@ -254,13 +254,13 @@ public class Util {
 				else if ( nativeQueryReturn instanceof NativeSQLQueryCollectionReturn ) {
 					final NativeSQLQueryCollectionReturn rtn = (NativeSQLQueryCollectionReturn) nativeQueryReturn;
 					final String role = rtn.getOwnerEntityName() + '.' + rtn.getOwnerProperty();
-					final CollectionPersister persister = context.getSessionFactory().getTypeConfiguration().findCollectionPersister( role );
+					final PersistentCollectionMetadata persister = context.getSessionFactory().getTypeConfiguration().findCollectionPersister( role );
 					//context.addQueryReturns( ... );
 					throw new NotYetImplementedException( "Collection Returns not yet implemented" );
 				}
 				else if ( nativeQueryReturn instanceof NativeSQLQueryRootReturn ) {
 					final NativeSQLQueryRootReturn rtn = (NativeSQLQueryRootReturn) nativeQueryReturn;
-					final EntityPersister persister = context.getSessionFactory().getTypeConfiguration().findEntityPersister( rtn.getReturnEntityName() );
+					final EntityTypeImplementor persister = context.getSessionFactory().getTypeConfiguration().findEntityPersister( rtn.getReturnEntityName() );
 					final QueryResultEntityImpl entityReturn = new QueryResultEntityImpl(
 							null,
 							persister,

@@ -19,7 +19,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -96,7 +96,7 @@ public final class PropertyFactory {
 	 * @return The appropriate VersionProperty definition.
 	 */
 	public static VersionProperty buildVersionProperty(
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			SessionFactoryImplementor sessionFactory,
 			int attributeNumber,
 			Property property,
@@ -149,7 +149,7 @@ public final class PropertyFactory {
 	 * @return The appropriate NonIdentifierProperty definition.
 	 */
 	public static NonIdentifierAttribute buildEntityBasedAttribute(
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			SessionFactoryImplementor sessionFactory,
 			int attributeNumber,
 			Property property,

@@ -7,9 +7,9 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.HibernateException;
-import org.hibernate.persister.common.spi.NavigableRole;
-import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
-import org.hibernate.persister.queryable.spi.ExpressableType;
+import org.hibernate.metamodel.model.domain.spi.NavigableRole;
+import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.ExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 

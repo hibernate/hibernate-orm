@@ -24,15 +24,15 @@ import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.hql.internal.ast.tree.OrderByClause;
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.persister.common.internal.SingularPersistentAttributeEmbedded;
-import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
-import org.hibernate.persister.common.spi.JoinablePersistentAttribute;
-import org.hibernate.persister.common.spi.Navigable;
-import org.hibernate.persister.common.spi.SingularPersistentAttribute;
-import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.queryable.spi.BasicValuedExpressableType;
-import org.hibernate.persister.queryable.spi.JoinedTableGroupContext;
-import org.hibernate.persister.queryable.spi.RootTableGroupContext;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.model.domain.spi.JoinablePersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.queryable.spi.JoinedTableGroupContext;
+import org.hibernate.metamodel.queryable.spi.RootTableGroupContext;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.consume.spi.BaseSemanticQueryWalker;
@@ -409,7 +409,7 @@ public class SqmSelectToSqlAstConverter
 		}
 
 		final SqmEntityReference binding = sqmRoot.getNavigableReference();
-		final EntityPersister entityPersister = (EntityPersister) binding.getReferencedNavigable();
+		final EntityTypeImplementor entityPersister = (EntityTypeImplementor) binding.getReferencedNavigable();
 		final EntityTableGroup group = entityPersister.createRootTableGroup(
 				binding,
 				new RootTableGroupContext() {
@@ -477,7 +477,7 @@ public class SqmSelectToSqlAstConverter
 	@Override
 	public TableGroupJoin visitCrossJoinedFromElement(SqmCrossJoin joinedFromElement) {
 		final QuerySpec querySpec = currentQuerySpec();
-		final EntityPersister entityPersister = joinedFromElement.getIntrinsicSubclassEntityPersister();
+		final EntityTypeImplementor entityPersister = joinedFromElement.getIntrinsicSubclassEntityPersister();
 		final EntityTableGroup group = entityPersister.createEntityTableGroup(
 				joinedFromElement.getNavigableReference(),
 				new JoinedTableGroupContext() {

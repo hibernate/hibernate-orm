@@ -39,7 +39,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.internal.util.collections.LazyIterator;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 import org.jboss.logging.Logger;
 
@@ -153,7 +153,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		}
 	}
 
-	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, Object anything)
+	private void cascadeOnFlush(EventSource session, EntityTypeImplementor persister, Object object, Object anything)
 	throws HibernateException {
 		session.getPersistenceContext().incrementCascadeLevel();
 		try {

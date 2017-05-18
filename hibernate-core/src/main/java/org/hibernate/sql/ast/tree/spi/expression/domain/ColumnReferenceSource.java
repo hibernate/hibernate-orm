@@ -6,8 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression.domain;
 
-import org.hibernate.persister.model.relational.spi.Column;
-import org.hibernate.persister.model.relational.spi.Table;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 
@@ -21,7 +21,7 @@ public interface ColumnReferenceSource {
 	/**
 	 * Get the unique (within this query) identifier for this group of tables.
 	 * Think primary-key; other code which knows this uid can locate it through
-	 * {@link org.hibernate.persister.queryable.spi.TableGroupResolver}.
+	 * {@link org.hibernate.metamodel.queryable.spi.TableGroupResolver}.
 	 */
 	String getUniqueIdentifier();
 

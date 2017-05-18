@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.type.internal.BagType;
 
@@ -50,7 +50,7 @@ public abstract class BasicLoader extends Loader {
 			descriptors[i] = new DefaultEntityAliases( persisters[i], suffixes[i] );
 		}
 
-		CollectionPersister[] collectionPersisters = getCollectionPersisters();
+		PersistentCollectionMetadata[] collectionPersisters = getCollectionPersisters();
 		List bagRoles = null;
 		if ( collectionPersisters != null ) {
 			String[] collectionSuffixes = getCollectionSuffixes();
@@ -76,7 +76,7 @@ public abstract class BasicLoader extends Loader {
 		}
 	}
 
-	private boolean isBag(CollectionPersister collectionPersister) {
+	private boolean isBag(PersistentCollectionMetadata collectionPersister) {
 		return collectionPersister.getCollectionType().getClass().isAssignableFrom( BagType.class );
 	}
 

@@ -12,7 +12,7 @@ import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.spi.Type;
@@ -43,7 +43,7 @@ public class SimpleEmbeddableOverriddenConverterTest extends BaseNonConfigCoreFu
 	 */
 	@Test
 	public void testSimpleConvertOverrides() {
-		final EntityPersister ep = sessionFactory().getEntityPersister( Person.class.getName() );
+		final EntityTypeImplementor ep = sessionFactory().getEntityPersister( Person.class.getName() );
 		EmbeddedType homeAddressType = assertTyping( EmbeddedType.class, ep.getPropertyType( "homeAddress" ) );
 		Type homeAddressCityType = findCompositeAttributeType( homeAddressType, "city" );
 		assertTyping( StringType.class, homeAddressCityType );

@@ -37,9 +37,9 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -141,7 +141,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @param key The owner key.
 	 * @return The instantiated collection.
 	 */
-	public abstract PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key);
+	public abstract PersistentCollection instantiate(SharedSessionContractImplementor session, PersistentCollectionMetadata persister, Serializable key);
 
 	@Override
 	public Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner) throws SQLException {
@@ -179,7 +179,7 @@ public abstract class CollectionType extends AbstractType implements Association
 
 		if ( !getReturnedClass().isInstance( value ) && !PersistentCollection.class.isInstance( value ) ) {
 			// its most likely the collection-key
-			final CollectionPersister persister = getPersister( factory );
+			final PersistentCollectionMetadata persister = getPersister( factory );
 			if ( persister.getKeyType().getReturnedClass().isInstance( value ) ) {
 				return getRole() + "#" + getPersister( factory ).getKeyType().toLoggableString( value, factory );
 			}
@@ -307,11 +307,11 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @param session The session from which the request is originating.
 	 * @return The underlying collection persister
 	 */
-	private CollectionPersister getPersister(SharedSessionContractImplementor session) {
+	private PersistentCollectionMetadata getPersister(SharedSessionContractImplementor session) {
 		return getPersister( session.getFactory() );
 	}
 
-	private CollectionPersister getPersister(SessionFactoryImplementor factory) {
+	private PersistentCollectionMetadata getPersister(SessionFactoryImplementor factory) {
 		return factory.getTypeConfiguration().findCollectionPersister( role );
 	}
 
@@ -423,7 +423,7 @@ public abstract class CollectionType extends AbstractType implements Association
 		}
 		else {
 			Type keyType = getPersister( session ).getKeyType();
-			EntityPersister ownerPersister = getPersister( session ).getOwnerEntityPersister();
+			EntityTypeImplementor ownerPersister = getPersister( session ).getOwnerEntityPersister();
 			// TODO: Fix this so it will work for non-POJO entity mode
 			Class ownerMappedClass = ownerPersister.getMappedClass();
 			if ( ownerMappedClass.isAssignableFrom( keyType.getReturnedClass() ) &&
@@ -751,7 +751,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 */
 	public Object getCollection(Serializable key, SharedSessionContractImplementor session, Object owner) {
 
-		CollectionPersister persister = getPersister( session );
+		PersistentCollectionMetadata persister = getPersister( session );
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final EntityMode entityMode = persister.getOwnerEntityPersister().getEntityMode();
 

@@ -14,7 +14,7 @@ import javax.persistence.Id;
 
 import org.hibernate.Session;
 
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -114,7 +114,7 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void checkConverterMutabilityPlans() {
-		final EntityPersister persister = sessionFactory().getEntityPersister( SomeEntity.class.getName() );
+		final EntityTypeImplementor persister = sessionFactory().getEntityPersister( SomeEntity.class.getName() );
 		assertFalse( persister.getPropertyType( "number" ).isMutable() );
 		assertTrue( persister.getPropertyType( "name" ).isMutable() );
 	}

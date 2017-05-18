@@ -13,7 +13,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * Defines an event class for the resolving of an entity id from the entity's natural-id
@@ -24,20 +24,20 @@ import org.hibernate.persister.entity.spi.EntityPersister;
 public class ResolveNaturalIdEvent extends AbstractEvent {
 	public static final LockMode DEFAULT_LOCK_MODE = LockMode.NONE;
 
-	private final EntityPersister entityPersister;
+	private final EntityTypeImplementor entityPersister;
 	private final Map<String, Object> naturalIdValues;
 	private final Object[] orderedNaturalIdValues;
 	private final LockOptions lockOptions;
 
 	private Serializable entityId;
 
-	public ResolveNaturalIdEvent(Map<String, Object> naturalIdValues, EntityPersister entityPersister, EventSource source) {
+	public ResolveNaturalIdEvent(Map<String, Object> naturalIdValues, EntityTypeImplementor entityPersister, EventSource source) {
 		this( naturalIdValues, entityPersister, new LockOptions(), source );
 	}
 
 	public ResolveNaturalIdEvent(
 			Map<String, Object> naturalIdValues,
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			LockOptions lockOptions,
 			EventSource source) {
 		super( source );
@@ -98,7 +98,7 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 		return orderedNaturalIdValues;
 	}
 
-	public EntityPersister getEntityPersister() {
+	public EntityTypeImplementor getEntityPersister() {
 		return entityPersister;
 	}
 

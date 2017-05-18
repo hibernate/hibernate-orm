@@ -39,12 +39,12 @@ import org.hibernate.jpa.test.SettingsGenerator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.collection.spi.CollectionPersister;
-import org.hibernate.persister.entity.spi.EntityPersister;
-import org.hibernate.persister.entity.MultiLoadOptions;
-import org.hibernate.persister.internal.PersisterClassResolverInitiator;
-import org.hibernate.persister.spi.PersisterClassResolver;
-import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.loader.spi.MultiLoadOptions;
+import org.hibernate.metamodel.model.creation.internal.PersisterClassResolverInitiator;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -62,7 +62,7 @@ public class PersisterClassProviderTest {
 	@SuppressWarnings("unchecked")
 	public void testPersisterClassProvider() {
 		Map settings = SettingsGenerator.generateSettings(
-				PersisterClassResolverInitiator.IMPL_NAME, GoofyPersisterClassProvider.class,
+				PersisterClassResolverInitiator.IMPL_NAME, GoofyRuntimeModelNodeClassProvider.class,
 				AvailableSettings.LOADED_CLASSES, Arrays.asList( Bell.class )
 		);
 		try {
@@ -80,26 +80,26 @@ public class PersisterClassProviderTest {
 		}
 	}
 
-	public static class GoofyPersisterClassProvider implements PersisterClassResolver {
+	public static class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClassResolver {
 		@Override
-		public Class<? extends EntityPersister> getEntityPersisterClass(PersistentClass metadata) {
+		public Class<? extends EntityTypeImplementor> getEntityPersisterClass(PersistentClass metadata) {
 			return GoofyProvider.class;
 		}
 
 		@Override
-		public Class<? extends CollectionPersister> getCollectionPersisterClass(Collection metadata) {
+		public Class<? extends PersistentCollectionMetadata> getCollectionPersisterClass(Collection metadata) {
 			return null;
 		}
 	}
 
-	public static class GoofyProvider implements EntityPersister {
+	public static class GoofyProvider implements EntityTypeImplementor {
 
 		@SuppressWarnings( {"UnusedParameters"})
 		public GoofyProvider(
 				org.hibernate.mapping.PersistentClass persistentClass,
 				org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
 				NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-				PersisterCreationContext creationContext) {
+				RuntimeModelCreationContext creationContext) {
 			throw new GoofyException();
 		}
 
@@ -581,7 +581,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
+		public EntityTypeImplementor getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
 			return null;
 		}
 
@@ -606,7 +606,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public EntityPersister getEntityPersister() {
+		public EntityTypeImplementor getEntityPersister() {
 			return this;
 		}
 

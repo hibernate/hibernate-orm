@@ -17,7 +17,7 @@ import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRecreateEventListener;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 
 /**
  * The action for recreating a collection
@@ -34,7 +34,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 	 */
 	public CollectionRecreateAction(
 			final PersistentCollection collection,
-			final CollectionPersister persister,
+			final PersistentCollectionMetadata persister,
 			final Serializable id,
 			final SharedSessionContractImplementor session) {
 		super( persister, collection, id, session );

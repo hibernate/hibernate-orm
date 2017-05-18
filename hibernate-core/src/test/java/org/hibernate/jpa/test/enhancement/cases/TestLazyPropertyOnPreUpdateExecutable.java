@@ -11,7 +11,7 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.enhancement.cases.domain.EntityWithLazyProperty;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 public class TestLazyPropertyOnPreUpdateExecutable extends AbstractExecutable {
 	@Override
 	protected void prepared() {
-		final EntityPersister ep = getEntityManagerFactory().getEntityPersister( EntityWithLazyProperty.class.getName() );
+		final EntityTypeImplementor ep = getEntityManagerFactory().getEntityPersister( EntityWithLazyProperty.class.getName() );
 		assertTrue( ep.getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() );
 	}
 

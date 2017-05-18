@@ -7,7 +7,7 @@
 package org.hibernate.query.spi;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.persister.common.spi.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 
 /**
  * A representation of a "Navigable" path as part of a query relative to a "navigable root".

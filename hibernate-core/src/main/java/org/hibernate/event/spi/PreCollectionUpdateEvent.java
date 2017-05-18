@@ -7,7 +7,7 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 
 /**
  * An event that occurs beforeQuery a collection is updated
@@ -16,7 +16,7 @@ import org.hibernate.persister.collection.spi.CollectionPersister;
  */
 public class PreCollectionUpdateEvent extends AbstractCollectionEvent {
 
-	public PreCollectionUpdateEvent(CollectionPersister collectionPersister,
+	public PreCollectionUpdateEvent(PersistentCollectionMetadata collectionPersister,
 									PersistentCollection collection,
 									EventSource source) {
 		super( collectionPersister, collection, source,

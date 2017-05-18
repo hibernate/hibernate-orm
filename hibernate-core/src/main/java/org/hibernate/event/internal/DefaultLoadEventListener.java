@@ -40,7 +40,7 @@ import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -75,7 +75,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			final LoadEvent event,
 			final LoadEventListener.LoadType loadType) throws HibernateException {
 
-		final EntityPersister persister = getPersister( event );
+		final EntityTypeImplementor persister = getPersister( event );
 
 		if ( persister == null ) {
 			throw new HibernateException( "Unable to locate persister: " + event.getEntityClassName() );
@@ -89,7 +89,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		doOnLoad( persister, event, loadType );
 	}
 
-	private EntityPersister getPersister( final LoadEvent event ) {
+	private EntityTypeImplementor getPersister(final LoadEvent event ) {
 		if ( event.getInstanceToLoad() != null ) {
 			//the load() which takes an entity does not pass an entityName
 			event.setEntityClassName( event.getInstanceToLoad().getClass().getName() );
@@ -104,7 +104,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	}
 
 	private void doOnLoad(
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final LoadEvent event,
 			final LoadEventListener.LoadType loadType) {
 
@@ -132,7 +132,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	}
 
 	private void checkIdClass(
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final LoadEvent event,
 			final LoadEventListener.LoadType loadType,
 			final Class idClass) {
@@ -170,9 +170,9 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	private void loadByDerivedIdentitySimplePkValue(
 			LoadEvent event,
 			LoadEventListener.LoadType options,
-			EntityPersister dependentPersister,
+			EntityTypeImplementor dependentPersister,
 			EmbeddedComponentType dependentIdType,
-			EntityPersister parentPersister) {
+			EntityTypeImplementor parentPersister) {
 		final EntityKey parentEntityKey = event.getSession().generateEntityKey( event.getEntityId(), parentPersister );
 		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );
 
@@ -198,7 +198,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object load(
 			final LoadEvent event,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) {
 
@@ -246,7 +246,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object proxyOrLoad(
 			final LoadEvent event,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) {
 
@@ -293,7 +293,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object returnNarrowedProxy(
 			final LoadEvent event,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options,
 			final PersistenceContext persistenceContext,
@@ -333,7 +333,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object createProxyIfNecessary(
 			final LoadEvent event,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options,
 			final PersistenceContext persistenceContext) {
@@ -378,7 +378,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object lockAndLoad(
 			final LoadEvent event,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options,
 			final SessionImplementor source) {
@@ -427,7 +427,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object doLoad(
 			final LoadEvent event,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final EntityKey keyToLoad,
 			final LoadEventListener.LoadType options) {
 
@@ -504,7 +504,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object loadFromDatasource(
 			final LoadEvent event,
-			final EntityPersister persister) {
+			final EntityTypeImplementor persister) {
 		Object entity = persister.load(
 				event.getEntityId(),
 				event.getInstanceToLoad(),
@@ -556,7 +556,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				}
 			}
 			if ( options.isAllowNulls() ) {
-				final EntityPersister persister = event.getSession()
+				final EntityTypeImplementor persister = event.getSession()
 						.getFactory()
 						.getEntityPersister( keyToLoad.getEntityName() );
 				if ( !persister.isInstance( old ) ) {
@@ -579,7 +579,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	 */
 	private Object loadFromSecondLevelCache(
 			final LoadEvent event,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final EntityKey entityKey) {
 
 		final SessionImplementor source = event.getSession();
@@ -604,7 +604,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 	private Object processCachedEntry(
 			final LoadEvent event,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final Object ce,
 			final SessionImplementor source,
 			final EntityKey entityKey) {
@@ -638,7 +638,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 	private Object getFromSharedCache(
 		final LoadEvent event,
-		final EntityPersister persister,
+		final EntityTypeImplementor persister,
 		SessionImplementor source ) {
 		final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 		final Object ck = cache.generateCacheKey(
@@ -710,13 +710,13 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	private Object convertCacheEntryToEntity(
 			CacheEntry entry,
 			Serializable entityId,
-			EntityPersister persister,
+			EntityTypeImplementor persister,
 			LoadEvent event,
 			EntityKey entityKey) {
 
 		final EventSource session = event.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
-		final EntityPersister subclassPersister;
+		final EntityTypeImplementor subclassPersister;
 
 		if ( traceEnabled ) {
 			LOG.tracef(
@@ -807,7 +807,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	private Object assembleCacheEntry(
 			final StandardCacheEntryImpl entry,
 			final Serializable id,
-			final EntityPersister persister,
+			final EntityTypeImplementor persister,
 			final LoadEvent event) throws HibernateException {
 
 		final Object optionalObject = event.getInstanceToLoad();
@@ -821,7 +821,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			);
 		}
 
-		EntityPersister subclassPersister = factory.getEntityPersister( entry.getSubclass() );
+		EntityTypeImplementor subclassPersister = factory.getEntityPersister( entry.getSubclass() );
 		Object result = optionalObject == null ?
 				session.instantiate( subclassPersister, id ) : optionalObject;
 

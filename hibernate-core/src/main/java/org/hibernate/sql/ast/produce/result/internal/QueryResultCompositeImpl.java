@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.result.internal;
 
-import org.hibernate.persister.embedded.spi.EmbeddedPersister;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
 import org.hibernate.sql.ast.consume.results.internal.QueryResultAssemblerComposite;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultComposite;
@@ -20,14 +20,14 @@ public class QueryResultCompositeImpl implements QueryResultComposite {
 	private final NavigableReference selectedExpression;
 	private final String resultVariable;
 
-	private final EmbeddedPersister persister;
+	private final EmbeddedTypeImplementor persister;
 
 	private final QueryResultAssembler assembler;
 
 	public QueryResultCompositeImpl(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			EmbeddedPersister<?> embeddedPersister) {
+			EmbeddedTypeImplementor<?> embeddedPersister) {
 		this.selectedExpression = selectedExpression;
 		this.resultVariable = resultVariable;
 		this.persister = embeddedPersister;

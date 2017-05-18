@@ -7,8 +7,8 @@
 package org.hibernate.sql.ast.produce.result.internal;
 
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.persister.common.internal.SingularPersistentAttributeEntity;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.produce.result.spi.EntityIdentifierReference;
@@ -26,7 +26,7 @@ import org.hibernate.type.spi.Type;
 public class FetchEntityAttributeImpl extends AbstractFetchParent implements FetchEntityAttribute {
 	private final FetchParent fetchParent;
 	private final SingularPersistentAttributeEntity fetchedAttribute;
-	private final EntityPersister entityPersister;
+	private final EntityTypeImplementor entityPersister;
 	private final FetchStrategy fetchStrategy;
 
 	private final EntityFetchInitializerImpl initializer;
@@ -36,7 +36,7 @@ public class FetchEntityAttributeImpl extends AbstractFetchParent implements Fet
 			NavigablePath navigablePath,
 			String tableGroupUid,
 			SingularPersistentAttributeEntity fetchedAttribute,
-			EntityPersister entityPersister,
+			EntityTypeImplementor entityPersister,
 			FetchStrategy fetchStrategy) {
 		super( navigablePath, tableGroupUid );
 		this.fetchParent = fetchParent;
@@ -92,7 +92,7 @@ public class FetchEntityAttributeImpl extends AbstractFetchParent implements Fet
 //	}
 
 	@Override
-	public EntityPersister getEntityPersister() {
+	public EntityTypeImplementor getEntityPersister() {
 		return entityPersister;
 	}
 

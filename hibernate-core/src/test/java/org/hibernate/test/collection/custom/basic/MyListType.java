@@ -12,7 +12,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.usertype.UserCollectionType;
 
 public class MyListType implements UserCollectionType {
@@ -20,7 +20,7 @@ public class MyListType implements UserCollectionType {
 	static int lastInstantiationRequest = -2;
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister) throws HibernateException {
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, PersistentCollectionMetadata persister) throws HibernateException {
 		return new PersistentMyList( session );
 	}
 
@@ -50,7 +50,7 @@ public class MyListType implements UserCollectionType {
 	}
 
 	@Override
-	public Object replaceElements(Object original, Object target, CollectionPersister persister, Object owner, Map copyCache, SharedSessionContractImplementor session) throws HibernateException {
+	public Object replaceElements(Object original, Object target, PersistentCollectionMetadata persister, Object owner, Map copyCache, SharedSessionContractImplementor session) throws HibernateException {
 		IMyList result = (IMyList) target;
 		result.clear();
 		result.addAll((MyList)original);

@@ -35,7 +35,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.procedure.NoMoreReturnsException;
 import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.Output;
@@ -535,7 +535,7 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
-	protected void addSynchronizedQuerySpaces(EntityPersister persister) {
+	protected void addSynchronizedQuerySpaces(EntityTypeImplementor persister) {
 		synchronizedQuerySpaces().addAll( Arrays.asList( (String[]) persister.getQuerySpaces() ) );
 	}
 

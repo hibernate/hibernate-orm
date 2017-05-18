@@ -30,7 +30,7 @@ import org.hibernate.criterion.Subqueries;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.persister.collection.spi.CollectionPersister;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
 import org.hibernate.testing.SkipForDialect;
@@ -99,7 +99,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 		// Force a collection into the second level cache, with its non-filtered elements
 		Salesperson sp = ( Salesperson ) session.load( Salesperson.class, testData.steveId );
 		Hibernate.initialize( sp.getOrders() );
-		CollectionPersister persister = sessionFactory().getCollectionPersister( Salesperson.class.getName() + ".orders" );
+		PersistentCollectionMetadata persister = sessionFactory().getCollectionPersister( Salesperson.class.getName() + ".orders" );
 		assertTrue( "No cache for collection", persister.hasCache() );
 		CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 		Object cacheKey = cache.generateCacheKey(

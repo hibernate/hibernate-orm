@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.internal.tools.ArraysTools;
-import org.hibernate.persister.entity.spi.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -29,7 +29,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 			SessionImplementor sessionImplementor,
 			String entityName,
 			AuditService auditService,
-			Serializable id, EntityPersister entityPersister, Object[] state) {
+			Serializable id, EntityTypeImplementor entityPersister, Object[] state) {
 		super( sessionImplementor, entityName, auditService, id, RevisionType.ADD );
 
 		this.data = new HashMap<>();

@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttrib
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;

@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.EntityMode;
-import org.hibernate.metamodel.queryable.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.tuple.Tuplizer;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 

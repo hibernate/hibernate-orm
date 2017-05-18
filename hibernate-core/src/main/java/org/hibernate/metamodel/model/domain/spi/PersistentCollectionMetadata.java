@@ -15,10 +15,10 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeFactory;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.metamodel.queryable.spi.NavigableReferenceInfo;
-import org.hibernate.metamodel.queryable.spi.RootTableGroupProducer;
-import org.hibernate.metamodel.queryable.spi.TableGroupJoinProducer;
-import org.hibernate.metamodel.queryable.spi.TableGroupResolver;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
+import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupProducer;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupJoinProducer;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 /**

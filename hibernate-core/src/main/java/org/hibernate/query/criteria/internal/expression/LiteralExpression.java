@@ -8,7 +8,7 @@ package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
 
-import org.hibernate.metamodel.queryable.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpressionImplementor;
 import org.hibernate.query.criteria.internal.ParameterRegistry;

@@ -1,0 +1,86 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.sql.ast.produce.metamodel.internal;
+
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
+
+/**
+ * @author Steve Ebersole
+ */
+public class NavigableReferenceInfoImpl implements NavigableReferenceInfo {
+	private final NavigableContainerReferenceInfoImpl containerReferenceInfo;
+	private final Navigable navigable;
+	private final NavigablePath path;
+	private final String uniqueIdentifier;
+	private final String identificationVariable;
+	private final EntityTypeImplementor intrinsicDowncastTarget;
+
+	public NavigableReferenceInfoImpl(
+			NavigableContainerReferenceInfoImpl containerReferenceInfo,
+			Navigable navigable,
+			NavigablePath path,
+			String uniqueIdentifier,
+			String identificationVariable,
+			EntityTypeImplementor intrinsicDowncastTarget) {
+		this.containerReferenceInfo = containerReferenceInfo;
+		this.navigable = navigable;
+		this.path = path;
+		this.uniqueIdentifier = uniqueIdentifier;
+		this.identificationVariable = identificationVariable;
+		this.intrinsicDowncastTarget = intrinsicDowncastTarget;
+	}
+
+	@Override
+	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
+		return containerReferenceInfo;
+	}
+
+	@Override
+	public Navigable getReferencedNavigable() {
+		return navigable;
+	}
+
+	@Override
+	public NavigablePath getNavigablePath() {
+		return path;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return navigable.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return navigable.getPersistenceType();
+	}
+
+	@Override
+	public Class getJavaType() {
+		return navigable.getJavaType();
+	}
+
+	@Override
+	public String getUniqueIdentifier() {
+		return uniqueIdentifier;
+	}
+
+	@Override
+	public String getIdentificationVariable() {
+		return identificationVariable;
+	}
+
+	@Override
+	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
+		return intrinsicDowncastTarget;
+	}
+}

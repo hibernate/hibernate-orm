@@ -11,7 +11,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.metamodel.queryable.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.sqm.produce.spi.criteria.select.JpaSelection;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 

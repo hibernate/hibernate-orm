@@ -6,8 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.metamodel.queryable.spi.NavigableReferenceInfo;
-import org.hibernate.metamodel.queryable.spi.TableGroupResolver;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 /**

@@ -73,6 +73,10 @@ public class NavigablePathStack {
 		MDC.put( MDC_KEY, mdcRep );
 	}
 
+	public NavigablePath getCurrent() {
+		return internalStack.getCurrent();
+	}
+
 	public void clear() {
 		MDC.remove( MDC_KEY );
 

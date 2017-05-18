@@ -12,7 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
-import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;

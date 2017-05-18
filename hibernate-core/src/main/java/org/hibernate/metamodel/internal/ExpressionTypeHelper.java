@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.internal;
 
-import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

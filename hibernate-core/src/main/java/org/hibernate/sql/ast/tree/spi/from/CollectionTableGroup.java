@@ -11,8 +11,8 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
-import org.hibernate.metamodel.queryable.spi.ElementColumnReferenceSource;
-import org.hibernate.metamodel.queryable.spi.IndexColumnReferenceSource;
+import org.hibernate.sql.ast.produce.metamodel.spi.ElementColumnReferenceSource;
+import org.hibernate.sql.ast.produce.metamodel.spi.IndexColumnReferenceSource;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;

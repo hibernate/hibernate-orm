@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.produce.spi.criteria.from;
 
 import javax.persistence.criteria.Root;
 
-import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 
 /**
  * @author Steve Ebersole

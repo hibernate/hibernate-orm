@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.queryable.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.ArgumentReader;
 import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultAssemblerConstructorImpl;

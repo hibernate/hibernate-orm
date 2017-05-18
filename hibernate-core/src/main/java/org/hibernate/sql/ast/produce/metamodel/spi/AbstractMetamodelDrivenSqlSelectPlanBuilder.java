@@ -4,12 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.metamodel.queryable.spi;
+package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
@@ -22,11 +24,13 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementBasic;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
-import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKey;
+import org.hibernate.sql.ast.produce.metamodel.internal.NavigableContainerReferenceInfoImpl;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
@@ -54,33 +58,34 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
-		implements MetamodelDrivenSqlSelectPlanBuilder, SqlAstBuildingContext, SqlSelectionResolver {
+		implements MetamodelDrivenSqlSelectPlanBuilder, SqlAstBuildingContext, SqlSelectionResolver,
+		RootTableGroupContext {
 	private static final Logger log = Logger.getLogger( AbstractMetamodelDrivenSqlSelectPlanBuilder.class );
 
 	private final SqlAstBuildingContext buildingContext;
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final LockOptions lockOptions;
 
-
 	private final FromClauseIndex fromClauseIndex = new FromClauseIndex();
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
-//	private final Stack<Clause> currentClauseStack = new Stack<>();
+
+	// todo (6.0) : populate this set everytime we encounter a "joinable" and check every time (b4) we continue processing the joinable
+	private final Set<AssociationKey> associationKeys = new HashSet<>();
+
+	//	private final Stack<Clause> currentClauseStack = new Stack<>();
 //	private final Stack<QuerySpec> querySpecStack = new Stack<>();
 //	private final Stack<NavigableSource<?>> navigableSourceStack = new Stack<>();
+
+
+	private final NavigablePathStack navigablePathStack = new NavigablePathStack();
+	private final Stack<FetchParent> fetchParentStack = new Stack<>();
+	private final Stack<NavigableContainerReferenceInfoImpl> navigableContainerInfoStack = new Stack<>();
+	private final Stack<TableGroup> fetchLhsTableGroupStack = new Stack<>();
+
 	private QuerySpec querySpec;
 	private TableSpace tableSpace;
 
 	private QueryResult queryReturn;
-
-
-	private final NavigablePathStack propertyPathStack = new NavigablePathStack();
-
-
-	private final Stack<FetchParent> fetchParentStack = new Stack<>();
-	private final Stack<TableGroup> fetchLhsTableGroupStack = new Stack<>();
-
-
-	private final ArrayDeque<ExpandingFetchSource> fetchSourceStack = new ArrayDeque<ExpandingFetchSource>();
 
 	/**
 	 *
@@ -127,40 +132,84 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 		// 		2) a CollectionPersister
 		assert rootNavigable instanceof IdentifiableTypeImplementor
 				|| rootNavigable instanceof PersistentCollectionMetadata;
+		assert rootNavigable instanceof RootTableGroupProducer;
 
 		prepareForVisitation();
 
+		querySpec = new QuerySpec( true );
+		// when generating a SELECT from the metamodel there is only ever 1 TableSpace, so make it here
+		tableSpace = querySpec.getFromClause().makeTableSpace();
+
+
 		try {
-			propertyPathStack.push( rootNavigable );
+			rootNavigable.visitNavigable( this );
 
-			try {
-				final TableGroup tableGroup = rootNavigable.buildTableGroup(
-						tableSpace,
-						sqlAliasBaseManager,
-						fromClauseIndex
-				);
+			// add this created reference to the "container stack" so we can access it later to build fetched navigables
+			navigableContainerInfoStack.push( navigableReferenceInfo );
+			final TableGroup tableGroup = ( (RootTableGroupProducer) rootNavigable ).createRootTableGroup(
+					navigableReferenceInfo,
+					this,
+					this
+			);
 
-				// * resolve SqlSelections
-				// * create Return and Fetches
+			// * resolve SqlSelections
+			// * create Return and Fetches
 
 
-				queryReturn = rootNavigable.generateQueryResult( this, tableGroup );
+			queryReturn = rootNavigable.generateQueryResult( this, tableGroup );
 
-				// finally visit any potential fetches
-				visitNavigables( rootNavigable, (FetchParent) queryReturn, tableGroup );
-			}
-			finally {
-				propertyPathStack.pop();
-			}
+			// finally visit any potential fetches
+			visitNavigables( rootNavigable, (FetchParent) queryReturn, tableGroup );
+
+			return new SqlSelectPlanImpl(
+					new SelectStatement( querySpec ),
+					Collections.singletonList( queryReturn )
+			);
+
 		}
 		finally {
 			visitationComplete();
 		}
+	}
 
-		return new SqlSelectPlanImpl(
-				new SelectStatement( querySpec ),
-				Collections.singletonList( queryReturn )
+	private void visitNavigable(Navigable navigable) {
+		if ( navigable instanceof AssociationKeyProducer ) {
+			final AssociationKeyProducer producer = (AssociationKeyProducer) navigable;
+			final AssociationKey associationKey = producer.getAssociationKey();
+			if ( associationKeys.contains( associationKey ) ) {
+				return;
+			}
+			associationKeys.add( associationKey );
+		}
+
+		navigablePathStack.push( navigable );
+		try {
+			navigable.visitNavigable( this );
+		}
+		finally {
+			navigablePathStack.pop();
+		}
+	}
+
+	@Override
+	public void visitEntity(EntityTypeImplementor entity) {
+		visitNavigable( entity );
+
+		// because the incoming navigable is a container, we know the reference object we
+		// 		create can also be a container
+		final NavigableContainerReferenceInfoImpl navigableReferenceInfo = new NavigableContainerReferenceInfoImpl(
+				null,
+				entity,
+				navigablePathStack.getCurrent(),
+				generateSqlAstNodeUid(),
+				null,
+				null
 		);
+
+		// this may be the root, check...
+		if ( navigablePathStack.isEmpty() ) {
+
+		}
 	}
 
 	@Override
@@ -174,7 +223,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 
 	@Override
 	public void visitationComplete() {
-		propertyPathStack.clear();
+		navigablePathStack.clear();
 
 		if ( !fetchParentStack.isEmpty() ) {
 			log.debug( "fetchParentStack was not empty upon completion of visitation; un-matched push and pop?" );
@@ -209,7 +258,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	}
 
 	public void visitEntityIdentifier(EntityIdentifier entityIdentifier) {
-		propertyPathStack.push( entityIdentifier );
+		navigablePathStack.push( entityIdentifier );
 
 		try {
 			if ( entityIdentifier instanceof NavigableContainer ) {
@@ -217,7 +266,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 			}
 		}
 		finally {
-			propertyPathStack.pop();
+			navigablePathStack.pop();
 		}
 	}
 
@@ -247,14 +296,14 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 
 	private void pushToStack(ExpandingFetchSource fetchSource) {
 		log.trace( "Pushing fetch source to stack : " + fetchSource );
-		propertyPathStack.push( fetchSource );
+		navigablePathStack.push( fetchSource );
 		fetchSourceStack.addFirst( fetchSource );
 	}
 
 	private ExpandingFetchSource popFromStack() {
 		final ExpandingFetchSource last = fetchSourceStack.removeFirst();
 		log.trace( "Popped fetch owner from stack : " + last );
-		propertyPathStack.pop();
+		navigablePathStack.pop();
 		return last;
 	}
 
@@ -427,14 +476,14 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 
 	private void pushToCollectionStack(CollectionReference collectionReference) {
 		log.trace( "Pushing collection reference to stack : " + collectionReference );
-		propertyPathStack.push( collectionReference.getPropertyPath() );
+		navigablePathStack.push( collectionReference.getPropertyPath() );
 		collectionReferenceStack.addFirst( collectionReference );
 	}
 
 	private CollectionReference popFromCollectionStack() {
 		final CollectionReference last = collectionReferenceStack.removeFirst();
 		log.trace( "Popped collection reference from stack : " + last );
-		propertyPathStack.pop();
+		navigablePathStack.pop();
 		return last;
 	}
 

@@ -6,6 +6,6 @@
  */
 
 /**
- * todo : document
+ * Responsible for producing a SQL AST based on walking the run-time domain metamodel
  */
 package org.hibernate.sql.ast.produce.metamodel;

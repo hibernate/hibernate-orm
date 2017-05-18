@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import org.hibernate.metamodel.queryable.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 /**
  * Describes a parameter declared in the query.

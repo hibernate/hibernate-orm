@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.math.BigInteger;
 
-import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 
 /**

@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.sqm.spi;
 
-import org.hibernate.metamodel.queryable.spi.TableGroupResolver;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;

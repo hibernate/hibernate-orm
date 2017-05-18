@@ -8,8 +8,8 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
-import org.hibernate.metamodel.queryable.spi.Fetchable;
+import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**

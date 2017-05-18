@@ -23,4 +23,6 @@ public interface Column {
 	String toLoggableString();
 
 	String render(String identificationVariable);
+
+	int getJdbcType();
 }

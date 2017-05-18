@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import org.hibernate.metamodel.queryable.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**

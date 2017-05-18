@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.produce.internal;
 
 import org.hibernate.metamodel.model.domain.spi.NavigableEmbeddedValued;
-import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.spi.AliasRegistry;
 import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;

@@ -12,9 +12,9 @@ import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
-import org.hibernate.metamodel.queryable.spi.EntityValuedExpressableType;
-import org.hibernate.metamodel.queryable.spi.NavigableReferenceInfo;
-import org.hibernate.metamodel.queryable.spi.SqlAliasBaseResolver;
+import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
+import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseResolver;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.spi.Type;
 

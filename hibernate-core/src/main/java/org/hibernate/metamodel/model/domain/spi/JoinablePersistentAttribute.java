@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.metamodel.queryable.spi.Joinable;
+import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
 
 /**
  * Specialization of Attributes that are joinable.

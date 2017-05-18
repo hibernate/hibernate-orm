@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.spi.from;
 
-import org.hibernate.metamodel.queryable.spi.AbstractColumnReferenceSource;
+import org.hibernate.sql.ast.produce.metamodel.spi.AbstractColumnReferenceSource;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;

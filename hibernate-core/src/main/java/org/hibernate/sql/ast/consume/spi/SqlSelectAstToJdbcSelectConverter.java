@@ -48,6 +48,8 @@ import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiat
 import org.hibernate.sql.ast.tree.spi.from.FromClause;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.spi.from.TableReference;
+import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.FilterPredicate;
@@ -61,6 +63,7 @@ import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
+import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 import org.hibernate.type.spi.Type;
@@ -248,6 +251,11 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker {
 		}
 	}
 
+	@Override
+	public void visitSelection(Selection selection) {
+		// do nothing... this is handled #visitSelectClause
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// FROM clause
 
@@ -294,6 +302,21 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker {
 	@Override
 	public void visitTableGroup(TableGroup tableGroup) {
 		tableGroup.render( sqlAppender, this );
+	}
+
+	@Override
+	public void visitTableGroupJoin(TableGroupJoin tableGroupJoin) {
+		// nothing to do... this is handled in visitTableSpace
+	}
+
+	@Override
+	public void visitTableReference(TableReference tableReference) {
+		// nothing to do... handled via TableGroup#render
+	}
+
+	@Override
+	public void visitTableReferenceJoin(TableReferenceJoin tableReferenceJoin) {
+		// nothing to do... handled within TableGroup#render
 	}
 
 

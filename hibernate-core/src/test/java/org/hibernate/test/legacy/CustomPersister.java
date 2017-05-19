@@ -410,6 +410,7 @@ public class CustomPersister implements EntityPersister {
 		Serializable id,
 		Object version,
 		Object object,
+		Object rowId,
 		SharedSessionContractImplementor session
 	) throws HibernateException {
 

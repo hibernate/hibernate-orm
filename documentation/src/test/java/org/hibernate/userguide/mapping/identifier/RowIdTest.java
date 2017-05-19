@@ -49,6 +49,10 @@ public class RowIdTest extends BaseEntityManagerFunctionalTestCase {
 			product.setName( "Smart phone" );
 			//end::identifiers-rowid-example[]
 		} );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Product product = entityManager.find( Product.class, 1L );
+			entityManager.remove( product );
+		} );
 	}
 
 	//tag::identifiers-rowid-mapping[]

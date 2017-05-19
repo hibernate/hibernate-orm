@@ -258,6 +258,7 @@ public abstract class AbstractEntityPersister
 
 	private String sqlIdentityInsertString;
 	private String sqlUpdateByRowIdString;
+	private String sqlDeleteByRowIdString;
 	private String sqlLazyUpdateByRowIdString;
 
 	private String[] sqlDeleteStrings;
@@ -2880,9 +2881,18 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Generate the SQL that deletes a row by id (and version)
 	 */
-	public String generateDeleteString(int j) {
-		final Delete delete = createDelete().setTableName( getTableName( j ) )
-				.addPrimaryKeyColumns( getKeyColumns( j ) );
+	public String generateDeleteString(int j, final boolean useRowId) {
+		final Delete delete = new Delete()
+				.setTableName( getTableName( j ) );
+
+		// select the correct row by either pk or rowid
+		if ( useRowId ) {
+			delete.addPrimaryKeyColumns( new String[] {rowIdName} ); //TODO: eventually, rowIdName[j]
+		}
+		else {
+			delete.addPrimaryKeyColumns( getKeyColumns( j ) );
+		}
+
 		if ( j == 0 ) {
 			delete.setVersionColumnName( getVersionColumnName() );
 		}
@@ -3284,7 +3294,7 @@ public abstract class AbstractEntityPersister
 			else if ( isNullableTable( j ) && isAllNull( fields, j ) ) {
 				//if all fields are null, we might need to delete existing row
 				isRowToUpdate = true;
-				delete( id, oldVersion, j, object, getSQLDeleteStrings()[j], session, null );
+				delete( id, oldVersion, j, object, getSQLDeleteStrings()[j], rowId, session, null );
 			}
 			else {
 				//there is probably a row there, so try to update
@@ -3470,6 +3480,7 @@ public abstract class AbstractEntityPersister
 			final int j,
 			final Object object,
 			final String sql,
+			final Object rowId,
 			final SharedSessionContractImplementor session,
 			final Object[] loadedState) throws HibernateException {
 
@@ -3525,8 +3536,7 @@ public abstract class AbstractEntityPersister
 
 				// Do the key. The key is immutable so we can use the _current_ object state - not necessarily
 				// the state at the time the delete was issued
-				getIdentifierType().nullSafeSet( delete, id, index, session );
-				index += getIdentifierColumnSpan();
+				index += dehydrateId( id, rowId, delete, session, index );
 
 				// We should use the _current_ object state (ie. after any updates that occurred during flush)
 
@@ -3777,7 +3787,7 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Delete an object
 	 */
-	public void delete(Serializable id, Object version, Object object, SharedSessionContractImplementor session)
+	public void delete(Serializable id, Object version, Object object, Object rowId, SharedSessionContractImplementor session)
 			throws HibernateException {
 		final int span = getTableSpan();
 		boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned() && isAllOrDirtyOptLocking();
@@ -3807,7 +3817,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		for ( int j = span - 1; j >= 0; j-- ) {
-			delete( id, version, j, object, deleteStrings[j], session, loadedState );
+			delete( id, version, j, object, deleteStrings[j], rowId, session, loadedState );
 		}
 
 	}
@@ -4226,7 +4236,7 @@ public abstract class AbstractEntityPersister
 					generateUpdateString( getNonLazyPropertyUpdateability(), j, false ) :
 						substituteBrackets( customSQLUpdate[j]);
 			sqlDeleteStrings[j] = customSQLDelete[j] == null ?
-					generateDeleteString( j ) :
+					generateDeleteString( j, rowIdName != null ) :
 						substituteBrackets( customSQLDelete[j]);
 		}
 

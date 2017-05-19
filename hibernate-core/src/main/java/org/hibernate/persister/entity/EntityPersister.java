@@ -429,8 +429,19 @@ public interface EntityPersister extends EntityDefinition {
 
 	/**
 	 * Delete a persistent instance
+	 *
+	 * @deprecated use {{@link #delete(Serializable, Object, Object, Object, SharedSessionContractImplementor)} instead}
 	 */
-	void delete(Serializable id, Object version, Object object, SharedSessionContractImplementor session)
+	@Deprecated
+	default void delete(Serializable id, Object version, Object object, SharedSessionContractImplementor session)
+			throws HibernateException {
+		delete( id, version, object, null, session );
+	}
+
+	/**
+	 * Delete a persistent instance
+	 */
+	void delete(Serializable id, Object version, Object object, Object rowId, SharedSessionContractImplementor session)
 	throws HibernateException;
 
 	/**

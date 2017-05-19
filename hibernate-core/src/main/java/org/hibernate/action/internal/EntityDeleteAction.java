@@ -33,6 +33,7 @@ public class EntityDeleteAction extends EntityAction {
 	private final Object version;
 	private final boolean isCascadeDeleteEnabled;
 	private final Object[] state;
+	private final Object rowId;
 
 	private SoftLock lock;
 	private Object[] naturalIdValues;
@@ -53,6 +54,7 @@ public class EntityDeleteAction extends EntityAction {
 			final Object[] state,
 			final Object version,
 			final Object instance,
+			final Object rowId,
 			final EntityPersister persister,
 			final boolean isCascadeDeleteEnabled,
 			final SessionImplementor session) {
@@ -60,6 +62,7 @@ public class EntityDeleteAction extends EntityAction {
 		this.version = version;
 		this.isCascadeDeleteEnabled = isCascadeDeleteEnabled;
 		this.state = state;
+		this.rowId = rowId;
 
 		// before remove we need to remove the local (transactional) natural id cross-reference
 		naturalIdValues = session.getPersistenceContextInternal().getNaturalIdHelper().removeLocalNaturalIdCrossReference(
@@ -121,7 +124,7 @@ public class EntityDeleteAction extends EntityAction {
 		}
 
 		if ( !isCascadeDeleteEnabled && !veto ) {
-			persister.delete( id, version, instance, session );
+			persister.delete( id, version, instance, rowId, session );
 		}
 		
 		//postDelete:

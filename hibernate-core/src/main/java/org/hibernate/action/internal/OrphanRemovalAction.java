@@ -13,8 +13,9 @@ import org.hibernate.persister.entity.EntityPersister;
 
 public final class OrphanRemovalAction extends EntityDeleteAction {
 
-	public OrphanRemovalAction(Serializable id, Object[] state, Object version, Object instance,
-			EntityPersister persister, boolean isCascadeDeleteEnabled, SessionImplementor session) {
-		super( id, state, version, instance, persister, isCascadeDeleteEnabled, session );
+	public OrphanRemovalAction(
+			Serializable id, Object[] state, Object version, Object instance,
+			Object rowId, EntityPersister persister, boolean isCascadeDeleteEnabled, SessionImplementor session) {
+		super( id, state, version, instance, rowId, persister, isCascadeDeleteEnabled, session );
 	}
 }

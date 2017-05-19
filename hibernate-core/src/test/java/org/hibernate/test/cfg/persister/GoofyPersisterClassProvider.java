@@ -298,7 +298,14 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void delete(Serializable id, Object version, Object object, SharedSessionContractImplementor session) {
+		public void delete(Serializable id, Object version, Object object,  Object rowId, SharedSessionContractImplementor session) {
+		}
+
+		@Override
+		public void delete(
+				Serializable id, Object version, Object object, SharedSessionContractImplementor session)
+				throws HibernateException {
+
 		}
 
 		@Override

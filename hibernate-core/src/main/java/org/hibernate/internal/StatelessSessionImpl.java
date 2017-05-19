@@ -133,7 +133,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		EntityPersister persister = getEntityPersister( entityName, entity );
 		Serializable id = persister.getIdentifier( entity, this );
 		Object version = persister.getVersion( entity );
-		persister.delete( id, version, entity, this );
+		persister.delete( id, version, entity, null, this );
 	}
 
 

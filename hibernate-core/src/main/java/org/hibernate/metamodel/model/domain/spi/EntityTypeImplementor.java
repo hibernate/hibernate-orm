@@ -48,7 +48,7 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeFactory;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
 import org.hibernate.sql.JoinType;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
@@ -215,7 +215,7 @@ public interface EntityTypeImplementor<T>
 	 */
 	void applyTableReferenceJoins(
 			JoinType joinType,
-			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
+			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector collector);
 
 

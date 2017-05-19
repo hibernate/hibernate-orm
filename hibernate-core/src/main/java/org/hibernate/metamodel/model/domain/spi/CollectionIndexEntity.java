@@ -12,6 +12,6 @@ package org.hibernate.metamodel.model.domain.spi;
 public interface CollectionIndexEntity<J> extends CollectionIndex<J>, NavigableEntityValued<J> {
 	@Override
 	default void visitNavigable(NavigableVisitationStrategy visitor) {
-		getEntityPersister().visitNavigable( visitor );
+		getEntityDescriptor().visitNavigable( visitor );
 	}
 }

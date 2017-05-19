@@ -20,7 +20,7 @@ public interface NavigableEmbeddedValued<J> extends EmbeddedValueExpressableType
 	@Override
 	EmbeddedContainer getContainer();
 
-	EmbeddedTypeImplementor<J> getEmbeddedPersister();
+	EmbeddedTypeImplementor<J> getEmbeddedDescriptor();
 
 	@Override
 	EmbeddableJavaDescriptor<J> getJavaTypeDescriptor();

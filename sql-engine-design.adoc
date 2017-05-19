@@ -48,39 +48,31 @@ The main parts of the overall design for this work follow...
 
 === SQL AST
 
-The decision was made to base this centralization for generating SQL, executing it and, for SELECTs, processing
-its results on the idea of an Abstract Syntax Tree (AST) - which is just a fancy way of saying that we created
-a visitable object representation of a SQL query (`org.hibernate.sql.ast.tree`) and contracts to:
-
-	* produce such a tree (`org.hibernate.sql.produce`)
-	* consume (walk) such a tree (`org.hibernate.sql.consume`)
-
-Consumption of an SQL AST tree involves:
-
-	* generating JDBC "operation" - `org.hibernate.sql.ast.tree.spi.Statement` and `org.hibernate.sql.ast.consume.spi.JdbcOperation`
-	* executing these JDBC operation
-	 	** CALL -> todo (6.0) (although `org.hibernate.sql.ast.consume.spi.JdbcCall` is done)
-		** SELECT -> `org.hibernate.sql.ast.consume.spi.JdbcSelectExecutor`
-		** DELETE -> todo (6.0)
-		** UPDATE -> todo (6.0)
-		** INSERT -> todo (6.0)
-	* for operations returning results, processing ResultSet(s) into domain results - `org.hibernate.sql.exec.results`
-
+The general approach for centralizing the SQL generation, execution and (for SELECTS) processing results was
+to use an Abstract Syntax Tree (AST) representing the SQL and walking/visiting the AST to produce the SQL and
+all delegates needed to execute the JDBC call.  The term AST is just a fancy phrase for a visitable object
+representation of a SQL query.  The overall solution here includes:
+ 	* The SQL AST - `org.hibernate.sql.ast.tree`
+ 	* contracts to produce this AST - `org.hibernate.sql.produce`
+ 	* contracts to consume this AST - `org.hibernate.sql.consume`
 
 Producing the SQL AST tree comes from 2 main sources:
 
 	* Queries - HQL and Criteria, as well as custom "SQM producers"
 	* Persister-based load, remove, etc calls.
 
-
-In either case, persisters are responsible for generating the various SQL AST sub-trees such as its contributions
-to a QuerySpec's FROM clause, SELECT clause, etc.  It was decided to have persisters directly produce SQL AST trees
-in handling _Persister-based load, remove, etc calls_ because:
+In either case, persisters are responsible for generating the various "sub-trees" of the SQL AST.  It was decided
+to have persisters directly produce SQL AST trees in handling _Persister-based load, remove, etc calls_ because:
 
  	* It already knows how to generate the sub-trees.
  	* Is more performant than generation the SQM view and then walking that SQM.
 
-The SQL AST tree is made up of the following parts...
+Producing the SQL AST is beyond the scope of this doc, but is not hard to conceptually understand...
+
+Consumption of an SQL AST is the process of ultimately executing JDBC calls as indicated by the AST.  Consumption
+of the tree is covered in detail in <<consumption>>.
+
+The following sub-sections describe the sub-parts of the SQL AST.
 
 
 ==== FromClause - Tables and Groups and Spaces (oh my)
@@ -201,7 +193,7 @@ FromClause
 
 Expressions are fundamental to building the other parts of the SQL AST.  Examples of `Expression` include:
 
-	* reference to part of the domain model (attribute, etc)
+	* reference to part of the domain model (entity, attribute, collection-element, etc)
 	* aggregation (count, sum, min, max, etc)
 	* arithmetic operation
 	* function
@@ -211,42 +203,89 @@ Expressions are fundamental to building the other parts of the SQL AST.  Example
 	* dynamic instantiation (although this one is special in that it can only be used in the SELECT clause)
 	* etc
 
-
+[NOTE]
+====
+`TableGroup` can also be used as an `Expression` via it's `TableGroup#asExpression` method.  For example,
+when we see an HQL like `select p from Person p`, the `p` in the SELECT clause actually refers to the
+`Person p` TableGroup.  While we can certain use "identification variables" in the SELECT clause at the
+conceptual level, at the implementation level Hibernate use's the `TableGroup("Person", "p")#asExpression`
+as the basis for the selection
+====
 
 
 ==== SelectClause
 
-The SQL AST `org.hibernate.sql.ast.tree.spi.select.SelectClause` contains one or more
-`org.hibernate.sql.ast.tree.spi.select.Selection` references.  A `Selection` is made up of
-a specific `Expression` and an optional "result variable" (the term used in JPA for the alias
-assigned to a selection).  A `Selection` is obtained from `Expression#getType` -> `ExpressableType#makeSelection`.
+`org.hibernate.sql.ast.tree.spi.select.SelectClause` contains one or more
+`org.hibernate.sql.ast.tree.spi.select.Selection` references.  These `Selection`
+references describe a single result in the domain query.  Here is a visualization
+of the process used to produce `Selection` references:
 
-A `Selection` operates as a producer of `QueryResult` instances (`Selection#makeQueryResult`).
+[plantuml,sql-selection-sequence,png]
+.Producing SQL AST Selections
+....
+@startuml
+skinparam handwritten true
 
-	todo (6.0) : ^^ note that an alternative option is to pass `QueryResultCreationContext` into the
-		creation of `Selection` which could build then the `QueryResult` at any time as needed and cache the reference
-		for access later.
+boundary "SQL AST Producer" as Producer
 
-These `QueryResult` references:
 
-	. model the individual values in the overall domain query result
-	. contibute to the resolution/creation of the various readers, assemblers and initializers.
+participant Expression
+participant Selectable
 
-Some specific sub-types include:
+Producer -> Expression : getSelectable
+Producer <-- Expression : Selectable
 
-	* `QueryResultScalar` - scalar query result; e.g. a function call in the HQL or reference to a String-valued attribute
-	* `QueryResultComposite` - composite/embeddable valued query result
-	* `QueryResultEntity` - an entity valued query return
-	* `QueryResultDynamicInstantiation` - a "constructor" query result.  only used through SQM -> SQL AST producer
-	* `QueryResultCollection` - specialized query result used when loading plural attribute entries.
+Producer -> Selectable : createSelection
+create Selection
+Selectable -> Selection : <<init>>
+Producer <-- Selectable: Selection
+@enduml
+....
 
-Generally speaking an `Expression` is its own `Selectable`.  What does that mean?  Most `Expression` impls
-additionally implement `Selectable` and return itself (`this`) as its `Selectable`.  For example,
-the `org.hibernate.sql.ast.tree.spi.expression.AvgFunction` (modelling an AVG aggregate function) implements
-`Expression` and also implements `Selectable`; it's `Expression#getSelectable` by returning itself as the
-`AvgFunction` already knows how to build its Return (for `Selectable#makeQueryResult`).  The main case where this
-is not the case is `NavigableReferenceExpression`s; for these the `Selectable` is part of the `Navigable`
-model (proposed, it is not yet this way).
+As we see above, a `Expression` acts as a factory for an appropriate `Selection`.  Generally speaking an
+`Expression` is its own `Selectable` (most `Expression` impls also implement `Selectable`).  The exception
+is `NavigableReference` which is an `Expression` whose `Selectable` is its referenced `Navigable`.
+
+
+[#consumption]
+==== SQL AST consumption
+
+Ultimately, the consumption of the SQL AST is execution of some JDBC call.  Here we will focus on processing
+SELECT queries as they are the most complicated due to the select-clause.  The other statement types are logically
+similar.
+
+The main actor in consuming SQL AST for a SELECT query (`org.hibernate.sql.ast.tree.spi.SelectStatement`) is
+`org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter` which consumes the `SelectStatement` and
+transforms it into a `org.hibernate.sql.ast.consume.spi.JdbcSelect` which encapsulates:
+
+	* The SQL String
+	* `List` of `JdbcParameterBinder`
+	* `List` of `QueryResult` references (see <<reading-results>>)
+	* `List` of `SqlSelection` references (see <<reading-results>> and <<rendering>>)
+
+
+[plantuml,queryresult-sequence,png]
+.Creation of QueryResult, etal
+....
+@startuml
+note left: This is the Selection created in the earlier diagram
+Producer -> Selection : createQueryResult
+create QueryResult
+Selection -> QueryResult : <<init>>
+Producer <-- Selection : QueryResult
+@enduml
+....
+
+
+
+
+[#rendering]
+===== Rendering SQL String
+
+As it walks the AST it renders the SELECT portion
+
+
+This is also where the collection of `SqlSelection` references occurs.
 
 Ultimately this `SelectClause` need to be converted into a SQL SELECT statement as well as
 "readers" to read back values from the JDBC `ResultSet`.  This is the role of `SqlSelectAstToJdbcSelectConverter`:
@@ -258,53 +297,8 @@ Ultimately this `SelectClause` need to be converted into a SQL SELECT statement 
 
 
 
-
-
-==== SqlSelectAstToJdbcSelectConverter
-
-`SqlSelectAstToJdbcSelectConverter` implements the transformation of a SQL SELECT AST into
-a representation of the "JDBC operation(s)" to perform.  The inputs into this process are:
-
-	* `org.hibernate.sql.ast.produce.spi.SqlSelectPlan`, made up of
-		* `org.hibernate.sql.ast.tree.spi.SelectStatement` - the SQL AST tree
-		* the `List` of `Return` references describing the query results (at the domain level.  Note that
-			these are gleaned from the SQL AST
-
-`org.hibernate.sql.ast.consume.spi.JdbcSelect.
-a `org.hibernate.sql.ast.consume.spi.JdbcSelect` which represents the actual
-JDBC call.
-
-The 2 main responsibilities of `SqlSelectAstToJdbcSelectConverter`:
-
-	* Rendering the SQL String
-	* Building "readers" used later to read back the JDBC result values.
-
-The input to `SqlSelectAstToJdbcSelectConverter` which encapsulates:
-
-	* `org.hibernate.sql.ast.produce.spi.SqlSelectPlan` which encapsulates:
-		. the SQL AST tree `org.hibernate.sql.ast.tree.spi.SelectStatement`
-        . the `List` of `Return` references describing the query results (at the domain level)
-    * `org.hibernate.query.spi.QueryParameterBindings`
-
-The output from `SqlSelectAstToJdbcSelectConverter` is a `org.hibernate.sql.ast.consume.spi.JdbcSelect` which
-models all the information needed to create, prepare and execute a SELECT `PreparedStatement` and
-process its results.  It encapsulates:
-
-	* The SQL String
-	* `List` of `JdbcParameterBinder`
-	* `List` of `SqlSelection` references (see section on reading results)
-	* `List` of `Return` references (see section on reading results)
-
-
-=== Rendering SQL String
-
-
-
-As it walks the AST it renders the SELECT portion
-
-
-This is also where the collection of `SqlSelection` references occurs.
-
+[#reading-results]
+=== Reading Results
 
 === Building "readers"
 
@@ -358,6 +352,22 @@ results by the first selection item (p.id).
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- end of work ---
 rest needs to be re-worked
 
@@ -392,7 +402,7 @@ SQM parser was able to ascertain an "anticipatedType" for the parameters.  Here,
 we would anticipate `":name"` to also be a `StringType`; we will see later that ParameterBinding can adjust that.
 
 It may also be a good idea to allow for a ParameterSpec to specify a requiredType.  This would accomodate
-cases where the placement of the parameter in the query requires a certain Type to used.
+cases where the placement of the parameter in the query requires a certain Type to used.  *_Example of such a case?_*
 
 Proposed ParameterSpec contract:
 

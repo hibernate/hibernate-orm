@@ -38,8 +38,8 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	private final MutabilityPlan<T> mutabilityPlan;
 	private final Comparator<T> comparator;
 
-	private ManagedTypeImplementor<? super T>  superTypeDescriptor;
-	private List<IdentifiableTypeImplementor<? extends T>> subclassTypes;
+	private InheritanceCapable<? super T>  superTypeDescriptor;
+	private List<InheritanceCapable<? extends T>> subclassTypes;
 
 	private Map<String,PersistentAttribute> declaredAttributesByName;
 
@@ -63,7 +63,8 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 	}
 
 
-	protected void injectSuperTypeDescriptor(ManagedTypeImplementor<? super T> superTypeDescriptor) {
+	@Override
+	public void injectSuperTypeDescriptor(InheritanceCapable<? super T> superTypeDescriptor) {
 		log.debugf(
 				"Injecting super-type descriptor [%s] for ManagedTypeImplementor [%s]; was [%s]",
 				superTypeDescriptor,
@@ -71,6 +72,18 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 				this.superTypeDescriptor
 		);
 		this.superTypeDescriptor = superTypeDescriptor;
+
+		superTypeDescriptor.addSubclassType( this );
+	}
+
+	@Override
+	public void addSubclassType(InheritanceCapable<? extends T> subclassType) {
+		subclassTypes.add( subclassType );
+	}
+
+	@Override
+	public List<InheritanceCapable<? extends T>> getSubclassTypes() {
+		return subclassTypes;
 	}
 
 	@Override
@@ -84,7 +97,7 @@ public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T
 
 	}
 
-	public ManagedTypeImplementor<? super T> getSuperclassType() {
+	public InheritanceCapable<? super T> getSuperclassType() {
 		return superTypeDescriptor;
 	}
 

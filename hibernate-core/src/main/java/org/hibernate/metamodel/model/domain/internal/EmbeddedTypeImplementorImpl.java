@@ -18,15 +18,15 @@ import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.model.domain.spi.NavigableRole;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractManagedType;
-import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
+import org.hibernate.metamodel.model.domain.spi.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
@@ -159,7 +159,7 @@ public class EmbeddedTypeImplementorImpl<T> extends AbstractManagedType<T> imple
 	}
 
 	@Override
-	public EmbeddedTypeImplementor<T> getEmbeddedPersister() {
+	public EmbeddedTypeImplementor<T> getEmbeddedDescriptor() {
 		return this;
 	}
 
@@ -200,12 +200,17 @@ public class EmbeddedTypeImplementorImpl<T> extends AbstractManagedType<T> imple
 	}
 
 	@Override
-	public List<ManagedTypeImplementor<? extends T>> getSubclassTypes() {
+	public List<InheritanceCapable<? extends T>> getSubclassTypes() {
 		return Collections.emptyList();
 	}
 
 	@Override
-	public void addSubclassType(ManagedTypeImplementor<? extends T> subclassType) {
+	public void injectSuperTypeDescriptor(InheritanceCapable<? super T> superType) {
+		throw new UnsupportedOperationException( "Embeddable inheritance is not yet implemented" );
+	}
+
+	@Override
+	public void addSubclassType(InheritanceCapable<? extends T> subclassType) {
 		throw new UnsupportedOperationException( "Embeddable inheritance is not yet implemented" );
 	}
 }

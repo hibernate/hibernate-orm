@@ -7,15 +7,10 @@
 
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 
 import org.jboss.logging.Logger;
 
@@ -39,13 +34,8 @@ public class NamedParameter extends AbstractParameter {
 	}
 
 	@Override
-	public int bindParameterValue(
-			PreparedStatement statement,
-			int startPosition,
-			QueryParameterBindings queryParameterBindings,
-			SharedSessionContractImplementor session) throws SQLException {
-		final QueryParameterBinding binding = queryParameterBindings.getBinding( name );
-		return bindParameterValue( statement, startPosition, binding, session );
+	public QueryParameterBinding resolveBinding(ParameterBindingContext context) {
+		return context.getQueryParameterBindings().getBinding( name );
 	}
 
 	@Override

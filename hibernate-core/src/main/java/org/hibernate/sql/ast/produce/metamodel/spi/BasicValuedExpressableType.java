@@ -21,6 +21,11 @@ public interface BasicValuedExpressableType<J> extends ConvertibleNavigable<J>, 
 	@Override
 	BasicJavaDescriptor<J> getJavaTypeDescriptor();
 
+	@Override
+	default int getNumberOfJdbcParametersForRestriction() {
+		return 1;
+	}
+
 	// todo (6.0) : moved this down to BasicValuedNavigable#getSqlTypeDescriptor
 	//		uncomment if we find this is needed as part of being queryable
 	//SqlTypeDescriptor getSqlTypeDescriptor();

@@ -29,5 +29,10 @@ public interface InheritanceCapable<T> extends ManagedTypeImplementor<T> {
 	 */
 	Collection<InheritanceCapable<? extends T>> getSubclassTypes();
 
+	void injectSuperTypeDescriptor(InheritanceCapable<? super T> superTypeDescriptor);
+
+	/**
+	 * Do not call directly.  Use {@link #injectSuperTypeDescriptor} instead.
+	 */
 	void addSubclassType(InheritanceCapable<? extends T> subclassType);
 }

@@ -48,48 +48,48 @@ public class CollectionIndexEmbeddedImpl<J>
 				creationContext
 		);
 
-		this.columns = getEmbeddedPersister().collectColumns();
+		this.columns = getEmbeddedDescriptor().collectColumns();
 
 	}
 
 	@Override
-	public EmbeddedTypeImplementor<J> getEmbeddedPersister() {
+	public EmbeddedTypeImplementor<J> getEmbeddedDescriptor() {
 		return embeddedPersister;
 	}
 
 	@Override
 	public <N> Navigable<N> findNavigable(String navigableName) {
-		return getEmbeddedPersister().findNavigable( navigableName );
+		return getEmbeddedDescriptor().findNavigable( navigableName );
 	}
 
 	@Override
 	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		return getEmbeddedPersister().findDeclaredNavigable( navigableName );
+		return getEmbeddedDescriptor().findDeclaredNavigable( navigableName );
 	}
 
 	@Override
 	public List<Navigable> getNavigables() {
-		return getEmbeddedPersister().getNavigables();
+		return getEmbeddedDescriptor().getNavigables();
 	}
 
 	@Override
 	public List<Navigable> getDeclaredNavigables() {
-		return getEmbeddedPersister().getDeclaredNavigables();
+		return getEmbeddedDescriptor().getDeclaredNavigables();
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
-		getEmbeddedPersister().visitNavigables( visitor );
+		getEmbeddedDescriptor().visitNavigables( visitor );
 	}
 
 	@Override
 	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
-		getEmbeddedPersister().visitDeclaredNavigables( visitor );
+		getEmbeddedDescriptor().visitDeclaredNavigables( visitor );
 	}
 
 	@Override
 	public EmbeddableJavaDescriptor<J> getJavaTypeDescriptor() {
-		return getEmbeddedPersister().getJavaTypeDescriptor();
+		return getEmbeddedDescriptor().getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -99,7 +99,7 @@ public class CollectionIndexEmbeddedImpl<J>
 			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return new QueryResultCompositeImpl( selectedExpression, resultVariable, getEmbeddedPersister() );
+		return new QueryResultCompositeImpl( selectedExpression, resultVariable, getEmbeddedDescriptor() );
 	}
 
 	@Override

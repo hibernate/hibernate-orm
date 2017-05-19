@@ -96,7 +96,7 @@ public class EntityValuedSelectable implements Selectable {
 
 		final List<Column> columns;
 		if ( persistentAttribute instanceof SingularPersistentAttributeEmbedded ) {
-			columns = ( (SingularPersistentAttributeEmbedded) singularAttribute ).getEmbeddedPersister().collectColumns();
+			columns = ( (SingularPersistentAttributeEmbedded) singularAttribute ).getEmbeddedDescriptor().collectColumns();
 		}
 		else {
 			columns = singularAttribute.getColumns();

@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
+import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 
 /**
  * Contract for things that can produce the {@link TableGroup} that is the root of a

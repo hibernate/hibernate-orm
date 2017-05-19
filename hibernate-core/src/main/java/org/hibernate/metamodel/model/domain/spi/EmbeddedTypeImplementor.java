@@ -12,6 +12,7 @@ import javax.persistence.metamodel.EmbeddableType;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -30,7 +31,7 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  * @author Steve Ebersole
  */
 public interface EmbeddedTypeImplementor<T>
-		extends InheritanceCapable<T>, EmbeddedContainer<T>, EmbeddableType<T>, NavigableEmbeddedValued<T> {
+		extends InheritanceCapable<T>, EmbeddedContainer<T>, EmbeddedValueExpressableType<T>, EmbeddableType<T>, NavigableEmbeddedValued<T> {
 
 	Class[] STANDARD_CTOR_SIGNATURE = new Class[] {
 			Component.class,
@@ -101,5 +102,10 @@ public interface EmbeddedTypeImplementor<T>
 	@Override
 	default String asLoggableText() {
 		return "EmbeddableMapper(" + getJavaType() + " [" + getRoleName() + "])";
+	}
+
+	@Override
+	default int getNumberOfJdbcParametersForRestriction() {
+		return getEmbeddedDescriptor().getNumberOfJdbcParametersForRestriction();
 	}
 }

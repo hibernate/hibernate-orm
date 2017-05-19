@@ -606,7 +606,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public EntityTypeImplementor getEntityPersister() {
+		public EntityTypeImplementor getEntityDescriptor() {
 			return this;
 		}
 

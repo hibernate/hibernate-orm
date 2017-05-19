@@ -157,7 +157,7 @@ public class EntityBasedAssociationAttribute
 
 	@Override
 	public FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath) {
-		final EntityTypeImplementor owningPersister = getSource().getEntityPersister();
+		final EntityTypeImplementor owningPersister = getSource().getEntityDescriptor();
 
 		FetchStyle style = FetchStrategyHelper.determineFetchStyleByProfile(
 				loadQueryInfluencers,
@@ -167,7 +167,7 @@ public class EntityBasedAssociationAttribute
 		);
 		if ( style == null ) {
 			style = FetchStrategyHelper.determineFetchStyleByMetadata(
-					( (OuterJoinLoadable) getSource().getEntityPersister() ).getFetchMode( attributeNumber() ),
+					( (OuterJoinLoadable) getSource().getEntityDescriptor() ).getFetchMode( attributeNumber() ),
 					getType(),
 					sessionFactory()
 			);
@@ -181,7 +181,7 @@ public class EntityBasedAssociationAttribute
 
 	@Override
 	public CascadeStyle determineCascadeStyle() {
-		return getSource().getEntityPersister().getPropertyCascadeStyles()[attributeNumber()];
+		return getSource().getEntityDescriptor().getPropertyCascadeStyles()[attributeNumber()];
 	}
 
 	private HydratedCompoundValueHandler hydratedCompoundValueHandler;

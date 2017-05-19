@@ -4,13 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.sql.ast.produce.metamodel.spi;
-
-import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
+package org.hibernate.sql.ast.produce.spi;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqlAliasBaseResolver {
-	SqlAliasBase getSqlAliasBase(NavigableReferenceInfo navigableReferenceInfo);
+public interface SqlAliasBase {
+	String getAliasStem();
+
+	String generateNewAlias();
 }

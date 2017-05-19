@@ -20,7 +20,7 @@ public interface EntityValuedExpressableType<T> extends ExpressableType<T>, Navi
 	// todo (6.0) : should this extend NavigableSource rather than just Navigable?
 	// 		or should this just specialize ExpressableType?
 
-	EntityTypeImplementor<T> getEntityPersister();
+	EntityTypeImplementor<T> getEntityDescriptor();
 
 	String getEntityName();
 	String getJpaEntityName();
@@ -30,5 +30,12 @@ public interface EntityValuedExpressableType<T> extends ExpressableType<T>, Navi
 	}
 
 	@Override
-	EntityJavaDescriptor<T> getJavaTypeDescriptor();
+	default EntityJavaDescriptor<T> getJavaTypeDescriptor() {
+		return getEntityDescriptor().getJavaTypeDescriptor();
+	}
+
+	@Override
+	default int getNumberOfJdbcParametersForRestriction() {
+		return getEntityDescriptor().getNumberOfJdbcParametersForRestriction();
+	}
 }

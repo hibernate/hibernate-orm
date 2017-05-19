@@ -16,6 +16,7 @@ import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.ConcatFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountStarFunction;
+import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
 import org.hibernate.sql.ast.tree.spi.expression.MaxFunction;
 import org.hibernate.sql.ast.tree.spi.expression.MinFunction;
 import org.hibernate.sql.ast.tree.spi.expression.NamedParameter;
@@ -112,6 +113,8 @@ public interface SqlAstWalker {
 	void visitMinFunction(MinFunction minFunction);
 
 	void visitNamedParameter(NamedParameter namedParameter);
+
+	void visitGenericParameter(GenericParameter parameter);
 
 	void visitNonStandardFunctionExpression(NonStandardFunction functionExpression);
 

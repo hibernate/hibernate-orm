@@ -27,7 +27,7 @@ import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
@@ -52,18 +52,18 @@ public class CollectionIndexEntityImpl<J>
 	}
 
 	@Override
-	public EntityTypeImplementor<J> getEntityPersister() {
+	public EntityTypeImplementor<J> getEntityDescriptor() {
 		return entityPersister;
 	}
 
 	@Override
 	public String getEntityName() {
-		return getEntityPersister().getEntityName();
+		return getEntityDescriptor().getEntityName();
 	}
 
 	@Override
 	public String getJpaEntityName() {
-		return getEntityPersister().getJpaEntityName();
+		return getEntityDescriptor().getJpaEntityName();
 	}
 
 	@Override
@@ -79,40 +79,40 @@ public class CollectionIndexEntityImpl<J>
 
 	@Override
 	public <N> Navigable<N> findNavigable(String navigableName) {
-		return getEntityPersister().findNavigable( navigableName );
+		return getEntityDescriptor().findNavigable( navigableName );
 	}
 
 	@Override
 	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		return getEntityPersister().findDeclaredNavigable( navigableName );
+		return getEntityDescriptor().findDeclaredNavigable( navigableName );
 	}
 
 	@Override
 	public List<Navigable> getNavigables() {
-		return getEntityPersister().getNavigables();
+		return getEntityDescriptor().getNavigables();
 	}
 
 	@Override
 	public List<Navigable> getDeclaredNavigables() {
-		return getEntityPersister().getDeclaredNavigables();
+		return getEntityDescriptor().getDeclaredNavigables();
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
-		getEntityPersister().visitNavigables( visitor );
+		getEntityDescriptor().visitNavigables( visitor );
 	}
 
 	@Override
 	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
-		getEntityPersister().visitDeclaredNavigables( visitor );
+		getEntityDescriptor().visitDeclaredNavigables( visitor );
 	}
 
 	@Override
 	public void applyTableReferenceJoins(
 			JoinType joinType,
-			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
+			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector collector) {
-		getEntityPersister().applyTableReferenceJoins( joinType, sqlAliasBase, collector );
+		getEntityDescriptor().applyTableReferenceJoins( joinType, sqlAliasBase, collector );
 	}
 
 	@Override
@@ -122,7 +122,7 @@ public class CollectionIndexEntityImpl<J>
 
 	@Override
 	public EntityJavaDescriptor<J> getJavaTypeDescriptor() {
-		return getEntityPersister().getJavaTypeDescriptor();
+		return getEntityDescriptor().getJavaTypeDescriptor();
 	}
 
 	@Override

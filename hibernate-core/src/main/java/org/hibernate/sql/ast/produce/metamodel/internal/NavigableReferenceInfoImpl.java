@@ -9,7 +9,6 @@ package org.hibernate.sql.ast.produce.metamodel.internal;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -17,7 +16,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class NavigableReferenceInfoImpl implements NavigableReferenceInfo {
-	private final NavigableContainerReferenceInfoImpl containerReferenceInfo;
+	private final NavigableContainerReferenceInfoImpl containerReference;
 	private final Navigable navigable;
 	private final NavigablePath path;
 	private final String uniqueIdentifier;
@@ -25,13 +24,13 @@ public class NavigableReferenceInfoImpl implements NavigableReferenceInfo {
 	private final EntityTypeImplementor intrinsicDowncastTarget;
 
 	public NavigableReferenceInfoImpl(
-			NavigableContainerReferenceInfoImpl containerReferenceInfo,
+			NavigableContainerReferenceInfoImpl containerReference,
 			Navigable navigable,
 			NavigablePath path,
 			String uniqueIdentifier,
 			String identificationVariable,
 			EntityTypeImplementor intrinsicDowncastTarget) {
-		this.containerReferenceInfo = containerReferenceInfo;
+		this.containerReference = containerReference;
 		this.navigable = navigable;
 		this.path = path;
 		this.uniqueIdentifier = uniqueIdentifier;
@@ -40,8 +39,8 @@ public class NavigableReferenceInfoImpl implements NavigableReferenceInfo {
 	}
 
 	@Override
-	public NavigableContainerReferenceInfo getNavigableContainerReferenceInfo() {
-		return containerReferenceInfo;
+	public NavigableContainerReferenceInfoImpl getNavigableContainerReferenceInfo() {
+		return containerReference;
 	}
 
 	@Override
@@ -56,17 +55,17 @@ public class NavigableReferenceInfoImpl implements NavigableReferenceInfo {
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return navigable.getJavaTypeDescriptor();
+		return getReferencedNavigable().getJavaTypeDescriptor();
 	}
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return navigable.getPersistenceType();
+		return getReferencedNavigable().getPersistenceType();
 	}
 
 	@Override
 	public Class getJavaType() {
-		return navigable.getJavaType();
+		return getReferencedNavigable().getJavaType();
 	}
 
 	@Override

@@ -15,6 +15,10 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
+import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder.ParameterBindingContext;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
 import org.hibernate.sql.ast.tree.spi.expression.NamedParameter;
 import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -25,14 +29,13 @@ import org.hibernate.type.spi.Type;
  * @author Steve Ebersole
  */
 public class ConversionHelper {
-	public static Type resolveType(
-			NamedParameter parameter,
-			QueryParameterBindings bindings,
-			SharedSessionContractImplementor persistenceContext) {
-		final QueryParameterBinding binding = bindings.getBinding( parameter.getName() );
-		if ( binding != null ) {
-			if ( binding.getBindType() != null ) {
-				return binding.getBindType();
+	public static ExpressableType resolveType(
+			GenericParameter parameter,
+			ParameterBindingContext bindingContext) {
+		final QueryParameterBinding parameterBinding = parameter.resolveBinding( bindingContext );
+		if ( parameterBinding != null ) {
+			if ( parameterBinding.getBindType() != null ) {
+				return parameterBinding.getBindType();
 			}
 		}
 
@@ -40,11 +43,11 @@ public class ConversionHelper {
 			return parameter.getType();
 		}
 
-		if ( binding.isMultiValued() ) {
+		if ( parameterBinding.isMultiValued() ) {
 			throw new NotYetImplementedException( "Support for Type determination for multi-valued parameters is not yet implemented" );
 		}
-		else if ( binding.isBound() ) {
-			return persistenceContext.resolveParameterBindType( binding.getBindValue() );
+		else if ( parameterBinding.isBound() ) {
+			return persistenceContext.resolveParameterBindType( parameterBinding.getBindValue() );
 		}
 
 		throw new QueryException( "Unable to determine Type for named parameter [:" + parameter.getName() + "]" );

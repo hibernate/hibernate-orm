@@ -4,18 +4,24 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.ast.consume.spi;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.QueryLiteralRendering;
+import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.tree.order.SqmSortOrder;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.consume.ExecutionException;
+import org.hibernate.sql.ast.consume.SemanticException;
 import org.hibernate.sql.ast.consume.internal.JdbcSelectImpl;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 import org.hibernate.sql.ast.produce.sqm.spi.ConversionHelper;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
@@ -30,6 +36,7 @@ import org.hibernate.sql.ast.tree.spi.expression.ConcatFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountStarFunction;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
 import org.hibernate.sql.ast.tree.spi.expression.MaxFunction;
 import org.hibernate.sql.ast.tree.spi.expression.MinFunction;
 import org.hibernate.sql.ast.tree.spi.expression.NamedParameter;
@@ -77,7 +84,8 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker {
+public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker,
+		JdbcParameterBinder.ParameterBindingContext {
 	private static final Logger log = Logger.getLogger( SqlSelectAstToJdbcSelectConverter.class );
 
 	/**
@@ -87,13 +95,13 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker {
 	 */
 	public static JdbcSelect interpret(
 			SqlSelectPlan sqlSelectPlan,
-			boolean shallow,
 			SharedSessionContractImplementor persistenceContext,
-			QueryParameterBindings parameterBindings) {
+			QueryParameterBindings parameterBindings,
+			java.util.Collection<?> loadIdentifiers) {
 		final SqlSelectAstToJdbcSelectConverter walker = new SqlSelectAstToJdbcSelectConverter(
 				persistenceContext,
 				parameterBindings,
-				shallow
+				loadIdentifiers
 		);
 		walker.visitSelectQuery( sqlSelectPlan.getSqlAstSelectStatement() );
 		return new JdbcSelectImpl(
@@ -107,7 +115,7 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker {
 	// pre-req state
 	private final SharedSessionContractImplementor persistenceContext;
 	private final QueryParameterBindings parameterBindings;
-	private final boolean shallow;
+	private final java.util.Collection<?> loadIdentifiers;
 
 	// In-flight state
 	private final StringBuilder sqlBuffer = new StringBuilder();
@@ -120,10 +128,10 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker {
 	private SqlSelectAstToJdbcSelectConverter(
 			SharedSessionContractImplementor persistenceContext,
 			QueryParameterBindings parameterBindings,
-			boolean shallow) {
+			java.util.Collection<?> loadIdentifiers) {
 		this.persistenceContext = persistenceContext;
 		this.parameterBindings = parameterBindings;
-		this.shallow = shallow;
+		this.loadIdentifiers = loadIdentifiers;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -488,12 +496,15 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker {
 	}
 
 	@Override
-	public void visitNamedParameter(NamedParameter namedParameter) {
-		parameterBinders.add( namedParameter.getParameterBinder() );
+	public void visitGenericParameter(GenericParameter parameter) {
+		// todo (6.0) : implement
+		//		add new `ExpressableType#getNumberOfJdbcParametersForRestriction()
 
-		final Type type = ConversionHelper.resolveType( namedParameter, parameterBindings, persistenceContext );
+		parameterBinders.add( parameter.getParameterBinder() );
 
-		final int columnCount = type.getColumnSpan();
+		final ExpressableType type = resolveType( parameter );
+
+		final int columnCount = type.getNumberOfJdbcParametersForRestriction();
 		final boolean needsParens = currentlyInPredicate && columnCount > 1;
 
 		if ( needsParens ) {
@@ -510,6 +521,45 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker {
 		if ( needsParens ) {
 			appendSql( ")" );
 		}
+	}
+
+	private ExpressableType resolveType(GenericParameter parameter) {
+		final QueryParameterBinding parameterBinding = parameter.resolveBinding( this );
+		if ( parameterBinding == null || !parameterBinding.isBound() ) {
+			throw new SemanticException( "Parameter [" + parameter + "] found in SQL AST had no binding" );
+		}
+
+		if ( parameterBinding.getBindType() != null ) {
+			return parameterBinding.getBindType();
+		}
+
+		if ( parameter.getType() != null ) {
+			return parameter.getType();
+		}
+
+		if ( parameterBinding.isMultiValued() ) {
+			// can't be "multi-valued" unless there are actually bound value(s)
+			return resolveBasicValueType( parameterBinding.getBindValues().iterator().next() );
+		}
+
+		if ( parameterBinding.getBindValue() != null ) {
+			return resolveBasicValueType( parameterBinding.getBindValue() );
+		}
+
+		throw new QueryException( "Unable to determine Type for parameter [" + parameter + "]" );
+
+	}
+
+	private ExpressableType resolveBasicValueType(Object value) {
+		return getSession().getFactory()
+				.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getBasicType( value.getClass() );
+	}
+
+	@Override
+	public void visitNamedParameter(NamedParameter namedParameter) {
+		visitGenericParameter( namedParameter );
 	}
 
 	@Override
@@ -784,4 +834,19 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker {
 		relationalPredicate.getRightHandExpression().accept( this );
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> Collection<T> getLoadIdentifiers() {
+		return (Collection<T>) loadIdentifiers;
+	}
+
+	@Override
+	public QueryParameterBindings getQueryParameterBindings() {
+		return parameterBindings;
+	}
+
+	@Override
+	public SharedSessionContractImplementor getSession() {
+		return persistenceContext;
+	}
 }

@@ -63,8 +63,7 @@ import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager.SqlAliasBase;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroup;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
@@ -282,7 +281,7 @@ public abstract class AbstractEntityTypeImplementor<T>
 	}
 
 	@Override
-	public EntityTypeImplementor<T> getEntityPersister() {
+	public EntityTypeImplementor<T> getEntityDescriptor() {
 		return this;
 	}
 
@@ -446,7 +445,7 @@ public abstract class AbstractEntityTypeImplementor<T>
 			RootTableGroupContext tableGroupContext,
 			SqlAliasBaseResolver sqlAliasBaseResolver) {
 		assert navigableReferenceInfo.getReferencedNavigable() instanceof NavigableEntityValued;
-		assert ( (NavigableEntityValued) navigableReferenceInfo ).getEntityPersister() == this;
+		assert ( (NavigableEntityValued) navigableReferenceInfo ).getEntityDescriptor() == this;
 		// it is a root (supposedly)
 		assert navigableReferenceInfo.getNavigableContainerReferenceInfo() == null;
 
@@ -543,7 +542,7 @@ public abstract class AbstractEntityTypeImplementor<T>
 	@Override
 	public void applyTableReferenceJoins(
 			JoinType joinType,
-			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
+			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector collector) {
 		// todo (6.0) : NOTE the LHS is no longer passed in because we changed the expectation such that the caller would be the one creating the TableReference
 
@@ -562,7 +561,7 @@ public abstract class AbstractEntityTypeImplementor<T>
 //		assert navigableReferenceInfo.getReferencedNavigable() instanceof EntityValuedNavigable;
 //		assert navigableReferenceInfo.getReferencedNavigable() instanceof JoinablePersistentAttribute
 //				|| navigableReferenceInfo.getReferencedNavigable() instanceof CollectionElement;
-//		assert ( (EntityValuedNavigable) navigableReferenceInfo ).getEntityPersister() == this;
+//		assert ( (EntityValuedNavigable) navigableReferenceInfo ).getEntityDescriptor() == this;
 //		assert navigableReferenceInfo.getNavigableContainerReferenceInfo() != null;
 //
 //		final EntityTableGroup group = createEntityTableGroup(

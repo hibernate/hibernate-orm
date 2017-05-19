@@ -48,7 +48,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseResolver;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.sql.JoinType;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.tree.spi.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
@@ -272,7 +272,7 @@ public abstract class AbstractPersistentCollectionMetadata<O,C,E> implements Per
 			NavigableReferenceInfo navigableReferenceInfo,
 			RootTableGroupContext tableGroupContext,
 			SqlAliasBaseResolver sqlAliasBaseResolver) {
-		final SqlAliasBaseManager.SqlAliasBase sqlAliasBase = sqlAliasBaseResolver.getSqlAliasBase( navigableReferenceInfo );
+		final SqlAliasBase sqlAliasBase = sqlAliasBaseResolver.getSqlAliasBase( navigableReferenceInfo );
 
 		final TableReference collectionTableReference;
 		if ( separateCollectionTable != null ) {

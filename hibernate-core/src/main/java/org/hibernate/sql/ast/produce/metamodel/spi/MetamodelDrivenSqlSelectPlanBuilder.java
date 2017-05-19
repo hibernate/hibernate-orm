@@ -8,6 +8,9 @@ package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 
 /**
@@ -17,7 +20,8 @@ import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
  *
  * @author Steve Ebersole
  */
-public interface MetamodelDrivenSqlSelectPlanBuilder extends NavigableVisitationStrategy {
+public interface MetamodelDrivenSqlSelectPlanBuilder
+		extends NavigableVisitationStrategy, SqlAstBuildingContext, SqlSelectionResolver, RootTableGroupContext, QueryResultCreationContext {
 	/**
 	 * Build the SqlSelectPlan, driven by mapping model, with the given
 	 * NavigableSource as query root..  The mapping model indicates the shape

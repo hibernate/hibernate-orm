@@ -254,7 +254,7 @@ public class QuerySplitter {
 						currentFromElementSpaceCopy,
 						rootEntityFromElement.getUniqueIdentifier(),
 						rootEntityFromElement.getIdentificationVariable(),
-						rootEntityFromElement.getNavigableReference().getReferencedNavigable().getEntityPersister()
+						rootEntityFromElement.getNavigableReference().getReferencedNavigable().getEntityDescriptor()
 				);
 			}
 			navigableBindingCopyMap.put( rootEntityFromElement.getNavigableReference(), copy.getNavigableReference() );
@@ -276,7 +276,7 @@ public class QuerySplitter {
 					currentFromElementSpaceCopy,
 					joinedFromElement.getUniqueIdentifier(),
 					joinedFromElement.getIdentificationVariable(),
-					joinedFromElement.getNavigableReference().getReferencedNavigable().getEntityPersister()
+					joinedFromElement.getNavigableReference().getReferencedNavigable().getEntityDescriptor()
 			);
 			navigableBindingCopyMap.put( joinedFromElement.getNavigableReference(), copy.getNavigableReference() );
 			return copy;
@@ -297,7 +297,7 @@ public class QuerySplitter {
 					currentFromElementSpaceCopy,
 					joinedFromElement.getUniqueIdentifier(),
 					joinedFromElement.getIdentificationVariable(),
-					joinedFromElement.getNavigableReference().getReferencedNavigable().getEntityPersister(),
+					joinedFromElement.getNavigableReference().getReferencedNavigable().getEntityDescriptor(),
 					joinedFromElement.getJoinType()
 			);
 			navigableBindingCopyMap.put( joinedFromElement.getNavigableReference(), copy.getNavigableReference() );

@@ -6,13 +6,14 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
+
 /**
  * Models a persistent (mapped) attribute in Hibernate's "runtime model".
  *
  * @author Steve Ebersole
  */
-public interface PersistentAttribute<O,T>
-		extends Navigable<T>, javax.persistence.metamodel.Attribute<O,T> {
+public interface PersistentAttribute<O,T> extends Navigable<T>, javax.persistence.metamodel.Attribute<O,T> {
 	@Override
 	ManagedTypeImplementor<O> getContainer();
 

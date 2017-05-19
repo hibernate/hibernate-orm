@@ -84,7 +84,7 @@ public class CollectionKey {
 		}
 		else {
 			// otherwise we just need to resolve the column names in the element table(s) (as the "collection table")
-			final EntityTypeImplementor elementPersister = ( (CollectionElementEntity) collectionPersister.getElementDescriptor() ).getEntityPersister();
+			final EntityTypeImplementor elementPersister = ( (CollectionElementEntity) collectionPersister.getElementDescriptor() ).getEntityDescriptor();
 
 			for ( int i = 0; i < columnNames.length; i++ ) {
 				// it is conceivable that the column already exists

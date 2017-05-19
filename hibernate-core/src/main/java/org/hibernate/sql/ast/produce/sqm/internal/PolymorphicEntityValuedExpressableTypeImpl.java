@@ -59,7 +59,7 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements Polymorphi
 	}
 
 	@Override
-	public EntityTypeImplementor<T> getEntityPersister() {
+	public EntityTypeImplementor<T> getEntityDescriptor() {
 		// todo (6.0) - throw an exception?
 		return null;
 	}

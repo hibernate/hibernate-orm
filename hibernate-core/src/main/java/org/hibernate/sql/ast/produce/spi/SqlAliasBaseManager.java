@@ -9,54 +9,35 @@ package org.hibernate.sql.ast.produce.spi;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.AssertionFailure;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseResolver;
-import org.hibernate.type.spi.EntityType;
-import org.hibernate.type.spi.Type;
 
 /**
+ * Helper used in creating unique SQL table aliases for a SQL AST
+ *
  * @author Steve Ebersole
  */
 public class SqlAliasBaseManager implements SqlAliasBaseResolver {
+	// an overall dictionary.  used to ensure that a given
+	// 		NavigableReferenceInfo instance always resolves to the same
+	// 		SQL alias base; its called base because a NavigableReferenceInfo
+	// 		can encompass multiple physical tables - each needing its own SQL
+	// 		alias which we derive from the base.
+	private Map<NavigableReferenceInfo,SqlAliasBase> fromElementAliasMap = new HashMap<>();
 
-	public interface SqlAliasBase {
-		String getAliasStem();
-		String generateNewAlias();
-	}
-
-
-	// an overall dictionary.  used to ensure that a given NavigableReferenceInfo instance always
-	// resolves to the same SQL alias base; its called base because a NavigableReferenceInfo can encompass
-	// multiple physical tables - each needing its own SQL alias which we derive from the base.
-	private Map<NavigableReferenceInfo,String> fromElementAliasMap = new HashMap<>();
-
-	// work dictionary used to map a FromElement type name to its acronym
-	private Map<String,String> nameAcronymMap = new HashMap<>();
-	// wok dictionary used to map an acronym to the number of times it has been used.
+	// work dictionary used to map an acronym to the number of times it has
+	// 		been used.
 	private Map<String,Integer> acronymCountMap = new HashMap<>();
 
-	public String getSqlAliasBase(NavigableReferenceInfo navigableReferenceInfo) {
+	public SqlAliasBase getSqlAliasBase(NavigableReferenceInfo navigableReferenceInfo) {
 		return fromElementAliasMap.computeIfAbsent(
 				navigableReferenceInfo,
 				e -> generateAliasBase( navigableReferenceInfo )
 		);
 	}
 
-	private String generateAliasBase(NavigableReferenceInfo domainReference) {
-		final String acronym;
-		if ( domainReference instanceof EntityValuedExpressableType ) {
-			acronym = determineAcronym( (EntityValuedExpressableType) domainReference );
-		}
-		else if ( domainReference.getReferencedNavigable() instanceof PersistentAttribute ) {
-			acronym = determineAcronym( (PersistentAttribute) domainReference.getReferencedNavigable() );
-		}
-		else {
-			throw new IllegalArgumentException( "Unexpected Navigable type : " + domainReference );
-		}
+	private SqlAliasBase generateAliasBase(NavigableReferenceInfo domainReference) {
+		final String acronym = domainReference.getReferencedNavigable().getSqlAliasStem();
 
 		Integer acronymCount = acronymCountMap.get( acronym );
 		if ( acronymCount == null ) {
@@ -65,53 +46,27 @@ public class SqlAliasBaseManager implements SqlAliasBaseResolver {
 		acronymCount++;
 		acronymCountMap.put( acronym, acronymCount );
 
-		return acronym + acronymCount;
+		return new SqlAliasBaseImpl( acronym + acronymCount );
 	}
 
-	private String determineAcronym(EntityValuedExpressableType entityRef) {
-		return nameAcronymMap.computeIfAbsent(
-				entityRef.getEntityName(),
-				k -> entityNameToAcronym( entityRef.getEntityName() )
-		);
-	}
+	private static class SqlAliasBaseImpl implements SqlAliasBase {
+		private final String stem;
+		private int aliasCount;
 
-	private String entityNameToAcronym(String entityName) {
-		final String simpleName = toSimpleEntityName( entityName );
-
-		// ideally I'd like to build the alias base from acronym form of the name.  E.g.
-		// 'TransportationMethod` becomes 'tm', 'ShippingDestination` becomes 'sd', etc
-
-		// for now, just use the first letter
-		return Character.toString( Character.toLowerCase( simpleName.charAt( 0 ) ) );
-	}
-
-	private String toSimpleEntityName(String entityName) {
-		String simpleName = StringHelper.unqualify( entityName );
-		if ( simpleName.contains( "$" ) ) {
-			// inner class
-			simpleName = simpleName.substring( simpleName.lastIndexOf( '$' ) + 1 );
-		}
-		if ( StringHelper.isEmpty( simpleName ) ) {
-			throw new AssertionFailure( "Could not determine simple name as base for alias [" + entityName + "]" );
-		}
-		return simpleName;
-	}
-
-	private String determineAcronym(PersistentAttribute attrRef) {
-		final String acronymBase;
-		final Type attrType = attrRef.getOrmType();
-		if ( attrType.isEntityType() && !attrType.isAnyType() ) {
-			// use the entity name as the base
-			acronymBase = toSimpleEntityName( ( (EntityType) attrType ).getAssociatedEntityName() );
-		}
-		else {
-			acronymBase = attrRef.getAttributeName();
+		SqlAliasBaseImpl(String stem) {
+			this.stem = stem;
 		}
 
-		// see note above, again for now just use the first letter
-		return nameAcronymMap.computeIfAbsent(
-				acronymBase,
-				b -> Character.toString( Character.toLowerCase( b.charAt( 0 ) ) )
-		);
+		@Override
+		public String getAliasStem() {
+			return stem;
+		}
+
+		@Override
+		public String generateNewAlias() {
+			synchronized ( this ) {
+				return stem + '_' + (aliasCount++);
+			}
+		}
 	}
 }

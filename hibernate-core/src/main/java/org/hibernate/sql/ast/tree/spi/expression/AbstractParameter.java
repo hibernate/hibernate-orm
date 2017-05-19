@@ -10,27 +10,23 @@ package org.hibernate.sql.ast.tree.spi.expression;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
-import org.hibernate.sql.ast.produce.sqm.spi.ParameterSpec;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractParameter
-		implements ParameterSpec, JdbcParameterBinder, Expression, SqlSelectable, Selectable {
+public abstract class AbstractParameter implements GenericParameter {
 	private static final Logger log = Logger.getLogger( AbstractParameter.class );
 
 	private final ExpressableType inferredType;
@@ -70,14 +66,15 @@ public abstract class AbstractParameter
 		return new SqlSelectionReaderImpl( ( BasicValuedExpressableType) getType() );
 	}
 
-	protected int bindParameterValue(
+	@Override
+	public int bindParameterValue(
 			PreparedStatement statement,
 			int startPosition,
-			QueryParameterBinding valueBinding,
-			SharedSessionContractImplementor session) throws SQLException {
+			ParameterBindingContext bindingContext) throws SQLException {
 		final ExpressableType bindType;
 		final Object bindValue;
 
+		final QueryParameterBinding valueBinding = resolveBinding( bindingContext );
 		if ( valueBinding == null ) {
 			warnNoBinding();
 			bindType = valueBinding.getBindType();

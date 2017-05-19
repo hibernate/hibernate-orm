@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.JoinType;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 
 /**
  * @author Steve Ebersole
@@ -31,7 +31,7 @@ public interface CollectionIndex<J> extends Navigable<J> {
 
 	void applyTableReferenceJoins(
 			JoinType joinType,
-			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
+			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector collector);
 
 	List<Column> getColumns();

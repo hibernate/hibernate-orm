@@ -700,7 +700,7 @@ public class CustomPersister implements EntityTypeImplementor {
 	}
 
 	@Override
-	public EntityTypeImplementor getEntityPersister() {
+	public EntityTypeImplementor getEntityDescriptor() {
 		return this;
 	}
 

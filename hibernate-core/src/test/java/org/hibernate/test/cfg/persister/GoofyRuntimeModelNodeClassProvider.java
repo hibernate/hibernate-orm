@@ -581,7 +581,7 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 		}
 
 		@Override
-		public EntityTypeImplementor getEntityPersister() {
+		public EntityTypeImplementor getEntityDescriptor() {
 			return this;
 		}
 

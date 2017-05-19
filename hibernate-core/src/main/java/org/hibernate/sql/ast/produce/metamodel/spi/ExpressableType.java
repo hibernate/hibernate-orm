@@ -7,8 +7,6 @@
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
@@ -29,6 +27,8 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 public interface ExpressableType<T> extends javax.persistence.metamodel.Type<T> {
 	JavaTypeDescriptor<T> getJavaTypeDescriptor();
 
+	int getNumberOfJdbcParametersForRestriction();
+
 	// todo (6.0) : need to account for binding and extracting at this level
 	//		now encapsulates AttributeConverter, so this is appropriate.
 	//
@@ -37,10 +37,4 @@ public interface ExpressableType<T> extends javax.persistence.metamodel.Type<T> 
 	//			2) use ExpressableType to access the "current row JDBC value"
 
 
-	/**
-	 * ExpressableType acts as a factory for Expressions for the specific type modeled.
-	 */
-	default Expression createExpression() {
-		throw new NotYetImplementedException(  );
-	}
 }

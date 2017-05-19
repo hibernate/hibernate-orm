@@ -112,17 +112,17 @@ public abstract class AbstractEntityReferenceInitializer
 		concretePersister = resolveConcreteEntityPersister( rowProcessingState, persistenceContext );
 
 		//		1) resolve the value(s) into its identifier representation
-		final Object id = concretePersister.getEntityPersister().getIdentifierType().assemble(
+		final Object id = concretePersister.getEntityDescriptor().getIdentifierType().assemble(
 				(Serializable) identifierHydratedState,
 				persistenceContext,
 				null
 		);
 
 		//		2) build and register an EntityKey
-		this.entityKey = new EntityKey( (Serializable) id, concretePersister.getEntityPersister() );
+		this.entityKey = new EntityKey( (Serializable) id, concretePersister.getEntityDescriptor() );
 
 		//		3) schedule the EntityKey for batch loading, if possible
-		if ( shouldBatchFetch() && concretePersister.getEntityPersister().isBatchLoadable() ) {
+		if ( shouldBatchFetch() && concretePersister.getEntityDescriptor().isBatchLoadable() ) {
 			if ( !persistenceContext.getPersistenceContext().containsEntity( entityKey ) ) {
 				persistenceContext.getPersistenceContext().getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
 			}
@@ -242,7 +242,7 @@ public abstract class AbstractEntityReferenceInitializer
 		);
 
 		TwoPhaseLoad.postHydrate(
-				concretePersister.getEntityPersister(),
+				concretePersister.getEntityDescriptor(),
 				entityKey.getIdentifier(),
 				hydratedState,
 				// ROW_ID
@@ -270,7 +270,7 @@ public abstract class AbstractEntityReferenceInitializer
 				selectionGroup.getSqlSelections().get( 0 ).getValuesArrayPosition()
 		];
 
-		final Loadable legacyLoadable = (Loadable) persister.getEntityPersister();
+		final Loadable legacyLoadable = (Loadable) persister.getEntityDescriptor();
 		final String result = legacyLoadable.getSubclassForDiscriminatorValue( discriminatorValue );
 
 		if ( result == null ) {

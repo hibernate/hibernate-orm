@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.sql.ast.produce.metamodel.spi;
+package org.hibernate.sql.ast.produce.metamodel.internal;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -25,15 +25,19 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementBasic;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
-import org.hibernate.sql.ast.produce.metamodel.internal.NavigableContainerReferenceInfoImpl;
+import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKey;
+import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKeyProducer;
+import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
+import org.hibernate.sql.ast.produce.metamodel.spi.MetamodelDrivenSqlSelectPlanBuilder;
+import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.NavigablePathStack;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
@@ -42,8 +46,13 @@ import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
+import org.hibernate.sql.ast.tree.spi.expression.AbstractParameter;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
+import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
+import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
+import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -57,9 +66,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
-		implements MetamodelDrivenSqlSelectPlanBuilder, SqlAstBuildingContext, SqlSelectionResolver,
-		RootTableGroupContext {
+public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder implements MetamodelDrivenSqlSelectPlanBuilder {
 	private static final Logger log = Logger.getLogger( AbstractMetamodelDrivenSqlSelectPlanBuilder.class );
 
 	private final SqlAstBuildingContext buildingContext;
@@ -84,8 +91,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 
 	private QuerySpec querySpec;
 	private TableSpace tableSpace;
-
-	private QueryResult queryReturn;
+	private TableGroup rootTableGroup;
 
 	/**
 	 *
@@ -125,51 +131,144 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 		return buildingContext.getCallback();
 	}
 
-	@Override
-	public SqlSelectPlan buildSqlSelectPlan(NavigableContainer rootNavigable) {
-		// rootNavigable should be either
-		// 		1) an IdentifiableTypeImplementor (Entity or MappedSuperclass)
-		// 		2) a CollectionPersister
-		assert rootNavigable instanceof IdentifiableTypeImplementor
-				|| rootNavigable instanceof PersistentCollectionMetadata;
-		assert rootNavigable instanceof RootTableGroupProducer;
+	private NavigableReferenceInfoImpl createNavigableRefInfo(Navigable navigable) {
+		if ( navigable instanceof NavigableContainer ) {
+			return new NavigableContainerReferenceInfoImpl(
+					navigableContainerInfoStack.getCurrent(),
+					(NavigableContainer) navigable,
+					navigablePathStack.getCurrent(),
+					generateSqlAstNodeUid(),
+					null,
+					null
+			);
+		}
+		else {
+			return new NavigableReferenceInfoImpl(
+					navigableContainerInfoStack.getCurrent(),
+					navigable,
+					navigablePathStack.getCurrent(),
+					generateSqlAstNodeUid(),
+					null,
+					null
+			);
+		}
+	}
 
-		prepareForVisitation();
+	private String generateSqlAstNodeUid() {
+		return null;
+	}
+
+	public SqlSelectPlan buildSqlSelectPlan(PersistentCollectionMetadata collection) {
+
+	}
+
+	@Override
+	public void prepareForVisitation() {
+		if ( !fetchParentStack.isEmpty() || !fetchLhsTableGroupStack.isEmpty() ) {
+			throw new IllegalStateException(
+					"MetamodelDrivenSqlSelectPlanBuilder [" + this + "] is not in proper state to begin visitation"
+			);
+		}
 
 		querySpec = new QuerySpec( true );
 		// when generating a SELECT from the metamodel there is only ever 1 TableSpace, so make it here
 		tableSpace = querySpec.getFromClause().makeTableSpace();
+	}
 
+	@Override
+	public void visitationComplete() {
+		querySpec = null;
+		tableSpace = null;
+		rootTableGroup = null;
+
+		navigablePathStack.clear();
+
+		if ( !fetchParentStack.isEmpty() ) {
+			log.debug( "fetchParentStack was not empty upon completion of visitation; un-matched push and pop?" );
+			fetchParentStack.clear();
+		}
+		if ( !fetchLhsTableGroupStack.isEmpty() ) {
+			log.debug( "fetchLhsTableGroupStack was not empty upon completion of visitation; un-matched push and pop?" );
+			fetchLhsTableGroupStack.clear();
+		}
+	}
+
+	@Override
+	public SqlSelectPlan buildSqlSelectPlan(NavigableContainer rootNavigable) {
+		assert rootNavigable instanceof RootTableGroupProducer;
+		final RootTableGroupProducer rootTableGroupProducer = (RootTableGroupProducer) rootNavigable;
+
+		prepareForVisitation();
+
+		// ignore return for root
+		shouldContinue( rootNavigable );
+
+		final NavigableContainerReferenceInfoImpl navigableRefInfo = (NavigableContainerReferenceInfoImpl) createNavigableRefInfo( rootNavigable );
+		navigableContainerInfoStack.push( navigableRefInfo );
 
 		try {
-			rootNavigable.visitNavigable( this );
+			final TableGroup tableGroup = rootTableGroupProducer.createRootTableGroup(
+					navigableRefInfo,
+					this,
+					sqlAliasBaseManager
+			);
 
-			// add this created reference to the "container stack" so we can access it later to build fetched navigables
-			navigableContainerInfoStack.push( navigableReferenceInfo );
-			final TableGroup tableGroup = ( (RootTableGroupProducer) rootNavigable ).createRootTableGroup(
-					navigableReferenceInfo,
+			tableSpace.setRootTableGroup( tableGroup );
+
+			final Selection selection = tableGroup.asExpression().getSelectable().createSelection(
+					tableGroup.asExpression(),
+					null
+			);
+			querySpec.getSelectClause().selection( selection );
+
+			querySpec.addRestriction( generateRestriction() );
+
+			final QueryResult queryResult = rootNavigable.generateQueryResult(
+					tableGroup.asExpression(),
+					null,
+					rootTableGroup,
 					this,
 					this
 			);
 
-			// * resolve SqlSelections
-			// * create Return and Fetches
+			fetchParentStack.push( (FetchParent) queryResult );
+			try {
+				rootNavigable.visitNavigables( this );
 
-
-			queryReturn = rootNavigable.generateQueryResult( this, tableGroup );
-
-			// finally visit any potential fetches
-			visitNavigables( rootNavigable, (FetchParent) queryReturn, tableGroup );
-
-			return new SqlSelectPlanImpl(
-					new SelectStatement( querySpec ),
-					Collections.singletonList( queryReturn )
-			);
-
+				return new SqlSelectPlanImpl(
+						new SelectStatement( querySpec ),
+						Collections.singletonList( queryResult )
+				);
+			}
+			finally {
+				fetchParentStack.pop();
+			}
 		}
 		finally {
+			navigableContainerInfoStack.pop();
 			visitationComplete();
 		}
+	}
+
+	protected Predicate generateRestriction() {
+		final Expression restrictionExpression = generateRestrictionExpression();
+		return new RelationalPredicate(
+				RelationalPredicate.Operator.EQUAL,
+				restrictionExpression,
+				new LoadIdParameter( restrictionExpression.getType() )
+		);
+	}
+
+	protected abstract Expression generateRestrictionExpression();
+
+	private boolean shouldContinue(Navigable navigable) {
+		if ( navigable instanceof AssociationKeyProducer ) {
+			final AssociationKeyProducer producer = (AssociationKeyProducer) navigable;
+			final AssociationKey associationKey = producer.getAssociationKey();
+			return associationKeys.add( associationKey );
+		}
+
+		return true;
 	}
 
 	private void visitNavigable(Navigable navigable) {
@@ -193,46 +292,10 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 
 	@Override
 	public void visitEntity(EntityTypeImplementor entity) {
-		visitNavigable( entity );
-
-		// because the incoming navigable is a container, we know the reference object we
-		// 		create can also be a container
-		final NavigableContainerReferenceInfoImpl navigableReferenceInfo = new NavigableContainerReferenceInfoImpl(
-				null,
-				entity,
-				navigablePathStack.getCurrent(),
-				generateSqlAstNodeUid(),
-				null,
-				null
-		);
-
-		// this may be the root, check...
-		if ( navigablePathStack.isEmpty() ) {
-
-		}
-	}
-
-	@Override
-	public void prepareForVisitation() {
-		if ( !fetchParentStack.isEmpty() || !fetchLhsTableGroupStack.isEmpty() ) {
-			throw new IllegalStateException(
-					"MetamodelDrivenSqlSelectPlanBuilder [" + this + "] is not in proper state to begin visitation"
-			);
-		}
-	}
-
-	@Override
-	public void visitationComplete() {
-		navigablePathStack.clear();
-
-		if ( !fetchParentStack.isEmpty() ) {
-			log.debug( "fetchParentStack was not empty upon completion of visitation; un-matched push and pop?" );
-			fetchParentStack.clear();
-		}
-		if ( !fetchLhsTableGroupStack.isEmpty() ) {
-			log.debug( "fetchLhsTableGroupStack was not empty upon completion of visitation; un-matched push and pop?" );
-			fetchLhsTableGroupStack.clear();
-		}
+		// the root entity is handled in #buildSqlSelectPlan and entity fetches are
+		//		handled in the actual "joinable navigable".  So nothing to do here
+		//		except propagate to the entity's navigables.
+		entity.visitNavigables( this );
 	}
 
 
@@ -967,8 +1030,8 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		}
 //
 //		@Override
-//		public EntityPersister getEntityPersister() {
-//			return targetEntityReference.getEntityPersister();
+//		public EntityPersister getEntityDescriptor() {
+//			return targetEntityReference.getEntityDescriptor();
 //		}
 //
 //		@Override

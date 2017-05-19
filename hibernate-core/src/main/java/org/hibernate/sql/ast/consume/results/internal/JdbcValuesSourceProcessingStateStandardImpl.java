@@ -210,7 +210,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 					// todo : handle LockMode
 					LockMode.NONE,
 					true,
-					loadingEntity.persister.getEntityPersister(),
+					loadingEntity.persister.getEntityDescriptor(),
 					// disableVersionIncrement?
 					false
 			);

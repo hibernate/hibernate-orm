@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.sql.JoinType;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 
 /**
  * @author Steve Ebersole
@@ -49,7 +49,7 @@ public abstract class AbstractCollectionIndex<J> implements CollectionIndex<J> {
 	@Override
 	public void applyTableReferenceJoins(
 			JoinType leftOuterJoin,
-			SqlAliasBaseManager.SqlAliasBase sqlAliasBase,
+			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector collector) {
 		// only relevant for ONE-TO-MANY and MANY-TO-MANY - noop in the general case
 	}

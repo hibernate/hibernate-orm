@@ -76,7 +76,7 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public EntityTypeImplementor<J> getEntityPersister() {
+	public EntityTypeImplementor<J> getEntityDescriptor() {
 		return entityPersister;
 	}
 

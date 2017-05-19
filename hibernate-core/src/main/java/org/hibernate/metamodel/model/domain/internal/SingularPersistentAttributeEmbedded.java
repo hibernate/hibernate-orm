@@ -37,16 +37,16 @@ public class SingularPersistentAttributeEmbedded<O,J>
 		extends AbstractSingularPersistentAttribute<O,J>
 		implements SingularPersistentAttribute<O,J>, NavigableEmbeddedValued<J> {
 
-	private final EmbeddedTypeImplementor<J> embeddedPersister;
+	private final EmbeddedTypeImplementor<J> embeddedDescriptor;
 
 	public SingularPersistentAttributeEmbedded(
 			ManagedTypeImplementor<O> declaringType,
 			String attributeName,
 			PropertyAccess propertyAccess,
 			Disposition disposition,
-			EmbeddedTypeImplementor<J> embeddedPersister) {
-		super( declaringType, attributeName, propertyAccess, embeddedPersister, disposition, true );
-		this.embeddedPersister = embeddedPersister;
+			EmbeddedTypeImplementor<J> embeddedDescriptor) {
+		super( declaringType, attributeName, propertyAccess, embeddedDescriptor, disposition, true );
+		this.embeddedDescriptor = embeddedDescriptor;
 	}
 
 	@Override
@@ -55,8 +55,8 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	}
 
 	@Override
-	public EmbeddedTypeImplementor<J> getEmbeddedPersister() {
-		return embeddedPersister;
+	public EmbeddedTypeImplementor<J> getEmbeddedDescriptor() {
+		return embeddedDescriptor;
 	}
 
 	@Override
@@ -71,7 +71,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 
 	@Override
 	public List<Column> getColumns() {
-		return embeddedPersister.collectColumns();
+		return embeddedDescriptor.collectColumns();
 	}
 
 	@Override
@@ -87,12 +87,12 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <N> Navigable<N> findNavigable(String navigableName) {
-		return getEmbeddedPersister().findNavigable( navigableName );
+		return this.getEmbeddedDescriptor().findNavigable( navigableName );
 	}
 
 	@Override
 	public NavigableRole getNavigableRole() {
-		return embeddedPersister.getNavigableRole();
+		return embeddedDescriptor.getNavigableRole();
 	}
 
 	@Override
@@ -102,27 +102,27 @@ public class SingularPersistentAttributeEmbedded<O,J>
 
 	@Override
 	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		return embeddedPersister.findDeclaredNavigable( navigableName );
+		return embeddedDescriptor.findDeclaredNavigable( navigableName );
 	}
 
 	@Override
 	public List<Navigable> getNavigables() {
-		return embeddedPersister.getNavigables();
+		return embeddedDescriptor.getNavigables();
 	}
 
 	@Override
 	public List<Navigable> getDeclaredNavigables() {
-		return embeddedPersister.getDeclaredNavigables();
+		return embeddedDescriptor.getDeclaredNavigables();
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
-		embeddedPersister.visitNavigables( visitor );
+		embeddedDescriptor.visitNavigables( visitor );
 	}
 
 	@Override
 	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
-		embeddedPersister.visitDeclaredNavigables( visitor );
+		embeddedDescriptor.visitDeclaredNavigables( visitor );
 	}
 
 	@Override
@@ -138,6 +138,6 @@ public class SingularPersistentAttributeEmbedded<O,J>
 			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return new QueryResultCompositeImpl( selectedExpression, resultVariable, embeddedPersister );
+		return new QueryResultCompositeImpl( selectedExpression, resultVariable, embeddedDescriptor );
 	}
 }

@@ -12,6 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.Session;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.SQLServer2008Dialect;
 
@@ -21,7 +22,6 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -43,16 +43,25 @@ public class NationalizedScalarQueryTest extends BaseCoreFunctionalTestCase {
 		User user1 = new User( 1, "Chris" );
 		User user2 = new User( 2, "Steve" );
 
-		doInHibernate( this::sessionFactory, session -> {
+		Session session = openSession();
+		session.getTransaction().begin();
+		{
 			session.save( user1 );
 			session.save( user2 );
-		} );
+		}
+		session.getTransaction().commit();
+		session.close();
 
-		doInHibernate( this::sessionFactory, session -> {
-			List<Object[]> users = session.createNativeQuery(
-					"select * from users" ).getResultList();
+		session = openSession();
+		session.getTransaction().begin();
+		{
+			List users = session.createSQLQuery(
+					"select * from users"
+			).list();
 			assertEquals( 2, users.size() );
-		} );
+		}
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Entity(name = "User")

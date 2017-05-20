@@ -15,6 +15,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.fail;
+
 /**
  * @author Steve Ebersole
  */
@@ -49,6 +51,28 @@ public class GetIdentifierTest extends BaseEntityManagerFunctionalTestCase {
 
 		entityManager.getTransaction().commit();
 		entityManager.close();
+	}
+
+	@Test
+	public void getIdentifierOfNonEntityTest() {
+		try {
+			entityManagerFactory().getPersistenceUnitUtil().getIdentifier( this );
+			fail( "should have thrown IllegalArgumentException" );
+		}
+		catch (IllegalArgumentException ex) {
+			// expected
+		}
+	}
+
+	@Test
+	public void getIdentifierOfNullTest() {
+		try {
+			entityManagerFactory().getPersistenceUnitUtil().getIdentifier( null );
+			fail( "should have thrown IllegalArgumentException" );
+		}
+		catch (IllegalArgumentException ex) {
+			// expected
+		}
 	}
 
 	private NestedLegacyEntity createExisitingNestedLegacyEntity() {

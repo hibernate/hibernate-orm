@@ -37,6 +37,7 @@ import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.Hibernate;
+import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.RegionFactory;
@@ -698,9 +699,15 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 		private Object getIdentifierFromPersister(Object entity) {
 			Class<?> entityClass = Hibernate.getClass( entity );
-			EntityPersister persister = emf.getSessionFactory().getEntityPersister( entityClass.getName() );
-			if ( persister == null ) {
-				throw new IllegalArgumentException( entityClass.getName() + " is not an entity" );
+			final EntityPersister persister;
+			try {
+				persister = emf.getSessionFactory().getEntityPersister( entityClass.getName() );
+				if ( persister == null ) {
+					throw new IllegalArgumentException( entityClass.getName() + " is not an entity" );
+				}
+			}
+			catch (MappingException ex) {
+				throw new IllegalArgumentException( entityClass.getName() + " is not an entity", ex );
 			}
 			return persister.getIdentifier( entity, null );
 		}

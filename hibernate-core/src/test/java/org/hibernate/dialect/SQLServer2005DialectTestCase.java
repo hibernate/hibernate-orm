@@ -410,6 +410,92 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-8916")
+	public void testGetLimitStringUsingCTEQueryNoOffset() {
+		RowSelection selection = toRowSelection( 0, 5 );
+
+		// test top-based CTE with single CTE query definition with no odd formatting
+		final String query1 = "WITH a (c1, c2) AS (SELECT c1, c2 FROM t) SELECT c1, c2 FROM a";
+		assertEquals(
+				"WITH a (c1, c2) AS (SELECT c1, c2 FROM t) SELECT TOP(?) c1, c2 FROM a",
+				dialect.getLimitHandler().processSql( query1, selection )
+		);
+
+		// test top-based CTE with single CTE query definition and various tab, newline spaces
+		final String query2 = "  \n\tWITH a (c1\n\t,c2)\t\nAS (SELECT\n\tc1,c2 FROM t)\t\nSELECT c1, c2 FROM a";
+		assertEquals(
+				"  \n\tWITH a (c1\n\t,c2)\t\nAS (SELECT\n\tc1,c2 FROM t)\t\nSELECT TOP(?) c1, c2 FROM a",
+				dialect.getLimitHandler().processSql( query2, selection )
+		);
+
+		// test top-based CTE with multiple CTE query definitions with no odd formatting
+		final String query3 = "WITH a (c1, c2) AS (SELECT c1, c2 FROM t1), b (b1, b2) AS (SELECT b1, b2 FROM t2) " +
+				"SELECT c1, c2, b1, b2 FROM t1, t2 WHERE t1.c1 = t2.b1";
+		assertEquals(
+				"WITH a (c1, c2) AS (SELECT c1, c2 FROM t1), b (b1, b2) AS (SELECT b1, b2 FROM t2) " +
+						"SELECT TOP(?) c1, c2, b1, b2 FROM t1, t2 WHERE t1.c1 = t2.b1",
+				dialect.getLimitHandler().processSql( query3, selection )
+		);
+
+		// test top-based CTE with multiple CTE query definitions and various tab, newline spaces
+		final String query4 = "  \n\r\tWITH a (c1, c2) AS\n\r (SELECT c1, c2 FROM t1)\n\r, b (b1, b2)\tAS\t" +
+				"(SELECT b1, b2 FROM t2)    SELECT c1, c2, b1, b2 FROM t1, t2 WHERE t1.c1 = t2.b1";
+		assertEquals(
+				"  \n\r\tWITH a (c1, c2) AS\n\r (SELECT c1, c2 FROM t1)\n\r, b (b1, b2)\tAS\t(SELECT b1, b2 FROM t2)" +
+						"    SELECT TOP(?) c1, c2, b1, b2 FROM t1, t2 WHERE t1.c1 = t2.b1",
+				dialect.getLimitHandler().processSql( query4, selection )
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8916")
+	public void testGetLimitStringUsingCTEQueryWithOffset() {
+		RowSelection selection = toRowSelection( 1, 5 );
+
+		// test non-top based CTE with single CTE query definition with no odd formatting
+		final String query1 = "WITH a (c1, c2) AS (SELECT c1, c2 FROM t) SELECT c1, c2 FROM a";
+		assertEquals(
+				"WITH a (c1, c2) AS (SELECT c1, c2 FROM t), query AS (SELECT inner_query.*, ROW_NUMBER() OVER " +
+						"(ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM (  SELECT c1 as page0_, c2 as page1_ " +
+						"FROM a ) inner_query ) SELECT page0_, page1_ FROM query WHERE __hibernate_row_nr__ >= ? " +
+						"AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( query1, selection )
+		);
+
+		// test non-top based CTE with single CTE query definition and various tab, newline spaces
+		final String query2 = "  \n\tWITH a (c1\n\t,c2)\t\nAS (SELECT\n\tc1,c2 FROM t)\t\nSELECT c1, c2 FROM a";
+		assertEquals(
+				"  \n\tWITH a (c1\n\t,c2)\t\nAS (SELECT\n\tc1,c2 FROM t), query AS (SELECT inner_query.*, ROW_NUMBER()" +
+						" OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( \t\nSELECT c1 as page0_, c2 " +
+						"as page1_ FROM a ) inner_query ) SELECT page0_, page1_ FROM query WHERE __hibernate_row_nr__ >= " +
+						"? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( query2, selection )
+		);
+
+		// test non-top based CTE with multiple CTE query definitions with no odd formatting
+		final String query3 = "WITH a (c1, c2) AS (SELECT c1, c2 FROM t1), b (b1, b2) AS (SELECT b1, b2 FROM t2) " +
+				" SELECT c1, c2, b1, b2 FROM t1, t2 WHERE t1.c1 = t2.b1";
+		assertEquals(
+				"WITH a (c1, c2) AS (SELECT c1, c2 FROM t1), b (b1, b2) AS (SELECT b1, b2 FROM t2), query AS (" +
+						"SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM (" +
+						"   SELECT c1 as page0_, c2 as page1_, b1 as page2_, b2 as page3_ FROM t1, t2 WHERE t1.c1 = t2.b1 ) inner_query )" +
+						" SELECT page0_, page1_, page2_, page3_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( query3, selection )
+		);
+
+		// test top-based CTE with multiple CTE query definitions and various tab, newline spaces
+		final String query4 = "  \n\r\tWITH a (c1, c2) AS\n\r (SELECT c1, c2 FROM t1)\n\r, b (b1, b2)\tAS\t(SELECT b1, " +
+				"b2 FROM t2)    SELECT c1, c2, b1, b2 FROM t1, t2 WHERE t1.c1 = t2.b1";
+		assertEquals(
+				"  \n\r\tWITH a (c1, c2) AS\n\r (SELECT c1, c2 FROM t1)\n\r, b (b1, b2)\tAS\t(SELECT b1, b2 FROM t2), query AS (" +
+						"SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM (" +
+						"     SELECT c1 as page0_, c2 as page1_, b1 as page2_, b2 as page3_ FROM t1, t2 WHERE t1.c1 = t2.b1 ) inner_query )" +
+						" SELECT page0_, page1_, page2_, page3_ FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?",
+				dialect.getLimitHandler().processSql( query4, selection )
+		);
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-9635")
 	public void testAppendLockHintReadPastLocking() {
 		final String expectedLockHint = "tab1 with (updlock, rowlock, readpast)";

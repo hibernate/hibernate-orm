@@ -6,16 +6,11 @@
  */
 package org.hibernate.test.dialect.functional;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -28,15 +23,12 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.dialect.SQLServer2005Dialect;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.LockTimeoutException;
-import org.hibernate.jdbc.ReturningWork;
+import org.junit.Test;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertArrayEquals;
@@ -56,6 +48,106 @@ public class SQLServerDialectTest extends BaseCoreFunctionalTestCase {
 		Configuration configuration = super.constructConfiguration();
 		configuration.setProperty( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, Boolean.TRUE.toString() );
 		return configuration;
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8916")
+	public void testPaginationWithCTEQueryNoOffset() {
+		// This used to throw SQLServerException: Incorrect syntax near 'SEL'
+		doInHibernate( this::sessionFactory, session -> {
+			for ( int i = 0; i < 20; ++i ) {
+				session.persist( new Product2( i, "Product" + i ) );
+			}
+			session.flush();
+			session.clear();
+
+			List results = session
+					.createNativeQuery( "WITH a AS (SELECT description FROM Product2) SELECT description FROM a" )
+					.setMaxResults( 10 )
+					.getResultList();
+
+			assertEquals( 10, results.size() );
+			assertEquals( String.class, results.get( 0 ).getClass() );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8916")
+	public void testPaginationWithCTEQueryNoOffsetNewLine() {
+		// This used to throw SQLServerException: Incorrect syntax near 'SEL'
+		doInHibernate( this::sessionFactory, session -> {
+			for ( int i = 0; i < 20; ++i ) {
+				session.persist( new Product2( i, "Product" + i ) );
+			}
+			session.flush();
+			session.clear();
+
+			List results = session
+					.createNativeQuery(
+						"WITH a AS (\n" +
+						"\tSELECT description \n" +
+						"\tFROM Product2\n" +
+						") \n" +
+						"SELECT description FROM a" )
+					.setMaxResults( 10 )
+					.getResultList();
+
+			assertEquals( 10, results.size() );
+			assertEquals( String.class, results.get( 0 ).getClass() );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8916")
+	public void testPaginationWithCTEQueryWithOffsetAndOrderBy() {
+		// This used to throw an StringIndexOutOfBoundsException
+		doInHibernate( this::sessionFactory, session -> {
+			for ( int i = 0; i < 20; ++i ) {
+				session.persist( new Product2( i, "Product" + i ) );
+			}
+			session.flush();
+			session.clear();
+
+			List results = session
+					.createNativeQuery( "WITH a AS (SELECT id, description FROM Product2) SELECT id, description FROM a ORDER BY id DESC" )
+					.setFirstResult( 5 )
+					.setMaxResults( 10 )
+					.getResultList();
+			assertEquals( 10, results.size() );
+
+			final Object[] row = (Object[]) results.get( 0 );
+			assertEquals( 2, row.length );
+			assertEquals( Integer.class, row[ 0 ].getClass() );
+			assertEquals( String.class, row[ 1 ].getClass() );
+			assertEquals( 14, row[0] );
+			assertEquals( "Product14", row[1] );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8916")
+	public void testPaginationWithCTEQueryWithOffset() {
+		// This used to throw an StringIndexOutOfBoundsException
+		doInHibernate( this::sessionFactory, session -> {
+			for ( int i = 0; i < 20; ++i ) {
+				session.persist( new Product2( i, "Product" + i ) );
+			}
+			session.flush();
+			session.clear();
+
+			List results = session
+					.createNativeQuery( "WITH a AS (SELECT id, description FROM Product2) SELECT id, description FROM a" )
+					.setFirstResult( 5 )
+					.setMaxResults( 10 )
+					.getResultList();
+
+			assertEquals( 10, results.size() );
+
+			final Object[] row = (Object[]) results.get( 0 );
+			assertEquals( 2, row.length );
+			assertEquals( Integer.class, row[ 0 ].getClass() );
+			assertEquals( String.class, row[ 1 ].getClass() );
+		} );
 	}
 
 	@Test

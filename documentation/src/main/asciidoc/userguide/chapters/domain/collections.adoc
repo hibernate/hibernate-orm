@@ -380,6 +380,36 @@ include::{extrasdir}/collections-bidirectional-ordered-list-order-column-example
 
 When fetching the collection, Hibernate will use the fetched ordered columns to sort the elements according to the `@OrderColumn` mapping.
 
+[[collections-customizing-ordered-list-ordinal]]
+===== Customizing ordered list ordinal
+
+You can customize the ordinal of the underlying ordered list by using the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ListIndexBase.html[`@ListIndexBase`] annotation.
+
+[[collections-customizing-ordered-list-ordinal-mapping-example]]
+.`@ListIndexBase` mapping example
+====
+[source,java]
+----
+include::{sourcedir}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-mapping-example,indent=0]
+----
+====
+
+When inserting two `Phone` records, Hibernate is going to start the List index from 100 this time.
+
+[[collections-customizing-ordered-list-ordinal-persist-example]]
+.`@ListIndexBase` persist example
+====
+[source,java]
+----
+include::{sourcedir}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-persist-example,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/collections-customizing-ordered-list-ordinal-persist-example.sql[]
+----
+====
+
 [[collections-set]]
 ==== Sets
 

@@ -741,8 +741,6 @@ See the <<chapters/pc/PersistenceContext.adoc#pc-managed-state-dynamic-update,`@
 For reattachment of detached entities, the dynamic update is not possible without having the <<annotations-hibernate-selectbeforeupdate>> annotation as well.
 ====
 
-//TODO: Add example
-
 [[annotations-hibernate-entity]]
 ==== [line-through]#`@Entity`#
 
@@ -933,7 +931,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 By default, `List` indexes are stored starting at zero. Generally used in conjunction with <<annotations-jpa-ordercolumn>>.
 
-//TODO: Add example
+See the <<chapters/domain/collections.adoc#collections-customizing-ordered-list-ordinal, `@ListIndexBase` mapping>> section for more info.
 
 [[annotations-hibernate-loader]]
 ==== `@Loader`

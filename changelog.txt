@@ -3,6 +3,22 @@ Hibernate 5.1 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changed in 5.1.7.Final (May 21, 2017)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/projects/HHH/versions/28900
+https://hibernate.atlassian.net/issues/?jql=project%20%3D%2010031%20AND%20fixVersion%20%3D%2028900%20ORDER%20BY%20priority%20DESC%2C%20key%20ASC
+
+** Bug
+    * [HHH-10183] - Mapping for NVARCHAR in SqlServer not working with native queries; org.hibernate.MappingException: No Dialect mapping for JDBC type: -9
+    * [HHH-11274] - EntityManagerFactoryImpl.getIdentifier uses deprecated version of getIdentifier
+    * [HHH-11383] - Envers Query API: Cannot traverse relation of superclass with table-per-subclass mapping
+    * [HHH-11410] - ManyToMany with Filter generates incorrect load SQL
+    * [HHH-11426] - NullPointerException in getPersistenceUnitUtil().getIdentifier() on detached enhanced entity
+    * [HHH-11437] - Entity joins are not polymorphic
+    * [HHH-11484] - Conversion from String to Locale.ROOT is not working
+    * [HHH-11740] - Default MultiTableBulkIdStrategy for DB2 does not work with connection pools
+    * [HHH-11762] - PersistenceUnitUtilImpl#getIdentifier throws MappingException for non-entity
+
 Changed in 5.1.6.Final (May 5, 2017)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/projects/HHH/versions/28200

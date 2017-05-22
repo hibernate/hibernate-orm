@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import org.hibernate.sql.ast.JoinType;
+
 /**
  * Represents a canonical join type.
  * <p/>
@@ -22,32 +24,34 @@ public enum SqmJoinType {
 	/**
 	 * Represents an inner join.
 	 */
-	INNER( "inner" ),
+	INNER( "inner", JoinType.INNER ),
 
 	/**
 	 * Represents a left outer join.
 	 */
-	LEFT( "left outer" ),
+	LEFT( "left outer", JoinType.LEFT ),
 
 	/**
 	 * Represents a right outer join.
 	 */
-	RIGHT( "right outer" ),
+	RIGHT( "right outer", JoinType.RIGHT ),
 
 	/**
 	 * Represents a cross join (aka a cartesian product).
 	 */
-	CROSS( "cross" ),
+	CROSS( "cross", JoinType.CROSS ),
 
 	/**
 	 * Represents a full join.
 	 */
-	FULL( "full" );
+	FULL( "full", JoinType.FULL );
 
 	private final String text;
+	private final JoinType correspondingSqlJoinType;
 
-	SqmJoinType(String text) {
+	SqmJoinType(String text, JoinType correspondingSqlJoinType) {
 		this.text = text;
+		this.correspondingSqlJoinType = correspondingSqlJoinType;
 	}
 
 	@Override
@@ -57,5 +61,9 @@ public enum SqmJoinType {
 
 	public String getText() {
 		return text;
+	}
+
+	public JoinType getCorrespondingSqlJoinType() {
+		return correspondingSqlJoinType;
 	}
 }

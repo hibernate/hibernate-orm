@@ -11,17 +11,16 @@ import java.util.List;
 
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementBasic;
+import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.BasicType;
@@ -33,7 +32,7 @@ import org.jboss.logging.Logger;
  */
 public class CollectionElementBasicImpl<J>
 		extends AbstractCollectionElement<J>
-		implements CollectionElementBasic<J> {
+		implements CollectionElementBasic<J>, ConvertibleNavigable<J> {
 	private static final Logger log = Logger.getLogger( CollectionElementBasicImpl.class );
 
 	private final Column column;
@@ -82,13 +81,12 @@ public class CollectionElementBasicImpl<J>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new QueryResultScalarImpl(
 				selectedExpression,
 				sqlSelectionResolver.resolveSqlSelection(
-						columnReferenceSource.resolveColumnReference( getBoundColumn() )
+						creationContext.currentColumnReferenceSource().resolveColumnReference( getBoundColumn() )
 				),
 				resultVariable,
 				getBasicType()

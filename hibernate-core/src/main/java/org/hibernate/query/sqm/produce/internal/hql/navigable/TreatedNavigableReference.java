@@ -21,7 +21,7 @@ import org.hibernate.query.sqm.tree.from.SqmFromExporter;
 /**
  * Models an "incidental downcast", as opposed to an intrinsic downcast.  An
  * intrinsic downcast occurs in the from-clause - the downcast target becomes
- * an intrinsic part of the FromElement (see {@link SqmFrom#getIntrinsicSubclassEntityPersister()}.
+ * an intrinsic part of the FromElement (see {@link SqmFrom#getIntrinsicSubclassEntityMetadata()}.
  * An incidental downcast, on the other hand, occurs outside the from-clause.
  * <p/>
  * For example,

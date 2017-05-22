@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexEntity;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.NavigableEntityValued;
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
@@ -29,7 +29,7 @@ public class SqmCollectionIndexReferenceEntity
 	}
 
 	@Override
-	public NavigableEntityValued getReferencedNavigable() {
+	public EntityValuedNavigable getReferencedNavigable() {
 		return (CollectionIndexEntity) getPluralAttributeBinding().getReferencedNavigable().getPersistentCollectionMetadata().getIndexDescriptor();
 	}
 
@@ -60,9 +60,9 @@ public class SqmCollectionIndexReferenceEntity
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
+	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
 		// todo (6.0) : override this to account for implicit or explicit Downcasts
-		return super.getIntrinsicSubclassEntityPersister();
+		return super.getIntrinsicSubclassEntityMetadata();
 	}
 
 	@Override

@@ -8,22 +8,23 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
+import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.JoinablePersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.metamodel.model.domain.spi.NavigableEntityValued;
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey.ColumnMappings;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.JoinedTableGroupContext;
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
-import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseResolver;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.sql.NotYetImplementedException;
+import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.JoinedTableGroupContext;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
+import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
@@ -31,7 +32,6 @@ import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
@@ -43,10 +43,10 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
  */
 public class SingularPersistentAttributeEntity<O,J>
 		extends AbstractSingularPersistentAttribute<O,J>
-		implements JoinablePersistentAttribute<O,J>, NavigableEntityValued<J> {
+		implements JoinablePersistentAttribute<O,J>, EntityValuedNavigable<J> {
 
 	private final SingularAttributeClassification classification;
-	private final EntityTypeImplementor<J> entityPersister;
+	private final EntityTypeImplementor<J> entityMetadata;
 	private final ColumnMappings joinColumnMappings;
 
 	private final NavigableRole navigableRole;
@@ -59,11 +59,11 @@ public class SingularPersistentAttributeEntity<O,J>
 			SingularAttributeClassification classification,
 			EntityValuedExpressableType<J> ormType,
 			Disposition disposition,
-			EntityTypeImplementor<J> entityPersister,
+			EntityTypeImplementor<J> entityMetadata,
 			ColumnMappings joinColumnMappings) {
 		super( declaringType, name, propertyAccess, ormType, disposition, true );
 		this.classification = classification;
-		this.entityPersister = entityPersister;
+		this.entityMetadata = entityMetadata;
 		this.joinColumnMappings = joinColumnMappings;
 
 		this.navigableRole = declaringType.getNavigableRole().append( name );
@@ -77,7 +77,7 @@ public class SingularPersistentAttributeEntity<O,J>
 
 	@Override
 	public EntityTypeImplementor<J> getEntityDescriptor() {
-		return entityPersister;
+		return entityMetadata;
 	}
 
 	@Override
@@ -87,32 +87,32 @@ public class SingularPersistentAttributeEntity<O,J>
 
 	@Override
 	public String getJpaEntityName() {
-		return entityPersister.getJpaEntityName();
+		return entityMetadata.getJpaEntityName();
 	}
 
 	@Override
 	public EntityJavaDescriptor<J> getJavaTypeDescriptor() {
-		return entityPersister.getJavaTypeDescriptor();
+		return entityMetadata.getJavaTypeDescriptor();
 	}
 
 	@Override
 	public <N> Navigable<N> findNavigable(String navigableName) {
-		return entityPersister.findNavigable( navigableName );
+		return entityMetadata.findNavigable( navigableName );
 	}
 
 	@Override
 	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		return entityPersister.findDeclaredNavigable( navigableName );
+		return entityMetadata.findDeclaredNavigable( navigableName );
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
-		entityPersister.visitNavigables( visitor );
+		entityMetadata.visitNavigables( visitor );
 	}
 
 	@Override
 	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
-		entityPersister.visitNavigables( visitor );
+		entityMetadata.visitNavigables( visitor );
 	}
 
 	@Override
@@ -120,8 +120,8 @@ public class SingularPersistentAttributeEntity<O,J>
 		return true;
 	}
 
-	public EntityTypeImplementor getAssociatedEntityPersister() {
-		return entityPersister;
+	public EntityTypeImplementor getAssociatedEntityDescriptor() {
+		return entityMetadata;
 	}
 
 	@Override
@@ -142,7 +142,7 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	public String getEntityName() {
-		return entityPersister.getEntityName();
+		return entityMetadata.getEntityName();
 	}
 
 	@Override
@@ -165,13 +165,11 @@ public class SingularPersistentAttributeEntity<O,J>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return entityPersister.generateQueryResult(
+		return entityMetadata.generateQueryResult(
 				selectedExpression,
 				resultVariable,
-				columnReferenceSource,
 				sqlSelectionResolver,
 				creationContext
 		);
@@ -181,19 +179,18 @@ public class SingularPersistentAttributeEntity<O,J>
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigableReference selectedExpression,
+			FetchStrategy fetchStrategy,
 			String resultVariable,
-			ColumnReferenceSource columnReferenceResolver,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		throw new NotYetImplementedException(  );
 	}
 
 	@Override
-	public TableGroupJoin applyTableGroupJoin(
+	public TableGroupJoin createTableGroupJoin(
 			NavigableReferenceInfo navigableReferenceInfo,
 			SqmJoinType joinType,
-			JoinedTableGroupContext tableGroupJoinContext,
-			SqlAliasBaseResolver sqlAliasBaseResolver) {
+			JoinedTableGroupContext tableGroupJoinContext) {
 		throw new NotYetImplementedException(  );
 	}
 
@@ -204,11 +201,11 @@ public class SingularPersistentAttributeEntity<O,J>
 
 	@Override
 	public List<Navigable> getNavigables() {
-		return entityPersister.getNavigables();
+		return entityMetadata.getNavigables();
 	}
 
 	@Override
 	public List<Navigable> getDeclaredNavigables() {
-		return entityPersister.getDeclaredNavigables();
+		return entityMetadata.getDeclaredNavigables();
 	}
 }

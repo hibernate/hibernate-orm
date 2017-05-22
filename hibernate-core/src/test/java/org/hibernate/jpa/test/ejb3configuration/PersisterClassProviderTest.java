@@ -20,6 +20,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -36,19 +39,26 @@ import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.jpa.test.SettingsGenerator;
+import org.hibernate.loader.spi.MultiLoadOptions;
+import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.metamodel.model.creation.internal.PersisterClassResolverInitiator;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
+import org.hibernate.metamodel.model.domain.spi.AbstractEntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
+import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.spi.Type;
 
 import org.junit.Assert;
@@ -92,29 +102,20 @@ public class PersisterClassProviderTest {
 		}
 	}
 
-	public static class GoofyProvider implements EntityTypeImplementor {
+	public static class GoofyProvider extends AbstractEntityTypeImplementor implements EntityTypeImplementor {
 
-		@SuppressWarnings( {"UnusedParameters"})
 		public GoofyProvider(
-				org.hibernate.mapping.PersistentClass persistentClass,
-				org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
+				EntityMapping entityMapping,
+				EntityRegionAccessStrategy cacheAccessStrategy,
 				NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-				RuntimeModelCreationContext creationContext) {
+				RuntimeModelCreationContext creationContext) throws HibernateException {
+			super( entityMapping, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 			throw new GoofyException();
 		}
 
 		@Override
 		public EntityMode getEntityMode() {
 			return null;
-		}
-
-		@Override
-		public EntityTuplizer getEntityTuplizer() {
-			return null;
-		}
-
-		@Override
-		public void generateEntityDefinition() {
 		}
 
 		@Override
@@ -611,12 +612,52 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public EntityIdentifierDefinition getEntityKeyDefinition() {
+		public TableGroup resolveTableGroup(
+				NavigableReferenceInfo embeddedReferenceInfo, TableGroupResolver tableGroupResolver) {
 			return null;
 		}
 
 		@Override
-		public Iterable<AttributeDefinition> getAttributes() {
+		public void finishInstantiation(
+				EntityHierarchy entityHierarchy,
+				IdentifiableTypeImplementor superType,
+				IdentifiableTypeMapping bootMapping,
+				RuntimeModelCreationContext creationContext) {
+
+		}
+
+		@Override
+		public String asLoggableText() {
+			return null;
+		}
+
+		@Override
+		public void completeInitialization(
+				EntityHierarchy entityHierarchy,
+				IdentifiableTypeImplementor superType,
+				IdentifiableTypeMappingImplementor bootMapping,
+				RuntimeModelCreationContext creationContext) {
+
+		}
+
+		@Override
+		public EntityIdentifier getIdentifierDescriptor() {
+			return null;
+		}
+
+		@Override
+		public Table getPrimaryTable() {
+			return null;
+		}
+
+		@Override
+		public List<JoinedTableBinding> getSecondaryTableBindings() {
+			return null;
+		}
+
+		@Override
+		protected SingleIdEntityLoader createLoader(
+				LockOptions lockOptions, SharedSessionContractImplementor session) {
 			return null;
 		}
 	}

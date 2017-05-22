@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.jpa.graph.internal;
+package org.hibernate.graph.internal;
 
 import java.util.List;
 import javax.persistence.AttributeNode;
@@ -12,26 +12,27 @@ import javax.persistence.Subgraph;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 
 /**
  * The Hibernate implementation of the JPA EntityGraph contract.
  *
  * @author Steve Ebersole
  */
-public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGraphImplementor<T> {
+public class EntityGraphImpl<T> extends AbstractAttributeNodeContainer<T> implements EntityGraphImplementor<T> {
 	private final String name;
-	private final EntityType<T> entityType;
+	private final EntityTypeImplementor<T> entityDescriptor;
 
-	public EntityGraphImpl(String name, EntityType<T> entityType, SessionFactoryImplementor sessionFactory) {
+	public EntityGraphImpl(String name, EntityTypeImplementor<T> entityDescriptor, SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory, true );
 		this.name = name;
-		this.entityType = entityType;
+		this.entityDescriptor = entityDescriptor;
 	}
 
 	public EntityGraphImpl<T> makeImmutableCopy(String name) {
@@ -45,11 +46,15 @@ public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGr
 	private EntityGraphImpl(String name, EntityGraphImpl<T> original, boolean mutable) {
 		super( original, mutable );
 		this.name = name;
-		this.entityType = original.entityType;
+		this.entityDescriptor = original.entityDescriptor;
 	}
 
 	public EntityType<T> getEntityType() {
-		return entityType;
+		return entityDescriptor;
+	}
+
+	public EntityTypeImplementor<T> getEntityDescriptor() {
+		return entityDescriptor;
 	}
 
 	@Override
@@ -116,19 +121,19 @@ public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGr
 
 	@Override
 	public List<AttributeNode<?>> getAttributeNodes() {
-		return super.attributeNodes();
+		return super.jpaAttributeNodes();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	protected Attribute<T,?> resolveAttribute(String attributeName) {
-		final Attribute attribute = entityType.getAttribute( attributeName );
+	protected PersistentAttribute<T,?> resolveAttribute(String attributeName) {
+		final PersistentAttribute attribute = getEntityDescriptor().findAttribute( attributeName );
 		if ( attribute == null ) {
 			throw new IllegalArgumentException(
 					String.format(
 							"Given attribute name [%s] is not an attribute on this entity [%s]",
 							attributeName,
-							entityType.getName()
+							entityDescriptor.getName()
 					)
 			);
 		}
@@ -141,12 +146,12 @@ public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGr
 	}
 
 	@Override
-	public boolean appliesTo(EntityTypeImplementor<? super T> entityType) {
-		return appliesTo( entityType.getEntityName() );
+	public boolean appliesTo(EntityTypeImplementor<? super T> entityDescriptor) {
+		return appliesTo( entityDescriptor.getEntityName() );
 	}
 
 	public boolean appliesTo(EntityType<? super T> entityType) {
-		if ( this.entityType.equals( entityType ) ) {
+		if ( this.entityDescriptor.equals( entityType ) ) {
 			return true;
 		}
 
@@ -162,7 +167,7 @@ public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGr
 	}
 
 	@Override
-	ManagedType getManagedType() {
-		return entityType;
+	ManagedTypeImplementor getManagedType() {
+		return entityDescriptor;
 	}
 }

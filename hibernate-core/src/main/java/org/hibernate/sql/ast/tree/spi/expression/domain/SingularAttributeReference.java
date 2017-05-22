@@ -19,18 +19,15 @@ import org.hibernate.sql.ast.tree.spi.select.Selectable;
  */
 public class SingularAttributeReference implements NavigableReference {
 	private final NavigableContainerReference containerReference;
-	private final ColumnReferenceSource columnBindingSource;
 	private final SingularPersistentAttribute referencedAttribute;
 	private final NavigablePath navigablePath;
 
 
 	public SingularAttributeReference(
 			NavigableContainerReference containerReference,
-			ColumnReferenceSource columnBindingSource,
 			SingularPersistentAttribute referencedAttribute,
 			NavigablePath navigablePath) {
 		this.containerReference = containerReference;
-		this.columnBindingSource = columnBindingSource;
 		this.referencedAttribute = referencedAttribute;
 		this.navigablePath = navigablePath;
 	}
@@ -67,10 +64,5 @@ public class SingularAttributeReference implements NavigableReference {
 	@Override
 	public NavigableContainerReference getNavigableContainerReference() {
 		return containerReference;
-	}
-
-	@Override
-	public ColumnReferenceSource getContributedColumnReferenceSource() {
-		return columnBindingSource;
 	}
 }

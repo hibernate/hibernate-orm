@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.domain.spi;
 /**
  * @author Steve Ebersole
  */
-public interface CollectionElementEntity<E> extends CollectionElement<E>, NavigableEntityValued<E> {
+public interface CollectionElementEntity<E> extends CollectionElement<E>, EntityValuedNavigable<E> {
 	@Override
 	default void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitCollectionElementEntity( this );

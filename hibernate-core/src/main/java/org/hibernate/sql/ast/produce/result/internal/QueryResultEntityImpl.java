@@ -8,13 +8,10 @@ package org.hibernate.sql.ast.produce.result.internal;
 
 import java.util.Map;
 
-import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.produce.result.spi.EntityIdentifierReference;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultEntity;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.internal.EntityReturnInitializerImpl;
 import org.hibernate.sql.ast.consume.results.internal.QueryResultAssemblerEntity;
 import org.hibernate.sql.ast.consume.results.spi.EntityReferenceInitializer;
@@ -22,7 +19,10 @@ import org.hibernate.sql.ast.consume.results.spi.InitializerCollector;
 import org.hibernate.sql.ast.consume.results.spi.InitializerParent;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.produce.result.spi.EntityIdentifierReference;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultEntity;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 
 /**
  * Standard ReturnEntity impl
@@ -30,23 +30,17 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
  * @author Steve Ebersole
  */
 public class QueryResultEntityImpl extends AbstractFetchParent implements QueryResultEntity {
-	private final Expression expression;
-	private final EntityTypeImplementor entityPersister;
 	private final String resultVariable;
 
 	private final QueryResultAssemblerEntity assembler;
 	private final EntityReturnInitializerImpl initializer;
 
 	public QueryResultEntityImpl(
-			Expression expression,
-			EntityTypeImplementor entityPersister,
+			EntityReference expression,
 			String resultVariable,
 			Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap,
-			NavigablePath navigablePath,
-			ColumnReferenceSource columnReferenceSource) {
-		super( navigablePath, columnReferenceSource );
-		this.expression = expression;
-		this.entityPersister = entityPersister;
+			NavigablePath navigablePath) {
+		super( expression, navigablePath );
 		this.resultVariable = resultVariable;
 
 		this.initializer = new EntityReturnInitializerImpl(
@@ -59,8 +53,13 @@ public class QueryResultEntityImpl extends AbstractFetchParent implements QueryR
 	}
 
 	@Override
-	public EntityTypeImplementor getEntityPersister() {
-		return entityPersister;
+	public EntityReference getNavigableContainerReference() {
+		return (EntityReference) super.getNavigableContainerReference();
+	}
+
+	@Override
+	public EntityTypeImplementor getEntityMetadata() {
+		return getNavigableContainerReference().getNavigable();
 	}
 
 	@Override
@@ -70,7 +69,7 @@ public class QueryResultEntityImpl extends AbstractFetchParent implements QueryR
 
 	@Override
 	public Expression getSelectedExpression() {
-		return expression;
+		return getNavigableContainerReference();
 	}
 
 	@Override
@@ -80,7 +79,7 @@ public class QueryResultEntityImpl extends AbstractFetchParent implements QueryR
 
 	@Override
 	public Class getReturnedJavaType() {
-		return entityPersister.getMappedClass();
+		return getEntityMetadata().getMappedClass();
 	}
 
 	@Override

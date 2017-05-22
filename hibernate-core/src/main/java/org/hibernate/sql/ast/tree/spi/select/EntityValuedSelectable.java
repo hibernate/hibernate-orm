@@ -17,7 +17,7 @@ import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.NavigableEntityValued;
+import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
@@ -132,7 +132,7 @@ public class EntityValuedSelectable implements Selectable {
 		assert selectedExpression instanceof NavigableReference;
 		final NavigableReference navigableReference = (NavigableReference) selectedExpression;
 
-		assert navigableReference.getNavigable() instanceof NavigableEntityValued;
+		assert navigableReference.getNavigable() instanceof EntityValuedNavigable;
 
 		return new NavigableSelection( navigableReference, resultVariable );
 	}

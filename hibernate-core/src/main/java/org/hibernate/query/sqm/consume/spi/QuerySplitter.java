@@ -349,7 +349,7 @@ public class QuerySplitter {
 					attributeBindingCopy,
 					fromElement.getUniqueIdentifier(),
 					fromElement.getIdentificationVariable(),
-					fromElement.getIntrinsicSubclassEntityPersister(),
+					fromElement.getIntrinsicSubclassEntityMetadata(),
 					fromElement.getJoinType(),
 					fromElement.isFetched()
 			);

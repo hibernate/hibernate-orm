@@ -22,22 +22,43 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementBasic;
+import org.hibernate.metamodel.model.domain.spi.CollectionKey;
+import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggregated;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
+import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
+import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.sql.ast.consume.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.produce.internal.SqlSelectPlanImpl;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKey;
 import org.hibernate.sql.ast.produce.metamodel.spi.AssociationKeyProducer;
+import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.Joinable;
+import org.hibernate.sql.ast.produce.metamodel.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.MetamodelDrivenSqlSelectPlanBuilder;
+import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupProducer;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupJoinProducer;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
+import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.NavigablePathStack;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
@@ -46,13 +67,18 @@ import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 import org.hibernate.sql.ast.produce.sqm.spi.Callback;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
-import org.hibernate.sql.ast.tree.spi.expression.AbstractParameter;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.type.spi.Type;
 
 import org.jboss.logging.Logger;
@@ -66,7 +92,10 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder implements MetamodelDrivenSqlSelectPlanBuilder {
+public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
+		implements MetamodelDrivenSqlSelectPlanBuilder, RootTableGroupContext, JoinedTableGroupContext,
+		QueryResultCreationContext, SqlAstBuildingContext, SqlSelectionResolver {
+
 	private static final Logger log = Logger.getLogger( AbstractMetamodelDrivenSqlSelectPlanBuilder.class );
 
 	private final SqlAstBuildingContext buildingContext;
@@ -87,11 +116,12 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder implements Met
 	private final NavigablePathStack navigablePathStack = new NavigablePathStack();
 	private final Stack<FetchParent> fetchParentStack = new Stack<>();
 	private final Stack<NavigableContainerReferenceInfoImpl> navigableContainerInfoStack = new Stack<>();
-	private final Stack<TableGroup> fetchLhsTableGroupStack = new Stack<>();
+	private final Stack<TableGroup> tableGroupStack = new Stack<>();
 
 	private QuerySpec querySpec;
 	private TableSpace tableSpace;
 	private TableGroup rootTableGroup;
+	private HashMap<SqlSelectable,SqlSelection> sqlSelectionMap;
 
 	/**
 	 *
@@ -154,17 +184,15 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder implements Met
 		}
 	}
 
+	private int counter;
+
 	private String generateSqlAstNodeUid() {
-		return null;
-	}
-
-	public SqlSelectPlan buildSqlSelectPlan(PersistentCollectionMetadata collection) {
-
+		return "uid" + counter++;
 	}
 
 	@Override
 	public void prepareForVisitation() {
-		if ( !fetchParentStack.isEmpty() || !fetchLhsTableGroupStack.isEmpty() ) {
+		if ( !fetchParentStack.isEmpty() || !tableGroupStack.isEmpty() ) {
 			throw new IllegalStateException(
 					"MetamodelDrivenSqlSelectPlanBuilder [" + this + "] is not in proper state to begin visitation"
 			);
@@ -187,9 +215,9 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder implements Met
 			log.debug( "fetchParentStack was not empty upon completion of visitation; un-matched push and pop?" );
 			fetchParentStack.clear();
 		}
-		if ( !fetchLhsTableGroupStack.isEmpty() ) {
+		if ( !tableGroupStack.isEmpty() ) {
 			log.debug( "fetchLhsTableGroupStack was not empty upon completion of visitation; un-matched push and pop?" );
-			fetchLhsTableGroupStack.clear();
+			tableGroupStack.clear();
 		}
 	}
 
@@ -200,6 +228,8 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder implements Met
 
 		prepareForVisitation();
 
+		navigablePathStack.push( rootNavigable );
+
 		// ignore return for root
 		shouldContinue( rootNavigable );
 
@@ -207,16 +237,12 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder implements Met
 		navigableContainerInfoStack.push( navigableRefInfo );
 
 		try {
-			final TableGroup tableGroup = rootTableGroupProducer.createRootTableGroup(
-					navigableRefInfo,
-					this,
-					sqlAliasBaseManager
-			);
+			rootTableGroup = rootTableGroupProducer.createRootTableGroup( this );
+			tableSpace.setRootTableGroup( rootTableGroup );
+			tableGroupStack.push( rootTableGroup );
 
-			tableSpace.setRootTableGroup( tableGroup );
-
-			final Selection selection = tableGroup.asExpression().getSelectable().createSelection(
-					tableGroup.asExpression(),
+			final Selection selection = rootTableGroup.asExpression().getSelectable().createSelection(
+					rootTableGroup.asExpression(),
 					null
 			);
 			querySpec.getSelectClause().selection( selection );
@@ -224,14 +250,14 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder implements Met
 			querySpec.addRestriction( generateRestriction() );
 
 			final QueryResult queryResult = rootNavigable.generateQueryResult(
-					tableGroup.asExpression(),
+					rootTableGroup.asExpression(),
 					null,
-					rootTableGroup,
 					this,
 					this
 			);
 
 			fetchParentStack.push( (FetchParent) queryResult );
+
 			try {
 				rootNavigable.visitNavigables( this );
 
@@ -242,6 +268,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder implements Met
 			}
 			finally {
 				fetchParentStack.pop();
+				tableGroupStack.pop();
 			}
 		}
 		finally {
@@ -271,25 +298,6 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder implements Met
 		return true;
 	}
 
-	private void visitNavigable(Navigable navigable) {
-		if ( navigable instanceof AssociationKeyProducer ) {
-			final AssociationKeyProducer producer = (AssociationKeyProducer) navigable;
-			final AssociationKey associationKey = producer.getAssociationKey();
-			if ( associationKeys.contains( associationKey ) ) {
-				return;
-			}
-			associationKeys.add( associationKey );
-		}
-
-		navigablePathStack.push( navigable );
-		try {
-			navigable.visitNavigable( this );
-		}
-		finally {
-			navigablePathStack.pop();
-		}
-	}
-
 	@Override
 	public void visitEntity(EntityTypeImplementor entity) {
 		// the root entity is handled in #buildSqlSelectPlan and entity fetches are
@@ -298,22 +306,220 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder implements Met
 		entity.visitNavigables( this );
 	}
 
+	@Override
+	public void visitSingularAttributeEmbedded(SingularPersistentAttributeEmbedded attribute) {
+		processFetchableSingularAttribute( attribute );
+	}
 
-	private void visitNavigables(
-			NavigableContainer navigableSource,
-			FetchParent fetchParent,
-			TableGroup tableGroup) {
-		fetchParentStack.push( fetchParent );
-		fetchLhsTableGroupStack.push( tableGroup );
+	private void processFetchableSingularAttribute(SingularPersistentAttribute attribute) {
+		assert attribute instanceof Fetchable;
+		final Fetchable fetchable = (Fetchable) attribute;
+
+		if ( !shouldContinue( attribute ) ) {
+			log.debugf( "Stopping walking of Navigable model at [%s]", attribute );
+			return;
+		}
+
+		// todo (6.0) : why are we creating both a NavigableReferenceInfo and a NavigableReference?
+		//		maybe this is needed from SQM conversion - check
+		//		otherwise this should be reworked:
+		//			1) I think we may still need "TableGroupSourceInfo", but not sure NavigableReferenceInfo
+		//				should extend that
+		//			2) either
+		// 				a) have NavigableReference implement NavigableReferenceInfo, and
+		//					NavigableContainerReference implement NavigableContainerReferenceInfo
+		//				b) simply use NavigableReference/NavigableContainerReference in place of
+		//					NavigableReferenceInfo/NavigableContainerReferenceInfo
+		//
+		//		I'd prefer 2.b.  The only time this NavigableReferenceInfo/NavigableContainerReferenceInfo
+		// 			stuff is (possibly) useful is in processing SQM so would be great to localize it there
+		//			*if* SQM processing even needs it.
+		//
+		//		^^ NavigableReferenceInfo/NavigableContainerReferenceInfo were initially developed to
+		//			help in isolating persisters and SQL AST production.  But a lot has changed since in
+		//			those things individually and I think we no longer need these.
+
+		navigablePathStack.push( attribute );
+		final NavigableContainerReferenceInfoImpl navigableRefInfo = (NavigableContainerReferenceInfoImpl) createNavigableRefInfo( attribute );
+		navigableContainerInfoStack.push( navigableRefInfo );
 
 		try {
-			navigableSource.visitNavigables( this );
+			final NavigableReference navigableReference = new SingularAttributeReference(
+					fetchParentStack.getCurrent().getNavigableContainerReference(),
+					attribute,
+					currentNavigablePath()
+			);
+
+
+			if ( attribute instanceof TableGroupJoinProducer ) {
+				final TableGroupJoinProducer tableGroupJoinProducer = (TableGroupJoinProducer) attribute;
+				TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
+						navigableRefInfo,
+						// todo (6.0) : join type.  use LEFT OUTER for now
+						SqmJoinType.LEFT,
+						this
+				);
+
+				tableGroupStack.push( tableGroupJoin.getJoinedGroup() );
+			}
+
+			try {
+				final Fetch fetch = fetchable.generateFetch(
+						fetchParentStack.getCurrent(),
+						navigableReference,
+						null,
+						null,
+						this,
+						this
+				);
+				fetchParentStack.getCurrent().addFetch( fetch );
+				fetchParentStack.push( (FetchParent) fetch );
+				try {
+					( (NavigableContainer) attribute ).visitNavigables( this );
+				}
+				finally {
+					fetchParentStack.pop();
+				}
+			}
+			finally {
+				if ( attribute instanceof TableGroupJoinProducer ) {
+					tableGroupStack.pop();
+				}
+			}
 		}
 		finally {
-			fetchLhsTableGroupStack.pop();
-			fetchParentStack.pop();
+			navigablePathStack.pop();
+				navigableContainerInfoStack.pop();
 		}
 	}
+
+	@Override
+	public void visitSingularAttributeEntity(SingularPersistentAttributeEntity attribute) {
+		processFetchableSingularAttribute( attribute );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqlSelectionResolver
+
+	@Override
+	public SqlSelectionGroup resolveSqlSelectionGroup(Navigable navigable) {
+		return null;
+	}
+
+	@Override
+	public SqlSelection resolveSqlSelection(SqlSelectable sqlSelectable) {
+		final SqlSelection existing = sqlSelectionMap.get( sqlSelectable );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SqlSelection sqlSelection = new SqlSelectionImpl( sqlSelectable, sqlSelectionMap.size() );
+		querySpec.getSelectClause().addSqlSelection( sqlSelection );
+		sqlSelectionMap.put( sqlSelectable, sqlSelection );
+
+		return sqlSelection;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// TableGroupContext
+
+	@Override
+	public QuerySpec getQuerySpec() {
+		return querySpec;
+	}
+
+	@Override
+	public TableSpace getTableSpace() {
+		return tableSpace;
+	}
+
+	@Override
+	public TableGroupResolver getTableGroupResolver() {
+		return fromClauseIndex;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// QueryResultCreationContext
+
+	@Override
+	public ColumnReferenceSource currentColumnReferenceSource() {
+		return tableGroupStack.getCurrent();
+	}
+
+	@Override
+	public NavigablePath currentNavigablePath() {
+		return navigablePathStack.getCurrent();
+	}
+
+	@Override
+	public boolean shouldCreateShallowEntityResult() {
+		return false;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// RootTableGroupContext
+
+	@Override
+	public void addRestriction(Predicate predicate) {
+		log.debugf( "Query restriction being added through RootTableGroupContext#addRestriction" );
+		querySpec.addRestriction( predicate );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// no-op impls
+
+	@Override
+	public void visitSimpleIdentifier(EntityIdentifierSimple identifier) {
+	}
+
+	@Override
+	public void visitAggregateCompositeIdentifier(EntityIdentifierCompositeAggregated identifier) {
+	}
+
+	@Override
+	public void visitNonAggregateCompositeIdentifier(EntityIdentifierCompositeNonAggregated identifier) {
+	}
+
+	@Override
+	public void visitDiscriminator(DiscriminatorDescriptor discriminator) {
+	}
+
+	@Override
+	public void visitVersion(VersionDescriptor version) {
+	}
+
+	@Override
+	public void visitRowIdDescriptor(RowIdDescriptor rowIdDescriptor) {
+	}
+
+	@Override
+	public void visitTenantTenantDiscrimination(TenantDiscrimination tenantDiscrimination) {
+	}
+
+	@Override
+	public void visitSingularAttributeBasic(SingularPersistentAttributeBasic attribute) {
+	}
+
+	@Override
+	public void visitCollectionForeignKey(CollectionKey collectionKey) {
+	}
+
+
+
+
+
+
+
+
+
+
+
+
 
 	interface CompositeEntityIdentifierVisitor {
 		void visitKeyAttribute();
@@ -994,7 +1200,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder implements Met
 //		}
 //
 //		@Override
-//		public FetchStrategy getFetchStrategy() {
+//		public FetchStrategy getMappedFetchStrategy() {
 //			return fetchStrategy;
 //		}
 //

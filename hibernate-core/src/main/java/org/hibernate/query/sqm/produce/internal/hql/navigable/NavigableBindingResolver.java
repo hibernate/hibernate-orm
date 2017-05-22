@@ -47,7 +47,7 @@ public interface NavigableBindingResolver {
 	 * path is an attribute path.
 	 *
 	 * @param subclassIndicator The "intrinsic" subclass indicator to apply to the path terminal.  See
-	 * {@link SqmFrom#getIntrinsicSubclassEntityPersister()}
+	 * {@link SqmFrom#getIntrinsicSubclassEntityMetadata()}
 	 * @param pathParts The path parts to resolve
 	 *
 	 * @return The resolve path, or {@code null}.
@@ -61,7 +61,7 @@ public interface NavigableBindingResolver {
 	 * @param sourceBinding The NavigableSource binding from which to start resolving the
 	 * 		pathParts.
 	 * @param subclassIndicator The "intrinsic" subclass indicator to apply to the path terminal.  See
-	 * {@link SqmFrom#getIntrinsicSubclassEntityPersister()}
+	 * {@link SqmFrom#getIntrinsicSubclassEntityMetadata()}
 	 * @param pathParts The path parts to resolve
 	 *
 	 * @return The resolve path, or {@code null}.

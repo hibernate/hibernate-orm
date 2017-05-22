@@ -11,9 +11,12 @@ import javax.persistence.EntityGraph;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 /**
+ * Hibernate extension to the JPA entity-graph EntityGraph contract.
+ *
  * @author Steve Ebersole
+ * @author Andrea Boriero
  */
-public interface EntityGraphImplementor<T> extends EntityGraph<T>, GraphNodeImplementor {
+public interface EntityGraphImplementor<T> extends EntityGraph<T>, AttributeNodeContainer {
 	boolean appliesTo(String entityName);
 
 	boolean appliesTo(EntityTypeImplementor<? super T> entityType);

@@ -11,23 +11,28 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.spi.InitializerCollector;
+import org.hibernate.sql.ast.consume.results.spi.InitializerParent;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractFetchParent implements FetchParent {
+	private final NavigableContainerReference navigableContainerReference;
 	private final NavigablePath navigablePath;
-	private final ColumnReferenceSource columnReferenceSource;
 
 	private List<Fetch> fetches;
 
-	public AbstractFetchParent(NavigablePath navigablePath, ColumnReferenceSource columnReferenceSource) {
+	public AbstractFetchParent(
+			NavigableContainerReference navigableContainerReference,
+			NavigablePath navigablePath) {
+		this.navigableContainerReference = navigableContainerReference;
 		this.navigablePath = navigablePath;
-		this.columnReferenceSource = columnReferenceSource;
 	}
 
 	@Override
@@ -36,8 +41,13 @@ public abstract class AbstractFetchParent implements FetchParent {
 	}
 
 	@Override
-	public String getTableGroupUniqueIdentifier() {
-		return columnReferenceSource.getUniqueIdentifier();
+	public NavigableContainerReference getNavigableContainerReference() {
+		return navigableContainerReference;
+	}
+
+	@Override
+	public InitializerParent getInitializerParentForFetchInitializers() {
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override

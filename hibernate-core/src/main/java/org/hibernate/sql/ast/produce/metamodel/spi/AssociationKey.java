@@ -23,6 +23,7 @@ import org.hibernate.internal.util.StringHelper;
  * @author Steve Ebersole
  * @author Gail Badner
  * @author Gavin King
+ * @author Andrea Boriero
  */
 public class AssociationKey {
 	// todo (6.0) : just use the FK's uid...

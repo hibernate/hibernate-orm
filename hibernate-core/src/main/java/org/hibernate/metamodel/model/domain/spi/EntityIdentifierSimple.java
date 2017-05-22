@@ -6,10 +6,13 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+
 /**
  * @author Steve Ebersole
  */
-public interface EntityIdentifierSimple<O,J> extends EntityIdentifier<O,J> {
+public interface EntityIdentifierSimple<O,J>
+		extends EntityIdentifier<O,J>, SingularPersistentAttribute<O,J>, BasicValuedExpressableType<J> {
 	@Override
 	default void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitSimpleIdentifier( this );

@@ -71,7 +71,7 @@ public class SqmPluralAttributeReference
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
+	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
 		throw new NotYetImplementedException(  );
 	}
 }

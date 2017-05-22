@@ -14,13 +14,13 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexBasic;
+import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.spi.BasicType;
@@ -30,7 +30,7 @@ import org.hibernate.type.spi.BasicType;
  */
 public class CollectionIndexBasicImpl<J>
 		extends AbstractCollectionIndex<J>
-		implements CollectionIndexBasic<J> {
+		implements CollectionIndexBasic<J>, ConvertibleNavigable<J> {
 
 	private final BasicType<J> basicType;
 	private final Column column;
@@ -75,13 +75,12 @@ public class CollectionIndexBasicImpl<J>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new QueryResultScalarImpl(
 				selectedExpression,
 				sqlSelectionResolver.resolveSqlSelection(
-						columnReferenceSource.resolveColumnReference( column )
+						creationContext.currentColumnReferenceSource().resolveColumnReference( column )
 				),
 				resultVariable,
 				this

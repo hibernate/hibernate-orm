@@ -1,31 +1,32 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.jpa.graph.internal;
+package org.hibernate.graph.internal;
 
 import java.util.List;
 import javax.persistence.AttributeNode;
 import javax.persistence.Subgraph;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.graph.spi.GraphNodeImplementor;
+import org.hibernate.graph.spi.AttributeNodeContainer;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 
 /**
  * @author Steve Ebersole
  */
-public class SubgraphImpl<T> extends AbstractGraphNode<T> implements Subgraph<T>, GraphNodeImplementor {
-	private final ManagedType managedType;
+public class SubgraphImpl<T> extends AbstractAttributeNodeContainer<T> implements Subgraph<T>, AttributeNodeContainer {
+	private final ManagedTypeImplementor managedType;
 	private final Class<T> subclass;
 
 	@SuppressWarnings("WeakerAccess")
 	public SubgraphImpl(
 			SessionFactoryImplementor entityManagerFactory,
-			ManagedType managedType,
+			ManagedTypeImplementor managedType,
 			Class<T> subclass) {
 		super( entityManagerFactory, true );
 		this.managedType = managedType;
@@ -102,13 +103,13 @@ public class SubgraphImpl<T> extends AbstractGraphNode<T> implements Subgraph<T>
 
 	@Override
 	public List<AttributeNode<?>> getAttributeNodes() {
-		return super.attributeNodes();
+		return super.jpaAttributeNodes();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	protected Attribute<T,?> resolveAttribute(String attributeName) {
-		final Attribute<T,?> attribute = managedType.getAttribute( attributeName );
+	protected PersistentAttribute<T,?> resolveAttribute(String attributeName) {
+		final PersistentAttribute<T,?> attribute = managedType.findAttribute( attributeName );
 		if ( attribute == null ) {
 			throw new IllegalArgumentException(
 					String.format(
@@ -122,7 +123,7 @@ public class SubgraphImpl<T> extends AbstractGraphNode<T> implements Subgraph<T>
 	}
 
 	@Override
-	ManagedType getManagedType() {
+	ManagedTypeImplementor getManagedType() {
 		return managedType;
 	}
 }

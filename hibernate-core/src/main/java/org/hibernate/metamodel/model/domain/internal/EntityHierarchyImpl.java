@@ -124,7 +124,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		if ( rootEntityBinding.getIdentifierMapper() != null ) {
 			// should mean we have a "non-aggregated composite-id" (what we
 			// 		historically called an "embedded composite id")
-			return new EntityIdentifierCompositeNonAggregated(
+			return new EntityIdentifierCompositeNonAggregatedImpl(
 					hierarchy,
 					creationContext.getPersisterFactory().createEmbeddablePersister(
 							(Component) rootEntityBinding.getIdentifier(),
@@ -136,7 +136,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		}
 		else if ( rootEntityBinding.getIdentifier() instanceof Component ) {
 			// indicates we have an aggregated composite identifier (should)
-			return  new EntityIdentifierCompositeAggregated(
+			return  new EntityIdentifierCompositeAggregatedImpl(
 					hierarchy,
 					rootEntityBinding.getIdentifierProperty(),
 					creationContext.getPersisterFactory().createEmbeddablePersister(
@@ -150,7 +150,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		}
 		else {
 			// should indicate a simple identifier
-			return new EntityIdentifierSimple(
+			return new EntityIdentifierSimpleImpl(
 					hierarchy,
 					resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
 					rootEntityBinding.getIdentifierProperty(),

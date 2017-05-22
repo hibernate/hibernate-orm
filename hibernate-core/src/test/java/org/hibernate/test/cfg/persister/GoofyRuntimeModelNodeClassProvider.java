@@ -19,6 +19,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
@@ -34,21 +38,42 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.loader.spi.CollectionLoader;
+import org.hibernate.loader.spi.MultiLoadOptions;
+import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.loader.spi.MultiLoadOptions;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.CollectionElementDefinition;
-import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
-import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
+import org.hibernate.metamodel.model.domain.spi.AbstractEntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.CollectionElement;
+import org.hibernate.metamodel.model.domain.spi.CollectionIdentifier;
+import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
+import org.hibernate.metamodel.model.domain.spi.CollectionKey;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.metamodel.model.domain.spi.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
+import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.spi.Type;
 
 /**
@@ -65,13 +90,13 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 		return NoopCollectionPersister.class;
 	}
 
-	public static class NoopEntityPersister implements EntityTypeImplementor {
-
+	public static class NoopEntityPersister extends AbstractEntityTypeImplementor implements EntityTypeImplementor {
 		public NoopEntityPersister(
-				final PersistentClass persistentClass,
-				final EntityRegionAccessStrategy cacheAccessStrategy,
-				final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-				final RuntimeModelCreationContext creationContext) {
+				EntityMapping entityMapping,
+				EntityRegionAccessStrategy cacheAccessStrategy,
+				NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+				RuntimeModelCreationContext creationContext) throws HibernateException {
+			super( entityMapping, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 			throw new GoofyException(NoopEntityPersister.class);
 		}
 
@@ -81,12 +106,21 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 		}
 
 		@Override
-		public EntityTuplizer getEntityTuplizer() {
-			return null;
+		public void finishInstantiation(
+				EntityHierarchy entityHierarchy,
+				IdentifiableTypeImplementor superType,
+				IdentifiableTypeMapping bootMapping,
+				RuntimeModelCreationContext creationContext) {
+
 		}
 
 		@Override
-		public void generateEntityDefinition() {
+		public void completeInitialization(
+				EntityHierarchy entityHierarchy,
+				IdentifiableTypeImplementor superType,
+				IdentifiableTypeMappingImplementor bootMapping,
+				RuntimeModelCreationContext creationContext) {
+
 		}
 
 		@Override
@@ -100,8 +134,23 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 		}
 
 		@Override
+		public EntityIdentifier getIdentifierDescriptor() {
+			return null;
+		}
+
+		@Override
 		public EntityEntryFactory getEntityEntryFactory() {
 			return MutableEntityEntryFactory.INSTANCE;
+		}
+
+		@Override
+		public Table getPrimaryTable() {
+			return null;
+		}
+
+		@Override
+		public List<JoinedTableBinding> getSecondaryTableBindings() {
+			return null;
 		}
 
 		@Override
@@ -586,16 +635,12 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 		}
 
 		@Override
-		public EntityIdentifierDefinition getEntityKeyDefinition() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		protected SingleIdEntityLoader createLoader(
+				LockOptions lockOptions, SharedSessionContractImplementor session) {
+			return null;
 		}
 
 		@Override
-		public Iterable<AttributeDefinition> getAttributes() {
-			throw new NotYetImplementedException();
-		}
-
-        @Override
         public int[] resolveAttributeIndexes(String[] attributeNames) {
             return null;
         }
@@ -604,19 +649,78 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 		public boolean canUseReferenceCacheEntries() {
 			return false;
 		}
+
+		@Override
+		public TableGroup resolveTableGroup(
+				NavigableReferenceInfo embeddedReferenceInfo, TableGroupResolver tableGroupResolver) {
+			return null;
+		}
+
+		@Override
+		public String asLoggableText() {
+			return null;
+		}
 	}
 
-	public static class NoopCollectionPersister implements PersistentCollectionMetadata {
-
+	public static class NoopCollectionPersister extends AbstractPersistentCollectionMetadata  implements PersistentCollectionMetadata {
 		public NoopCollectionPersister(
 				Collection collectionBinding,
+				ManagedTypeImplementor source,
+				String navigableName,
 				CollectionRegionAccessStrategy cacheAccessStrategy,
-				RuntimeModelCreationContext creationContext) {
+				RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
+			super( collectionBinding, source, navigableName, cacheAccessStrategy, creationContext );
 			throw new GoofyException(NoopCollectionPersister.class);
+		}
+
+		@Override
+		protected Table resolveCollectionTable(
+				Collection collectionBinding, RuntimeModelCreationContext creationContext) {
+			return null;
 		}
 
 		public void initialize(Serializable key, SharedSessionContractImplementor session) throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public CollectionClassification getCollectionClassification() {
+			return null;
+		}
+
+		@Override
+		public NavigableRole getNavigableRole() {
+			return null;
+		}
+
+		@Override
+		public CollectionKey getForeignKeyDescriptor() {
+			return null;
+		}
+
+		@Override
+		public CollectionIdentifier getIdDescriptor() {
+			return null;
+		}
+
+		@Override
+		public CollectionElement getElementDescriptor() {
+			return null;
+		}
+
+		@Override
+		public CollectionIndex getIndexDescriptor() {
+			return null;
+		}
+
+		@Override
+		public CollectionLoader getLoader() {
+			return null;
+		}
+
+		@Override
+		public Table getSeparateCollectionTable() {
+			return null;
 		}
 
 		public boolean hasCache() {
@@ -629,25 +733,6 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 
 		public CacheEntryStructure getCacheEntryStructure() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public PersistentCollectionMetadata getPersistentCollectionMetadata() {
-			return this;
-		}
-
-		public CollectionType getCollectionType() {
-			throw new NotYetImplementedException();
-		}
-
-		@Override
-		public CollectionIndexDefinition getIndexDefinition() {
-			throw new NotYetImplementedException();
-		}
-
-		@Override
-		public CollectionElementDefinition getElementDefinition() {
-			throw new NotYetImplementedException();
 		}
 
 		public Type getKeyType() {
@@ -839,18 +924,87 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 		}
 
 		@Override
-		public int getBatchSize() {
-			return 0;
-		}
-
-		@Override
-		public String getMappedByProperty() {
+		public Navigable findNavigable(String navigableName) {
 			return null;
 		}
 
 		@Override
-		public void processQueuedOps(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
-				throws HibernateException {
+		public Navigable findDeclaredNavigable(String navigableName) {
+			return null;
+		}
+
+		@Override
+		public int getNumberOfJdbcParametersForRestriction() {
+			return 0;
+		}
+
+		@Override
+		public List<Navigable> getNavigables() {
+			return null;
+		}
+
+		@Override
+		public List<Navigable> getDeclaredNavigables() {
+			return null;
+		}
+
+		@Override
+		public void visitNavigables(NavigableVisitationStrategy visitor) {
+
+		}
+
+		@Override
+		public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
+
+		}
+
+		@Override
+		public NavigableContainer getContainer() {
+			return null;
+		}
+
+		@Override
+		public JavaTypeDescriptor getJavaTypeDescriptor() {
+			return null;
+		}
+
+		@Override
+		public String asLoggableText() {
+			return null;
+		}
+
+		@Override
+		public void visitNavigable(NavigableVisitationStrategy visitor) {
+
+		}
+
+		@Override
+		public QueryResult generateQueryResult(
+				NavigableReference selectedExpression,
+				String resultVariable,
+				SqlSelectionResolver sqlSelectionResolver,
+				QueryResultCreationContext creationContext) {
+			return null;
+		}
+
+		@Override
+		public boolean canCompositeContainCollections() {
+			return false;
+		}
+
+		@Override
+		public String getRolePrefix() {
+			return null;
+		}
+
+		@Override
+		public PersistenceType getPersistenceType() {
+			return null;
+		}
+
+		@Override
+		public Class getJavaType() {
+			return null;
 		}
 	}
 }

@@ -41,7 +41,9 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 /**
  * @author Steve Ebersole
  */
-public class EmbeddedTypeImplementorImpl<T> extends AbstractManagedType<T> implements EmbeddedTypeImplementor<T> {
+public class EmbeddedTypeImplementorImpl<T>
+		extends AbstractManagedType<T>
+		implements EmbeddedTypeImplementor<T> {
 	private final EmbeddedContainer container;
 	private final NavigableRole navigableRole;
 
@@ -188,10 +190,13 @@ public class EmbeddedTypeImplementorImpl<T> extends AbstractManagedType<T> imple
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return new QueryResultCompositeImpl( selectedExpression, resultVariable, this );
+		return new QueryResultCompositeImpl(
+				selectedExpression,
+				resultVariable,
+				this
+		);
 	}
 
 	@Override

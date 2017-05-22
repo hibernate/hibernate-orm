@@ -105,8 +105,8 @@ public class SqmEntityReference extends AbstractSqmNavigableReference
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
-		return exportedFromElement.getIntrinsicSubclassEntityPersister();
+	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
+		return exportedFromElement.getIntrinsicSubclassEntityMetadata();
 	}
 
 	@Override

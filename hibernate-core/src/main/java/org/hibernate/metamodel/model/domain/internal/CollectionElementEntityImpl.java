@@ -8,17 +8,18 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
+import org.hibernate.engine.FetchStrategy;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEntity;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
@@ -27,7 +28,6 @@ import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
@@ -122,21 +122,9 @@ public class CollectionElementEntityImpl<J>
 	}
 
 	@Override
-	public Fetch generateFetch(
-			FetchParent fetchParent,
-			NavigableReference selectedExpression,
-			String resultVariable,
-			ColumnReferenceSource columnReferenceResolver,
-			SqlSelectionResolver sqlSelectionResolver,
-			QueryResultCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
-	}
-
-	@Override
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		// delegate to the persister because here we are returning
@@ -144,9 +132,19 @@ public class CollectionElementEntityImpl<J>
 		return getEntityDescriptor().generateQueryResult(
 				selectedExpression,
 				resultVariable,
-				columnReferenceSource,
 				sqlSelectionResolver,
 				creationContext
 		);
+	}
+
+	@Override
+	public Fetch generateFetch(
+			FetchParent fetchParent,
+			NavigableReference selectedExpression,
+			FetchStrategy fetchStrategy,
+			String resultVariable,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		throw new NotYetImplementedException(  );
 	}
 }

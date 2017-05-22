@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface NavigableEntityValued<J> extends EntityValuedExpressableType<J>, NavigableContainer<J>, Fetchable {
+public interface EntityValuedNavigable<J> extends EntityValuedExpressableType<J>, NavigableContainer<J>, Fetchable<J> {
 	@Override
 	default Type.PersistenceType getPersistenceType() {
 		return Type.PersistenceType.ENTITY;

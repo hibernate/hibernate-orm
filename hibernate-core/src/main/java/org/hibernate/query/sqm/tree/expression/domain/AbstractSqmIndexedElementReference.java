@@ -86,7 +86,7 @@ public abstract class AbstractSqmIndexedElementReference
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
+	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
 		// for most element classifications, there is none
 		return null;
 	}

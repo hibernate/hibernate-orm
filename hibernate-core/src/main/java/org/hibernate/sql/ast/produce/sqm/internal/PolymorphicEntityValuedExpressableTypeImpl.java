@@ -156,7 +156,6 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements Polymorphi
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		throw new HibernateException( "Cannot create QueryResult from polymorphic entity reference" );

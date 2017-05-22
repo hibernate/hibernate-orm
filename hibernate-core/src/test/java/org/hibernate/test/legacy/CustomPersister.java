@@ -18,14 +18,15 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
+import org.hibernate.boot.model.domain.EntityMapping;
+import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.spi.IdentifiableTypeMappingImplementor;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -41,37 +42,37 @@ import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.loader.spi.MultiLoadOptions;
+import org.hibernate.loader.spi.SingleIdEntityLoader;
+import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
-import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
+import org.hibernate.metamodel.model.domain.spi.AbstractEntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
+import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
+import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.VersionType;
 
-public class CustomPersister implements EntityTypeImplementor {
+public class CustomPersister extends AbstractEntityTypeImplementor implements EntityTypeImplementor {
 
 	private static final Hashtable INSTANCES = new Hashtable();
 	private static final IdentifierGenerator GENERATOR = new UUIDHexGenerator();
 
-	private SessionFactoryImplementor factory;
-	private EntityMetamodel entityMetamodel;
-
-	@SuppressWarnings("UnusedParameters")
 	public CustomPersister(
-			PersistentClass model,
+			EntityMapping entityMapping,
 			EntityRegionAccessStrategy cacheAccessStrategy,
 			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-			RuntimeModelCreationContext creationContext) {
-		this.factory = creationContext.getSessionFactory();
-		this.entityMetamodel = new EntityMetamodel( model, this, factory );
+			RuntimeModelCreationContext creationContext,
+			SessionFactoryImplementor factory) throws HibernateException {
+		super( entityMapping, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 	}
+
 
 	public boolean hasLazyProperties() {
 		return false;
@@ -81,13 +82,19 @@ public class CustomPersister implements EntityTypeImplementor {
 		return false;
 	}
 
-	public SessionFactoryImplementor getFactory() {
-		return factory;
-	}
-
 	@Override
 	public EntityEntryFactory getEntityEntryFactory() {
 		return MutableEntityEntryFactory.INSTANCE;
+	}
+
+	@Override
+	public Table getPrimaryTable() {
+		return null;
+	}
+
+	@Override
+	public List<JoinedTableBinding> getSecondaryTableBindings() {
+		return null;
 	}
 
 	@Override
@@ -95,14 +102,15 @@ public class CustomPersister implements EntityTypeImplementor {
 		return Custom.class;
 	}
 
-	@Override
-	public void generateEntityDefinition() {
-	}
-
 	public void postInstantiate() throws MappingException {}
 
 	public String getEntityName() {
 		return Custom.class.getName();
+	}
+
+	@Override
+	public EntityIdentifier getIdentifierDescriptor() {
+		return null;
 	}
 
 	public boolean isSubclassEntityName(String entityName) {
@@ -428,17 +436,14 @@ public class CustomPersister implements EntityTypeImplementor {
 
 	}
 
-	private static final Type[] TYPES = new Type[] { StandardBasicTypes.STRING };
+	@Override
+	public Type[] getPropertyTypes() {
+		return new Type[0];
+	}
+
 	private static final String[] NAMES = new String[] { "name" };
 	private static final boolean[] MUTABILITY = new boolean[] { true };
 	private static final boolean[] GENERATION = new boolean[] { false };
-
-	/**
-	 * @see EntityTypeImplementor#getPropertyTypes()
-	 */
-	public Type[] getPropertyTypes() {
-		return TYPES;
-	}
 
 	/**
 	 * @see EntityTypeImplementor#getPropertyNames()
@@ -454,11 +459,9 @@ public class CustomPersister implements EntityTypeImplementor {
 		return null;
 	}
 
-	/**
-	 * @see EntityTypeImplementor#getIdentifierType()
-	 */
+	@Override
 	public Type getIdentifierType() {
-		return StandardBasicTypes.STRING;
+		return null;
 	}
 
 	/**
@@ -486,6 +489,11 @@ public class CustomPersister implements EntityTypeImplementor {
 
 	public String getRootEntityName() {
 		return "CUSTOMS";
+	}
+
+	@Override
+	public EntityMetamodel getEntityMetamodel() {
+		return null;
 	}
 
 	public Serializable[] getPropertySpaces() {
@@ -675,23 +683,26 @@ public class CustomPersister implements EntityTypeImplementor {
 	}
 
 	@Override
-	public EntityMetamodel getEntityMetamodel() {
-		return entityMetamodel;
-	}
-
-	@Override
 	public EntityMode getEntityMode() {
 		return EntityMode.POJO;
 	}
 
 	@Override
-	public EntityTuplizer getEntityTuplizer() {
-		return null;
+	public void finishInstantiation(
+			EntityHierarchy entityHierarchy,
+			IdentifiableTypeImplementor superType,
+			IdentifiableTypeMapping bootMapping,
+			RuntimeModelCreationContext creationContext) {
+
 	}
 
 	@Override
-	public BytecodeEnhancementMetadata getInstrumentationMetadata() {
-		return new BytecodeEnhancementMetadataNonPojoImpl( getEntityName() );
+	public void completeInitialization(
+			EntityHierarchy entityHierarchy,
+			IdentifiableTypeImplementor superType,
+			IdentifiableTypeMappingImplementor bootMapping,
+			RuntimeModelCreationContext creationContext) {
+
 	}
 
 	@Override
@@ -705,16 +716,12 @@ public class CustomPersister implements EntityTypeImplementor {
 	}
 
 	@Override
-	public EntityIdentifierDefinition getEntityKeyDefinition() {
-		throw new NotYetImplementedException();
+	protected SingleIdEntityLoader createLoader(
+			LockOptions lockOptions, SharedSessionContractImplementor session) {
+		return null;
 	}
 
 	@Override
-	public Iterable<AttributeDefinition> getAttributes() {
-		throw new NotYetImplementedException();
-	}
-
-    @Override
     public int[] resolveAttributeIndexes(String[] attributeNames) {
         return null;
     }
@@ -722,5 +729,16 @@ public class CustomPersister implements EntityTypeImplementor {
 	@Override
 	public boolean canUseReferenceCacheEntries() {
 		return false;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public TableGroup resolveTableGroup(
+			NavigableReferenceInfo embeddedReferenceInfo, TableGroupResolver tableGroupResolver) {
+		return null;
+	}
+
+	@Override
+	public String asLoggableText() {
+		return null;
 	}
 }

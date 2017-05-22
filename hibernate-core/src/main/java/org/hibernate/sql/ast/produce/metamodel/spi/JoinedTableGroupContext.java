@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
 /**
- * Parameter object passed to {@link TableGroupJoinProducer#applyTableGroupJoin}
+ * Parameter object passed to {@link TableGroupJoinProducer#createTableGroupJoin}
  * giving access to information about the context into which the TableGroup is
  * being applied.  This can be used to query that context and to some degree to
  * alter it.  Generally speaking, though, restrictions should be encoded into

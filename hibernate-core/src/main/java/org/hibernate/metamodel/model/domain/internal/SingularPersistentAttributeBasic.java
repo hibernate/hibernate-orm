@@ -10,18 +10,18 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.spi.NavigableBasicValued;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.NavigableBasicValued;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
@@ -32,7 +32,7 @@ import org.hibernate.type.spi.BasicType;
  */
 public class SingularPersistentAttributeBasic<O,J>
 		extends AbstractSingularPersistentAttribute<O, J>
-		implements NavigableBasicValued<J> {
+		implements NavigableBasicValued<J>, ConvertibleNavigable<J> {
 
 	private final Column boundColumn;
 	private final BasicType<J> basicType;
@@ -76,13 +76,12 @@ public class SingularPersistentAttributeBasic<O,J>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new QueryResultScalarImpl(
 				selectedExpression,
 				sqlSelectionResolver.resolveSqlSelection(
-						columnReferenceSource.resolveColumnReference( boundColumn )
+						creationContext.currentColumnReferenceSource().resolveColumnReference( boundColumn )
 				),
 				resultVariable,
 				getType()

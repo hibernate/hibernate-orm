@@ -21,6 +21,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
+import org.hibernate.graph.spi.AttributeNodeContainer;
 import org.hibernate.hql.internal.ast.tree.OrderByClause;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
@@ -29,9 +30,13 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.JoinablePersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.query.spi.EntityGraphQueryHint;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupContext;
+import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
@@ -118,6 +123,7 @@ import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
+import org.hibernate.sql.ast.produce.sqm.internal.FetchGraphBuilder;
 import org.hibernate.sql.ast.tree.spi.Clause;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
@@ -139,6 +145,7 @@ import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -176,7 +183,7 @@ public class SqmSelectToSqlAstConverter
 		implements SqlSelectionResolver, QueryResultCreationContext {
 	private static final Logger log = Logger.getLogger( SqmSelectToSqlAstConverter.class );
 
-	private final Stack<NavigablePath> navigablePathStack = new Stack<>();
+	private FetchGraphBuilder fetchGraphBuilder;
 
 	/**
 	 * Main entry point into SQM SelectStatement interpretation
@@ -207,7 +214,7 @@ public class SqmSelectToSqlAstConverter
 	private final Stack<QuerySpec> querySpecStack = new Stack<>();
 	private final Stack<Shallowness> shallownessStack = new Stack<>( Shallowness.NONE );
 
-	private final List<QueryResult> queryReturns = new ArrayList<>();
+	private final List<QueryResult> queryResults = new ArrayList<>();
 
 	private enum Shallowness {
 		NONE,
@@ -222,18 +229,25 @@ public class SqmSelectToSqlAstConverter
 			SqlAstBuildingContext sqlAstBuildingContext) {
 		this.queryOptions = queryOptions;
 		this.sqlAstBuildingContext = sqlAstBuildingContext;
+		this.fetchDepthLimit = sqlAstBuildingContext.getSessionFactory().getSessionFactoryOptions().getMaximumFetchDepth();
+		this.entityGraphQueryHintType = queryOptions.getEntityGraphQueryHint().getType();
 	}
 
 	private SqlSelectPlan interpret(SqmSelectStatement statement) {
 		return new SqlSelectPlanImpl(
 				visitSelectStatement( statement ),
-				queryReturns
+				queryResults
 		);
 	}
 
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
 		return sqlAstBuildingContext.getSessionFactory();
+	}
+
+	@Override
+	public ColumnReferenceSource currentColumnReferenceSource() {
+		return tableGroupStack.getCurrent();
 	}
 
 	@Override
@@ -399,9 +413,8 @@ public class SqmSelectToSqlAstConverter
 		}
 
 		final SqmEntityReference binding = sqmRoot.getNavigableReference();
-		final EntityTypeImplementor entityPersister = (EntityTypeImplementor) binding.getReferencedNavigable();
-		final EntityTableGroup group = entityPersister.createRootTableGroup(
-				binding,
+		final EntityTypeImplementor entityMetadata = (EntityTypeImplementor) binding.getReferencedNavigable();
+		final EntityTableGroup group = entityMetadata.createRootTableGroup(
 				new RootTableGroupContext() {
 					@Override
 					public QuerySpec getQuerySpec() {
@@ -414,6 +427,21 @@ public class SqmSelectToSqlAstConverter
 					}
 
 					@Override
+					public String getUniqueIdentifier() {
+						return sqmRoot.getUniqueIdentifier();
+					}
+
+					@Override
+					public String getIdentificationVariable() {
+						return sqmRoot.getIdentificationVariable();
+					}
+
+					@Override
+					public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
+						return sqmRoot.getIntrinsicSubclassEntityMetadata();
+					}
+
+					@Override
 					public void addRestriction(Predicate predicate) {
 						currentQuerySpec().addRestriction( predicate );
 					}
@@ -422,10 +450,23 @@ public class SqmSelectToSqlAstConverter
 					public TableGroupResolver getTableGroupResolver() {
 						return fromClauseIndex;
 					}
-				},
-				sqlAliasBaseManager
+
+					@Override
+					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+						return sqlAliasBaseManager;
+					}
+
+					@Override
+					public JoinType getTableReferenceJoinType() {
+						// TableReferences within the TableGroup can be
+						// inner-joined (unless they are optional, which is handled
+						// inside the producers)
+						return JoinType.INNER;
+					}
+				}
 		);
 		tableSpace.setRootTableGroup( group );
+		tableGroupStack.push( group );
 
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, group );
 
@@ -441,7 +482,7 @@ public class SqmSelectToSqlAstConverter
 		final QuerySpec querySpec = currentQuerySpec();
 		final JoinablePersistentAttribute joinableAttribute = (JoinablePersistentAttribute) joinedFromElement.getAttributeReference()
 				.getReferencedNavigable();
-		final TableGroupJoin tableGroupJoin = joinableAttribute.applyTableGroupJoin(
+		final TableGroupJoin tableGroupJoin = joinableAttribute.createTableGroupJoin(
 				joinedFromElement.getNavigableReference(),
 				joinedFromElement.getJoinType(),
 				new JoinedTableGroupContext() {
@@ -456,11 +497,38 @@ public class SqmSelectToSqlAstConverter
 					}
 
 					@Override
+					public String getUniqueIdentifier() {
+						return joinedFromElement.getUniqueIdentifier();
+					}
+
+					@Override
+					public String getIdentificationVariable() {
+						return joinedFromElement.getIdentificationVariable();
+					}
+
+					@Override
+					public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
+						return joinedFromElement.getIntrinsicSubclassEntityMetadata();
+					}
+
+					@Override
 					public TableGroupResolver getTableGroupResolver() {
 						return fromClauseIndex;
 					}
-				},
-				sqlAliasBaseManager
+
+					@Override
+					public JoinType getTableReferenceJoinType() {
+						// TableReferences within the joined TableGroup can be
+						// inner-joined (unless they are optional, which is handled
+						// inside the producers)
+						return JoinType.INNER;
+					}
+
+					@Override
+					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+						return sqlAliasBaseManager;
+					}
+				}
 		);
 
 		// add any additional join restrictions
@@ -470,16 +538,17 @@ public class SqmSelectToSqlAstConverter
 			);
 		}
 
+		tableGroupStack.push( tableGroupJoin.getJoinedGroup() );
+
 		return tableGroupJoin;
 	}
 
 	@Override
 	public TableGroupJoin visitCrossJoinedFromElement(SqmCrossJoin joinedFromElement) {
 		final QuerySpec querySpec = currentQuerySpec();
-		final EntityTypeImplementor entityPersister = joinedFromElement.getIntrinsicSubclassEntityPersister();
-		final EntityTableGroup group = entityPersister.createEntityTableGroup(
-				joinedFromElement.getNavigableReference(),
-				new JoinedTableGroupContext() {
+		final EntityTypeImplementor entityPersister = joinedFromElement.getIntrinsicSubclassEntityMetadata();
+		final EntityTableGroup group = entityPersister.createRootTableGroup(
+				new RootTableGroupContext() {
 					@Override
 					public QuerySpec getQuerySpec() {
 						return querySpec;
@@ -491,12 +560,52 @@ public class SqmSelectToSqlAstConverter
 					}
 
 					@Override
+					public String getUniqueIdentifier() {
+						return joinedFromElement.getUniqueIdentifier();
+					}
+
+					@Override
+					public String getIdentificationVariable() {
+						return null;
+					}
+
+					@Override
+					public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
+						return null;
+					}
+
+					@Override
 					public TableGroupResolver getTableGroupResolver() {
 						return fromClauseIndex;
 					}
-				},
-				sqlAliasBaseManager
+
+					@Override
+					public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+						return sqlAliasBaseManager;
+					}
+
+					@Override
+					public JoinType getTableReferenceJoinType() {
+						// TableReferences within the cross-joined TableGroup can be
+						// inner-joined (unless they are optional, which is handled
+						// inside the producers)
+						return JoinType.INNER;
+					}
+
+					@Override
+					public void addRestriction(Predicate predicate) {
+						log.debugf(
+								"Adding restriction [%s] to where-clause for cross-join [%s]",
+								predicate,
+								joinedFromElement.getNavigableReference()
+						);
+						querySpec.addRestriction( predicate );
+					}
+				}
 		);
+
+		tableGroupStack.push( group );
+
 		return new TableGroupJoin( SqmJoinType.CROSS, group, null );
 	}
 
@@ -541,20 +650,64 @@ public class SqmSelectToSqlAstConverter
 		//		still allows access to TableGroup/ColumnReference resolution for
 		//		Selection/Expression/Selectables that need it
 		final QueryResult queryResult = selection.createQueryResult( this, this );
-
-		applyFetchesAndEntityGraph( queryResult );
+		queryResults.add( queryResult );
+		applyFetches( queryResult );
 
 		return selection;
 	}
 
-	private void applyFetchesAndEntityGraph(QueryResult queryReturn) {
-		if ( queryReturn instanceof FetchParent ) {
-			applyFetchesAndEntityGraph( (FetchParent) queryReturn, extractEntityGraph() );
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Fetches
+
+	private final EntityGraphQueryHint.Type entityGraphQueryHintType;
+
+	private final int fetchDepthLimit;
+
+	private Stack<FetchParent> fetchParentStack = new Stack<>();
+	private Stack<NavigablePath> navigablePathStack = new Stack<>();
+	private final Stack<TableGroup> tableGroupStack = new Stack<>();
+	private Stack<SqmFrom> sqmFromStack = new Stack<>();
+	private Stack<AttributeNodeContainer> entityGraphNodeStack = new Stack<>();
+
+
+	protected void applyFetches(QueryResult queryReturn) {
+		if ( !FetchParent.class.isInstance( queryReturn ) ) {
+			return;
 		}
 
-		// todo : dynamic-instantiations *if* the dynamic-instantiation takes the entity as an argument
-		if ( queryReturn instanceof QueryResultDynamicInstantiation ) {
+		applyFetches( (FetchParent) queryReturn );
+	}
 
+	protected void applyFetches(FetchParent fetchParent) {
+		fetchParentStack.push( fetchParent );
+		navigablePathStack.push( fetchParent.getNavigablePath() );
+
+		fetchParent.
+		try {
+
+		}
+		finally {
+			navigablePathStack.pop();
+			fetchParentStack.pop();
+		}
+
+		final FetchGraphBuilder fetchGraphBuilder = new FetchGraphBuilder(
+				sqlAstBuildingContext,
+				this,
+				fetchParent,
+				queryOptions.getEntityGraphQueryHint(),
+				navigablePathStack.getCurrent(),
+				this,
+				this
+		);
+
+		fetchParent.getNavigableContainerReference().getNavigable().visitNavigable( fetchGraphBuilder );
+
+		if ( queryReturn instanceof QueryResultDynamicInstantiation ) {
+			// todo (6.0) : ? - dynamic-instantiations *if* the dynamic-instantiation takes the entity as an argument?
+			//		wuold be nice, but not critical
 		}
 
 		// otherwise, nothing to do
@@ -565,14 +718,42 @@ public class SqmSelectToSqlAstConverter
 			return null;
 		}
 		else {
-			return (EntityGraphImplementor) queryOptions.getEntityGraphQueryHint().getHintedGraph();
+			return queryOptions.getEntityGraphQueryHint().getHintedGraph();
 		}
 	}
 
 	private Set<String> alreadyProcessedFetchParentTableGroupUids = new HashSet<>();
 
-	private void applyFetchesAndEntityGraph(FetchParent fetchParent, EntityGraphImplementor entityGraph) {
-		final String uniqueIdentifier = fetchParent.getTableGroupUniqueIdentifier();
+	private void applyFetches(FetchParent fetchParent, EntityGraphImplementor entityGraph) {
+		// todo (6.0) : SUPERSEDES ALL NOTES BELOW!!!
+		//		I think this is now as simple as:
+		//			1) adding a Stack<FetchParent> field
+		//			2) adding the incoming FetchParent to that Stack
+		//			3) create a specialized NavigableVisitationStrategy and use walking
+		//			4) keep some mapping of "fetch parent" -> query-defined fetches.
+		//				currently `FromClauseIndex#sqmFetchesByParentUid` was the intended wy
+		// 				to handle this, but it would be better if SQM builder could
+		//				inject these into the SQM nodes.  We'd need some form of
+		//				"FetchableSqmNode" and "FetchableContainerSqmNode".  Criteria
+		//				already has this structure so it already works from there, especially
+		//				if we have Criteria nodes either:
+		//					a) extend the SQM nodes
+		//					b) internally build the SQM nodes (simple delegation from the JPA APIs)
+		//				we'd have to link them via HQL processing - probably via a FetchableContainerSqmNode
+		//				Stack in that code and linking them together as we process each fetch
+		//
+		//		this allows us to clean up FromClauseIndex even more
+		//
+		//		in this design the NavigableVisitationStrategy would be the thing responsible for
+		//			keeping the depth in sync in terms of:
+		// 				1) navigable we are processing
+		//				2) corresponding EntityGraph
+
+
+		fetchParent.getNavigableContainerReference().getNavigable().visitNavigables(  );
+
+
+		final String uniqueIdentifier = tableGroupStack.getCurrent().getUniqueIdentifier();
 		if ( !alreadyProcessedFetchParentTableGroupUids.add( uniqueIdentifier ) ) {
 			log.errorf( "Found duplicate tableGroupUid as FetchParent [%s]", uniqueIdentifier );
 			return;
@@ -599,11 +780,11 @@ public class SqmSelectToSqlAstConverter
 			//final String attributeName = fetchedAttributeBinding.getAttribute().getAttributeName();
 			//final AttributeNodeImplementor attributeNode = entityGraphImplementor.findAttributeNode( attributeName );
 			final AttributeNodeImplementor attributeNode = null;
-			applyFetchesAndEntityGraph( fetchParent, fetchedJoin, attributeNode );
+			applyFetches( fetchParent, fetchedJoin, attributeNode );
 		}
 	}
 
-	private void applyFetchesAndEntityGraph(FetchParent fetchParent, SqmAttributeJoin attributeJoin, AttributeNodeImplementor attributeNode) {
+	private void applyFetches(FetchParent fetchParent, SqmAttributeJoin attributeJoin, AttributeNodeImplementor attributeNode) {
 		if ( attributeJoin.getAttributeReference() instanceof SqmPluralAttributeReference ) {
 			// apply the plural attribute fetch join
 			final SqmPluralAttributeReference pluralAttributeBinding = (SqmPluralAttributeReference) attributeJoin.getAttributeReference();
@@ -613,6 +794,7 @@ public class SqmSelectToSqlAstConverter
 			// 		CollectionAttributeFetch expose its element versus key fetches individually?  Or
 			// 		does it represent each by itself?
 
+			throw new NotYetImplementedException( "collection fetched not yet implemented" );
 		}
 		else if ( attributeJoin.getAttributeReference() instanceof SqmSingularAttributeReference ) {
 			// apply the singular attribute fetch join
@@ -631,7 +813,7 @@ public class SqmSelectToSqlAstConverter
 							new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN )
 					);
 					fetchParent.addFetch( fetch );
-					applyFetchesAndEntityGraph( fetch, null );
+					applyFetches( fetch, null );
 					break;
 				}
 				case ONE_TO_ONE:
@@ -642,11 +824,11 @@ public class SqmSelectToSqlAstConverter
 							currentNavigablePath().append( attributeBinding.getReferencedNavigable().getName() ),
 							attributeJoin.getUniqueIdentifier(),
 							boundAttributeAsEntity,
-							boundAttributeAsEntity.getAssociatedEntityPersister(),
+							boundAttributeAsEntity.getAssociatedEntityDescriptor(),
 							new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN )
 					);
 					fetchParent.addFetch( fetch );
-					applyFetchesAndEntityGraph( fetch, null );
+					applyFetches( fetch, null );
 				}
 			}
 		}

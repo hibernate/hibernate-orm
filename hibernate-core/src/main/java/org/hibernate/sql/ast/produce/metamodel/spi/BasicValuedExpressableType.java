@@ -6,13 +6,12 @@
  */
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
-import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public interface BasicValuedExpressableType<J> extends ConvertibleNavigable<J>, ExpressableType<J> {
+public interface BasicValuedExpressableType<J> extends ExpressableType<J> {
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;

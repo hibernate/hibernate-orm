@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.produce.result.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.NavigablePath;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 
 /**
  * Contextual information useful when creating a QueryResult.
@@ -19,6 +20,7 @@ import org.hibernate.query.spi.NavigablePath;
 public interface QueryResultCreationContext {
 	SessionFactoryImplementor getSessionFactory();
 
+	ColumnReferenceSource currentColumnReferenceSource();
 	NavigablePath currentNavigablePath();
 
 	boolean shouldCreateShallowEntityResult();

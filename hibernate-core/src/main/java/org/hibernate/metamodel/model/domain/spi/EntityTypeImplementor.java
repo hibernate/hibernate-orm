@@ -39,15 +39,14 @@ import org.hibernate.loader.spi.EntityLocker;
 import org.hibernate.loader.spi.MultiIdEntityLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
 import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupProducer;
-import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseResolver;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeFactory;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
 import org.hibernate.sql.JoinType;
+import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -72,7 +71,7 @@ import org.hibernate.type.spi.Type;
  */
 @Incubating
 public interface EntityTypeImplementor<T>
-		extends NavigableEntityValued<T>, NavigableContainer<T>, EmbeddedContainer<T>,
+		extends EntityValuedNavigable<T>, NavigableContainer<T>, EmbeddedContainer<T>,
 				RootTableGroupProducer, OptimisticCacheSource, IdentifiableTypeImplementor<T>, EntityType<T> {
 
 	// todo (6.0) : ? - can OptimisticCacheSource stuff go away?
@@ -210,35 +209,19 @@ public interface EntityTypeImplementor<T>
 	EntityLocker getLocker(LockOptions lockOptions, SharedSessionContractImplementor session);
 
 	/**
-	 * Apply the Tables mapped by this entity to the collector as TableReferences; return
-	 * the root table for the added joined tables for the caller to use as a join target.
+	 * Apply the Tables mapped by this entity to the collector as TableReferences
 	 */
 	void applyTableReferenceJoins(
 			JoinType joinType,
 			SqlAliasBase sqlAliasBase,
-			TableReferenceJoinCollector collector);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// `org.hibernate.metamodel.queryable` support
-
-
-	@Override
-	EntityTableGroup createRootTableGroup(
-			NavigableReferenceInfo navigableReferenceInfo,
-			RootTableGroupContext tableGroupContext,
-			SqlAliasBaseResolver sqlAliasBaseResolver);
-
-	EntityTableGroup createEntityTableGroup(
-			NavigableReferenceInfo navigableReferenceInfo,
-			TableGroupContext tableGroupContext,
-			SqlAliasBaseResolver sqlAliasBaseResolver);
+			TableReferenceJoinCollector joinCollector,
+			TableGroupContext tableGroupContext);
 
 
 	/**
 	 * Access to the root table for this entity.
 	 */
-	Table getRootTable();
+	Table getPrimaryTable();
 
 	/**
 	 * Access to all "declared" secondary table mapping info for this entity.
@@ -251,11 +234,11 @@ public interface EntityTypeImplementor<T>
 		visitor.visitEntity( this );
 	}
 
+	@Override
+	EntityTableGroup createRootTableGroup(RootTableGroupContext tableGroupContext);
 
 
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Legacy contract (sans methods moved to above "Redesigned contract") section
 
 	/**

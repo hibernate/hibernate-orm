@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.consume.results.spi.InitializerParent;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 
 /**
  * Contract for things that can be the parent of a fetch
@@ -17,19 +18,14 @@ import org.hibernate.sql.ast.consume.results.spi.InitializerParent;
  * @author Steve Ebersole
  */
 public interface FetchParent {
+	NavigableContainerReference getNavigableContainerReference();
+
 	/**
 	 * Get the property path to this parent
 	 *
 	 * @return The property path
 	 */
 	NavigablePath getNavigablePath();
-
-	/**
-	 * Get the UID for this fetch source's query space.
-	 *
-	 * @return The query space UID.
-	 */
-	String getTableGroupUniqueIdentifier();
 
 	InitializerParent getInitializerParentForFetchInitializers();
 

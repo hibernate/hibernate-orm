@@ -20,7 +20,7 @@ public interface EntityReference extends FetchParent, InitializerSource {
 	 *
 	 * @return The EntityPersister.
 	 */
-	EntityTypeImplementor getEntityPersister();
+	EntityTypeImplementor getEntityMetadata();
 
 	/**
 	 * Get the description of the entity's identifier, specific to this query

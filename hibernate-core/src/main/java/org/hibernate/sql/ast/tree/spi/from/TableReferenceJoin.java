@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.spi.from;
 
-import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.produce.IllegalJoinSpecificationException;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
@@ -18,23 +18,23 @@ import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
  * @author Steve Ebersole
  */
 public class TableReferenceJoin implements SqlAstNode {
-	private final SqmJoinType joinType;
+	private final JoinType joinType;
 	private final TableReference joinedTableBinding;
 	private final Predicate predicate;
 
-	public TableReferenceJoin(SqmJoinType joinType, TableReference joinedTableBinding, Predicate predicate) {
+	public TableReferenceJoin(JoinType joinType, TableReference joinedTableBinding, Predicate predicate) {
 		this.joinType = joinType;
 		this.joinedTableBinding = joinedTableBinding;
 		this.predicate = predicate;
 
-		if ( joinType == SqmJoinType.CROSS ) {
+		if ( joinType == JoinType.CROSS ) {
 			if ( predicate != null ) {
 				throw new IllegalJoinSpecificationException( "Cross join cannot include join predicate" );
 			}
 		}
 	}
 
-	public SqmJoinType getJoinType() {
+	public JoinType getJoinType() {
 		return joinType;
 	}
 

@@ -6,8 +6,11 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.sql.ast.produce.metamodel.spi.EmbeddedValueExpressableType;
+
 /**
  * @author Steve Ebersole
  */
-public interface EntityIdentifierComposite<O,J> extends EntityIdentifier<O,J> {
+public interface EntityIdentifierComposite<O,J>
+		extends EntityIdentifier<O,J>, EmbeddedValueExpressableType<J> {
 }

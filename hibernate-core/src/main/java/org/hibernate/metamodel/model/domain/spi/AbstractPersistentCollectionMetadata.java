@@ -45,7 +45,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.IndexColumnReferenceSource;
 import org.hibernate.sql.ast.produce.metamodel.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
 import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupContext;
-import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseResolver;
+import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
@@ -271,7 +271,7 @@ public abstract class AbstractPersistentCollectionMetadata<O,C,E> implements Per
 	public CollectionTableGroup createRootTableGroup(
 			NavigableReferenceInfo navigableReferenceInfo,
 			RootTableGroupContext tableGroupContext,
-			SqlAliasBaseResolver sqlAliasBaseResolver) {
+			SqlAliasBaseGenerator sqlAliasBaseResolver) {
 		final SqlAliasBase sqlAliasBase = sqlAliasBaseResolver.getSqlAliasBase( navigableReferenceInfo );
 
 		final TableReference collectionTableReference;
@@ -317,11 +317,10 @@ public abstract class AbstractPersistentCollectionMetadata<O,C,E> implements Per
 	}
 
 	@Override
-	public TableGroupJoin applyTableGroupJoin(
+	public TableGroupJoin createTableGroupJoin(
 			NavigableReferenceInfo navigableReferenceInfo,
 			SqmJoinType joinType,
-			JoinedTableGroupContext tableGroupJoinContext,
-			SqlAliasBaseResolver sqlAliasBaseResolver) {
+			JoinedTableGroupContext tableGroupJoinContext) {
 		return null;
 	}
 

@@ -40,7 +40,7 @@ public class SqmRoot extends AbstractSqmFrom {
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
+	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
 		// a root FromElement cannot indicate a subclass intrinsically (as part of its declaration)
 		return null;
 	}

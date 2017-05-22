@@ -21,7 +21,9 @@ public interface FetchAttribute extends Fetch {
 	 *
 	 * @return The fetched attribute descriptor.
 	 */
-	PersistentAttribute getFetchedAttributeDescriptor();
+	default PersistentAttribute getFetchedAttributeDescriptor() {
+		return (PersistentAttribute) getFetchedNavigable();
+	}
 
 	/**
 	 * Get the property path to this fetch

@@ -27,13 +27,11 @@ public interface TableGroupJoinProducer {
 	 * @param navigableReferenceInfo Information about the TableGroupJoin to be built (alias, etc)
 	 * @param joinType The type of SQL join to generate
 	 * @param tableGroupJoinContext Access to information about the context that the TableGroupJoin is being applied to
-	 * @param sqlAliasBaseResolver Access to the SQL alias manager
 	 *
 	 * @return The generated TableGroupJoin
 	 */
-	TableGroupJoin applyTableGroupJoin(
+	TableGroupJoin createTableGroupJoin(
 			NavigableReferenceInfo navigableReferenceInfo,
 			SqmJoinType joinType,
-			JoinedTableGroupContext tableGroupJoinContext,
-			SqlAliasBaseResolver sqlAliasBaseResolver);
+			JoinedTableGroupContext tableGroupJoinContext);
 }

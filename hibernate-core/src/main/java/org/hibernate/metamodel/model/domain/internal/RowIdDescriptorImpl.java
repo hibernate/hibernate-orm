@@ -39,7 +39,7 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 	public RowIdDescriptorImpl(EntityHierarchy hierarchy) {
 		this.hierarchy = hierarchy;
 		column = new PhysicalColumn(
-				hierarchy.getRootEntityType().getRootTable(),
+				hierarchy.getRootEntityType().getPrimaryTable(),
 				"ROW_ID",
 				Integer.MAX_VALUE
 		);

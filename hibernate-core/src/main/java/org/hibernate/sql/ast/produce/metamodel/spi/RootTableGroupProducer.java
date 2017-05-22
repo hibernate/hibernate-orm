@@ -8,7 +8,6 @@ package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableSpace;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 
 /**
  * Contract for things that can produce the {@link TableGroup} that is the root of a
@@ -22,14 +21,9 @@ public interface RootTableGroupProducer {
 	 * NavigableReferenceInfo, being sure to add it to the passed
 	 * RootTableGroupContext.
 	 *
-	 * @param navigableReferenceInfo Information about the TableGroup to be built (alias, etc)
 	 * @param tableGroupContext Access to information about the context that the TableGroup is being applied to
-	 * @param sqlAliasBaseResolver Access to the component responsible for determining the "SQL alias base"
 	 *
 	 * @return The generated EntityTableGroup
 	 */
-	TableGroup createRootTableGroup(
-			NavigableReferenceInfo navigableReferenceInfo,
-			RootTableGroupContext tableGroupContext,
-			SqlAliasBaseResolver sqlAliasBaseResolver);
+	TableGroup createRootTableGroup(RootTableGroupContext tableGroupContext);
 }

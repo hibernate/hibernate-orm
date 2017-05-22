@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.produce.result.spi;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.consume.results.spi.InitializerSource;
-import org.hibernate.type.spi.Type;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**
  * Contract for fetches.
@@ -27,6 +27,11 @@ public interface Fetch extends InitializerSource {
 	FetchParent getFetchParent();
 
 	/**
+	 * The Navigable being fetched.
+	 */
+	NavigableReference getFetchedNavigableReference();
+
+	/**
 	 * Get the property path to this fetch
 	 *
 	 * @return The property path
@@ -39,13 +44,6 @@ public interface Fetch extends InitializerSource {
 	 * @return the fetch strategy for this fetch.
 	 */
 	FetchStrategy getFetchStrategy();
-
-	/**
-	 * Get the Hibernate Type that describes the fetched attribute
-	 *
-	 * @return The Type of the fetched attribute
-	 */
-	Type getFetchedType();
 
 	/**
 	 * Is this fetch nullable?

@@ -17,10 +17,8 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.tree.order.SqmSortOrder;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.consume.ExecutionException;
 import org.hibernate.sql.ast.consume.SemanticException;
 import org.hibernate.sql.ast.consume.internal.JdbcSelectImpl;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 import org.hibernate.sql.ast.produce.sqm.spi.ConversionHelper;
@@ -829,6 +827,20 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker,
 
 	@Override
 	public void visitRelationalPredicate(RelationalPredicate relationalPredicate) {
+		// todo (6.0) : do we want to allow multi-valued parameters in a relational predicate?
+		//		yes means we'd have to support dynamically converting this predicate into
+		//		an IN predicate or an OR predicate
+		//
+		//		NOTE: JPA does not define support for multi-valued parameters here.
+		//
+		// If we decide to support that ^^  we should validate that *both* sides of the
+		//		predicate are multi-valued parameters.  because...
+		//		well... its stupid :)
+//		if ( relationalPredicate.getLeftHandExpression() instanceof GenericParameter ) {
+//			final GenericParameter lhs =
+//			// transform this into a
+//		}
+//
 		relationalPredicate.getLeftHandExpression().accept( this );
 		appendSql( relationalPredicate.getOperator().sqlText() );
 		relationalPredicate.getRightHandExpression().accept( this );

@@ -89,9 +89,9 @@ public class CollectionKey {
 			for ( int i = 0; i < columnNames.length; i++ ) {
 				// it is conceivable that the column already exists
 				//		todo : is the same ^^ true for separateCollectionTable?
-				Column column = elementPersister.getRootTable().locateColumn( columnNames[i] );
+				Column column = elementPersister.getPrimaryTable().locateColumn( columnNames[i] );
 				if ( column == null ) {
-					column = elementPersister.getRootTable().makeColumn(
+					column = elementPersister.getPrimaryTable().makeColumn(
 							columnNames[i],
 							joinTargetColumns.get( i ).getJdbcType()
 					);

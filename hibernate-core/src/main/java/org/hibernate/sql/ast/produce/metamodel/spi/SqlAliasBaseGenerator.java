@@ -11,6 +11,6 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 /**
  * @author Steve Ebersole
  */
-public interface SqlAliasBaseResolver {
-	SqlAliasBase getSqlAliasBase(NavigableReferenceInfo navigableReferenceInfo);
+public interface SqlAliasBaseGenerator {
+	SqlAliasBase createSqlAliasBase(String stem);
 }

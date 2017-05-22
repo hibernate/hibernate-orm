@@ -60,7 +60,7 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
+	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
 		return subclassIndicator;
 	}
 }

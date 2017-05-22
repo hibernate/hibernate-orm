@@ -79,7 +79,7 @@ public class NavigableReferenceInfoImpl implements NavigableReferenceInfo {
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
+	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
 		return intrinsicDowncastTarget;
 	}
 }

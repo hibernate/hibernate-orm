@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.sql.JoinType;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 
 /**
@@ -50,7 +51,8 @@ public abstract class AbstractCollectionIndex<J> implements CollectionIndex<J> {
 	public void applyTableReferenceJoins(
 			JoinType leftOuterJoin,
 			SqlAliasBase sqlAliasBase,
-			TableReferenceJoinCollector collector) {
+			TableReferenceJoinCollector collector,
+			TableGroupContext tableGroupContext) {
 		// only relevant for ONE-TO-MANY and MANY-TO-MANY - noop in the general case
 	}
 }

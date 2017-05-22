@@ -10,10 +10,15 @@ import java.util.List;
 import javax.persistence.AttributeNode;
 
 /**
+ * A container for AttributeNodeImplementors.  A "bridge"
+ * between JPA's EntityGraph and Subgraph.
+ *
  * @author Strong Liu <stliu@hibernate.org>
+ * @author Steve Ebersole
+ * @author Andrea Boriero
  */
-public interface GraphNodeImplementor {
-	List<AttributeNodeImplementor<?>> attributeImplementorNodes();
-	List<AttributeNode<?>> attributeNodes();
-	boolean containsAttribute(String name);
+public interface AttributeNodeContainer {
+	List<AttributeNodeImplementor<?>> attributeNodes();
+	List<AttributeNode<?>> jpaAttributeNodes();
+	AttributeNodeImplementor findAttributeNode(String name);
 }

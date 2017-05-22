@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.jpa.graph.internal;
+package org.hibernate.graph.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,12 +13,13 @@ import java.util.List;
 import java.util.Map;
 import javax.persistence.AttributeNode;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.graph.spi.AttributeNodeContainer;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
-import org.hibernate.graph.spi.GraphNodeImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 
 import org.jboss.logging.Logger;
 
@@ -27,8 +28,8 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
-	private static final Logger log = Logger.getLogger( AbstractGraphNode.class );
+public abstract class AbstractAttributeNodeContainer<T> implements AttributeNodeContainer {
+	private static final Logger log = Logger.getLogger( AbstractAttributeNodeContainer.class );
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final boolean mutable;
@@ -36,13 +37,13 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 	private Map<String, AttributeNodeImplementor<?>> attributeNodeMap;
 
 	@SuppressWarnings("WeakerAccess")
-	protected AbstractGraphNode(SessionFactoryImplementor sessionFactory, boolean mutable) {
+	protected AbstractAttributeNodeContainer(SessionFactoryImplementor sessionFactory, boolean mutable) {
 		this.sessionFactory = sessionFactory;
 		this.mutable = mutable;
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected AbstractGraphNode(AbstractGraphNode<T> original, boolean mutable) {
+	protected AbstractAttributeNodeContainer(AbstractAttributeNodeContainer<T> original, boolean mutable) {
 		this.sessionFactory = original.sessionFactory;
 		this.mutable = mutable;
 		this.attributeNodeMap = makeSafeMapCopy( original.attributeNodeMap );
@@ -58,7 +59,7 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 		for ( Map.Entry<String,AttributeNodeImplementor<?>> attributeNodeEntry : attributeNodeMap.entrySet() ) {
 			copy.put(
 					attributeNodeEntry.getKey(),
-					( ( AttributeNodeImpl ) attributeNodeEntry.getValue() ).makeImmutableCopy()
+					( (AttributeNodeImpl) attributeNodeEntry.getValue() ).makeImmutableCopy()
 			);
 		}
 		return copy;
@@ -69,7 +70,7 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 	}
 
 	@Override
-	public List<AttributeNodeImplementor<?>> attributeImplementorNodes() {
+	public List<AttributeNodeImplementor<?>> attributeNodes() {
 		if ( attributeNodeMap == null ) {
 			return Collections.emptyList();
 		}
@@ -79,7 +80,7 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 	}
 
 	@Override
-	public List<AttributeNode<?>> attributeNodes() {
+	public List<AttributeNode<?>> jpaAttributeNodes() {
 		if ( attributeNodeMap == null ) {
 			return Collections.emptyList();
 		}
@@ -103,11 +104,11 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 		return buildAttributeNode( resolveAttribute( attributeName ) );
 	}
 
-	protected abstract Attribute<T,?> resolveAttribute(String attributeName);
+	protected abstract PersistentAttribute<T,?> resolveAttribute(String attributeName);
 
 	@SuppressWarnings("WeakerAccess")
-	protected <X> AttributeNodeImpl<X> buildAttributeNode(Attribute<T, X> attribute) {
-		return new AttributeNodeImpl<>( sessionFactory, getManagedType(), attribute );
+	protected <X> AttributeNodeImpl<X> buildAttributeNode(PersistentAttribute<T, X> attribute) {
+		return new AttributeNodeImpl<X>( sessionFactory, getManagedType(), attribute );
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -139,23 +140,23 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 	@SuppressWarnings("unchecked")
 	protected void addAttributeNodes(Attribute<T, ?>... attributes) {
 		for ( Attribute attribute : attributes ) {
-			addAttribute( attribute );
+			addAttribute( (PersistentAttribute) attribute );
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	protected AttributeNodeImpl addAttribute(Attribute attribute) {
+	protected AttributeNodeImpl addAttribute(PersistentAttribute attribute) {
 		return addAttributeNode( buildAttributeNode( attribute ) );
 	}
 
 	@SuppressWarnings("unchecked")
 	public <X> SubgraphImpl<X> addSubgraph(Attribute<T, X> attribute) {
-		return addAttribute( attribute ).makeSubgraph();
+		return addAttribute( (PersistentAttribute) attribute ).makeSubgraph();
 	}
 
 	@SuppressWarnings("unchecked")
 	public <X> SubgraphImpl<? extends X> addSubgraph(Attribute<T, X> attribute, Class<? extends X> type) {
-		return addAttribute( attribute ).makeSubgraph( type );
+		return addAttribute( (PersistentAttribute) attribute ).makeSubgraph( type );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -170,12 +171,12 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 
 	@SuppressWarnings("unchecked")
 	public <X> SubgraphImpl<X> addKeySubgraph(Attribute<T, X> attribute) {
-		return addAttribute( attribute ).makeKeySubgraph();
+		return addAttribute( (PersistentAttribute) attribute ).makeKeySubgraph();
 	}
 
 	@SuppressWarnings("unchecked")
 	public <X> SubgraphImpl<? extends X> addKeySubgraph(Attribute<T, X> attribute, Class<? extends X> type) {
-		return addAttribute( attribute ).makeKeySubgraph( type );
+		return addAttribute( (PersistentAttribute) attribute ).makeKeySubgraph( type );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -187,11 +188,12 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 	public <X> SubgraphImpl<X> addKeySubgraph(String attributeName, Class<X> type) {
 		return addAttribute( attributeName ).makeKeySubgraph( type );
 	}
-	
+
 	@Override
-	public boolean containsAttribute(String name) {
-		return attributeNodeMap != null && attributeNodeMap.containsKey( name );
+	public AttributeNodeImplementor findAttributeNode(String name) {
+		return attributeNodeMap == null ? null : attributeNodeMap.get( name );
 	}
 
-	abstract ManagedType getManagedType();
+
+	abstract ManagedTypeImplementor getManagedType();
 }

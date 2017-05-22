@@ -37,6 +37,13 @@ public class Stack<T> {
 		return internalStack.peek();
 	}
 
+	public T getPrevious() {
+		if ( internalStack.size() < 2 ) {
+			return null;
+		}
+		return internalStack.get( internalStack.size() - 2 );
+	}
+
 	public int depth() {
 		return internalStack.size();
 	}

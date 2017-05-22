@@ -41,7 +41,7 @@ public class ElementColumnReferenceSource
 	}
 
 	@Override
-	protected TableReference getRootTableReference() {
+	protected TableReference getPrimaryTableReference() {
 		return root;
 	}
 

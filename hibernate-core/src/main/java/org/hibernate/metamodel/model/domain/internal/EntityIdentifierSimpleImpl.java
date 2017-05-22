@@ -9,31 +9,31 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.List;
 
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityIdentifierSimple<O,J>
+public class EntityIdentifierSimpleImpl<O,J>
 		extends AbstractSingularPersistentAttribute<O,J>
-		implements EntityIdentifier<O,J>, SingularPersistentAttribute<O,J> {
-	private final EntityHierarchy hierarchy;
+		implements EntityIdentifierSimple<O,J> {
+
 	private final List<Column> columns;
 
-	public EntityIdentifierSimple(
+	public EntityIdentifierSimpleImpl(
 			EntityHierarchy hierarchy,
 			IdentifiableTypeImplementor declarer,
 			Property property,
@@ -48,7 +48,6 @@ public class EntityIdentifierSimple<O,J>
 				Disposition.ID,
 				false
 		);
-		this.hierarchy = hierarchy;
 		this.columns = columns;
 	}
 
@@ -65,6 +64,11 @@ public class EntityIdentifierSimple<O,J>
 	@Override
 	public SingularPersistentAttribute<O,J> getIdAttribute() {
 		return this;
+	}
+
+	@Override
+	public BasicJavaDescriptor<J> getJavaTypeDescriptor() {
+		return (BasicJavaDescriptor<J>) super.getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -89,16 +93,25 @@ public class EntityIdentifierSimple<O,J>
 
 	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
-		visitor.visitSimpleIdentifier( hierarchy, getIdAttribute() );
+		visitor.visitSimpleIdentifier( this );
 	}
 
 	@Override
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return getIdAttribute().generateQueryResult( selectedExpression, resultVariable, columnReferenceSource, sqlSelectionResolver, creationContext );
+		return getIdAttribute().generateQueryResult(
+				selectedExpression,
+				resultVariable,
+				sqlSelectionResolver,
+				creationContext
+		);
+	}
+
+	@Override
+	public String getName() {
+		return getIdAttribute().getName();
 	}
 }

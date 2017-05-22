@@ -25,63 +25,46 @@ public class EntityReference implements NavigableContainerReference {
 
 	// todo (6.0) : see org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference and SqmRoot ctor
 
-	private final EntityTypeImplementor entityPersister;
-	private final NavigableContainerReference navigableContainerReference;
+	private final EntityTypeImplementor entityMetadata;
 	private final EntityValuedExpressableType expressionType;
-	private final NavigablePath propertyPath;
+	private final NavigablePath navigablePath;
+	private final NavigableContainerReference containerReference;
 
 	private final EntityValuedSelectable selectable;
 
-	private ColumnReferenceSource columnReferenceSource;
-
-	/**
-	 * @see NavigableReference#getContributedColumnReferenceSource
-	 */
 	public EntityReference(
 			ColumnReferenceSource columnReferenceSource,
-			EntityTypeImplementor entityPersister,
-			NavigablePath propertyPath,
-			boolean isShallow) {
-		this( columnReferenceSource, entityPersister, null, entityPersister, propertyPath, isShallow );
-	}
-
-	/**
-	 * @see NavigableReference#getContributedColumnReferenceSource
-	 */
-	public EntityReference(
-			ColumnReferenceSource columnReferenceSource,
-			EntityTypeImplementor entityPersister,
-			NavigableContainerReference navigableContainerReference,
+			EntityTypeImplementor entityMetadata,
 			EntityValuedExpressableType expressionType,
-			NavigablePath propertyPath,
+			NavigablePath navigablePath,
+			NavigableContainerReference containerReference,
 			boolean isShallow) {
-		this.columnReferenceSource = columnReferenceSource;
-		this.entityPersister = entityPersister;
-		this.navigableContainerReference = navigableContainerReference;
+		this.entityMetadata = entityMetadata;
 		this.expressionType = expressionType;
-		this.propertyPath = propertyPath;
+		this.navigablePath = navigablePath;
+		this.containerReference = containerReference;
 
 		this.selectable = new EntityValuedSelectable(
 				this,
-				propertyPath,
+				navigablePath,
 				columnReferenceSource,
-				entityPersister,
+				entityMetadata,
 				isShallow
 		);
 	}
 
-	public EntityTypeImplementor getEntityPersister() {
-		return entityPersister;
+	public EntityTypeImplementor getEntityMetadata() {
+		return entityMetadata;
 	}
 
 	@Override
 	public NavigablePath getNavigablePath() {
-		return propertyPath;
+		return navigablePath;
 	}
 
 	@Override
 	public EntityTypeImplementor getNavigable() {
-		return getEntityPersister();
+		return getEntityMetadata();
 	}
 
 	@Override
@@ -96,12 +79,7 @@ public class EntityReference implements NavigableContainerReference {
 
 	@Override
 	public NavigableContainerReference getNavigableContainerReference() {
-		return navigableContainerReference;
-	}
-
-	@Override
-	public ColumnReferenceSource getContributedColumnReferenceSource() {
-		return columnReferenceSource;
+		return containerReference;
 	}
 
 	@Override

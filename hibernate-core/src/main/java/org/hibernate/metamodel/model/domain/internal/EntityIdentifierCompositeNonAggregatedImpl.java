@@ -8,59 +8,67 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
-import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
-import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.VirtualPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
-import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.EmbeddedType;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityIdentifierCompositeNonAggregated<O,J>
-		extends AbstractSingularPersistentAttribute<O,J,EmbeddedType<J>>
-		implements EntityIdentifier<O,J>, SingularPersistentAttribute<O,J>,
-		NavigableContainer<J>, VirtualPersistentAttribute<O,J> {
+public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
+		extends AbstractSingularPersistentAttribute<O,J>
+		implements EntityIdentifierCompositeNonAggregated<O,J> {
 	// todo : IdClass handling eventually
 
 	public static final String NAVIGABLE_NAME = "{id}";
 
-	private final EntityHierarchy entityHierarchy;
-	private final EmbeddedTypeImplementor<J> embeddedPersister;
+	private final EmbeddedTypeImplementor<J> embeddedDescriptor;
 
 	@SuppressWarnings("unchecked")
-	public EntityIdentifierCompositeNonAggregated(
+	public EntityIdentifierCompositeNonAggregatedImpl(
 			EntityHierarchy entityHierarchy,
-			EmbeddedTypeImplementor<J> embeddedPersister) {
+			EmbeddedTypeImplementor<J> embeddedDescriptor) {
 		super(
 				entityHierarchy.getRootEntityType(),
 				NAVIGABLE_NAME,
 				PropertyAccessStrategyEmbeddedImpl.INSTANCE.buildPropertyAccess( null, NAVIGABLE_NAME ),
-				embeddedPersister,
+				embeddedDescriptor,
 				Disposition.ID,
 				false
 		);
-		this.entityHierarchy = entityHierarchy;
-		this.embeddedPersister = embeddedPersister;
+		this.embeddedDescriptor = embeddedDescriptor;
+	}
+
+	@Override
+	public EmbeddedTypeImplementor getEmbeddedDescriptor() {
+		return embeddedDescriptor;
+	}
+
+	@Override
+	public List<Navigable> getNavigables() {
+		return null;
+	}
+
+	@Override
+	public List<Navigable> getDeclaredNavigables() {
+		return null;
 	}
 
 	@Override
 	public List<Column> getColumns() {
-		return embeddedPersister.collectColumns();
+		return embeddedDescriptor.collectColumns();
 	}
 
 	@Override
@@ -89,12 +97,12 @@ public class EntityIdentifierCompositeNonAggregated<O,J>
 
 	@Override
 	public NavigableRole getNavigableRole() {
-		return embeddedPersister.getNavigableRole();
+		return embeddedDescriptor.getNavigableRole();
 	}
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return embeddedPersister.getJavaTypeDescriptor();
+		return embeddedDescriptor.getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -109,27 +117,27 @@ public class EntityIdentifierCompositeNonAggregated<O,J>
 
 	@Override
 	public <N> Navigable<N> findNavigable(String navigableName) {
-		return embeddedPersister.findNavigable( navigableName );
+		return embeddedDescriptor.findNavigable( navigableName );
 	}
 
 	@Override
 	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		return embeddedPersister.findDeclaredNavigable( navigableName );
+		return embeddedDescriptor.findDeclaredNavigable( navigableName );
 	}
 
 	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
-		visitor.visitNonAggregatedCompositeIdentifier( entityHierarchy, embeddedPersister );
+		visitor.visitNonAggregateCompositeIdentifier( this );
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
-		embeddedPersister.visitNavigables( visitor );
+		embeddedDescriptor.visitNavigables( visitor );
 	}
 
 	@Override
 	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
-		embeddedPersister.visitDeclaredNavigables( visitor );
+		embeddedDescriptor.visitDeclaredNavigables( visitor );
 	}
 
 	@Override
@@ -141,13 +149,11 @@ public class EntityIdentifierCompositeNonAggregated<O,J>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return embeddedPersister.generateQueryResult(
+		return embeddedDescriptor.generateQueryResult(
 				selectedExpression,
 				resultVariable,
-				columnReferenceSource,
 				sqlSelectionResolver,
 				creationContext
 		);

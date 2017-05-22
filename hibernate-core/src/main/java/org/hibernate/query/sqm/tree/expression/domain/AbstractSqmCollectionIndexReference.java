@@ -96,7 +96,7 @@ public abstract class AbstractSqmCollectionIndexReference
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
+	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
 		// for most index classifications, there is none
 		return null;
 	}

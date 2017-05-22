@@ -65,9 +65,9 @@ public class SqmCollectionElementReferenceEntity extends AbstractSqmCollectionEl
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityPersister() {
+	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
 		// todo (6.0) : override this to account for implicit or explicit Downcasts
-		return super.getIntrinsicSubclassEntityPersister();
+		return super.getIntrinsicSubclassEntityMetadata();
 	}
 
 	@Override

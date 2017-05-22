@@ -9,39 +9,34 @@ package org.hibernate.sql.ast.produce.result.internal;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.sql.ast.produce.result.spi.EntityIdentifierReference;
-import org.hibernate.sql.ast.produce.result.spi.FetchEntityAttribute;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.internal.EntityFetchInitializerImpl;
 import org.hibernate.sql.ast.consume.results.spi.Initializer;
 import org.hibernate.sql.ast.consume.results.spi.InitializerCollector;
 import org.hibernate.sql.ast.consume.results.spi.InitializerParent;
-import org.hibernate.type.spi.Type;
+import org.hibernate.sql.ast.produce.result.spi.EntityIdentifierReference;
+import org.hibernate.sql.ast.produce.result.spi.FetchEntityAttribute;
+import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**
  * @author Steve Ebersole
  */
 public class FetchEntityAttributeImpl extends AbstractFetchParent implements FetchEntityAttribute {
 	private final FetchParent fetchParent;
-	private final SingularPersistentAttributeEntity fetchedAttribute;
-	private final EntityTypeImplementor entityPersister;
 	private final FetchStrategy fetchStrategy;
 
 	private final EntityFetchInitializerImpl initializer;
 
 	public FetchEntityAttributeImpl(
 			FetchParent fetchParent,
+			EntityReference entityReference,
 			NavigablePath navigablePath,
-			String tableGroupUid,
-			SingularPersistentAttributeEntity fetchedAttribute,
-			EntityTypeImplementor entityPersister,
 			FetchStrategy fetchStrategy) {
-		super( navigablePath, tableGroupUid );
+		super( entityReference, navigablePath );
 		this.fetchParent = fetchParent;
-		this.fetchedAttribute = fetchedAttribute;
-		this.entityPersister = entityPersister;
 		this.fetchStrategy = fetchStrategy;
 
 		this.initializer = new EntityFetchInitializerImpl(
@@ -58,8 +53,13 @@ public class FetchEntityAttributeImpl extends AbstractFetchParent implements Fet
 	}
 
 	@Override
+	public NavigableReference getFetchedNavigableReference() {
+		return getNavigableContainerReference();
+	}
+
+	@Override
 	public SingularPersistentAttributeEntity getFetchedAttributeDescriptor() {
-		return fetchedAttribute;
+		return (SingularPersistentAttributeEntity) getFetchedNavigableReference().getNavigable();
 	}
 
 	@Override
@@ -68,13 +68,8 @@ public class FetchEntityAttributeImpl extends AbstractFetchParent implements Fet
 	}
 
 	@Override
-	public Type getFetchedType() {
-		return fetchedAttribute.getOrmType();
-	}
-
-	@Override
 	public boolean isNullable() {
-		return fetchedAttribute.isNullable();
+		throw new NotYetImplementedException(  );
 	}
 
 //	@Override
@@ -92,8 +87,8 @@ public class FetchEntityAttributeImpl extends AbstractFetchParent implements Fet
 //	}
 
 	@Override
-	public EntityTypeImplementor getEntityPersister() {
-		return entityPersister;
+	public EntityTypeImplementor getEntityMetadata() {
+		return getFetchedAttributeDescriptor().getAssociatedEntityDescriptor();
 	}
 
 	@Override

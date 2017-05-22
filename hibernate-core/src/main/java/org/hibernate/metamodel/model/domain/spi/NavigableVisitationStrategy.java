@@ -38,36 +38,47 @@ public interface NavigableVisitationStrategy {
 	/**
 	 * Visit an entity
 	 */
-	void visitEntity(EntityTypeImplementor entity);
+	default void visitEntity(EntityTypeImplementor entity) {
+	}
 
 	/**
 	 * Visit an entity's identifier, which is "simple" (single basic attribute)
 	 */
-	void visitSimpleIdentifier(EntityIdentifierSimple identifier);
+	default void visitSimpleIdentifier(EntityIdentifierSimple identifier) {
+	}
 
 	/**
 	 * Visit an entity's identifier, which is an "aggregated composite (single composite attribute)
 	 */
-	void visitAggregateCompositeIdentifier(EntityIdentifierCompositeAggregated identifier);
+	default void visitAggregateCompositeIdentifier(EntityIdentifierCompositeAggregated identifier) {
+	}
 
 	/**
 	 * Visit an entity's identifier, which is a "non-aggregated composite (multiple attributes)
 	 */
-	void visitNonAggregateCompositeIdentifier(EntityIdentifierCompositeNonAggregated identifier);
+	default void visitNonAggregateCompositeIdentifier(EntityIdentifierCompositeNonAggregated identifier) {
+	}
 
-	void visitDiscriminator(DiscriminatorDescriptor discriminator);
+	default void visitDiscriminator(DiscriminatorDescriptor discriminator) {
+	}
 
-	void visitTenantTenantDiscrimination(TenantDiscrimination tenantDiscrimination);
+	default void visitTenantTenantDiscrimination(TenantDiscrimination tenantDiscrimination) {
+	}
 
-	void visitVersion(VersionDescriptor version);
+	default void visitVersion(VersionDescriptor version) {
+	}
 
-	void visitRowIdDescriptor(RowIdDescriptor rowIdDescriptor);
+	default void visitRowIdDescriptor(RowIdDescriptor rowIdDescriptor) {
+	}
 
-	void visitSingularAttributeBasic(SingularPersistentAttributeBasic attribute);
+	default void visitSingularAttributeBasic(SingularPersistentAttributeBasic attribute) {
+	}
 
-	void visitSingularAttributeEmbedded(SingularPersistentAttributeEmbedded attribute);
+	default void visitSingularAttributeEmbedded(SingularPersistentAttributeEmbedded attribute) {
+	}
 
-	void visitSingularAttributeEntity(SingularPersistentAttributeEntity attribute);
+	default void visitSingularAttributeEntity(SingularPersistentAttributeEntity attribute) {
+	}
 
 	default void visitPluralAttribute(PluralPersistentAttribute attribute) {
 		visitCollectionForeignKey( attribute.getPersistentCollectionMetadata().getForeignKeyDescriptor() );
@@ -85,21 +96,29 @@ public interface NavigableVisitationStrategy {
 		attribute.getPersistentCollectionMetadata().getElementDescriptor().visitNavigable( this );
 	}
 
-	void visitCollectionForeignKey(CollectionKey collectionKey);
+	default void visitCollectionForeignKey(CollectionKey collectionKey) {
+	}
 
-	void visitCollectionIdentifier(CollectionIdentifier identifier);
+	default void visitCollectionIdentifier(CollectionIdentifier identifier) {
+	}
 
-	void visitCollectionElementBasic(CollectionElementBasic element);
+	default void visitCollectionElementBasic(CollectionElementBasic element) {
+	}
 
-	void visitCollectionElementEmbedded(CollectionElementEmbedded element);
+	default void visitCollectionElementEmbedded(CollectionElementEmbedded element) {
+	}
 
-	void visitCollectionElementEntity(CollectionElementEntity element);
+	default void visitCollectionElementEntity(CollectionElementEntity element) {
+	}
 
-	void visitCollectionIndexBasic(CollectionIndexBasic index);
+	default void visitCollectionIndexBasic(CollectionIndexBasic index) {
+	}
 
-	void visitCollectionIndexEmbedded(CollectionIndexEmbedded index);
+	default void visitCollectionIndexEmbedded(CollectionIndexEmbedded index) {
+	}
 
-	void visitCollectionIndexEntity(CollectionIndexEntity index);
+	default void visitCollectionIndexEntity(CollectionIndexEntity index) {
+	}
 
 
 }

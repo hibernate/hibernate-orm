@@ -8,34 +8,36 @@ package org.hibernate.sql.ast.produce.result.internal;
 
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
-import org.hibernate.sql.ast.produce.result.spi.FetchCompositeAttribute;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.internal.CompositeReferenceInitializerImpl;
 import org.hibernate.sql.ast.consume.results.spi.CompositeReferenceInitializer;
 import org.hibernate.sql.ast.consume.results.spi.Initializer;
 import org.hibernate.sql.ast.consume.results.spi.InitializerCollector;
-import org.hibernate.type.spi.EmbeddedType;
+import org.hibernate.sql.ast.produce.result.spi.FetchCompositeAttribute;
+import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**
  * @author Steve Ebersole
  */
 public class FetchCompositeAttributeImpl extends AbstractFetchParent implements FetchCompositeAttribute {
 	private final FetchParent fetchParent;
-	private final SingularPersistentAttributeEmbedded fetchedAttribute;
+	private final NavigableReference fetchedNavigableReference;
 	private final FetchStrategy fetchStrategy;
 
 	private final CompositeReferenceInitializer initializer;
 
 	public FetchCompositeAttributeImpl(
 			FetchParent fetchParent,
-			SingularPersistentAttributeEmbedded fetchedAttribute,
+			NavigableContainerReference fetchedNavigableReference,
 			FetchStrategy fetchStrategy) {
 		super(
-				fetchParent.getNavigablePath().append( fetchedAttribute.getAttributeName() ),
-				fetchParent.getTableGroupUniqueIdentifier()
+				fetchedNavigableReference,
+				fetchParent.getNavigablePath().append( fetchedNavigableReference.getNavigable().getNavigableName() )
 		);
 		this.fetchParent = fetchParent;
-		this.fetchedAttribute = fetchedAttribute;
+		this.fetchedNavigableReference = fetchedNavigableReference;
 		this.fetchStrategy = fetchStrategy;
 
 		this.initializer = new CompositeReferenceInitializerImpl(
@@ -49,8 +51,13 @@ public class FetchCompositeAttributeImpl extends AbstractFetchParent implements 
 	}
 
 	@Override
+	public NavigableReference getFetchedNavigableReference() {
+		return fetchedNavigableReference;
+	}
+
+	@Override
 	public SingularPersistentAttributeEmbedded getFetchedAttributeDescriptor() {
-		return fetchedAttribute;
+		return (SingularPersistentAttributeEmbedded) fetchedNavigableReference.getNavigable();
 	}
 
 	@Override
@@ -59,13 +66,13 @@ public class FetchCompositeAttributeImpl extends AbstractFetchParent implements 
 	}
 
 	@Override
-	public EmbeddedType getFetchedType() {
-		return (EmbeddedType) fetchedAttribute.getOrmType();
+	public boolean isNullable() {
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override
-	public boolean isNullable() {
-		return fetchedAttribute.isNullable();
+	public NavigableContainerReference getNavigableContainerReference() {
+		return getFetchedNavigableReference().getNavigableContainerReference();
 	}
 
 	@Override
@@ -80,6 +87,6 @@ public class FetchCompositeAttributeImpl extends AbstractFetchParent implements 
 
 	@Override
 	public Initializer getInitializer() {
-		return null;
+		throw new NotYetImplementedException(  );
 	}
 }

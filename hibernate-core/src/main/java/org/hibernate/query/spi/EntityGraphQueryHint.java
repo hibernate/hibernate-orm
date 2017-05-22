@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.spi;
 
-import javax.persistence.EntityGraph;
+import org.hibernate.graph.spi.EntityGraphImplementor;
 
 /**
  * Encapsulates a JPA EntityGraph provided through a JPQL query hint.  Converts the fetches into a list of AST
@@ -16,7 +16,7 @@ import javax.persistence.EntityGraph;
  * @author Brett Meyer
  */
 public class EntityGraphQueryHint {
-	enum Type {
+	public enum Type {
 		/**
 		 * Indicates a "fetch graph" EntityGraph.  Attributes explicitly specified
 		 * as AttributeNodes are treated as FetchType.EAGER (via join fetch or
@@ -35,7 +35,9 @@ public class EntityGraphQueryHint {
 		 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition
 		 * in metadata
 		 */
-		LOAD( "javax.persistence.loadgraph" );
+		LOAD( "javax.persistence.loadgraph" ),
+
+		NONE( null );
 
 		private final String jpaHintName;
 
@@ -63,13 +65,13 @@ public class EntityGraphQueryHint {
 	}
 
 	private final Type type;
-	private final EntityGraph<?> hintedGraph;
+	private final EntityGraphImplementor<?> hintedGraph;
 
-	public EntityGraphQueryHint(String hintName, EntityGraph<?> hintedGraph) {
+	public EntityGraphQueryHint(String hintName, EntityGraphImplementor<?> hintedGraph) {
 		this( Type.fromJpaHintName( hintName ), hintedGraph );
 	}
 
-	public EntityGraphQueryHint(Type type, EntityGraph<?> hintedGraph) {
+	public EntityGraphQueryHint(Type type, EntityGraphImplementor<?> hintedGraph) {
 		this.type = type;
 		this.hintedGraph = hintedGraph;
 	}
@@ -82,7 +84,7 @@ public class EntityGraphQueryHint {
 		return getType().getJpaHintName();
 	}
 
-	public EntityGraph<?> getHintedGraph() {
+	public EntityGraphImplementor<?> getHintedGraph() {
 		return hintedGraph;
 	}
 

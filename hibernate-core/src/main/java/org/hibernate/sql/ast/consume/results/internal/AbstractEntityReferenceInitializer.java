@@ -82,7 +82,7 @@ public abstract class AbstractEntityReferenceInitializer
 	}
 
 	private Object buildIdentifierHydratedForm(RowProcessingState rowProcessingState) {
-		final SqlSelectionGroup sqlSelectionGroup = sqlSelectionGroupMap.get( entityReference.getEntityPersister().getHierarchy().getIdentifierDescriptor() );
+		final SqlSelectionGroup sqlSelectionGroup = sqlSelectionGroupMap.get( entityReference.getEntityMetadata().getHierarchy().getIdentifierDescriptor() );
 
 		final int selectionsConsumed = sqlSelectionGroup.getSqlSelections().size();
 		if ( selectionsConsumed == 1 ) {
@@ -159,7 +159,7 @@ public abstract class AbstractEntityReferenceInitializer
 		final Object rowId;
 		if ( concretePersister.getHierarchy().getRowIdDescriptor() != null ) {
 			final SqlSelectionGroup sqlSelectionGroup = sqlSelectionGroupMap.get(
-					entityReference.getEntityPersister().getHierarchy().getRowIdDescriptor()
+					entityReference.getEntityMetadata().getHierarchy().getRowIdDescriptor()
 			);
 
 			numberOfNonIdentifierAttributes -= 1;
@@ -257,7 +257,7 @@ public abstract class AbstractEntityReferenceInitializer
 	private EntityTypeImplementor resolveConcreteEntityPersister(
 			RowProcessingState rowProcessingState,
 			SharedSessionContractImplementor persistenceContext) throws WrongClassException {
-		final EntityTypeImplementor persister = getEntityReference().getEntityPersister();
+		final EntityTypeImplementor persister = getEntityReference().getEntityMetadata();
 		if ( persister.getHierarchy().getDiscriminatorDescriptor() == null ) {
 			return persister;
 		}

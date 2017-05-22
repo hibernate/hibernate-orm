@@ -8,13 +8,15 @@ package org.hibernate.sql.ast.tree.spi.from;
 
 import java.util.List;
 
+import org.hibernate.metamodel.model.domain.spi.AbstractEntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.metamodel.model.relational.spi.UnionSubclassTable;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
+import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
@@ -29,36 +31,46 @@ import org.hibernate.sql.ast.tree.spi.select.Selection;
  * @author Steve Ebersole
  */
 public class EntityTableGroup extends AbstractTableGroup implements Selectable {
-	private final EntityTypeImplementor entityPersister;
-	private final TableReference rootTableReference;
+	private final NavigableContainerReference containerReference;
+	private final NavigablePath navigablePath;
+	private final SqlAliasBase sqlAliasBase;
+	private final TableReference primaryTableReference;
 	private final List<TableReferenceJoin> tableReferenceJoins;
 
 	private final EntityReference expression;
+	private final AbstractEntityTypeImplementor entityMetadata;
 
-	public EntityTableGroup(
+	public <T> EntityTableGroup(
+			String uid,
 			TableSpace tableSpace,
-			EntityTypeImplementor entityPersister,
-			NavigableReferenceInfo navigableReferenceInfo,
-			NavigableContainerReference navigableContainerReference,
-			TableReference rootTableReference,
-			List<TableReferenceJoin> tableReferenceJoins) {
-		super( tableSpace, navigableReferenceInfo.getUniqueIdentifier() );
-		this.entityPersister = entityPersister;
-		this.rootTableReference = rootTableReference;
-		this.tableReferenceJoins = tableReferenceJoins;
+			AbstractEntityTypeImplementor entityMetadata,
+			NavigableContainerReference containerReference,
+			EntityValuedExpressableType entityValuedExpressableType,
+			NavigablePath navigablePath,
+			SqlAliasBase sqlAliasBase,
+			TableReference primaryTableReference,
+			List<TableReferenceJoin> joins) {
+		super( tableSpace, uid );
+
+		this.entityMetadata = entityMetadata;
+		this.containerReference = containerReference;
+		this.navigablePath = navigablePath;
+		this.sqlAliasBase = sqlAliasBase;
+		this.primaryTableReference = primaryTableReference;
+		this.tableReferenceJoins = joins;
 
 		this.expression = new EntityReference(
 				this,
-				getPersister(),
-				navigableContainerReference,
-				(EntityValuedExpressableType) navigableReferenceInfo,
+				entityMetadata,
+				entityValuedExpressableType,
+				navigablePath,
 				null,
 				false
 		);
 	}
 
-	public EntityTypeImplementor getPersister() {
-		return entityPersister;
+	public EntityTypeImplementor getEntittMetadata() {
+		return entityMetadata;
 	}
 
 	@Override
@@ -68,13 +80,13 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 
 	@Override
 	public TableReference locateTableReference(Table table) {
-		if ( table == rootTableReference.getTable() ) {
-			return rootTableReference;
+		if ( table == primaryTableReference.getTable() ) {
+			return primaryTableReference;
 		}
 
-		if ( rootTableReference.getTable() instanceof UnionSubclassTable ) {
-			if ( ( (UnionSubclassTable) rootTableReference.getTable() ).includes( table ) ) {
-				return rootTableReference;
+		if ( primaryTableReference.getTable() instanceof UnionSubclassTable ) {
+			if ( ( (UnionSubclassTable) primaryTableReference.getTable() ).includes( table ) ) {
+				return primaryTableReference;
 			}
 		}
 
@@ -98,7 +110,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 
 	@Override
 	public void render(SqlAppender sqlAppender, SqlSelectAstWalker walker) {
-		renderTableReference( rootTableReference, sqlAppender, walker );
+		renderTableReference( primaryTableReference, sqlAppender, walker );
 
 		for ( TableReferenceJoin tableJoin : tableReferenceJoins ) {
 			sqlAppender.appendSql( " " );
@@ -113,8 +125,8 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	}
 
 	@Override
-	protected TableReference getRootTableReference() {
-		return rootTableReference;
+	protected TableReference getPrimaryTableReference() {
+		return primaryTableReference;
 	}
 
 	@Override

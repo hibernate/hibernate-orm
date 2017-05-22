@@ -15,6 +15,6 @@ import org.hibernate.query.spi.NavigablePath;
  */
 public interface QueryResultEntity extends EntityReference, QueryResult {
 	default NavigablePath getNavigablePath() {
-		return new NavigablePath( getEntityPersister().getEntityName() );
+		return new NavigablePath( getEntityMetadata().getEntityName() );
 	}
 }

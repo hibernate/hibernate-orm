@@ -9,6 +9,8 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
+import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -19,13 +21,18 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.NavigableEmbeddedValued;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
+import org.hibernate.sql.ast.produce.result.internal.FetchCompositeAttributeImpl;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
+import org.hibernate.sql.ast.produce.result.spi.Fetch;
+import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
@@ -35,7 +42,7 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  */
 public class SingularPersistentAttributeEmbedded<O,J>
 		extends AbstractSingularPersistentAttribute<O,J>
-		implements SingularPersistentAttribute<O,J>, NavigableEmbeddedValued<J> {
+		implements SingularPersistentAttribute<O,J>, NavigableEmbeddedValued<J>, Fetchable {
 
 	private final EmbeddedTypeImplementor<J> embeddedDescriptor;
 
@@ -135,9 +142,23 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new QueryResultCompositeImpl( selectedExpression, resultVariable, embeddedDescriptor );
+	}
+
+	@Override
+	public Fetch generateFetch(
+			FetchParent fetchParent,
+			NavigableReference selectedExpression,
+			FetchStrategy fetchStrategy,
+			String resultVariable,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		return new FetchCompositeAttributeImpl(
+				fetchParent,
+				(NavigableContainerReference) selectedExpression,
+				fetchStrategy
+		);
 	}
 }

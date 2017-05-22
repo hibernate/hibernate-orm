@@ -6,22 +6,25 @@
  */
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
+import org.hibernate.engine.FetchStrategy;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
 /**
  * @author Steve Ebersole
  */
-public interface Fetchable {
+public interface Fetchable<T> extends Navigable<T> {
 	Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigableReference selectedExpression,
+			FetchStrategy fetchStrategy,
 			String resultVariable,
-			ColumnReferenceSource columnReferenceResolver,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext);
+
+	FetchStrategy getMappedFetchStrategy();
 }

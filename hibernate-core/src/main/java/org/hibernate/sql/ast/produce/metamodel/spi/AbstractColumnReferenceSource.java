@@ -34,7 +34,7 @@ public abstract class AbstractColumnReferenceSource implements ColumnReferenceSo
 		return uniqueIdentifier;
 	}
 
-	protected abstract TableReference getRootTableReference();
+	protected abstract TableReference getPrimaryTableReference();
 
 	protected abstract List<TableReferenceJoin> getTableReferenceJoins();
 
@@ -44,13 +44,13 @@ public abstract class AbstractColumnReferenceSource implements ColumnReferenceSo
 
 	@Override
 	public TableReference locateTableReference(Table table) {
-		if ( table == getRootTableReference().getTable() ) {
-			return getRootTableReference();
+		if ( table == getPrimaryTableReference().getTable() ) {
+			return getPrimaryTableReference();
 		}
 
-		if ( getRootTableReference().getTable() instanceof UnionSubclassTable ) {
-			if ( ( (UnionSubclassTable) getRootTableReference().getTable() ).includes( table ) ) {
-				return getRootTableReference();
+		if ( getPrimaryTableReference().getTable() instanceof UnionSubclassTable ) {
+			if ( ( (UnionSubclassTable) getPrimaryTableReference().getTable() ).includes( table ) ) {
+				return getPrimaryTableReference();
 			}
 		}
 

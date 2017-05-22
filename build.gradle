@@ -55,7 +55,7 @@ allprojects {
 
 ext {
     expectedGradleVersion = '2.10'
-    hibernateTargetVersion = '5.1.7.Final'
+    hibernateTargetVersion = '5.1.8-SNAPSHOT'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( '-SNAPSHOT', '.SNAPSHOT' )
 }

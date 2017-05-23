@@ -14,7 +14,7 @@ import java.io.Serializable;
 import org.hibernate.EntityMode;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Uniquely identifies a collection instance in a particular session.

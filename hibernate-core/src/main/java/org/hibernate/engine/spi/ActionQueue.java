@@ -48,7 +48,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.EntityType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Responsible for maintaining the queue of actions related to events.

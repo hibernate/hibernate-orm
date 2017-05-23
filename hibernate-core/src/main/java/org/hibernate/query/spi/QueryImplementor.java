@@ -27,7 +27,7 @@ import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

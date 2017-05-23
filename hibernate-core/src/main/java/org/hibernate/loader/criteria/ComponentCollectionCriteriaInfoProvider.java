@@ -13,7 +13,7 @@ import java.util.Map;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.spi.EmbeddedType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author David Mansfield

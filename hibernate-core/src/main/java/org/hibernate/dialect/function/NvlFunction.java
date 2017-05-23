@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Emulation of <tt>coalesce()</tt> on Oracle, using multiple <tt>nvl()</tt> calls

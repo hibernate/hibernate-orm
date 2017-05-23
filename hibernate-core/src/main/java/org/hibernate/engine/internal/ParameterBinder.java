@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 

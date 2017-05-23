@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author David Mansfield

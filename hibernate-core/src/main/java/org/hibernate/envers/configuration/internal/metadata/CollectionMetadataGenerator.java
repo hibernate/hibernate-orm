@@ -80,7 +80,7 @@ import org.hibernate.type.internal.MapType;
 import org.hibernate.type.internal.SetType;
 import org.hibernate.type.internal.SortedMapType;
 import org.hibernate.type.internal.SortedSetType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 

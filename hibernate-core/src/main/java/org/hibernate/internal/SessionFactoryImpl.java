@@ -124,7 +124,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;

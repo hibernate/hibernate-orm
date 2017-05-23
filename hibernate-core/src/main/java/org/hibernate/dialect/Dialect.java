@@ -105,7 +105,7 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.  Subclasses implement Hibernate compatibility

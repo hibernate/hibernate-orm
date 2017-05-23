@@ -9,7 +9,7 @@ package org.hibernate.mapping;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * A value which is "typed" by reference to some other

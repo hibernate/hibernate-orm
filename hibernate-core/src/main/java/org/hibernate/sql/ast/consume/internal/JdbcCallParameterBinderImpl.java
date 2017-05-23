@@ -15,7 +15,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
 import org.hibernate.type.ProcedureParameterNamedBinder;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 

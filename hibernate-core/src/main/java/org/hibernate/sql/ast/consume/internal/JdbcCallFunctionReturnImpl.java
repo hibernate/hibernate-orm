@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.consume.internal;
 import javax.persistence.ParameterMode;
 
 import org.hibernate.sql.ast.consume.spi.JdbcCallFunctionReturn;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

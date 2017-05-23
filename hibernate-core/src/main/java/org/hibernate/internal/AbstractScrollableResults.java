@@ -24,7 +24,7 @@ import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.loader.Loader;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Base implementation of the ScrollableResults interface.

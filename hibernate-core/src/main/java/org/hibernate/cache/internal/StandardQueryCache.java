@@ -26,7 +26,7 @@ import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
 /**

@@ -11,7 +11,7 @@ import javax.persistence.ParameterMode;
 
 import org.hibernate.Incubating;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Represents a parameter defined in the source (HQL/JPQL or criteria) query.

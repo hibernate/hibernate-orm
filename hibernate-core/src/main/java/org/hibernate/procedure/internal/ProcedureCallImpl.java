@@ -69,7 +69,7 @@ import org.hibernate.sql.ast.consume.results.spi.InitializerSource;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.consume.results.spi.RowReader;
 import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Standard implementation of {@link org.hibernate.procedure.ProcedureCall}

@@ -16,7 +16,7 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Centralized definition of standard ANSI SQL aggregation functions

@@ -13,7 +13,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * A simple-point association (ie. a reference to another entity).

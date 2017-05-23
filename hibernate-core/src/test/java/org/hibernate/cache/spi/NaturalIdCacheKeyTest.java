@@ -16,7 +16,7 @@ import org.hibernate.cache.internal.OldNaturalIdCacheKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;

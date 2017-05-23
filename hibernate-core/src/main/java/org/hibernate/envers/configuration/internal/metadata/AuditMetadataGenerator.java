@@ -47,7 +47,7 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 

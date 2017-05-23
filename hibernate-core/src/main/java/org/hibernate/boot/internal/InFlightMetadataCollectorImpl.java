@@ -109,7 +109,7 @@ import org.hibernate.type.spi.BasicType;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappings;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappingsExplicitImpl;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappingsImplicitImpl;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.ParameterizedType;
 

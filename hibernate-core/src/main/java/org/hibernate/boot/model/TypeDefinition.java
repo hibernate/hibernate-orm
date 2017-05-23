@@ -19,7 +19,7 @@ import org.hibernate.boot.model.type.spi.TypeResolverTemplate;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.ParameterizedType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

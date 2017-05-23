@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa;
 
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Can be used to bind query parameter values.  Allows to provide additional details about the

@@ -36,7 +36,7 @@ import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
 /**

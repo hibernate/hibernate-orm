@@ -16,7 +16,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

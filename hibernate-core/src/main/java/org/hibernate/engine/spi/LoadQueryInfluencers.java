@@ -17,7 +17,7 @@ import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Centralize all options which can be enabled on the Session in order to

@@ -19,7 +19,7 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.transform.CacheableResultTransformer;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * A key that identifies a particular query with bound parameter values.  This is the object Hibernate uses

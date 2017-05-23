@@ -34,7 +34,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
 import org.jboss.logging.Logger;

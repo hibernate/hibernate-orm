@@ -36,7 +36,7 @@ import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.query.spi.QueryMessageLogger;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.annotations.Cause;

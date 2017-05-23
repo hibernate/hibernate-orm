@@ -41,7 +41,7 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.sql.Update;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;

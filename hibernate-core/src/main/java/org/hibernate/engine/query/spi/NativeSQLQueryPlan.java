@@ -24,7 +24,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Defines a query execution plan for a native-SQL query.

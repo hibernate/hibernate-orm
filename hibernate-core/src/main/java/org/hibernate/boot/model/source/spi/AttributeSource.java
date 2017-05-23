@@ -7,7 +7,7 @@
 package org.hibernate.boot.model.source.spi;
 
 import org.hibernate.boot.model.source.internal.hbm.XmlElementMetadata;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Contract for sources of persistent attribute descriptions.

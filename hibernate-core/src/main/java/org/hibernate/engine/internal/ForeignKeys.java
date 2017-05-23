@@ -19,7 +19,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Algorithms related to foreign key constraint transparency

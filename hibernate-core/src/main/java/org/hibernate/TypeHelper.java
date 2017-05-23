@@ -11,7 +11,7 @@ import java.util.Properties;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Provides access to the various {@link Type} instances associated with the {@link SessionFactory}.

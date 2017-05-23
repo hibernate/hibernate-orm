@@ -43,7 +43,7 @@ import org.hibernate.tuple.ValueGenerator;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 

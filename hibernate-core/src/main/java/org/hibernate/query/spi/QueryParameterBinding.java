@@ -12,7 +12,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.Incubating;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * The value/type binding information for a particular query parameter.  Supports

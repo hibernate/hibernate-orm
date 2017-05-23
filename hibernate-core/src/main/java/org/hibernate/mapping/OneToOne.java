@@ -14,7 +14,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.spi.EntityType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * A one-to-one association mapping

@@ -12,7 +12,7 @@ import java.io.Serializable;
 
 import org.hibernate.EntityMode;
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * An ordered pair of a value and its Hibernate type.

@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.spi.EntityType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Defines a key for caching natural identifier resolutions into the second level cache.

@@ -31,7 +31,7 @@ import org.hibernate.tuple.entity.VersionProperty;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.EmbeddedType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Responsible for generation of runtime metamodel {@link Property} representations.

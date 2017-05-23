@@ -42,7 +42,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Gavin King

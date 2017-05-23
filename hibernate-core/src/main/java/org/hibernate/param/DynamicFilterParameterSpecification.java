@@ -13,7 +13,7 @@ import java.util.Iterator;
 
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * A specialized ParameterSpecification impl for dealing with a dynamic filter parameters.

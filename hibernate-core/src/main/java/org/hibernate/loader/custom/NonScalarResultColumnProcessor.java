@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Represents non-scalar returns within the custom query.  Most of the heavy lifting for non-scalar results

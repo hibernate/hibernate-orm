@@ -9,7 +9,7 @@ package org.hibernate.criterion;
 import org.hibernate.Criteria;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * A SQL fragment. The string {alias} will be replaced by the

@@ -26,7 +26,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Defines the default replicate event listener used by Hibernate to replicate

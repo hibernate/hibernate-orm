@@ -17,7 +17,7 @@ import javax.persistence.PreUpdate;
 
 import org.hibernate.Session;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
 import org.hibernate.testing.TestForIssue;

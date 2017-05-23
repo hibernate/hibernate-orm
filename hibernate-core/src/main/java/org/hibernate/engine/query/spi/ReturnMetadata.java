@@ -8,7 +8,7 @@ package org.hibernate.engine.query.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Metadata about the query return(s).

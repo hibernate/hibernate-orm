@@ -16,7 +16,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.spi.EmbeddedType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Abstract superclass of visitors that reattach collections.

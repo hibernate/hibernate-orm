@@ -23,7 +23,7 @@ import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import static org.hibernate.engine.internal.JoinHelper.getLHSColumnNames;
 import static org.hibernate.engine.internal.JoinHelper.getLHSTableName;

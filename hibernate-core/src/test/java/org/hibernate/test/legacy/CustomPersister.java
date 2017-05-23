@@ -57,7 +57,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 public class CustomPersister extends AbstractEntityTypeImplementor implements EntityTypeImplementor {
 

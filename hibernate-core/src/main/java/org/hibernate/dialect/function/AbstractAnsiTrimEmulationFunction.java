@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * A {@link org.hibernate.dialect.function.SQLFunction} providing support for implementing TRIM functionality

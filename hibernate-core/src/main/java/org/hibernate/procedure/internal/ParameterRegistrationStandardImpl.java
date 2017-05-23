@@ -15,7 +15,7 @@ import org.hibernate.procedure.spi.ParameterBindImplementor;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

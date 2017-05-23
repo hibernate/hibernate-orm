@@ -37,7 +37,7 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * An event that occurs for each entity instance at flush time

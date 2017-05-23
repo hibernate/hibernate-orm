@@ -10,7 +10,7 @@ import javax.persistence.ParameterMode;
 
 import org.hibernate.query.internal.AbstractQueryParameter;
 import org.hibernate.procedure.ProcedureParameter;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

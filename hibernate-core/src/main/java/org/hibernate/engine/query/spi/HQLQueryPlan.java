@@ -36,7 +36,7 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Defines a query execution plan for an HQL query (or filter).

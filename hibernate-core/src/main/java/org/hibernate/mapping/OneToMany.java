@@ -17,7 +17,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.EntityType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * A mapping for a one-to-many association

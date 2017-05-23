@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.model.source.spi;
 
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Highly abstract concept of the index of an "indexed persistent collection".

@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /** Processor for each "column" in a custom query result.  May map to more than one physical column in the JDBC ResultSert.
  *

@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.EmbeddedType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Wrap collections in a Hibernate collection wrapper.

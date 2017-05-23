@@ -11,7 +11,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

@@ -11,7 +11,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Second level cache providers now have the option to use custom key implementations.

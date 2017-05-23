@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.consume.spi.JdbcCallParameterExtractor;
 import org.hibernate.type.ProcedureParameterExtractionAware;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Standard implementation of JdbcCallParameterExtractor

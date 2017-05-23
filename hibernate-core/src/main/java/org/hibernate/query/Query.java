@@ -38,7 +38,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Represents an HQL/JPQL query or a compiled Criteria query.  Also acts as the Hibernate

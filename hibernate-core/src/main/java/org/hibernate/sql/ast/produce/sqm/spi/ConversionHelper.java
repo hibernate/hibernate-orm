@@ -21,7 +21,7 @@ import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
 import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.type.spi.EntityType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

@@ -20,7 +20,7 @@ import org.hibernate.naming.Identifier;
 import org.hibernate.persister.model.relational.spi.PhysicalColumn;
 import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.sql.Template;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * A column of a relational database table

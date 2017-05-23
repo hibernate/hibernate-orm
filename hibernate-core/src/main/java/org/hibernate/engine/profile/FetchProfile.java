@@ -12,7 +12,7 @@ import java.util.Map;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.internal.BagType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * A 'fetch profile' allows a user to dynamically modify the fetching strategy used for particular associations at

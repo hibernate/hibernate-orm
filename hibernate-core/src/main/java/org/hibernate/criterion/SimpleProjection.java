@@ -7,7 +7,7 @@
 package org.hibernate.criterion;
 
 import org.hibernate.Criteria;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * A single-column projection that may be aliased

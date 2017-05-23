@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Renders entities and query parameters to a nicely readable string.

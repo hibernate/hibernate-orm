@@ -19,7 +19,7 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.sql.spi.IntegerSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;

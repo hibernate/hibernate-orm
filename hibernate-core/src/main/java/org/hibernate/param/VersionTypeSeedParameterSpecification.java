@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Parameter bind specification used for optimisitc lock version seeding (from insert statements).

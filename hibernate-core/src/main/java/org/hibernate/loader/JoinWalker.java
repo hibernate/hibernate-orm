@@ -40,7 +40,7 @@ import org.hibernate.type.spi.AssociationType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Walks the metamodel, searching for joins, and collecting

@@ -50,7 +50,7 @@ import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;

@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.loader.Loader;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Implementation of ScrollableResults which can handle collection fetches.

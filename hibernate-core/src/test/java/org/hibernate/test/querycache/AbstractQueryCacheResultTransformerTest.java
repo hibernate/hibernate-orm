@@ -35,7 +35,7 @@ import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

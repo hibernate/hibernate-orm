@@ -27,7 +27,7 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.spi.EmbeddedType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Represents a property as part of an entity or a component.

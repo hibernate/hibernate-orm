@@ -57,7 +57,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

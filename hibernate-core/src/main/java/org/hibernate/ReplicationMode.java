@@ -7,7 +7,7 @@
 package org.hibernate;
 
 
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Represents a replication strategy.

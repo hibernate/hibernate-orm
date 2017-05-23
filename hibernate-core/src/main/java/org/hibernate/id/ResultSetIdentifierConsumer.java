@@ -8,7 +8,7 @@ package org.hibernate.id;
 import java.io.Serializable;
 import java.sql.ResultSet;
 
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * An optional contract for {@link Type} or

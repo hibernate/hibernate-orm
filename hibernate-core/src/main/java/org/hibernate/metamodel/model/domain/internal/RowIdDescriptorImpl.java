@@ -25,7 +25,7 @@ import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

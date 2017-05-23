@@ -39,7 +39,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;

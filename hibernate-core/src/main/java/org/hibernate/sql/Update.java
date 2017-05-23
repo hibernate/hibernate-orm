@@ -11,7 +11,7 @@ import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * An SQL <tt>UPDATE</tt> statement

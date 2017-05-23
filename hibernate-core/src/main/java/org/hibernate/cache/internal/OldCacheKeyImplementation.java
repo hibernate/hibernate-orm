@@ -9,7 +9,7 @@ package org.hibernate.cache.internal;
 import java.io.Serializable;
 
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Allows multiple entity classes / collection roles to be stored in the same cache region. Also allows for composite

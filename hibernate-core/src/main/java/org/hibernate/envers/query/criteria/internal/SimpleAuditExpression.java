@@ -15,7 +15,7 @@ import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Adam Warski (adam at warski dot org)

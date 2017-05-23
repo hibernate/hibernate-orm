@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.util.Calendar;
 
 import org.hibernate.EmptyInterceptor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 public class PropertyInterceptor extends EmptyInterceptor {
 

@@ -42,7 +42,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * A hilo <tt>IdentifierGenerator</tt> that returns a <tt>Long</tt>, constructed using

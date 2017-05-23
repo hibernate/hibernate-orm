@@ -74,7 +74,7 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Emmanuel Bernard <emmanuel@hibernate.org>

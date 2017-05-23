@@ -19,7 +19,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * <ul>

@@ -21,7 +21,7 @@ import org.hibernate.sql.ast.consume.internal.JdbcCallParameterExtractorImpl;
 import org.hibernate.sql.ast.consume.internal.JdbcCallRefCursorExtractorImpl;
 import org.hibernate.sql.ast.consume.spi.JdbcCallParameterRegistration;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 

@@ -7,7 +7,7 @@
 package org.hibernate.envers.internal.entities;
 
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Chris Cranford

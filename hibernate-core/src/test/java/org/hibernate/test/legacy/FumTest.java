@@ -54,7 +54,7 @@ import org.hibernate.transform.Transformers;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 import org.junit.Test;
 
 public class FumTest extends LegacyTestCase {

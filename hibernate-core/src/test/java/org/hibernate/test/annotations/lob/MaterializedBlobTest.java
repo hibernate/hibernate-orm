@@ -16,7 +16,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
 
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

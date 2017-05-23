@@ -46,7 +46,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 

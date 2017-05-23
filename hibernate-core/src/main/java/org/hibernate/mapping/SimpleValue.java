@@ -53,7 +53,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicTypeParameters;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 

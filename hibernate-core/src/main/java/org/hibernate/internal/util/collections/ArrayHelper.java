@@ -18,7 +18,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 public final class ArrayHelper {
 

@@ -10,7 +10,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.tuple.AbstractNonIdentifierAttribute;
 import org.hibernate.tuple.BaselineAttributeInformation;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

@@ -21,7 +21,7 @@ import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.CollectionType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Mapping for a collection. Subclasses specialize to particular collection styles.

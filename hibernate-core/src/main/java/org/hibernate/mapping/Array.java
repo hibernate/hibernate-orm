@@ -12,7 +12,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.spi.CollectionType;
 import org.hibernate.type.descriptor.java.spi.Primitive;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * An array mapping has a primary key consisting of the key columns + index column.

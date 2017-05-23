@@ -8,7 +8,7 @@ package org.hibernate.procedure;
 
 import javax.persistence.TemporalType;
 
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Describes an input value binding for any IN/INOUT parameters.

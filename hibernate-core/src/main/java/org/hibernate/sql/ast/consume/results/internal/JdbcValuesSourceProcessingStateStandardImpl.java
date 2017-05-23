@@ -41,7 +41,7 @@ import org.hibernate.sql.ast.consume.results.internal.values.JdbcValuesSource;
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.type.TypeHelper;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 

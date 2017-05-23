@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Represents HQL functions that can have different representations in different SQL dialects where that

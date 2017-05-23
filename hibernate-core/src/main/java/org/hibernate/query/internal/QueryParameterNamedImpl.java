@@ -9,7 +9,7 @@ package org.hibernate.query.internal;
 
 import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.query.sqm.tree.SqmParameter;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * QueryParameter impl for named-parameters in HQL, JPQL or Criteria queries.

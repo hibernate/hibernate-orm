@@ -12,7 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * A session action that may be cascaded from parent entity to its children

@@ -60,7 +60,7 @@ import org.hibernate.type.internal.EntityTypeImpl;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.spi.EntityType;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * For now mainly a helper for reflection into stuff not exposed on the entity/collection persister

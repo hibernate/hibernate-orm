@@ -16,7 +16,7 @@ import org.hibernate.sql.ast.consume.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.ast.consume.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
 import org.hibernate.type.ProcedureParameterExtractionAware;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

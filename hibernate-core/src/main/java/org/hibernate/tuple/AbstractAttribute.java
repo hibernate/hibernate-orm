@@ -6,7 +6,7 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

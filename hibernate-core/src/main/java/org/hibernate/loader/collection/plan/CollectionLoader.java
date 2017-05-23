@@ -14,7 +14,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.exec.query.internal.QueryBuildingParametersImpl;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 

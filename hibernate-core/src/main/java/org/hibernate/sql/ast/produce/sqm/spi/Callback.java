@@ -11,7 +11,7 @@ import org.hibernate.loader.spi.AfterLoadAction;
 
 /**
  * Callback to allow SQM interpretation to trigger certain things within ORM.  See the current
- * javadocs for {@link org.hibernate.loader.plan.spi.LoadPlan} for details.  Specifically this would
+ * {@link AfterLoadAction} javadocs for details.  Specifically this would
  * encompass things like follow-on locking, follow-on fetching, etc.
  *
  * @author Steve Ebersole

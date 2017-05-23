@@ -8,8 +8,6 @@ package org.hibernate.type.descriptor.java.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.type.spi.VersionSupport;
-
 /**
  * Additional contract for primitive / primitive wrapper Java types.
  *

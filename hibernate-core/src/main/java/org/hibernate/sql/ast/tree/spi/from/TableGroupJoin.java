@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.spi.from;
 
-import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
@@ -15,12 +15,12 @@ import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
  * @author Steve Ebersole
  */
 public class TableGroupJoin implements SqlAstNode {
-	private final SqmJoinType joinType;
+	private final JoinType joinType;
 	private final TableGroup joinedGroup;
 	private final Predicate predicate;
 
 	public TableGroupJoin(
-			SqmJoinType joinType,
+			JoinType joinType,
 			TableGroup joinedGroup,
 			Predicate predicate) {
 		this.joinType = joinType;
@@ -28,7 +28,7 @@ public class TableGroupJoin implements SqlAstNode {
 		this.predicate = predicate;
 	}
 
-	public SqmJoinType getJoinType() {
+	public JoinType getJoinType() {
 		return joinType;
 	}
 

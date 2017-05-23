@@ -111,7 +111,7 @@ FromClause
 ----
 
 The generation of all `TableSpace#rootTableGroup` references are handled through the
-`org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupProducer` contract.  Here, e.g.,
+`org.hibernate.sql.ast.produce.spi.RootTableGroupProducer` contract.  Here, e.g.,
 we'd get that root `EntityTableGroup(com.acme.Entity, "e")` reference by calling
 `EntityPersister(com.acme.Entity)#applyRootTableGroup`.
 

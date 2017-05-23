@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.List;
 
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.model.relational.spi.Column;
 
 /**
@@ -15,6 +16,9 @@ import org.hibernate.metamodel.model.relational.spi.Column;
  * @author Steve Ebersole
  */
 public interface EntityIdentifier<O,J> extends Navigable<J>, SingularPersistentAttribute<O,J> {
+	String NAVIGABLE_ID = "{id}";
+	String LEGACY_NAVIGABLE_ID = "id";
+
 	/**
 	 * Is this identifier defined by a single attribute on the entity?
 	 * <p/>
@@ -31,6 +35,8 @@ public interface EntityIdentifier<O,J> extends Navigable<J>, SingularPersistentA
 	 * "virtual" attribute mapping ({@link VirtualPersistentAttribute})
 	 */
 	SingularPersistentAttribute<O,J> getIdAttribute();
+
+	IdentifierGenerator getIdentifierValueGenerator();
 
 	/**
 	 * Retrieve the columns making up the identifier

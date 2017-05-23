@@ -6,8 +6,14 @@
  */
 package org.hibernate.sql.ast.tree.spi.from;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
 
 /**
@@ -15,9 +21,11 @@ import org.hibernate.sql.ast.tree.spi.predicate.SqlAstNode;
  *
  * @author Steve Ebersole
  */
-public class TableReference implements SqlAstNode {
+public class TableReference implements SqlAstNode, ColumnReferenceSource {
 	private final Table table;
 	private final String identificationVariable;
+
+	private final Map<Column,ColumnReference> columnReferenceResolutionMap = new HashMap<>();
 
 	public TableReference(Table table, String identificationVariable) {
 		this.table = table;
@@ -30,6 +38,32 @@ public class TableReference implements SqlAstNode {
 
 	public String getIdentificationVariable() {
 		return identificationVariable;
+	}
+
+	@Override
+	public String getUniqueIdentifier() {
+		// the uid is for TableGroups
+		return null;
+	}
+
+	@Override
+	public TableReference locateTableReference(Table table) {
+		if ( table.equals( getTable() ) ) {
+			return this;
+		}
+		return null;
+	}
+
+	@Override
+	public ColumnReference resolveColumnReference(Column column) {
+		final ColumnReference existing = columnReferenceResolutionMap.get( column );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final ColumnReference columnReference = new ColumnReference( column, this );
+		columnReferenceResolutionMap.put( column, columnReference );
+		return columnReference;
 	}
 
 	@Override

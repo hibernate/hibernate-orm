@@ -31,13 +31,13 @@ import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
-import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.LoadQueryInfluencers.InternalFetchProfileType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.loader.internal.StandardSingleIdEntityLoader;
 import org.hibernate.loader.spi.EntityLocker;
 import org.hibernate.loader.spi.MultiIdEntityLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
@@ -54,20 +54,18 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionGroupImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroupEmpty;
-import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupContext;
-import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupContext;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultEntityImpl;
-import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
+import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroup;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
@@ -287,11 +285,6 @@ public abstract class AbstractEntityTypeImplementor<T>
 	}
 
 	@Override
-	public String getRolePrefix() {
-		return getEntityName();
-	}
-
-	@Override
 	public <Y> SingularAttribute<? super T, Y> getId(Class<Y> type) {
 		return getHierarchy().getIdentifierDescriptor();
 	}
@@ -346,7 +339,7 @@ public abstract class AbstractEntityTypeImplementor<T>
 
 
 	@Override
-	public SingleIdEntityLoader getSingleIdLoader(LockOptions lockOptions, SharedSessionContractImplementor session) {
+	public SingleIdEntityLoader getSingleIdLoader(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
 		if ( customQueryLoader != null ) {
 			// if the user specified that we should use a custom query for loading this entity, we need
 			// 		to always use that custom loader.
@@ -354,29 +347,29 @@ public abstract class AbstractEntityTypeImplementor<T>
 		}
 
 
-		if ( isAffectedByEnabledFilters( session ) ) {
+		if ( isAffectedByEnabledFilters( loadQueryInfluencers ) ) {
 			// special case of not-cacheable based on enabled filters effecting this load.
 			//
 			// This case is special because the filters need to be applied in order to
 			// 		properly restrict the SQL/JDBC results.  For this reason it has higher
 			// 		precedence than even ""internal" fetch profiles.
-			return createLoader( lockOptions, session );
+			return createLoader( lockOptions, loadQueryInfluencers );
 		}
 
-		final boolean useInternalFetchProfile = session.getLoadQueryInfluencers().getEnabledInternalFetchProfileType() != null
+		final boolean useInternalFetchProfile = loadQueryInfluencers.getEnabledInternalFetchProfileType() != null
 				&& LockMode.UPGRADE.greaterThan( lockOptions.getLockMode() );
 		if ( useInternalFetchProfile ) {
 			return internalCascadeLoaders.computeIfAbsent(
-					session.getLoadQueryInfluencers().getEnabledInternalFetchProfileType(),
-					internalFetchProfileType -> createLoader( lockOptions, session )
+					loadQueryInfluencers.getEnabledInternalFetchProfileType(),
+					internalFetchProfileType -> createLoader( lockOptions, loadQueryInfluencers )
 			);
 		}
 
 		// otherwise see if the loader for the requested load can be cached (which
 		// 		also means we should look in the cache).
 
-		final boolean cacheable = ! isAffectedByEnabledFetchProfiles( session )
-				&& ! isAffectedByEntityGraph( session )
+		final boolean cacheable = ! isAffectedByEnabledFetchProfiles( loadQueryInfluencers )
+				&& ! isAffectedByEntityGraph( loadQueryInfluencers )
 				&& lockOptions.getTimeOut() != LockOptions.WAIT_FOREVER;
 
 
@@ -391,7 +384,7 @@ public abstract class AbstractEntityTypeImplementor<T>
 		}
 
 		if ( loader == null ) {
-			loader = createLoader( lockOptions, session );
+			loader = createLoader( lockOptions, loadQueryInfluencers );
 		}
 
 		if ( cacheable ) {
@@ -402,13 +395,13 @@ public abstract class AbstractEntityTypeImplementor<T>
 		return loader;
 	}
 
-	protected boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session) {
-		return session.getLoadQueryInfluencers().hasEnabledFilters()
-				&& filterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilters() );
+	protected boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
+		return loadQueryInfluencers.hasEnabledFilters()
+				&& filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() );
 	}
 
-	protected boolean isAffectedByEnabledFetchProfiles(SharedSessionContractImplementor session) {
-		for ( String s : session.getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
+	protected boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers loadQueryInfluencers) {
+		for ( String s : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
 			if ( affectingFetchProfileNames.contains( s ) ) {
 				return true;
 			}
@@ -416,36 +409,56 @@ public abstract class AbstractEntityTypeImplementor<T>
 		return false;
 	}
 
-	protected boolean isAffectedByEntityGraph(SharedSessionContractImplementor session) {
-		return session.getLoadQueryInfluencers().getFetchGraph() != null
-				|| session.getLoadQueryInfluencers().getLoadGraph() != null;
+	protected boolean isAffectedByEntityGraph(LoadQueryInfluencers loadQueryInfluencers) {
+		return loadQueryInfluencers.getFetchGraph() != null
+				|| loadQueryInfluencers.getLoadGraph() != null;
 	}
 
-	protected abstract SingleIdEntityLoader createLoader(LockOptions lockOptions, SharedSessionContractImplementor session);
+	protected SingleIdEntityLoader createLoader(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
+		// todo (6.0) : determine when the loader can be cached....
+
+		// for now, always create a new one
+		return new StandardSingleIdEntityLoader<>(
+				this,
+				lockOptions,
+				loadQueryInfluencers
+		);
+	}
 
 	@Override
-	public SingleUniqueKeyEntityLoader getSingleUniqueKeyLoader(Navigable navigable, SharedSessionContractImplementor session) {
+	public SingleUniqueKeyEntityLoader getSingleUniqueKeyLoader(Navigable navigable, LoadQueryInfluencers loadQueryInfluencers) {
 		return null;
 	}
 
 	@Override
-	public MultiIdEntityLoader getMultiIdLoader(SharedSessionContractImplementor session) {
+	public MultiIdEntityLoader getMultiIdLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		// todo (6.0) : disallow against entities for which the user has defined a custom "loader query".
 		return null;
 	}
 
 	@Override
-	public EntityLocker getLocker(LockOptions lockOptions, SharedSessionContractImplementor session) {
+	public EntityLocker getLocker(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
 		return null;
 	}
 
 
 	@Override
-	public EntityTableGroup createRootTableGroup(RootTableGroupContext tableGroupContext) {
-		final EntityTableGroup group = createEntityTableGroup(
-				null,
+	public EntityTableGroup createRootTableGroup(TableGroupInfoSource info, RootTableGroupContext tableGroupContext) {
+		final SqlAliasBase sqlAliasBase = tableGroupContext.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
+
+		final TableReference primaryTableReference = resolvePrimaryTableReference( sqlAliasBase );
+
+		final List<TableReferenceJoin> joins = new ArrayList<>(  );
+		resolveTableReferenceJoins( primaryTableReference, sqlAliasBase, tableGroupContext, joins::add );
+
+		final EntityTableGroup group = new EntityTableGroup(
+				info.getUniqueIdentifier(),
+				tableGroupContext.getTableSpace(),
 				this,
-				tableGroupContext
+				this,
+				new NavigablePath( getEntityName() ),
+				primaryTableReference,
+				joins
 		);
 
 		// todo (6.0) - apply filters - which needs access to Session, or at least its LoadQueryInfluencers
@@ -454,32 +467,6 @@ public abstract class AbstractEntityTypeImplementor<T>
 		tableGroupContext.addRestriction( null );
 
 		return group;
-	}
-
-	public EntityTableGroup createEntityTableGroup(
-			NavigableContainerReference containerReference,
-			EntityValuedNavigable<T> navigable,
-			TableGroupContext tableGroupContext) {
-		final SqlAliasBase sqlAliasBase = tableGroupContext.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
-
-		final TableReference primaryTableReference = resolvePrimaryTableReference( sqlAliasBase );
-
-		final List<TableReferenceJoin> joins = new ArrayList<>(  );
-		resolveTableReferenceJoins( primaryTableReference, sqlAliasBase, tableGroupContext, joins::add );
-
-		return new EntityTableGroup(
-				tableGroupContext.getUniqueIdentifier(),
-				tableGroupContext.getTableSpace(),
-				this,
-				containerReference,
-				navigable,
-				containerReference == null
-						? new NavigablePath(  )
-						: containerReference.getNavigablePath().append( navigable.getNavigableName() ),
-				sqlAliasBase,
-				primaryTableReference,
-				joins
-		);
 	}
 
 	private TableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
@@ -530,8 +517,8 @@ public abstract class AbstractEntityTypeImplementor<T>
 			conjunction.add(
 					new RelationalPredicate(
 							RelationalPredicate.Operator.EQUAL,
-							new ColumnReference( columnMapping.getTargetColumn(), rootTableReference ),
-							new ColumnReference( columnMapping.getReferringColumn(), joinedTableReference )
+							rootTableReference.resolveColumnReference( columnMapping.getTargetColumn() ),
+							joinedTableReference.resolveColumnReference( columnMapping.getReferringColumn() )
 					)
 			);
 		}
@@ -541,11 +528,12 @@ public abstract class AbstractEntityTypeImplementor<T>
 
 	@Override
 	public void applyTableReferenceJoins(
-			org.hibernate.sql.JoinType joinType,
+			ColumnReferenceSource lhs,
+			JoinType joinType,
 			SqlAliasBase sqlAliasBase,
 			TableReferenceJoinCollector joinCollector,
 			TableGroupContext tableGroupContext) {
-		TableReference root = resolvePrimaryTableReference( sqlAliasBase );
+		final TableReference root = resolvePrimaryTableReference( sqlAliasBase );
 		joinCollector.addRoot( root );
 		resolveTableReferenceJoins( root, sqlAliasBase, tableGroupContext, joinCollector::collectTableReferenceJoin );
 	}
@@ -562,17 +550,6 @@ public abstract class AbstractEntityTypeImplementor<T>
 				buildSqlSelectionGroupMap( creationContext, selectedExpression ),
 				selectedExpression.getNavigablePath()
 		);
-	}
-
-	@Override
-	public Fetch generateFetch(
-			FetchParent fetchParent,
-			NavigableReference selectedExpression,
-			FetchStrategy fetchStrategy,
-			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
-			QueryResultCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
 	}
 
 	private Map<PersistentAttribute, SqlSelectionGroup> buildSqlSelectionGroupMap(

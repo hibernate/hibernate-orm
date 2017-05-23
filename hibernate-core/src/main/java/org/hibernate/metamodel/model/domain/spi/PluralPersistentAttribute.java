@@ -6,11 +6,14 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
+
 /**
  * @author Steve Ebersole
  */
 public interface PluralPersistentAttribute<O,C,E>
-		extends PersistentAttribute<O,C>, NavigableContainer<C>, javax.persistence.metamodel.PluralAttribute<O,C,E> {
+		extends PersistentAttribute<O,C>, NavigableContainer<C>, javax.persistence.metamodel.PluralAttribute<O,C,E>,
+		Fetchable<C> {
 	PersistentCollectionMetadata<O,C,E> getPersistentCollectionMetadata();
 
 	@Override

@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 /**
@@ -17,7 +16,4 @@ public interface TableGroupResolver {
 	 * Resolve a TableGroup by its unique identifier
 	 */
 	TableGroup resolveTableGroup(String uid);
-
-	ColumnReferenceSource resolveColumnReferenceSource(String uid);
-	NavigableReferenceInfo resolveNavigableReferenceInfo(String uid);
 }

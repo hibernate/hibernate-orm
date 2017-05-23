@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.internal;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -107,9 +106,9 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.DiscriminatorMappings;
-import org.hibernate.type.spi.DiscriminatorMappingsExplicitImpl;
-import org.hibernate.type.spi.DiscriminatorMappingsImplicitImpl;
+import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappings;
+import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappingsExplicitImpl;
+import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappingsImplicitImpl;
 import org.hibernate.type.spi.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.ParameterizedType;

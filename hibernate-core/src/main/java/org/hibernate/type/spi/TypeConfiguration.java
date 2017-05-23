@@ -11,13 +11,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.EntityGraph;
@@ -25,7 +23,6 @@ import javax.persistence.EntityGraph;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.UnknownEntityTypeException;
@@ -35,50 +32,29 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationProcess;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.sql.ast.produce.sqm.internal.PolymorphicEntityValuedExpressableTypeImpl;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
+import org.hibernate.query.sqm.tree.expression.LiteralSqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
-import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
-import org.hibernate.query.sqm.tree.expression.LiteralSqmExpression;
-import org.hibernate.tuple.component.ComponentMetamodel;
+import org.hibernate.sql.ast.produce.sqm.internal.PolymorphicEntityValuedExpressableTypeImpl;
 import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.CustomCollectionType;
-import org.hibernate.type.EmbeddedComponentType;
-import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.OneToOneType;
-import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.java.spi.MappedSuperclassJavaDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
-import org.hibernate.type.internal.ArrayType;
-import org.hibernate.type.internal.BagType;
-import org.hibernate.type.internal.IdentifierBagType;
-import org.hibernate.type.internal.ListType;
-import org.hibernate.type.internal.MapType;
-import org.hibernate.type.internal.OrderedMapType;
-import org.hibernate.type.internal.OrderedSetType;
-import org.hibernate.type.internal.RuntimeModelCreationProcess;
-import org.hibernate.type.internal.SetType;
-import org.hibernate.type.internal.SortedMapType;
-import org.hibernate.type.internal.SortedSetType;
-import org.hibernate.usertype.ParameterizedType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -136,11 +112,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	public TypeConfiguration() {
-		this( new EolScopeMapping() );
-	}
-
-	public TypeConfiguration(Mapping mapping) {
-		this.scope = new Scope( mapping );
+		this.scope = new Scope();
 		this.javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
 		this.sqlTypeDescriptorRegistry = new SqlTypeDescriptorRegistry( this );
 		this.basicTypeRegistry = new BasicTypeRegistry( this );
@@ -406,7 +378,7 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		final Set<EntityTypeImplementor<?>> implementors = getImplementors( javaType );
 		if ( !implementors.isEmpty() ) {
 			final PolymorphicEntityValuedExpressableTypeImpl entityReference = new PolymorphicEntityValuedExpressableTypeImpl(
-					jtd,
+					(EntityJavaDescriptor) jtd,
 					implementors
 			);
 			polymorphicEntityReferenceMap.put( jtd, entityReference );
@@ -472,9 +444,10 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	 * @return The mapping object.  Should almost never return {@code null}.  There is a minor
 	 * chance this method would get a {@code null}, but that would be an unsupported use-case.
 	 */
-	public Mapping getMapping() {
-		return scope.getMapping();
-	}
+// todo (6.0) : as discussed below in Scope, it would be great to have a common contract exposable here
+//	public Mapping getMapping() {
+//		return scope.getMapping();
+//	}
 
 	/**
 	 * Attempt to resolve the {@link #getMapping()} reference as a SessionFactory (the runtime model).
@@ -704,20 +677,15 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	 * </ol>
 	 */
 	private static class Scope {
-		private transient Mapping mapping;
 
+		// todo (6.0) : consider a proper contract implemented by both SessionFactory (or its metamodel) and boot's MetadataImplementor
+		//		1) type-related info from MetadataBuildingOptions
+		//		2) ServiceRegistry
 		private transient MetadataBuildingContext metadataBuildingContext;
+		private transient SessionFactoryImplementor sessionFactory;
 
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;
-
-		Scope(Mapping mapping) {
-			this.mapping = mapping;
-		}
-
-		public Mapping getMapping() {
-			return mapping;
-		}
 
 		public MetadataBuildingContext getMetadataBuildingContext() {
 			if ( metadataBuildingContext == null ) {
@@ -728,30 +696,27 @@ public class TypeConfiguration implements SessionFactoryObserver {
 
 		public void setMetadataBuildingContext(MetadataBuildingContext metadataBuildingContext) {
 			this.metadataBuildingContext = metadataBuildingContext;
-			this.mapping = metadataBuildingContext.getMetadataCollector();
 		}
 
+
 		public SessionFactoryImplementor getSessionFactory() {
-			if ( mapping == null ) {
+			if ( sessionFactory == null ) {
 				if ( sessionFactoryName == null && sessionFactoryUuid == null ) {
 					throw new HibernateException( "TypeConfiguration was not yet scoped to SessionFactory" );
 				}
-				mapping = (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
+				sessionFactory = (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
 						sessionFactoryUuid,
 						sessionFactoryName
 				);
-				if ( mapping == null ) {
+				if ( sessionFactory == null ) {
 					throw new HibernateException(
 							"Could not find a SessionFactory [uuid=" + sessionFactoryUuid + ",name=" + sessionFactoryName + "]"
 					);
 				}
+
 			}
 
-			if ( !SessionFactoryImplementor.class.isInstance( mapping ) ) {
-				throw new HibernateException( "TypeConfiguration was not yet scoped to SessionFactory" );
-			}
-
-			return (SessionFactoryImplementor) mapping;
+			return sessionFactory;
 		}
 
 		/**
@@ -760,13 +725,13 @@ public class TypeConfiguration implements SessionFactoryObserver {
 		 * @param factory The SessionFactory that the TypeFactory is being bound to
 		 */
 		void setSessionFactory(SessionFactoryImplementor factory) {
-			if ( this.mapping != null && mapping instanceof SessionFactoryImplementor ) {
-				log.scopingTypesToSessionFactoryAfterAlreadyScoped( (SessionFactoryImplementor) mapping, factory );
+			if ( this.sessionFactory != null ) {
+				log.scopingTypesToSessionFactoryAfterAlreadyScoped( this.sessionFactory, factory );
 			}
 			else {
-				metadataBuildingContext = null;
+				this.metadataBuildingContext = null;
 
-				sessionFactoryUuid = factory.getUuid();
+				this.sessionFactoryUuid = factory.getUuid();
 				String sfName = factory.getSessionFactoryOptions().getSessionFactoryName();
 				if ( sfName == null ) {
 					final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()
@@ -775,45 +740,14 @@ public class TypeConfiguration implements SessionFactoryObserver {
 						sfName = cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
 					}
 				}
-				sessionFactoryName = sfName;
+				this.sessionFactoryName = sfName;
 			}
-			this.mapping = factory;
+			this.sessionFactory = factory;
 		}
 
 		public void unsetSessionFactory(SessionFactory factory) {
 			log.debugf( "Un-scoping TypeConfiguration [%s] from SessionFactory [%s]", this, factory );
-			this.mapping = EolScopeMapping.INSTANCE;
-		}
-	}
-
-	private static class EolScopeMapping implements Mapping {
-		/**
-		 * Singleton access
-		 */
-		public static final EolScopeMapping INSTANCE = new EolScopeMapping();
-
-		@Override
-		public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-			throw invalidAccess();
-		}
-
-		private RuntimeException invalidAccess() {
-			return new IllegalStateException( "Access to this TypeConfiguration is no longer valid" );
-		}
-
-		@Override
-		public Type getIdentifierType(String className) {
-			throw invalidAccess();
-		}
-
-		@Override
-		public String getIdentifierPropertyName(String className) {
-			throw invalidAccess();
-		}
-
-		@Override
-		public Type getReferencedPropertyType(String className, String propertyName) {
-			throw invalidAccess();
+			this.sessionFactory = null;
 		}
 	}
 
@@ -896,10 +830,10 @@ public class TypeConfiguration implements SessionFactoryObserver {
 	}
 
 	private void registerEntityNameResolvers(EntityTypeImplementor persister) {
-		if ( persister.getEntityMetamodel() == null || persister.getEntityMetamodel().getTuplizer() == null ) {
+		if ( persister.getTuplizer() == null ) {
 			return;
 		}
-		registerEntityNameResolvers( persister.getEntityMetamodel().getTuplizer() );
+		registerEntityNameResolvers( persister.getTuplizer() );
 	}
 
 	private void registerEntityNameResolvers(EntityTuplizer tuplizer) {
@@ -908,174 +842,6 @@ public class TypeConfiguration implements SessionFactoryObserver {
 			return;
 		}
 		Collections.addAll( entityNameResolvers, resolvers );
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Legacy stuff
-	//		todo : look at removing these...  they (most of them anyway) at least need new signatures
-	//		e.g. A *-to-one Type (the EntityType) is actually specific to each specific usage (navigable)
-
-	public EntityType manyToOne(Class clazz) {
-		assert clazz != null;
-		return manyToOne( clazz.getName() );
-	}
-
-	public EntityType manyToOne(String entityName) {
-		throw new NotYetImplementedException(  );
-	}
-
-	public EntityType manyToOne(Class clazz, boolean lazy) {
-		assert clazz != null;
-		return manyToOne( clazz.getName(), lazy );
-	}
-
-	public EntityType manyToOne(String entityName, boolean lazy) {
-		return manyToOne( entityName, true, null, lazy, true, false, false );
-	}
-
-	public EntityType manyToOne(
-			String persistentClass,
-			boolean referenceToPrimaryKey,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			boolean ignoreNotFound,
-			boolean isLogicalOneToOne) {
-		return new ManyToOneType(
-				this,
-				persistentClass,
-				referenceToPrimaryKey,
-				uniqueKeyPropertyName,
-				lazy,
-				unwrapProxy,
-				ignoreNotFound,
-				isLogicalOneToOne
-		);
-	}
-
-	// one-to-one type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	public EntityType oneToOne(
-			String persistentClass,
-			ForeignKeyDirection foreignKeyType,
-			boolean referenceToPrimaryKey,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			String entityName,
-			String propertyName) {
-		return new OneToOneType(
-				this, persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName
-		);
-	}
-
-	public EntityType specialOneToOne(
-			String persistentClass,
-			ForeignKeyDirection foreignKeyType,
-			boolean referenceToPrimaryKey,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			String entityName,
-			String propertyName) {
-		return new SpecialOneToOneType(
-				this, persistentClass, foreignKeyType, referenceToPrimaryKey,
-				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName
-		);
-	}
-
-	public Type heuristicType(String typename) {
-		throw new NotYetImplementedException(  );
-	}
-
-	// collection type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	public org.hibernate.type.spi.CollectionType array(String role, String propertyRef, Class elementClass) {
-		return new ArrayType( role, elementClass );
-	}
-
-	public org.hibernate.type.spi.CollectionType list(String role, String propertyRef) {
-		return new ListType( role );
-	}
-
-	public org.hibernate.type.spi.CollectionType bag(String role) {
-		return new BagType(  role );
-	}
-
-	public org.hibernate.type.spi.CollectionType idbag(String role, String propertyRef) {
-		return new IdentifierBagType( role );
-	}
-
-	public org.hibernate.type.spi.CollectionType map(String role, String propertyRef) {
-		return new MapType( role );
-	}
-
-	public org.hibernate.type.spi.CollectionType orderedMap(String role, String propertyRef) {
-		return new OrderedMapType( role );
-	}
-
-	public org.hibernate.type.spi.CollectionType sortedMap(String role, String propertyRef, Comparator comparator) {
-		return new SortedMapType( role, comparator );
-	}
-
-	public org.hibernate.type.spi.CollectionType set(String role, String propertyRef) {
-		return new SetType( role );
-	}
-
-	public org.hibernate.type.spi.CollectionType orderedSet(String role, String propertyRef) {
-		return new OrderedSetType( role );
-	}
-
-	public org.hibernate.type.spi.CollectionType sortedSet(String role, String propertyRef, Comparator comparator) {
-		return new SortedSetType( role, comparator );
-	}
-
-	// component type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	public EmbeddedComponentType embeddedComponent(ComponentMetamodel metamodel) {
-		return new EmbeddedComponentType( this, metamodel );
-	}
-
-	public ComponentType component(ComponentMetamodel metamodel) {
-		return new ComponentType( this, metamodel );
-	}
-
-
-	public CollectionType customCollection(
-			String typeName,
-			Properties typeParameters,
-			String role,
-			String propertyRef) {
-		Class typeClass;
-		try {
-			typeClass = ReflectHelper.classForName( typeName );
-		}
-		catch (ClassNotFoundException cnfe) {
-			throw new MappingException( "user collection type class not found: " + typeName, cnfe );
-		}
-		CustomCollectionType result = new CustomCollectionType( this, typeClass, role, propertyRef );
-		if ( typeParameters != null ) {
-			injectParameters( result.getUserType(), typeParameters );
-		}
-		return result;
-	}
-
-	private final static Properties EMPTY_PROPERTIES = new Properties();
-
-	public static void injectParameters(Object type, Properties parameters) {
-		if ( ParameterizedType.class.isInstance( type ) ) {
-			if ( parameters == null ) {
-				( (ParameterizedType) type ).setParameterValues( EMPTY_PROPERTIES );
-			}
-			else {
-				( (ParameterizedType) type ).setParameterValues( parameters );
-			}
-		}
-		else if ( parameters != null && !parameters.isEmpty() ) {
-			throw new MappingException( "type is not parameterized: " + type.getClass().getName() );
-		}
 	}
 
 }

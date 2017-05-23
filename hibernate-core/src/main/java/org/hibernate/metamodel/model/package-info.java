@@ -12,6 +12,6 @@
  * Also see {@link org.hibernate.boot.model} for it's boot-time model, which
  * is used to incrementally collect all the "metadata source" (XML, annotations, etc).
  * This run-time model is built from the boot-time model; see
- * {@link org.hibernate.type.internal.RuntimeModelCreationProcess}
+ * {@link org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationProcess}
  */
 package org.hibernate.metamodel.model;

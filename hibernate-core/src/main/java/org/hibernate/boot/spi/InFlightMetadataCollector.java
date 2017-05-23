@@ -14,11 +14,9 @@ import javax.persistence.AttributeConverter;
 
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedTable;
@@ -33,17 +31,15 @@ import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.naming.Identifier;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.Type;
 
 /**
  * An in-flight representation of Metadata while Metadata is being built.
@@ -52,7 +48,7 @@ import org.hibernate.type.spi.Type;
  *
  * @since 5.0
  */
-public interface InFlightMetadataCollector extends Mapping, MetadataImplementor {
+public interface InFlightMetadataCollector extends MetadataImplementor {
 	BootstrapContext getBootstrapContext();
 
 	Database getDatabase();
@@ -254,23 +250,6 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 * a resolution for BasicType using "registry keys".
 	 */
 	<T> BasicType<T> basicType(String registrationKey);
-
-	/**
-	 * Performs the same function as the legacy TypeResolver#heuristicType.
-	 */
-	default Type heuristicType(String typeName) {
-		return heuristicType( typeName, null );
-	}
-
-	/**
-	 * Performs the same function as the legacy TypeResolver#heuristicType.
-	 */
-	Type heuristicType(String typeName, Map parameters);
-
-	/**
-	 * Performs same function as the legacy TypeFactory#any
-	 */
-	Type any(BasicType identifierType, BasicType discriminatorType, Map discriminatorValues);
 
 	interface DelayedPropertyReferenceHandler extends Serializable {
 		void process(InFlightMetadataCollector metadataCollector);

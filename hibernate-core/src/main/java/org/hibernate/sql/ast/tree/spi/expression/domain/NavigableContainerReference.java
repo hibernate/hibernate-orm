@@ -15,4 +15,5 @@ public interface NavigableContainerReference extends NavigableReference {
 	@Override
 	NavigableContainer getNavigable();
 
+	NavigableReference findNavigableReference(String navigableName);
 }

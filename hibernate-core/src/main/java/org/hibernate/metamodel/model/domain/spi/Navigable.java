@@ -56,18 +56,6 @@ public interface Navigable<T> extends DomainType<T>, Selectable {
 
 	void visitNavigable(NavigableVisitationStrategy visitor);
 
-	/**
-	 * Get the "stem" used as the base for generating SQL table aliases for table
-	 * references coming from this Navigable.
-	 *
-	 * @see org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager#generateAliasBase
-	 */
-	default String getSqlAliasStem() {
-		// a few Navigables do not support this, so by default
-		// 		throw an exception
-		throw new AssertionFailure( "Cannot determine SQL alias stem for given Navigable [" + getNavigableName() + "]" );
-	}
-
 	QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,

@@ -49,6 +49,7 @@ import org.hibernate.sql.ast.tree.spi.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
 
 /**
@@ -65,6 +66,8 @@ public interface SqlAstWalker {
 	void visitSelectClause(SelectClause selectClause);
 
 	void visitSelection(Selection selection);
+
+	void visitSqlSelection(SqlSelection sqlSelection);
 
 	void visitFromClause(FromClause fromClause);
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.graph.spi;
 
+import java.util.Map;
 import javax.persistence.AttributeNode;
 
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
@@ -28,5 +29,10 @@ public interface AttributeNodeImplementor<T> extends AttributeNode<T> {
 		return getAttribute();
 	}
 
+	Map<Class, SubGraphImplementor> subGraphs();
+	Map<Class, SubGraphImplementor> keySubGraphs();
+
 	AttributeNodeImplementor<T> makeImmutableCopy();
+
+	SubGraphImplementor<T> extractSubGraph(PersistentAttribute<?,T> persistentAttribute);
 }

@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.sql.JoinType;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupContext;
+import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 
 /**
@@ -44,7 +44,7 @@ public abstract class AbstractCollectionIndex<J> implements CollectionIndex<J> {
 
 	@Override
 	public String asLoggableText() {
-		return "PluralAttributeIndex(" + persister.getRole() + " [" + getJavaType() + "])";
+		return "PluralAttributeIndex(" + persister.getNavigableRole() + " [" + getJavaType() + "])";
 	}
 
 	@Override

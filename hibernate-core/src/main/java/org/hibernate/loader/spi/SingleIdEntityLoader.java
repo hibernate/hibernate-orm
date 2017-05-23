@@ -16,15 +16,15 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
-public interface SingleIdEntityLoader extends Loader {
+public interface SingleIdEntityLoader<T> extends Loader {
 	// todo (6.0) - any additional Options info?
 
 	interface Options {
-		/**
-		 * The lock options for this load.  May be {@code null}.
-		 */
-		LockOptions getLockOptions();
+//		/**
+//		 * The lock options for this load.  May be {@code null}.
+//		 */
+//		LockOptions getLockOptions();
 	}
 
-	Object load(Serializable id, SharedSessionContractImplementor session, Options options);
+	T load(Serializable id, SharedSessionContractImplementor session, Options options);
 }

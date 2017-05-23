@@ -35,6 +35,6 @@ public class SqlSelectionImpl implements SqlSelection {
 
 	@Override
 	public void accept(SqlSelectAstToJdbcSelectConverter interpreter) {
-		sqlSelectable.accept( interpreter );
+		interpreter.visitSqlSelection( this );
 	}
 }

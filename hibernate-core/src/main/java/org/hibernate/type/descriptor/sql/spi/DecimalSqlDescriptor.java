@@ -14,7 +14,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;

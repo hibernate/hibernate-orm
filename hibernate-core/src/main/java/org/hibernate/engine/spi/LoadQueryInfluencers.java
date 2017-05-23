@@ -49,6 +49,7 @@ public class LoadQueryInfluencers implements Serializable {
 	private InternalFetchProfileType enabledInternalFetchProfileType;
 	private final Map<String,Filter> enabledFilters;
 	private final Set<String> enabledFetchProfileNames;
+
 	private EntityGraph fetchGraph;
 	private EntityGraph loadGraph;
 

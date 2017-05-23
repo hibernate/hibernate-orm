@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
+import org.hibernate.sql.ast.tree.spi.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 
@@ -20,6 +21,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 public class ElementColumnReferenceSource
 		extends AbstractColumnReferenceSource
 		implements ColumnReferenceSource, TableReferenceJoinCollector {
+	private CollectionTableGroup collectionTableGroup;
 	private TableReference root;
 	private List<TableReferenceJoin> joins;
 

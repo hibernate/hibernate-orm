@@ -9,8 +9,6 @@ package org.hibernate.metamodel.model.domain.spi;
 import java.util.List;
 
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.sql.JoinType;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 
 /**
  * @author Steve Ebersole
@@ -28,11 +26,6 @@ public interface CollectionElement<J> extends Navigable<J> {
 	}
 
 	ElementClassification getClassification();
-
-	void applyTableReferenceJoins(
-			JoinType joinType,
-			SqlAliasBase sqlAliasBase,
-			TableReferenceJoinCollector collector);
 
 	// todo (6.0) : another place to consider removing generic access to columns
 	List<Column> getColumns();

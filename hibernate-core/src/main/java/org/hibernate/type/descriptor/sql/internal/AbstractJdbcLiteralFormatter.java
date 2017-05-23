@@ -6,7 +6,7 @@
  */
 package org.hibernate.type.descriptor.sql.internal;
 
-import org.hibernate.type.spi.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.sql.spi.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**

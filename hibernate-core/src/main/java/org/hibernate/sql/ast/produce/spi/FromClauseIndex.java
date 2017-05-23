@@ -13,19 +13,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.stream.Collectors;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
-import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
-import org.hibernate.sql.ast.tree.spi.from.FromClause;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.produce.ConversionException;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.produce.ConversionException;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 
 import org.jboss.logging.Logger;
 
@@ -37,14 +32,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class FromClauseIndex implements TableGroupResolver {
-	private static final Logger log = Logger.getLogger( FromClauseIndex.class );
-
-	private final Stack<FromClauseStackNode> fromClauseStackNodes = new Stack<>();
-
-	private final Map<String,NavigableReferenceInfo> navigableRefInfoByUid = new HashMap<>();
-	private final Map<String,ColumnReferenceSource> columnRefSourceByUid = new HashMap<>();
-
-	private final Map<NavigableReferenceInfo,ColumnReferenceSource> colRefSourceByNavRefInfo = new HashMap<>();
 
 
 	// todo (6.0) : Need to reconsider the cross referencing done here and decide how to index stuff:
@@ -55,82 +42,25 @@ public class FromClauseIndex implements TableGroupResolver {
 	// 			fetches (see sqmFetchesByParentUid)
 
 
-	@Override
-	public ColumnReferenceSource resolveColumnReferenceSource(String uid) {
-		return columnRefSourceByUid.get( uid );
-	}
+	private static final Logger log = Logger.getLogger( FromClauseIndex.class );
 
-	@Override
-	public NavigableReferenceInfo resolveNavigableReferenceInfo(String uid) {
-		return navigableRefInfoByUid.get( uid );
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	private final Map<NavigableReference,String> uidBySourceNavigableReference = new HashMap<>();
 	private final Map<String,SqmFrom> sqmFromByUid = new HashMap<>();
 	private final Map<SqmFrom, TableGroup> tableGroupBySqmFromXref = new HashMap<>();
 	private Map<String, List<SqmAttributeJoin>> sqmFetchesByParentUid;
-
-
-	public void pushFromClause(FromClause fromClause) {
-		FromClauseStackNode parent = null;
-		if ( fromClauseStackNodes.size() > 0 ) {
-			parent = fromClauseStackNodes.peek();
-		}
-		FromClauseStackNode node = new FromClauseStackNode( parent, fromClause );
-		fromClauseStackNodes.push( node );
-	}
-
-	public FromClause popFromClause() {
-		final FromClauseStackNode node = fromClauseStackNodes.pop();
-		if ( node == null ) {
-			return null;
-		}
-		else {
-			return node.getCurrentFromClause();
-		}
-	}
-
-	public FromClause currentFromClause() {
-		final FromClauseStackNode currentNode = fromClauseStackNodes.peek();
-		if ( currentNode == null ) {
-			return null;
-		}
-		else {
-			return currentNode.getCurrentFromClause();
-		}
-	}
 
 	@Override
 	public TableGroup resolveTableGroup(String uid) {
 		return findResolvedTableGroupByUniqueIdentifier( uid );
 	}
 
-	public void crossReference(SqmFrom fromElement, TableGroup tableGroup) {
-		TableGroup old = tableGroupBySqmFromXref.put( fromElement, tableGroup );
-		if ( old != null ) {
-			log.debugf(
-					"FromElement [%s] was already cross-referenced to TableSpecificationGroup - old : [%s]; new : [%s]",
-					fromElement,
-					old,
-					tableGroup
-			);
-		}
+	public String getTableGroupUidForNavigableReference(NavigableReference navigableReference) {
+		return uidBySourceNavigableReference.get( navigableReference );
+	}
 
+	public void crossReference(
+			SqmFrom fromElement,
+			TableGroup tableGroup) {
 		SqmFrom existing = sqmFromByUid.put( fromElement.getUniqueIdentifier(), fromElement );
 		if ( existing != null ) {
 			if ( existing != fromElement ) {
@@ -143,10 +73,22 @@ public class FromClauseIndex implements TableGroupResolver {
 			}
 		}
 
+		uidBySourceNavigableReference.put( tableGroup.asExpression(), tableGroup.getUniqueIdentifier() );
+
+		TableGroup old = tableGroupBySqmFromXref.put( fromElement, tableGroup );
+		if ( old != null ) {
+			log.debugf(
+					"FromElement [%s] was already cross-referenced to TableSpecificationGroup - old : [%s]; new : [%s]",
+					fromElement,
+					old,
+					tableGroup
+			);
+		}
+
 		if ( fromElement instanceof SqmAttributeJoin ) {
 			final SqmAttributeJoin sqmAttributeJoin = (SqmAttributeJoin) fromElement;
 			if ( sqmAttributeJoin.isFetched() ) {
-				final String fetchParentUid = sqmAttributeJoin.getNavigableContainerReferenceInfo().getUniqueIdentifier();
+				final String fetchParentUid = sqmAttributeJoin.getNavigableReference().getNavigableContainerReferenceInfo().getUniqueIdentifier();
 
 				if ( sqmFetchesByParentUid == null ) {
 					sqmFetchesByParentUid = new HashMap<>();
@@ -159,8 +101,6 @@ public class FromClauseIndex implements TableGroupResolver {
 				fetches.add( sqmAttributeJoin );
 			}
 		}
-
-		crossReference( fromElement.getNavigableReference(), tableGroup );
 	}
 
 	public TableGroup findResolvedTableGroup(SqmFrom fromElement) {
@@ -180,38 +120,12 @@ public class FromClauseIndex implements TableGroupResolver {
 		return tableGroupBySqmFromXref.get( sqmFrom );
 	}
 
-	public void crossReference(SqmNavigableReference binding, TableGroup group) {
-		tableGroupBySqmFromXref.put( binding.getFromElement(), group );
-	}
-
-	public TableGroup findResolvedTableGroup(SqmNavigableReference binding) {
-		if ( binding == null ) {
-			// todo : or error?
-			return null;
-		}
-
-		TableGroup tableGroup = findResolvedTableGroup( binding.getFromElement() );
-		if ( tableGroup == null ) {
-			if ( binding instanceof SqmSingularAttributeReference ) {
-				// it might be a composite...
-				final SqmSingularAttributeReference singularAttributeBinding = (SqmSingularAttributeReference) binding;
-				final SqmSingularAttributeReference.SingularAttributeClassification classification = singularAttributeBinding
-						.getAttribute()
-						.getAttributeTypeClassification();
-				if ( classification == SingularAttributeReference.SingularAttributeClassification.EMBEDDED ) {
-					tableGroup = findResolvedTableGroup( singularAttributeBinding.getLhs() );
-				}
-			}
-		}
-
-		return tableGroup;
-	}
 
 	public boolean isResolved(SqmFrom fromElement) {
 		return tableGroupBySqmFromXref.containsKey( fromElement );
 	}
 
-	public List<SqmAttributeJoin> findFetchesByUniqueIdentifier(String uniqueIdentifier) {
+	public List<SqmAttributeJoin> findFetchesByParentUniqueIdentifier(String uniqueIdentifier) {
 		if ( sqmFetchesByParentUid == null ) {
 			return Collections.emptyList();
 		}
@@ -228,34 +142,11 @@ public class FromClauseIndex implements TableGroupResolver {
 
 	private boolean noDuplicates(List<SqmAttributeJoin> fetches, String uniqueIdentifier) {
 		final Set<String> uniqueUids = fetches.stream()
-				.map( AbstractFrom::getUniqueIdentifier )
+				.map( SqmFrom::getUniqueIdentifier )
 				.collect( Collectors.toSet() );
 		if ( uniqueUids.size() != fetches.size() ) {
 			throw new IllegalStateException( "Found duplicate fetches (by uid) for parent uid : " + uniqueIdentifier );
 		}
 		return true;
 	}
-
-	public static class FromClauseStackNode {
-		private final FromClauseStackNode parentNode;
-		private final FromClause currentFromClause;
-
-		public FromClauseStackNode(FromClause currentFromClause) {
-			this( null, currentFromClause );
-		}
-
-		public FromClauseStackNode(FromClauseStackNode parentNode, FromClause currentFromClause) {
-			this.parentNode = parentNode;
-			this.currentFromClause = currentFromClause;
-		}
-
-		public FromClauseStackNode getParentNode() {
-			return parentNode;
-		}
-
-		public FromClause getCurrentFromClause() {
-			return currentFromClause;
-		}
-	}
-
 }

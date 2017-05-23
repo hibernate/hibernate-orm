@@ -6,13 +6,10 @@
  */
 package org.hibernate.type.internal;
 
-import java.util.Comparator;
-
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BooleanBasicType;
-import org.hibernate.type.spi.ColumnMapping;
+import org.hibernate.type.spi.ColumnDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +20,7 @@ public class BooleanBasicTypeImpl<U> extends BasicTypeImpl<Boolean> implements B
 
 	public BooleanBasicTypeImpl(
 			BasicJavaDescriptor javaDescriptor,
-			ColumnMapping columnMapping,
+			ColumnDescriptor columnMapping,
 			U trueValue,
 			U falseValue) {
 		super( javaDescriptor, columnMapping );
@@ -37,30 +34,6 @@ public class BooleanBasicTypeImpl<U> extends BasicTypeImpl<Boolean> implements B
 			U trueValue,
 			U falseValue) {
 		super( javaDescriptor, sqlTypeDescriptor );
-		this.trueValue = trueValue;
-		this.falseValue = falseValue;
-	}
-
-	public BooleanBasicTypeImpl(
-			BasicJavaDescriptor javaDescriptor,
-			MutabilityPlan mutabilityPlan,
-			Comparator comparator,
-			SqlTypeDescriptor sqlTypeDescriptor,
-			U trueValue,
-			U falseValue) {
-		super( javaDescriptor, mutabilityPlan, comparator, sqlTypeDescriptor );
-		this.trueValue = trueValue;
-		this.falseValue = falseValue;
-	}
-
-	public BooleanBasicTypeImpl(
-			BasicJavaDescriptor javaDescriptor,
-			MutabilityPlan mutabilityPlan,
-			Comparator comparator,
-			ColumnMapping columnMapping,
-			U trueValue,
-			U falseValue) {
-		super( javaDescriptor, mutabilityPlan, comparator, columnMapping );
 		this.trueValue = trueValue;
 		this.falseValue = falseValue;
 	}

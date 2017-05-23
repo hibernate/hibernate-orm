@@ -32,8 +32,8 @@ import org.hibernate.ScrollMode;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.procedure.NoMoreReturnsException;
@@ -794,7 +794,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	protected void applyEntityGraphQueryHint(String hintName, EntityGraphImpl entityGraph) {
+	protected void applyEntityGraphQueryHint(String hintName, EntityGraphImplementor entityGraph) {
 		throw new IllegalStateException( "EntityGraph hints are not supported for ProcedureCall/StoredProcedureQuery" );
 	}
 

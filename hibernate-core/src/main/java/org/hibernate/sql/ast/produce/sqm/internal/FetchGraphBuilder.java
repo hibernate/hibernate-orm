@@ -6,24 +6,34 @@
  */
 package org.hibernate.sql.ast.produce.sqm.internal;
 
+import java.util.HashSet;
+import java.util.List;
+
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.spi.AttributeNodeContainer;
-import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.graph.spi.AttributeNodeImplementor;
+import org.hibernate.graph.spi.SubGraphImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.query.spi.EntityGraphQueryHint;
-import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
+import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
+import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
+import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
+import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.SingularAttributeReference;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.spi.from.TableSpace;
 
 import org.jboss.logging.Logger;
 
@@ -37,140 +47,197 @@ import org.jboss.logging.Logger;
 public class FetchGraphBuilder {
 	private static final Logger log = Logger.getLogger( FetchGraphBuilder.class );
 
-	private final SqlAstBuildingContext sqlAstBuildingContext;
-	private final SemanticQueryWalker sqmWalker;
-	private final SqlSelectionResolver sqlSelectionResolver;
-	private final QueryResultCreationContext queryResultCreationContext;
+	private final QuerySpec querySpec;
+	private final SqmSelectToSqlAstConverter builder;
 
+	@SuppressWarnings("FieldCanBeLocal")
+	private final EntityGraphQueryHint.Type entityGraphQueryHintType;
+	private final AttributeNodeContainer rootGraphAttributeContainer;
+
+	private final int fetchDepthLimit;
+
+	private final FetchStrategy fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 
 	public FetchGraphBuilder(
-			SqlAstBuildingContext sqlAstBuildingContext,
-			SemanticQueryWalker sqmWalker,
-			SqlSelectionResolver sqlSelectionResolver,
-			QueryResultCreationContext queryResultCreationContext,
-			FetchParent fetchParent,
-			SqmFrom sqmFrom,
-			EntityGraphQueryHint entityGraphQueryHint,
-			NavigablePath navigablePath) {
-		this.sqlAstBuildingContext = sqlAstBuildingContext;
-		this.sqmWalker = sqmWalker;
+			QuerySpec querySpec,
+			SqmSelectToSqlAstConverter builder,
+			EntityGraphQueryHint entityGraphQueryHint) {
+		this.querySpec = querySpec;
+		this.builder = builder;
 
-		this.fetchDepthLimit = sqlAstBuildingContext.getSessionFactory().getSessionFactoryOptions().getMaximumFetchDepth();
-		this.sqlSelectionResolver = sqlSelectionResolver;
-		this.queryResultCreationContext = queryResultCreationContext;
-
-		this.fetchParentStack.push( fetchParent );
-		this.navigablePathStack.push( navigablePath );
-		this.sqmFromStack.push( sqmFrom );
+		this.fetchDepthLimit = builder.getSessionFactory().getSessionFactoryOptions().getMaximumFetchDepth();
 
 		this.entityGraphQueryHintType = entityGraphQueryHint.getType();
+		this.rootGraphAttributeContainer = entityGraphQueryHint.getHintedGraph();
 
-		if ( entityGraphQueryHintType != EntityGraphQueryHint.Type.NONE ) {
-			this.entityGraphNodeStack.push( entityGraphQueryHint.getHintedGraph() );
-		}
-		else {
-			if ( entityGraphQueryHint.getHintedGraph() == null ) {
-				 log.debugf( "Encountered EntityGraph hint, but null EntityGraph" );
-			}
-		}
 	}
 
-	public void process() {
-		sqmFromStack.getCurrent().accept( this );
+	public void process(FetchParent fetchParent) {
+		processFetchParent( fetchParent, rootGraphAttributeContainer, 0 );
 	}
 
-	@Override
-	public Object visitQualifiedAttributeJoinFromElement(SqmAttributeJoin joinedFromElement) {
-		if ( fetchParentStack.depth() + 1 > fetchDepthLimit ) {
-			return null;
+	private void processFetchParent(
+			FetchParent fetchParent,
+			AttributeNodeContainer attributeNodeContainer,
+			int depth) {
+		if ( depth > fetchDepthLimit ) {
+			return;
 		}
 
-		if ( joinedFromElement.isFetched() ) {
-			makeFetch(  );
-			return null;
-		}
+		final HashSet<String> processedAttributeNames = new HashSet<>();
 
-
-		joinedFromElement.getAttributeReference().getReferencedNavigable()
-
-		final Fetchable navigable = (Fetchable) navigableReference.getNavigable();
-
-		// todo (6.0) : actually for SQM this should be driven more by query-defined fetches
-		//		this piece below would fit in the metamodel-walking version
-
-		final FetchStrategy fetchStrategy = navigable.getMappedFetchStrategy();
-		if ( fetchStrategy.getTiming() == FetchTiming.IMMEDIATE ) {
-			if ( fetchStrategy.getStyle() == FetchStyle.JOIN ) {
-				makeFetch( navigableReference );
-				return;
-			}
-		}
-
-		if ( entityGraphQueryHintType != EntityGraphQueryHint.Type.NONE ) {
-			final AttributeNodeContainer currentGraphNode = entityGraphNodeStack.getCurrent();
-
-			if ( currentGraphNode.containsAttribute( navigable.getNavigableName() ) ) {
-				makeFetch( navigableReference );
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public void visitSingularAttributeEntity(SingularPersistentAttributeEntity attribute) {
-		final NavigablePath navigablePath = navigablePathStack.getCurrent().append( attribute.getNavigableName() );
-		navigablePathStack.push( navigablePath );
-
-		try {
-			final SingularAttributeReference navigableReference = new SingularAttributeReference(
-					fetchParentStack.getCurrent().getNavigableContainerReference(),
-					attribute,
-					navigablePath
-			);
-			visitNavigable( navigableReference );
-		}
-		finally {
-			navigablePathStack.pop();
-		}
-	}
-
-
-
-	private void visitNavigable(NavigableReference navigableReference) {
-	}
-
-	private static final FetchStrategy FETCH_NOW = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
-
-	private void makeFetch(NavigableReference navigableReference) {
-		final Fetchable navigable = (Fetchable) navigableReference.getNavigable();
-		final Fetch fetch = navigable.generateFetch(
-				fetchParentStack.getCurrent(),
-				navigableReference,
-				FETCH_NOW,
-				null,
-				sqlSelectionResolver,
-				queryResultCreationContext
+		final String parentUid = builder.getFromClauseIndex().getTableGroupUidForNavigableReference(
+				fetchParent.getNavigableContainerReference()
 		);
+		final TableGroup parentTableGroup = builder.getFromClauseIndex().resolveTableGroup( parentUid );
 
-		fetchParentStack.getCurrent().addFetch( fetch );
+		final List<SqmAttributeJoin> fetchedJoins = builder.getFromClauseIndex().findFetchesByParentUniqueIdentifier( parentUid );
+		for ( SqmAttributeJoin fetchedJoin : fetchedJoins ) {
+			assert fetchedJoin.isFetched();
 
-		if ( fetch instanceof FetchParent ) {
-			processNext( (FetchParent) fetch );
+			final String fetchedAttributeName = fetchedJoin.getAttributeReference()
+					.getReferencedNavigable()
+					.getAttributeName();
+
+			final TableGroup tableGroup = builder.getFromClauseIndex().resolveTableGroup( fetchedJoin.getUniqueIdentifier() );
+			assert tableGroup != null;
+
+			final AttributeNodeImplementor attributeNode = attributeNodeContainer.findAttributeNode( fetchedAttributeName );
+			final NavigableReference fetchedNavigableReference = tableGroup.asExpression();
+
+			processedAttributeNames.add( fetchedNavigableReference.getNavigable().getNavigableName() );
+
+			assert fetchedNavigableReference.getNavigable() instanceof Fetchable;
+			final Fetch fetch = ( (Fetchable) fetchedNavigableReference.getNavigable() ).generateFetch(
+					fetchParent,
+					fetchedNavigableReference,
+					fetchStrategy,
+					fetchedJoin.getIdentificationVariable(),
+					builder,
+					builder
+			);
+			processFetch( fetchParent, fetch, attributeNode, depth );
 		}
+
+		for ( AttributeNodeImplementor<?> attributeNode : attributeNodeContainer.attributeNodes() ) {
+			if ( processedAttributeNames.contains( attributeNode.getAttributeName() ) ) {
+				continue;
+			}
+
+			final PersistentAttribute persistentAttribute = (PersistentAttribute) fetchParent.getNavigableContainerReference()
+					.getNavigable()
+					.findNavigable( attributeNode.getAttributeName() );
+
+			NavigableReference navigableReference = fetchParent.getNavigableContainerReference()
+					.findNavigableReference( persistentAttribute.getNavigableName() );
+
+			if ( navigableReference == null ) {
+				// 1) Find the TableGroupJoinProducer and generate the TableGroupJoin
+				assert persistentAttribute instanceof TableGroupJoinProducer;
+				final String fetchJoinTableGroupUid = builder.generateSqlAstNodeUid();
+				final TableGroupJoin fetchTableGroupJoin = ( (TableGroupJoinProducer) persistentAttribute ).createTableGroupJoin(
+						new TableGroupInfoSource() {
+							@Override
+							public String getUniqueIdentifier() {
+								return fetchJoinTableGroupUid;
+							}
+
+							@Override
+							public String getIdentificationVariable() {
+								return null;
+							}
+
+							@Override
+							public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
+								return null;
+							}
+						},
+						JoinType.LEFT,
+						new JoinedTableGroupContext() {
+							@Override
+							public TableGroup getLhs() {
+								return parentTableGroup;
+							}
+
+							@Override
+							public QuerySpec getQuerySpec() {
+								return querySpec;
+							}
+
+							@Override
+							public TableSpace getTableSpace() {
+								return parentTableGroup.getTableSpace();
+							}
+
+							@Override
+							public String getUniqueIdentifier() {
+								return fetchJoinTableGroupUid;
+							}
+
+							@Override
+							public String getIdentificationVariable() {
+								return null;
+							}
+
+							@Override
+							public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
+								return null;
+							}
+
+							@Override
+							public TableGroupResolver getTableGroupResolver() {
+								return builder.getFromClauseIndex();
+							}
+
+							@Override
+							public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
+								return builder.getSqlAliasBaseManager();
+							}
+
+							@Override
+							public JoinType getTableReferenceJoinType() {
+								return JoinType.INNER;
+							}
+						}
+				);
+				parentTableGroup.getTableSpace().addJoinedTableGroup( fetchTableGroupJoin );
+
+				navigableReference = fetchTableGroupJoin.getJoinedGroup().asExpression();
+			}
+
+			final Fetch fetch = ( (Fetchable) persistentAttribute ).generateFetch(
+					fetchParent,
+					navigableReference,
+					fetchStrategy,
+					null,
+					builder,
+					builder
+			);
+
+			processFetch( fetchParent, fetch, attributeNode, depth );
+		}
+
 	}
 
-	private void processNext(FetchParent fetchParent) {
-		fetchParentStack.push( fetchParent );
+	@SuppressWarnings("unchecked")
+	private void processFetch(
+			FetchParent fetchParent,
+			Fetch fetch,
+			AttributeNodeImplementor fetchedAttributeNode,
+			int depth) {
+		fetchParent.addFetch( fetch );
 
-		// todo (6.0) : finish hooking in entiyt-graphs.
-		//		need to remember how all that works.  graphs/sub-graphs/kKey-sub-graphs/attributes
-		//		makes my head spin
+		if ( !FetchParent.class.isInstance( fetch ) ) {
+			return;
+		}
 
-		try {
-			fetchParent.getNavigableContainerReference().getNavigable().visitNavigable( this );
-		}
-		finally {
-			fetchParentStack.pop();
-		}
+		final FetchParent fetchAsFetchParent = (FetchParent) fetch;
+
+		assert fetch.getFetchedNavigableReference().getNavigable() instanceof PersistentAttribute;
+		final PersistentAttribute persistentAttribute = (PersistentAttribute) fetch.getFetchedNavigableReference().getNavigable();
+
+		final SubGraphImplementor subGraph = fetchedAttributeNode.extractSubGraph( persistentAttribute );
+
+		processFetchParent( fetchAsFetchParent, subGraph, depth + 1 );
 	}
 }

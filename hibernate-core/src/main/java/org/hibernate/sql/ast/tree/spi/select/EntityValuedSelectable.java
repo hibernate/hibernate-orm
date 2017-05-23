@@ -36,9 +36,9 @@ public class EntityValuedSelectable implements Selectable {
 	private final NavigablePath navigablePath;
 	private final ColumnReferenceSource columnBindingSource;
 	private final EntityTypeImplementor<?> entityPersister;
-
-	private final LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> columnReferenceGroupMap;
 	private final boolean isShallow;
+
+	private LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> columnReferenceGroupMap;
 
 	public EntityValuedSelectable(
 			Expression expression,
@@ -50,15 +50,17 @@ public class EntityValuedSelectable implements Selectable {
 		this.navigablePath = navigablePath;
 		this.columnBindingSource = columnBindingSource;
 		this.entityPersister = entityPersister;
-		this.columnReferenceGroupMap = buildColumnBindingGroupMap( isShallow );
 		this.isShallow = isShallow;
 	}
 
 	public LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> getColumnReferenceGroupMap() {
+		if ( columnReferenceGroupMap == null ) {
+			columnReferenceGroupMap = buildColumnBindingGroupMap();
+		}
 		return columnReferenceGroupMap;
 	}
 
-	private LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> buildColumnBindingGroupMap(boolean isShallow) {
+	private LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> buildColumnBindingGroupMap() {
 		final LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> columnBindingGroupMap = new LinkedHashMap<>();
 
 		// no matter what, include:

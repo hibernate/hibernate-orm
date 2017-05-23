@@ -41,6 +41,8 @@ public interface EntityHierarchy {
 	 */
 	<O,J> EntityIdentifier<O,J> getIdentifierDescriptor();
 
+	NaturalIdentifierDescriptor getNaturalIdentifierDescriptor();
+
 	/**
 	 * Retrieve the descriptor for the hierarchy's discriminator, if one.  May
 	 * return {@code null}.

@@ -15,7 +15,6 @@ import java.sql.Types;
 
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.descriptor.spi.WrapperOptions;

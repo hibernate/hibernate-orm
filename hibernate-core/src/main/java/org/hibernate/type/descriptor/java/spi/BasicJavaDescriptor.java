@@ -6,7 +6,7 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
-import org.hibernate.type.spi.VersionSupport;
+import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 
 /**
  * @author Steve Ebersole

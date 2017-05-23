@@ -14,5 +14,5 @@ import javax.persistence.Subgraph;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-public interface SubGraphImplementor extends AttributeNodeContainer, Subgraph {
+public interface SubGraphImplementor<T> extends AttributeNodeContainer, Subgraph<T> {
 }

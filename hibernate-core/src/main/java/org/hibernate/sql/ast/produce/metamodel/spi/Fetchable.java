@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 /**
  * @author Steve Ebersole
  */
-public interface Fetchable<T> extends Navigable<T> {
+public interface Fetchable<T> extends Joinable<T> {
 	Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigableReference selectedExpression,
@@ -27,4 +27,6 @@ public interface Fetchable<T> extends Navigable<T> {
 			QueryResultCreationContext creationContext);
 
 	FetchStrategy getMappedFetchStrategy();
+
+	ManagedTypeImplementor<T> getFetchedManagedType();
 }

@@ -14,7 +14,6 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
 import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
-import org.hibernate.type.spi.DatabaseObjectResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

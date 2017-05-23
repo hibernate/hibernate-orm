@@ -45,7 +45,7 @@ public class ConversionHelper {
 			throw new NotYetImplementedException( "Support for Type determination for multi-valued parameters is not yet implemented" );
 		}
 		else if ( parameterBinding.isBound() ) {
-			return persistenceContext.resolveParameterBindType( parameterBinding.getBindValue() );
+			return bindingContext.getSession().getFactory().resolveParameterBindType( parameterBinding.getBindValue() );
 		}
 
 		throw new QueryException( "Unable to determine Type for named parameter [:" + parameter.getName() + "]" );

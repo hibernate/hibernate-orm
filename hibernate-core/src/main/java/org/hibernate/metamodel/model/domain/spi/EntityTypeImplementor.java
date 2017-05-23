@@ -15,7 +15,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.OptimisticCacheSource;
@@ -25,11 +24,12 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.loader.spi.NaturalIdLoader;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
@@ -39,17 +39,14 @@ import org.hibernate.loader.spi.EntityLocker;
 import org.hibernate.loader.spi.MultiIdEntityLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
-import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupContext;
-import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupProducer;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
+import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
+import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeFactory;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
-import org.hibernate.sql.JoinType;
-import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupContext;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
+import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
-import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.spi.Type;
 
@@ -191,32 +188,24 @@ public interface EntityTypeImplementor<T>
 	/**
 	 * @todo (6.0) what args?
 	 */
-	SingleIdEntityLoader getSingleIdLoader(LockOptions lockOptions, SharedSessionContractImplementor session);
+	SingleIdEntityLoader<T> getSingleIdLoader(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers);
 
 	/**
 	 * @todo (6.0) what args?
 	 */
-	MultiIdEntityLoader getMultiIdLoader(SharedSessionContractImplementor session);
+	MultiIdEntityLoader getMultiIdLoader(LoadQueryInfluencers loadQueryInfluencers);
+
+	NaturalIdLoader getNaturalIdLoader(LockOptions lockOptions);
 
 	/**
 	 * @todo (6.0) what args?
 	 */
-	SingleUniqueKeyEntityLoader getSingleUniqueKeyLoader(Navigable navigable, SharedSessionContractImplementor session);
+	SingleUniqueKeyEntityLoader getSingleUniqueKeyLoader(Navigable navigable, LoadQueryInfluencers loadQueryInfluencers);
 
 	/**
 	 * @todo (6.0) - other args?
 	 */
-	EntityLocker getLocker(LockOptions lockOptions, SharedSessionContractImplementor session);
-
-	/**
-	 * Apply the Tables mapped by this entity to the collector as TableReferences
-	 */
-	void applyTableReferenceJoins(
-			JoinType joinType,
-			SqlAliasBase sqlAliasBase,
-			TableReferenceJoinCollector joinCollector,
-			TableGroupContext tableGroupContext);
-
+	EntityLocker getLocker(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers);
 
 	/**
 	 * Access to the root table for this entity.
@@ -235,70 +224,10 @@ public interface EntityTypeImplementor<T>
 	}
 
 	@Override
-	EntityTableGroup createRootTableGroup(RootTableGroupContext tableGroupContext);
+	EntityTableGroup createRootTableGroup(TableGroupInfoSource info, RootTableGroupContext tableGroupContext);
 
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Legacy contract (sans methods moved to above "Redesigned contract") section
-
-	/**
-	 * The property name of the "special" identifier property in HQL
-	 */
-	String ENTITY_ID = "id";
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // stuff that is persister-centric and/or EntityInfo-centric ~~~~~~~~~~~~~~
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * Returns an object that identifies the space in which identifiers of
-	 * this entity hierarchy are unique.  Might be a table name, a JNDI URL, etc.
-	 *
-	 * @return The root entity name.
-	 */
-	String getRootEntityName();
-
-	/**
-	 * Retrieve the underlying entity metamodel instance...
-	 *
-	 *@return The metamodel
-	 */
-	EntityMetamodel getEntityMetamodel();
-
-	/**
-	 * Determine whether the given name represents a subclass entity
-	 * (or this entity itself) of the entity mapped by this persister.
-	 *
-	 * @param entityName The entity name to be checked.
-	 * @return True if the given entity name represents either the entity
-	 * mapped by this persister or one of its subclass entities; false
-	 * otherwise.
-	 */
-	boolean isSubclassEntityName(String entityName);
-
-	/**
-	 * Returns an array of objects that identify spaces in which properties of
-	 * this entity are persisted, for instances of this class only.
-	 * <p/>
-	 * For most implementations, this returns the complete set of table names
-	 * to which instances of the mapped entity are persisted (not accounting
-	 * for superclass entity mappings).
-	 *
-	 * @return The property spaces.
-	 */
-	Serializable[] getPropertySpaces();
-
-	/**
-	 * Returns an array of objects that identify spaces in which properties of
-	 * this entity are persisted, for instances of this class and its subclasses.
-	 * <p/>
-	 * Much like {@link #getPropertySpaces()}, except that here we include subclass
-	 * entity spaces.
-	 *
-	 * @return The query spaces.
-	 */
-	Serializable[] getQuerySpaces();
+	String[] getAffectedTableNames();
 
 	/**
 	 * Determine whether this entity supports dynamic proxies.
@@ -306,71 +235,6 @@ public interface EntityTypeImplementor<T>
 	 * @return True if the entity has dynamic proxy support; false otherwise.
 	 */
 	boolean hasProxy();
-
-	/**
-	 * Determine whether this entity contains references to persistent collections.
-	 *
-	 * @return True if the entity does contain persistent collections; false otherwise.
-	 */
-	boolean hasCollections();
-
-	/**
-	 * Determine whether any properties of this entity are considered mutable.
-	 *
-	 * @return True if any properties of the entity are mutable; false otherwise (meaning none are).
-	 */
-	boolean hasMutableProperties();
-
-	/**
-	 * Determine whether this entity contains references to persistent collections
-	 * which are fetchable by subselect?
-	 *
-	 * @return True if the entity contains collections fetchable by subselect; false otherwise.
-	 */
-	boolean hasSubselectLoadableCollections();
-
-	/**
-	 * Determine whether this entity has any non-none cascading.
-	 *
-	 * @return True if the entity has any properties with a cascade other than NONE;
-	 * false otherwise (aka, no cascading).
-	 */
-	boolean hasCascades();
-
-	/**
-	 * Determine whether instances of this entity are considered mutable.
-	 *
-	 * @return True if the entity is considered mutable; false otherwise.
-	 */
-	boolean isMutable();
-
-	/**
-	 * Determine whether the entity is inherited one or more other entities.
-	 * In other words, is this entity a subclass of other entities.
-	 *
-	 * @return True if other entities extend this entity; false otherwise.
-	 */
-	boolean isInherited();
-
-	/**
-	 * Are identifiers of this entity assigned known beforeQuery the insert execution?
-	 * Or, are they generated (in the database) by the insert execution.
-	 *
-	 * @return True if identifiers for this entity are generated by the insert
-	 * execution.
-	 */
-	boolean isIdentifierAssignedByInsert();
-
-	/**
-	 * Get the type of a particular property by name.
-	 *
-	 * @param propertyName The name of the property for which to retrieve
-	 * the type.
-	 * @return The type.
-	 * @throws org.hibernate.MappingException Typically indicates an unknown
-	 * property name.
-	 */
-	Type getPropertyType(String propertyName) throws MappingException;
 
 	/**
 	 * Compare the two snapshots to determine if they represent dirty state.
@@ -396,90 +260,6 @@ public interface EntityTypeImplementor<T>
 	 */
 	int[] findModified(Object[] old, Object[] current, Object object, SharedSessionContractImplementor session);
 
-	/**
-	 * Determine whether the entity has a particular property holding
-	 * the identifier value.
-	 *
-	 * @return True if the entity has a specific property holding identifier value.
-	 */
-	boolean hasIdentifierProperty();
-
-	/**
-	 * Determine whether detached instances of this entity carry their own
-	 * identifier value.
-	 * <p/>
-	 * The other option is the deprecated feature where users could supply
-	 * the id during session calls.
-	 *
-	 * @return True if either (1) {@link #hasIdentifierProperty()} or
-	 * (2) the identifier is an embedded composite identifier; false otherwise.
-	 */
-	boolean canExtractIdOutOfEntity();
-
-	/**
-	 * Determine whether optimistic locking by column is enabled for this
-	 * entity.
-	 *
-	 * @return True if optimistic locking by column (i.e., <version/> or
-	 * <timestamp/>) is enabled; false otherwise.
-	 */
-	boolean isVersioned();
-
-	/**
-	 * If {@link #isVersioned()}, then what is the type of the property
-	 * holding the locking value.
-	 *
-	 * @return The Type of the property; or null, if not versioned.
-	 */
-	Type getVersionType();
-
-	/**
-	 * If {@link #isVersioned()}, then what is the index of the property
-	 * holding the locking value.
-	 *
-	 * @return The type of the version property; or -66, if not versioned.
-	 */
-	int getVersionProperty();
-
-	/**
-	 * Determine whether this entity defines a natural identifier.
-	 *
-	 * @return True if the entity defines a natural id; false otherwise.
-	 */
-	boolean hasNaturalIdentifier();
-
-	/**
-	 * If the entity defines a natural id ({@link #hasNaturalIdentifier()}), which
-	 * properties make up the natural id.
-	 *
-	 * @return The indices of the properties making of the natural id; or
-	 * null, if no natural id is defined.
-	 */
-	int[] getNaturalIdentifierProperties();
-
-	/**
-	 * Retrieve the current state of the natural-id properties from the database.
-	 *
-	 * @param id The identifier of the entity for which to retrieve the natural-id values.
-	 * @param session The session from which the request originated.
-	 * @return The natural-id snapshot.
-	 */
-	Object[] getNaturalIdentifierSnapshot(Serializable id, SharedSessionContractImplementor session);
-
-	/**
-	 * Determine which identifier generation strategy is used for this entity.
-	 *
-	 * @return The identifier generation strategy.
-	 */
-	IdentifierGenerator getIdentifierGenerator();
-
-	/**
-	 * Determine whether this entity defines any lazy properties (ala
-	 * bytecode instrumentation).
-	 *
-	 * @return True if the entity has properties mapped as lazy; false otherwise.
-	 */
-	boolean hasLazyProperties();
 
 	/**
 	 * Load the id for the entity based on the natural id.

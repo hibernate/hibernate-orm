@@ -18,7 +18,11 @@ public interface DiscriminatorDescriptor<O,J>
 	//		we do not support a model exposing the discriminator as a real attribute
 	// 		`@Discriminator` is only valid on TYPE
 
-	// todo (6.0) : how to handle the `org.hibernate.persister.entity.DiscriminatorMetadata` aspect?
+	/**
+	 * The mappings for `entity-name` <--> `discriminator-value` for this
+	 * hierarchy's discriminator.
+	 */
+	DiscriminatorMappings getDiscriminatorMappings();
 
 	@Override
 	default void visitNavigable(NavigableVisitationStrategy visitor) {

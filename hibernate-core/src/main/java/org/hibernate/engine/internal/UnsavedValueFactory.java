@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.spi.Type;
-import org.hibernate.type.spi.VersionSupport;
+import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 
 /**
  * Helper for dealing with unsaved value handling

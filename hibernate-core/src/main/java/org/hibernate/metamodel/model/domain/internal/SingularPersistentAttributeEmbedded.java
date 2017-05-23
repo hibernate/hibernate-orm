@@ -10,17 +10,18 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.List;
 
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.FetchStyle;
-import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.NavigableEmbeddedValued;
+import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.NavigableEmbeddedValued;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.result.internal.FetchCompositeAttributeImpl;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
@@ -31,7 +32,6 @@ import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
@@ -42,7 +42,7 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
  */
 public class SingularPersistentAttributeEmbedded<O,J>
 		extends AbstractSingularPersistentAttribute<O,J>
-		implements SingularPersistentAttribute<O,J>, NavigableEmbeddedValued<J>, Fetchable {
+		implements SingularPersistentAttribute<O,J>, NavigableEmbeddedValued<J>, Fetchable<J> {
 
 	private final EmbeddedTypeImplementor<J> embeddedDescriptor;
 
@@ -160,5 +160,20 @@ public class SingularPersistentAttributeEmbedded<O,J>
 				(NavigableContainerReference) selectedExpression,
 				fetchStrategy
 		);
+	}
+
+	@Override
+	public FetchStrategy getMappedFetchStrategy() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public ManagedTypeImplementor<J> getFetchedManagedType() {
+		return embeddedDescriptor;
+	}
+
+	@Override
+	public ForeignKey.ColumnMappings getJoinColumnMappings() {
+		return null;
 	}
 }

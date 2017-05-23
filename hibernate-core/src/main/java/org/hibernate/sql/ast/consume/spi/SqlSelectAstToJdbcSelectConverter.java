@@ -262,6 +262,11 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker,
 		// do nothing... this is handled #visitSelectClause
 	}
 
+	@Override
+	public void visitSqlSelection(SqlSelection sqlSelection) {
+		// do nothing... this is handled #visitSelectClause
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// FROM clause
 

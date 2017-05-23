@@ -340,7 +340,7 @@ public class CollectionLoadContext {
 		boolean isPutFromLoad = true;
 		if ( persister.isAssociation() ) {
 			for ( Serializable id : entry.getState() ) {
-				EntityTypeImplementor entityPersister = persister.getElementType()..getElementPersister();
+				EntityTypeImplementor entityPersister = persister.getElementType().getElementPersister();
 				if ( session.getPersistenceContext().wasInsertedDuringTransaction( entityPersister, id ) ) {
 					isPutFromLoad = false;
 					break;

@@ -14,7 +14,7 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
  *
  * @author Steve Ebersole
  */
-public interface Joinable<T> extends Navigable<T>, TableGroupJoinProducer {
+public interface Joinable<T> extends Navigable<T> {
 	/**
 	 * Intended for metadata-tive purposes.  Internally Hibernate never uses this
 	 * method, since the specific Joinable Navigables simply incorporate these

@@ -8,7 +8,6 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -22,8 +21,7 @@ import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
@@ -39,7 +37,7 @@ public class CollectionElementEntityImpl<J>
 		implements CollectionElementEntity<J> {
 
 	private final ElementClassification elementClassification;
-	private final EntityTypeImplementor<J> entityPersister;
+	private final EntityTypeImplementor<J> entityDescriptor;
 
 	public CollectionElementEntityImpl(
 			PersistentCollectionMetadata persister,
@@ -50,12 +48,12 @@ public class CollectionElementEntityImpl<J>
 		this.elementClassification = elementClassification;
 
 		final ToOne value = (ToOne) mappingBinding.getElement();
-		this.entityPersister = creationContext.getTypeConfiguration().findEntityPersister( value.getReferencedEntityName() );
+		this.entityDescriptor = creationContext.getTypeConfiguration().findEntityPersister( value.getReferencedEntityName() );
 	}
 
 	@Override
 	public EntityTypeImplementor<J> getEntityDescriptor() {
-		return entityPersister;
+		return entityDescriptor;
 	}
 
 	@Override
@@ -112,8 +110,9 @@ public class CollectionElementEntityImpl<J>
 	public void applyTableReferenceJoins(
 			JoinType joinType,
 			SqlAliasBase sqlAliasBase,
-			TableReferenceJoinCollector collector) {
-		getEntityDescriptor().applyTableReferenceJoins( joinType, sqlAliasBase, collector );
+			TableReferenceJoinCollector collector,
+			TableGroupContext tableGroupContext) {
+		getEntityDescriptor().applyTableReferenceJoins( joinType, sqlAliasBase, collector, tableGroupContext );
 	}
 
 	@Override
@@ -135,16 +134,5 @@ public class CollectionElementEntityImpl<J>
 				sqlSelectionResolver,
 				creationContext
 		);
-	}
-
-	@Override
-	public Fetch generateFetch(
-			FetchParent fetchParent,
-			NavigableReference selectedExpression,
-			FetchStrategy fetchStrategy,
-			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
-			QueryResultCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
 	}
 }

@@ -6,27 +6,12 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-
 /**
  * Contract for things that can contain composites.
  *
  * @author Steve Ebersole
  */
 public interface EmbeddedContainer<T> extends NavigableContainer<T> {
-	/**
-	 * Resolve the TableGroup that defines the group of tables which
-	 * contain the composite values.
-	 *
-	 * @param embeddedReferenceInfo Information about the embedded-valued navigable reference
-	 * @param tableGroupResolver Access to existing TableGroup resolutions
-	 *
-	 * @return The resolved TableGroup
-	 */
-	TableGroup resolveTableGroup(NavigableReferenceInfo embeddedReferenceInfo, TableGroupResolver tableGroupResolver);
-
 	/**
 	 * Holy alliteration Bat Man! :)
 	 * <p/>
@@ -38,6 +23,4 @@ public interface EmbeddedContainer<T> extends NavigableContainer<T> {
 	 * otherwise.
 	 */
 	boolean canCompositeContainCollections();
-
-	String getRolePrefix();
 }

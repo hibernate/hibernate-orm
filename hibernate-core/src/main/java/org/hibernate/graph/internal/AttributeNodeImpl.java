@@ -14,6 +14,7 @@ import javax.persistence.Subgraph;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
+import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
@@ -28,6 +29,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggrega
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 
@@ -101,6 +103,21 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 	@Override
 	public String getAttributeName() {
 		return attribute.getName();
+	}
+
+	@Override
+	public Map<Class, SubGraphImplementor> subGraphs() {
+		return subgraphMap == null ? Collections.emptyMap() : cast( subgraphMap );
+	}
+
+	@Override
+	public Map<Class, SubGraphImplementor> keySubGraphs() {
+		return keySubgraphMap == null ? Collections.emptyMap() : cast( keySubgraphMap ) ;
+	}
+
+	@SuppressWarnings("unchecked")
+	private Map<Class, SubGraphImplementor> cast(Map keySubgraphMap) {
+		return keySubgraphMap;
 	}
 
 	@Override
@@ -301,6 +318,19 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 			);
 		}
 		return copy;
+	}
+
+	@Override
+	public SubGraphImplementor extractSubGraph(PersistentAttribute<?,T> persistentAttribute) {
+		final Map<Class,SubGraphImplementor> subgraphMap = subGraphs();
+		if ( subgraphMap.size() == 0 ) {
+			return null;
+		}
+		else if ( subgraphMap.size() == 1 ) {
+			return subgraphMap.values().iterator().next();
+		}
+
+		return subgraphMap.get( persistentAttribute.getJavaType() );
 	}
 
 }

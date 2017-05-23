@@ -188,17 +188,15 @@ public class Util {
 			Class... resultClasses) {
 		int i = 0;
 		for ( Class resultClass : resultClasses ) {
-			final EntityTypeImplementor persister = context.getSessionFactory().getTypeConfiguration().findEntityPersister( resultClass.getName() );
-			context.addQuerySpaces( (String[]) persister.getQuerySpaces() );
+			final EntityTypeImplementor entityDescriptor = context.getSessionFactory().getTypeConfiguration().findEntityPersister( resultClass.getName() );
+			context.addQuerySpaces( (String[]) entityDescriptor.getQuerySpaces() );
 			context.addQueryReturns(
 					new QueryResultEntityImpl(
-							null,
-							persister,
+							entityDescriptor,
 							null,
 							// todo : SqlSelection map
 							null,
-							new NavigablePath( persister.getEntityName() ),
-							null
+							new NavigablePath( entityDescriptor.getEntityName() )
 
 					)
 			);
@@ -287,17 +285,7 @@ public class Util {
 			return sqlSelectionMap.computeIfAbsent(
 					alias,
 					s -> new SqlSelectionImpl(
-							new SqlSelectable() {
-								@Override
-								public SqlSelectionReader getSqlSelectionReader() {
-									return new SqlSelectionReaderImpl( ormType );
-								}
-
-								@Override
-								public void accept(SqlSelectAstToJdbcSelectConverter interpreter) {
-									throw new HibernateException( "Unexpected call to SqlSelectable#accept as part of procedure/native query Return" );
-								}
-							},
+							() -> new SqlSelectionReaderImpl( ormType ),
 							selectablesCount++
 					)
 			);

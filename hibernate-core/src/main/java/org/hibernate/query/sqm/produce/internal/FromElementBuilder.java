@@ -70,7 +70,7 @@ public class FromElementBuilder {
 				fromElementSpace,
 				parsingContext.makeUniqueIdentifier(),
 				alias,
-				entityBinding
+				entityBinding.getEntityDescriptor()
 		);
 		fromElementSpace.setRoot( root );
 		parsingContext.registerFromElementByUniqueId( root );
@@ -100,7 +100,7 @@ public class FromElementBuilder {
 				fromElementSpace,
 				uid,
 				alias,
-				entityToJoin
+				entityToJoin.getEntityDescriptor()
 		);
 		fromElementSpace.addJoin( join );
 		parsingContext.registerFromElementByUniqueId( join );
@@ -126,7 +126,7 @@ public class FromElementBuilder {
 				fromElementSpace,
 				parsingContext.makeUniqueIdentifier(),
 				alias,
-				entityToJoin,
+				entityToJoin.getEntityDescriptor(),
 				joinType
 		);
 		fromElementSpace.addJoin( join );
@@ -178,7 +178,7 @@ public class FromElementBuilder {
 					attributeBinding,
 					parsingContext.makeUniqueIdentifier(),
 					alias,
-					subclassIndicator,
+					subclassIndicator.getEntityDescriptor(),
 					joinType,
 					fetched
 			);

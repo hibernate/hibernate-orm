@@ -6,15 +6,13 @@
  */
 package org.hibernate.type.spi;
 
-import java.sql.Types;
-import java.util.Comparator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.EnumType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.java.internal.BigDecimalJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.BigIntegerJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.BlobJavaDescriptor;
@@ -54,7 +52,7 @@ import org.hibernate.type.descriptor.java.internal.UUIDJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.UrlJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.ZonedDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.TemporalJavaDescriptor;
 import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.sql.spi.BigIntSqlDescriptor;
@@ -82,7 +80,6 @@ import org.hibernate.type.descriptor.sql.spi.TinyIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarbinarySqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 import org.hibernate.type.internal.BasicTypeImpl;
-import org.hibernate.type.internal.TemporalTypeImpl;
 
 /**
  * Registry for BasicType instances.  Lookup is primarily done by Java type
@@ -100,11 +97,7 @@ import org.hibernate.type.internal.TemporalTypeImpl;
 public class BasicTypeRegistry {
 	private final TypeConfiguration typeConfiguration;
 
-	private final Map<Key,BasicType> registrations = new ConcurrentHashMap<>();
-	private Map<String, Key> castTypeToKeyXref = new ConcurrentHashMap<>();
-	private final Map<Class,Key> javaTypeToKeyXref = new ConcurrentHashMap<>();
-	private final Map<TemporalTypeXrefKey, Key> temporalTypeToKeyXref = new ConcurrentHashMap<>();
-
+	private final Map<Class,BasicType> javaTypeToBasicTypeXref = new ConcurrentHashMap<>();
 	private final JdbcRecommendedSqlTypeMappingContext baseJdbcRecommendedSqlTypeMappingContext;
 
 	public BasicTypeRegistry(TypeConfiguration typeConfiguration) {
@@ -151,39 +144,55 @@ public class BasicTypeRegistry {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> BasicType<T> getBasicType(Class<T> javaType) {
-		final Key registryKey = javaTypeToKeyXref.get( javaType );
-		if ( registryKey == null ) {
-			return null;
+		return javaTypeToBasicTypeXref.computeIfAbsent(
+				javaType,
+				k -> createBasicType( javaType )
+		);
+	}
+
+	private <T> BasicType createBasicType(Class<T> javaType) {
+		final JavaTypeDescriptor<T> descriptor = typeConfiguration.getJavaTypeDescriptorRegistry()
+				.getDescriptor( javaType );
+
+		if ( !BasicJavaDescriptor.class.isInstance( descriptor ) ) {
+			throw new HibernateException(
+					String.format(
+							Locale.ROOT,
+							"Previously registered non-basic JavaTypeDescriptor [%s] found for class [%s]; cannot create BasicType",
+							descriptor,
+							javaType.getName()
+					)
+			);
 		}
 
-		return getBasicType( registryKey );
+		final BasicJavaDescriptor<T> javaTypeDescriptor = (BasicJavaDescriptor<T>) descriptor;
+
+		final SqlTypeDescriptor recommendedSqlType = javaTypeDescriptor.getJdbcRecommendedSqlType(
+				new JdbcRecommendedSqlTypeMappingContext() {
+					@Override
+					public boolean isNationalized() {
+						return false;
+					}
+
+					@Override
+					public boolean isLob() {
+						return false;
+					}
+
+					@Override
+					public EnumType getEnumeratedType() {
+						return EnumType.ORDINAL;
+					}
+
+					@Override
+					public TypeConfiguration getTypeConfiguration() {
+						return typeConfiguration;
+					}
+				}
+		);
+
+		return new BasicTypeImpl<T>( javaTypeDescriptor, recommendedSqlType );
 	}
-
-	/**
-	 * Returns the BasicType by its registryKey (pk).
-	 *
-	 * @param registryKey The key (id/pk) for the BasicType we want.
-	 *
-	 * @return The linked BasicType.  May return {@code null}
-	 */
-	@SuppressWarnings("unchecked")
-	public <T> BasicType<T> getBasicType(Key registryKey) {
-		return registrations.get( registryKey );
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -271,71 +280,15 @@ public class BasicTypeRegistry {
 			sqlTypeDescriptor = javaTypeDescriptor.getJdbcRecommendedSqlType( jdbcTypeResolutionContext );
 		}
 
-		MutabilityPlan<T> mutabilityPlan = parameters.getMutabilityPlan();
-		if ( mutabilityPlan == null ) {
-			mutabilityPlan = javaTypeDescriptor.getMutabilityPlan();
-		}
+		return createBasicType( javaTypeDescriptor, sqlTypeDescriptor );
+	}
 
-		Comparator comparator = parameters.getComparator();
-		if ( comparator == null ) {
-			if ( javaTypeDescriptor.getJavaType() != null
-					&& Comparable.class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
-				comparator = new ComparableComparator();
-			}
-		}
-
-		if ( javaTypeDescriptor instanceof TemporalJavaDescriptor ) {
-			final TemporalJavaDescriptor temporalJavaDescriptor = (TemporalJavaDescriptor) javaTypeDescriptor;
-			javax.persistence.TemporalType temporalPrecision = parameters.getTemporalPrecision();
-			if ( temporalPrecision == null ) {
-				temporalPrecision = temporalJavaDescriptor.getPrecision();
-			}
-
-			TemporalTypeXrefKey fk = new TemporalTypeXrefKey( temporalJavaDescriptor, temporalPrecision );
-			Key key = temporalTypeToKeyXref.get( fk );
-			if ( key == null ) {
-				key = new Key(
-						temporalJavaDescriptor.getJavaType(),
-						sqlTypeDescriptor.getSqlType(),
-						mutabilityPlan,
-						temporalPrecision
-				);
-
-				temporalTypeToKeyXref.put( fk, key );
-			}
-
-			BasicType registeredType = registrations.get( key );
-			if ( registeredType == null ) {
-				registeredType = makeTemporalType(
-						temporalJavaDescriptor,
-						sqlTypeDescriptor,
-						mutabilityPlan,
-						comparator,
-						temporalPrecision
-				);
-			}
-
-			return registeredType;
-		}
-		else {
-			final Key key = new Key(
-					javaTypeDescriptor.getJavaType(),
-					sqlTypeDescriptor.getSqlType(),
-					mutabilityPlan,
-					null
-			);
-			BasicType registeredType = registrations.get( key );
-			if ( registeredType == null ) {
-				registeredType = makeBasicType(
-						javaTypeDescriptor,
-						sqlTypeDescriptor,
-						mutabilityPlan,
-						comparator
-				);
-			}
-
-			return registeredType;
-		}
+	private <T> BasicType<T> createBasicType(
+			BasicJavaDescriptor<T> javaTypeDescriptor,
+			SqlTypeDescriptor sqlTypeDescriptor) {
+		final BasicTypeImpl<T> basicType = new BasicTypeImpl<>( javaTypeDescriptor, sqlTypeDescriptor );
+		javaTypeToBasicTypeXref.put( javaTypeDescriptor.getJavaType(), basicType );
+		return basicType;
 	}
 
 	private <T> TemporalJavaDescriptor<T> determineJavaDescriptorForTemporalPrecision(javax.persistence.TemporalType temporalPrecision) {
@@ -353,58 +306,6 @@ public class BasicTypeRegistry {
 				throw new HibernateException( "Unrecognized JPA temporal precision : " + temporalPrecision );
 			}
 		}
-	}
-
-	private <T> TemporalTypeImpl makeTemporalType(
-			TemporalJavaDescriptor javaTypeDescriptor,
-			SqlTypeDescriptor sqlTypeDescriptor,
-			MutabilityPlan<T> mutabilityPlan,
-			Comparator comparator,
-			javax.persistence.TemporalType temporalPrecision) {
-		final TemporalTypeImpl type = new TemporalTypeImpl(
-				javaTypeDescriptor,
-				mutabilityPlan,
-				comparator,
-				sqlTypeDescriptor,
-				temporalPrecision
-		);
-
-		register( type, type.getRegistryKey() );
-
-		return type;
-	}
-
-	private <T> BasicTypeImpl makeBasicType(
-			BasicJavaDescriptor<T> javaTypeDescriptor,
-			SqlTypeDescriptor sqlTypeDescriptor,
-			MutabilityPlan<T> mutabilityPlan,
-			Comparator comparator) {
-		final BasicTypeImpl basicType = new BasicTypeImpl(
-				javaTypeDescriptor,
-				mutabilityPlan,
-				comparator,
-				sqlTypeDescriptor
-		);
-
-		register( basicType, basicType.getRegistryKey() );
-
-		return basicType;
-	}
-
-	public void register(BasicType type, Key registryKey) {
-		if ( registryKey == null ) {
-			throw new HibernateException( "Cannot register a type with a null registry key." );
-		}
-		if ( type == null ) {
-			throw new HibernateException( "Cannot register a null type." );
-		}
-		if ( type.getJavaType() == null ) {
-			throw new HibernateException( "BasicType must have a Java type." );
-		}
-
-		registrations.put( type.getRegistryKey(), type );
-		castTypeToKeyXref.put( type.getJavaType().getSimpleName(), type.getRegistryKey() );
-		javaTypeToKeyXref.put( type.getJavaType(), type.getRegistryKey() );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -476,178 +377,15 @@ public class BasicTypeRegistry {
 	}
 
 	private void registerBasicType(BasicJavaDescriptor javaTypeDescriptor, SqlTypeDescriptor sqlTypeDescriptor) {
-		registerBasicType( javaTypeDescriptor, sqlTypeDescriptor, null );
+		createBasicType( javaTypeDescriptor, sqlTypeDescriptor );
 	}
 
-	@SuppressWarnings("unchecked")
-	private void registerBasicType(
-			BasicJavaDescriptor javaDescriptor,
-			SqlTypeDescriptor sqlDescriptor,
-			MutabilityPlan mutabilityPlan) {
-		assert javaDescriptor != null;
-		assert sqlDescriptor != null;
-
-		final BasicType type = new BasicTypeImpl(
-				javaDescriptor,
-				mutabilityPlan,
-				null,
-				sqlDescriptor
-		);
-		register( type, type.getRegistryKey() );
-	}
 
 	private void registerTemporalType(TemporalJavaDescriptor javaDescriptor, SqlTypeDescriptor sqlDescriptor) {
-		registerTemporalType( javaDescriptor, sqlDescriptor, null );
+		createBasicType( javaDescriptor, sqlDescriptor );
 	}
 
-	@SuppressWarnings("unchecked")
-	private void registerTemporalType(
-			TemporalJavaDescriptor javaDescriptor,
-			SqlTypeDescriptor sqlDescriptor,
-			MutabilityPlan mutabilityPlan) {
-		final TemporalType type = new TemporalTypeImpl(
-				javaDescriptor,
-				mutabilityPlan,
-				null,
-				sqlDescriptor,
-				javaDescriptor.getPrecision()
-		);
-		register( type, type.getRegistryKey() );
-	}
-
-	public BasicType
-	getBasicTypeForCast(String name) {
-		final Key key = castTypeToKeyXref.get( name );
-		if ( key == null ) {
-			throw new IllegalArgumentException( "Could not determine cast type for given name : " + name );
-		}
-
-		return registrations.get( key );
-	}
-
-	/**
-	 * Represents a "primary key" into the registrations
-	 */
-	public static class Key {
-		private final Class javaType;
-		private final int jdbcTypeCode;
-		private final MutabilityPlan mutabilityPlan;
-		private final javax.persistence.TemporalType temporalPrecision;
-
-		private Key(
-				Class javaType,
-				int jdbcTypeCode,
-				MutabilityPlan mutabilityPlan,
-				javax.persistence.TemporalType temporalPrecision) {
-			this.javaType = javaType;
-			this.jdbcTypeCode = jdbcTypeCode;
-			this.mutabilityPlan = mutabilityPlan;
-			this.temporalPrecision = temporalPrecision;
-		}
-
-		public Class getJavaType() {
-			return javaType;
-		}
-
-		public int getJdbcTypeCode() {
-			return jdbcTypeCode;
-		}
-
-		public MutabilityPlan getMutabilityPlan() {
-			return mutabilityPlan;
-		}
-
-		public javax.persistence.TemporalType getTemporalPrecision() {
-			return temporalPrecision;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if ( this == o ) {
-				return true;
-			}
-			if ( o == null || getClass() != o.getClass() ) {
-				return false;
-			}
-
-			Key key = (Key) o;
-
-			if ( getJdbcTypeCode() != key.getJdbcTypeCode() ) {
-				return false;
-			}
-			if ( !getJavaType().equals( key.getJavaType() ) ) {
-				return false;
-			}
-			if ( !getMutabilityPlan().equals( key.getMutabilityPlan() ) ) {
-				return false;
-			}
-			return getTemporalPrecision() == key.getTemporalPrecision();
-		}
-
-		@Override
-		public int hashCode() {
-			int result = getJavaType().hashCode();
-			result = 31 * result + getJdbcTypeCode();
-			result = 31 * result + getMutabilityPlan().hashCode();
-			result = 31 * result + ( getTemporalPrecision() != null ? getTemporalPrecision().hashCode() : 0 );
-			return result;
-		}
-
-		public static Key from(BasicType type) {
-			javax.persistence.TemporalType precision = null;
-			if ( type instanceof TemporalType ) {
-				precision = ( (TemporalType) type ).getPrecision();
-			}
-			return from(
-					(TemporalJavaDescriptor) type.getJavaTypeDescriptor(),
-					type.getColumnMappings()[0].getSqlTypeDescriptor(),
-					type.getMutabilityPlan(),
-					precision
-			);
-		}
-
-		private static Key from(
-				BasicJavaDescriptor javaTypeDescriptor,
-				SqlTypeDescriptor sqlTypeDescriptor,
-				MutabilityPlan mutabilityPlan,
-				javax.persistence.TemporalType temporalPrecision) {
-			return new Key(
-					javaTypeDescriptor.getJavaType(),
-					sqlTypeDescriptor == null ? Types.OTHER : sqlTypeDescriptor.getSqlType(),
-					mutabilityPlan,
-					temporalPrecision
-			);
-		}
-
-		public static Key from(
-				BasicJavaDescriptor javaTypeDescriptor,
-				SqlTypeDescriptor sqlTypeDescriptor) {
-			return from(
-					javaTypeDescriptor,
-					sqlTypeDescriptor,
-					javaTypeDescriptor.getMutabilityPlan(),
-					javaTypeDescriptor instanceof TemporalJavaDescriptor
-							? ( (TemporalJavaDescriptor) javaTypeDescriptor ).getPrecision()
-							: null
-			);
-		}
-	}
-
-	public static class TemporalTypeXrefKey {
-		private final TemporalJavaDescriptor javaTypeDescriptor;
-		private final javax.persistence.TemporalType precision;
-
-		public TemporalTypeXrefKey(TemporalJavaDescriptor javaTypeDescriptor, javax.persistence.TemporalType precision) {
-			this.javaTypeDescriptor = javaTypeDescriptor;
-			this.precision = precision;
-		}
-
-		public TemporalJavaDescriptor getJavaTypeDescriptor() {
-			return javaTypeDescriptor;
-		}
-
-		public javax.persistence.TemporalType getPrecision() {
-			return precision;
-		}
+	public void register(BasicType type) {
+		javaTypeToBasicTypeXref.put( type.getJavaTypeDescriptor().getJavaType(), type );
 	}
 }

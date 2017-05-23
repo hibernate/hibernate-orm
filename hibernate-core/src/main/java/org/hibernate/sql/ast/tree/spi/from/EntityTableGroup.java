@@ -8,7 +8,6 @@ package org.hibernate.sql.ast.tree.spi.from;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.spi.AbstractEntityTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.metamodel.model.relational.spi.UnionSubclassTable;
@@ -16,11 +15,9 @@ import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstWalker;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
@@ -31,37 +28,29 @@ import org.hibernate.sql.ast.tree.spi.select.Selection;
  * @author Steve Ebersole
  */
 public class EntityTableGroup extends AbstractTableGroup implements Selectable {
-	private final NavigableContainerReference containerReference;
-	private final NavigablePath navigablePath;
-	private final SqlAliasBase sqlAliasBase;
 	private final TableReference primaryTableReference;
 	private final List<TableReferenceJoin> tableReferenceJoins;
 
 	private final EntityReference expression;
-	private final AbstractEntityTypeImplementor entityMetadata;
+	private final EntityTypeImplementor entityDescriptor;
 
 	public <T> EntityTableGroup(
 			String uid,
 			TableSpace tableSpace,
-			AbstractEntityTypeImplementor entityMetadata,
-			NavigableContainerReference containerReference,
+			EntityTypeImplementor entityDescriptor,
 			EntityValuedExpressableType entityValuedExpressableType,
 			NavigablePath navigablePath,
-			SqlAliasBase sqlAliasBase,
 			TableReference primaryTableReference,
 			List<TableReferenceJoin> joins) {
 		super( tableSpace, uid );
 
-		this.entityMetadata = entityMetadata;
-		this.containerReference = containerReference;
-		this.navigablePath = navigablePath;
-		this.sqlAliasBase = sqlAliasBase;
+		this.entityDescriptor = entityDescriptor;
 		this.primaryTableReference = primaryTableReference;
 		this.tableReferenceJoins = joins;
 
 		this.expression = new EntityReference(
 				this,
-				entityMetadata,
+				entityDescriptor,
 				entityValuedExpressableType,
 				navigablePath,
 				null,
@@ -69,8 +58,8 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 		);
 	}
 
-	public EntityTypeImplementor getEntittMetadata() {
-		return entityMetadata;
+	public EntityTypeImplementor getEntityDescriptor() {
+		return entityDescriptor;
 	}
 
 	@Override

@@ -15,11 +15,9 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeFactory;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
-import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupProducer;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupJoinProducer;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
+import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
+import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
+import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
 
 /**
  * A strategy for persisting a collection role. Defines a contract between
@@ -62,7 +60,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
  */
 public interface PersistentCollectionMetadata<O,C,E>
 		extends NavigableContainer<C>, RootTableGroupProducer, TableGroupJoinProducer,
-		EmbeddedContainer<C> {
+		TableReferenceContributor, EmbeddedContainer<C> {
 
 	Class[] CONSTRUCTOR_SIGNATURE = new Class[] {
 			Collection.class,
@@ -148,21 +146,6 @@ public interface PersistentCollectionMetadata<O,C,E>
 	Table getSeparateCollectionTable();
 
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// CollectionPersister as EmbeddedContainer
-
-	@Override
-	default TableGroup resolveTableGroup(NavigableReferenceInfo embeddedReferenceInfo, TableGroupResolver tableGroupResolver) {
-		// here we are asked to resolve the TableGroup to use for columns making up
-		// 		the collection's composite element or composite index index
-		// todo (6.0) : I *think* this is correct - verify
-
-		assert embeddedReferenceInfo.getReferencedNavigable() instanceof CollectionElementEmbedded
-				|| embeddedReferenceInfo.getReferencedNavigable() instanceof CollectionIndexEmbedded;
-
-		return tableGroupResolver.resolveTableGroup( embeddedReferenceInfo.getNavigableContainerReferenceInfo().getUniqueIdentifier() );
-	}
 
 
 

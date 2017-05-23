@@ -9,7 +9,7 @@ package org.hibernate.engine.internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.type.spi.VersionSupport;
+import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 
 import org.jboss.logging.Logger;
 
@@ -31,7 +31,7 @@ public final class Versioning {
 	}
 
 	/**
-	 * Create an initial optimistic locking value according the {@link org.hibernate.type.spi.VersionSupport}
+	 * Create an initial optimistic locking value according the {@link VersionSupport}
 	 * contract for the version property.
 	 *
 	 * @param versionType The version type.

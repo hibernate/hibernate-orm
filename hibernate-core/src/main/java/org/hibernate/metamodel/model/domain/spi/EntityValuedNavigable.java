@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.domain.spi;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
+import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
@@ -17,7 +17,8 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface EntityValuedNavigable<J> extends EntityValuedExpressableType<J>, NavigableContainer<J>, Fetchable<J> {
+public interface EntityValuedNavigable<J>
+		extends EntityValuedExpressableType<J>, NavigableContainer<J>, TableReferenceContributor {
 	@Override
 	default Type.PersistenceType getPersistenceType() {
 		return Type.PersistenceType.ENTITY;

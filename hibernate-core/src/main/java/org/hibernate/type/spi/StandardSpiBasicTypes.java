@@ -50,9 +50,6 @@ import org.hibernate.type.descriptor.java.internal.DurationJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.FloatJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.InstantJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.IntegerJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.JdbcDateJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.JdbcTimeJavaDescriptor;
-import org.hibernate.type.descriptor.java.internal.JdbcTimestampJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.LocalDateJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.LocalDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.LocalTimeJavaDescriptor;
@@ -70,7 +67,6 @@ import org.hibernate.type.descriptor.java.internal.TimeZoneJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.UUIDJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.UrlJavaDescriptor;
 import org.hibernate.type.descriptor.java.internal.ZonedDateTimeJavaDescriptor;
-import org.hibernate.type.descriptor.java.spi.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.sql.spi.BigIntSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.BinarySqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.BitSqlDescriptor;
@@ -96,7 +92,6 @@ import org.hibernate.type.descriptor.sql.spi.VarbinarySqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.VarcharSqlDescriptor;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.BooleanBasicTypeImpl;
-import org.hibernate.type.internal.TemporalTypeImpl;
 
 /**
  * Centralizes access to the standard set of basic {@link BasicType types}.
@@ -118,7 +113,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#BIT BIT}.
 	 */
-	public static final BasicType<Boolean> BOOLEAN = new BasicTypeImpl(
+	public static final BasicType<Boolean> BOOLEAN = new BasicTypeImpl<>(
 			BooleanJavaDescriptor.INSTANCE,
 			BitSqlDescriptor.INSTANCE
 	);
@@ -126,7 +121,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#INTEGER INTEGER}.
 	 */
-	public static final BasicType<Boolean> NUMERIC_BOOLEAN = new BooleanBasicTypeImpl(
+	public static final BasicType<Boolean> NUMERIC_BOOLEAN = new BooleanBasicTypeImpl<>(
 			BooleanJavaDescriptor.INSTANCE,
 			NumericSqlDescriptor.INSTANCE,
 			1,
@@ -136,7 +131,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#CHAR CHAR(1)} (using 'T'/'F').
 	 */
-	public static final BasicType<Boolean> TRUE_FALSE = new BooleanBasicTypeImpl(
+	public static final BasicType<Boolean> TRUE_FALSE = new BooleanBasicTypeImpl<>(
 			BooleanJavaDescriptor.INSTANCE,
 			CharSqlDescriptor.INSTANCE,
 			'T',
@@ -146,7 +141,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#CHAR CHAR(1)} (using 'Y'/'N').
 	 */
-	public static final BasicType<Boolean> YES_NO = new BooleanBasicTypeImpl(
+	public static final BasicType<Boolean> YES_NO = new BooleanBasicTypeImpl<>(
 			BooleanJavaDescriptor.INSTANCE,
 			CharSqlDescriptor.INSTANCE,
 			'Y',
@@ -160,7 +155,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Byte} to JDBC {@link java.sql.Types#TINYINT TINYINT}.
 	 */
-	public static final BasicType<Byte> BYTE = new BasicTypeImpl(
+	public static final BasicType<Byte> BYTE = new BasicTypeImpl<>(
 			ByteJavaDescriptor.INSTANCE,
 			TinyIntSqlDescriptor.INSTANCE
 	);
@@ -168,7 +163,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.
 	 */
-	public static final BasicType<byte[]> BINARY = new BasicTypeImpl(
+	public static final BasicType<byte[]> BINARY = new BasicTypeImpl<>(
 			PrimitiveByteArrayJavaDescriptor.INSTANCE,
 			VarbinarySqlDescriptor.INSTANCE
 	);
@@ -455,7 +450,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link LocalDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final BasicType<LocalDateTime> LOCAL_DATE_TIME = new TemporalTypeImpl(
+	public static final BasicType<LocalDateTime> LOCAL_DATE_TIME = new BasicTypeImpl<>(
 			LocalDateTimeJavaDescriptor.INSTANCE,
 			TimestampSqlDescriptor.INSTANCE
 	);
@@ -463,7 +458,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link LocalDate} to JDBC {@link java.sql.Types#DATE DATE}.
 	 */
-	public static final BasicType<LocalDate> LOCAL_DATE = new TemporalTypeImpl(
+	public static final BasicType<LocalDate> LOCAL_DATE = new BasicTypeImpl(
 			LocalDateJavaDescriptor.INSTANCE,
 			DateSqlDescriptor.INSTANCE
 	);
@@ -471,7 +466,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link LocalTime} to JDBC {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final BasicType<LocalTime> LOCAL_TIME = new TemporalTypeImpl(
+	public static final BasicType<LocalTime> LOCAL_TIME = new BasicTypeImpl(
 			LocalTimeJavaDescriptor.INSTANCE,
 			TimeSqlDescriptor.INSTANCE
 	);
@@ -479,7 +474,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final BasicType<OffsetDateTime> OFFSET_DATE_TIME = new TemporalTypeImpl(
+	public static final BasicType<OffsetDateTime> OFFSET_DATE_TIME = new BasicTypeImpl(
 			OffsetDateTimeJavaDescriptor.INSTANCE,
 			TimestampSqlDescriptor.INSTANCE
 	);
@@ -487,7 +482,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final BasicType<OffsetTime> OFFSET_TIME = new TemporalTypeImpl(
+	public static final BasicType<OffsetTime> OFFSET_TIME = new BasicTypeImpl(
 			OffsetTimeJavaDescriptor.INSTANCE,
 			TimeSqlDescriptor.INSTANCE
 	);
@@ -495,7 +490,7 @@ public final class StandardSpiBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final BasicType<ZonedDateTime> ZONED_DATE_TIME = new TemporalTypeImpl(
+	public static final BasicType<ZonedDateTime> ZONED_DATE_TIME = new BasicTypeImpl(
 			ZonedDateTimeJavaDescriptor.INSTANCE,
 			TimestampSqlDescriptor.INSTANCE
 	);
@@ -504,7 +499,7 @@ public final class StandardSpiBasicTypes {
 	 * The standard Hibernate type for mapping {@link Date} ({@link java.sql.Time}) to JDBC
 	 * {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final BasicType<Date> TIME = new TemporalTypeImpl(
+	public static final BasicType<Date> TIME = new BasicTypeImpl(
 			DateJavaDescriptor.INSTANCE,
 			TimeSqlDescriptor.INSTANCE
 	);
@@ -513,7 +508,7 @@ public final class StandardSpiBasicTypes {
 	 * The standard Hibernate type for mapping {@link Date} ({@link java.sql.Date}) to JDBC
 	 * {@link java.sql.Types#DATE DATE}.
 	 */
-	public static final BasicType<Date> DATE = new TemporalTypeImpl(
+	public static final BasicType<Date> DATE = new BasicTypeImpl(
 			DateJavaDescriptor.INSTANCE,
 			DateSqlDescriptor.INSTANCE
 	);
@@ -522,7 +517,7 @@ public final class StandardSpiBasicTypes {
 	 * The standard Hibernate type for mapping {@link Date} ({@link java.sql.Timestamp}) to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final BasicType<Date> TIMESTAMP = new TemporalTypeImpl(
+	public static final BasicType<Date> TIMESTAMP = new BasicTypeImpl(
 			DateJavaDescriptor.INSTANCE,
 			TimestampSqlDescriptor.INSTANCE
 	);
@@ -531,7 +526,7 @@ public final class StandardSpiBasicTypes {
 	 * The standard Hibernate type for mapping {@link Calendar} to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final BasicType<Calendar> CALENDAR = new TemporalTypeImpl(
+	public static final BasicType<Calendar> CALENDAR = new BasicTypeImpl(
 			CalendarJavaDescriptor.INSTANCE,
 			TimestampSqlDescriptor.INSTANCE
 	);
@@ -540,7 +535,7 @@ public final class StandardSpiBasicTypes {
 	 * The standard Hibernate type for mapping {@link Calendar} to JDBC
 	 * {@link java.sql.Types#DATE DATE}.
 	 */
-	public static final BasicType<Calendar> CALENDAR_DATE = new TemporalTypeImpl(
+	public static final BasicType<Calendar> CALENDAR_DATE = new BasicTypeImpl(
 			CalendarDateJavaDescriptor.INSTANCE,
 			DateSqlDescriptor.INSTANCE
 	);
@@ -549,7 +544,7 @@ public final class StandardSpiBasicTypes {
 	 * The standard Hibernate type for mapping {@link Calendar} to JDBC
 	 * {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final BasicType<Calendar> CALENDAR_TIME = new TemporalTypeImpl(
+	public static final BasicType<Calendar> CALENDAR_TIME = new BasicTypeImpl(
 			CalendarTimeJavaDescriptor.INSTANCE,
 			TimeSqlDescriptor.INSTANCE
 	);
@@ -559,7 +554,7 @@ public final class StandardSpiBasicTypes {
 	 * The standard Hibernate type for mapping {@link Instant} to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final BasicType<Instant> INSTANT = new TemporalTypeImpl(
+	public static final BasicType<Instant> INSTANT = new BasicTypeImpl(
 			InstantJavaDescriptor.INSTANCE, TimestampSqlDescriptor.INSTANCE
 	);
 
@@ -1118,107 +1113,6 @@ public final class StandardSpiBasicTypes {
 		);
 
 
-		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// immutable variants of various mutable types
-
-		handle(
-				new TemporalTypeImpl<>(
-						JdbcDateJavaDescriptor.INSTANCE,
-						DateSqlDescriptor.INSTANCE,
-						ImmutableMutabilityPlan.INSTANCE
-				),
-				null,
-				typeConfiguration,
-				basicTypeProducerRegistry,
-				"imm_date"
-		);
-
-		handle(
-				new TemporalTypeImpl<>(
-						JdbcTimeJavaDescriptor.INSTANCE,
-						TimeSqlDescriptor.INSTANCE,
-						ImmutableMutabilityPlan.INSTANCE
-				),
-				null,
-				typeConfiguration,
-				basicTypeProducerRegistry,
-				"imm_time"
-		);
-
-		handle(
-				new TemporalTypeImpl<>(
-						JdbcTimestampJavaDescriptor.INSTANCE,
-						TimestampSqlDescriptor.INSTANCE,
-						ImmutableMutabilityPlan.INSTANCE
-				),
-				null,
-				typeConfiguration,
-				basicTypeProducerRegistry,
-				"imm_timestamp"
-		);
-
-		handle(
-				new TemporalTypeImpl<>(
-						CalendarJavaDescriptor.INSTANCE,
-						TimestampSqlDescriptor.INSTANCE,
-						ImmutableMutabilityPlan.INSTANCE
-				),
-				null,
-				typeConfiguration,
-				basicTypeProducerRegistry,
-				"imm_calendar"
-		);
-
-		handle(
-				new TemporalTypeImpl<>(
-						CalendarTimeJavaDescriptor.INSTANCE,
-						TimeSqlDescriptor.INSTANCE,
-						ImmutableMutabilityPlan.INSTANCE
-				),
-				null,
-				typeConfiguration,
-				basicTypeProducerRegistry,
-				"imm_calendar_time"
-		);
-
-		handle(
-				new TemporalTypeImpl<>(
-						CalendarDateJavaDescriptor.INSTANCE,
-						DateSqlDescriptor.INSTANCE,
-						ImmutableMutabilityPlan.INSTANCE
-				),
-				null,
-				typeConfiguration,
-				basicTypeProducerRegistry,
-				"imm_calendar_date"
-		);
-
-		handle(
-				new BasicTypeImpl(
-						SerializableJavaDescriptor.INSTANCE,
-						ImmutableMutabilityPlan.INSTANCE,
-						null,
-						VarbinarySqlDescriptor.INSTANCE
-				),
-				null,
-				typeConfiguration,
-				basicTypeProducerRegistry,
-				"imm_serializable"
-		);
-
-		handle(
-				new BasicTypeImpl(
-						PrimitiveByteArrayJavaDescriptor.INSTANCE,
-						ImmutableMutabilityPlan.INSTANCE,
-						null,
-						VarbinarySqlDescriptor.INSTANCE
-				),
-				null,
-				typeConfiguration,
-				basicTypeProducerRegistry,
-				"imm_binary"
-		);
-
 		// todo (6.0) - ? how to handle DbTimestampType?
 		//		DbTimestampType was really just a variant of TimestampType with overridden
 		//		version (opt lock) support
@@ -1229,30 +1123,24 @@ public final class StandardSpiBasicTypes {
 	}
 
 	private static void handle(
-			Type type,
+			BasicType type,
 			String legacyTypeClassName,
 			TypeConfiguration typeConfiguration,
 			BasicTypeProducerRegistry basicTypeProducerRegistry,
 			String... registrationKeys) {
-		assert type instanceof BasicType;
-		final BasicType basicType = (BasicType) type;
-
-		typeConfiguration.getBasicTypeRegistry().register(
-				basicType,
-				BasicTypeRegistry.Key.from( basicType )
-		);
+		typeConfiguration.getBasicTypeRegistry().register( type );
 
 		// we add these
 		if ( StringHelper.isNotEmpty( legacyTypeClassName ) ) {
 			basicTypeProducerRegistry.register(
-					basicType,
+					type,
 					BasicTypeProducerRegistry.DuplicationStrategy.OVERWRITE,
 					legacyTypeClassName
 			);
 		}
 
 		basicTypeProducerRegistry.register(
-				basicType,
+				type,
 				BasicTypeProducerRegistry.DuplicationStrategy.OVERWRITE,
 				registrationKeys
 		);

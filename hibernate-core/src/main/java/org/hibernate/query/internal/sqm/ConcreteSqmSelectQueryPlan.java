@@ -7,6 +7,7 @@
 package org.hibernate.query.internal.sqm;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import javax.persistence.Tuple;
@@ -14,19 +15,17 @@ import javax.persistence.TupleElement;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.streams.StingArrayCollector;
-import org.hibernate.loader.spi.AfterLoadAction;
-import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.JpaTupleBuilder;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.sql.ast.produce.sqm.spi.Callback;
-import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
-import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.consume.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.ast.consume.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.ast.consume.internal.RowTransformerSingularReturnImpl;
@@ -36,8 +35,10 @@ import org.hibernate.sql.ast.consume.internal.TupleElementImpl;
 import org.hibernate.sql.ast.consume.spi.JdbcSelect;
 import org.hibernate.sql.ast.consume.spi.RowTransformer;
 import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
-import org.hibernate.query.sqm.tree.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
+import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
+import org.hibernate.sql.ast.produce.sqm.spi.Callback;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 
 /**
  * @author Steve Ebersole
@@ -78,7 +79,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				for ( SqmSelection selection : sqm.getQuerySpec().getSelectClause().getSelections() ) {
 					tupleElementList.add(
 							new TupleElementImpl(
-									( (TypeExporter) selection.getExpression().getExpressionType() ).getOrmType().getReturnedClass(),
+									selection.getExpression().getExpressionType().getJavaTypeDescriptor().getJavaType(),
 									selection.getAlias()
 							)
 					);
@@ -144,32 +145,17 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			QueryParameterBindings inputParameterBindings) {
 		verifyQueryIsSelect();
 
-		boolean shallow = false;
-
-		final Callback callback = new Callback() {
-			@Override
-			public void registerAfterLoadAction(AfterLoadAction afterLoadAction) {
-				// do nothing here
-			}
+		final Callback callback = afterLoadAction -> {
+			// do nothing here
 		};
 
-		// todo (6.0) : SqmSelectToSqlAstConverter needs to account for the EntityGraph hint
-		final SqlSelectPlan interpretation = SqmSelectToSqlAstConverter.interpret(
-				sqm,
+		final JdbcSelect jdbcSelect = buildJdbcSelect(
 				persistenceContext,
 				queryOptions,
-				shallow,
+				inputParameterBindings,
 				callback
 		);
 
-		// todo (6.0) : is there any benefit to building SqlSelectPlan and then JdbcSelect in successive steps?
-		//		as opposed to combining into one step
-		final JdbcSelect jdbcSelect = SqlSelectAstToJdbcSelectConverter.interpret(
-				interpretation,
-				shallow,
-				persistenceContext,
-				inputParameterBindings
-		);
 
 		return new JdbcSelectExecutorStandardImpl().list(
 				jdbcSelect,
@@ -178,6 +164,37 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				rowTransformer,
 				callback,
 				persistenceContext
+		);
+	}
+
+	private JdbcSelect buildJdbcSelect(
+			SharedSessionContractImplementor persistenceContext,
+			QueryOptions queryOptions,
+			QueryParameterBindings inputParameterBindings, Callback callback) {
+		// todo (6.0) : SqmSelectToSqlAstConverter needs to account for the EntityGraph hint
+		final SqlSelectPlan interpretation = SqmSelectToSqlAstConverter.interpret(
+				sqm,
+				queryOptions,
+				new SqlAstBuildingContext() {
+					@Override
+					public SessionFactoryImplementor getSessionFactory() {
+						return persistenceContext.getFactory();
+					}
+
+					@Override
+					public Callback getCallback() {
+						return callback;
+					}
+				}
+		);
+
+		// todo (6.0) : is there any benefit to building SqlSelectPlan and then JdbcSelect in successive steps?
+		//		as opposed to combining into one step
+		return SqlSelectAstToJdbcSelectConverter.interpret(
+				interpretation,
+				persistenceContext,
+				inputParameterBindings,
+				Collections.emptyList()
 		);
 	}
 
@@ -209,29 +226,16 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			ScrollMode scrollMode) {
 		verifyQueryIsSelect();
 
-		boolean shallow = false;
-
-		final Callback callback = new Callback() {
-			@Override
-			public void registerAfterLoadAction(AfterLoadAction afterLoadAction) {
-				// do nothing here
-			}
+		final Callback callback = afterLoadAction -> {
+			// do nothing here
 		};
 
 		// todo : SqmSelectToSqlAstConverter needs to account for the EntityGraph hint
-		final SqlSelectPlan interpretation = SqmSelectToSqlAstConverter.interpret(
-				sqm,
+		final JdbcSelect jdbcSelect = buildJdbcSelect(
 				persistenceContext,
 				queryOptions,
-				shallow,
+				inputParameterBindings,
 				callback
-		);
-
-		final JdbcSelect jdbcSelect = SqlSelectAstToJdbcSelectConverter.interpret(
-				interpretation,
-				shallow,
-				persistenceContext,
-				inputParameterBindings
 		);
 
 		return new JdbcSelectExecutorStandardImpl().scroll(

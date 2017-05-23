@@ -19,7 +19,6 @@ import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;
 import org.hibernate.type.descriptor.spi.WrapperOptions;
 import org.hibernate.type.descriptor.sql.internal.SqlTypeDescriptorBaseline;
-import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;

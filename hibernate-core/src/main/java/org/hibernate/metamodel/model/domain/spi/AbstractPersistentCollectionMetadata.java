@@ -40,18 +40,22 @@ import org.hibernate.metamodel.model.domain.internal.CollectionIndexEntityImpl;
 import org.hibernate.metamodel.model.domain.internal.PersisterHelper;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ElementColumnReferenceSource;
 import org.hibernate.sql.ast.produce.metamodel.spi.IndexColumnReferenceSource;
-import org.hibernate.sql.ast.produce.metamodel.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
-import org.hibernate.sql.ast.produce.metamodel.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
-import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.sql.JoinType;
+import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
+import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
+import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.CollectionTableGroup;
+import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
+import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.Type;
 
@@ -268,60 +272,127 @@ public abstract class AbstractPersistentCollectionMetadata<O,C,E> implements Per
 	}
 
 	@Override
-	public CollectionTableGroup createRootTableGroup(
-			NavigableReferenceInfo navigableReferenceInfo,
-			RootTableGroupContext tableGroupContext,
-			SqlAliasBaseGenerator sqlAliasBaseResolver) {
-		final SqlAliasBase sqlAliasBase = sqlAliasBaseResolver.getSqlAliasBase( navigableReferenceInfo );
-
-		final TableReference collectionTableReference;
-		if ( separateCollectionTable != null ) {
-			collectionTableReference = new TableReference( separateCollectionTable, sqlAliasBase.generateNewAlias() );
-		}
-		else {
-			collectionTableReference = null;
-		}
-
-		final ElementColumnReferenceSource elementTableGroup = new ElementColumnReferenceSource(
-				navigableReferenceInfo.getUniqueIdentifier()
-		);
-		getElementDescriptor().applyTableReferenceJoins(
-				JoinType.LEFT_OUTER_JOIN,
-				sqlAliasBase,
-				elementTableGroup
-		);
-
-		final IndexColumnReferenceSource indexTableGroup;
-		if ( getIndexDescriptor() != null ) {
-			indexTableGroup = new IndexColumnReferenceSource(
-					navigableReferenceInfo.getUniqueIdentifier()
-			);
-			getIndexDescriptor().applyTableReferenceJoins(
-					JoinType.LEFT_OUTER_JOIN,
-					sqlAliasBase,
-					elementTableGroup
-			);
-		}
-		else {
-			indexTableGroup = null;
-		}
-
-		return new CollectionTableGroup(
-				this,
-				tableGroupContext.getTableSpace(),
-				navigableReferenceInfo.getUniqueIdentifier(),
-				collectionTableReference,
-				elementTableGroup,
-				indexTableGroup
-		);
+	public TableGroup createRootTableGroup(
+			TableGroupInfoSource tableGroupInfo,
+			RootTableGroupContext tableGroupContext) {
+		throw new org.hibernate.sql.NotYetImplementedException(  );
+//		final SqlAliasBase sqlAliasBase = tableGroupContext.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
+//		final RootTableGroupTableReferenceCollector collector = new RootTableGroupTableReferenceCollector( this, sqlAliasBase );
+//		applyTableReferenceJoins(
+//				null,
+//				JoinType.INNER,
+//				sqlAliasBase,
+//				collector,
+//				tableGroupContext
+//		);
+//		return null;
 	}
+
+	// ultimately, "inclusion" in a collection must defined through a single table whether
+	// that be:
+	//		1) a "separate" collection table (@JoinTable) - could be either:
+	//			a) an @ElementCollection - element/index value are contained on this separate table
+	//			b) @ManyToMany - the separate table is an association table with column(s) that define the
+	//				FK to an entity table.  NOTE that this is true for element and/or index -
+	//				The element must be defined via the FK.  In this model, the index could be:
+	// 					1) column(s) on the collection table pointing to the tables for
+	// 						the entity that defines the index - only valid for map-keys that
+	// 						are entities
+	//					2) a basic/embedded value on the collection table
+	//					3) a basic/embedded value on the element entity table
+	//			c) @OneToOne or @ManyToOne - essentially the same as (b) but with
+	//				UKs defined on link table restricting cardinality
+	//		2) no separate collection table - only valid for @OneToOne or @ManyToOne, although (1.c)
+	//			for alternative mapping for @OneToOne or @ManyToOne.  Here the "collection table"
+	//			is the primary table for the associated entity
+
+//	private static class RootTableGroupTableReferenceCollector implements TableReferenceJoinCollector {
+//		private final AbstractPersistentCollectionMetadata collectionMetadata;
+//		private final TableReference collectionTableReference;
+//		private TableReference primaryTableReference;
+//
+//		public RootTableGroupTableReferenceCollector(
+//				AbstractPersistentCollectionMetadata collectionMetadata,
+//				SqlAliasBase sqlAliasBase) {
+//			this.collectionMetadata = collectionMetadata;
+//
+//			if ( collectionMetadata.separateCollectionTable != null ) {
+//				this.collectionTableReference = new TableReference( collectionMetadata.separateCollectionTable, sqlAliasBase.generateNewAlias() );
+//				primaryTableReference = collectionTableReference;
+//			}
+//			else {
+//
+//			}
+//		}
+//
+//		@Override
+//		public void addRoot(TableReference root) {
+//
+//		}
+//
+//		@Override
+//		public void collectTableReferenceJoin(TableReferenceJoin tableReferenceJoin) {
+//
+//		}
+//	}
+
+//	@Override
+//	public CollectionTableGroup createRootTableGroup(
+//			NavigableReferenceInfo navigableReferenceInfo,
+//			RootTableGroupContext tableGroupContext,
+//			SqlAliasBaseGenerator sqlAliasBaseResolver) {
+//		final SqlAliasBase sqlAliasBase = sqlAliasBaseResolver.getSqlAliasBase( navigableReferenceInfo );
+//
+//		final TableReference collectionTableReference;
+//		if ( separateCollectionTable != null ) {
+//			collectionTableReference = new TableReference( separateCollectionTable, sqlAliasBase.generateNewAlias() );
+//		}
+//		else {
+//			collectionTableReference = null;
+//		}
+//
+//		final ElementColumnReferenceSource elementTableGroup = new ElementColumnReferenceSource(
+//				navigableReferenceInfo.getUniqueIdentifier()
+//		);
+//		getElementDescriptor().applyTableReferenceJoins(
+//				JoinType.LEFT_OUTER_JOIN,
+//				sqlAliasBase,
+//				elementTableGroup
+//		);
+//
+//		final IndexColumnReferenceSource indexTableGroup;
+//		if ( getIndexDescriptor() != null ) {
+//			indexTableGroup = new IndexColumnReferenceSource(
+//					navigableReferenceInfo.getUniqueIdentifier()
+//			);
+//			getIndexDescriptor().applyTableReferenceJoins(
+//					JoinType.LEFT_OUTER_JOIN,
+//					sqlAliasBase,
+//					elementTableGroup
+//			);
+//		}
+//		else {
+//			indexTableGroup = null;
+//		}
+//
+//		return new CollectionTableGroup(
+//				this,
+//				tableGroupContext.getTableSpace(),
+//				navigableReferenceInfo.getUniqueIdentifier(),
+//				collectionTableReference,
+//				elementTableGroup,
+//				indexTableGroup
+//		);
+//	}
+
 
 	@Override
 	public TableGroupJoin createTableGroupJoin(
-			NavigableReferenceInfo navigableReferenceInfo,
-			SqmJoinType joinType,
+			TableGroupInfoSource tableGroupInfoSource,
+			JoinType joinType,
+			NavigableReference joinedReference,
 			JoinedTableGroupContext tableGroupJoinContext) {
-		return null;
+		throw new org.hibernate.sql.NotYetImplementedException(  );
 	}
 
 }

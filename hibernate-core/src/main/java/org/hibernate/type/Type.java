@@ -6,10 +6,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.EmbeddedType;
-import org.hibernate.type.spi.EntityType;
 
 /**
  *
@@ -17,20 +15,59 @@ import org.hibernate.type.spi.EntityType;
  */
 public interface Type<T> {
 	/**
+	 * Return the classification of this Type.
+	 *
+	 * @return The Type's classification/categorization
+	 */
+	Classification getClassification();
+
+	JavaTypeDescriptor<T> getJavaTypeDescriptor();
+
+	/**
+	 * Get the Java type handled by this Hibernate mapping Type.  May return {@code null}
+	 * in the case of non-basic types in dynamic domain models.
+	 */
+	default Class<T> getJavaType() {
+		return getJavaTypeDescriptor().getJavaType();
+	}
+
+	/**
+	 * Compare two instances of the class mapped by this type for
+	 * persistence "equality" (equality of persistent state).
+	 * <p/>
+	 * This should always equate to some form of comparison of the value's internal state.  As an example, for
+	 * something like a date the comparison should be based on its internal "time" state based on the specific portion
+	 * it is meant to represent (timestamp, date, time).
+	 *
+	 * @param x The first value
+	 * @param y The second value
+	 *
+	 * @return True if there are considered equal (see discussion above).
+	 *
+	 * @throws HibernateException A problem occurred performing the comparison
+	 */
+	boolean areEqual(T x, T y) throws HibernateException;
+
+	/**
+	 * Return a String representation of the given value for use in Hibernate logging.
+	 */
+	default String toLoggableString(Object value) {
+		return value == null ? "<null>" : value.toString();
+	}
+
+	/**
 	 * Enumerated values for the classification of the Type.
 	 */
 	enum Classification {
 		/**
-		 * Indicates that this type represents basic values (Strings, Integers, enums, etc).  Types classified as
-		 * BASIC will be castable to {@link BasicType}.
+		 * Indicates that this type represents basic values (Strings, Integers, enums, etc).
 		 * <p/>
 		 * Corresponds to the JPA {@link javax.persistence.metamodel.Type.PersistenceType#BASIC} classification
 		 */
 		BASIC( javax.persistence.metamodel.Type.PersistenceType.BASIC ),
 
 		/**
-		 * Represents composite values (what JPA calls embedded/embeddable).  Types classified as
-		 * COMPOSITE will be castable to {@link EmbeddedType}
+		 * Represents composite values (what JPA calls embedded/embeddable).
 		 * <p/>
 		 * Corresponds to the JPA {@link javax.persistence.metamodel.Type.PersistenceType#EMBEDDABLE} classification
 		 */
@@ -38,15 +75,13 @@ public interface Type<T> {
 
 		/**
 		 * Represents reverse-discriminated values (where the discriminator is on the FK side of the association).
-		 * Types classified as ANY will be castable to {@link AnyType}
 		 * <p/>
 		 * Has no corresponding JPA classification.  JPA simply has no such concept.
 		 */
 		ANY( null ),
 
 		/**
-		 * Represents an entity value (either as a root, one-to-one or many-to-one).  Types classified
-		 * as ENTITY will be castable to {@link EntityType}
+		 * Represents an entity value (either as a root, one-to-one or many-to-one).
 		 * <p/>
 		 * Corresponds to the JPA {@link javax.persistence.metamodel.Type.PersistenceType#ENTITY} classification
 		 */
@@ -60,8 +95,7 @@ public interface Type<T> {
 		MAPPED_SUPERCLASS( javax.persistence.metamodel.Type.PersistenceType.MAPPED_SUPERCLASS ),
 
 		/**
-		 * Represents a plural attribute, including the FK.   Types classified as COLLECTION
-		 * will be castable to {@link CollectionType}
+		 * Represents a plural attribute, including the FK.
 		 * <p/>
 		 * Has no corresponding JPA classification.  JPA handles this via PluralAttribute and the
 		 * fact that support for Collection types in JPA is extremely narrow.
@@ -98,23 +132,4 @@ public interface Type<T> {
 			}
 		}
 	}
-
-	/**
-	 * Return the classification of this Type.
-	 *
-	 * @return The Type's classification/categorization
-	 */
-	Classification getClassification();
-
-	JavaTypeDescriptor<T> getJavaTypeDescriptor();
-
-	/**
-	 * Get the Java type handled by this Hibernate mapping Type.  May return {@code null}
-	 * in the case of non-basic types in dynamic domain models.
-	 */
-	default Class<T> getJavaType() {
-		return getJavaTypeDescriptor().getJavaType();
-	}
-
-	boolean isEqual(T one, T another);
 }

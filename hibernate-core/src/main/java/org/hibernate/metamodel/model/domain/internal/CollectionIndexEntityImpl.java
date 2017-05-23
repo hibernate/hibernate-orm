@@ -8,7 +8,6 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionIndex;
@@ -22,10 +21,8 @@ import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.JoinType;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupContext;
+import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultEntityImpl;
-import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
@@ -140,16 +137,5 @@ public class CollectionIndexEntityImpl<J>
 				null,
 				selectedExpression.getNavigablePath()
 		);
-	}
-
-	@Override
-	public Fetch generateFetch(
-			FetchParent fetchParent,
-			NavigableReference selectedExpression,
-			FetchStrategy fetchStrategy,
-			String resultVariable,
-			SqlSelectionResolver sqlSelectionResolver,
-			QueryResultCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
 	}
 }

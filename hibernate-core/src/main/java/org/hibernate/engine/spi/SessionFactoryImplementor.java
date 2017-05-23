@@ -49,7 +49,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -63,7 +63,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface SessionFactoryImplementor
-		extends Mapping, SessionFactory, QueryParameterBindingTypeResolver {
+		extends SessionFactory, QueryParameterBindingTypeResolver {
 	/**
 	 * Get the UUID for this SessionFactory.  The value is generated as a {@link java.util.UUID}, but kept
 	 * as a String.

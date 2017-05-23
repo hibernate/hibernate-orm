@@ -16,7 +16,6 @@ import java.util.Calendar;
 
 import javax.persistence.TemporalType;
 
-import org.hibernate.type.spi.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.spi.ValueBinder;
 import org.hibernate.type.descriptor.spi.ValueExtractor;

@@ -41,6 +41,9 @@ public interface EntityHierarchy {
 	 */
 	<O,J> EntityIdentifier<O,J> getIdentifierDescriptor();
 
+	/**
+	 * Assuming that the hierarchy defines a natural-id, return its descriptor
+	 */
 	NaturalIdentifierDescriptor getNaturalIdentifierDescriptor();
 
 	/**
@@ -80,13 +83,6 @@ public interface EntityHierarchy {
 	 * for second-level caching.
 	 */
 	EntityRegionAccessStrategy getEntityRegionAccessStrategy();
-
-	/**
-	 * Assuming that the hierarchy defines a natural-id and that natural-id is
-	 * configured to be cached, retrieve the second-level cache access strategy for
-	 * the natural-id value cache.  May return {@code null}.
-	 */
-	NaturalIdRegionAccessStrategy getNaturalIdRegionAccessStrategy();
 
 	String getWhere();
 

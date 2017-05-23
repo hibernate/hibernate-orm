@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.Collection;
 
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -23,4 +24,6 @@ public interface NaturalIdentifierDescriptor {
 	 * @param entityId The identifier value
 	 */
 	Object[] resolveSnapshot(Object entityId, SharedSessionContractImplementor session);
+
+	NaturalIdRegionAccessStrategy getNaturalIdCaching();
 }

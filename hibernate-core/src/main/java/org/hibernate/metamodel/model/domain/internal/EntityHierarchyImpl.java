@@ -31,6 +31,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.InheritanceStrategy;
+import org.hibernate.metamodel.model.domain.spi.NaturalIdentifierDescriptor;
 import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
@@ -49,7 +50,6 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 
 	private final EntityTypeImplementor rootEntityPersister;
 	private final EntityRegionAccessStrategy caching;
-	private final NaturalIdRegionAccessStrategy naturalIdCaching;
 
 	private final InheritanceStrategy inheritanceStrategy;
 	private final EntityMode entityMode;
@@ -75,7 +75,6 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 
 		this.rootEntityPersister = rootEntityPersister;
 		this.caching = caching;
-		this.naturalIdCaching = naturalIdCaching;
 		this.inheritanceStrategy = interpretInheritanceType( rootEntityBinding );
 		this.entityMode = rootEntityBinding.hasPojoRepresentation() ? EntityMode.POJO : EntityMode.MAP;
 		this.optimisticLockStyle = rootEntityBinding.getOptimisticLockStyle();
@@ -297,6 +296,11 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	@Override
+	public NaturalIdentifierDescriptor getNaturalIdentifierDescriptor() {
+		return null;
+	}
+
+	@Override
 	public EntityIdentifier getIdentifierDescriptor() {
 		return identifierDescriptor;
 	}
@@ -329,11 +333,6 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	@Override
 	public EntityRegionAccessStrategy getEntityRegionAccessStrategy() {
 		return caching;
-	}
-
-	@Override
-	public NaturalIdRegionAccessStrategy getNaturalIdRegionAccessStrategy() {
-		return naturalIdCaching;
 	}
 
 	@Override

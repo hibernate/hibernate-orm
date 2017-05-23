@@ -17,9 +17,8 @@ import java.util.ListIterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.CollectionAliases;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.type.spi.Type;
+import org.hibernate.sql.NotYetImplementedException;
 
 /**
  * An unordered, unkeyed collection that can contain the same element
@@ -88,31 +87,31 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object readFrom(ResultSet rs, PersistentCollectionMetadata persister, CollectionAliases descriptor, Object owner)
-			throws HibernateException, SQLException {
-		// note that if we load this collection from a cartesian product
-		// the multiplicity would be broken ... so use an idbag instead
-		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() ) ;
-		if ( element != null ) {
-			bag.add( element );
-		}
-		return element;
+	public Object readFrom(ResultSet rs, PersistentCollectionMetadata persister, Object owner) throws SQLException {
+		throw new NotYetImplementedException(  );
+		// todo (6.0) : this is done so much differently in this redesign - I think these metods are not going to be needed
+//		// note that if we load this collection from a cartesian product
+//		// the multiplicity would be broken ... so use an idbag instead
+//		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() ) ;
+//		if ( element != null ) {
+//			bag.add( element );
+//		}
+//		return element;
 	}
 
 	@Override
 	public void beforeInitialize(PersistentCollectionMetadata persister, int anticipatedSize) {
-		this.bag = (List) persister.getOrmType().instantiate( anticipatedSize );
+		this.bag = (List) persister.getTuplizer().instantiate( anticipatedSize );
 	}
 
 	@Override
 	public boolean equalsSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
-		final Type elementType = getElementType( persister );
 		final List sn = (List) getSnapshot();
 		if ( sn.size() != bag.size() ) {
 			return false;
 		}
 		for ( Object elt : bag ) {
-			final boolean unequal = countOccurrences( elt, bag, elementType ) != countOccurrences( elt, sn, elementType );
+			final boolean unequal = countOccurrences( elt, bag ) != countOccurrences( elt, sn );
 			if ( unequal ) {
 				return false;
 			}
@@ -126,12 +125,11 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	}
 
 	@SuppressWarnings("unchecked")
-	private int countOccurrences(Object element, List list, Type elementType)
-			throws HibernateException {
+	private int countOccurrences(Object element, List list) {
 		final Iterator iter = list.iterator();
 		int result = 0;
 		while ( iter.hasNext() ) {
-			if ( elementType.getJavaTypeDescriptor().areEqual( element, iter.next() ) ) {
+			if ( getCollectionMetadata().getElementDescriptor().getJavaTypeDescriptor().areEqual( element, iter.next() ) ) {
 				result++;
 			}
 		}
@@ -144,7 +142,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			throws HibernateException {
 		final ArrayList clonedList = new ArrayList( bag.size() );
 		for ( Object item : bag ) {
-			clonedList.add( getElementType( persister ).getMutabilityPlan().deepCopy( item ) );
+			clonedList.add( getCollectionMetadata().getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().deepCopy( item ) );
 		}
 		return clonedList;
 	}
@@ -161,7 +159,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		final int length = bag.size();
 		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
-			result[i] = getElementType( persister ).getMutabilityPlan().disassemble( bag.get( i ) );
+			result[i] = getCollectionMetadata().getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().disassemble( bag.get( i ) );
 		}
 		return result;
 	}
@@ -174,7 +172,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		final int size = array.length;
 		beforeInitialize( persister, size );
 		for ( Serializable item : array ) {
-			final Object element = getElementType( persister ).getMutabilityPlan().assemble( item );
+			final Object element = getCollectionMetadata().getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().assemble( item );
 			if ( element != null ) {
 				bag.add( element );
 			}
@@ -198,7 +196,6 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterator getDeletes(PersistentCollectionMetadata persister, boolean indexIsFormula) throws HibernateException {
-		final Type elementType = getElementType( persister );
 		final ArrayList deletes = new ArrayList();
 		final List sn = (List) getSnapshot();
 		final Iterator olditer = sn.iterator();
@@ -207,7 +204,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			final Object old = olditer.next();
 			final Iterator newiter = bag.iterator();
 			boolean found = false;
-			if ( bag.size()>i && elementType.getJavaTypeDescriptor().areEqual( old, bag.get( i++ ) ) ) {
+			if ( bag.size()>i && getCollectionMetadata().getElementDescriptor().getJavaTypeDescriptor().areEqual( old, bag.get( i++ ) ) ) {
 			//a shortcut if its location didn't change!
 				found = true;
 			}
@@ -215,7 +212,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 				//search for it
 				//note that this code is incorrect for other than one-to-many
 				while ( newiter.hasNext() ) {
-					if ( elementType.getJavaTypeDescriptor().areEqual( old, newiter.next() ) ) {
+					if ( getCollectionMetadata().getElementDescriptor().getJavaTypeDescriptor().areEqual( old, newiter.next() ) ) {
 						found = true;
 						break;
 					}
@@ -230,9 +227,9 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
+	public boolean needsInserting(Object entry, int i) throws HibernateException {
 		final List sn = (List) getSnapshot();
-		if ( sn.size() > i && elemType.getJavaTypeDescriptor().areEqual( sn.get( i ), entry ) ) {
+		if ( sn.size() > i && getCollectionMetadata().getElementDescriptor().getJavaTypeDescriptor().areEqual( sn.get( i ), entry ) ) {
 			//a shortcut if its location didn't change!
 			return false;
 		}
@@ -240,7 +237,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			//search for it
 			//note that this code is incorrect for other than one-to-many
 			for ( Object old : sn ) {
-				if ( elemType.getJavaTypeDescriptor().areEqual( old, entry ) ) {
+				if ( getCollectionMetadata().getElementDescriptor().getJavaTypeDescriptor().areEqual( old, entry ) ) {
 					return false;
 				}
 			}
@@ -254,7 +251,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	}
 
 	@Override
-	public boolean needsUpdating(Object entry, int i, Type elemType) {
+	public boolean needsUpdating(Object entry, int i) {
 		return false;
 	}
 

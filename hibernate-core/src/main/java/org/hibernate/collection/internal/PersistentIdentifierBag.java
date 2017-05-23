@@ -19,9 +19,8 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.CollectionAliases;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.type.spi.Type;
+import org.hibernate.sql.NotYetImplementedException;
 
 /**
  * An <tt>IdentifierBag</tt> implements "bag" semantics more efficiently than
@@ -87,9 +86,9 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		for ( int i = 0; i < size; i+=2 ) {
 			identifiers.put(
 				(i/2),
-				persister.getIdentifierType().getMutabilityPlan().assemble( array[i] )
+				persister.getIdDescriptor().getBasicType().getJavaTypeDescriptor().getMutabilityPlan().assemble( array[i] )
 			);
-			values.add( super.getElementType( persister ).getMutabilityPlan().assemble( array[i+1] ) );
+			values.add( persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().assemble( array[i+1] ) );
 		}
 	}
 
@@ -220,8 +219,8 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		int i = 0;
 		for ( int j=0; j< values.size(); j++ ) {
 			final Object value = values.get( j );
-			result[i++] = persister.getIdentifierType().getMutabilityPlan().disassemble( identifiers.get( j ) );
-			result[i++] = super.getElementType( persister ).getMutabilityPlan().disassemble( value );
+			result[i++] = persister.getIdDescriptor().getBasicType().getJavaTypeDescriptor().getMutabilityPlan().disassemble( identifiers.get( j ) );
+			result[i++] = persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().disassemble( value );
 		}
 		return result;
 	}
@@ -243,7 +242,6 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 	@Override
 	public boolean equalsSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
-		final Type elementType = getElementType( persister );
 		final Map snap = (Map) getSnapshot();
 		if ( snap.size()!= values.size() ) {
 			return false;
@@ -255,7 +253,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 				return false;
 			}
 			final Object old = snap.get( id );
-			if ( elementType.isDirty( old, value, getSession() ) ) {
+			if ( persister.isDirty( old, value, getSession() ) ) {
 				return false;
 			}
 		}
@@ -298,7 +296,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public boolean needsInserting(Object entry, int i, Type elemType)
+	public boolean needsInserting(Object entry, int i)
 			throws HibernateException {
 		final Map snap = (Map) getSnapshot();
 		final Object id = identifiers.get( i );
@@ -307,7 +305,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public boolean needsUpdating(Object entry, int i, Type elemType) throws HibernateException {
+	public boolean needsUpdating(Object entry, int i) throws HibernateException {
 		if ( entry == null ) {
 			return false;
 		}
@@ -319,26 +317,26 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		}
 
 		final Object old = snap.get( id );
-		return old != null && elemType.isDirty( old, entry, getSession() );
+		return old != null && getCollectionMetadata().isDirty( old, entry, getSession() );
 	}
 
 	@Override
 	public Object readFrom(
 			ResultSet rs,
 			PersistentCollectionMetadata persister,
-			CollectionAliases descriptor,
-			Object owner) throws HibernateException, SQLException {
-		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
-		final Object old = identifiers.put(
-			values.size(),
-			persister.readIdentifier( rs, descriptor.getSuffixedIdentifierAlias(), getSession() )
-		);
-
-		if ( old == null ) {
-			//maintain correct duplication if loaded in a cartesian product
-			values.add( element );
-		}
-		return element;
+			Object owner) throws SQLException {
+		throw new NotYetImplementedException(  );
+//		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
+//		final Object old = identifiers.put(
+//			values.size(),
+//			persister.readIdentifier( rs, descriptor.getSuffixedIdentifierAlias(), getSession() )
+//		);
+//
+//		if ( old == null ) {
+//			//maintain correct duplication if loaded in a cartesian product
+//			values.add( element );
+//		}
+//		return element;
 	}
 
 	@Override
@@ -351,7 +349,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 			final Object value = iter.next();
 			map.put(
 					identifiers.get( i++ ),
-					getElementType( persister ).getMutabilityPlan().deepCopy( value )
+					persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().deepCopy( value )
 			);
 		}
 		return map;
@@ -372,7 +370,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 			final Integer loc = i++;
 			if ( !identifiers.containsKey( loc ) ) {
 				//TODO: native ids
-				final Serializable id = persister.getIdentifierGenerator().generate( getSession(), entry );
+				final Serializable id = persister.getIdDescriptor().getGenerator().generate( getSession(), entry );
 				identifiers.put( loc, id );
 			}
 		}

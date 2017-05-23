@@ -18,9 +18,8 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.CollectionAliases;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.type.spi.Type;
+import org.hibernate.sql.NotYetImplementedException;
 
 
 /**
@@ -77,7 +76,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	public Serializable getSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
 		final HashMap clonedSet = new HashMap( set.size() );
 		for ( Object aSet : set ) {
-			final Object copied = getElementType( persister ).getMutabilityPlan().deepCopy( aSet );
+			final Object copied = persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().deepCopy( aSet );
 			clonedSet.put( copied, copied );
 		}
 		return clonedSet;
@@ -91,7 +90,6 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	@Override
 	public boolean equalsSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
-		final Type elementType = getElementType( persister );
 		final java.util.Map sn = (java.util.Map) getSnapshot();
 		if ( sn.size()!=set.size() ) {
 			return false;
@@ -99,7 +97,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		else {
 			for ( Object test : set ) {
 				final Object oldValue = sn.get( test );
-				if ( oldValue == null || elementType.isDirty( oldValue, test, getSession() ) ) {
+				if ( oldValue == null || persister.isDirty( oldValue, test, getSession() ) ) {
 					return false;
 				}
 			}
@@ -114,7 +112,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	@Override
 	public void beforeInitialize(PersistentCollectionMetadata persister, int anticipatedSize) {
-		this.set = (Set) persister.getOrmType().instantiate( anticipatedSize );
+		this.set = (Set) persister.getTuplizer().instantiate( anticipatedSize );
 	}
 
 	@Override
@@ -125,7 +123,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		final int size = array.length;
 		beforeInitialize( persister, size );
 		for ( Serializable arrayElement : array ) {
-			final Object assembledArrayElement = getElementType( persister ).getMutabilityPlan().assemble( arrayElement );
+			final Object assembledArrayElement = persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().assemble( arrayElement );
 			if ( assembledArrayElement != null ) {
 				set.add( assembledArrayElement );
 			}
@@ -305,13 +303,13 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	public Object readFrom(
 			ResultSet rs,
 			PersistentCollectionMetadata persister,
-			CollectionAliases descriptor,
-			Object owner) throws HibernateException, SQLException {
-		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
-		if ( element != null ) {
-			tempList.add( element );
-		}
-		return element;
+			Object owner) throws SQLException {
+		throw new NotYetImplementedException(  );
+//		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
+//		if ( element != null ) {
+//			tempList.add( element );
+//		}
+//		return element;
 	}
 
 	@Override
@@ -343,7 +341,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		final Iterator itr = set.iterator();
 		int i=0;
 		while ( itr.hasNext() ) {
-			result[i++] = getElementType( persister ).getMutabilityPlan().disassemble( itr.next() );
+			result[i++] = persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().disassemble( itr.next() );
 		}
 		return result;
 	}
@@ -351,7 +349,6 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	@Override
 	@SuppressWarnings("unchecked")
 	public Iterator getDeletes(PersistentCollectionMetadata persister, boolean indexIsFormula) throws HibernateException {
-		final Type elementType = getElementType( persister );
 		final java.util.Map sn = (java.util.Map) getSnapshot();
 		final ArrayList deletes = new ArrayList( sn.size() );
 
@@ -368,7 +365,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		while ( itr.hasNext() ) {
 			final Object test = itr.next();
 			final Object oldValue = sn.get( test );
-			if ( oldValue!=null && elementType.isDirty( test, oldValue, getSession() ) ) {
+			if ( oldValue!=null && persister.isDirty( test, oldValue, getSession() ) ) {
 				// the element has changed
 				deletes.add( oldValue );
 			}
@@ -379,17 +376,17 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
+	public boolean needsInserting(Object entry, int i) throws HibernateException {
 		final Object oldValue = ( (java.util.Map) getSnapshot() ).get( entry );
 		// note that it might be better to iterate the snapshot but this is safe,
 		// assuming the user implements equals() properly, as required by the Set
 		// contract!
-		return oldValue == null || elemType.isDirty( oldValue, entry, getSession() );
+		return oldValue == null || getCollectionMetadata().isDirty( oldValue, entry, getSession() );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public boolean needsUpdating(Object entry, int i, Type elemType) {
+	public boolean needsUpdating(Object entry, int i) {
 		return false;
 	}
 

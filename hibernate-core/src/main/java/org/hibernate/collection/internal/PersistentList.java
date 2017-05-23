@@ -17,9 +17,8 @@ import java.util.ListIterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.CollectionAliases;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.type.spi.Type;
+import org.hibernate.sql.NotYetImplementedException;
 
 /**
  * A persistent wrapper for a <tt>java.util.List</tt>. Underlying
@@ -64,7 +63,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	public Serializable getSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
 		final ArrayList clonedList = new ArrayList( list.size() );
 		for ( Object element : list ) {
-			final Object deepCopy = getElementType( persister ).getMutabilityPlan().deepCopy( element );
+			final Object deepCopy = persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().deepCopy( element );
 			clonedList.add( deepCopy );
 		}
 		return clonedList;
@@ -78,7 +77,6 @@ public class PersistentList extends AbstractPersistentCollection implements List
 
 	@Override
 	public boolean equalsSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
-		final Type elementType = getElementType( persister );
 		final List sn = (List) getSnapshot();
 		if ( sn.size()!=this.list.size() ) {
 			return false;
@@ -86,7 +84,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		final Iterator itr = list.iterator();
 		final Iterator snapshotItr = sn.iterator();
 		while ( itr.hasNext() ) {
-			if ( elementType.isDirty( itr.next(), snapshotItr.next(), getSession() ) ) {
+			if ( persister.isDirty( itr.next(), snapshotItr.next(), getSession() ) ) {
 				return false;
 			}
 		}
@@ -100,7 +98,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 
 	@Override
 	public void beforeInitialize(PersistentCollectionMetadata persister, int anticipatedSize) {
-		this.list = (List) persister.getOrmType().instantiate( anticipatedSize );
+		this.list = (List) persister.getTuplizer().instantiate( anticipatedSize );
 	}
 
 	@Override
@@ -366,18 +364,18 @@ public class PersistentList extends AbstractPersistentCollection implements List
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object readFrom(ResultSet rs, PersistentCollectionMetadata persister, CollectionAliases descriptor, Object owner)
-			throws HibernateException, SQLException {
-		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() ) ;
-		final int index = (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
-
-		//pad with nulls from the current last element up to the new index
-		for ( int i = list.size(); i<=index; i++) {
-			list.add( i, null );
-		}
-
-		list.set( index, element );
-		return element;
+	public Object readFrom(ResultSet rs, PersistentCollectionMetadata persister, Object owner) throws SQLException {
+		throw new NotYetImplementedException(  );
+//		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() ) ;
+//		final int index = (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
+//
+//		//pad with nulls from the current last element up to the new index
+//		for ( int i = list.size(); i<=index; i++) {
+//			list.add( i, null );
+//		}
+//
+//		list.set( index, element );
+//		return element;
 	}
 
 	@Override
@@ -394,7 +392,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		final int size = array.length;
 		beforeInitialize( persister, size );
 		for ( Serializable arrayElement : array ) {
-			list.add( getElementType( persister ).getMutabilityPlan().assemble( arrayElement ) );
+			list.add( persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().assemble( arrayElement ) );
 		}
 	}
 
@@ -404,7 +402,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		final int length = list.size();
 		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
-			result[i] = getElementType( persister ).getMutabilityPlan().disassemble( list.get( i ) );
+			result[i] = persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().disassemble( list.get( i ) );
 		}
 		return result;
 	}
@@ -435,18 +433,18 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
+	public boolean needsInserting(Object entry, int i) throws HibernateException {
 		final List sn = (List) getSnapshot();
 		return list.get( i ) != null && ( i >= sn.size() || sn.get( i ) == null );
 	}
 
 	@Override
-	public boolean needsUpdating(Object entry, int i, Type elemType) throws HibernateException {
+	public boolean needsUpdating(Object entry, int i) throws HibernateException {
 		final List sn = (List) getSnapshot();
 		return i < sn.size()
 				&& sn.get( i ) != null
 				&& list.get( i ) != null
-				&& elemType.isDirty( list.get( i ), sn.get( i ), getSession() );
+				&& getCollectionMetadata().isDirty( list.get( i ), sn.get( i ), getSession() );
 	}
 
 	@Override

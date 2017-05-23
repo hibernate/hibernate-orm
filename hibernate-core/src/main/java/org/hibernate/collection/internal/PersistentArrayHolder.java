@@ -18,9 +18,8 @@ import java.util.Iterator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.loader.CollectionAliases;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.type.spi.Type;
+import org.hibernate.sql.NotYetImplementedException;
 
 import org.jboss.logging.Logger;
 
@@ -63,7 +62,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	 */
 	public PersistentArrayHolder(SharedSessionContractImplementor session, PersistentCollectionMetadata persister) {
 		super( session );
-		elementClass = persister.getElementClass();
+		elementClass = persister.getElementDescriptor().getJavaType();
 	}
 
 
@@ -72,12 +71,12 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	public Serializable getSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
 //		final int length = (array==null) ? tempList.size() : Array.getLength( array );
 		final int length = Array.getLength( array );
-		final Serializable result = (Serializable) Array.newInstance( persister.getElementClass(), length );
+		final Serializable result = (Serializable) Array.newInstance( persister.getElementDescriptor().getJavaType(), length );
 		for ( int i=0; i<length; i++ ) {
 //			final Object elt = (array==null) ? tempList.get( i ) : Array.get( array, i );
 			final Object elt = Array.get( array, i );
 			try {
-				Array.set( result, i, getElementType( persister ).getMutabilityPlan().deepCopy( elt ) );
+				Array.set( result, i, persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().deepCopy( elt ) );
 			}
 			catch (IllegalArgumentException iae) {
 				LOG.invalidArrayElementType( iae.getMessage() );
@@ -116,18 +115,19 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 
 	@Override
 	public boolean equalsSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
-		final Type elementType = getElementType( persister );
-		final Serializable snapshot = getSnapshot();
-		final int xlen = Array.getLength( snapshot );
-		if ( xlen!= Array.getLength( array ) ) {
-			return false;
-		}
-		for ( int i=0; i<xlen; i++) {
-			if ( elementType.isDirty( Array.get( snapshot, i ), Array.get( array, i ), getSession() ) ) {
-				return false;
-			}
-		}
-		return true;
+		throw new NotYetImplementedException(  );
+//		final Type elementType = getElementType( persister );
+//		final Serializable snapshot = getSnapshot();
+//		final int xlen = Array.getLength( snapshot );
+//		if ( xlen!= Array.getLength( array ) ) {
+//			return false;
+//		}
+//		for ( int i=0; i<xlen; i++) {
+//			if ( elementType.isDirty( Array.get( snapshot, i ), Array.get( array, i ), getSession() ) ) {
+//				return false;
+//			}
+//		}
+//		return true;
 	}
 
 	/**
@@ -152,15 +152,15 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object readFrom(ResultSet rs, PersistentCollectionMetadata persister, CollectionAliases descriptor, Object owner)
-	throws HibernateException, SQLException {
-		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
-		final int index = (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
-		for ( int i = tempList.size(); i<=index; i++) {
-			tempList.add( i, null );
-		}
-		tempList.set( index, element );
-		return element;
+	public Object readFrom(ResultSet rs, PersistentCollectionMetadata persister, Object owner) throws SQLException {
+		throw new NotYetImplementedException(  );
+//		final Object element = persister.readElement( rs, owner, getSession() );
+//		final int index = (Integer) persister.readIndex( rs, getSession() );
+//		for ( int i = tempList.size(); i<=index; i++) {
+//			tempList.add( i, null );
+//		}
+//		tempList.set( index, element );
+//		return element;
 	}
 
 	@Override
@@ -197,13 +197,12 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	@Override
-	public void initializeFromCache(PersistentCollectionMetadata persister, Serializable disassembled, Object owner)
-			throws HibernateException {
+	public void initializeFromCache(PersistentCollectionMetadata persister, Serializable disassembled, Object owner) {
 		final Serializable[] cached = (Serializable[]) disassembled;
-		array = Array.newInstance( persister.getElementClass(), cached.length );
+		array = Array.newInstance( persister.getElementDescriptor().getJavaType(), cached.length );
 
 		for ( int i=0; i<cached.length; i++ ) {
-			Array.set( array, i, getElementType( persister ).getMutabilityPlan().assemble( cached[i] ) );
+			Array.set( array, i, persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().assemble( cached[i] ) );
 		}
 	}
 
@@ -212,7 +211,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		final int length = Array.getLength( array );
 		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
-			result[i] = getElementType( persister ).getMutabilityPlan().disassemble( Array.get( array,i ) );
+			result[i] = persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().disassemble( Array.get( array,i ) );
 		}
 
 		return result;
@@ -248,18 +247,19 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	@Override
-	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
+	public boolean needsInserting(Object entry, int i) throws HibernateException {
 		final Serializable sn = getSnapshot();
 		return Array.get( array, i ) != null && ( i >= Array.getLength( sn ) || Array.get( sn, i ) == null );
 	}
 
 	@Override
-	public boolean needsUpdating(Object entry, int i, Type elemType) throws HibernateException {
-		final Serializable sn = getSnapshot();
-		return i < Array.getLength( sn )
-				&& Array.get( sn, i ) != null
-				&& Array.get( array, i ) != null
-				&& elemType.isDirty( Array.get( array, i ), Array.get( sn, i ), getSession() );
+	public boolean needsUpdating(Object entry, int i) throws HibernateException {
+		throw new NotYetImplementedException(  );
+//		final Serializable sn = getSnapshot();
+//		return i < Array.getLength( sn )
+//				&& Array.get( sn, i ) != null
+//				&& Array.get( array, i ) != null
+//				&& elemType.isDirty( Array.get( array, i ), Array.get( sn, i ), getSession() );
 	}
 
 	@Override

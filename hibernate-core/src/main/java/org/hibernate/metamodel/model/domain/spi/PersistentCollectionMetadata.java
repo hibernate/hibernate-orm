@@ -6,10 +6,13 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.io.Serializable;
 import javax.persistence.metamodel.PluralAttribute;
 
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
+import org.hibernate.collection.spi.PersistentCollectionTuplizer;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.CollectionLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -138,12 +141,42 @@ public interface PersistentCollectionMetadata<O,C,E>
 	 */
 	CollectionIndex getIndexDescriptor();
 
+	PersistentCollectionTuplizer getTuplizer();
+
 	/**
 	 * @todo (6.0) what args?
 	 */
 	CollectionLoader getLoader();
 
 	Table getSeparateCollectionTable();
+
+	boolean isInverse();
+
+	boolean hasOrphanDelete();
+
+	boolean isOneToMany();
+
+	boolean isExtraLazy();
+
+	boolean isDirty(Object old, Object value, SharedSessionContractImplementor session);
+
+
+	// todo (6.0) : consider better alternatives
+	// 		- delegates?  i.e.
+	// 				* PersistentCollectionMetadata#getSizeExecutor()...
+	//				* PersistentCollectionMetadata#getIndexDescriptor#getIndexExistsExecutor()...
+	//				* PersistentCollectionMetadata#getElementDescriptor#getElementExistsExecutor()...
+	//				* etc
+
+	int getSize(Serializable loadedKey, SharedSessionContractImplementor session);
+
+	Boolean indexExists(Serializable loadedKey, Object index, SharedSessionContractImplementor session);
+
+	Boolean elementExists(Serializable loadedKey, Object element, SharedSessionContractImplementor session);
+
+	Object getElementByIndex(Serializable loadedKey, Object index, SharedSessionContractImplementor session, Object owner);
+
+
 
 
 

@@ -19,9 +19,8 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.CollectionAliases;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.type.spi.Type;
+import org.hibernate.sql.NotYetImplementedException;
 
 
 /**
@@ -74,7 +73,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		final HashMap clonedMap = new HashMap( map.size() );
 		for ( Object o : map.entrySet() ) {
 			final Entry e = (Entry) o;
-			final Object copy = getElementType( persister ).getMutabilityPlan().deepCopy( e.getValue() );
+			final Object copy = persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().deepCopy( e.getValue() );
 			clonedMap.put( e.getKey(), copy );
 		}
 		return clonedMap;
@@ -88,7 +87,6 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	public boolean equalsSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
-		final Type elementType = getElementType( persister );
 		final Map snapshotMap = (Map) getSnapshot();
 		if ( snapshotMap.size() != this.map.size() ) {
 			return false;
@@ -96,7 +94,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 		for ( Object o : map.entrySet() ) {
 			final Entry entry = (Entry) o;
-			if ( elementType.isDirty( entry.getValue(), snapshotMap.get( entry.getKey() ), getSession() ) ) {
+			if ( persister.isDirty( entry.getValue(), snapshotMap.get( entry.getKey() ), getSession() ) ) {
 				return false;
 			}
 		}
@@ -115,7 +113,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	public void beforeInitialize(PersistentCollectionMetadata persister, int anticipatedSize) {
-		this.map = (Map) persister.getOrmType().instantiate( anticipatedSize );
+		this.map = (Map) persister.getTuplizer().instantiate( anticipatedSize );
 	}
 
 	@Override
@@ -258,17 +256,17 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	public Object readFrom(
 			ResultSet rs,
 			PersistentCollectionMetadata persister,
-			CollectionAliases descriptor,
 			Object owner) throws HibernateException, SQLException {
-		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
-		if ( element != null ) {
-			final Object index = persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
-			if ( loadingEntries == null ) {
-				loadingEntries = new ArrayList<>();
-			}
-			loadingEntries.add( new Object[] { index, element } );
-		}
-		return element;
+		throw new NotYetImplementedException(  );
+//		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
+//		if ( element != null ) {
+//			final Object index = persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
+//			if ( loadingEntries == null ) {
+//				loadingEntries = new ArrayList<>();
+//			}
+//			loadingEntries.add( new Object[] { index, element } );
+//		}
+//		return element;
 	}
 
 	@Override
@@ -460,8 +458,8 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		beforeInitialize( persister, size );
 		for ( int i = 0; i < size; i+=2 ) {
 			map.put(
-					persister.getIndexType().getMutabilityPlan().assemble( array[i] ),
-					getElementType( persister ).getMutabilityPlan().assemble( array[i+1] )
+					persister.getIndexDescriptor().getJavaTypeDescriptor().getMutabilityPlan().assemble( array[i] ),
+					persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().assemble( array[i+1] )
 			);
 		}
 	}
@@ -474,8 +472,8 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		int i=0;
 		while ( itr.hasNext() ) {
 			final Map.Entry e = (Map.Entry) itr.next();
-			result[i++] = persister.getIndexType().getMutabilityPlan().disassemble( e.getKey() );
-			result[i++] = getElementType( persister ).getMutabilityPlan().disassemble( e.getValue() );
+			result[i++] = persister.getIndexDescriptor().getJavaTypeDescriptor().getMutabilityPlan().disassemble( e.getKey() );
+			result[i++] = persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().disassemble( e.getValue() );
 		}
 		return result;
 
@@ -497,7 +495,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
+	public boolean needsInserting(Object entry, int i) throws HibernateException {
 		final Map sn = (Map) getSnapshot();
 		final Map.Entry e = (Map.Entry) entry;
 		return e.getValue() != null && sn.get( e.getKey() ) == null;
@@ -505,13 +503,13 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public boolean needsUpdating(Object entry, int i, Type elemType) throws HibernateException {
+	public boolean needsUpdating(Object entry, int i) throws HibernateException {
 		final Map sn = (Map) getSnapshot();
 		final Map.Entry e = (Map.Entry) entry;
 		final Object snValue = sn.get( e.getKey() );
 		return e.getValue() != null
 				&& snValue != null
-				&& elemType.isDirty( snValue, e.getValue(), getSession() );
+				&& getCollectionMetadata().isDirty( snValue, e.getValue(), getSession() );
 	}
 
 	@Override

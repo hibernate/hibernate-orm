@@ -8,7 +8,6 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.persister.common.spi.TypeExporter;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -26,5 +25,9 @@ public class CollectionIdentifier {
 
 	public IdentifierGenerator getGenerator() {
 		return generator;
+	}
+
+	public BasicType getBasicType() {
+		return type;
 	}
 }

@@ -15,7 +15,6 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.type.spi.Type;
 
 /**
  * A persistent wrapper for a <tt>java.util.SortedSet</tt>. Underlying
@@ -59,7 +58,7 @@ public class PersistentSortedSet extends PersistentSet implements SortedSet {
 			throws HibernateException {
 		final TreeMap clonedSet = new TreeMap( comparator );
 		for ( Object setElement : set ) {
-			final Object copy = ( (Type) persister.getElementType() ).getMutabilityPlan().deepCopy( setElement );
+			final Object copy = persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().deepCopy( setElement );
 			clonedSet.put( copy, copy );
 		}
 		return clonedSet;

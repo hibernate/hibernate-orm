@@ -15,8 +15,8 @@ import java.util.Iterator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
+import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.type.spi.Type;
 
 /**
  * Persistent collections are treated as value objects by Hibernate.
@@ -46,6 +46,8 @@ import org.hibernate.type.spi.Type;
  * @author Gavin King
  */
 public interface PersistentCollection {
+	PersistentCollectionMetadata getCollectionMetadata();
+
 	/**
 	 * Get the owning entity. Note that the owner is only
 	 * set during the flush cycle, and when a new collection
@@ -76,7 +78,7 @@ public interface PersistentCollection {
 	 * @param role The collection role
 	 * @param snapshot The snapshot state
 	 */
-	void setSnapshot(Serializable key, String role, Serializable snapshot);
+	void setSnapshot(Serializable key, NavigableRole role, Serializable snapshot);
 
 	/**
 	 * After flushing, clear any "queued" additions, since the
@@ -162,7 +164,6 @@ public interface PersistentCollection {
 	 *
 	 * @param rs The JDBC ResultSet
 	 * @param role The collection role
-	 * @param descriptor The aliases used for the columns making up the collection
 	 * @param owner The collection owner
 	 *
 	 * @return The read object
@@ -170,8 +171,7 @@ public interface PersistentCollection {
 	 * @throws HibernateException Generally indicates a problem resolving data read from the ResultSet
 	 * @throws SQLException Indicates a problem accessing the ResultSet
 	 */
-	Object readFrom(ResultSet rs, PersistentCollectionMetadata role, CollectionAliases descriptor, Object owner)
-			throws HibernateException, SQLException;
+	Object readFrom(ResultSet rs, PersistentCollectionMetadata role, Object owner) throws SQLException;
 
 	/**
 	 * Get the identifier of the given collection entry.  This refers to the collection identifier, not the
@@ -291,22 +291,20 @@ public interface PersistentCollection {
 	 *
 	 * @param entry The collection element to check
 	 * @param i The index (for indexed collections)
-	 * @param elemType The type for the element
 	 *
 	 * @return {@code true} if the element needs inserting
 	 */
-	boolean needsInserting(Object entry, int i, Type elemType);
+	boolean needsInserting(Object entry, int i);
 
 	/**
 	 * Do we need to update this element?
 	 *
 	 * @param entry The collection element to check
 	 * @param i The index (for indexed collections)
-	 * @param elemType The type for the element
 	 *
 	 * @return {@code true} if the element needs updating
 	 */
-	boolean needsUpdating(Object entry, int i, Type elemType);
+	boolean needsUpdating(Object entry, int i);
 
 	/**
 	 * Can each element in the collection be mapped unequivocally to a single row in the database?  Generally
@@ -377,7 +375,9 @@ public interface PersistentCollection {
 	 *
 	 * @return the collection role name
 	 */
-	String getRole();
+	default String getRole() {
+		return getCollectionMetadata().getNavigableRole().getFullPath();
+	}
 	
 	/**
 	 * Is the collection unreferenced?

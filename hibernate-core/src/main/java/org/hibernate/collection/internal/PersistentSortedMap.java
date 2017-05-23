@@ -18,7 +18,6 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.type.spi.Type;
 
 /**
  * A persistent wrapper for a <tt>java.util.SortedMap</tt>. Underlying
@@ -64,7 +63,7 @@ public class PersistentSortedMap extends PersistentMap implements SortedMap {
 			final Entry e = (Entry) o;
 			clonedMap.put(
 					e.getKey(),
-					( (Type) persister.getElementType() ).getMutabilityPlan().deepCopy( e.getValue() )
+					persister.getElementDescriptor().getJavaTypeDescriptor().getMutabilityPlan().deepCopy( e.getValue() )
 			);
 		}
 		return clonedMap;

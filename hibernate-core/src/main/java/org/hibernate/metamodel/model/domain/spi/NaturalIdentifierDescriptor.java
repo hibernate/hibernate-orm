@@ -25,5 +25,5 @@ public interface NaturalIdentifierDescriptor {
 	 */
 	Object[] resolveSnapshot(Object entityId, SharedSessionContractImplementor session);
 
-	NaturalIdRegionAccessStrategy getNaturalIdCaching();
+	NaturalIdRegionAccessStrategy getNaturalIdRegionAccessStrategy();
 }

@@ -433,21 +433,6 @@ public interface EntityTypeImplementor<T>
 	CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session);
 
 	/**
-	 * Does this class have a natural id cache
-	 */
-	boolean hasNaturalIdCache();
-	
-	/**
-	 * Get the NaturalId cache (optional operation)
-	 */
-	NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy();
-
-	/**
-	 * Get the user-visible metadata for the class (optional operation)
-	 */
-	ClassMetadata getClassMetadata();
-
-	/**
 	 * Is batch loading enabled?
 	 */
 	boolean isBatchLoadable();

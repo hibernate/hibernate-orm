@@ -52,7 +52,7 @@ ext {
                         'jdbc.url'   : 'jdbc:mariadb://127.0.0.1/hibernate_orm_test'
                 ],
                 postgis : [
-                        'db.dialect' : 'org.hibernate.spatial.dialect.postgis.PostgisDialect',
+                        'db.dialect' : 'org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect',
                         'jdbc.driver': 'org.postgresql.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',

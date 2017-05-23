@@ -45,10 +45,9 @@ import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeFactory;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
-import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * Contract describing mapping information and persistence logic for a particular strategy of entity mapping.  A given

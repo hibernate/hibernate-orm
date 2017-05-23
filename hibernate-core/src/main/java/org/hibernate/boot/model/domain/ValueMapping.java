@@ -12,7 +12,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.type.spi.Type;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

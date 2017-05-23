@@ -10,11 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.naming.Identifier;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
@@ -23,7 +19,7 @@ import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
-import org.hibernate.tool.schema.extract.spi.TableInformation;
+import org.hibernate.naming.Identifier;
 
 /**
  * Models any mapped "table reference" (e.g. a physical table, an in-lined

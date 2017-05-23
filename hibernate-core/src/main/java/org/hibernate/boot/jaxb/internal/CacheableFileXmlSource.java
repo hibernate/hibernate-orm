@@ -21,7 +21,8 @@ import org.hibernate.boot.jaxb.spi.XmlSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.type.SerializationException;
+
+import com.sun.xml.internal.ws.encoding.soap.SerializationException;
 
 /**
  * @author Steve Ebersole

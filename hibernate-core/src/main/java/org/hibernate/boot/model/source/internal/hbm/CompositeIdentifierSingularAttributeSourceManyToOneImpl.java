@@ -22,7 +22,6 @@ import org.hibernate.boot.model.source.spi.RelationalValueSourceContainer;
 import org.hibernate.boot.model.source.spi.SingularAttributeNature;
 import org.hibernate.boot.model.source.spi.SingularAttributeSourceManyToOne;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
-import org.hibernate.type.ForeignKeyDirection;
 
 /**
  * Descriptor for {@code <key-many-to-one/>} mapping

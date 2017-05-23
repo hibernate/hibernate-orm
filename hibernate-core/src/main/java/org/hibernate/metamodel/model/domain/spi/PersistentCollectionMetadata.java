@@ -132,7 +132,7 @@ public interface PersistentCollectionMetadata<O,C,E>
 	/**
 	 * Access to information about the collection's elements
 	 */
-	CollectionElement getElementDescriptor();
+	CollectionElement<E> getElementDescriptor();
 
 	/**
 	 * Access to information about the collection's index (list/array) or key (map).

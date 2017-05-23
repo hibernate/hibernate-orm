@@ -6,8 +6,8 @@
  */
 package org.hibernate.sql.ast.produce.result.spi;
 
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.type.CollectionType;
 
 /**
  * Models the requested fetching of a persistent collection attribute.
@@ -15,13 +15,7 @@ import org.hibernate.type.CollectionType;
  * @author Steve Ebersole
  */
 public interface FetchCollectionAttribute extends FetchAttribute, CollectionReference {
-	/**
-	 * Get the Hibernate Type that describes the fetched attribute as a {@link CollectionType}.
-	 *
-	 * @return The Type of the fetched attribute
-	 */
-	@Override
-	CollectionType getFetchedType();
+	PluralPersistentAttribute getFetchedNavigable();
 
 	@Override
 	default NavigablePath getNavigablePath() {

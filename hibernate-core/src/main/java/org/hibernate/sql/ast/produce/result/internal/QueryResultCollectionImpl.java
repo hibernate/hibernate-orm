@@ -6,8 +6,11 @@
  */
 package org.hibernate.sql.ast.produce.result.internal;
 
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCollection;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
@@ -15,11 +18,12 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
  * @author Steve Ebersole
  */
 public class QueryResultCollectionImpl extends AbstractCollectionReference implements QueryResultCollection {
-	private final String resultVariable;
-
-	public QueryResultCollectionImpl(NavigableReference navigableReference, String resultVariable) {
-		super( navigableReference, true );
-		this.resultVariable = resultVariable;
+	public QueryResultCollectionImpl(
+			NavigableReference selectedExpression,
+			String resultVariable,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		super( selectedExpression, resultVariable );
 	}
 
 	@Override
@@ -29,7 +33,7 @@ public class QueryResultCollectionImpl extends AbstractCollectionReference imple
 
 	@Override
 	public String getResultVariable() {
-		return resultVariable;
+		return super.getResultVariable();
 	}
 
 	@Override
@@ -39,6 +43,6 @@ public class QueryResultCollectionImpl extends AbstractCollectionReference imple
 
 	@Override
 	public QueryResultAssembler getResultAssembler() {
-		return null;
+		throw new NotYetImplementedException(  );
 	}
 }

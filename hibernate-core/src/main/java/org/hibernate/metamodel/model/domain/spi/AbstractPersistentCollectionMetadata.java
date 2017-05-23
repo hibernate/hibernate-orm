@@ -390,7 +390,6 @@ public abstract class AbstractPersistentCollectionMetadata<O,C,E> implements Per
 	public TableGroupJoin createTableGroupJoin(
 			TableGroupInfoSource tableGroupInfoSource,
 			JoinType joinType,
-			NavigableReference joinedReference,
 			JoinedTableGroupContext tableGroupJoinContext) {
 		throw new org.hibernate.sql.NotYetImplementedException(  );
 	}

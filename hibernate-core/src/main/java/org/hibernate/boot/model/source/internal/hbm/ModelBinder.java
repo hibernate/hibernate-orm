@@ -147,7 +147,6 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.tuple.GeneratedValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.converter.spi.AttributeConverterDefinition;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;

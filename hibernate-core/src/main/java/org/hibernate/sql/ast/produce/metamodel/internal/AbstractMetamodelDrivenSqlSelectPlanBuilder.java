@@ -775,7 +775,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Starting root collection : %s",
 //				StringHelper.repeat( ">>", fetchSourceStack.size() ),
-//				collectionDefinition.getCollectionPersister().getRole()
+//				collectionDefinition.getCollectionMetadata().getRole()
 //		);
 //
 //		// if we get here, it is a root
@@ -789,8 +789,8 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //
 //		associationKeyRegistered(
 //				new AssociationKey(
-//						( (Joinable) collectionDefinition.getCollectionPersister() ).getTableName(),
-//						( (Joinable) collectionDefinition.getCollectionPersister() ).getKeyColumnNames()
+//						( (Joinable) collectionDefinition.getCollectionMetadata() ).getTableName(),
+//						( (Joinable) collectionDefinition.getCollectionMetadata() ).getKeyColumnNames()
 //				)
 //		);
 //	}
@@ -813,13 +813,13 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Finished root collection : %s",
 //				StringHelper.repeat( "<<", fetchSourceStack.size() ),
-//				collectionDefinition.getCollectionPersister().getRole()
+//				collectionDefinition.getCollectionMetadata().getRole()
 //		);
 //	}
 //
 //	private void checkedPoppedCollection(CollectionReference poppedCollectionReference, CollectionDefinition collectionDefinition) {
 //		// make sure what we just poppedCollectionReference represents collectionDefinition.
-//		if ( ! poppedCollectionReference.getCollectionPersister().equals( collectionDefinition.getCollectionPersister() ) ) {
+//		if ( ! poppedCollectionReference.getCollectionMetadata().equals( collectionDefinition.getCollectionMetadata() ) ) {
 //			throw new WalkingException( "Mismatched CollectionReference from stack on pop" );
 //		}
 //	}
@@ -830,7 +830,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Starting collection index graph : %s",
 //				StringHelper.repeat( ">>", fetchSourceStack.size() ),
-//				indexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+//				indexDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
 //		);
 //
 //		final CollectionReference collectionReference = currentCollection();
@@ -840,7 +840,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //			if ( indexGraph == null ) {
 //				throw new WalkingException(
 //						"CollectionReference did not return an expected index graph : " +
-//								indexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+//								indexDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
 //				);
 //			}
 //			if ( !indexType.getClassification().equals( Type.Classification.ANY ) ) {
@@ -851,7 +851,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //			if ( indexGraph != null ) {
 //				throw new WalkingException(
 //						"CollectionReference returned an unexpected index graph : " +
-//								indexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+//								indexDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
 //				);
 //			}
 //		}
@@ -870,7 +870,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //			if ( !CollectionFetchableIndex.class.isInstance( fetchSource ) ) {
 //				throw new WalkingException(
 //						"CollectionReference did not return an expected index graph : " +
-//								indexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+//								indexDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
 //				);
 //			}
 //		}
@@ -878,7 +878,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Finished collection index graph : %s",
 //				StringHelper.repeat( "<<", fetchSourceStack.size() ),
-//				indexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+//				indexDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
 //		);
 //	}
 //
@@ -888,7 +888,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Starting collection element graph : %s",
 //				StringHelper.repeat( ">>", fetchSourceStack.size() ),
-//				elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+//				elementDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
 //		);
 //
 //		final CollectionReference collectionReference = currentCollection();
@@ -898,7 +898,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //			if ( elementGraph == null ) {
 //				throw new IllegalStateException(
 //						"CollectionReference did not return an expected element graph : " +
-//								elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+//								elementDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
 //				);
 //			}
 //			if ( !elementType.getClassification().equals( Type.Classification.ANY ) ) {
@@ -909,7 +909,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //			if ( elementGraph != null ) {
 //				throw new IllegalStateException(
 //						"CollectionReference returned an unexpected element graph : " +
-//								elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+//								elementDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
 //				);
 //			}
 //		}
@@ -935,7 +935,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 //		log.tracef(
 //				"%s Finished collection element graph : %s",
 //				StringHelper.repeat( "<<", fetchSourceStack.size() ),
-//				elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+//				elementDefinition.getCollectionDefinition().getCollectionMetadata().getRole()
 //		);
 //	}
 //

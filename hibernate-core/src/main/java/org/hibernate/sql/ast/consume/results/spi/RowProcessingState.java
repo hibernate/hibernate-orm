@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.ast.consume.results.spi;
 
-import org.hibernate.loader.plan.spi.EntityFetch;
+import org.hibernate.sql.ast.produce.result.spi.FetchEntityAttribute;
 
 /**
  * State pertaining to the processing of a single row of a JdbcValuesSource
@@ -20,7 +20,7 @@ public interface RowProcessingState {
 //	boolean next() throws SQLException;
 	Object[] getJdbcValues();
 
-	void registerNonExists(EntityFetch fetch);
+	void registerNonExists(FetchEntityAttribute fetch);
 
 	void finishRowProcessing();
 }

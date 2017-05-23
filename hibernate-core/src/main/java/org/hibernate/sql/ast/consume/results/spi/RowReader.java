@@ -9,8 +9,6 @@ package org.hibernate.sql.ast.consume.results.spi;
 import java.sql.SQLException;
 
 /**
- * Clean-room impl of {@link org.hibernate.loader.plan.exec.process.spi.RowReader}
- *
  * @author Steve Ebersole
  */
 public interface RowReader<R> {

@@ -19,7 +19,7 @@ public interface CollectionReference {
 	 *
 	 * @return The CollectionPersister.
 	 */
-	PersistentCollectionMetadata getCollectionPersister();
+	PersistentCollectionMetadata getCollectionMetadata();
 
 	/**
 	 * Retrieve the metadata about the index of this collection *as a FetchSource*.  Will return

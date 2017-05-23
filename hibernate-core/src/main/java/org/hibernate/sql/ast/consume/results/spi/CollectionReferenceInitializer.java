@@ -8,17 +8,16 @@ package org.hibernate.sql.ast.consume.results.spi;
 
 import java.sql.ResultSet;
 
-import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessingContextImpl;
-import org.hibernate.loader.plan.spi.CollectionReference;
+import org.hibernate.sql.ast.produce.result.spi.CollectionReference;
 
 /**
  * @author Steve Ebersole
  */
 public interface CollectionReferenceInitializer extends Initializer {
 	// again, not sure.  ResultSetProcessingContextImpl.initializeEntitiesAndCollections() stuff?
-	void finishUpRow(ResultSet resultSet, ResultSetProcessingContextImpl context);
+	void finishUpRow(ResultSet resultSet, JdbcValuesSourceProcessingState processingState);
 
 	CollectionReference getCollectionReference();
 
-	void endLoading(ResultSetProcessingContextImpl context);
+	void endLoading(JdbcValuesSourceProcessingState processingState);
 }

@@ -21,6 +21,8 @@ import org.hibernate.persister.entity.Loadable;
  */
 public class DefaultEntityAliases implements EntityAliases {
 
+	private static final String[][] EMPTY_ARRAY_OF_ARRAY_OF_STRINGS = new String[0][];
+
 	private final String[] suffixedKeyColumns;
 	private final String[] suffixedVersionColumn;
 	private final String[][] suffixedPropertyColumns;
@@ -40,14 +42,14 @@ public class DefaultEntityAliases implements EntityAliases {
 			Map userProvidedAliases,
 			Loadable persister,
 			String suffix) {
-		this.suffix = suffix;
+		this.suffix = suffix.intern();
 		this.userProvidedAliases = userProvidedAliases;
 
 		suffixedKeyColumns = determineKeyAlias( persister, suffix );
 		suffixedPropertyColumns = determinePropertyAliases( persister );
 		suffixedDiscriminatorColumn = determineDiscriminatorAlias( persister, suffix );
 		suffixedVersionColumn = determineVersionAlias( persister );
-		rowIdAlias = Loadable.ROWID_ALIAS + suffix; // TODO: not visible to the user!
+		rowIdAlias = (Loadable.ROWID_ALIAS + suffix).intern(); // TODO: not visible to the user!
 	}
 
 	public DefaultEntityAliases(Loadable persister, String suffix) {
@@ -121,14 +123,20 @@ public class DefaultEntityAliases implements EntityAliases {
 	@Override
 	public String[][] getSuffixedPropertyAliases(Loadable persister) {
 		final int size = persister.getPropertyNames().length;
-		final String[][] suffixedPropertyAliases = new String[size][];
-		for ( int j = 0; j < size; j++ ) {
-			suffixedPropertyAliases[j] = getUserProvidedAliases(
-					persister.getPropertyNames()[j],
-					getPropertyAliases( persister, j )
-			);
-			suffixedPropertyAliases[j] = StringHelper.unquote( suffixedPropertyAliases[j], persister.getFactory().getDialect() );
-			intern( suffixedPropertyAliases[j] );
+		final String[][] suffixedPropertyAliases;
+		if (size > 0) {
+			suffixedPropertyAliases = new String[size][];
+			for ( int j = 0; j < size; j++ ) {
+				suffixedPropertyAliases[j] = getUserProvidedAliases(
+						persister.getPropertyNames()[j],
+						getPropertyAliases( persister, j )
+				);
+				suffixedPropertyAliases[j] = StringHelper.unquote( suffixedPropertyAliases[j], persister.getFactory().getDialect() );
+				intern( suffixedPropertyAliases[j] );
+			}
+		}
+		else {
+			suffixedPropertyAliases = EMPTY_ARRAY_OF_ARRAY_OF_STRINGS;
 		}
 		return suffixedPropertyAliases;
 	}
@@ -164,7 +172,7 @@ public class DefaultEntityAliases implements EntityAliases {
 	}
 
 	private static void intern(String[] strings) {
-		for (int i=0; i<strings.length; i++ ) {
+		for ( int i = 0; i < strings.length; i++ ) {
 			strings[i] = strings[i].intern();
 		}
 	}

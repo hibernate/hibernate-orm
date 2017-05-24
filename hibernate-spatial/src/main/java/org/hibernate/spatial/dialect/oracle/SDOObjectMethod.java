@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 
@@ -37,7 +36,7 @@ class SDOObjectMethod implements SQLFunction {
 		  *      org.hibernate.engine.Mapping)
 		  */
 
-	public Type getReturnType(Type columnType, Mapping mapping)
+	public Type getReturnType(Type columnType)
 			throws QueryException {
 		return type == null ? columnType : type;
 	}

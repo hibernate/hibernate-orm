@@ -16,11 +16,9 @@ import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.spi.CollectionType;
 import org.hibernate.type.Type;
 
 /**
@@ -301,7 +299,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return collectionPersisterClass;
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
+	public void validate() throws MappingException {
 		assert getKey() != null : "Collection key not bound : " + getRole();
 		assert getElement() != null : "Collection element not bound : " + getRole();
 
@@ -311,20 +309,20 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 							+ getRole()
 			);
 		}
-		if ( !getKey().isValid( mapping ) ) {
+		if ( !getKey().isValid() ) {
 			throw new MappingException(
 					"collection foreign key mapping has wrong number of columns: "
 							+ getRole()
 							+ " type: "
-							+ getKey().getType().getName()
+							+ getKey().getType().getJavaType().getName()
 			);
 		}
-		if ( !getElement().isValid( mapping ) ) {
+		if ( !getElement().isValid() ) {
 			throw new MappingException(
 					"collection element mapping has wrong number of columns: "
 							+ getRole()
 							+ " type: "
-							+ getElement().getType().getName()
+							+ getElement().getType().getJavaType().getName()
 			);
 		}
 
@@ -417,7 +415,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return false;
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
+	@Override
+	public boolean isValid() throws MappingException {
 		return true;
 	}
 

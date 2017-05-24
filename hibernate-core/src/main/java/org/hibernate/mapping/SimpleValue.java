@@ -36,7 +36,6 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -55,7 +54,6 @@ import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicTypeParameters;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
  * Any value that maps to columns.
@@ -420,7 +418,8 @@ public class SimpleValue implements KeyValue {
 		return true;
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
+	@Override
+	public boolean isValid() throws MappingException {
 		return getColumnSpan()==getType().getColumnSpan();
 	}
 

@@ -10,7 +10,6 @@ import java.util.Iterator;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.engine.spi.Mapping;
 
 /**
  * Indexed collections include Lists, Maps, arrays and
@@ -70,12 +69,12 @@ public abstract class IndexedCollection extends Collection {
 		}
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
+	public void validate() throws MappingException {
+		super.validate();
 
 		assert getElement() != null : "IndexedCollection index not bound : " + getRole();
 
-		if ( !getIndex().isValid(mapping) ) {
+		if ( !getIndex().isValid() ) {
 			throw new MappingException(
 				"collection index mapping has wrong number of columns: " +
 				getRole() +

@@ -14,13 +14,10 @@ import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.naming.Identifier;
-import org.hibernate.persister.model.relational.spi.PhysicalColumn;
-import org.hibernate.persister.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.sql.Template;
-import org.hibernate.type.Type;
 
 /**
  * A column of a relational database table
@@ -179,9 +176,9 @@ public class Column implements Selectable, Serializable, Cloneable {
 		sqlTypeCode = typeCode;
 	}
 
-	public String getSqlType(Dialect dialect, Mapping mapping) throws HibernateException {
+	public String getSqlType(Dialect dialect) throws HibernateException {
 		if ( sqlType == null ) {
-			sqlType = dialect.getTypeName( getSqlTypeCode( mapping ), getLength(), getPrecision(), getScale() );
+			sqlType = dialect.getTypeName( getSqlTypeCode(), getLength(), getPrecision(), getScale() );
 		}
 		return sqlType;
 	}
@@ -263,7 +260,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 				getName(),
 				jdbcEnvironment
 		);
-		return new org.hibernate.metamodel.model.relational.spi.PhysicalColumn(runtimeTable,physicalName,get);
+		return new PhysicalColumn( runtimeTable, physicalName, sqlTypeCode );
 	}
 
 	public int getPrecision() {

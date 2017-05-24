@@ -8,7 +8,6 @@ package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.engine.spi.Mapping;
 
 /**
  * A collection with a synthetic "identifier" column
@@ -48,12 +47,12 @@ public abstract class IdentifierCollection extends Collection {
 		// create an index on the key columns??
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
+	public void validate() throws MappingException {
+		super.validate();
 
 		assert getElement() != null : "IdentifierCollection identifier not bound : " + getRole();
 
-		if ( !getIdentifier().isValid(mapping) ) {
+		if ( !getIdentifier().isValid() ) {
 			throw new MappingException(
 				"collection id mapping has wrong number of columns: " +
 				getRole() +

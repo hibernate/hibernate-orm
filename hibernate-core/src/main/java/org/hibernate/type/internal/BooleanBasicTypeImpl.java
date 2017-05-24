@@ -14,7 +14,7 @@ import org.hibernate.type.spi.ColumnDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class BooleanBasicTypeImpl<U> extends BasicTypeImpl<Boolean> implements BooleanBasicType {
+public class BooleanBasicTypeImpl<U> extends BasicTypeImpl<Boolean> implements BooleanBasicType<U> {
 	private final U trueValue;
 	private final U falseValue;
 
@@ -39,12 +39,12 @@ public class BooleanBasicTypeImpl<U> extends BasicTypeImpl<Boolean> implements B
 	}
 
 	@Override
-	public Object getTrueValue() {
+	public U getTrueValue() {
 		return trueValue;
 	}
 
 	@Override
-	public Object getFalseValue() {
+	public U getFalseValue() {
 		return falseValue;
 	}
 }

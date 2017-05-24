@@ -64,7 +64,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		propertyName = params.getProperty( "property" );
 		entityName = params.getProperty( ENTITY_NAME );
 		if ( propertyName==null ) {

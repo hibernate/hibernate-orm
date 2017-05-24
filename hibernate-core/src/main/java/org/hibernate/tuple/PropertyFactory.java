@@ -7,6 +7,7 @@
 package org.hibernate.tuple;
 
 import java.lang.reflect.Constructor;
+import java.util.Optional;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -20,6 +21,7 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -102,11 +104,10 @@ public final class PropertyFactory {
 			Property property,
 			boolean lazyAvailable) {
 		String mappedUnsavedValue = ( (KeyValue) property.getValue() ).getNullValue();
-
 		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
 				mappedUnsavedValue,
 				getGetter( property ),
-				( (BasicType) property.getType() ).getVersionSupport(),
+				((Optional<VersionSupport>) ( (BasicType) property.getType() ).getVersionSupport()).get(),
 				getConstructor( property.getPersistentClass() )
 		);
 

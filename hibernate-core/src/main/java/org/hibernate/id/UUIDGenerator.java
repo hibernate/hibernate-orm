@@ -19,7 +19,7 @@ import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.internal.UUIDJavaDescriptor;
 
 /**
@@ -56,7 +56,7 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 	}
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		// check first for the strategy instance
 		strategy = (UUIDGenerationStrategy) params.get( UUID_GEN_STRATEGY );
 		if ( strategy == null ) {
@@ -83,18 +83,19 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 			strategy = StandardRandomStrategy.INSTANCE;
 		}
 
-		if ( UUID.class.isAssignableFrom( type.getJavaTypeDescriptor().getJavaType() ) ) {
+		if ( UUID.class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
 			valueTransformer = UUIDJavaDescriptor.PassThroughTransformer.INSTANCE;
 		}
-		else if ( String.class.isAssignableFrom( type.getJavaTypeDescriptor().getJavaType() ) ) {
+		else if ( String.class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
 			valueTransformer = UUIDJavaDescriptor.ToStringTransformer.INSTANCE;
 		}
-		else if ( byte[].class.isAssignableFrom( type.getJavaTypeDescriptor().getJavaType() ) ) {
+		else if ( byte[].class.isAssignableFrom( javaTypeDescriptor.getJavaType() ) ) {
 			valueTransformer = UUIDJavaDescriptor.ToBytesTransformer.INSTANCE;
 		}
 		else {
 			throw new HibernateException( "Unanticipated return type [" +
-					type.getJavaTypeDescriptor().getJavaType().getName() + "] for UUID conversion" );
+												  javaTypeDescriptor.getJavaType()
+														  .getName() + "] for UUID conversion" );
 		}
 	}
 

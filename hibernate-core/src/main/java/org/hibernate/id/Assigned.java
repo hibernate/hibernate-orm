@@ -39,7 +39,7 @@ public class Assigned implements IdentifierGenerator, Configurable {
 	}
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		entityName = params.getProperty( ENTITY_NAME );
 		if ( entityName == null ) {
 			throw new MappingException("no entity name");

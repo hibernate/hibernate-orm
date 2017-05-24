@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggregated;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
@@ -126,6 +127,11 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	@Override
 	public SingularPersistentAttribute<O,J> getIdAttribute() {
 		return this;
+	}
+
+	@Override
+	public IdentifierGenerator getIdentifierValueGenerator() {
+		throw new NotYetImplementedException(  );
 	}
 
 	@Override

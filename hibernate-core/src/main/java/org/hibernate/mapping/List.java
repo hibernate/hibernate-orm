@@ -8,7 +8,6 @@ package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.spi.CollectionType;
 
 /**
  * A list mapping has a primary key consisting of the key columns + index column.
@@ -31,7 +30,7 @@ public class List extends IndexedCollection {
 		return getMetadata().getTypeConfiguration()
 				.list( getRole(), getReferencedPropertyName() );
 	}
-	
+
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

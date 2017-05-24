@@ -14,9 +14,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.Type;
 
 /**
@@ -121,7 +119,8 @@ public class OneToMany implements Value {
 		return false;
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
+	@Override
+	public boolean isValid() throws MappingException {
 		if ( referencedEntityName == null ) {
 			throw new MappingException( "one to many association must specify the referenced entity" );
 		}

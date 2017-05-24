@@ -10,7 +10,7 @@ import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * An {@link IdentifierGenerator} that supports "configuration".
@@ -26,9 +26,9 @@ public interface Configurable {
 	 * specified by the user as <tt>&lt;param&gt;</tt> elements.
 	 * This method is called just once, following instantiation.
 	 *
-	 * @param type The id property type descriptor
+	 * @param javaTypeDescriptor The id property java type descriptor
 	 * @param params param values, keyed by parameter name
 	 * @param serviceRegistry Access to service that may be needed.
 	 */
-	void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException;
+	void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException;
 }

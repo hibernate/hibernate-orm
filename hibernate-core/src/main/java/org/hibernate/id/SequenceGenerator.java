@@ -26,7 +26,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -66,10 +66,10 @@ public class SequenceGenerator
 
 	private QualifiedName logicalQualifiedSequenceName;
 	private String sequenceName;
-	private Type identifierType;
+	private JavaTypeDescriptor identifierType;
 	private String sql;
 
-	protected Type getIdentifierType() {
+	protected JavaTypeDescriptor getIdentifierType() {
 		return identifierType;
 	}
 
@@ -83,10 +83,10 @@ public class SequenceGenerator
 
 	@Override
 	@SuppressWarnings("StatementWithEmptyBody")
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		DeprecationLogger.DEPRECATION_LOGGER.deprecatedSequenceGenerator( getClass().getName() );
 
-		identifierType = type;
+		identifierType = javaTypeDescriptor;
 
 		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
 		logicalQualifiedSequenceName = QualifiedNameParser.INSTANCE.parse(
@@ -142,7 +142,7 @@ public class SequenceGenerator
 
 	protected IntegralDataTypeHolder buildHolder() {
 		return IdentifierGeneratorHelper.getIntegralDataTypeHolder(
-				identifierType.getJavaTypeDescriptor().getJavaType()
+				identifierType.getJavaType()
 		);
 	}
 

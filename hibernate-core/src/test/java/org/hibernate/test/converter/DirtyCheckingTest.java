@@ -115,8 +115,8 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void checkConverterMutabilityPlans() {
 		final EntityTypeImplementor persister = sessionFactory().getEntityPersister( SomeEntity.class.getName() );
-		assertFalse( persister.getPropertyType( "number" ).isMutable() );
-		assertTrue( persister.getPropertyType( "name" ).isMutable() );
+		assertFalse( persister.getPropertyType( "number" ).getJavaTypeDescriptor().getMutabilityPlan().isMutable() );
+		assertTrue( persister.getPropertyType( "name" ).getJavaTypeDescriptor().getMutabilityPlan().isMutable() );
 	}
 
 	@Override

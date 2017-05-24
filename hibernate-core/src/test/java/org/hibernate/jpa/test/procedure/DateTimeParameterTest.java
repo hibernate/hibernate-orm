@@ -23,6 +23,7 @@ import java.util.Map;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
 import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureQuery;
@@ -35,7 +36,6 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -51,7 +51,7 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 public class DateTimeParameterTest extends BaseUnitTestCase {
-	HibernateEntityManagerFactory entityManagerFactory;
+	EntityManagerFactory entityManagerFactory;
 
 	private static GregorianCalendar nowCal = new GregorianCalendar();
 	private static Date now = new Date( nowCal.getTime().getTime() );
@@ -98,7 +98,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 		entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
 				buildSettingsMap()
-		).build().unwrap( HibernateEntityManagerFactory.class );
+		).build();
 
 		// create the procedures
 		createTestData( entityManagerFactory );
@@ -136,7 +136,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 		entityManagerFactory.close();
 	}
 
-	private void createProcedures(HibernateEntityManagerFactory emf) {
+	private void createProcedures(EntityManagerFactory emf) {
 		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
 		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
 		final Connection conn;
@@ -248,7 +248,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 		out[0] = in;
 	}
 
-	private void createTestData(HibernateEntityManagerFactory entityManagerFactory) {
+	private void createTestData(EntityManagerFactory entityManagerFactory) {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();
 		em.persist( new Message( 1, "test", now, now, now ) );
@@ -256,7 +256,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 		em.close();
 	}
 
-	private void deleteTestData(HibernateEntityManagerFactory entityManagerFactory) {
+	private void deleteTestData(EntityManagerFactory entityManagerFactory) {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();
 		em.createQuery( "delete from Message" ).executeUpdate();
@@ -264,7 +264,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 		em.close();
 	}
 
-	private void dropProcedures(HibernateEntityManagerFactory emf) {
+	private void dropProcedures(EntityManagerFactory emf) {
 		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
 		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
 		final Connection conn;

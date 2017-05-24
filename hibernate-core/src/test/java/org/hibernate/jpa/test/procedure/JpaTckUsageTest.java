@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.StoredProcedureQuery;
 
 import org.hibernate.dialect.DerbyTenSevenDialect;
@@ -24,7 +25,6 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -248,7 +248,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 //			"$$";
 //	public static final String deleteAllUsers_DROP_CMD = "DROP ALIAS deleteAllUsers IF EXISTS";
 
-	HibernateEntityManagerFactory entityManagerFactory;
+	EntityManagerFactory entityManagerFactory;
 
 	@Before
 	public void startUp() {
@@ -256,7 +256,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 		entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
 				buildSettingsMap()
-		).build().unwrap( HibernateEntityManagerFactory.class );
+		).build();
 
 		// create the procedures
 		createTestUser( entityManagerFactory );
@@ -297,7 +297,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 		entityManagerFactory.close();
 	}
 
-	private void createProcedures(HibernateEntityManagerFactory emf) {
+	private void createProcedures(EntityManagerFactory emf) {
 		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
 		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
 		final Connection conn;
@@ -395,7 +395,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 		conn.close();
 	}
 
-	private void createTestUser(HibernateEntityManagerFactory entityManagerFactory) {
+	private void createTestUser(EntityManagerFactory entityManagerFactory) {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();
 
@@ -404,7 +404,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 		em.close();
 	}
 
-	private void deleteTestUser(HibernateEntityManagerFactory entityManagerFactory) {
+	private void deleteTestUser(EntityManagerFactory entityManagerFactory) {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();
 		em.createQuery( "delete from User" ).executeUpdate();
@@ -412,7 +412,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 		em.close();
 	}
 
-	private void dropProcedures(HibernateEntityManagerFactory emf) {
+	private void dropProcedures(EntityManagerFactory emf) {
 		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
 		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
 		final Connection conn;

@@ -15,9 +15,10 @@ import org.hibernate.envers.test.RequiresAuditStrategy;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.type.LongType;
+import org.hibernate.type.StandardBasicTypes;
 import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertTrue;
@@ -50,6 +51,6 @@ public class RevisionEndNumericTypeTest extends BaseEnversJPAFunctionalTestCase 
 		assertTrue( clazz.hasProperty( getAuditServiceOptions().getRevisionEndTimestampFieldName() ) );
 		// get the revision end timestamp property and confirm it is of Long type.
 		final Property property = clazz.getProperty( getAuditServiceOptions().getRevisionEndTimestampFieldName() );
-		assertTyping( LongType.class, property.getType() );
+		assertTyping( StandardBasicTypes.LONG.getClass(), property.getType() );
 	}
 }

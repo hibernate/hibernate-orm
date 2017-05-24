@@ -74,17 +74,15 @@ public class ValidityAuditStrategyRevEndTestCustomRevEnt extends BaseEnversJPAFu
 		// to allow this.
 		em.getTransaction().begin();
 		Session session = (Session) em.getDelegate();
-		session.createSQLQuery( "DROP TABLE children" ).executeUpdate();
-		session
-				.createSQLQuery(
+		session.createNativeQuery( "DROP TABLE children" ).executeUpdate();
+		session.createNativeQuery(
 						"CREATE TABLE children ( parent_id " + getDialect().getTypeName( Types.INTEGER ) +
 								", child1_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() +
 								", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
 				)
 				.executeUpdate();
-		session.createSQLQuery( "DROP TABLE children_AUD" ).executeUpdate();
-		session
-				.createSQLQuery(
+		session.createNativeQuery( "DROP TABLE children_AUD" ).executeUpdate();
+		session.createNativeQuery(
 						"CREATE TABLE children_AUD ( REV " + getDialect().getTypeName( Types.INTEGER ) + " NOT NULL" +
 								", REVEND " + getDialect().getTypeName( Types.INTEGER ) +
 								", " + revendTimestampColumName + " " + getDialect().getTypeName( Types.TIMESTAMP ) +

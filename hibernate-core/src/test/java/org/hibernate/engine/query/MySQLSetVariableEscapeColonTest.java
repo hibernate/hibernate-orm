@@ -51,7 +51,7 @@ public class MySQLSetVariableEscapeColonTest extends BaseCoreFunctionalTestCase 
 					}
 				}
 			}  );
-			Object[] result = (Object[]) session.createSQLQuery( "SELECT @a, (@a::=20) FROM dual" ).uniqueResult();
+			Object[] result = (Object[]) session.createNativeQuery( "SELECT @a, (@a::=20) FROM dual" ).uniqueResult();
 			assertEquals("test", result[0]);
 			assertEquals(20, ((Number) result[1]).intValue());
 

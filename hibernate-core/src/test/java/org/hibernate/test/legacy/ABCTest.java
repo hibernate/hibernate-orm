@@ -11,12 +11,12 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.naming.Identifier;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.mapping.Index;
-import org.hibernate.mapping.Table;
+import org.hibernate.naming.Identifier;
+import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -63,7 +63,7 @@ public class ABCTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testHigherLevelIndexDefinition() throws Throwable {
-		Table table = metadata().getDatabase().getDefaultNamespace().locateTable( Identifier.toIdentifier( "TA" ) );
+		MappedTable table = metadata().getDatabase().getDefaultNamespace().locateTable( Identifier.toIdentifier( "TA" ) );
 		Iterator<Index> indexItr = table.getIndexIterator();
 		boolean found = false;
 		while ( indexItr.hasNext() ) {

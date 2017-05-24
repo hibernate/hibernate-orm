@@ -8,6 +8,7 @@ package org.hibernate.test.annotations.lob;
 
 import java.util.Arrays;
 
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.junit.Test;
 
 import org.hibernate.testing.DialectChecks;
@@ -33,8 +34,8 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testTypeSelection() {
-		int index = sessionFactory().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getPropertyIndex( "theBytes" );
-		Type  type = sessionFactory().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getProperties()[index].getType();
+		EntityTypeImplementor persister = sessionFactory().getTypeConfiguration().findEntityPersister( MaterializedBlobEntity.class );
+		Type type = persister.getPropertyType( "theBytes" );
 		assertEquals( StandardBasicTypes.MATERIALIZED_BLOB, type );
 	}
 

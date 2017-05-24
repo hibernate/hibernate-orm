@@ -44,8 +44,8 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		txn = session.beginTransaction();
-		session.createQuery( "delete from Mail where alias = :alias" ).setString( "alias", "test" ).executeUpdate();
-		session.createQuery( "delete from User where userid = :userid" ).setString( "userid", "test" ).executeUpdate();
+		session.createQuery( "delete from Mail where alias = :alias" ).setParameter( "alias", "test" ).executeUpdate();
+		session.createQuery( "delete from User where userid = :userid" ).setParameter( "userid", "test" ).executeUpdate();
 		txn.commit();
 		session.close();
 	}

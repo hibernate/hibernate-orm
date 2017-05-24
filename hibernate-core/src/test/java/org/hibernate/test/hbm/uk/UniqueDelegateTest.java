@@ -8,6 +8,7 @@ package org.hibernate.test.hbm.uk;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -109,7 +110,7 @@ public class UniqueDelegateTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public String getTableCreationUniqueConstraintsFragment(Table table) {
+		public String getTableCreationUniqueConstraintsFragment(MappedTable table) {
 			getTableCreationUniqueConstraintsFragmentCallCount++;
 			return super.getTableCreationUniqueConstraintsFragment( table );
 		}

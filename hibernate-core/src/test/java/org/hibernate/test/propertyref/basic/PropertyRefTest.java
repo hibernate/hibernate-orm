@@ -66,7 +66,7 @@ public class PropertyRefTest extends BaseNonConfigCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		s.createQuery( "from Person" ).list();
 		s.clear();
-		s.createSQLQuery( "select {p.*} from PROPREF_PERS {p}" )
+		s.createNativeQuery( "select {p.*} from PROPREF_PERS {p}" )
 				.addEntity( "p", Person.class.getName() )
 				.list();
 		t.commit();

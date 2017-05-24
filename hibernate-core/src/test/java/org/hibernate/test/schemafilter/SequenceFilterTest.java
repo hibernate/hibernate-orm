@@ -23,6 +23,8 @@ import org.hamcrest.Description;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.boot.model.relational.MappedSequence;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
@@ -160,14 +162,14 @@ public class SequenceFilterTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public boolean includeTable(Table table) {
+		public boolean includeTable(MappedTable table) {
 			return true;
 		}
 
 		@Override
-		public boolean includeSequence(Sequence sequence) {
-			final String render = sequence.getName().render();
-			return !"entity_2_seq_gen".endsWith( sequence.getName().render() );
+		public boolean includeSequence(MappedSequence sequence) {
+			final String render = sequence.getLogicalName().render();
+			return !"entity_2_seq_gen".endsWith( sequence.getLogicalName().render() );
 		}
 	}
 

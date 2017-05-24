@@ -13,7 +13,6 @@ import javax.persistence.EntityManager;
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.HibernateEntityManager;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
@@ -36,7 +35,7 @@ public class SharedCacheModesTest extends BaseEntityManagerFunctionalTestCase {
 		Session session;
 
 		em = getOrCreateEntityManager();
-		session = ( (HibernateEntityManager) em ).getSession();
+		session = em.unwrap( Session.class );
 
 		// defaults...
 		assertEquals( CacheStoreMode.USE, em.getProperties().get( AvailableSettings.SHARED_CACHE_STORE_MODE ) );

@@ -16,7 +16,6 @@ import javax.persistence.PersistenceException;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
@@ -52,26 +51,6 @@ public class EntityManagerFactoryUnwrapTest extends BaseEntityManagerFunctionalT
 	public void testEntityManagerCanBeUnwrappedToSessionFactoryImplementor() {
 		SessionFactoryImplementor sessionFactoryImplementor = entityManagerFactory.unwrap( SessionFactoryImplementor.class );
 		assertNotNull( "Unwrapping to SPI class SessionFactoryImplementor should be ok", sessionFactoryImplementor );
-	}
-
-	@Test
-	public void testEntityManagerCanBeUnwrappedToDeprecatedHibernateEntityManagerFactory() {
-		HibernateEntityManagerFactory hibernateEntityManagerFactory = entityManagerFactory.unwrap(
-				HibernateEntityManagerFactory.class
-		);
-		assertNotNull(
-				"Unwrapping to SPI class HibernateEntityManagerFactory should be ok",
-				hibernateEntityManagerFactory
-		);
-	}
-
-	@Test
-	public void testEntityManagerCanBeUnwrappedToHibernateEntityManagerFactory() {
-		org.hibernate.jpa.HibernateEntityManagerFactory hibernateEntityManagerFactory = entityManagerFactory.unwrap( org.hibernate.jpa.HibernateEntityManagerFactory.class );
-		assertNotNull(
-				"Unwrapping to SPI class HibernateEntityManagerFactory should be ok",
-				hibernateEntityManagerFactory
-		);
 	}
 
 	@Test

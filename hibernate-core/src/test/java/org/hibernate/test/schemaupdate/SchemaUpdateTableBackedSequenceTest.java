@@ -13,15 +13,15 @@ import java.util.Map;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.id.enhanced.TableStructure;
-import org.hibernate.mapping.Table;
+import org.hibernate.naming.Identifier;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
@@ -30,11 +30,11 @@ import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -75,7 +75,7 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 
 		// lets make sure the InitCommand is there
 		assertEquals( 1, database.getDefaultNamespace().getTables().size() );
-		Table table = database.getDefaultNamespace().getTables().iterator().next();
+		MappedTable table = database.getDefaultNamespace().getTables().iterator().next();
 		assertEquals( 1, table.getInitCommands().size() );
 
 		final TargetImpl target = new TargetImpl();

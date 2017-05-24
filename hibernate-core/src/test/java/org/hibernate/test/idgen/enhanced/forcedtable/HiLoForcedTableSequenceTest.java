@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.idgen.enhanced.forcedtable;
 
+import org.hibernate.id.IdentifierGenerator;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -32,11 +33,12 @@ public class HiLoForcedTableSequenceTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNormalBoundary() {
 		EntityTypeImplementor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
+		IdentifierGenerator identifierGenerator = persister.getIdentifierDescriptor().getIdentifierValueGenerator();
 		assertTrue(
 				"sequence style generator was not used",
-				SequenceStyleGenerator.class.isInstance( persister.getIdentifierGenerator() )
+				SequenceStyleGenerator.class.isInstance( identifierGenerator )
 		);
-		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) persister.getIdentifierGenerator();
+		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) identifierGenerator;
 		assertTrue(
 				"table structure was not used",
 				TableStructure.class.isInstance( generator.getDatabaseStructure() )

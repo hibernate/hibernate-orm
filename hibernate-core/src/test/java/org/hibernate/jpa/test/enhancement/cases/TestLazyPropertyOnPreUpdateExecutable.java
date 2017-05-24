@@ -23,7 +23,7 @@ public class TestLazyPropertyOnPreUpdateExecutable extends AbstractExecutable {
 	@Override
 	protected void prepared() {
 		final EntityTypeImplementor ep = getEntityManagerFactory().getEntityPersister( EntityWithLazyProperty.class.getName() );
-		assertTrue( ep.getEntityMetamodel().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() );
+		assertTrue( ep.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() );
 	}
 
 	@Override

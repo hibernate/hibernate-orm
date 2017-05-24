@@ -47,7 +47,7 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 		Session s = openSession();
 		try {
 			s.getTransaction().begin();
-			s.createSQLQuery( "CREATE SYNONYM test_synonym FOR test_entity" ).executeUpdate();
+			s.createNativeQuery( "CREATE SYNONYM test_synonym FOR test_entity" ).executeUpdate();
 			s.getTransaction().commit();
 		}
 		catch (Exception e) {
@@ -65,7 +65,7 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 		Session s = openSession();
 		try {
 			s.getTransaction().begin();
-			s.createSQLQuery( "DROP SYNONYM test_synonym FORCE" ).executeUpdate();
+			s.createNativeQuery( "DROP SYNONYM test_synonym FORCE" ).executeUpdate();
 			s.getTransaction().commit();
 		}
 		catch (Exception e) {

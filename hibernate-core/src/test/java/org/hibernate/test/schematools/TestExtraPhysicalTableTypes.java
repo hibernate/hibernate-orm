@@ -105,8 +105,8 @@ public class TestExtraPhysicalTableTypes {
 				database.getJdbcEnvironment(),
 				ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess(),
 				(ExtractionContext.DatabaseObjectAccess) dbInfo,
-				database.getDefaultNamespace().getPhysicalName().getCatalog(),
-				database.getDefaultNamespace().getPhysicalName().getSchema()
+				database.getDefaultNamespace().getName().getCatalog(),
+				database.getDefaultNamespace().getName().getSchema()
 
 		);
 		return new InformationExtractorJdbcDatabaseMetaDataImplTest(

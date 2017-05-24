@@ -11,10 +11,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.hibernate.query.Query;
 import org.junit.Test;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.procedure.ProcedureCall;
@@ -37,7 +37,7 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 	public void testScalarStoredProcedure() throws HibernateException, SQLException {
 		Session s = openSession();
 		Query namedQuery = s.getNamedQuery( "simpleScalar" );
-		namedQuery.setLong( "number", 43 );
+		namedQuery.setParameter( "number", 43 );
 		List list = namedQuery.list();
 		Object o[] = ( Object[] ) list.get( 0 );
 		assertEquals( o[0], "getAll" );
@@ -50,16 +50,16 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 		Session s = openSession();
 
 		Query namedQuery = s.getNamedQuery( "paramhandling" );
-		namedQuery.setLong( 0, 10 );
-		namedQuery.setLong( 1, 20 );
+		namedQuery.setParameter( 0, 10 );
+		namedQuery.setParameter( 1, 20 );
 		List list = namedQuery.list();
 		Object[] o = ( Object[] ) list.get( 0 );
 		assertEquals( o[0], Long.valueOf( 10 ) );
 		assertEquals( o[1], Long.valueOf( 20 ) );
 
 		namedQuery = s.getNamedQuery( "paramhandling_mixed" );
-		namedQuery.setLong( 0, 10 );
-		namedQuery.setLong( "second", 20 );
+		namedQuery.setParameter( 0, 10 );
+		namedQuery.setParameter( "second", 20 );
 		list = namedQuery.list();
 		o = ( Object[] ) list.get( 0 );
 		assertEquals( o[0], Long.valueOf( 10 ) );

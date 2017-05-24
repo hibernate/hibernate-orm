@@ -8,6 +8,7 @@ package org.hibernate.test.idgen.enhanced.sequence;
 
 
 import org.hibernate.Session;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.HiLoOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -30,8 +31,9 @@ public class HiLoSequenceTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNormalBoundary() {
 		EntityTypeImplementor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
-		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );
-		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) persister.getIdentifierGenerator();
+		IdentifierGenerator identifierGenerator = persister.getIdentifierDescriptor().getIdentifierValueGenerator();
+		assertClassAssignability( SequenceStyleGenerator.class, identifierGenerator.getClass() );
+		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) identifierGenerator;
 		assertClassAssignability( HiLoOptimizer.class, generator.getOptimizer().getClass() );
 		HiLoOptimizer optimizer = (HiLoOptimizer) generator.getOptimizer();
 

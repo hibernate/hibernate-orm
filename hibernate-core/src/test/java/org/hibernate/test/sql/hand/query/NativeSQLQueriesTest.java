@@ -18,9 +18,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
 import org.hibernate.QueryException;
-import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
@@ -30,13 +28,12 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.Transformers;
-import org.hibernate.type.FloatType;
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
-import org.hibernate.type.TimestampType;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
@@ -139,7 +136,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		try {
 			String sql = "select {org.*} " +
 			             "from organization org";
-			s.createSQLQuery( sql ).list();
+			s.createNativeQuery( sql ).list();
 			fail( "Should throw an exception since no addEntity nor addScalar has been performed." );
 		}
 		catch( PersistenceException pe) {
@@ -163,7 +160,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 		final Session s = openSession();
 		s.beginTransaction();
-		final SQLQuery query = (SQLQuery) s.getNamedQuery("namedQuery");
+		final NativeQuery query = (NativeQuery) s.getNamedQuery("namedQuery");
 		query.addScalar("c");
 		final Number result = (Number) query.uniqueResult();
  		s.getTransaction().commit();
@@ -185,11 +182,11 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		s.persist( jboss );
 
 		// now query on Employment, this should not cause an auto-flush
-		s.createSQLQuery( getEmploymentSQL() ).addSynchronizedQuerySpace( "ABC" ).list();
+		s.createNativeQuery( getEmploymentSQL() ).addSynchronizedQuerySpace( "ABC" ).list();
 		assertEquals( 0, sessionFactory().getStatistics().getEntityInsertCount() );
 
 		// now try to query on Employment but this time add Organization as a synchronized query space...
-		s.createSQLQuery( getEmploymentSQL() ).addSynchronizedEntityClass( Organization.class ).list();
+		s.createNativeQuery( getEmploymentSQL() ).addSynchronizedEntityClass( Organization.class ).list();
 		assertEquals( 1, sessionFactory().getStatistics().getEntityInsertCount() );
 
 		// clean up
@@ -212,14 +209,14 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		s.persist(gavin);
 		s.persist(emp);
 
-		List l = s.createSQLQuery( getOrgEmpRegionSQL() )
+		List l = s.createNativeQuery( getOrgEmpRegionSQL() )
 				.addEntity("org", Organization.class)
 				.addJoin("emp", "org.employments")
-				.addScalar("regionCode", StringType.INSTANCE)
+				.addScalar("regionCode", StandardBasicTypes.STRING )
 				.list();
 		assertEquals( 2, l.size() );
 
-		l = s.createSQLQuery( getOrgEmpPersonSQL() )
+		l = s.createNativeQuery( getOrgEmpPersonSQL() )
 				.addEntity("org", Organization.class)
 				.addJoin("emp", "org.employments")
 				.addJoin("pers", "emp.employee")
@@ -232,7 +229,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 
-		l = s.createSQLQuery( "select {org.*}, {emp.*} " +
+		l = s.createNativeQuery( "select {org.*}, {emp.*} " +
 			       "from ORGANIZATION org " +
 			       "     left outer join EMPLOYMENT emp on org.ORGID = emp.EMPLOYER, ORGANIZATION org2" )
 		.addEntity("org", Organization.class)
@@ -270,12 +267,12 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		s.persist(gavin);
 		s.persist(emp);
 
-		List l = s.createSQLQuery( getOrgEmpRegionSQL() )
+		List l = s.createNativeQuery( getOrgEmpRegionSQL() )
 				.setResultSetMapping( "org-emp-regionCode" )
 				.list();
 		assertEquals( l.size(), 2 );
 
-		l = s.createSQLQuery( getOrgEmpPersonSQL() )
+		l = s.createNativeQuery( getOrgEmpPersonSQL() )
 				.setResultSetMapping( "org-emp-person" )
 				.list();
 		assertEquals( l.size(), 1 );
@@ -491,7 +488,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		Object[] o =  (Object[]) s.createSQLQuery( "select\r\n" +
+		Object[] o =  (Object[]) s.createNativeQuery( "select\r\n" +
 				"        product.orgid as {product.id.orgid}," +
 				"        product.productnumber as {product.id.productnumber}," +
 				"        {prod_orders}.orgid as orgid3_1_,\r\n" +
@@ -539,7 +536,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		List list = s.createSQLQuery( getEmploymentSQL() )
+		List list = s.createNativeQuery( getEmploymentSQL() )
 				.addEntity( Employment.class.getName() )
 				.list();
 		assertEquals( 1,list.size() );
@@ -551,7 +548,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 		s.clear();
 
-		list = s.createSQLQuery( getEmploymentSQL() )
+		list = s.createNativeQuery( getEmploymentSQL() )
 		.addEntity( Employment.class.getName() )
 		.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP)
 		.list();
@@ -560,12 +557,12 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		assertTrue(m.containsKey("Employment"));
 		assertEquals(1,m.size());
 
-		list = s.createSQLQuery(getEmploymentSQL()).list();
+		list = s.createNativeQuery(getEmploymentSQL()).list();
 		assertEquals(1, list.size());
 		Object[] o = (Object[]) list.get(0);
 		assertEquals(8, o.length);
 
-		list = s.createSQLQuery( getEmploymentSQL() ).setResultTransformer( new UpperCasedAliasToEntityMapResultTransformer() ).list();
+		list = s.createNativeQuery( getEmploymentSQL() ).setResultTransformer( new UpperCasedAliasToEntityMapResultTransformer() ).list();
 		assertEquals(1, list.size());
 		m = (Map) list.get(0);
 		assertTrue(m.containsKey("EMPID"));
@@ -573,7 +570,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		assertTrue(m.containsKey("ENDDATE"));
 		assertEquals(8, m.size());
 
-		list = s.createSQLQuery( getEmploymentSQLMixedScalarEntity() ).addScalar( "employerid" ).addEntity( Employment.class ).list();
+		list = s.createNativeQuery( getEmploymentSQLMixedScalarEntity() ).addScalar( "employerid" ).addEntity( Employment.class ).list();
 		assertEquals(1, list.size());
 		o = (Object[]) list.get(0);
 		assertEquals(2, o.length);
@@ -583,13 +580,13 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 
 		Query queryWithCollection = s.getNamedQuery("organizationEmploymentsExplicitAliases");
-		queryWithCollection.setLong("id",  jboss.getId() );
+		queryWithCollection.setParameter("id",  jboss.getId() );
 		list = queryWithCollection.list();
 		assertEquals(list.size(),1);
 
 		s.clear();
 
-		list = s.createSQLQuery( getOrganizationJoinEmploymentSQL() )
+		list = s.createNativeQuery( getOrganizationJoinEmploymentSQL() )
 				.addEntity( "org", Organization.class )
 				.addJoin( "emp", "org.employments" )
 				.list();
@@ -597,7 +594,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 		s.clear();
 
-		list = s.createSQLQuery( getOrganizationFetchJoinEmploymentSQL() )
+		list = s.createNativeQuery( getOrganizationFetchJoinEmploymentSQL() )
 				.addEntity( "org", Organization.class )
 				.addJoin( "emp", "org.employments" )
 				.list();
@@ -632,7 +629,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		Dimension dim = new Dimension( 3, 30 );
 		s.save( dim );
-		list = s.createSQLQuery( "select d_len * d_width as surface, d_len * d_width * 10 as volume from Dimension" ).list();
+		list = s.createNativeQuery( "select d_len * d_width as surface, d_len * d_width * 10 as volume from Dimension" ).list();
 		s.delete( dim );
 		t.commit();
 		s.close();
@@ -690,7 +687,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 				"    LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER";
 
 		// as a control, lets apply an existing rs mapping
-		SQLQuery sqlQuery = s.createSQLQuery( sql );
+		NativeQuery sqlQuery = s.createNativeQuery( sql );
 		sqlQuery.setResultSetMapping( "org-description" );
 		sqlQuery.list();
 
@@ -716,16 +713,16 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		sqlQuery.list();
 
 		// lets try a totally different approach now and pull back scalars, first with explicit types
-		sqlQuery.addScalar( "orgid", LongType.INSTANCE )
-				.addScalar( "name", StringType.INSTANCE )
-				.addScalar( "empid", LongType.INSTANCE )
-				.addScalar( "employee", LongType.INSTANCE )
-				.addScalar( "startDate", TimestampType.INSTANCE )
-				.addScalar( "endDate", TimestampType.INSTANCE )
-				.addScalar( "regionCode", StringType.INSTANCE )
-				.addScalar( "empId", LongType.INSTANCE )
-				.addScalar( "AMOUNT", FloatType.INSTANCE )
-				.addScalar( "CURRENCY", StringType.INSTANCE );
+		sqlQuery.addScalar( "orgid", StandardBasicTypes.LONG )
+				.addScalar( "name", StandardBasicTypes.STRING )
+				.addScalar( "empid", StandardBasicTypes.LONG )
+				.addScalar( "employee", StandardBasicTypes.LONG )
+				.addScalar( "startDate", StandardBasicTypes.TIMESTAMP )
+				.addScalar( "endDate", StandardBasicTypes.TIMESTAMP )
+				.addScalar( "regionCode", StandardBasicTypes.STRING )
+				.addScalar( "empId", StandardBasicTypes.LONG )
+				.addScalar( "AMOUNT", StandardBasicTypes.FLOAT )
+				.addScalar( "CURRENCY", StandardBasicTypes.STRING);
 
 
 		s.getTransaction().commit();
@@ -751,7 +748,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		List l = s.createSQLQuery( "select name, id, flength, name as scalarName from Speech" )
+		List l = s.createNativeQuery( "select name, id, flength, name as scalarName from Speech" )
 				.setResultSetMapping( "speech" )
 				.list();
 		assertEquals( l.size(), 1 );
@@ -844,7 +841,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		String descriptionRead = ( String ) s.createSQLQuery( getDescriptionsSQL() )
+		String descriptionRead = ( String ) s.createNativeQuery( getDescriptionsSQL() )
 				.uniqueResult();
 		assertEquals( description, descriptionRead );
 		s.delete( holder );
@@ -865,7 +862,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		byte[] photoRead = ( byte[] ) s.createSQLQuery( getPhotosSQL() )
+		byte[] photoRead = ( byte[] ) s.createNativeQuery( getPhotosSQL() )
 				.uniqueResult();
 		assertTrue( Arrays.equals( photo, photoRead ) );
 		s.delete( holder );
@@ -877,7 +874,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 	public void testEscapeColonInSQL() throws QueryException {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		SQLQuery query = s.createSQLQuery( "SELECT @row \\:= 1" );
+		NativeQuery query = s.createNativeQuery( "SELECT @row \\:= 1" );
 		List list = query.list();
 		assertTrue( list.get( 0 ).toString().equals( "1" ) );
 		t.commit();

@@ -12,8 +12,9 @@ import java.util.Date;
 import java.util.Locale;
 
 import org.hibernate.Criteria;
-import org.hibernate.HibernateException;
-import org.hibernate.Query;
+import org.hibernate.boot.model.relational.MappedColumn;
+import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
@@ -39,9 +40,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testDefaultValue() throws Exception {
 		Join join = (Join) metadata().getEntityBinding( Life.class.getName() ).getJoinClosureIterator().next();
 		assertEquals( "ExtendedLife", join.getTable().getName() );
-		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
-		owner.setName( "LIFE_ID" );
-		assertTrue( join.getTable().getPrimaryKey().containsColumn( owner ) );
+		assertTrue( containsPrimaryKeyColumnWithName( join.getMappedTable(), "LIFE_ID" ) );
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Life life = new Life();
@@ -64,9 +63,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testCompositePK() throws Exception {
 		Join join = (Join) metadata().getEntityBinding( Dog.class.getName() ).getJoinClosureIterator().next();
 		assertEquals( "DogThoroughbred", join.getTable().getName() );
-		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
-		owner.setName( "OWNER_NAME" );
-		assertTrue( join.getTable().getPrimaryKey().containsColumn( owner ) );
+		assertTrue( containsPrimaryKeyColumnWithName( join.getMappedTable(), "OWNER_NAME" ) );
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Dog dog = new Dog();
@@ -136,7 +133,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testReferenceColumnWithBacktics() throws Exception {
 		Session s=openSession();
@@ -150,7 +147,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testUniqueConstaintOnSecondaryTable() throws Exception {
 		Cat cat = new Cat();
@@ -189,7 +186,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.persist( cat );
 		s.flush();
 		s.clear();
-		
+
 		s.get( Cat.class, cat.getId() );
 		//Find a way to test it, I need to define the secondary table on a subclass
 
@@ -253,5 +250,14 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 				SysGroupsOrm.class,
 				SysUserOrm.class
 		};
+	}
+
+	private boolean containsPrimaryKeyColumnWithName(MappedTable table, String columnName) {
+		for ( MappedColumn column : table.getPrimaryKey().getColumns() ) {
+			if ( column.getText().equals( columnName ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.idgen.enhanced.sequence;
 
+import org.hibernate.id.IdentifierGenerator;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -31,8 +32,9 @@ public class BasicSequenceTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNormalBoundary() {
 		EntityTypeImplementor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
-		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );
-		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) persister.getIdentifierGenerator();
+		IdentifierGenerator identifierGenerator = persister.getIdentifierDescriptor().getIdentifierValueGenerator();
+		assertClassAssignability( SequenceStyleGenerator.class, identifierGenerator.getClass() );
+		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) identifierGenerator;
 
 		int count = 5;
 		Entity[] entities = new Entity[count];
@@ -62,8 +64,9 @@ public class BasicSequenceTest extends BaseCoreFunctionalTestCase {
 	public void testSequencePerEntity() {
 		final String overriddenEntityName = "SpecialEntity";
 		EntityTypeImplementor persister = sessionFactory().getEntityPersister( overriddenEntityName );
-		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );
-		SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();
+		IdentifierGenerator identifierGenerator = persister.getIdentifierDescriptor().getIdentifierValueGenerator();
+		assertClassAssignability( SequenceStyleGenerator.class, identifierGenerator.getClass() );
+		SequenceStyleGenerator generator = (SequenceStyleGenerator) identifierGenerator;
 		assertEquals( overriddenEntityName + SequenceStyleGenerator.DEF_SEQUENCE_SUFFIX, generator.getDatabaseStructure().getName() );
 
 		Session s = openSession();

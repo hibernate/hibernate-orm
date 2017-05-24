@@ -10,8 +10,8 @@ import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.LockMode;
-import org.hibernate.Query;
-import org.hibernate.SQLQuery;
+import org.hibernate.query.Query;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.Session;
 
 import org.hibernate.testing.TestForIssue;
@@ -94,7 +94,7 @@ public class PagingAndLockingTest extends BaseCoreFunctionalTestCase {
 	public void testNativeSql() {
 		Session session = openSession();
 		session.beginTransaction();
-		SQLQuery qry = session.createSQLQuery( "select * from door" );
+		NativeQuery qry = session.createNativeQuery( "select * from door" );
 		qry.addRoot( "door", Door.class );
 		qry.getLockOptions().setLockMode( LockMode.PESSIMISTIC_WRITE );
 		qry.setFirstResult( 2 );

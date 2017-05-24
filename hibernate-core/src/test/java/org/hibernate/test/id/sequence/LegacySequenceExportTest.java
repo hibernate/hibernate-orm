@@ -15,17 +15,17 @@ import javax.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.MappedNamespace;
-import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
 
@@ -60,7 +60,7 @@ public class LegacySequenceExportTest extends BaseUnitTestCase {
 
 		int count = 0;
 		for ( MappedNamespace namespace : metadata.getDatabase().getNamespaces() ) {
-			for ( Sequence sequence : namespace.getSequences() ) {
+			for ( MappedSequence sequence : namespace.getSequences() ) {
 				count++;
 			}
 		}
@@ -81,7 +81,7 @@ public class LegacySequenceExportTest extends BaseUnitTestCase {
 
 		int count = 0;
 		for ( MappedNamespace namespace : metadata.getDatabase().getNamespaces() ) {
-			for ( Sequence sequence : namespace.getSequences() ) {
+			for ( MappedSequence sequence : namespace.getSequences() ) {
 				count++;
 			}
 		}

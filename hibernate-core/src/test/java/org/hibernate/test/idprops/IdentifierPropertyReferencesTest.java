@@ -9,7 +9,7 @@ package org.hibernate.test.idprops;
 import org.junit.Test;
 
 import org.hibernate.Criteria;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -57,8 +57,8 @@ public class IdentifierPropertyReferencesTest extends BaseCoreFunctionalTestCase
 
 		if ( getDialect().supportsRowValueConstructorSyntax() ) {
 			Query q = s.createQuery( "select count(*) from LineItem l where l.pk = (:order, :product)" )
-					.setEntity( "order", o )
-					.setString( "product", "my-product" );
+					.setParameter( "order", o )
+					.setParameter( "product", "my-product" );
 			count = extractCount( q );
 			assertEquals( "LineItem by pk prop (named composite identifier", 1, count );
 		}

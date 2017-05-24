@@ -11,7 +11,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.loader.Loader;
+import org.hibernate.loader.spi.Loader;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.idgen.enhanced.table;
 
+import org.hibernate.id.IdentifierGenerator;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -30,8 +31,9 @@ public class HiLoTableTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNormalBoundary() {
 		EntityTypeImplementor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
-		assertClassAssignability( TableGenerator.class, persister.getIdentifierGenerator().getClass() );
-		TableGenerator generator = ( TableGenerator ) persister.getIdentifierGenerator();
+		IdentifierGenerator identifierGenerator = persister.getIdentifierDescriptor().getIdentifierValueGenerator();
+		assertClassAssignability( TableGenerator.class, identifierGenerator.getClass() );
+		TableGenerator generator = ( TableGenerator ) identifierGenerator;
 		assertClassAssignability( HiLoOptimizer.class, generator.getOptimizer().getClass() );
 		HiLoOptimizer optimizer = (HiLoOptimizer) generator.getOptimizer();
 

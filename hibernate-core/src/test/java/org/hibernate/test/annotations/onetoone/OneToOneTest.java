@@ -10,7 +10,7 @@ import java.util.Iterator;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.MappingException;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
@@ -53,7 +53,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Query q = s.createQuery( "select c from Client c where c.name = :name" );
-		q.setString( "name", c.getName() );
+		q.setParameter( "name", c.getName() );
 		c = ( Client ) q.uniqueResult();
 		//c = (Client) s.get(Client.class, c.getId());
 		assertNotNull( c );

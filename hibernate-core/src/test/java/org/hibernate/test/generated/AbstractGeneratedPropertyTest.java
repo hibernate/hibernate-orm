@@ -48,11 +48,11 @@ public abstract class AbstractGeneratedPropertyTest extends BaseCoreFunctionalTe
 			s = openSession();
 			t = s.beginTransaction();
 			entity = s.get( GeneratedPropertyEntity.class, entity.getId() );
-			assertTrue( StandardBasicTypes.BINARY.isEqual( bytes, entity.getLastModified() ) );
+			assertTrue( StandardBasicTypes.BINARY.areEqual( bytes, entity.getLastModified() ) );
 			t.commit();
 			s.close();
 
-			assertTrue( StandardBasicTypes.BINARY.isEqual( bytes, entity.getLastModified() ) );
+			assertTrue( StandardBasicTypes.BINARY.areEqual( bytes, entity.getLastModified() ) );
 
 			s = openSession();
 			t = s.beginTransaction();

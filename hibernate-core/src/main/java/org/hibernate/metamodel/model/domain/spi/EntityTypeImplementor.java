@@ -351,6 +351,19 @@ public interface EntityTypeImplementor<T>
 	String[] getPropertyNames();
 
 	/**
+	 * Helper method to locate a property type by property name.
+	 */
+	default Type getPropertyType(String propertyName) {
+		final String[] propertyNames = getPropertyNames();
+		for ( int i = 0; i < propertyNames.length; ++i ) {
+			if ( propertyNames[i] == propertyName ) {
+				return getPropertyTypes()[i];
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Get the "insertability" of the properties of this class
 	 * (does the property appear in an SQL INSERT)
 	 */

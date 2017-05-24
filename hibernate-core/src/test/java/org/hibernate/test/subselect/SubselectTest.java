@@ -8,6 +8,7 @@ package org.hibernate.test.subselect;
 
 import java.util.List;
 
+import org.hibernate.type.StandardBasicTypes;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -94,10 +95,10 @@ public class SubselectTest extends BaseCoreFunctionalTestCase {
 		// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
 		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
 		Double humanHeightViaSql =
-				( (Number)s.createSQLQuery("select height_centimeters from humans").uniqueResult() ).doubleValue();
+				( (Number)s.createNativeQuery("select height_centimeters from humans").uniqueResult() ).doubleValue();
 		assertEquals(HUMAN_CENTIMETERS, humanHeightViaSql, 0.01d);
 		Double alienHeightViaSql =
-				( (Number)s.createSQLQuery("select height_centimeters from aliens").uniqueResult() ).doubleValue();
+				( (Number)s.createNativeQuery("select height_centimeters from aliens").uniqueResult() ).doubleValue();
 		assertEquals(ALIEN_CENTIMETERS, alienHeightViaSql, 0.01d);
 		s.clear();
 		
@@ -113,8 +114,8 @@ public class SubselectTest extends BaseCoreFunctionalTestCase {
 		
 		// Test predicate and entity load via HQL
 		b = (Being)s.createQuery("from Being b where b.heightInches between ? and ?")
-			.setDouble(0, ALIEN_INCHES - 0.01d)
-			.setDouble(1, ALIEN_INCHES + 0.01d)
+			.setParameter( 0, ALIEN_INCHES - 0.01d, StandardBasicTypes.DOUBLE )
+			.setParameter( 1, ALIEN_INCHES + 0.01d, StandardBasicTypes.DOUBLE )
 			.uniqueResult();
 		assertEquals(ALIEN_INCHES, b.getHeightInches(), 0.01d);
                 s.delete(gavin);

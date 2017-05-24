@@ -8,7 +8,7 @@ package org.hibernate.test.annotations.enumerated.custom_mapkey;
 
 import java.io.Serializable;
 
-import org.hibernate.SQLQuery;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.mapping.Map;
@@ -45,12 +45,10 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 		return map.getIndex().getType();
 	}
 
-	private void assetTypeDefinition(
-			Property property,
-			Class expectedReturnedClass, Class expectedType) {
+	private void assertTypeDefinition(Property property, Class expectedReturnedClass, Class expectedType) {
 		Type type = getMapKeyType( property );
-		assertEquals( expectedReturnedClass, type.getReturnedClass() );
-		assertEquals( expectedType.getName(), type.getName() );
+		assertEquals( expectedReturnedClass, type.getJavaType() );
+		assertEquals( expectedType.getName(), type.getJavaTypeDescriptor().getTypeName() );
 	}
 
 	@Test
@@ -58,19 +56,19 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 		PersistentClass pc = metadata().getEntityBinding( EntityMapEnum.class.getName() );
 
 		// ordinal default of EnumType
-		assetTypeDefinition( pc.getProperty( "ordinalMap" ), Common.class, EnumType.class );
+		assertTypeDefinition( pc.getProperty( "ordinalMap" ), Common.class, EnumType.class );
 
 		// string defined by Enumerated(STRING)
-		assetTypeDefinition( pc.getProperty( "stringMap" ), Common.class, EnumType.class );
+		assertTypeDefinition( pc.getProperty( "stringMap" ), Common.class, EnumType.class );
 
 		// explicit defined by @Type
-		assetTypeDefinition( pc.getProperty( "firstLetterMap" ), FirstLetter.class, FirstLetterType.class );
+		assertTypeDefinition( pc.getProperty( "firstLetterMap" ), FirstLetter.class, FirstLetterType.class );
 
 		// implicit defined by @TypeDef in somewhere
-		assetTypeDefinition( pc.getProperty( "lastNumberMap" ), LastNumber.class, LastNumberType.class );
+		assertTypeDefinition( pc.getProperty( "lastNumberMap" ), LastNumber.class, LastNumberType.class );
 
 		// implicit defined by @TypeDef in anywhere, but overrided by Enumerated(STRING)
-		assetTypeDefinition( pc.getProperty( "explicitOverridingImplicitMap" ), LastNumber.class, EnumType.class );
+		assertTypeDefinition( pc.getProperty( "explicitOverridingImplicitMap" ), LastNumber.class, EnumType.class );
 	}
 
 	private void assetEntityMapEnumEquals(EntityMapEnum expected, EntityMapEnum found) {
@@ -103,7 +101,7 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 		assetEntityMapEnumEquals( expected, found );
 
 		//native query check
-		SQLQuery sqlQuery = session.createSQLQuery( nativeQueryCheck );
+		NativeQuery sqlQuery = session.createNativeQuery( nativeQueryCheck );
 		sqlQuery.setParameter( "idEntityMapEnum", expected.id );
 		Object o = sqlQuery.uniqueResult();
 		assertNotNull( o );

@@ -21,12 +21,10 @@ import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 
-import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.BasicType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -56,7 +54,7 @@ public class BasicAttributeOverrideTest extends BaseNonConfigCoreFunctionalTestC
 
 		final SimpleValue mapKey = assertTyping( SimpleValue.class, attributesMap.getIndex() );
 		final BasicType mapKeyType = assertTyping( BasicType.class, mapKey.getType() );
-		assertTrue( String.class.equals( mapKeyType.getReturnedClass() ) );
+		assertTrue( String.class.equals( mapKeyType.getJavaType() ) );
 
 		// let's also make sure the @MapKeyColumn got applied
 		assertThat( mapKey.getColumnSpan(), is(1) );

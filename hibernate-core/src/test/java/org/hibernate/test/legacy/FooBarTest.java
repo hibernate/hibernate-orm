@@ -34,7 +34,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.LockMode;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -1778,17 +1778,17 @@ public class FooBarTest extends LegacyTestCase {
 		Object result = q.uniqueResult();
 		assertTrue( result != null );
 		q = s.createQuery("select bar, b from Bar bar left join bar.baz baz left join baz.cascadingBars b where bar.name like :name and b.name like :name");
-		q.setString( "name", "Bar%" );
+		q.setParameter( "name", "Bar%" );
 		list = q.list();
 		assertTrue( list.size()==1 );
 
 
 		// This test added for issue HB-297 - there is an named parameter in the Order By clause
 		q = s.createQuery("select bar from Bar bar order by ((bar.x - :valueX)*(bar.x - :valueX))");
-		q.setInteger( "valueX", bar.getX() + 1 );
+		q.setParameter( "valueX", bar.getX() + 1 );
 		list = q.list();
 		assertTrue( ((Bar) list.get( 0 )).getX() == bar.getX() );
-		q.setInteger( "valueX", bar2.getX() + 1 );
+		q.setParameter( "valueX", bar2.getX() + 1 );
 		list = q.list();
 		assertTrue( ((Bar)list.get(0)).getX() == bar2.getX());
 
@@ -1846,7 +1846,7 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		try {
 			Query q = s.createQuery("select bar from Bar as bar where bar.x > ? or bar.short = 1 or bar.string = 'ff ? bb'");
-			q.setInteger(0, 1);
+			q.setParameter(0, 1);
 			q.list();
 		}
 		catch (QueryException iae) {

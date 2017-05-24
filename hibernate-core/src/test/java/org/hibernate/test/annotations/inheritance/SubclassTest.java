@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.A320;
@@ -80,7 +80,7 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Query q = s.createQuery( "from " + A320.class.getName() + " as a where a.javaEmbeddedVersion = :version" );
-		q.setString( "version", "Elephant" );
+		q.setParameter( "version", "Elephant" );
 		List a320s = q.list();
 		assertNotNull( a320s );
 		assertEquals( 1, a320s.size() );

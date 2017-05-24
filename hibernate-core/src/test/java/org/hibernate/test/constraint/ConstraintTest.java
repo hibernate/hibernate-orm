@@ -16,6 +16,7 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.UniqueKey;
@@ -70,7 +71,7 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testConstraintNameLength() {
 		int foundCount = 0;
 		for ( MappedNamespace namespace : metadata().getDatabase().getNamespaces() ) {
-			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
+			for ( MappedTable table : namespace.getTables() ) {
 				Iterator fkItr = table.getForeignKeyIterator();
 				while (fkItr.hasNext()) {
 					ForeignKey fk = (ForeignKey) fkItr.next();

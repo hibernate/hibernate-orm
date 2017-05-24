@@ -8,11 +8,11 @@ package org.hibernate.test.unionsubclass;
 
 import java.util.List;
 
+import org.hibernate.query.Query;
 import org.junit.Test;
 
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
@@ -392,8 +392,8 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Query q = s.createQuery( "from Being h where h.identity = :name1 or h.identity = :name2" );
-		q.setString("name1", "marc");
-		q.setString("name2", "steve");
+		q.setParameter( "name1", "marc" );
+		q.setParameter( "name2", "steve" );
 		final List result = q.list();
 		assertEquals( 2, result.size() );
 		s.delete( result.get(0) );

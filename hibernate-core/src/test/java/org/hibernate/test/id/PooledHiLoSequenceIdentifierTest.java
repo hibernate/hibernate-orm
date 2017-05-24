@@ -98,7 +98,7 @@ public class PooledHiLoSequenceIdentifierTest extends BaseCoreFunctionalTestCase
 	}
 
 	private int countInsertedRows(Session s) {
-		return ((Number) s.createSQLQuery( "SELECT COUNT(*) FROM sequenceIdentifier" )
+		return ((Number) s.createNativeQuery( "SELECT COUNT(*) FROM sequenceIdentifier" )
 				.uniqueResult()).intValue();
 	}
 

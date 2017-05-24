@@ -27,9 +27,9 @@ import javax.persistence.Query;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -127,7 +127,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		res.setName( "Bruce" );
 		item.setDistributors( new HashSet<Distributor>() );
 		item.getDistributors().add( res );
-		Statistics stats = ( ( HibernateEntityManagerFactory ) entityManagerFactory() ).getSessionFactory().getStatistics();
+		Statistics stats = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled( true );
 

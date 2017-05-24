@@ -20,6 +20,8 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.type.StandardBasicTypes;
 import org.junit.Test;
 
 /**
@@ -56,7 +58,7 @@ public class OneToOneLinkTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 
 		e = (Employee) s.createQuery("from Employee e where e.person.dob = :date")
-			.setDate("date", new Date() )
+			.setParameter("date", new Date(), StandardBasicTypes.DATE )
 			.uniqueResult();
 		assertEquals( e.getPerson().getName(), "Gavin King" );
 		assertFalse( Hibernate.isInitialized( e.getPerson() ) );

@@ -12,11 +12,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.TypedQuery;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.QueryHints;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
+
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
 
@@ -42,8 +42,7 @@ public class CachedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 		em.close();
 
-		HibernateEntityManagerFactory hemf =  (HibernateEntityManagerFactory) entityManagerFactory();
-		Statistics stats = hemf.getSessionFactory().getStatistics();
+		Statistics stats = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 
 		assertEquals( 0, stats.getQueryCacheHitCount() );
 		assertEquals( 0, stats.getQueryCacheMissCount() );
@@ -130,11 +129,7 @@ public class CachedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		em = getOrCreateEntityManager();
 
 		em.getEntityManagerFactory().getCache().evictAll();
-		em.unwrap( HibernateEntityManagerImplementor.class )
-				.getFactory()
-				.getSessionFactory()
-				.getCache()
-				.evictQueryRegions();
+		em.unwrap( SessionFactory.class ).getCache().evictQueryRegions();
 
 		em.getTransaction().begin();
 		query = em.createQuery( "select e from Employee e", Employee.class )

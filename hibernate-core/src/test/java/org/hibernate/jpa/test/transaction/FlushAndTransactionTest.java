@@ -16,7 +16,7 @@ import javax.persistence.RollbackException;
 import javax.persistence.TransactionRequiredException;
 
 import org.hibernate.Session;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.SessionFactory;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
 
@@ -64,7 +64,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		Book book = new Book();
 		book.name = "Le petit prince";
 		EntityManager em = getOrCreateEntityManager();
-		Statistics stats = ( ( HibernateEntityManagerFactory ) entityManagerFactory() ).getSessionFactory().getStatistics();
+		Statistics stats = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled( true );
 
@@ -108,7 +108,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		Book book = new Book();
 		book.name = "Le petit prince";
 		EntityManager em = getOrCreateEntityManager();
-		Statistics stats = ( ( HibernateEntityManagerFactory ) entityManagerFactory() ).getSessionFactory().getStatistics();
+		Statistics stats = entityManagerFactory().unwrap( SessionFactory.class ).getStatistics();
 
 		em.getTransaction().begin();
 		em.persist( book );

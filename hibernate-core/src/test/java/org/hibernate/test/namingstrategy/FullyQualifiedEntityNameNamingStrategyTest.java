@@ -93,7 +93,7 @@ public class FullyQualifiedEntityNameNamingStrategyTest extends BaseUnitTestCase
 		boolean ownerFKFound = false;
 		boolean inverseFKFound = false;
 		for ( Iterator it = ownerCollectionMapping.getCollectionTable().getForeignKeyIterator(); it.hasNext(); ) {
-			final String fkColumnName = ( (ForeignKey) it.next() ).getColumn( 0 ).getName();
+			final String fkColumnName = ( (ForeignKey) it.next() ).getColumn( 0 ).getName().getText();
 			if ( expectedOwnerFK.equals( fkColumnName ) ) {
 				ownerFKFound = true;
 			}

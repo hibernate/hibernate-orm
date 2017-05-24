@@ -20,8 +20,8 @@ import java.util.concurrent.Future;
 import org.hibernate.Criteria;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
-import org.hibernate.SQLQuery;
+import org.hibernate.query.Query;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.Transaction;
@@ -515,7 +515,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		// 1 and 2+ scalars.
 		
         String sqlQuery = "select name, description from Items";
-        SQLQuery query = s.createSQLQuery(sqlQuery);
+        NativeQuery query = s.createNativeQuery(sqlQuery);
         query.setCacheable(true);
         query.addScalar("name");
         query.addScalar("description");
@@ -526,7 +526,7 @@ public class QueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
         assertEquals( result1[1], "fooDescription" );
 		
         sqlQuery = "select name from Items";
-        query = s.createSQLQuery(sqlQuery);
+        query = s.createNativeQuery(sqlQuery);
         query.setCacheable(true);
         query.addScalar("name");
         String result2 = (String) query.uniqueResult();

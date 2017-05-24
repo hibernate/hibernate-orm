@@ -61,7 +61,7 @@ public class Tests extends BaseUnitTestCase {
 			final Column column = (Column) itr.next();
 			assertFalse( itr.hasNext() );
 
-			assertEquals( "C_FALLBACK_ID", column.getName().toUpperCase( Locale.ROOT ) );
+			assertEquals( "C_FALLBACK_ID", column.getName().getText().toUpperCase( Locale.ROOT ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

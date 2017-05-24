@@ -116,7 +116,7 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 		try {
 			SubSubEntity loaded = (SubSubEntity) session.createQuery(
 					"select se from SubSubEntity se where se.id = :id" )
-					.setLong( "id", subSubEntityId )
+					.setParameter( "id", subSubEntityId )
 					.uniqueResult();
 			assertNotNull( loaded );
 		}
@@ -131,7 +131,7 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 		try {
 			SubSubSubEntity loaded = (SubSubSubEntity) session.createQuery(
 					"select se from SubSubSubEntity se where se.id = :id" )
-					.setLong( "id", subSubEntityId )
+					.setParameter( "id", subSubEntityId )
 					.uniqueResult();
 			assertNull( loaded );
 		}

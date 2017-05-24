@@ -15,7 +15,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.type.StringType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
@@ -74,7 +74,7 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 
 		PersistentClass pc = metadata.getEntityBinding( TheEntity.class.getName() );
 		Type type = pc.getProperty( "it" ).getType();
-		assertTyping( StringType.class, type );
+		assertTyping( StandardBasicTypes.STRING.getClass(), type );
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 
 		PersistentClass pc = metadata.getEntityBinding( TheEntity2.class.getName() );
 		Type type = pc.getProperty( "it" ).getType();
-		assertTyping( StringType.class, type );
+		assertTyping( StandardBasicTypes.STRING.getClass(), type );
 	}
 
 	@Entity(name="TheEntity")

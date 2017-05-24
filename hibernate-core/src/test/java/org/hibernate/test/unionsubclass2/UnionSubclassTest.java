@@ -19,6 +19,8 @@ import org.hibernate.dialect.TeradataDialect;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.type.StandardBasicTypes;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -192,11 +194,11 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
 		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
 		Double heightViaSql =
-				( (Number)s.createSQLQuery("select height_centimeters from UPerson where name='Emmanuel'").uniqueResult() ).doubleValue();
+				( (Number)s.createNativeQuery("select height_centimeters from UPerson where name='Emmanuel'").uniqueResult() ).doubleValue();
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
 		Double expiryViaSql =
-				( (Number)s.createSQLQuery("select pwd_expiry_weeks from UEmployee where person_id=?")
-						.setLong(0, e.getId())
+				( (Number)s.createNativeQuery("select pwd_expiry_weeks from UEmployee where person_id=?")
+						.setParameter( 0, e.getId(), StandardBasicTypes.LONG )
 						.uniqueResult()
 				).doubleValue();
 		assertEquals(PASSWORD_EXPIRY_WEEKS, expiryViaSql, 0.01d);
@@ -219,14 +221,14 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		
 		// Test predicate and entity load via HQL
 		p = (Person)s.createQuery("from Person p where p.heightInches between ? and ?")
-			.setDouble(0, HEIGHT_INCHES - 0.01d)
-			.setDouble(1, HEIGHT_INCHES + 0.01d)
-			.uniqueResult();
+				.setParameter( 0, HEIGHT_INCHES - 0.01d, StandardBasicTypes.DOUBLE )
+				.setParameter( 1, HEIGHT_INCHES + 0.01d, StandardBasicTypes.DOUBLE )
+				.uniqueResult();
 		assertEquals(HEIGHT_INCHES, p.getHeightInches(), 0.01d);
 		e = (Employee)s.createQuery("from Employee e where e.passwordExpiryDays between ? and ?")
-			.setDouble(0, PASSWORD_EXPIRY_DAYS - 0.01d)
-			.setDouble(1, PASSWORD_EXPIRY_DAYS + 0.01d)
-			.uniqueResult();
+				.setParameter( 0, PASSWORD_EXPIRY_DAYS - 0.01d, StandardBasicTypes.DOUBLE )
+				.setParameter( 1, PASSWORD_EXPIRY_DAYS + 0.01d, StandardBasicTypes.DOUBLE )
+				.uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_DAYS, e.getPasswordExpiryDays(), 0.01d);
 		
 		// Test update
@@ -234,12 +236,12 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		e.setPasswordExpiryDays(7);
 		s.flush();
 		heightViaSql =
-				( (Number)s.createSQLQuery("select height_centimeters from UPerson where name='Emmanuel'").uniqueResult() )
+				( (Number)s.createNativeQuery("select height_centimeters from UPerson where name='Emmanuel'").uniqueResult() )
 						.doubleValue();
 		assertEquals(2.54d, heightViaSql, 0.01d);
 		expiryViaSql =
-				( (Number)s.createSQLQuery("select pwd_expiry_weeks from UEmployee where person_id=?")
-						.setLong(0, e.getId())
+				( (Number)s.createNativeQuery("select pwd_expiry_weeks from UEmployee where person_id=?")
+						.setParameter( 0, e.getId(), StandardBasicTypes.LONG )
 						.uniqueResult()
 				).doubleValue();
 		assertEquals(1d, expiryViaSql, 0.01d);

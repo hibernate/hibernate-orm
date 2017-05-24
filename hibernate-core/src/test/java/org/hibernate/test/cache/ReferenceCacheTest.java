@@ -44,8 +44,8 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testUseOfDirectReferencesInCache() throws Exception {
-		EntityTypeImplementor persister = (EntityTypeImplementor) sessionFactory().getClassMetadata( MyReferenceData.class );
-		assertFalse( persister.isMutable() );
+		EntityTypeImplementor persister = sessionFactory().getTypeConfiguration().findEntityPersister( MyReferenceData.class );
+		assertFalse( persister.getJavaTypeDescriptor().getMutabilityPlan().isMutable() );
 		assertTrue( persister.buildCacheEntry( null, null, null, null ).isReferenceEntry() );
 		assertFalse( persister.hasProxy() );
 

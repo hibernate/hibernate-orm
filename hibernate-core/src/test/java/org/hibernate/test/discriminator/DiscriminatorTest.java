@@ -196,7 +196,7 @@ public class DiscriminatorTest extends BaseCoreFunctionalTestCase {
 		assertTrue( pLoad instanceof HibernateProxy);
 		Person pGet = ( Person ) s.get( Person.class, new Long( e.getId() ));
 		Person pQuery = ( Person ) s.createQuery( "from Person where id = :id" )
-				.setLong( "id", e.getId() )
+				.setParameter( "id", e.getId() )
 				.uniqueResult();
 		Person pCriteria = ( Person ) s.createCriteria( Person.class )
 				.add( Restrictions.idEq( new Long( e.getId() ) ) )
@@ -240,7 +240,7 @@ public class DiscriminatorTest extends BaseCoreFunctionalTestCase {
 		s.evict( pLoad );
 		Employee pGet = ( Employee ) s.get( Person.class, new Long( e.getId() ));
 		Employee pQuery = ( Employee ) s.createQuery( "from Person where id = :id" )
-				.setLong( "id", e.getId() )
+				.setParameter( "id", e.getId() )
 				.uniqueResult();
 		Employee pCriteria = ( Employee ) s.createCriteria( Person.class )
 				.add( Restrictions.idEq( new Long( e.getId() ) ) )

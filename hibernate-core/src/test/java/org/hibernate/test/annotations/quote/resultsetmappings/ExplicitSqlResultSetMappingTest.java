@@ -51,7 +51,7 @@ public class ExplicitSqlResultSetMappingTest extends BaseCoreFunctionalTestCase 
 
 		Session s = openSession();
 		s.beginTransaction();
-		s.createSQLQuery( queryString )
+		s.createNativeQuery( queryString )
 				.list();
 		s.getTransaction().commit();
 		s.close();
@@ -63,7 +63,7 @@ public class ExplicitSqlResultSetMappingTest extends BaseCoreFunctionalTestCase 
 
 		Session s = openSession();
 		s.beginTransaction();
-		s.createSQLQuery( queryString )
+		s.createNativeQuery( queryString )
 				.setResultSetMapping( "explicitScalarResultSetMapping" )
 				.list();
 		s.getTransaction().commit();

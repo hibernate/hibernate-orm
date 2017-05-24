@@ -17,7 +17,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

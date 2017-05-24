@@ -9,23 +9,22 @@ package org.hibernate.test.type;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.query.Query;
 import org.hibernate.Session;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
+import org.hibernate.query.Query;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 /**
  * @author Andrea Boriero
@@ -109,8 +108,7 @@ public class ZonedDateTimeTest extends BaseNonConfigCoreFunctionalTestCase {
 		try (Session s = openSession()) {
 			final ZonedDateTimeEvent zonedDateTimeEvent = s.get( ZonedDateTimeEvent.class, 1L );
 			assertThat(
-					StandardSpiBasicTypes.ZONED_DATE_TIME.getComparator()
-							.compare( zonedDateTimeEvent.startDate, startdate ),
+					StandardSpiBasicTypes.ZONED_DATE_TIME.areEqual( zonedDateTimeEvent.startDate, startdate ),
 					is( 0 )
 			);
 		}

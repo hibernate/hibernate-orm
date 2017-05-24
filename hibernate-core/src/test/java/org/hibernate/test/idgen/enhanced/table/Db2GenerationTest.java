@@ -10,19 +10,19 @@ import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
-import org.hibernate.mapping.Table;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.junit.Assert;
+import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Assert;
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -52,7 +52,7 @@ public class Db2GenerationTest extends BaseUnitTestCase {
 
 			assertEquals( 1, metadata.getDatabase().getDefaultNamespace().getTables().size() );
 
-			final Table table = metadata.getDatabase().getDefaultNamespace().getTables().iterator().next();
+			final MappedTable table = metadata.getDatabase().getDefaultNamespace().getTables().iterator().next();
 			final String[] createCommands = new DB2Dialect().getTableExporter().getSqlCreateStrings( table, metadata );
 			assertContains( "sequence_name varchar(255) not null", createCommands[0] );
 		}
@@ -88,7 +88,7 @@ public class Db2GenerationTest extends BaseUnitTestCase {
 
 			assertEquals( 1, metadata.getDatabase().getDefaultNamespace().getTables().size() );
 
-			final Table table = metadata.getDatabase().getDefaultNamespace().getTables().iterator().next();
+			final MappedTable table = metadata.getDatabase().getDefaultNamespace().getTables().iterator().next();
 			final String[] createCommands = new DB2Dialect().getTableExporter().getSqlCreateStrings( table, metadata );
 			assertContains( "sequence_name varchar(255) not null", createCommands[0] );
 		}

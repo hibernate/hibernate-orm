@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.idgen.enhanced.sequence;
 
+import org.hibernate.id.IdentifierGenerator;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -30,8 +31,9 @@ public class PooledSequenceTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNormalBoundary() {
 		EntityTypeImplementor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
-		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );
-		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) persister.getIdentifierGenerator();
+		IdentifierGenerator identifierGenerator = persister.getIdentifierDescriptor().getIdentifierValueGenerator();
+		assertClassAssignability( SequenceStyleGenerator.class, identifierGenerator.getClass() );
+		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) identifierGenerator;
 		assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 		PooledOptimizer optimizer = (PooledOptimizer) generator.getOptimizer();
 

@@ -34,17 +34,17 @@ public class ColumnTransformerTest extends BaseCoreFunctionalTestCase {
 		// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
 		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
 		double heightViaSql =
-				( (Number)s.createSQLQuery("select size_in_cm from t_staff where t_staff.id=1").uniqueResult() )
+				( (Number)s.createNativeQuery("select size_in_cm from t_staff where t_staff.id=1").uniqueResult() )
 						.doubleValue();
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
 
 		heightViaSql =
-				( (Number)s.createSQLQuery("select radiusS from t_staff where t_staff.id=1").uniqueResult() )
+				( (Number)s.createNativeQuery("select radiusS from t_staff where t_staff.id=1").uniqueResult() )
 						.doubleValue();
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
 
 		heightViaSql =
-				( (Number)s.createSQLQuery("select diamet from t_staff where t_staff.id=1").uniqueResult() )
+				( (Number)s.createNativeQuery("select diamet from t_staff where t_staff.id=1").uniqueResult() )
 						.doubleValue();
 		assertEquals(HEIGHT_CENTIMETERS*2, heightViaSql, 0.01d);
 
@@ -60,8 +60,8 @@ public class ColumnTransformerTest extends BaseCoreFunctionalTestCase {
 		
 		// Test predicate and entity load via HQL
 		staff = (Staff)s.createQuery("from Staff s where s.sizeInInches between ? and ?")
-			.setDouble(0, HEIGHT_INCHES - 0.01d)
-			.setDouble(1, HEIGHT_INCHES + 0.01d)
+			.setParameter(0, HEIGHT_INCHES - 0.01d)
+			.setParameter(1, HEIGHT_INCHES + 0.01d)
 			.uniqueResult();
 		assertEquals(HEIGHT_INCHES, staff.getSizeInInches(), 0.01d);
 
@@ -69,7 +69,7 @@ public class ColumnTransformerTest extends BaseCoreFunctionalTestCase {
 		staff.setSizeInInches(1);
 		s.flush();
 		heightViaSql =
-				( (Number)s.createSQLQuery("select size_in_cm from t_staff where t_staff.id=1").uniqueResult() )
+				( (Number)s.createNativeQuery("select size_in_cm from t_staff where t_staff.id=1").uniqueResult() )
 						.doubleValue();
 		assertEquals(2.54d, heightViaSql, 0.01d);
 		s.delete(staff);

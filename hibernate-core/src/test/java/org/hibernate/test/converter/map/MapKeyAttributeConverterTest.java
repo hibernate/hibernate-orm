@@ -229,7 +229,7 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 
 	private Object findDatabaseValue(MapValue mapValue, String column) {
 		return getSession()
-				.createSQLQuery( "select mv." + column + " from map_value mv where mv.id=:id" )
+				.createNativeQuery( "select mv." + column + " from map_value mv where mv.id=:id" )
 				.setParameter( "id", mapValue.id )
 				.uniqueResult();
 	}

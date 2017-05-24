@@ -8,7 +8,7 @@ package org.hibernate.test.annotations.any;
 
 import org.junit.Test;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -40,7 +40,7 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 
 		Query q = s
 				.createQuery( "select s from PropertySet s where name = :name" );
-		q.setString( "name", "string" );
+		q.setParameter( "name", "string" );
 		PropertySet result = (PropertySet) q.uniqueResult();
 
 		assertNotNull( result );
@@ -51,7 +51,7 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, result.getGeneralProperties().size() );
 		assertEquals( "Alex", result.getGeneralProperties().get( 0 ).asString() );
 
-		q.setString( "name", "integer" );
+		q.setParameter( "name", "integer" );
 		result = (PropertySet) q.uniqueResult();
 		assertNotNull( result );
 		assertNotNull( result.getSomeProperty() );
@@ -82,7 +82,7 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 
 		Query q = s
 				.createQuery( "SELECT map FROM PropertyMap map WHERE map.name = :name" );
-		q.setString( "name", "sample" );
+		q.setParameter( "name", "sample" );
 		PropertyMap actualMap = (PropertyMap) q.uniqueResult();
 
 		assertNotNull( actualMap );
@@ -128,7 +128,7 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 
 		Query q = s
 				.createQuery( "SELECT list FROM PropertyList list WHERE list.name = :name" );
-		q.setString( "name", "sample" );
+		q.setParameter( "name", "sample" );
 		PropertyList<Property> actualList = (PropertyList<Property>) q
 				.uniqueResult();
 

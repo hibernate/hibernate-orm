@@ -11,7 +11,7 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
@@ -35,7 +35,7 @@ public class BasicUnstructuredCachingOfConvertedValueTest extends BaseNonConfigC
 	@TestForIssue( jiraKey = "HHH-9615" )
 	@SuppressWarnings("unchecked")
 	public void basicCacheStructureTest() {
-		EntityPersister persister =  sessionFactory().getMetamodel().entityPersisters().get( Address.class.getName() );
+		EntityTypeImplementor persister =  sessionFactory().getTypeConfiguration().findEntityPersister( Address.class );
 		EntityRegionImpl region = (EntityRegionImpl) persister.getCacheAccessStrategy().getRegion();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

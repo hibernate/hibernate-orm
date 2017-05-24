@@ -235,8 +235,10 @@ public interface PersistentCollectionMetadata<O,C,E>
 	 */
 	CacheEntryStructure getCacheEntryStructure();
 
-
-
+	/**
+	 * Get the persister of the entity that "owns" this collection
+	 */
+	EntityTypeImplementor getOwnerEntityPersister();
 
 	// consider whether we want to keep any of this legacy stuff
 
@@ -382,10 +384,6 @@ public interface PersistentCollectionMetadata<O,C,E>
 //	 * extended by a "property path")
 //	 */
 //	String getRole();
-//	/**
-//	 * Get the persister of the entity that "owns" this collection
-//	 */
-//	EntityTypeImplementor getOwnerEntityPersister();
 //	/**
 //	 * Get the surrogate key generation strategy (optional operation)
 //	 */

@@ -342,14 +342,12 @@ public class TypeTest extends BaseUnitTestCase {
 		assertTrue( original == basicType.replace( original, copy, null, null, null ) );
 
 		assertTrue( basicType.isSame( original, copy ) );
-		assertTrue( basicType.isEqual( original, copy ) );
-		assertTrue( basicType.isEqual( original, copy ) );
-		assertTrue( basicType.isEqual( original, copy, null ) );
+		assertTrue( basicType.areEqual( original, copy ) );
+		assertTrue( basicType.areEqual( original, copy ) );
 
 		assertFalse( basicType.isSame( original, different ) );
-		assertFalse( basicType.isEqual( original, different ) );
-		assertFalse( basicType.isEqual( original, different ) );
-		assertFalse( basicType.isEqual( original, different, null ) );
+		assertFalse( basicType.areEqual( original, different ) );
+		assertFalse( basicType.areEqual( original, different ) );
 
 		assertFalse( basicType.isDirty( original, copy , session ) );
 		assertFalse( basicType.isDirty( original, copy , ArrayHelper.FALSE, session ) );

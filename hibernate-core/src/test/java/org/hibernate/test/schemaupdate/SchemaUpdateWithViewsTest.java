@@ -13,7 +13,6 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Table;
 
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
@@ -21,6 +20,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.query.Query;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
@@ -64,7 +64,7 @@ public class SchemaUpdateWithViewsTest extends BaseNonConfigCoreFunctionalTestCa
 	private void createViewWithSameNameOfEntityTable() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
-		Query query = session.createSQLQuery( "CREATE OR REPLACE VIEW MyEntity AS SELECT 'Hello World' " );
+		Query query = session.createNativeQuery( "CREATE OR REPLACE VIEW MyEntity AS SELECT 'Hello World' " );
 		query.executeUpdate();
 		transaction.commit();
 		session.close();
@@ -84,7 +84,7 @@ public class SchemaUpdateWithViewsTest extends BaseNonConfigCoreFunctionalTestCa
 	private void dropView() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
-		Query query = session.createSQLQuery( "DROP VIEW IF EXISTS MyEntity " );
+		Query query = session.createNativeQuery( "DROP VIEW IF EXISTS MyEntity " );
 		query.executeUpdate();
 		transaction.commit();
 		session.close();

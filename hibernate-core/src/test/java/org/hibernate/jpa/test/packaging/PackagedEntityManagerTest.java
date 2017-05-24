@@ -15,12 +15,12 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.pack.cfgxmlpar.Morito;
@@ -394,7 +394,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		res.setName( "Bruce" );
 		item.setDistributors( new HashSet<Distributor>() );
 		item.getDistributors().add( res );
-		Statistics stats = ( (HibernateEntityManagerFactory) emf ).getSessionFactory().getStatistics();
+		Statistics stats = emf.unwrap( SessionFactory.class ).getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled( true );
 

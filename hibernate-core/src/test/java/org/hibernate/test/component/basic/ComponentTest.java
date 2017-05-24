@@ -209,9 +209,9 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 			.list();
 		if ( getDialect().supportsRowValueConstructorSyntax() ) {
 			s.createQuery("from User u where u.person = ('gavin', :dob, 'Peachtree Rd', 'Karbarook Ave', 1974, 34, 'Peachtree Rd')")
-				.setDate("dob", new Date("March 25, 1974")).list();
+				.setParameter("dob", new Date("March 25, 1974")).list();
 			s.createQuery("from User where person = ('gavin', :dob, 'Peachtree Rd', 'Karbarook Ave', 1974, 34, 'Peachtree Rd')")
-				.setDate("dob", new Date("March 25, 1974")).list();
+				.setParameter("dob", new Date("March 25, 1974")).list();
 		}
 		t.commit();
 		s.close();
@@ -232,7 +232,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
 		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
 		Double heightViaSql =
-				( (Number)s.createSQLQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult())
+				( (Number)s.createNativeQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult())
 						.doubleValue();
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
 
@@ -248,8 +248,8 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		
 		// Test predicate and entity load via HQL
 		u = (User)s.createQuery("from User u where u.person.heightInches between ? and ?")
-			.setDouble(0, HEIGHT_INCHES - 0.01d)
-			.setDouble(1, HEIGHT_INCHES + 0.01d)
+			.setParameter(0, HEIGHT_INCHES - 0.01d)
+			.setParameter(1, HEIGHT_INCHES + 0.01d)
 			.uniqueResult();
 		assertEquals(HEIGHT_INCHES, u.getPerson().getHeightInches(), 0.01d);
 		
@@ -257,7 +257,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		u.getPerson().setHeightInches(1);
 		s.flush();
 		heightViaSql =
-				( (Number)s.createSQLQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult() )
+				( (Number)s.createNativeQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult() )
 						.doubleValue();
 		assertEquals(2.54d, heightViaSql, 0.01d);
 		s.delete(u);

@@ -15,9 +15,10 @@ import org.hibernate.envers.test.RequiresAuditStrategy;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.type.TimestampType;
+import org.hibernate.type.StandardBasicTypes;
 import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertTrue;
@@ -49,6 +50,6 @@ public class RevisionEndTimestampTypeTest extends BaseEnversJPAFunctionalTestCas
 		assertTrue( clazz.hasProperty( getAuditServiceOptions().getRevisionEndTimestampFieldName() ) );
 		// get the revision end timestamp property and confirm it is of Timestamp type.
 		final Property property = clazz.getProperty( getAuditServiceOptions().getRevisionEndTimestampFieldName() );
-		assertTyping( TimestampType.class, property.getType() );
+		assertTyping( StandardBasicTypes.TIMESTAMP.getClass(), property.getType() );
 	}
 }

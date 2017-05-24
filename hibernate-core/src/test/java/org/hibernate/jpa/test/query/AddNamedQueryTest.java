@@ -119,8 +119,8 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		// assert the state of the query config settings based on the initial named query
 		//
 		//		NOTE: here we check "query options" via the Hibernate contract (allowing nullness checking); see below for access via the JPA contract
-		assertNull( hibernateQuery.getQueryOptions().getFirstRow() );
-		assertNull( hibernateQuery.getQueryOptions().getMaxRows() );
+		assertNull( hibernateQuery.getQueryOptions().getLimit().getFirstRow() );
+		assertNull( hibernateQuery.getQueryOptions().getLimit().getMaxRows() );
 		assertEquals( FlushMode.AUTO, hibernateQuery.getHibernateFlushMode() );
 		assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );

@@ -8,13 +8,13 @@ package org.hibernate.test.onetoone.basic;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.naming.Identifier;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.mapping.Table;
+import org.hibernate.naming.Identifier;
+import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 
@@ -32,7 +32,7 @@ public class OneToOneSchemaTest extends BaseUnitTestCase {
 					.addAnnotatedClass( Child.class )
 					.buildMetadata();
 
-			Table childTable = metadata.getDatabase().getDefaultNamespace().locateTable( Identifier.toIdentifier( "CHILD" ) );
+			MappedTable childTable = metadata.getDatabase().getDefaultNamespace().locateTable( Identifier.toIdentifier( "CHILD" ) );
 			assertFalse( "UniqueKey was generated when it should not", childTable.getUniqueKeyIterator().hasNext() );
 		}
 		finally {

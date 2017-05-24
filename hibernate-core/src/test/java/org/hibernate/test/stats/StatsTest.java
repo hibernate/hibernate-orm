@@ -213,7 +213,7 @@ public class StatsTest extends BaseUnitTestCase {
 		s = sf.openSession();
 		tx = s.beginTransaction();
 		final String sql = "select id, name from Country";
-		results = s.createSQLQuery( sql ).addEntity( Country.class ).list().size();
+		results = s.createNativeQuery( sql ).addEntity( Country.class ).list().size();
 		QueryStatistics sqlStats = sf.getStatistics().getQueryStatistics( sql );
 		assertNotNull( "sql stats were null", sqlStats );
 		assertEquals( "unexpected execution count", 1, sqlStats.getExecutionCount() );

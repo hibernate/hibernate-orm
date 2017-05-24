@@ -100,7 +100,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		// Oracle returns BigDecimaal while other dialects return Integer;
 		// casting to Number so it works on all dialects
-		Number sqlValue = ((Number) s.createSQLQuery("select child_position from ParentChild c where c.name='Child One'")
+		Number sqlValue = ((Number) s.createNativeQuery("select child_position from ParentChild c where c.name='Child One'")
 				.uniqueResult());
 		assertEquals( 0, sqlValue.intValue() );
 
@@ -118,7 +118,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		c.setPosition( 2 );
 		s.flush();
-		sqlValue = ( (Number) s.createSQLQuery("select child_position from ParentChild c where c.name='Child One'")
+		sqlValue = ( (Number) s.createNativeQuery("select child_position from ParentChild c where c.name='Child One'")
 				.uniqueResult() );
 		assertEquals( 1, sqlValue.intValue() );
 		s.delete( p );

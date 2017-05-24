@@ -67,7 +67,7 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 		assertEquals("Blahs", doc2.getName());
 		assertEquals(doc.getText(), doc2.getText());
 				
-		doc2 = (Document) ss.createSQLQuery("select * from Document")
+		doc2 = (Document) ss.createNativeQuery("select * from Document")
 			.addEntity(Document.class)
 			.uniqueResult();
 		assertEquals("Blahs", doc2.getName());
@@ -103,12 +103,12 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 
 		tx = ss.beginTransaction();
 		int count = ss.createQuery( "update Document set name = :newName where name = :oldName" )
-				.setString( "newName", "Foos" )
-				.setString( "oldName", "Blahs" )
+				.setParameter( "newName", "Foos" )
+				.setParameter( "oldName", "Blahs" )
 				.executeUpdate();
 		assertEquals( "hql-update on stateless session", 1, count );
 		count = ss.createQuery( "update Paper set color = :newColor" )
-				.setString( "newColor", "Goldenrod" )
+				.setParameter( "newColor", "Goldenrod" )
 				.executeUpdate();
 		assertEquals( "hql-update on stateless session", 1, count );
 		tx.commit();

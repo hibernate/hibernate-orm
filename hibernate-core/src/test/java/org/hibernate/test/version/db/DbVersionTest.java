@@ -53,7 +53,7 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertFalse( "owner version not incremented", StandardBasicTypes.TIMESTAMP.isEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertFalse( "owner version not incremented", StandardBasicTypes.TIMESTAMP.areEqual( steveTimestamp, steve.getTimestamp() ) );
 
 		steveTimestamp = steve.getTimestamp();
 		Thread.sleep( 1500 );
@@ -65,7 +65,7 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertFalse( "owner version not incremented", StandardBasicTypes.TIMESTAMP.isEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertFalse( "owner version not incremented", StandardBasicTypes.TIMESTAMP.areEqual( steveTimestamp, steve.getTimestamp() ) );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -96,7 +96,7 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertTrue( "owner version was incremented", StandardBasicTypes.TIMESTAMP.isEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertTrue( "owner version was incremented", StandardBasicTypes.TIMESTAMP.areEqual( steveTimestamp, steve.getTimestamp() ) );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -105,7 +105,7 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertTrue( "owner version was incremented", StandardBasicTypes.TIMESTAMP.isEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertTrue( "owner version was incremented", StandardBasicTypes.TIMESTAMP.areEqual( steveTimestamp, steve.getTimestamp() ) );
 
 		s = openSession();
 		t = s.beginTransaction();

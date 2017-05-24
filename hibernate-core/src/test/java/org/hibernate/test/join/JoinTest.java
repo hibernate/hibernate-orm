@@ -173,10 +173,10 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		// Test value conversion during insert
 		// Oracle returns BigDecimaal while other dialects return Double;
 		// casting to Number so it works on all dialects
-		Number heightViaSql = (Number)s.createSQLQuery("select height_centimeters from person where name='Emmanuel'").uniqueResult();
+		Number heightViaSql = (Number)s.createNativeQuery("select height_centimeters from person where name='Emmanuel'").uniqueResult();
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql.doubleValue(), 0.01d);
-		Number expiryViaSql = (Number)s.createSQLQuery("select pwd_expiry_weeks from t_user where person_id=?")
-			.setLong(0, u.getId())
+		Number expiryViaSql = (Number)s.createNativeQuery("select pwd_expiry_weeks from t_user where person_id=?")
+			.setParameter(0, u.getId())
 			.uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_WEEKS, expiryViaSql.doubleValue(), 0.01d);
 		
@@ -198,13 +198,13 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		
 		// Test predicate and entity load via HQL
 		p = (Person)s.createQuery("from Person p where p.heightInches between ? and ?")
-			.setDouble(0, HEIGHT_INCHES - 0.01d)
-			.setDouble(1, HEIGHT_INCHES + 0.01d)
+			.setParameter(0, HEIGHT_INCHES - 0.01d)
+			.setParameter(1, HEIGHT_INCHES + 0.01d)
 			.uniqueResult();
 		assertEquals(HEIGHT_INCHES, p.getHeightInches(), 0.01d);
 		u = (User)s.createQuery("from User u where u.passwordExpiryDays between ? and ?")
-			.setDouble(0, PASSWORD_EXPIRY_DAYS - 0.01d)
-			.setDouble(1, PASSWORD_EXPIRY_DAYS + 0.01d)
+			.setParameter(0, PASSWORD_EXPIRY_DAYS - 0.01d)
+			.setParameter(1, PASSWORD_EXPIRY_DAYS + 0.01d)
 			.uniqueResult();
 		assertEquals(PASSWORD_EXPIRY_DAYS, u.getPasswordExpiryDays(), 0.01d);
 		
@@ -212,10 +212,10 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		p.setHeightInches(1);
 		u.setPasswordExpiryDays(7d);
 		s.flush();
-		heightViaSql = (Number)s.createSQLQuery("select height_centimeters from person where name='Emmanuel'").uniqueResult();
+		heightViaSql = (Number)s.createNativeQuery("select height_centimeters from person where name='Emmanuel'").uniqueResult();
 		assertEquals(2.54d, heightViaSql.doubleValue(), 0.01d);
-		expiryViaSql = (Number)s.createSQLQuery("select pwd_expiry_weeks from t_user where person_id=?")
-			.setLong(0, u.getId())
+		expiryViaSql = (Number)s.createNativeQuery("select pwd_expiry_weeks from t_user where person_id=?")
+			.setParameter(0, u.getId())
 			.uniqueResult();
 		assertEquals(1d, expiryViaSql.doubleValue(), 0.01d);
 		

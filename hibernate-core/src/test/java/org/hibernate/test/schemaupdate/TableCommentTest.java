@@ -12,22 +12,22 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.annotations.Table;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.core.Is.is;
@@ -98,9 +98,8 @@ public class TableCommentTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	private String getTableName() {
-		SessionFactoryImplementor sessionFactoryImplementor = sessionFactory();
-		ClassMetadata tableWithCommentMetadata = sessionFactoryImplementor.getClassMetadata( TableWithComment.class );
-		return ((AbstractEntityPersister) tableWithCommentMetadata).getTableName();
+		EntityTypeImplementor entityType = sessionFactory().getTypeConfiguration().findEntityPersister( TableWithComment.class );
+		return ( (PhysicalTable) entityType.getPrimaryTable() ).getTableName().getText();
 	}
 
 	private void createSchema(Class[] annotatedClasses) {

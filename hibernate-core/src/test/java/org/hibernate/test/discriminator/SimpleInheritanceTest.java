@@ -190,7 +190,7 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 		assertTrue( pLoad instanceof HibernateProxy);
 		Person pGet = ( Person ) s.get( Person.class, e.getId());
 		Person pQuery = ( Person ) s.createQuery( "from org.hibernate.test.discriminator.Person where id = :id" )
-				.setLong( "id", e.getId() )
+				.setParameter( "id", e.getId() )
 				.uniqueResult();
 		Person pCriteria = ( Person ) s.createCriteria( Person.class )
 				.add( Restrictions.idEq( e.getId() ) )
@@ -235,7 +235,7 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 		s.evict( pLoad );
 		Employee pGet = ( Employee ) s.get( Person.class, e.getId() );
 		Employee pQuery = ( Employee ) s.createQuery( "from org.hibernate.test.discriminator.Person where id = :id" )
-				.setLong( "id", e.getId() )
+				.setParameter( "id", e.getId() )
 				.uniqueResult();
 		Employee pCriteria = ( Employee ) s.createCriteria( Person.class )
 				.add( Restrictions.idEq( e.getId() ) )

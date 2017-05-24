@@ -12,7 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import java.util.List;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.Oracle10gDialect;
@@ -84,7 +84,7 @@ public class StringNationalizedTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		try {
 			final Query query = s.createQuery( "from NationalizedEntity where name = :name" );
-			query.setString( "name", "Hello" );
+			query.setParameter( "name", "Hello" );
 			final List list = query.list();
 			assertThat( list.size(), is( 1 ) );
 		}

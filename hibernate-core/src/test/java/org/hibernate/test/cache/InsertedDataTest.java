@@ -8,19 +8,15 @@ package org.hibernate.test.cache;
 
 import java.util.Map;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.persister.entity.Lockable;
+import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for handling of data just inserted during a transaction being read from the database

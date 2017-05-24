@@ -70,7 +70,7 @@ public class LazyGroupAccessTestTask extends AbstractEnhancerTestTask {
 		Session s = getFactory().openSession();
 		s.beginTransaction();
 
-		Child c1 = (Child) s.createQuery( "from Child c where c.name = :name" ).setString( "name", "steve" ).uniqueResult();
+		Child c1 = (Child) s.createQuery( "from Child c where c.name = :name" ).setParameter( "name", "steve" ).uniqueResult();
 
 		// verify the expected initial loaded state
 		assertLoaded( c1, "name" );
@@ -86,7 +86,7 @@ public class LazyGroupAccessTestTask extends AbstractEnhancerTestTask {
 		assertEquals( "Hibernate", c1.getParent().getNombre() );
 		assertFalse( c1.getParent() instanceof HibernateProxy );
 
-		Child c2 = (Child) s.createQuery( "from Child c where c.name = :name" ).setString( "name", "sally" ).uniqueResult();
+		Child c2 = (Child) s.createQuery( "from Child c where c.name = :name" ).setParameter( "name", "sally" ).uniqueResult();
 
 		// verify the expected initial loaded state
 		assertLoaded( c2, "name" );

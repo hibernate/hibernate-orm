@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
@@ -391,7 +391,7 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Query q = s.createQuery( "select p from Person p where p.address.city = :city" );
-		q.setString( "city", add.city );
+		q.setParameter( "city", add.city );
 		List result = q.list();
 		Person samePerson = (Person) result.get( 0 );
 		assertNotNull( samePerson.address.type );

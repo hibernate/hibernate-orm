@@ -173,9 +173,7 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	// uses the first getter of the tupelizer for the assertions
 
 	private void assertAccessType(SessionFactoryImplementor factory, Class<?> classUnderTest, AccessType accessType) {
-		EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-				.getEntityMetamodel()
-				.getTuplizer();
+		EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() ).getTuplizer();
 		if ( AccessType.FIELD.equals( accessType ) ) {
 			Assert.assertTrue(
 					"Field access was expected.",

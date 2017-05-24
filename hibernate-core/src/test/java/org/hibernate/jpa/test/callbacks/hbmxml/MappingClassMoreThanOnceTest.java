@@ -9,8 +9,9 @@ package org.hibernate.jpa.test.callbacks.hbmxml;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.EntityManagerFactory;
+
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -38,9 +39,9 @@ public class MappingClassMoreThanOnceTest extends BaseUnitTestCase {
 				settings
 		);
 
-		HibernateEntityManagerFactory emf = null;
+		EntityManagerFactory emf = null;
 		try {
-			emf = builder.build().unwrap( HibernateEntityManagerFactory.class );
+			emf = builder.build();
 		}
 		finally {
 			if ( emf != null ) {

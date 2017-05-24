@@ -13,8 +13,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.Criteria;
-import org.hibernate.Query;
-import org.hibernate.SQLQuery;
+import org.hibernate.query.Query;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
@@ -187,7 +187,7 @@ public class PaginationTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( "Description: 3", result.get( 1 ) );
 		assertEquals( "Description: 4", result.get( 2 ) );
 
-		result = session.createSQLQuery( "select description, xval, yval from DataPoint order by xval, yval" )
+		result = session.createNativeQuery( "select description, xval, yval from DataPoint order by xval, yval" )
 				.setFirstResult( 2 )
 				.setMaxResults( 5 )
 				.list();
@@ -195,7 +195,7 @@ public class PaginationTest extends BaseNonConfigCoreFunctionalTestCase {
 		Object[] row = (Object[]) result.get( 0 );
 		assertTrue( row[0] instanceof String );
 
-		result = session.createSQLQuery( "select * from DataPoint order by xval, yval" )
+		result = session.createNativeQuery( "select * from DataPoint order by xval, yval" )
 				.setFirstResult( 2 )
 				.setMaxResults( 5 )
 				.list();
@@ -217,8 +217,8 @@ public class PaginationTest extends BaseNonConfigCoreFunctionalTestCase {
 				.addOrder( Order.asc( "sequence" ) );
 	}
 
-	private SQLQuery generateBaseSQLQuery(Session session) {
-		return session.createSQLQuery( "select id, seqval, xval, yval, description from DataPoint order by seqval" )
+	private NativeQuery generateBaseSQLQuery(Session session) {
+		return session.createNativeQuery( "select id, seqval, xval, yval, description from DataPoint order by seqval" )
 				.addEntity( DataPoint.class );
 	}
 

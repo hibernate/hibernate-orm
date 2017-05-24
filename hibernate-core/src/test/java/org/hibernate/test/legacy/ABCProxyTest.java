@@ -268,7 +268,7 @@ public class ABCProxyTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		List l = s.createQuery( "from E e, A a where e.reverse = a.forward and a = ?" )
-				.setEntity( 0, a )
+				.setParameter( 0, a )
 				.list();
 		assertTrue( l.size()==1 );
 		l = s.createQuery( "from E e join fetch e.reverse" ).list();

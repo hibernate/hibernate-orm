@@ -18,7 +18,7 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Example;
@@ -417,13 +417,13 @@ public class MasterDetailTest extends LegacyTestCase {
 		assertTrue( s.createFilter( master.getDetails(), "order by this.i desc" ).list().size()==2 );
 		assertTrue( s.createFilter( master.getDetails(), "select this where this.id > -1" ).list().size()==2 );
 		Query q = s.createFilter( master.getDetails(), "where this.id > :id" );
-		q.setInteger("id", -1);
+		q.setParameter("id", -1);
 		assertTrue( q.list().size()==2 );
 		q = s.createFilter( master.getDetails(), "where this.id > :id1 and this.id < :id2" );
-		q.setInteger("id1", -1);
-		q.setInteger("id2", 99999999);
+		q.setParameter("id1", -1);
+		q.setParameter("id2", 99999999);
 		assertTrue( q.list().size()==2 );
-		q.setInteger("id2", -1);
+		q.setParameter("id2", -1);
 		assertTrue( q.list().size()==0 );
 		q = s.createFilter( master.getDetails(), "where this.id in (:ids)" );
 		list = new ArrayList();
@@ -449,10 +449,10 @@ public class MasterDetailTest extends LegacyTestCase {
 		assertTrue( s.createFilter( master.getIncoming(), "" ).list().size()==0 );
 
 		Query f = s.createFilter( master.getDetails(), "select max(this.i) where this.i < :top and this.i>=:bottom" );
-		f.setInteger("top", 100);
-		f.setInteger("bottom", 0);
+		f.setParameter("top", 100);
+		f.setParameter("bottom", 0);
 		assertEquals( f.iterate().next(), new Integer(12) );
-		f.setInteger("top", 2);
+		f.setParameter("top", 2);
 		assertEquals( f.iterate().next(), new Integer(0) );
 
 		f = s.createFilter( master.getDetails(), "select max(this.i) where this.i not in (:list)" );

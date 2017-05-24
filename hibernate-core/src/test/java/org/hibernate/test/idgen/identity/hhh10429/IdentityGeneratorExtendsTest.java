@@ -19,6 +19,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.mapping.KeyValue;
 
 import org.hibernate.testing.DialectChecks;
@@ -70,9 +71,8 @@ public class IdentityGeneratorExtendsTest extends BaseCoreFunctionalTestCase {
 		final MetadataBuilder builder = sources.getMetadataBuilder();
 		final Metadata metadata = builder.build();
 
-
 		for ( final MappedNamespace ns : metadata.getDatabase().getNamespaces() ) {
-			for ( final org.hibernate.mapping.Table table : ns.getTables() ) {
+			for ( final MappedTable table : ns.getTables() ) {
 				final KeyValue value = table.getIdentifierValue();
 				assertNotNull( "IdentifierValue was null", value );
 				assertTrue( value.isIdentityColumn( metadata.getIdentifierGeneratorFactory(), getDialect() ) );

@@ -51,7 +51,7 @@ public class HibernateSequenceTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testHibernateSequenceSchema() {
 		EntityTypeImplementor persister = sessionFactory().getEntityPersister( HibernateSequenceEntity.class.getName() );
-		IdentifierGenerator generator = persister.getIdentifierGenerator();
+		IdentifierGenerator generator = persister.getIdentifierDescriptor().getIdentifierValueGenerator();
 		Assert.assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
 		Assert.assertEquals(

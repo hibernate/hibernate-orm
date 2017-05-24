@@ -69,7 +69,7 @@ public class LazyGroupUpdateTestTask extends AbstractEnhancerTestTask {
 		Session s = getFactory().openSession();
 		s.beginTransaction();
 
-		Child c1 = (Child) s.createQuery( "from Child c where c.name = :name" ).setString( "name", "steve" ).uniqueResult();
+		Child c1 = (Child) s.createQuery( "from Child c where c.name = :name" ).setParameter( "name", "steve" ).uniqueResult();
 
 		// verify the expected initial loaded state
 		assertLoaded( c1, "name" );
@@ -98,7 +98,7 @@ public class LazyGroupUpdateTestTask extends AbstractEnhancerTestTask {
 		s = getFactory().openSession();
 		s.getTransaction().begin();
 
-		c1 = (Child) s.createQuery( "from Child c where c.name = :name" ).setString( "name", "steve" ).uniqueResult();
+		c1 = (Child) s.createQuery( "from Child c where c.name = :name" ).setParameter( "name", "steve" ).uniqueResult();
 
 		// verify updates
 		assertEquals( "new nickName", c1.getNickName() );
@@ -111,7 +111,7 @@ public class LazyGroupUpdateTestTask extends AbstractEnhancerTestTask {
 		s = getFactory().openSession();
 		s.getTransaction().begin();
 
-		Child c2 = (Child) s.createQuery( "from Child c where c.name = :name" ).setString( "name", "sally" ).uniqueResult();
+		Child c2 = (Child) s.createQuery( "from Child c where c.name = :name" ).setParameter( "name", "sally" ).uniqueResult();
 
 		// verify the expected initial loaded state
 		assertLoaded( c2, "name" );
@@ -137,7 +137,7 @@ public class LazyGroupUpdateTestTask extends AbstractEnhancerTestTask {
 		s = getFactory().openSession();
 		s.getTransaction().begin();
 
-		c2 = (Child) s.createQuery( "from Child c where c.name = :name" ).setString( "name", "sally" ).uniqueResult();
+		c2 = (Child) s.createQuery( "from Child c where c.name = :name" ).setParameter( "name", "sally" ).uniqueResult();
 
 		// verify update
 		assertEquals( "p1New", c2.getAlternateParent().getNombre() );

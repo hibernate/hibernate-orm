@@ -5,23 +5,28 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.MappedNamespace;
-import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.MappedSequence;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.mapping.Table;
+import org.hibernate.naming.Identifier;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.spi.SchemaFilter;
+import org.junit.Assert;
+import org.junit.Test;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.DialectChecks;
@@ -29,11 +34,6 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Assert;
-import org.junit.Test;
-
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
 
 import static org.hibernate.test.schemafilter.RecordingTarget.Category.SCHEMA_CREATE;
 import static org.hibernate.test.schemafilter.RecordingTarget.Category.SCHEMA_DROP;
@@ -165,13 +165,13 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public boolean includeTable(Table table) {
+		public boolean includeTable(MappedTable table) {
 			// exclude table "the_entity_2"
 			return !"the_entity_2".equals( table.getName() );
 		}
 
 		@Override
-		public boolean includeSequence(Sequence sequence) {
+		public boolean includeSequence(MappedSequence sequence) {
 			return true;
 		}
 	}

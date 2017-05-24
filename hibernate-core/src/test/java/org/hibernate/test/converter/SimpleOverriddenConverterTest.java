@@ -12,11 +12,11 @@ import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.type.StringType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 
@@ -42,9 +42,8 @@ public class SimpleOverriddenConverterTest extends BaseNonConfigCoreFunctionalTe
 	@Test
 	public void testSimpleConvertOverrides() {
 		final EntityTypeImplementor ep = sessionFactory().getEntityPersister( Sub.class.getName() );
-
 		Type type = ep.getPropertyType( "it" );
-		assertTyping( StringType.class, type );
+		assertTyping( StandardBasicTypes.STRING.getClass(), type );
 	}
 
 	@MappedSuperclass

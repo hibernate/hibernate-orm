@@ -952,7 +952,7 @@ See the <<chapters/domain/basic_types.adoc#mapping-column-many-to-any, `@ManyToA
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MapKeyType.html[`@MapKeyType`] annotation is used to specify the map key type.
 
-//TODO: Add example
+See the <<chapters/domain/collections.adoc#collections-map-custom-key-type, `@MapKeyType` mapping>> section for more info.
 
 [[annotations-hibernate-metavalue]]
 ==== `@MetaValue`

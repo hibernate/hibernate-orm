@@ -550,6 +550,42 @@ include::{extrasdir}/collections-map-value-type-entity-key-add-example.sql[]
 ----
 ====
 
+[[collections-map-custom-key-type]]
+===== Maps with a custom key type
+
+Hibernate defines the
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MapKeyType.html[`@MapKeyType`] annotation
+which you can use to customize the `Map` key type.
+
+Considering you have the following tables in your database:
+
+[source,sql]
+----
+include::{extrasdir}/collections-map-custom-key-type-sql-example.sql[]
+----
+
+The `call_register` records the call history for every `person`.
+However, the timestamp is stored as a Unix timestamp since epoch and we want to map all the calls
+by their associated `java.util.Date`.
+
+Therefore, the entity mapping looks as follows:
+
+[[collections-map-custom-key-type-mapping-example]]
+.@MapKeyType mapping example
+====
+[source,java]
+----
+include::{sourcedir}/MapKeyTypeTest.java[tags=collections-map-custom-key-type-mapping-example,indent=0]
+----
+
+----
+include::{sourcedir}/type/TimestampEpochType.java[tags=collections-map-custom-key-type-mapping-example,indent=0]
+----
+====
+
+The `TimestampEpochType` allows us to map a Unix timestamp since epoch to a `java.util.Date`.
+But, without the `@MapKeyType` Hibernate annotation, it would nt be possible to customize the `Map` key type.
+
 [[collections-map-unidirectional]]
 ===== Unidirectional maps
 

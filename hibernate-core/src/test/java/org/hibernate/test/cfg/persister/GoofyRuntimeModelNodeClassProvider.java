@@ -859,10 +859,6 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 			return new Serializable[0];  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public CollectionMetadata getCollectionMetadata() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
 		public boolean isCascadeDeleteEnabled() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
@@ -911,11 +907,11 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 			return 0;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public boolean indexExists(Serializable key, Object index, SharedSessionContractImplementor session) {
+		public Boolean indexExists(Serializable key, Object index, SharedSessionContractImplementor session) {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public boolean elementExists(Serializable key, Object element, SharedSessionContractImplementor session) {
+		public Boolean elementExists(Serializable key, Object element, SharedSessionContractImplementor session) {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
@@ -931,11 +927,6 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 		@Override
 		public Navigable findDeclaredNavigable(String navigableName) {
 			return null;
-		}
-
-		@Override
-		public int getNumberOfJdbcParametersForRestriction() {
-			return 0;
 		}
 
 		@Override
@@ -984,16 +975,6 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 				String resultVariable,
 				SqlSelectionResolver sqlSelectionResolver,
 				QueryResultCreationContext creationContext) {
-			return null;
-		}
-
-		@Override
-		public boolean canCompositeContainCollections() {
-			return false;
-		}
-
-		@Override
-		public String getRolePrefix() {
 			return null;
 		}
 

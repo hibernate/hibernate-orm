@@ -19,6 +19,8 @@ public interface Joinable<T> extends Navigable<T> {
 	 * Intended for metadata-tive purposes.  Internally Hibernate never uses this
 	 * method, since the specific Joinable Navigables simply incorporate these
 	 * into their corresponding TableGroupJoin#predicate and QueryResult.
+	 * <p/>
+	 * Can be `null` when the joinable is an embedded value.
 	 */
 	ForeignKey.ColumnMappings getJoinColumnMappings();
 }

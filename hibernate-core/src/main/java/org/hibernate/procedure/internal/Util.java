@@ -30,7 +30,6 @@ import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.tree.spi.expression.instantiation.DynamicInstantiation;
-import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultDynamicInstantiationImpl;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultEntityImpl;
@@ -43,8 +42,6 @@ import org.hibernate.sql.ast.consume.results.internal.instantiation.QueryResultA
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
-import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
-import org.hibernate.sql.ast.consume.spi.SqlSelectAstToJdbcSelectConverter;
 import org.hibernate.type.spi.BasicType;
 
 import org.jboss.logging.Logger;
@@ -196,8 +193,9 @@ public class Util {
 							null,
 							// todo : SqlSelection map
 							null,
-							new NavigablePath( entityDescriptor.getEntityName() )
+							new NavigablePath( entityDescriptor.getEntityName() ),
 
+							creationContext
 					)
 			);
 		}

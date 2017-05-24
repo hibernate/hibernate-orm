@@ -20,6 +20,7 @@ import org.hibernate.sql.ast.consume.results.spi.InitializerParent;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionGroup;
 import org.hibernate.sql.ast.produce.result.spi.EntityIdentifierReference;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultEntity;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
@@ -39,15 +40,15 @@ public class QueryResultEntityImpl extends AbstractFetchParent implements QueryR
 			EntityReference expression,
 			String resultVariable,
 			Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap,
-			NavigablePath navigablePath) {
+			NavigablePath navigablePath,
+			QueryResultCreationContext creationContext) {
 		super( expression, navigablePath );
 		this.resultVariable = resultVariable;
 
 		this.initializer = new EntityReturnInitializerImpl(
 				this,
 				sqlSelectionGroupMap,
-				// root entity result cannot be shallow
-				false
+				creationContext.shouldCreateShallowEntityResult()
 		);
 		assembler = new QueryResultAssemblerEntity( this );
 	}

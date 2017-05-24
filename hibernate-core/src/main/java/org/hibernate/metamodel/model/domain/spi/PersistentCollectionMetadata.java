@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.io.Serializable;
 import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.Type;
 
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -143,6 +144,12 @@ public interface PersistentCollectionMetadata<O,C,E>
 
 	PersistentCollectionTuplizer getTuplizer();
 
+	@Override
+	default boolean canCompositeContainCollections() {
+		return false;
+	}
+
+
 	/**
 	 * @todo (6.0) what args?
 	 */
@@ -179,7 +186,31 @@ public interface PersistentCollectionMetadata<O,C,E>
 
 
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JPA
 
+	@Override
+	default PersistenceType getPersistenceType() {
+		switch ( getElementDescriptor().getClassification() ) {
+			case BASIC: {
+				return PersistenceType.BASIC;
+			}
+			case EMBEDDABLE: {
+				return PersistenceType.EMBEDDABLE;
+			}
+			case MANY_TO_MANY:
+			case ONE_TO_MANY: {
+				return PersistenceType.ENTITY;
+			}
+			case ANY: {
+				// todo (6.0) : check against setting controlling how to handle JPA methods for extension stuff
+				return null;
+			}
+			default: {
+				throw new IllegalStateException( "Unrecognized collection element classification : " + getElementDescriptor().getClassification() );
+			}
+		}
+	}
 
 
 

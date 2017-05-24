@@ -18,6 +18,8 @@ import org.hibernate.sql.ast.consume.results.spi.InitializerParent;
 import org.hibernate.sql.ast.produce.result.spi.EntityIdentifierReference;
 import org.hibernate.sql.ast.produce.result.spi.FetchEntityAttribute;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 
@@ -34,7 +36,9 @@ public class FetchEntityAttributeImpl extends AbstractFetchParent implements Fet
 			FetchParent fetchParent,
 			EntityReference entityReference,
 			NavigablePath navigablePath,
-			FetchStrategy fetchStrategy) {
+			FetchStrategy fetchStrategy,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
 		super( entityReference, navigablePath );
 		this.fetchParent = fetchParent;
 		this.fetchStrategy = fetchStrategy;

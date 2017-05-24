@@ -16,4 +16,5 @@ public interface NavigableContainerReference extends NavigableReference {
 	NavigableContainer getNavigable();
 
 	NavigableReference findNavigableReference(String navigableName);
+	void  addNavigableReference(NavigableReference reference);
 }

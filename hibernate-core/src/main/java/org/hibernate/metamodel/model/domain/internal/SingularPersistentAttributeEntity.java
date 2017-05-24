@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.FetchStrategy;
@@ -27,6 +26,7 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
+import org.hibernate.sql.ast.produce.result.internal.FetchEntityAttributeImpl;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
@@ -39,16 +39,10 @@ import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableContainerReference;
+import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.spi.predicate.Junction;
-import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
-import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
@@ -208,7 +202,14 @@ public class SingularPersistentAttributeEntity<O,J>
 			String resultVariable,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		throw new NotYetImplementedException(  );
+		return new FetchEntityAttributeImpl(
+				fetchParent,
+				(EntityReference) selectedExpression,
+				selectedExpression.getNavigablePath(),
+				fetchStrategy,
+				sqlSelectionResolver,
+				creationContext
+		);
 	}
 
 	protected TableReference resolveJoinTableReference(SqlAliasBase sqlAliasBase) {
@@ -244,7 +245,6 @@ public class SingularPersistentAttributeEntity<O,J>
 	public TableGroupJoin createTableGroupJoin(
 			TableGroupInfoSource tableGroupInfoSource,
 			JoinType joinType,
-			NavigableReference joinedReference,
 			JoinedTableGroupContext tableGroupJoinContext) {
 		throw new NotYetImplementedException(  );
 //		final SqlAliasBase sqlAliasBase = tableGroupJoinContext.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );

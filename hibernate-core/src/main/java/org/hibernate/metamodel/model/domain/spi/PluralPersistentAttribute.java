@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import javax.persistence.metamodel.Type;
+
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
 
 /**
@@ -19,5 +21,20 @@ public interface PluralPersistentAttribute<O,C,E>
 	@Override
 	default void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitPluralAttribute( this );
+	}
+
+	@Override
+	default PersistenceType getPersistenceType() {
+		return getPersistentCollectionMetadata().getPersistenceType();
+	}
+
+	@Override
+	default CollectionType getCollectionType() {
+		return getPersistentCollectionMetadata().getCollectionClassification().toJpaClassification();
+	}
+
+	@Override
+	default Type<E> getElementType() {
+		return getPersistentCollectionMetadata().getElementDescriptor();
 	}
 }

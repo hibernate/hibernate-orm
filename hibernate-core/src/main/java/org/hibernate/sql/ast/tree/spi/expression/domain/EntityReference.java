@@ -34,15 +34,15 @@ public class EntityReference implements NavigableContainerReference {
 
 	public EntityReference(
 			ColumnReferenceSource columnReferenceSource,
-			EntityTypeImplementor entityMetadata,
 			EntityValuedExpressableType expressionType,
 			NavigablePath navigablePath,
 			NavigableContainerReference containerReference,
 			boolean isShallow) {
-		this.entityMetadata = entityMetadata;
 		this.expressionType = expressionType;
 		this.navigablePath = navigablePath;
 		this.containerReference = containerReference;
+
+		this.entityMetadata = expressionType.getEntityDescriptor();
 
 		this.selectable = new EntityValuedSelectable(
 				this,
@@ -65,6 +65,11 @@ public class EntityReference implements NavigableContainerReference {
 	@Override
 	public EntityTypeImplementor getNavigable() {
 		return getEntityMetadata();
+	}
+
+	@Override
+	public NavigableReference findNavigableReference(String navigableName) {
+		return null;
 	}
 
 	@Override

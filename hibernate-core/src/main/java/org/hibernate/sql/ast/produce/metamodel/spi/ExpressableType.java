@@ -16,7 +16,6 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * Generally will be one of:<ul>
  *     <li>a {@link Navigable}</li>
  *     <li>a {@link org.hibernate.type.spi.BasicType}</li>
- *     <li>(tbd) a {@link org.hibernate.type.spi.EmbeddedType}</li>
  * </ul>
  * <p/>
  * Note: cannot be just Navigable as we need to account for functions
@@ -26,8 +25,6 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  */
 public interface ExpressableType<T> extends javax.persistence.metamodel.Type<T> {
 	JavaTypeDescriptor<T> getJavaTypeDescriptor();
-
-	int getNumberOfJdbcParametersForRestriction();
 
 	// todo (6.0) : need to account for binding and extracting at this level
 	//		now encapsulates AttributeConverter, so this is appropriate.

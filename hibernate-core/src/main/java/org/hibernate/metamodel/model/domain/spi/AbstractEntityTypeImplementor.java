@@ -260,11 +260,6 @@ public abstract class AbstractEntityTypeImplementor<T>
 	}
 
 	@Override
-	public NaturalIdRegionAccessStrategy getNaturalIdCacheAccessStrategy() {
-		return naturalIdRegionAccessStrategy;
-	}
-
-	@Override
 	public BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
 		return bytecodeEnhancementMetadata;
 	}
@@ -548,7 +543,8 @@ public abstract class AbstractEntityTypeImplementor<T>
 				(EntityReference) selectedExpression,
 				resultVariable,
 				buildSqlSelectionGroupMap( creationContext, selectedExpression ),
-				selectedExpression.getNavigablePath()
+				selectedExpression.getNavigablePath(),
+				creationContext
 		);
 	}
 

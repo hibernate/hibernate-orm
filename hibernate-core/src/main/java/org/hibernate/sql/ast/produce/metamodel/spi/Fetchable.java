@@ -28,5 +28,7 @@ public interface Fetchable<T> extends Joinable<T> {
 
 	FetchStrategy getMappedFetchStrategy();
 
+	// todo (6.0) : what is the proper return type here?
+	//		ExpressableType?
 	ManagedTypeImplementor<T> getFetchedManagedType();
 }

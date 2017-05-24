@@ -135,7 +135,8 @@ public class CollectionIndexEntityImpl<J>
 				(EntityReference) selectedExpression,
 				resultVariable,
 				null,
-				selectedExpression.getNavigablePath()
+				selectedExpression.getNavigablePath(),
+				creationContext
 		);
 	}
 }

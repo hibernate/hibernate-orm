@@ -29,25 +29,24 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.loader.spi.NaturalIdLoader;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
-import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.loader.spi.EntityLocker;
 import org.hibernate.loader.spi.MultiIdEntityLoader;
+import org.hibernate.loader.spi.MultiLoadOptions;
+import org.hibernate.loader.spi.NaturalIdLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeFactory;
+import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
+import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeFactory;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
 import org.hibernate.sql.ast.tree.spi.from.EntityTableGroup;
-import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
  * Contract describing mapping information and persistence logic for a particular strategy of entity mapping.  A given

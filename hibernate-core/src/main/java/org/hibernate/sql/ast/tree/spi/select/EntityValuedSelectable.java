@@ -32,29 +32,35 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
  * @author Steve Ebersole
  */
 public class EntityValuedSelectable implements Selectable {
-	private final Expression expression;
+	private final NavigableReference navigableReference;
 	private final NavigablePath navigablePath;
 	private final ColumnReferenceSource columnBindingSource;
-	private final EntityTypeImplementor<?> entityPersister;
+	private final EntityTypeImplementor<?> entityDescriptor;
 	private final boolean isShallow;
 
 	private LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> columnReferenceGroupMap;
 
 	public EntityValuedSelectable(
-			Expression expression,
+			NavigableReference navigableReference,
 			NavigablePath navigablePath,
 			ColumnReferenceSource columnBindingSource,
-			EntityTypeImplementor entityPersister,
 			boolean isShallow) {
-		this.expression = expression;
+		this.navigableReference = navigableReference;
 		this.navigablePath = navigablePath;
 		this.columnBindingSource = columnBindingSource;
-		this.entityPersister = entityPersister;
 		this.isShallow = isShallow;
+
+		assert navigableReference.getNavigable() instanceof EntityValuedNavigable;
+
+		final EntityValuedNavigable navigable = (EntityValuedNavigable) navigableReference.getNavigable();
+		this.entityDescriptor = navigable.getEntityDescriptor();
 	}
 
 	public LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> getColumnReferenceGroupMap() {
 		if ( columnReferenceGroupMap == null ) {
+			entityDescriptor.createSelection(
+
+			)
 			columnReferenceGroupMap = buildColumnBindingGroupMap();
 		}
 		return columnReferenceGroupMap;
@@ -65,19 +71,19 @@ public class EntityValuedSelectable implements Selectable {
 
 		// no matter what, include:
 		//		1) identifier
-		addColumnBindingGroupEntry( entityPersister.getHierarchy().getIdentifierDescriptor(), columnBindingGroupMap );
+		addColumnBindingGroupEntry( entityDescriptor.getHierarchy().getIdentifierDescriptor(), columnBindingGroupMap );
 		//		2) ROW_ID (if used)
-		if ( entityPersister.getHierarchy().getRowIdDescriptor() != null ) {
-			addColumnBindingGroupEntry( entityPersister.getHierarchy().getRowIdDescriptor(), columnBindingGroupMap );
+		if ( entityDescriptor.getHierarchy().getRowIdDescriptor() != null ) {
+			addColumnBindingGroupEntry( entityDescriptor.getHierarchy().getRowIdDescriptor(), columnBindingGroupMap );
 		}
 		//		3) discriminator (if used)
-		if ( entityPersister.getHierarchy().getDiscriminatorDescriptor() != null ) {
-			addColumnBindingGroupEntry( entityPersister.getHierarchy().getDiscriminatorDescriptor(), columnBindingGroupMap );
+		if ( entityDescriptor.getHierarchy().getDiscriminatorDescriptor() != null ) {
+			addColumnBindingGroupEntry( entityDescriptor.getHierarchy().getDiscriminatorDescriptor(), columnBindingGroupMap );
 		}
 
 		// Only render the rest of the attributes if !shallow
 		if ( !isShallow ) {
-			for ( PersistentAttribute<?,?> persistentAttribute : entityPersister.getPersistentAttributes() ) {
+			for ( PersistentAttribute<?,?> persistentAttribute : entityDescriptor.getPersistentAttributes() ) {
 				addColumnBindingGroupEntry( persistentAttribute, columnBindingGroupMap );
 			}
 		}
@@ -136,6 +142,8 @@ public class EntityValuedSelectable implements Selectable {
 
 		assert navigableReference.getNavigable() instanceof EntityValuedNavigable;
 
+		final EntityValuedNavigable navigable = (EntityValuedNavigable) navigableReference.getNavigable();
+		navigable.getEntityDescriptor().createSelection(  )
 		return new NavigableSelection( navigableReference, resultVariable );
 	}
 

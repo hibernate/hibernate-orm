@@ -7,39 +7,49 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.List;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Bindable;
-import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.consume.results.spi.Initializer;
-import org.hibernate.sql.ast.consume.results.spi.InitializerCollector;
 import org.hibernate.sql.ast.produce.result.internal.FetchCollectionAttributeImpl;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultCollectionImpl;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchCollectionAttribute;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
-import org.hibernate.sql.ast.produce.result.spi.FetchableCollectionElement;
-import org.hibernate.sql.ast.produce.result.spi.FetchableCollectionIndex;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistentAttribute<O,C> implements PluralPersistentAttribute<O,C,E> {
+public class AbstractPluralPersistentAttribute<O,C,E>
+		extends AbstractPersistentAttribute<O,C>
+		implements PluralPersistentAttribute<O,C,E> {
+
 	private final PersistentCollectionMetadata<O,C,E> collectionMetadata;
+
+	public AbstractPluralPersistentAttribute(
+			ManagedTypeImplementor<O> container,
+			String name,
+			JavaTypeDescriptor<C> javaTypeDescriptor,
+			PropertyAccess access,
+			PersistentCollectionMetadata<O, C, E> collectionMetadata) {
+		super( container, name, javaTypeDescriptor, access );
+		this.collectionMetadata = collectionMetadata;
+	}
 
 	@Override
 	public PersistentCollectionMetadata<O,C,E> getPersistentCollectionMetadata() {
 		return collectionMetadata;
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JPA
 
 	@Override
 	public Type<E> getElementType() {
@@ -93,6 +103,10 @@ public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistent
 		return true;
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Navigable
+
 	@Override
 	public <N> Navigable<N> findNavigable(String navigableName) {
 		return getPersistentCollectionMetadata().findNavigable( navigableName );
@@ -124,18 +138,8 @@ public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistent
 	}
 
 	@Override
-	public String getNavigableName() {
-		return getPersistentCollectionMetadata().getNavigableName();
-	}
-
-	@Override
 	public String asLoggableText() {
 		return getPersistentCollectionMetadata().asLoggableText();
-	}
-
-	@Override
-	public Selection createSelection(Expression selectedExpression, String resultVariable) {
-		throw new NotYetImplementedException(  );
 	}
 
 	@Override
@@ -151,6 +155,10 @@ public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistent
 				creationContext
 		);
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Fetchable
 
 	@Override
 	public Fetch generateFetch(
@@ -180,4 +188,11 @@ public class AbstractPluralPersistentAttribute<O,C,E> extends AbstractPersistent
 	public ManagedTypeImplementor<C> getFetchedManagedType() {
 		throw new NotYetImplementedException(  );
 	}
+
+	@Override
+	public ForeignKey.ColumnMappings getJoinColumnMappings() {
+		return getPersistentCollectionMetadata().getForeignKeyDescriptor().getJoinColumnMappings();
+	}
+
+
 }

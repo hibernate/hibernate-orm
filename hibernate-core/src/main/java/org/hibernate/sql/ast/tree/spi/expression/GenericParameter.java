@@ -11,6 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.ast.consume.spi.JdbcParameterBinder;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.sqm.spi.ParameterSpec;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
@@ -29,4 +30,8 @@ public interface GenericParameter extends ParameterSpec, JdbcParameterBinder, Ex
 			ParameterBindingContext context) throws SQLException;
 
 	QueryParameterBinding resolveBinding(ParameterBindingContext context);
+
+	interface AllowableType<T> extends ExpressableType<T> {
+		int getNumberOfJdbcParametersForRestriction();
+	}
 }

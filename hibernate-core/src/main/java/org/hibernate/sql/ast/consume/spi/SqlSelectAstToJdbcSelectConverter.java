@@ -19,9 +19,8 @@ import org.hibernate.query.sqm.tree.order.SqmSortOrder;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.SemanticException;
 import org.hibernate.sql.ast.consume.internal.JdbcSelectImpl;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
-import org.hibernate.sql.ast.produce.sqm.spi.ConversionHelper;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
 import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
@@ -71,7 +70,7 @@ import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.BasicType;
 
 import org.jboss.logging.Logger;
 
@@ -500,15 +499,12 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker,
 
 	@Override
 	public void visitGenericParameter(GenericParameter parameter) {
-		// todo (6.0) : implement
-		//		add new `ExpressableType#getNumberOfJdbcParametersForRestriction()
-
 		parameterBinders.add( parameter.getParameterBinder() );
 
-		final ExpressableType type = resolveType( parameter );
-
-		final int columnCount = type.getNumberOfJdbcParametersForRestriction();
+		final int columnCount = resolveType( parameter ).getNumberOfJdbcParametersForRestriction();
 		final boolean needsParens = currentlyInPredicate && columnCount > 1;
+
+		// todo : (6.0) wrap in cast function call if the literal occurs in SELECT (?based on Dialect?)
 
 		if ( needsParens ) {
 			appendSql( "(" );
@@ -526,18 +522,22 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker,
 		}
 	}
 
-	private ExpressableType resolveType(GenericParameter parameter) {
+	private GenericParameter.AllowableType resolveType(GenericParameter parameter) {
+		// todo (6.0) : decide which types of ExpressableTypes to support for parameters.  see below in method too
+		// 		for now limit parameters to just basic types.
+
 		final QueryParameterBinding parameterBinding = parameter.resolveBinding( this );
 		if ( parameterBinding == null || !parameterBinding.isBound() ) {
 			throw new SemanticException( "Parameter [" + parameter + "] found in SQL AST had no binding" );
 		}
 
+		// todo (6.0) : depending on decision for above, these casts should be moved to use those as the return types for Parameter#getType and ParameterBinding#getBindType
 		if ( parameterBinding.getBindType() != null ) {
-			return parameterBinding.getBindType();
+			return (BasicValuedExpressableType) parameterBinding.getBindType();
 		}
 
 		if ( parameter.getType() != null ) {
-			return parameter.getType();
+			return (BasicValuedExpressableType) parameter.getType();
 		}
 
 		if ( parameterBinding.isMultiValued() ) {
@@ -553,7 +553,7 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker,
 
 	}
 
-	private ExpressableType resolveBasicValueType(Object value) {
+	private BasicType resolveBasicValueType(Object value) {
 		return getSession().getFactory()
 				.getTypeConfiguration()
 				.getBasicTypeRegistry()
@@ -566,38 +566,13 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker,
 	}
 
 	@Override
-	public void visitNonStandardFunctionExpression(NonStandardFunction functionExpression) {
-		// todo : look up function registry entry (maybe even when building the SQL tree)
-		appendSql( functionExpression.getFunctionName() );
-		if ( !functionExpression.getArguments().isEmpty() ) {
-			appendSql( "(" );
-			String separator = "";
-			for ( Expression argumentExpression : functionExpression.getArguments() ) {
-				appendSql( separator );
-				argumentExpression.accept( this );
-				separator = ", ";
-			}
-			appendSql( ")" );
-		}
-	}
-
-	@Override
-	public void visitNullifFunction(NullifFunction function) {
-		appendSql( "nullif(" );
-		function.getFirstArgument().accept( this );
-		appendSql( ", " );
-		function.getSecondArgument().accept( this );
-		appendSql( ")" );
-	}
-
-	@Override
 	public void visitPositionalParameter(PositionalParameter positionalParameter) {
 		parameterBinders.add( positionalParameter.getParameterBinder() );
 
-		final Type type = ConversionHelper.resolveType( positionalParameter, parameterBindings, persistenceContext );
-
-		final int columnCount = type.getColumnSpan();
+		final int columnCount = resolveType( positionalParameter ).getNumberOfJdbcParametersForRestriction();
 		final boolean needsParens = currentlyInPredicate && columnCount > 1;
+
+		// todo : (6.0) wrap in cast function call if the literal occurs in SELECT (?based on Dialect?)
 
 		if ( needsParens ) {
 			appendSql( "(" );
@@ -670,21 +645,18 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker,
 	private void renderAsParameter(QueryLiteral queryLiteral) {
 		parameterBinders.add( queryLiteral );
 
-		// NOTE : the needsParens bit is only needed if we allow composites.
-		//		currently QueryLiteral#getType is defined as BasicType
-		// todo : ?do we want to allow composites?
+		// todo : (6.0) wrap in cast function call if the literal occurs in SELECT (?based on Dialect?)
 
-		// todo : wrap in cast function call if the literal occurs in SELECT (?based on Dialect?)
-
-		final int columnCount = queryLiteral.getType().getColumnSpan();
-		final boolean needsParens = currentlyInPredicate && columnCount > 1;
+		// NOTE : use the same rules regarding "allowable types" for literals as we use for parameters...
+		final int physicalJdbcParamCount = queryLiteral.getType().getNumberOfJdbcParametersForRestriction();
+		final boolean needsParens = currentlyInPredicate && physicalJdbcParamCount > 1;
 
 		if ( needsParens ) {
 			appendSql( "(" );
 		}
 
 		String separator = "";
-		for ( int i = 0; i < columnCount; i++ ) {
+		for ( int i = 0; i < physicalJdbcParamCount; i++ ) {
 			appendSql( separator );
 			appendSql( "?" );
 			separator = ", ";
@@ -693,6 +665,31 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker,
 		if ( needsParens ) {
 			appendSql( ")" );
 		}
+	}
+
+	@Override
+	public void visitNonStandardFunctionExpression(NonStandardFunction functionExpression) {
+		// todo : look up function registry entry (maybe even when building the SQL tree)
+		appendSql( functionExpression.getFunctionName() );
+		if ( !functionExpression.getArguments().isEmpty() ) {
+			appendSql( "(" );
+			String separator = "";
+			for ( Expression argumentExpression : functionExpression.getArguments() ) {
+				appendSql( separator );
+				argumentExpression.accept( this );
+				separator = ", ";
+			}
+			appendSql( ")" );
+		}
+	}
+
+	@Override
+	public void visitNullifFunction(NullifFunction function) {
+		appendSql( "nullif(" );
+		function.getFirstArgument().accept( this );
+		appendSql( ", " );
+		function.getSecondArgument().accept( this );
+		appendSql( ")" );
 	}
 
 	@Override

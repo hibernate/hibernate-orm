@@ -18,18 +18,19 @@ import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.query.spi.EntityGraphQueryHint;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
-import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
+import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
@@ -160,6 +161,17 @@ public class FetchGraphBuilder {
 							}
 
 							@Override
+							public ColumnReferenceSource getColumnReferenceSource() {
+								return parentTableGroup;
+							}
+
+							@Override
+							public NavigablePath getNavigablePath() {
+								// todo (6.0) whose NavigablePath?
+								return null;
+							}
+
+							@Override
 							public QuerySpec getQuerySpec() {
 								return querySpec;
 							}
@@ -167,26 +179,6 @@ public class FetchGraphBuilder {
 							@Override
 							public TableSpace getTableSpace() {
 								return parentTableGroup.getTableSpace();
-							}
-
-							@Override
-							public String getUniqueIdentifier() {
-								return fetchJoinTableGroupUid;
-							}
-
-							@Override
-							public String getIdentificationVariable() {
-								return null;
-							}
-
-							@Override
-							public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
-								return null;
-							}
-
-							@Override
-							public TableGroupResolver getTableGroupResolver() {
-								return builder.getFromClauseIndex();
 							}
 
 							@Override
@@ -203,6 +195,7 @@ public class FetchGraphBuilder {
 				parentTableGroup.getTableSpace().addJoinedTableGroup( fetchTableGroupJoin );
 
 				navigableReference = fetchTableGroupJoin.getJoinedGroup().asExpression();
+				fetchParent.getNavigableContainerReference().addNavigableReference( navigableReference );
 			}
 
 			final Fetch fetch = ( (Fetchable) persistentAttribute ).generateFetch(

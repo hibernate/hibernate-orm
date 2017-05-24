@@ -8,8 +8,8 @@ package org.hibernate.envers.internal.entities.mapper.relation.query;
 
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.internal.entities.mapper.id.AbstractCompositeIdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
-import org.hibernate.envers.internal.entities.mapper.id.MultipleIdMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -47,7 +47,9 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 
 		this.mappedBy = mappedBy;
 
-		if ( ( referencedIdData.getOriginalMapper() instanceof MultipleIdMapper ) && mappedByKey ) {
+		// HHH-11770 We use AbstractCompositeIdMapper here to handle EmbeddedIdMapper and MultipleIdMappper support
+		// so that OneAuditEntityQueryGenerator supports mappings to both @IdClass and @EmbeddedId components.
+		if ( ( referencedIdData.getOriginalMapper() instanceof AbstractCompositeIdMapper ) && mappedByKey ) {
 			multipleIdMapperKey = true;
 		}
 		else {

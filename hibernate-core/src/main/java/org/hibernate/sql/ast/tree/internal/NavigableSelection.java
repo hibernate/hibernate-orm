@@ -41,7 +41,6 @@ public class NavigableSelection implements Selection {
 		return getSelectedExpression().getNavigable().generateQueryResult(
 				getSelectedExpression(),
 				getResultVariable(),
-				getSelectedExpression().getContributedColumnReferenceSource(),
 				sqlSelectionResolver,
 				creationContext
 		);

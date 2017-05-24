@@ -45,6 +45,8 @@ import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.internal.EntityIdentifierCompositeAggregatedImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityIdentifierSimpleImpl;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
@@ -64,6 +66,8 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
 import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroup;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroupEmptyImpl;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceGroupImpl;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
@@ -553,9 +557,7 @@ public abstract class AbstractEntityTypeImplementor<T>
 			NavigableReference selectedExpression) {
 		final Map<PersistentAttribute, SqlSelectionGroup> sqlSelectionGroupMap = new HashMap<>();
 
-		final LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> columnBindingGroupMap =
-				( (EntityValuedSelectable) selectedExpression.getSelectable() ).getColumnReferenceGroupMap();
-
+		final LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> columnBindingGroupMap = buildColumnBindingGroupMap( selectedExpression, resolutionContext );
 		for ( Map.Entry<PersistentAttribute, ColumnReferenceGroup> entry : columnBindingGroupMap.entrySet() ) {
 			sqlSelectionGroupMap.put(
 					entry.getKey(),
@@ -578,5 +580,59 @@ public abstract class AbstractEntityTypeImplementor<T>
 			sqlSelectionGroup.addSqlSelection( sqlSelectionResolver.resolveSqlSelection( columnReference ) );
 		}
 		return sqlSelectionGroup;
+	}
+
+	private LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> buildColumnBindingGroupMap(
+			NavigableReference selectedExpression,
+			QueryResultCreationContext creationContext) {
+		final LinkedHashMap<PersistentAttribute, ColumnReferenceGroup> columnBindingGroupMap = new LinkedHashMap<>();
+
+		// no matter what, include:
+		//		1) identifier
+		addColumnBindingGroupEntry( getHierarchy().getIdentifierDescriptor(), columnBindingGroupMap, creationContext );
+		//		2) ROW_ID (if used)
+		if ( getHierarchy().getRowIdDescriptor() != null ) {
+			addColumnBindingGroupEntry( getHierarchy().getRowIdDescriptor(), columnBindingGroupMap, creationContext );
+		}
+		//		3) discriminator (if used)
+		if ( getHierarchy().getDiscriminatorDescriptor() != null ) {
+			addColumnBindingGroupEntry( getHierarchy().getDiscriminatorDescriptor(), columnBindingGroupMap, creationContext );
+		}
+
+		// Only render the rest of the attributes if !shallow
+		if (  !creationContext.shouldCreateShallowEntityResult() ) {
+			for ( PersistentAttribute<?,?> persistentAttribute : getPersistentAttributes() ) {
+				addColumnBindingGroupEntry( persistentAttribute, columnBindingGroupMap, creationContext );
+			}
+		}
+
+		return columnBindingGroupMap;
+	}
+
+	private void addColumnBindingGroupEntry(
+			PersistentAttribute persistentAttribute,
+			Map<PersistentAttribute, ColumnReferenceGroup> columnBindingGroupMap,
+			QueryResultCreationContext creationContext) {
+		if ( !SingularPersistentAttribute.class.isInstance( persistentAttribute ) ) {
+			columnBindingGroupMap.put( persistentAttribute, ColumnReferenceGroupEmptyImpl.INSTANCE );
+			return;
+		}
+
+		final SingularPersistentAttribute singularAttribute = (SingularPersistentAttribute) persistentAttribute;
+		final ColumnReferenceGroupImpl columnBindingGroup = new ColumnReferenceGroupImpl();
+
+		final List<Column> columns;
+		if ( persistentAttribute instanceof SingularPersistentAttributeEmbedded ) {
+			columns = ( (SingularPersistentAttributeEmbedded) singularAttribute ).getEmbeddedDescriptor().collectColumns();
+		}
+		else {
+			columns = singularAttribute.getColumns();
+		}
+
+		for ( Column column : columns ) {
+			columnBindingGroup.addColumnBinding( creationContext.currentColumnReferenceSource().resolveColumnReference( column ) );
+		}
+
+		columnBindingGroupMap.put( persistentAttribute, columnBindingGroup );
 	}
 }

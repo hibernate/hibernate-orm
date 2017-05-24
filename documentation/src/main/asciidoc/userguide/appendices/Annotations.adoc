@@ -1077,7 +1077,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 It differs from the JPA <<annotations-jpa-orderby>> annotation because the JPA annotation expects a JPQL order-by fragment, not an SQL directive.
 
-//TODO: Add example
+See the <<chapters/domain/collections.adoc#collections-customizing-ordered-by-sql-clause, `@OrderBy` mapping>> section for more info.
 
 [[annotations-hibernate-paramdef]]
 ==== `@ParamDef`

@@ -410,6 +410,41 @@ include::{extrasdir}/collections-customizing-ordered-list-ordinal-persist-exampl
 ----
 ====
 
+[[collections-customizing-ordered-by-sql-clause]]
+===== Customizing ORDER BY SQL clause
+
+While the JPA
+http://docs.oracle.com/javaee/7/api/javax/persistence/OrderBy.html[`@OrderBy`] annotation allows you to specify the entity attributes used for sorting
+when fetching the current annotated collection, the Hibernate specific
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* clause instead.
+
+In the following example, the `@OrderBy` annotations uses the `CHAR_LENGTH` SQL function to order the `Article` entities by the size of their contents.
+
+[[collections-customizing-ordered-by-sql-clause-mapping-example]]
+.`@OrderBy` mapping example
+====
+[source,java]
+----
+include::{sourcedir}/OrderedBySQLTest.java[tags=collections-customizing-ordered-by-sql-clause-mapping-example,indent=0]
+----
+====
+
+When fetching the `articles` collection, Hibernate uses the ORDER BY SQL clause provided by the mapping:
+
+[[collections-customizing-ordered-by-sql-clause-fetching-example]]
+.`@OrderBy` fetching example
+====
+[source,java]
+----
+include::{sourcedir}/OrderedBySQLTest.java[tags=collections-customizing-ordered-by-sql-clause-fetching-example,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/collections-customizing-ordered-by-sql-clause-fetching-example.sql[]
+----
+====
+
 [[collections-set]]
 ==== Sets
 

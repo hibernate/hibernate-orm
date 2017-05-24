@@ -28,7 +28,7 @@ import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -216,7 +216,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 		Object entity = event.getEntity();
 
-		EntityTypeImplementor persister = event.getSession().getEntityPersister( event.getEntityName(), entity );
+		EntityDescriptor persister = event.getSession().getEntityPersister( event.getEntityName(), entity );
 
 		event.setRequestedId(
 				getUpdateId(
@@ -242,7 +242,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 */
 	protected Serializable getUpdateId(
 			Object entity,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			Serializable requestedId,
 			SessionImplementor session) {
 		// use the id assigned to the instance
@@ -264,7 +264,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	protected void performUpdate(
 			SaveOrUpdateEvent event,
 			Object entity,
-			EntityTypeImplementor persister) throws HibernateException {
+			EntityDescriptor persister) throws HibernateException {
 
 		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( traceEnabled && !persister.isMutable() ) {
@@ -331,7 +331,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 		cascadeOnUpdate( event, persister, entity );
 	}
 
-	protected boolean invokeUpdateLifecycle(Object entity, EntityTypeImplementor persister, EventSource source) {
+	protected boolean invokeUpdateLifecycle(Object entity, EntityDescriptor persister, EventSource source) {
 		if ( persister.implementsLifecycle() ) {
 			LOG.debug( "Calling onUpdate()" );
 			if ( ( (Lifecycle) entity ).onUpdate( source ) ) {
@@ -350,7 +350,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 * @param persister The defined persister for the entity being updated.
 	 * @param entity The entity being updated.
 	 */
-	private void cascadeOnUpdate(SaveOrUpdateEvent event, EntityTypeImplementor persister, Object entity) {
+	private void cascadeOnUpdate(SaveOrUpdateEvent event, EntityDescriptor persister, Object entity) {
 		final EventSource source = event.getSession();
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {

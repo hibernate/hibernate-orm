@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -38,7 +38,7 @@ public class OnUpdateVisitor extends ReattachVisitor {
 		}
 
 		EventSource session = getSession();
-		PersistentCollectionMetadata persister = session.getFactory().getTypeConfiguration().findCollectionPersister( type.getRole() );
+		PersistentCollectionDescriptor persister = session.getFactory().getTypeConfiguration().findCollectionPersister( type.getRole() );
 
 		final Serializable collectionKey = extractCollectionKeyFromOwner( persister );
 		if ( collection!=null && (collection instanceof PersistentCollection) ) {

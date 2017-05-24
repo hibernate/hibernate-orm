@@ -18,7 +18,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata.CollectionClassification;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor.CollectionClassification;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;

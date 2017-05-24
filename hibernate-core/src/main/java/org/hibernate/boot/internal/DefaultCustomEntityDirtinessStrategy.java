@@ -8,7 +8,7 @@ package org.hibernate.boot.internal;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Session;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * The default implementation of {@link org.hibernate.CustomEntityDirtinessStrategy} which does nada.
@@ -19,23 +19,23 @@ public class DefaultCustomEntityDirtinessStrategy implements CustomEntityDirtine
 	public static final DefaultCustomEntityDirtinessStrategy INSTANCE = new DefaultCustomEntityDirtinessStrategy();
 
 	@Override
-	public boolean canDirtyCheck(Object entity, EntityTypeImplementor persister, Session session) {
+	public boolean canDirtyCheck(Object entity, EntityDescriptor persister, Session session) {
 		return false;
 	}
 
 	@Override
-	public boolean isDirty(Object entity, EntityTypeImplementor persister, Session session) {
+	public boolean isDirty(Object entity, EntityDescriptor persister, Session session) {
 		return false;
 	}
 
 	@Override
-	public void resetDirty(Object entity, EntityTypeImplementor persister, Session session) {
+	public void resetDirty(Object entity, EntityDescriptor persister, Session session) {
 	}
 
 	@Override
 	public void findDirty(
 			Object entity,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			Session session,
 			DirtyCheckContext dirtyCheckContext) {
 	}

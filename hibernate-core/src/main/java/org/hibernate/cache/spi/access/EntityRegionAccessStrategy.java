@@ -10,7 +10,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Contract for managing transactional and concurrent access to cached entity
@@ -44,15 +44,15 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy {
 	 */
 	Object generateCacheKey(
 			Object id,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			SessionFactoryImplementor factory,
 			String tenantIdentifier);
 
 	/**
-	 * Performs reverse operation to {@link #generateCacheKey(Object, EntityTypeImplementor, SessionFactoryImplementor, String)}
+	 * Performs reverse operation to {@link #generateCacheKey(Object, EntityDescriptor, SessionFactoryImplementor, String)}
 	 *
-	 * @param cacheKey key previously returned from {@link #generateCacheKey(Object, EntityTypeImplementor, SessionFactoryImplementor, String)}
-	 * @return original id passed to {@link #generateCacheKey(Object, EntityTypeImplementor, SessionFactoryImplementor, String)}
+	 * @param cacheKey key previously returned from {@link #generateCacheKey(Object, EntityDescriptor, SessionFactoryImplementor, String)}
+	 * @return original id passed to {@link #generateCacheKey(Object, EntityDescriptor, SessionFactoryImplementor, String)}
 	 */
 	Object getCacheKeyId(Object cacheKey);
 

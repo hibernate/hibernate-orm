@@ -12,7 +12,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.HiLoOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -30,7 +30,7 @@ public class HiLoSequenceTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNormalBoundary() {
-		EntityTypeImplementor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
+		EntityDescriptor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		IdentifierGenerator identifierGenerator = persister.getIdentifierDescriptor().getIdentifierValueGenerator();
 		assertClassAssignability( SequenceStyleGenerator.class, identifierGenerator.getClass() );
 		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) identifierGenerator;

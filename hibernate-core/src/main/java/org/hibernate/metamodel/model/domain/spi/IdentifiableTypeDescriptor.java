@@ -16,20 +16,19 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
  * Hibernate extension SPI for working with {@link IdentifiableType} implementations, which includes
- * both mapped-superclasses {@link MappedSuperclassImplementor}
- * and {@link EntityTypeImplementor}
+ * both mapped-superclasses {@link MappedSuperclassDescriptor}
+ * and {@link EntityDescriptor}
  *
  * @author Steve Ebersole
  */
-public interface IdentifiableTypeImplementor<T>
-		extends InheritanceCapable<T>, IdentifiableType<T> {
+public interface IdentifiableTypeDescriptor<T> extends InheritanceCapable<T>, IdentifiableType<T> {
 	@Override
-	default IdentifiableTypeImplementor<? super T> getSupertype() {
+	default IdentifiableTypeDescriptor<? super T> getSupertype() {
 		return getSuperclassType();
 	}
 
 	@Override
-	IdentifiableTypeImplementor<? super T> getSuperclassType();
+	IdentifiableTypeDescriptor<? super T> getSuperclassType();
 
 	EntityHierarchy getHierarchy();
 
@@ -54,13 +53,13 @@ public interface IdentifiableTypeImplementor<T>
 	 */
 	void finishInstantiation(
 			EntityHierarchy entityHierarchy,
-			IdentifiableTypeImplementor<? super T> superType,
+			IdentifiableTypeDescriptor<? super T> superType,
 			IdentifiableTypeMapping bootMapping,
 			RuntimeModelCreationContext creationContext);
 
 	void completeInitialization(
 			EntityHierarchy entityHierarchy,
-			IdentifiableTypeImplementor<? super T> superType,
+			IdentifiableTypeDescriptor<? super T> superType,
 			IdentifiableTypeMappingImplementor bootMapping,
 			RuntimeModelCreationContext creationContext);
 

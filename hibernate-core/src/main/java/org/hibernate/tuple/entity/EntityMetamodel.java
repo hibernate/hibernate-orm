@@ -31,7 +31,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
@@ -125,7 +125,7 @@ public class EntityMetamodel implements Serializable {
 
 	public EntityMetamodel(
 			PersistentClass persistentClass,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 

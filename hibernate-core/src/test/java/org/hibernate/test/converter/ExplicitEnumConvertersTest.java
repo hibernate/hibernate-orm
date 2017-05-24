@@ -13,7 +13,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.Session;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
@@ -88,7 +88,7 @@ public class ExplicitEnumConvertersTest extends BaseNonConfigCoreFunctionalTestC
 
 	@Test
 	public void testSimpleConvertUsage() throws MalformedURLException {
-		final EntityTypeImplementor ep = sessionFactory().getEntityPersister( Entity1.class.getName() );
+		final EntityDescriptor ep = sessionFactory().getEntityPersister( Entity1.class.getName() );
 		final Type theDatePropertyType = ep.getPropertyType( "mediaType" );
 		final AttributeConverterTypeAdapter type = assertTyping(
 				AttributeConverterTypeAdapter.class,

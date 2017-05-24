@@ -18,7 +18,7 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -35,7 +35,7 @@ public abstract class EntityAction
 
 	private transient Object instance;
 	private transient SharedSessionContractImplementor session;
-	private transient EntityTypeImplementor persister;
+	private transient EntityDescriptor persister;
 
 	/**
 	 * Instantiate an action.
@@ -45,7 +45,7 @@ public abstract class EntityAction
 	 * @param instance The entity instance
 	 * @param persister The entity persister
 	 */
-	protected EntityAction(SharedSessionContractImplementor session, Serializable id, Object instance, EntityTypeImplementor persister) {
+	protected EntityAction(SharedSessionContractImplementor session, Serializable id, Object instance, EntityDescriptor persister) {
 		this.entityName = persister.getEntityName();
 		this.id = id;
 		this.instance = instance;
@@ -122,7 +122,7 @@ public abstract class EntityAction
 	 *
 	 * @return The entity persister
 	 */
-	public final EntityTypeImplementor getPersister() {
+	public final EntityDescriptor getPersister() {
 		return persister;
 	}
 

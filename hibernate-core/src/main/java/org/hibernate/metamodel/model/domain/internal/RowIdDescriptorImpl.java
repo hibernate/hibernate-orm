@@ -14,7 +14,7 @@ import java.util.List;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
@@ -110,7 +110,7 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
 	}
 
 	@Override
-	public ManagedTypeImplementor getContainer() {
+	public ManagedTypeDescriptor getContainer() {
 		return hierarchy.getRootEntityType();
 	}
 

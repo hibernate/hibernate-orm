@@ -25,7 +25,7 @@ import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
@@ -165,7 +165,7 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 						}
 					}
 
-					public boolean requiresPostCommitHanding(EntityTypeImplementor persister) {
+					public boolean requiresPostCommitHanding(EntityDescriptor persister) {
 						return false;
 					}
 				}

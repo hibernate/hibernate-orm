@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.tree.spi.from;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.metamodel.model.relational.spi.UnionSubclassTable;
 import org.hibernate.query.spi.NavigablePath;
@@ -32,12 +32,12 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 	private final List<TableReferenceJoin> tableReferenceJoins;
 
 	private final EntityReference expression;
-	private final EntityTypeImplementor entityDescriptor;
+	private final EntityDescriptor entityDescriptor;
 
 	public <T> EntityTableGroup(
 			String uid,
 			TableSpace tableSpace,
-			EntityTypeImplementor entityDescriptor,
+			EntityDescriptor entityDescriptor,
 			EntityValuedExpressableType entityValuedExpressableType,
 			NavigablePath navigablePath,
 			TableReference primaryTableReference,
@@ -58,7 +58,7 @@ public class EntityTableGroup extends AbstractTableGroup implements Selectable {
 		);
 	}
 
-	public EntityTypeImplementor getEntityDescriptor() {
+	public EntityDescriptor getEntityDescriptor() {
 		return entityDescriptor;
 	}
 

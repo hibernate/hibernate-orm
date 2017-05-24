@@ -11,7 +11,7 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.Type;
 
@@ -54,10 +54,10 @@ public class Helper {
 	}
 
 	public static class EntityPersisterAttributeSource implements AttributeSource {
-		private final EntityTypeImplementor entityPersister;
+		private final EntityDescriptor entityPersister;
 
 
-		public EntityPersisterAttributeSource(EntityTypeImplementor entityPersister) {
+		public EntityPersisterAttributeSource(EntityDescriptor entityPersister) {
 			this.entityPersister = entityPersister;
 		}
 

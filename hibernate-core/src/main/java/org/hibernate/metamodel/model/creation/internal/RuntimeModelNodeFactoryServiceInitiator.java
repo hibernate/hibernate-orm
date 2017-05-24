@@ -10,37 +10,37 @@ import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeFactory;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * @author Steve Ebersole
  */
-public class RuntimeModelNodeFactoryServiceInitiator implements StandardServiceInitiator<RuntimeModelNodeFactory> {
+public class RuntimeModelNodeFactoryServiceInitiator implements StandardServiceInitiator<RuntimeModelDescriptorFactory> {
 	public static final RuntimeModelNodeFactoryServiceInitiator INSTANCE = new RuntimeModelNodeFactoryServiceInitiator();
 
 	public static final String IMPL_NAME = "hibernate.persister.factory";
 
 	@Override
-	public Class<RuntimeModelNodeFactory> getServiceInitiated() {
-		return RuntimeModelNodeFactory.class;
+	public Class<RuntimeModelDescriptorFactory> getServiceInitiated() {
+		return RuntimeModelDescriptorFactory.class;
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public RuntimeModelNodeFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public RuntimeModelDescriptorFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		final Object customImpl = configurationValues.get( IMPL_NAME );
 		if ( customImpl == null ) {
-			return new RuntimeModelNodeFactoryImpl();
+			return new RuntimeModelDescriptorFactoryImpl();
 		}
 
-		if ( RuntimeModelNodeFactory.class.isInstance( customImpl ) ) {
-			return (RuntimeModelNodeFactory) customImpl;
+		if ( RuntimeModelDescriptorFactory.class.isInstance( customImpl ) ) {
+			return (RuntimeModelDescriptorFactory) customImpl;
 		}
 
-		final Class<? extends RuntimeModelNodeFactory> customImplClass = Class.class.isInstance( customImpl )
-				? ( Class<? extends RuntimeModelNodeFactory> ) customImpl
+		final Class<? extends RuntimeModelDescriptorFactory> customImplClass = Class.class.isInstance( customImpl )
+				? ( Class<? extends RuntimeModelDescriptorFactory> ) customImpl
 				: locate( registry, customImpl.toString() );
 		try {
 			return customImplClass.newInstance();
@@ -50,7 +50,7 @@ public class RuntimeModelNodeFactoryServiceInitiator implements StandardServiceI
 		}
 	}
 
-	private Class<? extends RuntimeModelNodeFactory> locate(ServiceRegistryImplementor registry, String className) {
+	private Class<? extends RuntimeModelDescriptorFactory> locate(ServiceRegistryImplementor registry, String className) {
 		return registry.getService( ClassLoaderService.class ).classForName( className );
 	}
 }

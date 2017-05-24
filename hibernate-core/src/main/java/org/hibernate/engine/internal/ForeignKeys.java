@@ -14,7 +14,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.EmbeddedType;
@@ -222,7 +222,7 @@ public final class ForeignKeys {
 		}
 
 		// let the persister inspect the instance to decide
-		final EntityTypeImplementor persister = session.getEntityPersister( entityName, entity );
+		final EntityDescriptor persister = session.getEntityPersister( entityName, entity );
 		isUnsaved = persister.isTransient( entity, session );
 		if ( isUnsaved != null ) {
 			return isUnsaved;
@@ -308,7 +308,7 @@ public final class ForeignKeys {
 			boolean isEarlyInsert,
 			SharedSessionContractImplementor session) {
 		final Nullifier nullifier = new Nullifier( entity, false, isEarlyInsert, session );
-		final EntityTypeImplementor persister = session.getEntityPersister( entityName, entity );
+		final EntityDescriptor persister = session.getEntityPersister( entityName, entity );
 		final String[] propertyNames = persister.getPropertyNames();
 		final Type[] types = persister.getPropertyTypes();
 		final boolean[] nullability = persister.getPropertyNullability();

@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.creation.spi;
 
+import java.util.List;
+
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -18,4 +20,6 @@ public interface DatabaseObjectResolver {
 	Table resolveTable(MappedTable mappedTable);
 
 	Column resolveColumn(MappedColumn mappedColumn);
+
+	void resolveForeignKey(List<MappedColumn> constraintColumns, List<MappedColumn> mappedColumns);
 }

@@ -21,7 +21,7 @@ import org.hibernate.event.spi.InitializeCollectionEvent;
 import org.hibernate.event.spi.InitializeCollectionEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -99,7 +99,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	 */
 	private boolean initializeCollectionFromCache(
 			Serializable id,
-			PersistentCollectionMetadata persister,
+			PersistentCollectionDescriptor persister,
 			PersistentCollection collection,
 			SessionImplementor source) {
 

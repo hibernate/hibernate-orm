@@ -11,7 +11,7 @@ import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.CallbackType;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * The standard PostDeleteEventListener implementation
@@ -32,7 +32,7 @@ public class PostDeleteEventListenerStandardImpl implements PostDeleteEventListe
 	}
 
 	@Override
-	public boolean requiresPostCommitHanding(EntityTypeImplementor persister) {
+	public boolean requiresPostCommitHanding(EntityDescriptor persister) {
 		return callbackRegistry.hasRegisteredCallbacks( persister.getMappedClass(), CallbackType.POST_REMOVE );
 	}
 }

@@ -38,7 +38,7 @@ public interface NavigableVisitationStrategy {
 	/**
 	 * Visit an entity
 	 */
-	default void visitEntity(EntityTypeImplementor entity) {
+	default void visitEntity(EntityDescriptor entity) {
 	}
 
 	/**

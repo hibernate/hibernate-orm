@@ -28,8 +28,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggregated;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.Navigable;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 
@@ -43,7 +42,7 @@ import org.jboss.logging.Logger;
 public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImplementor<T> {
 	private final SessionFactoryImplementor sessionFactory;
 	private final PersistentAttribute<?,T> attribute;
-	private final ManagedTypeImplementor managedType;
+	private final ManagedTypeDescriptor managedType;
 
 	private Map<Class, Subgraph> subgraphMap;
 	private Map<Class, Subgraph> keySubgraphMap;
@@ -51,7 +50,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 	@SuppressWarnings("WeakerAccess")
 	public <X> AttributeNodeImpl(
 			SessionFactoryImplementor sessionFactory,
-			ManagedTypeImplementor managedType,
+			ManagedTypeDescriptor managedType,
 			PersistentAttribute<X, T> attribute) {
 		this.sessionFactory = sessionFactory;
 		this.managedType = managedType;
@@ -71,7 +70,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 	 */
 	private AttributeNodeImpl(
 			SessionFactoryImplementor sessionFactory,
-			ManagedTypeImplementor managedType,
+			ManagedTypeDescriptor managedType,
 			PersistentAttribute<?, T> attribute,
 			Map<Class, Subgraph> subgraphMap,
 			Map<Class, Subgraph> keySubgraphMap) {
@@ -149,7 +148,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 			subgraphMap = new HashMap<>();
 		}
 
-		final ManagedTypeImplementor<X> associatedManagedTypeDescriptor;
+		final ManagedTypeDescriptor<X> associatedManagedTypeDescriptor;
 		if ( attribute instanceof PluralPersistentAttribute ) {
 			final PluralPersistentAttribute pluralAttribute = (PluralPersistentAttribute) attribute;
 			final CollectionElement elementDescriptor = pluralAttribute.getPersistentCollectionMetadata().getElementDescriptor();
@@ -210,7 +209,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 	 * @return {@code true} indicates it is treatable as such; {@code false} indicates it is not
 	 */
 	@SuppressWarnings("unchecked")
-	private boolean isTreatableAs(ManagedTypeImplementor managedType, Class javaType) {
+	private boolean isTreatableAs(ManagedTypeDescriptor managedType, Class javaType) {
 		return javaType == null || javaType.isAssignableFrom( managedType.getJavaType() );
 	}
 
@@ -226,7 +225,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 
 	@SuppressWarnings("unchecked")
 	private <X> SubgraphImpl<X> internalMakeKeySubgraph(Class<X> type) {
-		final ManagedTypeImplementor<X> associatedManagedTypeDescriptor;
+		final ManagedTypeDescriptor<X> associatedManagedTypeDescriptor;
 		if ( attribute instanceof PluralPersistentAttribute ) {
 			final PluralPersistentAttribute pluralAttribute = (PluralPersistentAttribute) attribute;
 			final CollectionIndex indexDescriptor = pluralAttribute.getPersistentCollectionMetadata().getIndexDescriptor();

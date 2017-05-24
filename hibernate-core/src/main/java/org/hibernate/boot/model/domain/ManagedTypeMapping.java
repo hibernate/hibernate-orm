@@ -7,8 +7,6 @@
 package org.hibernate.boot.model.domain;
 
 import java.util.List;
-
-import javax.persistence.metamodel.Type;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 /**

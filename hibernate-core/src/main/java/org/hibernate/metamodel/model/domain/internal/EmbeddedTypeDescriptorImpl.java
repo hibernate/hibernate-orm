@@ -21,7 +21,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
@@ -31,7 +31,6 @@ import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.tuple.Tuplizer;
 import org.hibernate.type.descriptor.java.internal.EmbeddableJavaDescriptorImpl;
@@ -41,16 +40,16 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 /**
  * @author Steve Ebersole
  */
-public class EmbeddedTypeImplementorImpl<T>
+public class EmbeddedTypeDescriptorImpl<T>
 		extends AbstractManagedType<T>
-		implements EmbeddedTypeImplementor<T> {
+		implements EmbeddedTypeDescriptor<T> {
 	private final EmbeddedContainer container;
 	private final NavigableRole navigableRole;
 
 	private final EntityMode representationMode;
 	private final Tuplizer tuplizer;
 
-	public EmbeddedTypeImplementorImpl(
+	public EmbeddedTypeDescriptorImpl(
 			EmbeddedMapping embeddedMapping,
 			EmbeddedContainer container,
 			String localName,
@@ -161,7 +160,7 @@ public class EmbeddedTypeImplementorImpl<T>
 	}
 
 	@Override
-	public EmbeddedTypeImplementor<T> getEmbeddedDescriptor() {
+	public EmbeddedTypeDescriptor<T> getEmbeddedDescriptor() {
 		return this;
 	}
 

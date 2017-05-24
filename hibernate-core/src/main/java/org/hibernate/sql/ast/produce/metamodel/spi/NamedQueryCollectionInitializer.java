@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.collection.CollectionInitializer;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.spi.NativeQueryImplementor;
 
 /**
@@ -28,9 +28,9 @@ public final class NamedQueryCollectionInitializer implements CollectionInitiali
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( NamedQueryCollectionInitializer.class );
 
 	private final String queryName;
-	private final PersistentCollectionMetadata persister;
+	private final PersistentCollectionDescriptor persister;
 
-	public NamedQueryCollectionInitializer(String queryName, PersistentCollectionMetadata persister) {
+	public NamedQueryCollectionInitializer(String queryName, PersistentCollectionDescriptor persister) {
 		super();
 		this.queryName = queryName;
 		this.persister = persister;

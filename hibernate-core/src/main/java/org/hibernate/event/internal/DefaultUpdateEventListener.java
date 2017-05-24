@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * An event handler for update() events
@@ -46,7 +46,7 @@ public class DefaultUpdateEventListener extends DefaultSaveOrUpdateEventListener
 	 */
 	protected Serializable getUpdateId(
 			Object entity,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			Serializable requestedId,
 			SessionImplementor session) throws HibernateException {
 		if ( requestedId == null ) {

@@ -19,8 +19,8 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -176,7 +176,7 @@ public class BatchFetchQueue {
 	 */
 	@SuppressWarnings("unchecked")
 	public Serializable[] getEntityBatch(
-			final EntityTypeImplementor persister,
+			final EntityDescriptor persister,
 			final Serializable id,
 			final int batchSize,
 			final EntityMode entityMode) {
@@ -214,7 +214,7 @@ public class BatchFetchQueue {
 		return ids; //we ran out of ids to try
 	}
 
-	private boolean isCached(EntityKey entityKey, EntityTypeImplementor persister) {
+	private boolean isCached(EntityKey entityKey, EntityDescriptor persister) {
 		final SharedSessionContractImplementor session = context.getSession();
 		if ( context.getSession().getCacheMode().isGetEnabled() && persister.hasCache() ) {
 			final EntityRegionAccessStrategy cache = persister.getCacheAccessStrategy();
@@ -237,7 +237,7 @@ public class BatchFetchQueue {
 	 * it to the queue.
 	 */
 	public void addBatchLoadableCollection(PersistentCollection collection, CollectionEntry ce) {
-		final PersistentCollectionMetadata persister = ce.getLoadedPersister();
+		final PersistentCollectionDescriptor persister = ce.getLoadedPersister();
 
 		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( persister.getRole() );
 		if ( map == null ) {
@@ -268,7 +268,7 @@ public class BatchFetchQueue {
 	 * @return an array of collection keys, of length batchSize (padded with nulls)
 	 */
 	public Serializable[] getCollectionBatch(
-			final PersistentCollectionMetadata collectionPersister,
+			final PersistentCollectionDescriptor collectionPersister,
 			final Serializable id,
 			final int batchSize) {
 
@@ -330,7 +330,7 @@ public class BatchFetchQueue {
 		return keys; //we ran out of keys to try
 	}
 
-	private boolean isCached(Serializable collectionKey, PersistentCollectionMetadata persister) {
+	private boolean isCached(Serializable collectionKey, PersistentCollectionDescriptor persister) {
 		SharedSessionContractImplementor session = context.getSession();
 		if ( session.getCacheMode().isGetEnabled() && persister.hasCache() ) {
 			CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();

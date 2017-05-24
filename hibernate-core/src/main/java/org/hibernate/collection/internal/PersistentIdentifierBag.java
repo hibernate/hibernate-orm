@@ -19,7 +19,7 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.sql.NotYetImplementedException;
 
 /**
@@ -78,7 +78,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public void initializeFromCache(PersistentCollectionMetadata persister, Serializable disassembled, Object owner)
+	public void initializeFromCache(PersistentCollectionDescriptor persister, Serializable disassembled, Object owner)
 			throws HibernateException {
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;
@@ -203,7 +203,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public void beforeInitialize(PersistentCollectionMetadata persister, int anticipatedSize) {
+	public void beforeInitialize(PersistentCollectionDescriptor persister, int anticipatedSize) {
 		identifiers = anticipatedSize <= 0
 				? new HashMap<>()
 				: new HashMap<>( anticipatedSize + 1 + (int) ( anticipatedSize * .75f ), .75f );
@@ -213,7 +213,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public Serializable disassemble(PersistentCollectionMetadata persister)
+	public Serializable disassemble(PersistentCollectionDescriptor persister)
 			throws HibernateException {
 		final Serializable[] result = new Serializable[ values.size() * 2 ];
 		int i = 0;
@@ -231,7 +231,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public Iterator entries(PersistentCollectionMetadata persister) {
+	public Iterator entries(PersistentCollectionDescriptor persister) {
 		return values.iterator();
 	}
 
@@ -241,7 +241,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public boolean equalsSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
+	public boolean equalsSnapshot(PersistentCollectionDescriptor persister) throws HibernateException {
 		final Map snap = (Map) getSnapshot();
 		if ( snap.size()!= values.size() ) {
 			return false;
@@ -267,7 +267,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Iterator getDeletes(PersistentCollectionMetadata persister, boolean indexIsFormula) throws HibernateException {
+	public Iterator getDeletes(PersistentCollectionDescriptor persister, boolean indexIsFormula) throws HibernateException {
 		final Map snap = (Map) getSnapshot();
 		final List deletes = new ArrayList( snap.keySet() );
 		for ( int i=0; i<values.size(); i++ ) {
@@ -279,7 +279,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public Object getIndex(Object entry, int i, PersistentCollectionMetadata persister) {
+	public Object getIndex(Object entry, int i, PersistentCollectionDescriptor persister) {
 		throw new UnsupportedOperationException("Bags don't have indexes");
 	}
 
@@ -323,7 +323,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	@Override
 	public Object readFrom(
 			ResultSet rs,
-			PersistentCollectionMetadata persister,
+			PersistentCollectionDescriptor persister,
 			Object owner) throws SQLException {
 		throw new NotYetImplementedException(  );
 //		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
@@ -341,7 +341,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Serializable getSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
+	public Serializable getSnapshot(PersistentCollectionDescriptor persister) throws HibernateException {
 		final HashMap map = new HashMap( values.size() );
 		final Iterator iter = values.iterator();
 		int i=0;
@@ -362,7 +362,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public void preInsert(PersistentCollectionMetadata persister) throws HibernateException {
+	public void preInsert(PersistentCollectionDescriptor persister) throws HibernateException {
 		final Iterator itr = values.iterator();
 		int i = 0;
 		while ( itr.hasNext() ) {
@@ -480,7 +480,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 	@Override
 	public void afterRowInsert(
-			PersistentCollectionMetadata persister,
+			PersistentCollectionDescriptor persister,
 			Object entry,
 			int i) throws HibernateException {
 		//TODO: if we are using identity columns, fetch the identifier

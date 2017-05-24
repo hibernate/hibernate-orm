@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.EntityType;
 
@@ -43,7 +43,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 */
 	protected static boolean isOwnerUnchanged(
 			final PersistentCollection snapshot, 
-			final PersistentCollectionMetadata persister,
+			final PersistentCollectionDescriptor persister,
 			final Serializable id
 	) {
 		return isCollectionSnapshotValid(snapshot) &&
@@ -65,7 +65,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	protected void reattachCollection(PersistentCollection collection, CollectionType type)
 	throws HibernateException {
 		if ( collection.wasInitialized() ) {
-			PersistentCollectionMetadata collectionPersister = getSession().getFactory().getTypeConfiguration()
+			PersistentCollectionDescriptor collectionPersister = getSession().getFactory().getTypeConfiguration()
 			.findCollectionPersister( type.getRole() );
 			getSession().getPersistenceContext()
 				.addInitializedDetachedCollection( collectionPersister, collection );
@@ -74,7 +74,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 			if ( !isCollectionSnapshotValid(collection) ) {
 				throw new HibernateException( "could not reassociate uninitialized transient collection" );
 			}
-			PersistentCollectionMetadata collectionPersister = getSession().getFactory().getTypeConfiguration()
+			PersistentCollectionDescriptor collectionPersister = getSession().getFactory().getTypeConfiguration()
 					.findCollectionPersister( collection.getRole() );
 			getSession().getPersistenceContext()
 				.addUninitializedDetachedCollection( collectionPersister, collection );

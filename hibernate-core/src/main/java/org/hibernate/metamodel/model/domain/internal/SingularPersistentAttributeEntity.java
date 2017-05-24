@@ -8,12 +8,15 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
+import org.hibernate.MappingException;
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.mapping.ToOne;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.metamodel.model.domain.spi.JoinablePersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
@@ -55,27 +58,37 @@ public class SingularPersistentAttributeEntity<O,J>
 		implements JoinablePersistentAttribute<O,J>, EntityValuedNavigable<J>, Fetchable<J>, TableGroupJoinProducer {
 
 	private final SingularAttributeClassification classification;
-	private final EntityTypeImplementor<J> entityMetadata;
+	private final EntityDescriptor<J> entityDescriptor;
 	private final ColumnMappings joinColumnMappings;
 
 	private final NavigableRole navigableRole;
 
 
 	public SingularPersistentAttributeEntity(
-			ManagedTypeImplementor<O> declaringType,
+			ManagedTypeDescriptor<O> declaringType,
 			String name,
 			PropertyAccess propertyAccess,
 			SingularAttributeClassification classification,
-			EntityValuedExpressableType<J> ormType,
 			Disposition disposition,
-			EntityTypeImplementor<J> entityMetadata,
-			ColumnMappings joinColumnMappings) {
-		super( declaringType, name, propertyAccess, ormType, disposition, true );
+			boolean nullable,
+			ToOne valueMapping,
+			RuntimeModelCreationContext context) {
+		super( declaringType, name, propertyAccess, disposition, nullable, valueMapping );
 		this.classification = classification;
-		this.entityMetadata = entityMetadata;
-		this.joinColumnMappings = joinColumnMappings;
 
+		if ( valueMapping.getReferencedEntityName() == null ) {
+			throw new MappingException(
+					"Cannot create SingularPersistentAttributeEntity instance until after associated entity descriptor has been registered"
+			);
+		}
+		this.entityDescriptor = context.getTypeConfiguration().findEntityPersister( valueMapping.getReferencedEntityName() );
 		this.navigableRole = declaringType.getNavigableRole().append( name );
+
+		valueMapping.createForeignKey();
+		context.getDatabaseObjectResolver().resolveForeignKey(
+				valueMapping.getConstraintColumns(),
+				valueMapping.getMappedColumns()
+		);
 	}
 
 	@Override
@@ -85,8 +98,8 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public EntityTypeImplementor<J> getEntityDescriptor() {
-		return entityMetadata;
+	public EntityDescriptor<J> getEntityDescriptor() {
+		return entityDescriptor;
 	}
 
 	@Override
@@ -96,32 +109,32 @@ public class SingularPersistentAttributeEntity<O,J>
 
 	@Override
 	public String getJpaEntityName() {
-		return entityMetadata.getJpaEntityName();
+		return entityDescriptor.getJpaEntityName();
 	}
 
 	@Override
 	public EntityJavaDescriptor<J> getJavaTypeDescriptor() {
-		return entityMetadata.getJavaTypeDescriptor();
+		return entityDescriptor.getJavaTypeDescriptor();
 	}
 
 	@Override
 	public <N> Navigable<N> findNavigable(String navigableName) {
-		return entityMetadata.findNavigable( navigableName );
+		return entityDescriptor.findNavigable( navigableName );
 	}
 
 	@Override
 	public <N> Navigable<N> findDeclaredNavigable(String navigableName) {
-		return entityMetadata.findDeclaredNavigable( navigableName );
+		return entityDescriptor.findDeclaredNavigable( navigableName );
 	}
 
 	@Override
 	public void visitNavigables(NavigableVisitationStrategy visitor) {
-		entityMetadata.visitNavigables( visitor );
+		entityDescriptor.visitNavigables( visitor );
 	}
 
 	@Override
 	public void visitDeclaredNavigables(NavigableVisitationStrategy visitor) {
-		entityMetadata.visitNavigables( visitor );
+		entityDescriptor.visitNavigables( visitor );
 	}
 
 	@Override
@@ -129,8 +142,8 @@ public class SingularPersistentAttributeEntity<O,J>
 		return true;
 	}
 
-	public EntityTypeImplementor getAssociatedEntityDescriptor() {
-		return entityMetadata;
+	public EntityDescriptor getAssociatedEntityDescriptor() {
+		return entityDescriptor;
 	}
 
 	@Override
@@ -151,7 +164,7 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	public String getEntityName() {
-		return entityMetadata.getEntityName();
+		return entityDescriptor.getEntityName();
 	}
 
 	@Override
@@ -176,7 +189,7 @@ public class SingularPersistentAttributeEntity<O,J>
 			String resultVariable,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return entityMetadata.generateQueryResult(
+		return entityDescriptor.generateQueryResult(
 				selectedExpression,
 				resultVariable,
 				sqlSelectionResolver,
@@ -190,8 +203,8 @@ public class SingularPersistentAttributeEntity<O,J>
 	}
 
 	@Override
-	public ManagedTypeImplementor<J> getFetchedManagedType() {
-		return entityMetadata;
+	public ManagedTypeDescriptor<J> getFetchedManagedType() {
+		return entityDescriptor;
 	}
 
 	@Override
@@ -347,11 +360,11 @@ public class SingularPersistentAttributeEntity<O,J>
 
 	@Override
 	public List<Navigable> getNavigables() {
-		return entityMetadata.getNavigables();
+		return entityDescriptor.getNavigables();
 	}
 
 	@Override
 	public List<Navigable> getDeclaredNavigables() {
-		return entityMetadata.getDeclaredNavigables();
+		return entityDescriptor.getDeclaredNavigables();
 	}
 }

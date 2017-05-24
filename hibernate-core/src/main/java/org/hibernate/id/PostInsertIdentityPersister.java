@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.id;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * A persister that may have an identity assigned by execution of 
@@ -13,7 +13,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
  *
  * @author Gavin King
  */
-public interface PostInsertIdentityPersister extends EntityTypeImplementor {
+public interface PostInsertIdentityPersister extends EntityDescriptor {
 	/**
 	 * Get a SQL select string that performs a select based on a unique
 	 * key determined by the given property name).

@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.loadplans.walking;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
 
 import org.junit.Test;
@@ -26,7 +26,7 @@ public class KeyManyToOneWalkingTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testWalkingKeyManyToOneGraphs() {
 		// Address has a composite id with a bi-directional key-many to Person
-		final EntityTypeImplementor ep = (EntityTypeImplementor) sessionFactory().getClassMetadata( Address.class );
+		final EntityDescriptor ep = (EntityDescriptor) sessionFactory().getClassMetadata( Address.class );
 
 		MetamodelGraphWalker.visitEntity( new NavigableVisitationStrategyLoggingImpl(), ep );
 	}

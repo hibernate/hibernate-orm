@@ -29,22 +29,19 @@ import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.loader.spi.NaturalIdLoader;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.spi.AbstractEntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.AbstractEntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
-import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupResolver;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
  */
-public class SingleTableEntityDescriptor<T> extends AbstractEntityTypeImplementor<T> {
+public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> {
 
 
 
@@ -87,7 +84,7 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityTypeImplemento
 	@Override
 	public void finishInstantiation(
 			EntityHierarchy entityHierarchy,
-			IdentifiableTypeImplementor<? super T> superType,
+			IdentifiableTypeDescriptor<? super T> superType,
 			IdentifiableTypeMapping bootMapping,
 			RuntimeModelCreationContext creationContext) {
 
@@ -96,7 +93,7 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityTypeImplemento
 	@Override
 	public void completeInitialization(
 			EntityHierarchy entityHierarchy,
-			IdentifiableTypeImplementor<? super T> superType,
+			IdentifiableTypeDescriptor<? super T> superType,
 			IdentifiableTypeMappingImplementor bootMapping,
 			RuntimeModelCreationContext creationContext) {
 
@@ -508,7 +505,7 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityTypeImplemento
 	}
 
 	@Override
-	public EntityTypeImplementor getSubclassEntityPersister(
+	public EntityDescriptor getSubclassEntityPersister(
 			Object instance, SessionFactoryImplementor factory) {
 		return null;
 	}

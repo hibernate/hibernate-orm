@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeContainer;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 
 import org.jboss.logging.Logger;
@@ -195,5 +195,5 @@ public abstract class AbstractAttributeNodeContainer<T> implements AttributeNode
 	}
 
 
-	abstract ManagedTypeImplementor getManagedType();
+	abstract ManagedTypeDescriptor getManagedType();
 }

@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.spi.select;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityValuedNavigable;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -20,7 +20,7 @@ public class EntityValuedSelectable implements Selectable {
 	private final NavigableReference navigableReference;
 	private final NavigablePath navigablePath;
 	private final ColumnReferenceSource columnBindingSource;
-	private final EntityTypeImplementor<?> entityDescriptor;
+	private final EntityDescriptor<?> entityDescriptor;
 	private final boolean isShallow;
 
 	public EntityValuedSelectable(

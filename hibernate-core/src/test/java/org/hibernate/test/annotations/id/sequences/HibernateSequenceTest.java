@@ -16,7 +16,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.test.annotations.id.sequences.entities.HibernateSequenceEntity;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -50,7 +50,7 @@ public class HibernateSequenceTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testHibernateSequenceSchema() {
-		EntityTypeImplementor persister = sessionFactory().getEntityPersister( HibernateSequenceEntity.class.getName() );
+		EntityDescriptor persister = sessionFactory().getEntityPersister( HibernateSequenceEntity.class.getName() );
 		IdentifierGenerator generator = persister.getIdentifierDescriptor().getIdentifierValueGenerator();
 		Assert.assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;

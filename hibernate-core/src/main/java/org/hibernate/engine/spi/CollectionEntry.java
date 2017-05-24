@@ -19,7 +19,7 @@ import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -40,7 +40,7 @@ public final class CollectionEntry implements Serializable {
 
 	// "loaded" means the reference that is consistent
 	// with the current database state
-	private transient PersistentCollectionMetadata loadedPersister;
+	private transient PersistentCollectionDescriptor loadedPersister;
 	private Serializable loadedKey;
 
 	// ATTRIBUTES USED ONLY DURING FLUSH CYCLE
@@ -57,13 +57,13 @@ public final class CollectionEntry implements Serializable {
 	private transient boolean ignore;
 
 	// "current" means the reference that was found during flush()
-	private transient PersistentCollectionMetadata currentPersister;
+	private transient PersistentCollectionDescriptor currentPersister;
 	private transient Serializable currentKey;
 
 	/**
 	 * For newly wrapped collections, or dereferenced collection wrappers
 	 */
-	public CollectionEntry(PersistentCollectionMetadata persister, PersistentCollection collection) {
+	public CollectionEntry(PersistentCollectionDescriptor persister, PersistentCollection collection) {
 		// new collections that get found + wrapped
 		// during flush shouldn't be ignored
 		ignore = false;
@@ -81,7 +81,7 @@ public final class CollectionEntry implements Serializable {
 	 */
 	public CollectionEntry(
 			final PersistentCollection collection,
-			final PersistentCollectionMetadata loadedPersister,
+			final PersistentCollectionDescriptor loadedPersister,
 			final Serializable loadedKey,
 			final boolean ignore
 	) {
@@ -100,7 +100,7 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * For uninitialized detached collections
 	 */
-	public CollectionEntry(PersistentCollectionMetadata loadedPersister, Serializable loadedKey) {
+	public CollectionEntry(PersistentCollectionDescriptor loadedPersister, Serializable loadedKey) {
 		// detached collection wrappers that get found + reattached
 		// during flush shouldn't be ignored
 		ignore = false;
@@ -272,7 +272,7 @@ public final class CollectionEntry implements Serializable {
 		fromMerge = true;
 	}
 
-	private void setLoadedPersister(PersistentCollectionMetadata persister) {
+	private void setLoadedPersister(PersistentCollectionDescriptor persister) {
 		loadedPersister = persister;
 		setRole( persister == null ? null : persister.getRole() );
 	}
@@ -329,11 +329,11 @@ public final class CollectionEntry implements Serializable {
 		return ignore;
 	}
 
-	public PersistentCollectionMetadata getCurrentPersister() {
+	public PersistentCollectionDescriptor getCurrentPersister() {
 		return currentPersister;
 	}
 
-	public void setCurrentPersister(PersistentCollectionMetadata currentPersister) {
+	public void setCurrentPersister(PersistentCollectionDescriptor currentPersister) {
 		this.currentPersister = currentPersister;
 	}
 
@@ -352,7 +352,7 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * This is only available late during the flush cycle
 	 */
-	public PersistentCollectionMetadata getLoadedPersister() {
+	public PersistentCollectionDescriptor getLoadedPersister() {
 		return loadedPersister;
 	}
 

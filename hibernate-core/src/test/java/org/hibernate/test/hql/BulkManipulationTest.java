@@ -26,7 +26,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.jdbc.Work;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
@@ -508,7 +508,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	protected boolean supportsBulkInsertIdGeneration(Class entityClass) {
-		EntityTypeImplementor persister = sessionFactory().getEntityPersister( entityClass.getName() );
+		EntityDescriptor persister = sessionFactory().getEntityPersister( entityClass.getName() );
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		return BulkInsertionCapableIdentifierGenerator.class.isInstance( generator )
 				&& BulkInsertionCapableIdentifierGenerator.class.cast( generator ).supportsBulkInsertionIdentifierGeneration();

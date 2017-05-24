@@ -17,7 +17,7 @@ import java.util.Collection;
  *
  * @author Steve Ebersole
  */
-public interface InheritanceCapable<T> extends ManagedTypeImplementor<T> {
+public interface InheritanceCapable<T> extends ManagedTypeDescriptor<T> {
 	/**
 	 *
 	 */

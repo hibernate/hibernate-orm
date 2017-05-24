@@ -14,8 +14,8 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.tuple.HydratedCompoundValueHandler;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
@@ -123,7 +123,7 @@ public class CompositeBasedAssociationAttribute
 		if ( isAnyType() ) {
 			throw new IllegalStateException( "Cannot treat any-type attribute as entity type" );
 		}
-		return (EntityTypeImplementor) getJoinable();
+		return (EntityDescriptor) getJoinable();
 	}
 
 	@Override
@@ -134,12 +134,12 @@ public class CompositeBasedAssociationAttribute
 		if ( isAnyType() ) {
 			throw new IllegalStateException( "Cannot treat any-type attribute as collection type" );
 		}
-		return (PersistentCollectionMetadata) getJoinable();
+		return (PersistentCollectionDescriptor) getJoinable();
 	}
 
 	@Override
 	public FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath) {
-		final EntityTypeImplementor owningPersister = getSource().locateOwningPersister();
+		final EntityDescriptor owningPersister = getSource().locateOwningPersister();
 
 		FetchStyle style = FetchStrategyHelper.determineFetchStyleByProfile(
 				loadQueryInfluencers,

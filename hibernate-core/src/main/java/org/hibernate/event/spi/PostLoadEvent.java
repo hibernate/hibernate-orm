@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Occurs afterQuery an an entity instance is fully loaded.
@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 public class PostLoadEvent extends AbstractEvent {
 	private Object entity;
 	private Serializable id;
-	private EntityTypeImplementor persister;
+	private EntityDescriptor persister;
 
 	public PostLoadEvent(EventSource session) {
 		super(session);
@@ -28,7 +28,7 @@ public class PostLoadEvent extends AbstractEvent {
 		return entity;
 	}
 	
-	public EntityTypeImplementor getPersister() {
+	public EntityDescriptor getPersister() {
 		return persister;
 	}
 	
@@ -46,7 +46,7 @@ public class PostLoadEvent extends AbstractEvent {
 		return this;
 	}
 
-	public PostLoadEvent setPersister(EntityTypeImplementor persister) {
+	public PostLoadEvent setPersister(EntityDescriptor persister) {
 		this.persister = persister;
 		return this;
 	}

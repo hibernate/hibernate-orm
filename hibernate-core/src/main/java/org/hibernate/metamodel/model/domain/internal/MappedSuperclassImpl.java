@@ -6,10 +6,10 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.model.domain.spi.MappedSuperclassImplementor;
+import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class MappedSuperclassImpl<J> implements MappedSuperclassImplementor<J> {
+public class MappedSuperclassImpl<J> implements MappedSuperclassDescriptor<J> {
 }

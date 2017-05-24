@@ -17,8 +17,8 @@ import org.hibernate.MappingException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.loading.internal.LoadContexts;
 import org.hibernate.internal.util.MarkerObject;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Represents the state of "stuff" Hibernate is tracking, including (not exhaustive):
@@ -120,7 +120,7 @@ public interface PersistenceContext {
 	 *
 	 * @see #getCachedDatabaseSnapshot
 	 */
-	public Object[] getDatabaseSnapshot(Serializable id, EntityTypeImplementor persister);
+	public Object[] getDatabaseSnapshot(Serializable id, EntityDescriptor persister);
 
 	/**
 	 * Retrieve the cached database snapshot for the requested entity key.
@@ -144,7 +144,7 @@ public interface PersistenceContext {
 	 *
 	 * @return The current (non-cached) snapshot of the entity's natural id state.
 	 */
-	public Object[] getNaturalIdSnapshot(Serializable id, EntityTypeImplementor persister);
+	public Object[] getNaturalIdSnapshot(Serializable id, EntityDescriptor persister);
 
 	/**
 	 * Add a canonical mapping from entity key to entity instance
@@ -243,7 +243,7 @@ public interface PersistenceContext {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityTypeImplementor persister,
+			final EntityDescriptor persister,
 			final boolean disableVersionIncrement);
 
 	/**
@@ -259,7 +259,7 @@ public interface PersistenceContext {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityTypeImplementor persister,
+			final EntityDescriptor persister,
 			final boolean disableVersionIncrement);
 
 	/**
@@ -326,7 +326,7 @@ public interface PersistenceContext {
 	 * @return An appropriately narrowed instance.
 	 * @throws HibernateException
 	 */
-	public Object narrowProxy(Object proxy, EntityTypeImplementor persister, EntityKey key, Object object)
+	public Object narrowProxy(Object proxy, EntityDescriptor persister, EntityKey key, Object object)
 			throws HibernateException;
 
 	/**
@@ -334,7 +334,7 @@ public interface PersistenceContext {
 	 * third argument (the entity associated with the key) if no proxy exists. Init
 	 * the proxy to the target implementation, if necessary.
 	 */
-	public Object proxyFor(EntityTypeImplementor persister, EntityKey key, Object impl)
+	public Object proxyFor(EntityDescriptor persister, EntityKey key, Object impl)
 			throws HibernateException;
 
 	/**
@@ -347,7 +347,7 @@ public interface PersistenceContext {
 	/**
 	 * Get the entity that owns this persistent collection
 	 */
-	public Object getCollectionOwner(Serializable key, PersistentCollectionMetadata collectionPersister)
+	public Object getCollectionOwner(Serializable key, PersistentCollectionDescriptor collectionPersister)
 			throws MappingException;
 
 	/**
@@ -370,13 +370,13 @@ public interface PersistenceContext {
 	/**
 	 * add a collection we just loaded up (still needs initializing)
 	 */
-	public void addUninitializedCollection(PersistentCollectionMetadata persister,
+	public void addUninitializedCollection(PersistentCollectionDescriptor persister,
 			PersistentCollection collection, Serializable id);
 
 	/**
 	 * add a detached uninitialized collection
 	 */
-	public void addUninitializedDetachedCollection(PersistentCollectionMetadata persister,
+	public void addUninitializedDetachedCollection(PersistentCollectionDescriptor persister,
 			PersistentCollection collection);
 
 	/**
@@ -384,20 +384,20 @@ public interface PersistenceContext {
 	 * application, with no database state or snapshot)
 	 * @param collection The collection to be associated with the persistence context
 	 */
-	public void addNewCollection(PersistentCollectionMetadata persister, PersistentCollection collection)
+	public void addNewCollection(PersistentCollectionDescriptor persister, PersistentCollection collection)
 			throws HibernateException;
 
 	/**
 	 * add an (initialized) collection that was created by another session and passed
 	 * into update() (ie. one with a snapshot and existing state on the database)
 	 */
-	public void addInitializedDetachedCollection(PersistentCollectionMetadata collectionPersister,
+	public void addInitializedDetachedCollection(PersistentCollectionDescriptor collectionPersister,
 			PersistentCollection collection) throws HibernateException;
 
 	/**
 	 * add a collection we just pulled out of the cache (does not need initializing)
 	 */
-	public CollectionEntry addInitializedCollection(PersistentCollectionMetadata persister,
+	public CollectionEntry addInitializedCollection(PersistentCollectionDescriptor persister,
 			PersistentCollection collection, Serializable id) throws HibernateException;
 
 	/**
@@ -702,7 +702,7 @@ public interface PersistenceContext {
 	 * @param persister The entity persister
 	 * @param id The id
 	 */
-	public void registerInsertedKey(EntityTypeImplementor persister, Serializable id);
+	public void registerInsertedKey(EntityDescriptor persister, Serializable id);
 
 	/**
 	 * Allows callers to check to see if the identified entity was inserted during the current transaction.
@@ -712,7 +712,7 @@ public interface PersistenceContext {
 	 *
 	 * @return True if inserted during this transaction, false otherwise.
 	 */
-	public boolean wasInsertedDuringTransaction(EntityTypeImplementor persister, Serializable id);
+	public boolean wasInsertedDuringTransaction(EntityDescriptor persister, Serializable id);
 
 	/**
 	 * Provides centralized access to natural-id-related functionality.
@@ -728,7 +728,7 @@ public interface PersistenceContext {
 		 * 
 		 * @return The extracted natural id values
 		 */
-		public Object[] extractNaturalIdValues(Object[] state, EntityTypeImplementor persister);
+		public Object[] extractNaturalIdValues(Object[] state, EntityDescriptor persister);
 
 		/**
 		 * Given an entity instance, extract the values that represent the natural id
@@ -738,7 +738,7 @@ public interface PersistenceContext {
 		 *
 		 * @return The extracted natural id values
 		 */
-		public Object[] extractNaturalIdValues(Object entity, EntityTypeImplementor persister);
+		public Object[] extractNaturalIdValues(Object entity, EntityDescriptor persister);
 
 		/**
 		 * Performs processing related to creating natural-id cross-reference entries on load.
@@ -749,7 +749,7 @@ public interface PersistenceContext {
 		 * @param naturalIdValues The natural id values
 		 */
 		public void cacheNaturalIdCrossReferenceFromLoad(
-				EntityTypeImplementor persister,
+				EntityDescriptor persister,
 				Serializable id, 
 				Object[] naturalIdValues);
 
@@ -764,7 +764,7 @@ public interface PersistenceContext {
 		 * @param source Enumeration representing how these values are coming into cache.
 		 */
 		public void manageLocalNaturalIdCrossReference(
-				EntityTypeImplementor persister,
+				EntityDescriptor persister,
 				Serializable id,
 				Object[] state,
 				Object[] previousState,
@@ -779,7 +779,7 @@ public interface PersistenceContext {
 		 * 
 		 * @return The local cached natural id values (could be different from given values).
 		 */
-		public Object[] removeLocalNaturalIdCrossReference(EntityTypeImplementor persister, Serializable id, Object[] state);
+		public Object[] removeLocalNaturalIdCrossReference(EntityDescriptor persister, Serializable id, Object[] state);
 
 		/**
 		 * Creates necessary shared (second level cache) cross-reference entries.
@@ -792,7 +792,7 @@ public interface PersistenceContext {
 		 * @param source Enumeration representing how these values are coming into cache.
 		 */
 		public void manageSharedNaturalIdCrossReference(
-				EntityTypeImplementor persister,
+				EntityDescriptor persister,
 				Serializable id,
 				Object[] state,
 				Object[] previousState,
@@ -805,7 +805,7 @@ public interface PersistenceContext {
 		 * @param id The primary key value
 		 * @param naturalIdValues The natural id values array
 		 */
-		public void removeSharedNaturalIdCrossReference(EntityTypeImplementor persister, Serializable id, Object[] naturalIdValues);
+		public void removeSharedNaturalIdCrossReference(EntityDescriptor persister, Serializable id, Object[] naturalIdValues);
 
 		/**
 		 * Given a persister and primary key, find the corresponding cross-referenced natural id values.
@@ -815,7 +815,7 @@ public interface PersistenceContext {
 		 * 
 		 * @return The cross-referenced natural-id values, or {@code null}
 		 */
-		public Object[] findCachedNaturalId(EntityTypeImplementor persister, Serializable pk);
+		public Object[] findCachedNaturalId(EntityDescriptor persister, Serializable pk);
 
 		/**
 		 * Given a persister and natural-id values, find the corresponding cross-referenced primary key. Will return
@@ -829,7 +829,7 @@ public interface PersistenceContext {
 		 * 		{@link PersistenceContext.NaturalIdHelper#INVALID_NATURAL_ID_REFERENCE},
 		 * 		or {@code null}. 
 		 */
-		public Serializable findCachedNaturalIdResolution(EntityTypeImplementor persister, Object[] naturalIdValues);
+		public Serializable findCachedNaturalIdResolution(EntityDescriptor persister, Object[] naturalIdValues);
 
 		/**
 		 * Find all the locally cached primary key cross-reference entries for the given persister.
@@ -838,7 +838,7 @@ public interface PersistenceContext {
 		 * 
 		 * @return The primary keys
 		 */
-		public Collection<Serializable> getCachedPkResolutions(EntityTypeImplementor persister);
+		public Collection<Serializable> getCachedPkResolutions(EntityDescriptor persister);
 
 		/**
 		 * Part of the "load synchronization process".  Responsible for maintaining cross-reference entries
@@ -853,7 +853,7 @@ public interface PersistenceContext {
 		 * 
 		 * @see #cleanupFromSynchronizations
 		 */
-		public void handleSynchronization(EntityTypeImplementor persister, Serializable pk, Object entity);
+		public void handleSynchronization(EntityDescriptor persister, Serializable pk, Object entity);
 
 		/**
 		 * The clean up process of {@link #handleSynchronization}.  Responsible for cleaning up the tracking
@@ -868,7 +868,7 @@ public interface PersistenceContext {
 		 * @param persister The entity persister
 		 * @param identifier The entity identifier
 		 */
-		public void handleEviction(Object object, EntityTypeImplementor persister, Serializable identifier);
+		public void handleEviction(Object object, EntityDescriptor persister, Serializable identifier);
 	}
 
 	/**

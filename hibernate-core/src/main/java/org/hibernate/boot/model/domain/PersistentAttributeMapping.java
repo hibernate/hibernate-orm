@@ -7,6 +7,10 @@
 package org.hibernate.boot.model.domain;
 
 import org.hibernate.mapping.MetaAttributable;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.tuple.ValueGeneration;
 
 /**
@@ -39,4 +43,9 @@ public interface PersistentAttributeMapping extends ValueMappingContainer, MetaA
 	String getLazyGroup();
 
 	ValueGeneration getValueGenerationStrategy();
+
+	<O,T> PersistentAttribute<O,T> makeRuntimeAttribute(
+			ManagedTypeDescriptor<O> container,
+			SingularPersistentAttribute.Disposition singularAttributeDisposition,
+			RuntimeModelCreationContext context);
 }

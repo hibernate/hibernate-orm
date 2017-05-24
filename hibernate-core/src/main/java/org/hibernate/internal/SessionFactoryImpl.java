@@ -28,6 +28,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.SynchronizationType;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.AssertionFailure;
@@ -90,6 +91,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.config.ConfigurationException;
@@ -98,11 +100,8 @@ import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.ManagedFlushCheckerLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.internal.MetamodelImpl;
-import org.hibernate.persister.entity.Loadable;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
@@ -120,10 +119,11 @@ import org.hibernate.secure.spi.JaccService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
+import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
+import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -274,11 +274,16 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				integrator.integrate( metadata, this, this.serviceRegistry );
 				integratorObserver.integrators.add( integrator );
 			}
+
+			final IdentifierGeneratorFactory identifierGeneratorFactory = serviceRegistry.getService(
+					MutableIdentifierGeneratorFactory.class
+			);
+
 			//Generators:
 			this.identifierGenerators = new HashMap<>();
 			metadata.getEntityBindings().stream().filter( model -> !model.isInherited() ).forEach( model -> {
 				IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
-						metadata.getIdentifierGeneratorFactory(),
+						identifierGeneratorFactory,
 						jdbcServices.getJdbcEnvironment().getDialect(),
 						settings.getDefaultCatalogName(),
 						settings.getDefaultSchemaName(),
@@ -323,7 +328,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
 					// resolve the persister owning the fetch
 					final String entityName = getImportedClassName( mappingFetch.getEntity() );
-					final EntityTypeImplementor owner = entityName == null
+					final EntityDescriptor owner = entityName == null
 							? null
 							: typeConfiguration.findEntityPersister( entityName );
 					if ( owner == null ) {
@@ -333,9 +338,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 						);
 					}
 
-					// validate the specified association fetch
-					Type associationType = owner.getPropertyType( mappingFetch.getAssociation() );
-					if ( associationType == null || !associationType.isAssociationType() ) {
+					final Attribute attribute = owner.getAttribute( mappingFetch.getAssociation() );
+					if ( !Fetchable.class.isInstance( attribute ) ) {
 						throw new HibernateException( "Fetch profile [" + fetchProfile.getName() + "] specified an invalid association" );
 					}
 
@@ -344,7 +348,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 					// then construct the fetch instance...
 					fetchProfile.addFetch( new Association( owner, mappingFetch.getAssociation() ), fetchStyle );
-					( (Loadable) owner ).registerAffectingFetchProfile( fetchProfile.getName() );
+					owner.registerAffectingFetchProfile( fetchProfile.getName() );
 				}
 				fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 			}
@@ -689,32 +693,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return getTypeConfiguration().findEntityPersister( className ).getIdentifierPropertyName();
 	}
 
-	public ClassMetadata getClassMetadata(Class persistentClass) throws HibernateException {
-		return getClassMetadata( persistentClass.getName() );
-	}
-
-	public CollectionMetadata getCollectionMetadata(String roleName) throws HibernateException {
-		return (CollectionMetadata) getTypeConfiguration().findCollectionPersister( roleName );
-	}
-
-	public ClassMetadata getClassMetadata(String entityName) throws HibernateException {
-		return (ClassMetadata) getTypeConfiguration().findEntityPersister( entityName );
-	}
-
-	@Override
-	public Map<String,ClassMetadata> getAllClassMetadata() throws HibernateException {
-		throw new UnsupportedOperationException( "org.hibernate.SessionFactory.getAllClassMetadata is no longer supported" );
-	}
-
-	public Map getAllCollectionMetadata() throws HibernateException {
-		throw new UnsupportedOperationException( "org.hibernate.SessionFactory.getAllCollectionMetadata is no longer supported" );
-	}
-
-	public Type getReferencedPropertyType(String className, String propertyName)
-		throws MappingException {
-		return getTypeConfiguration().findEntityPersister( className ).getPropertyType( propertyName );
-	}
-
 	/**
 	 * Closes the session factory, releasing all held resources.
 	 *
@@ -1000,7 +978,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public Type resolveParameterBindType(Object bindValue) {
+	public GenericParameter.AllowableType resolveParameterBindType(Object bindValue) {
 		if ( bindValue == null ) {
 			// we can't guess
 			return null;
@@ -1010,27 +988,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public Type resolveParameterBindType(Class clazz){
-		String typename = clazz.getName();
-		Type type = getTypeConfiguration().heuristicType( typename );
-		boolean serializable = type != null && type.equals( StandardSpiBasicTypes.SERIALIZABLE );
-		if ( type == null || serializable ) {
-			try {
-				getTypeConfiguration().findEntityPersister( clazz.getName() );
-			}
-			catch (MappingException me) {
-				if ( serializable ) {
-					return type;
-				}
-				else {
-					throw new HibernateException( "Could not determine a type for class: " + typename );
-				}
-			}
-			return getMetamodel().getTypeConfiguration().manyToOne( clazz );
-		}
-		else {
-			return type;
-		}
+	public GenericParameter.AllowableType resolveParameterBindType(Class clazz) {
+		// for now we only support basic types as allowable for query parameters
+		return typeConfiguration.getBasicTypeRegistry().getBasicType( clazz );
 	}
 
 	@Override

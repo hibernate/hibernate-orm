@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 
 /**
@@ -19,14 +19,14 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 	private final String uid;
 	private final String alias;
 	private final SqmNavigableReference binding;
-	private final EntityTypeImplementor subclassIndicator;
+	private final EntityDescriptor subclassIndicator;
 
 	protected AbstractSqmFrom(
 			SqmFromElementSpace fromElementSpace,
 			String uid,
 			String alias,
 			SqmNavigableReference binding,
-			EntityTypeImplementor subclassIndicator) {
+			EntityDescriptor subclassIndicator) {
 		this.fromElementSpace = fromElementSpace;
 		this.uid = uid;
 		this.alias = alias;
@@ -60,7 +60,7 @@ public abstract class AbstractSqmFrom implements SqmFrom {
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
+	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
 		return subclassIndicator;
 	}
 }

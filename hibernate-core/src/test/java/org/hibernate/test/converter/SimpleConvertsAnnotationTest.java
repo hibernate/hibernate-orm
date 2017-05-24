@@ -16,7 +16,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.Session;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
@@ -40,7 +40,7 @@ public class SimpleConvertsAnnotationTest extends BaseNonConfigCoreFunctionalTes
 
 	@Test
 	public void testSimpleConvertsUsage() throws MalformedURLException {
-		final EntityTypeImplementor ep = sessionFactory().getEntityPersister( Entity1.class.getName() );
+		final EntityDescriptor ep = sessionFactory().getEntityPersister( Entity1.class.getName() );
 		final Type websitePropertyType = ep.getPropertyType( "website" );
 		final AttributeConverterTypeAdapter type = assertTyping(
 				AttributeConverterTypeAdapter.class,

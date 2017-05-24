@@ -16,7 +16,7 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
 import org.hibernate.Session;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
@@ -97,7 +97,7 @@ public class XmlWithExplicitConvertAnnotationsTest extends BaseNonConfigCoreFunc
 
 	@Test
 	public void testSimpleConvertUsage() throws MalformedURLException {
-		final EntityTypeImplementor ep = sessionFactory().getEntityPersister( Entity1.class.getName() );
+		final EntityDescriptor ep = sessionFactory().getEntityPersister( Entity1.class.getName() );
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final AttributeConverterTypeAdapter type = assertTyping(
 				AttributeConverterTypeAdapter.class,

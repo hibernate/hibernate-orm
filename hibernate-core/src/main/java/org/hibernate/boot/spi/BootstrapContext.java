@@ -22,6 +22,7 @@ import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.model.type.spi.BasicTypeResolverRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AttributeConverterDefinition;
+import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -58,6 +59,8 @@ public interface BootstrapContext {
 	EntityTuplizerFactory getEntityTuplizerFactory();
 
 	ComponentTuplizerFactory getComponentTuplizerFactory();
+
+	PersistentCollectionTuplizerFactory getPersistentCollectionTuplizerFactory();
 
 	/**
 	 * Access the temporary ClassLoader passed to us as defined by
@@ -187,4 +190,5 @@ public interface BootstrapContext {
 	 * @todo verify this ^^
 	 */
 	void release();
+
 }

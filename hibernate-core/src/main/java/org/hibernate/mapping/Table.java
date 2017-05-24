@@ -29,7 +29,6 @@ import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.relational.internal.InflightTable;
 import org.hibernate.metamodel.model.relational.spi.DerivedTable;
-import org.hibernate.metamodel.model.relational.spi.Namespace;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.metamodel.model.relational.spi.PhysicalTable;
 import org.hibernate.naming.Identifier;
@@ -55,7 +54,7 @@ public class Table implements MappedTable, Serializable {
 	private Map<String, MappedColumn> columns = new LinkedHashMap();
 	private KeyValue idValue;
 	private MappedPrimaryKey primaryKey;
-	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>();
+	private Map<ForeignKeyKey, ForeignKey> foreignKeyMap = new LinkedHashMap<>();
 	private Map<String, Index> indexes = new LinkedHashMap<>();
 	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
 	private int uniqueInteger;
@@ -307,13 +306,16 @@ public class Table implements MappedTable, Serializable {
 		return indexes.values().iterator();
 	}
 
-	@Override
-	public Iterator getForeignKeyIterator() {
-		return foreignKeys.values().iterator();
+	public Map<ForeignKeyKey, ForeignKey> getForeignKeyMap() {
+		return Collections.unmodifiableMap( foreignKeyMap );
 	}
 
-	public Map<ForeignKeyKey, ForeignKey> getForeignKeys() {
-		return Collections.unmodifiableMap( foreignKeys );
+	public Iterator getForeignKeyIterator() {
+		return foreignKeyMap.values().iterator();
+	}
+
+	public java.util.Collection<ForeignKey> getForeignKeys() {
+		return Collections.unmodifiableCollection( foreignKeyMap.values() );
 	}
 
 	@Override
@@ -531,7 +533,7 @@ public class Table implements MappedTable, Serializable {
 			List referencedColumns) {
 		final ForeignKeyKey key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
 
-		ForeignKey fk = foreignKeys.get( key );
+		ForeignKey fk = foreignKeyMap.get( key );
 		if ( fk == null ) {
 			fk = new ForeignKey();
 			fk.setTable( this );
@@ -546,7 +548,7 @@ public class Table implements MappedTable, Serializable {
 			// afterQuery we know the referenced table name (which might not be resolved yet).
 			fk.setName( keyName );
 
-			foreignKeys.put( key, fk );
+			foreignKeyMap.put( key, fk );
 		}
 
 		if ( keyName != null ) {

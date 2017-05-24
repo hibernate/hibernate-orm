@@ -18,7 +18,7 @@ import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
 import org.hibernate.envers.internal.synchronization.work.CollectionChangeWorkUnit;
 import org.hibernate.envers.internal.tools.EntityTools;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.proxy.HibernateProxy;
 
 /**
@@ -43,7 +43,7 @@ public abstract class BaseEnversEventListener implements EnversListener {
 
 	protected final void generateBidirectionalCollectionChangeWorkUnits(
 			AuditProcess auditProcess,
-			EntityTypeImplementor entityPersister,
+			EntityDescriptor entityPersister,
 			String entityName,
 			Object[] newState,
 			Object[] oldState,

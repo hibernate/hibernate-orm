@@ -29,7 +29,7 @@ import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 import org.junit.Test;
 
@@ -53,7 +53,7 @@ public class EntityWithNonLazyOneToManyListResultSetProcessorTest extends BaseCo
 
 	@Test
 	public void testEntityWithList() throws Exception {
-		final EntityTypeImplementor entityPersister = sessionFactory().getEntityPersister( Poster.class.getName() );
+		final EntityDescriptor entityPersister = sessionFactory().getEntityPersister( Poster.class.getName() );
 
 		// create some test data
 		Session session = openSession();

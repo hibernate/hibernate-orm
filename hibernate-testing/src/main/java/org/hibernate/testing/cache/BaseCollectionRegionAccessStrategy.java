@@ -9,7 +9,7 @@ package org.hibernate.testing.cache;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * @author Strong Liu
@@ -38,7 +38,7 @@ class BaseCollectionRegionAccessStrategy extends BaseRegionAccessStrategy implem
 	}
 
 	@Override
-	public Object generateCacheKey(Object id, PersistentCollectionMetadata persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	public Object generateCacheKey(Object id, PersistentCollectionDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		return region.getRegionFactory().getCacheKeysFactory().createCollectionKey( id, persister, factory, tenantIdentifier );
 	}
 

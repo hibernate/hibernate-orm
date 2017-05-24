@@ -9,7 +9,7 @@ package org.hibernate.cache.spi.access;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Contract for managing transactional and concurrent access to cached naturalId
@@ -48,13 +48,13 @@ public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy {
 	 */
 	Object generateCacheKey(
 			Object[] naturalIdValues,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			SharedSessionContractImplementor session);
 
 	/**
-	 * Performs reverse operation to {@link #generateCacheKey(Object[], EntityTypeImplementor, SharedSessionContractImplementor)}, returning
+	 * Performs reverse operation to {@link #generateCacheKey(Object[], EntityDescriptor, SharedSessionContractImplementor)}, returning
 	 * the original naturalIdValues.
-	 * @param cacheKey key returned from {@link #generateCacheKey(Object[], EntityTypeImplementor, SharedSessionContractImplementor)}
+	 * @param cacheKey key returned from {@link #generateCacheKey(Object[], EntityDescriptor, SharedSessionContractImplementor)}
 	 * @return the sequence of values which unequivocally identifies a cached element on this region
 	 */
 	Object[] getNaturalIdValues(Object cacheKey);

@@ -27,8 +27,8 @@ import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
 import org.hibernate.metamodel.model.domain.spi.InheritanceStrategy;
 import org.hibernate.metamodel.model.domain.spi.NaturalIdentifierDescriptor;
@@ -48,7 +48,7 @@ import org.jboss.logging.Logger;
 public class EntityHierarchyImpl implements EntityHierarchy {
 	private static final Logger log = Logger.getLogger( EntityHierarchyImpl.class );
 
-	private final EntityTypeImplementor rootEntityPersister;
+	private final EntityDescriptor rootEntityPersister;
 	private final EntityRegionAccessStrategy caching;
 
 	private final InheritanceStrategy inheritanceStrategy;
@@ -67,7 +67,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 
 	public EntityHierarchyImpl(
 			RuntimeModelCreationContext creationContext,
-			EntityTypeImplementor rootEntityPersister,
+			EntityDescriptor rootEntityPersister,
 			RootClass rootEntityBinding,
 			EntityRegionAccessStrategy caching,
 			NaturalIdRegionAccessStrategy naturalIdCaching) {
@@ -118,14 +118,14 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			EntityHierarchyImpl hierarchy,
 			RuntimeModelCreationContext creationContext,
 			RootClass rootEntityBinding,
-			EntityTypeImplementor rootEntityPersister,
+			EntityDescriptor rootEntityPersister,
 			Table identifierTable) {
 		if ( rootEntityBinding.getIdentifierMapper() != null ) {
 			// should mean we have a "non-aggregated composite-id" (what we
 			// 		historically called an "embedded composite id")
 			return new EntityIdentifierCompositeNonAggregatedImpl(
 					hierarchy,
-					creationContext.getPersisterFactory().createEmbeddablePersister(
+					creationContext.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
 							(Component) rootEntityBinding.getIdentifier(),
 							resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
 							rootEntityBinding.getIdentifierProperty().getName(),
@@ -138,7 +138,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			return  new EntityIdentifierCompositeAggregatedImpl(
 					hierarchy,
 					rootEntityBinding.getIdentifierProperty(),
-					creationContext.getPersisterFactory().createEmbeddablePersister(
+					creationContext.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
 							(Component) rootEntityBinding.getIdentifier(),
 							resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
 							rootEntityBinding.getIdentifierProperty().getName(),
@@ -160,9 +160,9 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		}
 	}
 
-	private static IdentifiableTypeImplementor resolveIdAttributeDeclarer(
+	private static IdentifiableTypeDescriptor resolveIdAttributeDeclarer(
 			RootClass rootEntityBinding,
-			EntityTypeImplementor rootEntityPersister) {
+			EntityDescriptor rootEntityPersister) {
 		// for now assume the root entity as the declarer
 		return rootEntityPersister;
 	}
@@ -281,7 +281,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	@Override
-	public EntityTypeImplementor getRootEntityType() {
+	public EntityDescriptor getRootEntityType() {
 		return rootEntityPersister;
 	}
 

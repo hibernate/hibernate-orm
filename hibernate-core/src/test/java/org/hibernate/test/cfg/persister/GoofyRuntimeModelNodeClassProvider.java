@@ -28,7 +28,6 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -47,22 +46,22 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
-import org.hibernate.metamodel.model.domain.spi.AbstractEntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.AbstractEntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionIdentifier;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.CollectionKey;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
@@ -81,16 +80,16 @@ import org.hibernate.type.Type;
  */
 public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClassResolver {
 	@Override
-	public Class<? extends EntityTypeImplementor> getEntityPersisterClass(PersistentClass metadata) {
+	public Class<? extends EntityDescriptor> getEntityPersisterClass(PersistentClass metadata) {
 		return NoopEntityPersister.class;
 	}
 
 	@Override
-	public Class<? extends PersistentCollectionMetadata> getCollectionPersisterClass(Collection metadata) {
+	public Class<? extends PersistentCollectionDescriptor> getCollectionPersisterClass(Collection metadata) {
 		return NoopCollectionPersister.class;
 	}
 
-	public static class NoopEntityPersister extends AbstractEntityTypeImplementor implements EntityTypeImplementor {
+	public static class NoopEntityPersister extends AbstractEntityDescriptor implements EntityDescriptor {
 		public NoopEntityPersister(
 				EntityMapping entityMapping,
 				EntityRegionAccessStrategy cacheAccessStrategy,
@@ -108,7 +107,7 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 		@Override
 		public void finishInstantiation(
 				EntityHierarchy entityHierarchy,
-				IdentifiableTypeImplementor superType,
+				IdentifiableTypeDescriptor superType,
 				IdentifiableTypeMapping bootMapping,
 				RuntimeModelCreationContext creationContext) {
 
@@ -117,7 +116,7 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 		@Override
 		public void completeInitialization(
 				EntityHierarchy entityHierarchy,
-				IdentifiableTypeImplementor superType,
+				IdentifiableTypeDescriptor superType,
 				IdentifiableTypeMappingImplementor bootMapping,
 				RuntimeModelCreationContext creationContext) {
 
@@ -619,7 +618,7 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 		}
 
 		@Override
-		public EntityTypeImplementor getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
+		public EntityDescriptor getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
 			return null;
 		}
 
@@ -630,7 +629,7 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 		}
 
 		@Override
-		public EntityTypeImplementor getEntityDescriptor() {
+		public EntityDescriptor getEntityDescriptor() {
 			return this;
 		}
 
@@ -662,10 +661,11 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 		}
 	}
 
-	public static class NoopCollectionPersister extends AbstractPersistentCollectionMetadata  implements PersistentCollectionMetadata {
+	public static class NoopCollectionPersister extends AbstractPersistentCollectionDescriptor
+			implements PersistentCollectionDescriptor {
 		public NoopCollectionPersister(
 				Collection collectionBinding,
-				ManagedTypeImplementor source,
+				ManagedTypeDescriptor source,
 				String navigableName,
 				CollectionRegionAccessStrategy cacheAccessStrategy,
 				RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
@@ -831,7 +831,7 @@ public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClass
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public EntityTypeImplementor getOwnerEntityPersister() {
+		public EntityDescriptor getOwnerEntityPersister() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 

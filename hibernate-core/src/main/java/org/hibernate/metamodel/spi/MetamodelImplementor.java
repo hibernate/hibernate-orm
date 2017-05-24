@@ -13,8 +13,8 @@ import java.util.Set;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Metamodel;
 import org.hibernate.internal.util.collections.streams.StreamUtils;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -42,7 +42,7 @@ public interface MetamodelImplementor extends Metamodel {
 	 * instead
 	 */
 	@Deprecated
-	default Map<String,EntityTypeImplementor<?>> getEntityPersisterMap() {
+	default Map<String,EntityDescriptor<?>> getEntityPersisterMap() {
 		return getTypeConfiguration().getEntityPersisterMap();
 	}
 
@@ -51,7 +51,7 @@ public interface MetamodelImplementor extends Metamodel {
 	 * instead
 	 */
 	@Deprecated
-	default Map<String,EntityTypeImplementor<?>> entityPersisters() {
+	default Map<String,EntityDescriptor<?>> entityPersisters() {
 		return getTypeConfiguration().getEntityPersisterMap();
 	}
 
@@ -69,7 +69,7 @@ public interface MetamodelImplementor extends Metamodel {
 	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getEntityNameResolvers()}
 	 */
 	@Deprecated
-	default <T> EntityTypeImplementor<? extends T> locateEntityPersister(Class<T> byClass) {
+	default <T> EntityDescriptor<? extends T> locateEntityPersister(Class<T> byClass) {
 		return getTypeConfiguration().resolveEntityPersister( byClass );
 	}
 
@@ -77,7 +77,7 @@ public interface MetamodelImplementor extends Metamodel {
 	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getEntityNameResolvers()}
 	 */
 	@Deprecated
-	default <T> EntityTypeImplementor<T> locateEntityPersister(String byName) {
+	default <T> EntityDescriptor<T> locateEntityPersister(String byName) {
 		return getTypeConfiguration().resolveEntityPersister( byName );
 	}
 
@@ -85,7 +85,7 @@ public interface MetamodelImplementor extends Metamodel {
 	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#findEntityPersister(Class)}
 	 */
 	@Deprecated
-	default <T> EntityTypeImplementor<? extends T> entityPersister(Class<T> entityClass) {
+	default <T> EntityDescriptor<? extends T> entityPersister(Class<T> entityClass) {
 		return getTypeConfiguration().findEntityPersister( entityClass );
 	}
 
@@ -93,7 +93,7 @@ public interface MetamodelImplementor extends Metamodel {
 	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#findEntityPersister(String)}
 	 */
 	@Deprecated
-	default <T> EntityTypeImplementor<? extends T> entityPersister(String entityName) {
+	default <T> EntityDescriptor<? extends T> entityPersister(String entityName) {
 		return getTypeConfiguration().findEntityPersister( entityName );
 	}
 
@@ -101,7 +101,7 @@ public interface MetamodelImplementor extends Metamodel {
 	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#getCollectionPersisterMap}
 	 */
 	@Deprecated
-	default Map<String,PersistentCollectionMetadata<?,?,?>> collectionPersisters() {
+	default Map<String,PersistentCollectionDescriptor<?,?,?>> collectionPersisters() {
 		return getTypeConfiguration().getCollectionPersisterMap();
 	}
 
@@ -117,7 +117,7 @@ public interface MetamodelImplementor extends Metamodel {
 	 * @deprecated (6.0) Use {@link #getTypeConfiguration()} -> {@link TypeConfiguration#findCollectionPersister}
 	 */
 	@Deprecated
-	default PersistentCollectionMetadata<?,?,?> collectionPersister(String role) {
+	default PersistentCollectionDescriptor<?,?,?> collectionPersister(String role) {
 		return getTypeConfiguration().findCollectionPersister( role );
 	}
 

@@ -13,7 +13,7 @@ import org.hibernate.PropertyValueException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.Type;
@@ -48,7 +48,7 @@ public final class Nullability {
 	 */
 	public void checkNullability(
 			final Object[] values,
-			final EntityTypeImplementor persister,
+			final EntityDescriptor persister,
 			final boolean isUpdate) throws HibernateException {
 		/*
 		 * Typically when Bean Validation is on, we don't want to validate null values

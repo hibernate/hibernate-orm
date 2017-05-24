@@ -8,7 +8,7 @@ package org.hibernate.tuple.entity;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.VersionValue;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.tuple.AbstractNonIdentifierAttribute;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.Type;
@@ -36,7 +36,7 @@ public class VersionProperty extends AbstractNonIdentifierAttribute {
 	 * instances of the owning entity.
 	 */
 	public VersionProperty(
-			EntityTypeImplementor source,
+			EntityDescriptor source,
 			SessionFactoryImplementor sessionFactory,
 			int attributeNumber,
 			String attributeName,

@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -19,7 +18,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
 import javax.persistence.AttributeConverter;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -37,19 +35,18 @@ import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.naming.Identifier;
+import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
-import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.model.type.spi.BasicTypeProducer;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AttributeConverterAutoApplyHandler;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -82,7 +79,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.boot.internal.AuditMetadataBuilderImpl;
 import org.hibernate.envers.boot.spi.AuditMetadataBuilderImplementor;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -103,15 +99,11 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.naming.Identifier;
 import org.hibernate.query.spi.NamedQueryRepository;
-import org.hibernate.type.AnyType;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappings;
-import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappingsExplicitImpl;
-import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappingsImplicitImpl;
-import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.usertype.ParameterizedType;
 
 /**
  * The implementation of the in-flight Metadata collector contract.
@@ -225,6 +217,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
+	public java.util.Collection<EntityMappingHierarchy> getEntityHierarchies() {
+		// todo (6.0) : we do not know the hierarchies yet, nor should we need them (return null/empty should be ok here)
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
 	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
 		throw new UnsupportedOperationException( "#buildNamedQueryRepository should not be called on InFlightMetadataCollector" );
 	}
@@ -247,11 +245,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public AuditMetadataBuilderImplementor getAuditMetadataBuilder() {
 		return auditMetadataBuilder;
-	}
-
-	@Override
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return identifierGeneratorFactory;
 	}
 
 	@Override
@@ -335,73 +328,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		return typeProducer.produceBasicType();
 	}
 
-	@Override
-	public Type heuristicType(String typeName, Map parameters) {
-		Type type = basicType( typeName );
-		if ( type != null ) {
-			return type;
-		}
-
-		return resolveTypeByName( typeName, parameters );
-	}
-
-	@Override
-	public AnyType any(BasicType identifierType, BasicType discriminatorType, Map discriminatorValueToEntityNameMap) {
-		final DiscriminatorMappings discriminatorMappings;
-		if ( discriminatorValueToEntityNameMap == null || discriminatorValueToEntityNameMap.isEmpty() ) {
-			discriminatorMappings = DiscriminatorMappingsImplicitImpl.INSTANCE;
-		}
-		else {
-			discriminatorMappings = new DiscriminatorMappingsExplicitImpl( discriminatorValueToEntityNameMap );
-		}
-
-		return new AnyType( identifierType, discriminatorType, discriminatorMappings );
-	}
-
-	private Type resolveTypeByName(String typeName, Map parameters) {
-		try {
-			final Class namedClass = getMetadataBuildingOptions().getServiceRegistry()
-					.getService( ClassLoaderService.class )
-					.classForName( typeName );
-
-			if ( Type.class.isAssignableFrom( namedClass ) ) {
-				return resolveTypeFromClass( namedClass, parameters );
-			}
-		}
-		catch (Exception ignore) {
-		}
-
-		return null;
-
-	}
-
-	private Type resolveTypeFromClass(Class<? extends Type> typeClass, Map parameters) {
-		try {
-			Type type = typeClass.newInstance();
-			injectParameters( type, parameters );
-			return type;
-		}
-		catch (Exception e) {
-			throw new MappingException( "Could not instantiate Type: " + typeClass.getName(), e );
-		}
-	}
 
 	// todo : can a Properties be wrapped in unmodifiable in any way?
 	private final static Properties EMPTY_PROPERTIES = new Properties();
-
-	private static void injectParameters(Object type, Map parameters) {
-		if ( ParameterizedType.class.isInstance( type ) ) {
-			if ( parameters == null ) {
-				( (ParameterizedType) type ).setParameterValues( EMPTY_PROPERTIES );
-			}
-			else {
-				( (ParameterizedType) type ).setParameterValues( asProperties( parameters ) );
-			}
-		}
-		else if ( parameters != null && !parameters.isEmpty() ) {
-			throw new MappingException( "type is not parameterized: " + type.getClass().getName() );
-		}
-	}
 
 	private static Properties asProperties(Map parameters) {
 		if ( parameters instanceof Properties ) {
@@ -839,46 +768,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Mapping impl
-
-	@Override
-	public Type getIdentifierType(String entityName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
-		}
-		return pc.getIdentifier().getType();
-	}
-
-	@Override
-	public String getIdentifierPropertyName(String entityName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
-		}
-		if ( !pc.hasIdentifierProperty() ) {
-			return null;
-		}
-		return pc.getIdentifierProperty().getName();
-	}
-
-	@Override
-	public Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
-		}
-		Property prop = pc.getReferencedProperty( propertyName );
-		if ( prop == null ) {
-			throw new MappingException(
-					"property not known: " +
-							entityName + '.' + propertyName
-			);
-		}
-		return prop.getType();
-	}
 
 	@Override
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
@@ -1657,9 +1546,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			final MetadataBuildingContext buildingContext) throws MappingException {
 		table.createForeignKeys();
 
-		Iterator itr = table.getForeignKeyIterator();
-		while ( itr.hasNext() ) {
-			final ForeignKey fk = (ForeignKey) itr.next();
+		for ( ForeignKey fk : table.getForeignKeys() ) {
 			if ( !done.contains( fk ) ) {
 				done.add( fk );
 				final String referencedEntityName = fk.getReferencedEntityName();
@@ -2114,7 +2001,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		//		it could be done better
 		try {
 			final IdentifierGenerator ig = identifierValueBinding.createIdentifierGenerator(
-					getIdentifierGeneratorFactory(),
+					options.getServiceRegistry().getService( MutableIdentifierGeneratorFactory.class ),
 					dialect,
 					defaultCatalog,
 					defaultSchema,

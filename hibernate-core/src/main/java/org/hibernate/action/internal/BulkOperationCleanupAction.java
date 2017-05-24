@@ -23,8 +23,8 @@ import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * An {@link org.hibernate.engine.spi.ActionQueue} {@link org.hibernate.action.spi.Executable} for ensuring
@@ -52,10 +52,10 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * collection regions for any collection in which those entity
 	 * persisters participate as elements/keys/etc.
 	 */
-	public BulkOperationCleanupAction(SharedSessionContractImplementor session, List<EntityTypeImplementor> affectedEntities) {
+	public BulkOperationCleanupAction(SharedSessionContractImplementor session, List<EntityDescriptor> affectedEntities) {
 		final SessionFactoryImplementor factory = session.getFactory();
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>();
-		for ( EntityTypeImplementor persister : affectedEntities ) {
+		for ( EntityDescriptor persister : affectedEntities ) {
 			spacesList.addAll( Arrays.asList( (String[]) persister.getAffectedTableNames() ) );
 
 			if ( persister.hasCache() ) {
@@ -69,7 +69,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			final Set<String> roles = factory.getTypeConfiguration().getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( roles != null ) {
 				for ( String role : roles ) {
-					final PersistentCollectionMetadata collectionPersister = factory.getTypeConfiguration()
+					final PersistentCollectionDescriptor collectionPersister = factory.getTypeConfiguration()
 							.findCollectionPersister( role );
 					if ( collectionPersister.hasCache() ) {
 						collectionCleanups.add( new CollectionCleanup( collectionPersister.getCacheAccessStrategy() ) );
@@ -87,7 +87,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * {@link BulkOperationCleanupAction#BulkOperationCleanupAction(org.hibernate.engine.spi.SharedSessionContractImplementor, java.util.List)}
 	 * in that here we have the affected <strong>table names</strong>.  From those
 	 * we deduce the entity persisters which are affected based on the defined
-	 * {@link EntityTypeImplementor#getAffectedTableNames()}; and from there, we
+	 * {@link EntityDescriptor#getAffectedTableNames()}; and from there, we
 	 * determine the affected collection regions based on any collections
 	 * in which those entity persisters participate as elements/keys/etc.
 	 *
@@ -100,7 +100,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		spacesList.addAll( tableSpaces );
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		for ( EntityTypeImplementor persister : factory.getTypeConfiguration().getEntityPersisters() ) {
+		for ( EntityDescriptor persister : factory.getTypeConfiguration().getEntityPersisters() ) {
 			final String[] affectedTableNames = persister.getAffectedTableNames();
 			if ( affectedEntity( tableSpaces, affectedTableNames ) ) {
 				spacesList.addAll( Arrays.asList( affectedTableNames ) );
@@ -116,7 +116,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				final Set<String> roles = session.getFactory().getTypeConfiguration().getCollectionRolesByEntityParticipant( persister.getEntityName() );
 				if ( roles != null ) {
 					for ( String role : roles ) {
-						final PersistentCollectionMetadata collectionPersister = factory.getTypeConfiguration().findCollectionPersister( role );
+						final PersistentCollectionDescriptor collectionPersister = factory.getTypeConfiguration().findCollectionPersister( role );
 						if ( collectionPersister.hasCache() ) {
 							collectionCleanups.add(
 									new CollectionCleanup( collectionPersister.getCacheAccessStrategy() )
@@ -240,7 +240,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			naturalIdCacheAccessStrategy.removeAll();
 		}
 
-		public NaturalIdCleanup(EntityTypeImplementor persister) {
+		public NaturalIdCleanup(EntityDescriptor persister) {
 			this( persister.getHierarchy().getNaturalIdentifierDescriptor().getNaturalIdRegionAccessStrategy() );
 		}
 

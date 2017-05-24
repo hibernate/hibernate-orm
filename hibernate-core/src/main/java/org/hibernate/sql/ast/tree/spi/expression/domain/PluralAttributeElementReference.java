@@ -8,7 +8,7 @@
 package org.hibernate.sql.ast.tree.spi.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
@@ -19,13 +19,13 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 public class PluralAttributeElementReference implements NavigableReference {
 	private final NavigableContainerReference collectionReference;
 
-	private final PersistentCollectionMetadata collectionMetadata;
+	private final PersistentCollectionDescriptor collectionMetadata;
 	private final ColumnReferenceSource columnReferenceSource;
 	private final NavigablePath navigablePath;
 
 	public PluralAttributeElementReference(
 			NavigableContainerReference collectionReference,
-			PersistentCollectionMetadata collectionMetadata,
+			PersistentCollectionDescriptor collectionMetadata,
 			TableGroup columnReferenceSource,
 			NavigablePath navigablePath) {
 		this.collectionReference = collectionReference;

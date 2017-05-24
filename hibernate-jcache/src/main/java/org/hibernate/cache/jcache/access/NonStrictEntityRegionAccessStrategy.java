@@ -13,7 +13,7 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 
 /**
@@ -52,7 +52,7 @@ public class NonStrictEntityRegionAccessStrategy extends JCacheRegionAccessStrat
 	}
 
 	@Override
-	public Object generateCacheKey(Object id, EntityTypeImplementor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	public Object generateCacheKey(Object id, EntityDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		return DefaultCacheKeysFactory.createEntityKey( id, persister, factory, tenantIdentifier );
 	}
 

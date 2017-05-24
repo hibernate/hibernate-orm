@@ -34,7 +34,7 @@ import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
@@ -146,7 +146,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				// entity to be merged...
 				EntityEntry entry = source.getPersistenceContext().getEntry( entity );
 				if ( entry == null ) {
-					EntityTypeImplementor persister = source.getEntityPersister( event.getEntityName(), entity );
+					EntityDescriptor persister = source.getEntityPersister( event.getEntityName(), entity );
 					Serializable id = persister.getIdentifier( entity, source );
 					if ( id != null ) {
 						final EntityKey key = source.generateEntityKey( id, persister );
@@ -197,7 +197,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 		final Object entity = event.getEntity();
 		final EventSource source = event.getSession();
-		final EntityTypeImplementor persister = source.getEntityPersister( event.getEntityName(), entity );
+		final EntityDescriptor persister = source.getEntityPersister( event.getEntityName(), entity );
 
 		( (MergeContext) copyCache ).put( entity, entity, true );  //beforeQuery cascade!
 
@@ -215,7 +215,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final EventSource source = event.getSession();
 
 		final String entityName = event.getEntityName();
-		final EntityTypeImplementor persister = source.getEntityPersister( entityName, entity );
+		final EntityDescriptor persister = source.getEntityPersister( entityName, entity );
 
 		final Serializable id = persister.hasIdentifierProperty() ?
 				persister.getIdentifier( entity, source ) :
@@ -268,7 +268,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final Object entity = event.getEntity();
 		final EventSource source = event.getSession();
 
-		final EntityTypeImplementor persister = source.getEntityPersister( event.getEntityName(), entity );
+		final EntityDescriptor persister = source.getEntityPersister( event.getEntityName(), entity );
 		final String entityName = persister.getEntityName();
 
 		Serializable id = event.getRequestedId();
@@ -344,7 +344,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 	}
 
-	private void markInterceptorDirty(final Object entity, final Object target, EntityTypeImplementor persister) {
+	private void markInterceptorDirty(final Object entity, final Object target, EntityDescriptor persister) {
 		// for enhanced entities, copy over the dirty attributes
 		if ( entity instanceof SelfDirtinessTracker && target instanceof SelfDirtinessTracker ) {
 			// clear, because setting the embedded attributes dirties them
@@ -356,7 +356,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		}
 	}
 
-	private boolean isVersionChanged(Object entity, EventSource source, EntityTypeImplementor persister, Object target) {
+	private boolean isVersionChanged(Object entity, EventSource source, EntityDescriptor persister, Object target) {
 		if ( !persister.isVersioned() ) {
 			return false;
 		}
@@ -380,7 +380,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		return changed && existsInDatabase( target, source, persister );
 	}
 
-	private boolean existsInDatabase(Object entity, EventSource source, EntityTypeImplementor persister) {
+	private boolean existsInDatabase(Object entity, EventSource source, EntityDescriptor persister) {
 		EntityEntry entry = source.getPersistenceContext().getEntry( entity );
 		if ( entry == null ) {
 			Serializable id = persister.getIdentifier( entity, source );
@@ -395,7 +395,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	}
 
 	protected void copyValues(
-			final EntityTypeImplementor persister,
+			final EntityDescriptor persister,
 			final Object entity,
 			final Object target,
 			final SessionImplementor source,
@@ -413,7 +413,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	}
 
 	protected void copyValues(
-			final EntityTypeImplementor persister,
+			final EntityDescriptor persister,
 			final Object entity,
 			final Object target,
 			final SessionImplementor source,
@@ -461,7 +461,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 */
 	protected void cascadeOnMerge(
 			final EventSource source,
-			final EntityTypeImplementor persister,
+			final EntityDescriptor persister,
 			final Object entity,
 			final Map copyCache
 	) {
@@ -496,7 +496,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 * Cascade behavior is redefined by this subclass, disable superclass behavior
 	 */
 	@Override
-	protected void cascadeAfterSave(EventSource source, EntityTypeImplementor persister, Object entity, Object anything)
+	protected void cascadeAfterSave(EventSource source, EntityDescriptor persister, Object entity, Object anything)
 			throws HibernateException {
 	}
 
@@ -504,7 +504,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 * Cascade behavior is redefined by this subclass, disable superclass behavior
 	 */
 	@Override
-	protected void cascadeBeforeSave(EventSource source, EntityTypeImplementor persister, Object entity, Object anything)
+	protected void cascadeBeforeSave(EventSource source, EntityDescriptor persister, Object entity, Object anything)
 			throws HibernateException {
 	}
 }

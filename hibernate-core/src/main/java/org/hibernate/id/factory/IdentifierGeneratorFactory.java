@@ -5,11 +5,12 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.id.factory;
+
 import java.util.Properties;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * Contract for a <tt>factory</tt> of {@link IdentifierGenerator} instances.
@@ -22,7 +23,7 @@ public interface IdentifierGeneratorFactory {
 	 *
 	 * @return the dialect
 	 */
-	public Dialect getDialect();
+	Dialect getDialect();
 
 	/**
 	 * Allow injection of the dialect to use.
@@ -33,18 +34,18 @@ public interface IdentifierGeneratorFactory {
 	 * ctor injected.
 	 */
 	@Deprecated
-	public void setDialect(Dialect dialect);
+	void setDialect(Dialect dialect);
 
 	/**
 	 * Given a strategy, retrieve the appropriate identifier generator instance.
 	 *
 	 * @param strategy The generation strategy.
-	 * @param type The mapping type for the identifier values.
-	 * @param config Any configuraion properties given in the generator mapping.
+	 * @param jtd The descriptor for the identifier's Java type.
+	 * @param config Any configuration properties given in the generator mapping.
 	 *
 	 * @return The appropriate generator instance.
 	 */
-	public IdentifierGenerator createIdentifierGenerator(String strategy, Type type, Properties config);
+	IdentifierGenerator createIdentifierGenerator(String strategy, JavaTypeDescriptor jtd, Properties config);
 
 	/**
 	 * Retrieve the class that will be used as the {@link IdentifierGenerator} for the given strategy.
@@ -52,5 +53,5 @@ public interface IdentifierGeneratorFactory {
 	 * @param strategy The strategy
 	 * @return The generator class.
 	 */
-	public Class getIdentifierGeneratorClass(String strategy);
+	Class getIdentifierGeneratorClass(String strategy);
 }

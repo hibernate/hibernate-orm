@@ -15,7 +15,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.Type;
@@ -77,7 +77,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 		// needs to be a Session for the #save and #contains calls below...
 		final Session session = ( Session ) sessionImplementor;
 
-		final EntityTypeImplementor persister = sessionImplementor.getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		final EntityDescriptor persister = sessionImplementor.getFactory().getTypeConfiguration().findEntityPersister( entityName );
 		Object associatedObject = persister.getPropertyValue( object, propertyName );
 		if ( associatedObject == null ) {
 			throw new IdentifierGenerationException(

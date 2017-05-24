@@ -12,11 +12,11 @@ import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexEntity;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.JoinType;
@@ -37,11 +37,11 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 public class CollectionIndexEntityImpl<J>
 		extends AbstractCollectionIndex<J>
 		implements CollectionIndexEntity<J> {
-	private final EntityTypeImplementor<J> entityPersister;
+	private final EntityDescriptor<J> entityPersister;
 	private final NavigableRole navigableRole;
 
 	public CollectionIndexEntityImpl(
-			PersistentCollectionMetadata persister,
+			PersistentCollectionDescriptor persister,
 			IndexedCollection mappingBinding,
 			RuntimeModelCreationContext creationContext) {
 		super( persister );
@@ -51,7 +51,7 @@ public class CollectionIndexEntityImpl<J>
 	}
 
 	@Override
-	public EntityTypeImplementor<J> getEntityDescriptor() {
+	public EntityDescriptor<J> getEntityDescriptor() {
 		return entityPersister;
 	}
 

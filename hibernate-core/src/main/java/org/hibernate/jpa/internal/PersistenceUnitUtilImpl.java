@@ -13,7 +13,7 @@ import javax.persistence.spi.LoadState;
 import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -60,7 +60,7 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 	@Override
 	public Object getIdentifier(Object entity) {
 		final Class entityClass = Hibernate.getClass( entity );
-		final EntityTypeImplementor persister = sessionFactory.getTypeConfiguration().findEntityPersister( entityClass );
+		final EntityDescriptor persister = sessionFactory.getTypeConfiguration().findEntityPersister( entityClass );
 		if ( persister == null ) {
 			throw new IllegalArgumentException( entityClass + " is not an entity" );
 		}

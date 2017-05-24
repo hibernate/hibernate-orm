@@ -7,21 +7,25 @@
 package org.hibernate.metamodel.model.creation.spi;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.relational.spi.DatabaseModelProducer;
+import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Table;
 
 /**
  * @author Steve Ebersole
  */
 public class DatabaseObjectResolutionContextImpl
-		implements DatabaseObjectResolver, DatabaseModelProducer.Callback {
-	final Map<MappedTable, Table> tableMap = new HashMap<>();
-	final Map<MappedColumn, Column> columnMap = new HashMap<>();
+		implements DatabaseObjectResolver, RuntimeDatabaseModelProducer.Callback {
+
+	private final Map<MappedTable, Table> tableMap = new HashMap<>();
+	private final Map<MappedColumn, Column> columnMap = new HashMap<>();
+	private final Map<ColumnMapping,ForeignKey> foreignKeyMap = new HashMap<>();
 
 	@Override
 	public void tableBuilt(MappedTable mappedTable, Table table) {
@@ -34,6 +38,11 @@ public class DatabaseObjectResolutionContextImpl
 	}
 
 	@Override
+	public void foreignKeyBuilt(org.hibernate.mapping.ForeignKey mappedFk, ForeignKey runtimeFk) {
+
+	}
+
+	@Override
 	public Table resolveTable(MappedTable mappedTable) {
 		return tableMap.get( mappedTable );
 	}
@@ -41,5 +50,10 @@ public class DatabaseObjectResolutionContextImpl
 	@Override
 	public Column resolveColumn(MappedColumn mappedColumn) {
 		return columnMap.get( mappedColumn );
+	}
+
+	private static class ColumnMapping {
+		List<MappedColumn> referringColumns;
+		List<MappedColumn> referencedColumns;
 	}
 }

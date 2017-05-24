@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.consume.results.spi;
 
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.consume.results.internal.values.JdbcValuesSource;
 
@@ -42,7 +42,7 @@ public interface JdbcValuesSourceProcessingState {
 
 	void registerLoadingEntity(
 			EntityKey entityKey,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			Object entityInstance,
 			Object[] hydratedState);
 

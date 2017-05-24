@@ -7,7 +7,7 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * An event that occurs afterQuery a collection is removed
@@ -16,7 +16,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
  */
 public class PostCollectionRemoveEvent extends AbstractCollectionEvent {
 	public PostCollectionRemoveEvent(
-			PersistentCollectionMetadata collectionPersister,
+			PersistentCollectionDescriptor collectionPersister,
 			PersistentCollection collection,
 			EventSource source,
 			Object loadedOwner) {

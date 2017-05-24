@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.loadplans.walking;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
 
 import org.junit.Test;
@@ -26,7 +26,7 @@ public class NestedCompositeElementTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testWalkingKeyManyToOneGraphs() {
-		final EntityTypeImplementor ep = (EntityTypeImplementor) sessionFactory().getClassMetadata( Customer.class );
+		final EntityDescriptor ep = (EntityDescriptor) sessionFactory().getClassMetadata( Customer.class );
 		MetamodelGraphWalker.visitEntity( new NavigableVisitationStrategyLoggingImpl(), ep );
 	}
 }

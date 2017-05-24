@@ -8,7 +8,6 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import org.hibernate.EntityMode;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
@@ -29,7 +28,7 @@ public interface EntityHierarchy {
 	 *
 	 * @return The root entity for this hierarchy.
 	 */
-	<J> EntityTypeImplementor<J> getRootEntityType();
+	<J> EntityDescriptor<J> getRootEntityType();
 
 	/**
 	 * What "entity mode" is in effect for this hierarchy?

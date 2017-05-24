@@ -12,11 +12,11 @@ import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexEmbedded;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
@@ -32,16 +32,16 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 public class CollectionIndexEmbeddedImpl<J>
 		extends AbstractCollectionIndex<J>
 		implements CollectionIndexEmbedded<J> {
-	private final EmbeddedTypeImplementor<J> embeddedPersister;
+	private final EmbeddedTypeDescriptor<J> embeddedPersister;
 	private final List<Column> columns;
 
 	public CollectionIndexEmbeddedImpl(
-			PersistentCollectionMetadata persister,
+			PersistentCollectionDescriptor persister,
 			IndexedCollection mapping,
 			RuntimeModelCreationContext creationContext) {
 		super( persister );
 
-		this.embeddedPersister = creationContext.getPersisterFactory().createEmbeddablePersister(
+		this.embeddedPersister = creationContext.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
 				(EmbeddedValueMapping) mapping.getIndex(),
 				persister,
 				NAVIGABLE_NAME,
@@ -53,7 +53,7 @@ public class CollectionIndexEmbeddedImpl<J>
 	}
 
 	@Override
-	public EmbeddedTypeImplementor<J> getEmbeddedDescriptor() {
+	public EmbeddedTypeDescriptor<J> getEmbeddedDescriptor() {
 		return embeddedPersister;
 	}
 

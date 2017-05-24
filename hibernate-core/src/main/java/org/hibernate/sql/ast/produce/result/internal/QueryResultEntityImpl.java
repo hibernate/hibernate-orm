@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.produce.result.internal;
 
 import java.util.Map;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
@@ -59,7 +59,7 @@ public class QueryResultEntityImpl extends AbstractFetchParent implements QueryR
 	}
 
 	@Override
-	public EntityTypeImplementor getEntityMetadata() {
+	public EntityDescriptor getEntityMetadata() {
 		return getNavigableContainerReference().getNavigable();
 	}
 

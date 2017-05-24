@@ -30,20 +30,20 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 		extends AbstractPersistentAttribute<O,C>
 		implements PluralPersistentAttribute<O,C,E> {
 
-	private final PersistentCollectionMetadata<O,C,E> collectionMetadata;
+	private final PersistentCollectionDescriptor<O,C,E> collectionMetadata;
 
 	public AbstractPluralPersistentAttribute(
-			ManagedTypeImplementor<O> container,
+			ManagedTypeDescriptor<O> container,
 			String name,
 			JavaTypeDescriptor<C> javaTypeDescriptor,
 			PropertyAccess access,
-			PersistentCollectionMetadata<O, C, E> collectionMetadata) {
+			PersistentCollectionDescriptor<O, C, E> collectionMetadata) {
 		super( container, name, javaTypeDescriptor, access );
 		this.collectionMetadata = collectionMetadata;
 	}
 
 	@Override
-	public PersistentCollectionMetadata<O,C,E> getPersistentCollectionMetadata() {
+	public PersistentCollectionDescriptor<O,C,E> getPersistentCollectionMetadata() {
 		return collectionMetadata;
 	}
 
@@ -185,7 +185,7 @@ public class AbstractPluralPersistentAttribute<O,C,E>
 	}
 
 	@Override
-	public ManagedTypeImplementor<C> getFetchedManagedType() {
+	public ManagedTypeDescriptor<C> getFetchedManagedType() {
 		throw new NotYetImplementedException(  );
 	}
 

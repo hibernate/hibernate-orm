@@ -36,16 +36,11 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.loader.spi.EntityLocker;
 import org.hibernate.loader.spi.MultiIdEntityLoader;
-import org.hibernate.loader.spi.MultiLoadOptions;
-import org.hibernate.loader.spi.NaturalIdLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeFactory;
-import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
-import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
@@ -63,16 +58,16 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  *
- * @see RuntimeModelNodeFactory
+ * @see RuntimeModelDescriptorFactory
  * @see RuntimeModelNodeClassResolver
  * @see #STANDARD_CONSTRUCTOR_SIG
  *
  * @since 6.0
  */
 @Incubating
-public interface EntityTypeImplementor<T>
+public interface EntityDescriptor<T>
 		extends EntityValuedNavigable<T>, NavigableContainer<T>, EmbeddedContainer<T>,
-				RootTableGroupProducer, OptimisticCacheSource, IdentifiableTypeImplementor<T>, EntityType<T> {
+				RootTableGroupProducer, OptimisticCacheSource, IdentifiableTypeDescriptor<T>, EntityType<T> {
 
 	// todo (6.0) : ? - can OptimisticCacheSource stuff go away?
 	// 		It was added for caches like JBoss Tree Cache that supported MVCC-based
@@ -81,7 +76,7 @@ public interface EntityTypeImplementor<T>
 
 
 	/**
-	 * Unless a custom {@link RuntimeModelNodeFactory} is used, it is expected
+	 * Unless a custom {@link RuntimeModelDescriptorFactory} is used, it is expected
 	 * that implementations of EntityPersister define a constructor accepting the following arguments:<ol>
 	 *     <li>
 	 *         {@link org.hibernate.mapping.PersistentClass} - describes the metadata about the entity
@@ -102,8 +97,6 @@ public interface EntityTypeImplementor<T>
 	 */
 	Class[] STANDARD_CONSTRUCTOR_SIG = new Class[] {
 			PersistentClass.class,
-			EntityRegionAccessStrategy.class,
-			NaturalIdRegionAccessStrategy.class,
 			RuntimeModelCreationContext.class
 	};
 
@@ -122,7 +115,7 @@ public interface EntityTypeImplementor<T>
 	 */
 	void finishInitialization(
 			EntityHierarchy entityHierarchy,
-			IdentifiableTypeImplementor<? super T> superType,
+			IdentifiableTypeDescriptor<? super T> superType,
 			EntityMapping mappingDescriptor,
 			RuntimeModelCreationContext creationContext);
 
@@ -700,7 +693,7 @@ public interface EntityTypeImplementor<T>
 	 * @throws HibernateException Indicates that instance was deemed to not be a subclass of the entity mapped by
 	 * this persister.
 	 */
-	EntityTypeImplementor getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory);
+	EntityDescriptor getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory);
 
 	FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 

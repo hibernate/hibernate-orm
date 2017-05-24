@@ -13,7 +13,7 @@ import java.util.TreeMap;
 import org.hibernate.HibernateException;
 import org.hibernate.sql.ast.produce.metamodel.spi.ElementColumnReferenceSource;
 import org.hibernate.sql.ast.produce.metamodel.spi.IndexColumnReferenceSource;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.NotYetImplementedException;
@@ -28,7 +28,7 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
  * @author Steve Ebersole
  */
 public class CollectionTableGroup implements TableGroup {
-	private final PersistentCollectionMetadata persister;
+	private final PersistentCollectionDescriptor persister;
 
 	private final TableSpace tableSpace;
 	private final String uniqueIdentifier;
@@ -37,7 +37,7 @@ public class CollectionTableGroup implements TableGroup {
 	private final IndexColumnReferenceSource indexTableGroup;
 
 	public CollectionTableGroup(
-			PersistentCollectionMetadata persister,
+			PersistentCollectionDescriptor persister,
 			TableSpace tableSpace,
 			String uniqueIdentifier,
 			TableReference collectionTableReference,
@@ -51,7 +51,7 @@ public class CollectionTableGroup implements TableGroup {
 		this.indexTableGroup = indexTableGroup;
 	}
 
-	public PersistentCollectionMetadata getPersister() {
+	public PersistentCollectionDescriptor getPersister() {
 		return persister;
 	}
 

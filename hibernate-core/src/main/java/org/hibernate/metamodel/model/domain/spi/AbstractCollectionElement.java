@@ -13,16 +13,16 @@ import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
  * @author Steve Ebersole
  */
 public abstract class AbstractCollectionElement<J> implements CollectionElement<J> {
-	private final PersistentCollectionMetadata persister;
+	private final PersistentCollectionDescriptor persister;
 	private final NavigableRole navigableRole;
 
-	public AbstractCollectionElement(PersistentCollectionMetadata persister) {
+	public AbstractCollectionElement(PersistentCollectionDescriptor persister) {
 		this.persister = persister;
 		this.navigableRole = persister.getNavigableRole().append( NAVIGABLE_NAME );
 	}
 
 	@Override
-	public PersistentCollectionMetadata getContainer() {
+	public PersistentCollectionDescriptor getContainer() {
 		return persister;
 	}
 

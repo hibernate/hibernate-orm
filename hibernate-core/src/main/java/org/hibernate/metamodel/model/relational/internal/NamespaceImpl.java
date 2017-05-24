@@ -59,7 +59,7 @@ public class NamespaceImpl implements Namespace {
 	}
 
 	public void addTable(Table table) {
-		log.debugf( "Registering Table [%s] with namespace [%s]", table.getLoggableView(), this );
+		log.debugf( "Registering Table [%s] with namespace [%s]", table, this );
 
 		if ( tables == null ) {
 			tables = new ArrayList<>();

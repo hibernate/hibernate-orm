@@ -29,8 +29,8 @@ import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.EmbeddedType;
@@ -74,7 +74,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 
 		final EntityEntry e = source.getPersistenceContext().getEntry( object );
-		final EntityTypeImplementor persister;
+		final EntityDescriptor persister;
 		final Serializable id;
 
 		if ( e == null ) {
@@ -194,7 +194,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 	}
 
-	private void evictCachedCollections(EntityTypeImplementor persister, Serializable id, EventSource source) {
+	private void evictCachedCollections(EntityDescriptor persister, Serializable id, EventSource source) {
 		evictCachedCollections( persister.getPropertyTypes(), id, source );
 	}
 
@@ -202,7 +202,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			throws HibernateException {
 		for ( Type type : types ) {
 			if ( type.getClassification().equals( Type.Classification.COLLECTION ) ) {
-				PersistentCollectionMetadata collectionPersister = source.getFactory().getTypeConfiguration().findCollectionPersister( ( (CollectionType) type ).getRole() );
+				PersistentCollectionDescriptor collectionPersister = source.getFactory().getTypeConfiguration().findCollectionPersister( ( (CollectionType) type ).getRole() );
 				if ( collectionPersister.hasCache() ) {
 					final CollectionRegionAccessStrategy cache = collectionPersister.getCacheAccessStrategy();
 					final Object ck = cache.generateCacheKey(

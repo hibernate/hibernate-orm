@@ -8,7 +8,7 @@ package org.hibernate.test.loadplans.walking;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
 
 import org.junit.Test;
@@ -29,7 +29,7 @@ public class CompositesWalkingTest extends BaseUnitTestCase {
 				.addAnnotatedClass( TestCourse.class )
 				.buildSessionFactory();
 		try {
-			final EntityTypeImplementor ep = (EntityTypeImplementor) sf.getClassMetadata( TestCourse.class );
+			final EntityDescriptor ep = (EntityDescriptor) sf.getClassMetadata( TestCourse.class );
 			MetamodelGraphWalker.visitEntity( new NavigableVisitationStrategyLoggingImpl(), ep );
 		}
 		finally {

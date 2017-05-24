@@ -19,7 +19,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -166,7 +166,7 @@ public class LoadContexts {
 	 * @param ownerKey The owner key
 	 * @return The loading collection, or null if not found.
 	 */
-	public PersistentCollection locateLoadingCollection(PersistentCollectionMetadata persister, Serializable ownerKey) {
+	public PersistentCollection locateLoadingCollection(PersistentCollectionDescriptor persister, Serializable ownerKey) {
 		final LoadingCollectionEntry lce = locateLoadingCollectionEntry( new CollectionKey( persister, ownerKey ) );
 		if ( lce != null ) {
 			if ( LOG.isTraceEnabled() ) {

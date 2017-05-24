@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 /**
@@ -22,7 +22,7 @@ public abstract class AbstractPreDatabaseOperationEvent
 
 	private final Object entity;
 	private final Serializable id;
-	private final EntityTypeImplementor persister;
+	private final EntityDescriptor persister;
 
 	/**
 	 * Constructs an event containing the pertinent information.
@@ -36,7 +36,7 @@ public abstract class AbstractPreDatabaseOperationEvent
 			EventSource source,
 			Object entity,
 			Serializable id,
-			EntityTypeImplementor persister) {
+			EntityDescriptor persister) {
 		super( source );
 		this.entity = entity;
 		this.id = id;
@@ -67,7 +67,7 @@ public abstract class AbstractPreDatabaseOperationEvent
 	 *
 	 * @return The entity persister.
 	 */
-	public EntityTypeImplementor getPersister() {
+	public EntityDescriptor getPersister() {
 		return persister;
 	}
 

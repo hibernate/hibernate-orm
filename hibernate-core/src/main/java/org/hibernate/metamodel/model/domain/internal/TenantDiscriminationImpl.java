@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 public class TenantDiscriminationImpl implements TenantDiscrimination {
 	private static final String NAVIGABLE_NAME = "{tenantId}";
 
-	private final IdentifiableTypeImplementor container;
+	private final IdentifiableTypeDescriptor container;
 	private final BasicJavaDescriptor javaDescriptor;
 	private final Column column;
 	private final boolean isShared;
@@ -33,7 +33,7 @@ public class TenantDiscriminationImpl implements TenantDiscrimination {
 	private final NavigableRole navigableRole;
 
 	public TenantDiscriminationImpl(
-			IdentifiableTypeImplementor container,
+			IdentifiableTypeDescriptor container,
 			BasicJavaDescriptor javaDescriptor,
 			Column column,
 			boolean isShared,

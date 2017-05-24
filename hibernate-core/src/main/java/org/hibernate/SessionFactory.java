@@ -8,7 +8,6 @@ package org.hibernate;
 
 import java.io.Serializable;
 import java.sql.Connection;
-import java.util.Map;
 import java.util.Set;
 import javax.naming.Referenceable;
 import javax.persistence.EntityManagerFactory;
@@ -16,8 +15,6 @@ import javax.persistence.EntityManagerFactory;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.envers.internal.AuditReaderFactory;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.stat.Statistics;
 
@@ -170,81 +167,4 @@ public interface SessionFactory extends EntityManagerFactory, AuditReaderFactory
 	 * @return True if there is such a fetch profile; false otherwise.
 	 */
 	boolean containsFetchProfileDefinition(String name);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Deprecations
-
-	/**
-	 * Retrieve the {@link ClassMetadata} associated with the given entity class.
-	 *
-	 * @param entityClass The entity class
-	 *
-	 * @return The metadata associated with the given entity; may be null if no such
-	 * entity was mapped.
-	 *
-	 * @throws HibernateException Generally null is returned instead of throwing.
-	 *
-	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
-	 */
-	@Deprecated
-	ClassMetadata getClassMetadata(Class entityClass);
-
-	/**
-	 * Retrieve the {@link ClassMetadata} associated with the given entity class.
-	 *
-	 * @param entityName The entity class
-	 *
-	 * @return The metadata associated with the given entity; may be null if no such
-	 * entity was mapped.
-	 *
-	 * @throws HibernateException Generally null is returned instead of throwing.
-	 * @since 3.0
-	 *
-	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
-	 */
-	@Deprecated
-	ClassMetadata getClassMetadata(String entityName);
-
-	/**
-	 * Get the {@link CollectionMetadata} associated with the named collection role.
-	 *
-	 * @param roleName The collection role (in form [owning-entity-name].[collection-property-name]).
-	 *
-	 * @return The metadata associated with the given collection; may be null if no such
-	 * collection was mapped.
-	 *
-	 * @throws HibernateException Generally null is returned instead of throwing.
-	 *
-	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
-	 */
-	@Deprecated
-	CollectionMetadata getCollectionMetadata(String roleName);
-
-	/**
-	 * Retrieve the {@link ClassMetadata} for all mapped entities.
-	 *
-	 * @return A map containing all {@link ClassMetadata} keyed by the
-	 * corresponding {@link String} entity-name.
-	 *
-	 * @throws HibernateException Generally empty map is returned instead of throwing.
-	 *
-	 * @since 3.0 changed key from {@link Class} to {@link String}.
-	 *
-	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
-	 */
-	@Deprecated
-	Map<String,ClassMetadata> getAllClassMetadata();
-
-	/**
-	 * Get the {@link CollectionMetadata} for all mapped collections.
-	 *
-	 * @return a map from <tt>String</tt> to <tt>CollectionMetadata</tt>
-	 *
-	 * @throws HibernateException Generally empty map is returned instead of throwing.
-	 *
-	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
-	 */
-	@Deprecated
-	Map getAllCollectionMetadata();
 }

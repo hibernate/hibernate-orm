@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.result.internal;
 
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 import org.hibernate.sql.ast.produce.result.spi.CollectionReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
@@ -18,7 +18,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 	private final NavigableReference navigableReference;
 	private final String resultVariable;
 
-	private final PersistentCollectionMetadata collectionMetadata;
+	private final PersistentCollectionDescriptor collectionMetadata;
 
 	protected AbstractCollectionReference(NavigableReference navigableReference, String resultVariable) {
 		this.navigableReference = navigableReference;
@@ -36,7 +36,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 	}
 
 	@Override
-	public PersistentCollectionMetadata getCollectionMetadata() {
+	public PersistentCollectionDescriptor getCollectionMetadata() {
 		return collectionMetadata;
 	}
 }

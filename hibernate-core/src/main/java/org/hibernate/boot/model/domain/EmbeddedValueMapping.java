@@ -7,6 +7,9 @@
 package org.hibernate.boot.model.domain;
 
 import org.hibernate.EntityMode;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 
 /**
  * Models an embeddable-valued mapping such as an {@link javax.persistence.Embedded} or
@@ -17,4 +20,9 @@ import org.hibernate.EntityMode;
 public interface EmbeddedValueMapping extends ValueMapping, ManagedTypeMapping {
 	EntityMode getRepresentationMode();
 	String getExplicitTuplizerClassName();
+
+	<X> EmbeddedTypeDescriptor<X> makeRuntimeDescriptor(
+			EmbeddedContainer embeddedContainer,
+			String localName,
+			RuntimeModelCreationContext context);
 }

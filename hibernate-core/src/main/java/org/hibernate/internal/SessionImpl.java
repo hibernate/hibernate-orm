@@ -148,10 +148,10 @@ import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.persister.entity.OuterJoinLoadable;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
@@ -1059,7 +1059,7 @@ public final class SessionImpl
 	@Override
 	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
 		if ( log.isDebugEnabled() ) {
-			EntityTypeImplementor persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
+			EntityDescriptor persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
 			log.debugf( "Initializing proxy: %s", MessageHelper.infoString( persister, id, getFactory() ) );
 		}
 		LoadEvent event = loadEvent;
@@ -1564,7 +1564,7 @@ public final class SessionImpl
 	 * give the interceptor an opportunity to override the default instantiation
 	 */
 	@Override
-	public Object instantiate(EntityTypeImplementor persister, Serializable id) throws HibernateException {
+	public Object instantiate(EntityDescriptor persister, Serializable id) throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
 		checkTransactionSynchStatus();
 		Object result = getInterceptor().instantiate(
@@ -1580,7 +1580,7 @@ public final class SessionImpl
 	}
 
 	@Override
-	public EntityTypeImplementor getEntityPersister(final String entityName, final Object object) {
+	public EntityDescriptor getEntityPersister(final String entityName, final Object object) {
 		checkOpenOrWaitingForAutoClose();
 		if ( entityName == null ) {
 			return getFactory().getTypeConfiguration().findEntityPersister( guessEntityName( object ) );
@@ -1656,7 +1656,7 @@ public final class SessionImpl
 		}
 
 		CollectionEntry entry = persistenceContext.getCollectionEntryOrNull( collection );
-		final PersistentCollectionMetadata roleBeforeFlush = ( entry == null ) ? null : entry.getLoadedPersister();
+		final PersistentCollectionDescriptor roleBeforeFlush = ( entry == null ) ? null : entry.getLoadedPersister();
 
 		FilterQueryPlan plan = null;
 		if ( roleBeforeFlush == null ) {
@@ -1664,7 +1664,7 @@ public final class SessionImpl
 			// get its state into the database in order to execute query
 			flush();
 			entry = persistenceContext.getCollectionEntryOrNull( collection );
-			PersistentCollectionMetadata roleAfterFlush = ( entry == null ) ? null : entry.getLoadedPersister();
+			PersistentCollectionDescriptor roleAfterFlush = ( entry == null ) ? null : entry.getLoadedPersister();
 			if ( roleAfterFlush == null ) {
 				throw new QueryException( "The collection was unreferenced" );
 			}
@@ -1688,7 +1688,7 @@ public final class SessionImpl
 				// might need to run a different filter entirely afterQuery the flush
 				// because the collection role may have changed
 				entry = persistenceContext.getCollectionEntryOrNull( collection );
-				PersistentCollectionMetadata roleAfterFlush = ( entry == null ) ? null : entry.getLoadedPersister();
+				PersistentCollectionDescriptor roleAfterFlush = ( entry == null ) ? null : entry.getLoadedPersister();
 				if ( roleBeforeFlush != roleAfterFlush ) {
 					if ( roleAfterFlush == null ) {
 						throw new QueryException( "The collection was dereferenced" );
@@ -1875,7 +1875,7 @@ public final class SessionImpl
 		}
 
 		final String entityName = criteria.getEntityOrClassName();
-		final EntityTypeImplementor entityPersister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		final EntityDescriptor entityPersister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
 
 		// Verify the entity actually has a natural id, needed for legacy support as NaturalIdentifier criteria
 		// queries did no natural id validation
@@ -1922,7 +1922,7 @@ public final class SessionImpl
 	}
 
 	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
-		EntityTypeImplementor persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		EntityDescriptor persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
 		if ( !( persister instanceof OuterJoinLoadable ) ) {
 			throw new MappingException( "class persister is not OuterJoinLoadable: " + entityName );
 		}
@@ -2619,11 +2619,11 @@ public final class SessionImpl
 	}
 
 	private class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
-		private final EntityTypeImplementor entityPersister;
+		private final EntityDescriptor entityPersister;
 		private LockOptions lockOptions;
 		private CacheMode cacheMode;
 
-		private IdentifierLoadAccessImpl(EntityTypeImplementor entityPersister) {
+		private IdentifierLoadAccessImpl(EntityDescriptor entityPersister) {
 			this.entityPersister = entityPersister;
 		}
 
@@ -2751,7 +2751,7 @@ public final class SessionImpl
 	}
 
 	private class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, MultiLoadOptions {
-		private final EntityTypeImplementor entityPersister;
+		private final EntityDescriptor entityPersister;
 		private LockOptions lockOptions;
 		private CacheMode cacheMode;
 		private Integer batchSize;
@@ -2759,7 +2759,7 @@ public final class SessionImpl
 		private boolean returnOfDeletedEntitiesEnabled;
 		private boolean orderedReturnEnabled = true;
 
-		public MultiIdentifierLoadAccessImpl(EntityTypeImplementor entityPersister) {
+		public MultiIdentifierLoadAccessImpl(EntityDescriptor entityPersister) {
 			this.entityPersister = entityPersister;
 		}
 
@@ -2880,20 +2880,20 @@ public final class SessionImpl
 		}
 	}
 
-	private <T> EntityTypeImplementor<? extends T> locateEntityPersister(Class<T> entityClass) {
+	private <T> EntityDescriptor<? extends T> locateEntityPersister(Class<T> entityClass) {
 		return getFactory().getTypeConfiguration().findEntityPersister( entityClass );
 	}
 
-	private <T> EntityTypeImplementor<? extends T> locateEntityPersister(String entityName) {
+	private <T> EntityDescriptor<? extends T> locateEntityPersister(String entityName) {
 		return getFactory().getTypeConfiguration().findEntityPersister( entityName );
 	}
 
 	private abstract class BaseNaturalIdLoadAccessImpl<T> {
-		private final EntityTypeImplementor entityPersister;
+		private final EntityDescriptor entityPersister;
 		private LockOptions lockOptions;
 		private boolean synchronizationEnabled = true;
 
-		private BaseNaturalIdLoadAccessImpl(EntityTypeImplementor entityPersister) {
+		private BaseNaturalIdLoadAccessImpl(EntityDescriptor entityPersister) {
 			this.entityPersister = entityPersister;
 
 			if ( !entityPersister.hasNaturalIdentifier() ) {
@@ -2983,7 +2983,7 @@ public final class SessionImpl
 			return identifierLoadAccess;
 		}
 
-		protected EntityTypeImplementor entityPersister() {
+		protected EntityDescriptor entityPersister() {
 			return entityPersister;
 		}
 	}
@@ -2991,7 +2991,7 @@ public final class SessionImpl
 	private class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadAccess<T> {
 		private final Map<String, Object> naturalIdParameters = new LinkedHashMap<String, Object>();
 
-		private NaturalIdLoadAccessImpl(EntityTypeImplementor entityPersister) {
+		private NaturalIdLoadAccessImpl(EntityDescriptor entityPersister) {
 			super( entityPersister );
 		}
 
@@ -3056,7 +3056,7 @@ public final class SessionImpl
 			implements SimpleNaturalIdLoadAccess<T> {
 		private final String naturalIdAttributeName;
 
-		private SimpleNaturalIdLoadAccessImpl(EntityTypeImplementor entityPersister) {
+		private SimpleNaturalIdLoadAccessImpl(EntityDescriptor entityPersister) {
 			super( entityPersister );
 
 			if ( entityPersister.getNaturalIdentifierProperties().length != 1 ) {

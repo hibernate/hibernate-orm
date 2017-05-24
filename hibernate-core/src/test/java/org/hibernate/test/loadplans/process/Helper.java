@@ -17,7 +17,7 @@ import org.hibernate.loader.plan.exec.query.internal.QueryBuildingParametersImpl
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -38,7 +38,7 @@ public class Helper implements QueryBuildingParameters {
 	private Helper() {
 	}
 
-	public LoadPlan buildLoadPlan(SessionFactoryImplementor sf, EntityTypeImplementor entityPersister) {
+	public LoadPlan buildLoadPlan(SessionFactoryImplementor sf, EntityDescriptor entityPersister) {
 		final SqlSelectPlanBuilder strategy = new SqlSelectPlanBuilder(
 				sf,
 				queryBuildingParameters.getQueryInfluencers(),
@@ -47,7 +47,7 @@ public class Helper implements QueryBuildingParameters {
 		return MetamodelDrivenSqlSelectPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
 	}
 
-	public LoadQueryDetails buildLoadQueryDetails(EntityTypeImplementor entityPersister, SessionFactoryImplementor sf) {
+	public LoadQueryDetails buildLoadQueryDetails(EntityDescriptor entityPersister, SessionFactoryImplementor sf) {
 		return buildLoadQueryDetails(
 				buildLoadPlan( sf, entityPersister ),
 				sf

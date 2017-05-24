@@ -12,7 +12,7 @@ import java.io.Serializable;
 
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * We need an entry to tell us all about the current state of an object with respect to its persistent state
@@ -50,7 +50,7 @@ public interface EntityEntry {
 
 	Object getVersion();
 
-	EntityTypeImplementor getPersister();
+	EntityDescriptor getPersister();
 
 	/**
 	 * Get the EntityKey based on this EntityEntry.

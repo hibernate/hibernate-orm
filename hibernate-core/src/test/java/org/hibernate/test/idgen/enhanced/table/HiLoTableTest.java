@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.id.enhanced.HiLoOptimizer;
 import org.hibernate.id.enhanced.TableGenerator;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
@@ -30,7 +30,7 @@ public class HiLoTableTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNormalBoundary() {
-		EntityTypeImplementor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
+		EntityDescriptor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		IdentifierGenerator identifierGenerator = persister.getIdentifierDescriptor().getIdentifierValueGenerator();
 		assertClassAssignability( TableGenerator.class, identifierGenerator.getClass() );
 		TableGenerator generator = ( TableGenerator ) identifierGenerator;

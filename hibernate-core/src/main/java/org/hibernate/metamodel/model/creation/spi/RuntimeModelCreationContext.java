@@ -6,12 +6,16 @@
  */
 package org.hibernate.metamodel.model.creation.spi;
 
+import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.internal.PersisterHelper;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -31,11 +35,13 @@ public interface RuntimeModelCreationContext {
 	DatabaseModel getDatabaseModel();
 	DatabaseObjectResolver getDatabaseObjectResolver();
 
-	RuntimeModelNodeFactory getPersisterFactory();
+	RuntimeModelDescriptorFactory getRuntimeModelDescriptorFactory();
+
 	EntityTuplizerFactory getEntityTuplizerFactory();
 	ComponentTuplizerFactory getComponentTuplizerFactory();
+	PersistentCollectionTuplizerFactory getPersistentCollectionTuplizerFactory();
 
-	void registerEntityPersister(EntityTypeImplementor entityPersister);
-	void registerCollectionPersister(PersistentCollectionMetadata collectionPersister);
-	void registerEmbeddablePersister(EmbeddedTypeImplementor embeddablePersister);
+	void registerEntityPersister(EntityDescriptor entityPersister);
+	void registerCollectionPersister(PersistentCollectionDescriptor collectionPersister);
+	void registerEmbeddablePersister(EmbeddedTypeDescriptor embeddablePersister);
 }

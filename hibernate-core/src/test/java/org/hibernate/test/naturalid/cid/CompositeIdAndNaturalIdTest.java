@@ -11,7 +11,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class CompositeIdAndNaturalIdTest extends BaseCoreFunctionalTestCase {
     @Test
     @TestForIssue( jiraKey = "HHH-10360")
     public void testNaturalIdNullability() {
-        final EntityTypeImplementor persister = sessionFactory().getEntityPersister( Account.class.getName() );
+        final EntityDescriptor persister = sessionFactory().getEntityPersister( Account.class.getName() );
         final int propertyIndex = persister.getEntityMetamodel().getPropertyIndex( "shortCode" );
         // the natural ID mapped as non-nullable
         assertFalse( persister.getPropertyNullability()[propertyIndex] );

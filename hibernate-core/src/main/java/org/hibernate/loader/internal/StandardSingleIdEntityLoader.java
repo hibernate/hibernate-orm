@@ -12,16 +12,16 @@ import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class StandardSingleIdEntityLoader<T> implements SingleIdEntityLoader<T> {
-	private final EntityTypeImplementor<T> entityDescriptor;
+	private final EntityDescriptor<T> entityDescriptor;
 
 	public StandardSingleIdEntityLoader(
-			EntityTypeImplementor<T> entityDescriptor,
+			EntityDescriptor<T> entityDescriptor,
 			LockOptions lockOptions,
 			LoadQueryInfluencers loadQueryInfluencers) {
 		this.entityDescriptor = entityDescriptor;

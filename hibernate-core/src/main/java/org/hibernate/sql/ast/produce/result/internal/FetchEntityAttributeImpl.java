@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.produce.result.internal;
 
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.internal.EntityFetchInitializerImpl;
@@ -91,7 +91,7 @@ public class FetchEntityAttributeImpl extends AbstractFetchParent implements Fet
 //	}
 
 	@Override
-	public EntityTypeImplementor getEntityMetadata() {
+	public EntityDescriptor getEntityMetadata() {
 		return getFetchedAttributeDescriptor().getAssociatedEntityDescriptor();
 	}
 

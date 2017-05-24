@@ -13,7 +13,7 @@ import javax.persistence.SharedCacheMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 import org.junit.Test;
 import junit.framework.Assert;
@@ -32,7 +32,7 @@ public class XmlTest extends BaseEntityManagerFunctionalTestCase {
 	public void testXmlMappingWithCacheable() throws Exception{
 		EntityManager em = getOrCreateEntityManager();
 		SharedSessionContractImplementor session = em.unwrap( SharedSessionContractImplementor.class );
-		EntityTypeImplementor entityPersister= session.getFactory().getEntityPersister( Lighter.class.getName() );
+		EntityDescriptor entityPersister= session.getFactory().getEntityPersister( Lighter.class.getName() );
 		Assert.assertTrue(entityPersister.hasCache());
 	}
 

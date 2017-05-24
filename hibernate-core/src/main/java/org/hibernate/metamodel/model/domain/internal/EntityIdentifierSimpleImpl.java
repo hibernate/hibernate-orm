@@ -13,7 +13,7 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -35,7 +35,7 @@ public class EntityIdentifierSimpleImpl<O,J>
 
 	public EntityIdentifierSimpleImpl(
 			EntityHierarchy hierarchy,
-			IdentifiableTypeImplementor declarer,
+			IdentifiableTypeDescriptor declarer,
 			Property property,
 			BasicType<J> ormType,
 			List<Column> columns,

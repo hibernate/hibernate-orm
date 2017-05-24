@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.sql.ast.produce.result.spi.Fetch;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
@@ -30,5 +30,5 @@ public interface Fetchable<T> extends Joinable<T> {
 
 	// todo (6.0) : what is the proper return type here?
 	//		ExpressableType?
-	ManagedTypeImplementor<T> getFetchedManagedType();
+	ManagedTypeDescriptor<T> getFetchedManagedType();
 }

@@ -19,7 +19,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.sql.NotYetImplementedException;
 
 
@@ -69,7 +69,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public Serializable getSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
+	public Serializable getSnapshot(PersistentCollectionDescriptor persister) throws HibernateException {
 		final HashMap clonedMap = new HashMap( map.size() );
 		for ( Object o : map.entrySet() ) {
 			final Entry e = (Entry) o;
@@ -86,7 +86,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	public boolean equalsSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
+	public boolean equalsSnapshot(PersistentCollectionDescriptor persister) throws HibernateException {
 		final Map snapshotMap = (Map) getSnapshot();
 		if ( snapshotMap.size() != this.map.size() ) {
 			return false;
@@ -112,7 +112,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	public void beforeInitialize(PersistentCollectionMetadata persister, int anticipatedSize) {
+	public void beforeInitialize(PersistentCollectionDescriptor persister, int anticipatedSize) {
 		this.map = (Map) persister.getTuplizer().instantiate( anticipatedSize );
 	}
 
@@ -255,7 +255,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	@SuppressWarnings("unchecked")
 	public Object readFrom(
 			ResultSet rs,
-			PersistentCollectionMetadata persister,
+			PersistentCollectionDescriptor persister,
 			Object owner) throws HibernateException, SQLException {
 		throw new NotYetImplementedException(  );
 //		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
@@ -283,7 +283,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Iterator entries(PersistentCollectionMetadata persister) {
+	public Iterator entries(PersistentCollectionDescriptor persister) {
 		return map.entrySet().iterator();
 	}
 
@@ -451,7 +451,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void initializeFromCache(PersistentCollectionMetadata persister, Serializable disassembled, Object owner)
+	public void initializeFromCache(PersistentCollectionDescriptor persister, Serializable disassembled, Object owner)
 			throws HibernateException {
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;
@@ -466,7 +466,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Serializable disassemble(PersistentCollectionMetadata persister) throws HibernateException {
+	public Serializable disassemble(PersistentCollectionDescriptor persister) throws HibernateException {
 		final Serializable[] result = new Serializable[ map.size() * 2 ];
 		final Iterator itr = map.entrySet().iterator();
 		int i=0;
@@ -481,7 +481,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Iterator getDeletes(PersistentCollectionMetadata persister, boolean indexIsFormula) throws HibernateException {
+	public Iterator getDeletes(PersistentCollectionDescriptor persister, boolean indexIsFormula) throws HibernateException {
 		final List deletes = new ArrayList();
 		for ( Object o : ((Map) getSnapshot()).entrySet() ) {
 			final Entry e = (Entry) o;
@@ -514,7 +514,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object getIndex(Object entry, int i, PersistentCollectionMetadata persister) {
+	public Object getIndex(Object entry, int i, PersistentCollectionDescriptor persister) {
 		return ( (Map.Entry) entry ).getKey();
 	}
 

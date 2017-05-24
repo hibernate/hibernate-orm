@@ -20,17 +20,17 @@ import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 /**
  * Hibernate extension SPI for working with {@link ManagedType} implementations.  All
  * "concrete ManagedType" implementations (entity and embedded) are modelled as a
- * "persister" (see {@link EntityTypeImplementor} and
- * {@link EmbeddedTypeImplementor}
+ * "persister" (see {@link EntityDescriptor} and
+ * {@link EmbeddedTypeDescriptor}
  *
  * NOTE : Hibernate additionally classifies plural attributes via a "persister" :
- * {@link PersistentCollectionMetadata}.
+ * {@link PersistentCollectionDescriptor}.
  *
  * @todo describe what is available after each initialization phase (and therefore what is "undefined" in terms of access earlier).
  *
  * @author Steve Ebersole
  */
-public interface ManagedTypeImplementor<T>
+public interface ManagedTypeDescriptor<T>
 		extends ManagedType<T>, NavigableContainer<T>, EmbeddedContainer<T>, ExpressableType<T> {
 
 	ManagedJavaDescriptor<T> getJavaTypeDescriptor();

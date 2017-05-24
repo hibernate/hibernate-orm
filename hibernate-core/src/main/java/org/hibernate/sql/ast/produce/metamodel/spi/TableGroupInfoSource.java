@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Access to "source" information about the TableGroup to be built - a set of
@@ -32,5 +32,5 @@ public interface TableGroupInfoSource {
 	/**
 	 * The specific entity subclass to be used (for filtering).
 	 */
-	EntityTypeImplementor getIntrinsicSubclassEntityMetadata();
+	EntityDescriptor getIntrinsicSubclassEntityMetadata();
 }

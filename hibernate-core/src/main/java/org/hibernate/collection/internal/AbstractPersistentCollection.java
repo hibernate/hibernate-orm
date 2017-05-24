@@ -31,7 +31,7 @@ import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -74,7 +74,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	@Override
-	public PersistentCollectionMetadata getCollectionMetadata() {
+	public PersistentCollectionDescriptor getCollectionMetadata() {
 		return null;
 	}
 
@@ -137,7 +137,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 								final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
 
 								if ( entry != null ) {
-									final PersistentCollectionMetadata persister = entry.getLoadedPersister();
+									final PersistentCollectionDescriptor persister = entry.getLoadedPersister();
 									if ( persister.isExtraLazy() ) {
 										if ( hasQueuedOperations() ) {
 											session.flush();
@@ -273,7 +273,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 						@Override
 						public Boolean doWork() {
 							final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
-							final PersistentCollectionMetadata persister = entry.getLoadedPersister();
+							final PersistentCollectionDescriptor persister = entry.getLoadedPersister();
 							if ( persister.isExtraLazy() ) {
 								if ( hasQueuedOperations() ) {
 									session.flush();
@@ -301,7 +301,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 						@Override
 						public Boolean doWork() {
 							final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
-							final PersistentCollectionMetadata persister = entry.getLoadedPersister();
+							final PersistentCollectionDescriptor persister = entry.getLoadedPersister();
 							if ( persister.isExtraLazy() ) {
 								if ( hasQueuedOperations() ) {
 									session.flush();
@@ -333,7 +333,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				@Override
 				public Object doWork() {
 					final CollectionEntry entry = session.getPersistenceContext().getCollectionEntry( AbstractPersistentCollection.this );
-					final PersistentCollectionMetadata persister = entry.getLoadedPersister();
+					final PersistentCollectionDescriptor persister = entry.getLoadedPersister();
 					isExtraLazy = persister.isExtraLazy();
 					if ( isExtraLazy ) {
 						if ( hasQueuedOperations() ) {
@@ -469,7 +469,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	 * @param copyCache - mapping from entity in the process of being
 	 *                    merged to managed copy.
 	 */
-	public final void replaceQueuedOperationValues(PersistentCollectionMetadata persister, Map copyCache) {
+	public final void replaceQueuedOperationValues(PersistentCollectionDescriptor persister, Map copyCache) {
 		for ( DelayedOperation operation : operationQueue ) {
 			if ( ValueDelayedOperation.class.isInstance( operation ) ) {
 				( (ValueDelayedOperation) operation ).replace( persister, copyCache );
@@ -615,7 +615,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 	}
 
-	private PersistentCollectionMetadata collectionMetadata;
+	private PersistentCollectionDescriptor collectionMetadata;
 
 	@Override
 	public final boolean setCurrentSession(SharedSessionContractImplementor session) throws HibernateException {
@@ -687,7 +687,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	@Override
-	public boolean needsRecreate(PersistentCollectionMetadata persister) {
+	public boolean needsRecreate(PersistentCollectionDescriptor persister) {
 		// Workaround for situations like HHH-7072.  If the collection element is a component that consists entirely
 		// of nullable properties, we currently have to forcefully recreate the entire collection.  See the use
 		// of hasNotNullableColumns in the AbstractCollectionPersister constructor for more info.  In order to delete
@@ -794,11 +794,11 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	@Override
-	public void preInsert(PersistentCollectionMetadata persister) throws HibernateException {
+	public void preInsert(PersistentCollectionDescriptor persister) throws HibernateException {
 	}
 
 	@Override
-	public void afterRowInsert(PersistentCollectionMetadata persister, Object entry, int i) throws HibernateException {
+	public void afterRowInsert(PersistentCollectionDescriptor persister, Object entry, int i) throws HibernateException {
 	}
 
 	@Override
@@ -1135,7 +1135,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	protected interface ValueDelayedOperation extends DelayedOperation {
-		void replace(PersistentCollectionMetadata collectionPersister, Map copyCache);
+		void replace(PersistentCollectionDescriptor collectionPersister, Map copyCache);
 	}
 
 	protected abstract class AbstractValueDelayedOperation implements ValueDelayedOperation {
@@ -1147,7 +1147,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			this.orphan = orphan;
 		}
 
-		public void replace(PersistentCollectionMetadata persister, Map copyCache) {
+		public void replace(PersistentCollectionDescriptor persister, Map copyCache) {
 			throw new org.hibernate.sql.NotYetImplementedException(  );
 //			if ( addedValue != null ) {
 //				addedValue = getReplacement( (Type) persister.getElementType(), addedValue, copyCache );

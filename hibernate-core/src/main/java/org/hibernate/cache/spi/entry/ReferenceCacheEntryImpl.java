@@ -8,7 +8,7 @@ package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Specialized CacheEntry for storing direct references to entity instances.
@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 public class ReferenceCacheEntryImpl implements CacheEntry {
 	private final Object reference;
 	// passing the persister avoids a costly persister lookup by class name at cache retrieval time
-	private final EntityTypeImplementor subclassPersister;
+	private final EntityDescriptor subclassPersister;
 
 	/**
 	 * Constructs a ReferenceCacheEntryImpl
@@ -26,7 +26,7 @@ public class ReferenceCacheEntryImpl implements CacheEntry {
 	 * @param reference The reference entity instance
 	 * @param subclassPersister The specific subclass persister
 	 */
-	public ReferenceCacheEntryImpl(Object reference, EntityTypeImplementor subclassPersister) {
+	public ReferenceCacheEntryImpl(Object reference, EntityDescriptor subclassPersister) {
 		this.reference = reference;
 		this.subclassPersister = subclassPersister;
 	}
@@ -50,7 +50,7 @@ public class ReferenceCacheEntryImpl implements CacheEntry {
 		return subclassPersister.getEntityName();
 	}
 
-	public EntityTypeImplementor getSubclassPersister() {
+	public EntityDescriptor getSubclassPersister() {
 		return subclassPersister;
 	}
 

@@ -7,6 +7,9 @@
 package org.hibernate.collection.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
 
 /**
@@ -33,5 +36,8 @@ public interface PersistentCollectionTuplizer<T extends PersistentCollection> {
 
 	Class<PersistentCollection> getPersistentCollectionJavaType();
 
-	<O, C, E> PluralPersistentAttribute<O, C, E> generatePluralPersistentAttribute();
+	<O, C, E> PluralPersistentAttribute<O, C, E> generatePluralPersistentAttribute(
+			ManagedTypeDescriptor container,
+			Property property,
+			RuntimeModelCreationContext context);
 }

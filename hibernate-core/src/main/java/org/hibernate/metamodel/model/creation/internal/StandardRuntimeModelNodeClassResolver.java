@@ -14,8 +14,8 @@ import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
 import org.hibernate.metamodel.model.domain.NavigableResolutionException;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
@@ -26,7 +26,7 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 public class StandardRuntimeModelNodeClassResolver implements RuntimeModelNodeClassResolver {
 
 	@Override
-	public Class<? extends EntityTypeImplementor> getEntityPersisterClass(PersistentClass metadata) {
+	public Class<? extends EntityDescriptor> getEntityPersisterClass(PersistentClass metadata) {
 		// todo : make sure this is based on an attribute kept on the metamodel in the new code, not the concrete PersistentClass impl found!
 		if ( RootClass.class.isInstance( metadata ) ) {
 			if ( metadata.hasSubclasses() ) {
@@ -53,20 +53,20 @@ public class StandardRuntimeModelNodeClassResolver implements RuntimeModelNodeCl
 		}
 	}
 
-	public Class<? extends EntityTypeImplementor> singleTableEntityPersister() {
+	public Class<? extends EntityDescriptor> singleTableEntityPersister() {
 		return SingleTableEntityPersister.class;
 	}
 
-	public Class<? extends EntityTypeImplementor> joinedSubclassEntityPersister() {
+	public Class<? extends EntityDescriptor> joinedSubclassEntityPersister() {
 		return JoinedSubclassEntityPersister.class;
 	}
 
-	public Class<? extends EntityTypeImplementor> unionSubclassEntityPersister() {
+	public Class<? extends EntityDescriptor> unionSubclassEntityPersister() {
 		return UnionSubclassEntityPersister.class;
 	}
 
 	@Override
-	public Class<? extends PersistentCollectionMetadata> getCollectionPersisterClass(Collection metadata) {
+	public Class<? extends PersistentCollectionDescriptor> getCollectionPersisterClass(Collection metadata) {
 		return metadata.isOneToMany() ? oneToManyPersister() : basicCollectionPersister();
 	}
 }

@@ -7,12 +7,13 @@
 package org.hibernate.metamodel.model.creation.spi;
 
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.internal.EmbeddedTypeImplementorImpl;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.internal.EmbeddedTypeDescriptorImpl;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.service.Service;
 
 /**
@@ -36,7 +37,7 @@ public interface RuntimeModelNodeClassResolver extends Service {
 	 *
 	 * @return The entity persister class to use
 	 */
-	Class<? extends EntityTypeImplementor> getEntityPersisterClass(PersistentClass metadata);
+	Class<? extends EntityDescriptor> getEntityPersisterClass(EntityMapping metadata);
 
 	/**
 	 * Returns the collection persister class for a given collection role or null
@@ -46,7 +47,7 @@ public interface RuntimeModelNodeClassResolver extends Service {
 	 *
 	 * @return The collection persister class to use
 	 */
-	Class<? extends PersistentCollectionMetadata> getCollectionPersisterClass(Collection metadata);
+	Class<? extends PersistentCollectionDescriptor> getCollectionPersisterClass(Collection metadata);
 
 	/**
 	 * Returns the collection persister class for a given collection role or null
@@ -58,7 +59,7 @@ public interface RuntimeModelNodeClassResolver extends Service {
 	 *
 	 * @since 6.0
 	 */
-	default Class<? extends EmbeddedTypeImplementor> getEmbeddablePersisterClass(EmbeddedValueMapping embeddedValueMapping) {
-		return EmbeddedTypeImplementorImpl.class;
+	default Class<? extends EmbeddedTypeDescriptor> getEmbeddablePersisterClass(EmbeddedValueMapping embeddedValueMapping) {
+		return EmbeddedTypeDescriptorImpl.class;
 	}
 }

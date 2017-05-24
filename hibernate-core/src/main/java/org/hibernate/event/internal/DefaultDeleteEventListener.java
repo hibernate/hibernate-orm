@@ -34,7 +34,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
@@ -88,7 +88,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 		Object entity = persistenceContext.unproxyAndReassociate( event.getObject() );
 
 		EntityEntry entityEntry = persistenceContext.getEntry( entity );
-		final EntityTypeImplementor persister;
+		final EntityDescriptor persister;
 		final Serializable id;
 		final Object version;
 
@@ -189,7 +189,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 	private void disallowDeletionOfDetached(DeleteEvent event) {
 		EventSource source = event.getSession();
 		String entityName = event.getEntityName();
-		EntityTypeImplementor persister = source.getEntityPersister( entityName, event.getObject() );
+		EntityDescriptor persister = source.getEntityPersister( entityName, event.getObject() );
 		Serializable id =  persister.getIdentifier( event.getObject(), source );
 		entityName = entityName == null ? source.guessEntityName( event.getObject() ) : entityName;
 		throw new IllegalArgumentException("Removing a detached instance "+ entityName + "#" + id);
@@ -214,7 +214,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 			EventSource session,
 			Object entity,
 			boolean cascadeDeleteEnabled,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			Set transientEntities) {
 		LOG.handlingTransientEntity();
 		if ( transientEntities.contains( entity ) ) {
@@ -244,7 +244,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 			final EntityEntry entityEntry,
 			final boolean isCascadeDeleteEnabled,
 			final boolean isOrphanRemovalBeforeUpdates,
-			final EntityTypeImplementor persister,
+			final EntityDescriptor persister,
 			final Set transientEntities) {
 
 		if ( LOG.isTraceEnabled() ) {
@@ -327,7 +327,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 		//persistenceContext.removeDatabaseSnapshot(key);
 	}
 
-	private Object[] createDeletedState(EntityTypeImplementor persister, Object[] currentState, EventSource session) {
+	private Object[] createDeletedState(EntityDescriptor persister, Object[] currentState, EventSource session) {
 		Type[] propTypes = persister.getPropertyTypes();
 		final Object[] deletedState = new Object[propTypes.length];
 //		TypeFactory.deepCopy( currentState, propTypes, persister.getPropertyUpdateability(), deletedState, session );
@@ -337,7 +337,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 		return deletedState;
 	}
 
-	protected boolean invokeDeleteLifecycle(EventSource session, Object entity, EntityTypeImplementor persister) {
+	protected boolean invokeDeleteLifecycle(EventSource session, Object entity, EntityDescriptor persister) {
 		callbackRegistry.preRemove( entity );
 
 		if ( persister.implementsLifecycle() ) {
@@ -352,7 +352,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 
 	protected void cascadeBeforeDelete(
 			EventSource session,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			Object entity,
 			EntityEntry entityEntry,
 			Set transientEntities) throws HibernateException {
@@ -379,7 +379,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener, Callback
 
 	protected void cascadeAfterDelete(
 			EventSource session,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			Object entity,
 			Set transientEntities) throws HibernateException {
 

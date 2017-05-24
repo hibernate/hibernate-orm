@@ -13,7 +13,7 @@ import org.hibernate.cache.jcache.JCacheNaturalIdRegion;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * @author Alex Snaps
@@ -70,7 +70,7 @@ public class ReadWriteNaturalIdRegionAccessStrategy
 	}
 
 	@Override
-	public Object generateCacheKey(Object[] naturalIdValues, EntityTypeImplementor persister, SharedSessionContractImplementor session) {
+	public Object generateCacheKey(Object[] naturalIdValues, EntityDescriptor persister, SharedSessionContractImplementor session) {
 		return DefaultCacheKeysFactory.createNaturalIdKey( naturalIdValues, persister, session );
 	}
 

@@ -10,7 +10,7 @@ import org.hibernate.OptimisticLockException;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -36,7 +36,7 @@ public class EntityVerifyVersionProcess implements BeforeTransactionCompletionPr
 
 	@Override
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
-		final EntityTypeImplementor persister = entry.getPersister();
+		final EntityDescriptor persister = entry.getPersister();
 
 		if ( !entry.isExistsInDatabase() ) {
 			// HHH-9419: We cannot check for a version of an entry we ourselves deleted

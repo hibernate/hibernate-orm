@@ -19,7 +19,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 
 import org.jboss.logging.Logger;
@@ -32,7 +32,7 @@ import org.jboss.logging.Logger;
 public class EntityTuplizerFactory implements Serializable {
 	private static final Logger log = Logger.getLogger( EntityTuplizerFactory.class );
 
-	public static final Class[] ENTITY_TUP_CTOR_SIG = new Class[] { EntityTypeImplementor.class, EntityMapping.class };
+	public static final Class[] ENTITY_TUP_CTOR_SIG = new Class[] { EntityDescriptor.class, EntityMapping.class };
 
 	private Map<EntityMode,Class<? extends EntityTuplizer>> defaultImplClassByMode = buildBaseMapping();
 
@@ -69,7 +69,7 @@ public class EntityTuplizerFactory implements Serializable {
 	public EntityTuplizer createTuplizer(
 			String explicitTuplizerClassName,
 			EntityMode entityMode,
-			EntityTypeImplementor entityPersister,
+			EntityDescriptor entityPersister,
 			EntityMapping entityMapping,
 			RuntimeModelCreationContext persisterCreationContext) {
 		final Class<? extends EntityTuplizer> explicitTuplizerClass;
@@ -97,7 +97,7 @@ public class EntityTuplizerFactory implements Serializable {
 	public EntityTuplizer createTuplizer(
 			Class<? extends EntityTuplizer> explicitTuplizerClass,
 			EntityMode entityMode,
-			EntityTypeImplementor entityPersister,
+			EntityDescriptor entityPersister,
 			EntityMapping entityMapping,
 			RuntimeModelCreationContext persisterCreationContext) {
 		final Class<? extends EntityTuplizer> tuplizerClass;
@@ -125,7 +125,7 @@ public class EntityTuplizerFactory implements Serializable {
 
 	private EntityTuplizer constructTuplizer(
 			Class<? extends EntityTuplizer> tuplizerClass,
-			EntityTypeImplementor entityPersister,
+			EntityDescriptor entityPersister,
 			EntityMapping entityMapping,
 			RuntimeModelCreationContext persisterCreationContext) {
 		final Constructor<? extends EntityTuplizer> constructor = getProperConstructor( tuplizerClass );

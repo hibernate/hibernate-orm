@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.tree.expression.domain;
 
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEntity;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
@@ -61,7 +61,7 @@ public class SqmIndexedElementReferenceEntity
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
+	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
 		// todo (6.0) : override this to account for implicit or explicit Downcasts
 		return super.getIntrinsicSubclassEntityMetadata();
 	}

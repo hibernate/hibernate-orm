@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.AuditService;
 import org.hibernate.envers.internal.tools.ArraysTools;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -23,7 +23,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
  */
 public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
 	private final Object[] state;
-	private final EntityTypeImplementor entityPersister;
+	private final EntityDescriptor entityPersister;
 	private final String[] propertyNames;
 
 	public DelWorkUnit(
@@ -31,7 +31,7 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 			String entityName,
 			AuditService auditService,
 			Serializable id,
-			EntityTypeImplementor entityPersister,
+			EntityDescriptor entityPersister,
 			Object[] state) {
 		super( sessionImplementor, entityName, auditService, id, RevisionType.DEL );
 

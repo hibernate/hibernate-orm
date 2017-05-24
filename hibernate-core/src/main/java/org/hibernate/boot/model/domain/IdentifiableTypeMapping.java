@@ -69,5 +69,4 @@ public interface IdentifiableTypeMapping extends ManagedTypeMapping {
 	 * Checks whether the identifier attribute represents a single id or embedded id.
 	 */
 	boolean hasSingleIdentifierAttributeMapping();
-
 }

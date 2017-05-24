@@ -18,7 +18,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
@@ -46,7 +46,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	 */
 	public StandardCacheEntryImpl(
 			final Object[] state,
-			final EntityTypeImplementor persister,
+			final EntityDescriptor persister,
 			final Object version,
 			final SharedSessionContractImplementor session,
 			final Object owner) throws HibernateException {
@@ -131,7 +131,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	public Object[] assemble(
 			final Object instance,
 			final Serializable id,
-			final EntityTypeImplementor persister,
+			final EntityDescriptor persister,
 			final Interceptor interceptor,
 			final EventSource session) throws HibernateException {
 		if ( !persister.getEntityName().equals( subclass ) ) {

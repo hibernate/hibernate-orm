@@ -46,11 +46,11 @@ import org.hibernate.loader.spi.MultiLoadOptions;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.domain.spi.AbstractEntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.AbstractEntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
@@ -59,7 +59,7 @@ import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.Type;
 
-public class CustomPersister extends AbstractEntityTypeImplementor implements EntityTypeImplementor {
+public class CustomPersister extends AbstractEntityDescriptor implements EntityDescriptor {
 
 	private static final Hashtable INSTANCES = new Hashtable();
 	private static final IdentifierGenerator GENERATOR = new UUIDHexGenerator();
@@ -238,7 +238,7 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 		( ( Custom ) entity ).id = ( String ) currentId;
 	}
 
-	public EntityTypeImplementor getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
+	public EntityDescriptor getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
 		return this;
 	}
 
@@ -269,35 +269,35 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 	}
 
 	/**
-	 * @see EntityTypeImplementor#hasIdentifierProperty()
+	 * @see EntityDescriptor#hasIdentifierProperty()
 	 */
 	public boolean hasIdentifierProperty() {
 		return true;
 	}
 
 	/**
-	 * @see EntityTypeImplementor#isVersioned()
+	 * @see EntityDescriptor#isVersioned()
 	 */
 	public boolean isVersioned() {
 		return false;
 	}
 
 	/**
-	 * @see EntityTypeImplementor#getVersionType()
+	 * @see EntityDescriptor#getVersionType()
 	 */
 	public Type getVersionType() {
 		return null;
 	}
 
 	/**
-	 * @see EntityTypeImplementor#getVersionProperty()
+	 * @see EntityDescriptor#getVersionProperty()
 	 */
 	public int getVersionProperty() {
 		return 0;
 	}
 
 	/**
-	 * @see EntityTypeImplementor#getIdentifierGenerator()
+	 * @see EntityDescriptor#getIdentifierGenerator()
 	 */
 	public IdentifierGenerator getIdentifierGenerator()
 	throws HibernateException {
@@ -305,7 +305,7 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 	}
 
 	/**
-	 * @see EntityTypeImplementor#load(Serializable, Object, org.hibernate.LockOptions , SharedSessionContractImplementor)
+	 * @see EntityDescriptor#load(Serializable, Object, org.hibernate.LockOptions , SharedSessionContractImplementor)
 	 */
 	public Object load(
 		Serializable id,
@@ -322,7 +322,7 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 	}
 
 	/**
-	 * @see EntityTypeImplementor#load(Serializable, Object, LockMode, SharedSessionContractImplementor)
+	 * @see EntityDescriptor#load(Serializable, Object, LockMode, SharedSessionContractImplementor)
 	 */
 	public Object load(
 		Serializable id,
@@ -364,7 +364,7 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 	}
 
 	/**
-	 * @see EntityTypeImplementor#lock(Serializable, Object, Object, LockMode, SharedSessionContractImplementor)
+	 * @see EntityDescriptor#lock(Serializable, Object, Object, LockMode, SharedSessionContractImplementor)
 	 */
 	public void lock(
 		Serializable id,
@@ -378,7 +378,7 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 	}
 
 	/**
-	 * @see EntityTypeImplementor#lock(Serializable, Object, Object, LockMode, SharedSessionContractImplementor)
+	 * @see EntityDescriptor#lock(Serializable, Object, Object, LockMode, SharedSessionContractImplementor)
 	 */
 	public void lock(
 		Serializable id,
@@ -418,7 +418,7 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 	}
 
 	/**
-	 * @see EntityTypeImplementor
+	 * @see EntityDescriptor
 	 */
 	public void update(
 		Serializable id,
@@ -446,14 +446,14 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 	private static final boolean[] GENERATION = new boolean[] { false };
 
 	/**
-	 * @see EntityTypeImplementor#getPropertyNames()
+	 * @see EntityDescriptor#getPropertyNames()
 	 */
 	public String[] getPropertyNames() {
 		return NAMES;
 	}
 
 	/**
-	 * @see EntityTypeImplementor#getPropertyCascadeStyles()
+	 * @see EntityDescriptor#getPropertyCascadeStyles()
 	 */
 	public CascadeStyle[] getPropertyCascadeStyles() {
 		return null;
@@ -465,7 +465,7 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 	}
 
 	/**
-	 * @see EntityTypeImplementor#getIdentifierPropertyName()
+	 * @see EntityDescriptor#getIdentifierPropertyName()
 	 */
 	public String getIdentifierPropertyName() {
 		return "id";
@@ -505,7 +505,7 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 	}
 
 	/**
-	 * @see EntityTypeImplementor#getClassMetadata()
+	 * @see EntityDescriptor#getClassMetadata()
 	 */
 	public ClassMetadata getClassMetadata() {
 		return null;
@@ -520,7 +520,7 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 	}
 
 	/**
-	 * @see EntityTypeImplementor#getPropertyInsertability()
+	 * @see EntityDescriptor#getPropertyInsertability()
 	 */
 	public boolean[] getPropertyInsertability() {
 		return MUTABILITY;
@@ -690,7 +690,7 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 	@Override
 	public void finishInstantiation(
 			EntityHierarchy entityHierarchy,
-			IdentifiableTypeImplementor superType,
+			IdentifiableTypeDescriptor superType,
 			IdentifiableTypeMapping bootMapping,
 			RuntimeModelCreationContext creationContext) {
 
@@ -699,7 +699,7 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 	@Override
 	public void completeInitialization(
 			EntityHierarchy entityHierarchy,
-			IdentifiableTypeImplementor superType,
+			IdentifiableTypeDescriptor superType,
 			IdentifiableTypeMappingImplementor bootMapping,
 			RuntimeModelCreationContext creationContext) {
 
@@ -711,7 +711,7 @@ public class CustomPersister extends AbstractEntityTypeImplementor implements En
 	}
 
 	@Override
-	public EntityTypeImplementor getEntityDescriptor() {
+	public EntityDescriptor getEntityDescriptor() {
 		return this;
 	}
 

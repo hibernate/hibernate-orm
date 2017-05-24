@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * Defines a base class for events involving collections.
@@ -36,7 +36,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 	 * by this event; can be null if unavailable
 	 * that is affected by this event; can be null if unavailable
 	 */
-	public AbstractCollectionEvent( PersistentCollectionMetadata collectionPersister,
+	public AbstractCollectionEvent( PersistentCollectionDescriptor collectionPersister,
 					PersistentCollection collection,
 					EventSource source,
 					Object affectedOwner,
@@ -49,7 +49,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 				getAffectedOwnerEntityName( collectionPersister, affectedOwner, source );
 	}
 
-	protected static PersistentCollectionMetadata getLoadedCollectionPersister(PersistentCollection collection, EventSource source ) {
+	protected static PersistentCollectionDescriptor getLoadedCollectionPersister(PersistentCollection collection, EventSource source ) {
 		CollectionEntry ce = source.getPersistenceContext().getCollectionEntry( collection );
 		return ( ce == null ? null : ce.getLoadedPersister() );		
 	}
@@ -67,7 +67,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 		return ( ownerEntry == null ? null : ownerEntry.getId() );
 	}
 
-	protected static String getAffectedOwnerEntityName(PersistentCollectionMetadata collectionPersister, Object affectedOwner, EventSource source ) {
+	protected static String getAffectedOwnerEntityName(PersistentCollectionDescriptor collectionPersister, Object affectedOwner, EventSource source ) {
 
 		// collectionPersister should not be null, but we don't want to throw
 		// an exception if it is null

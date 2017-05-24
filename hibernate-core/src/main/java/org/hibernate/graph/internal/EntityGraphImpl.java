@@ -16,8 +16,8 @@ import javax.persistence.metamodel.IdentifiableType;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.EntityGraphImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 
 /**
@@ -27,9 +27,9 @@ import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
  */
 public class EntityGraphImpl<T> extends AbstractAttributeNodeContainer<T> implements EntityGraphImplementor<T> {
 	private final String name;
-	private final EntityTypeImplementor<T> entityDescriptor;
+	private final EntityDescriptor<T> entityDescriptor;
 
-	public EntityGraphImpl(String name, EntityTypeImplementor<T> entityDescriptor, SessionFactoryImplementor sessionFactory) {
+	public EntityGraphImpl(String name, EntityDescriptor<T> entityDescriptor, SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory, true );
 		this.name = name;
 		this.entityDescriptor = entityDescriptor;
@@ -53,7 +53,7 @@ public class EntityGraphImpl<T> extends AbstractAttributeNodeContainer<T> implem
 		return entityDescriptor;
 	}
 
-	public EntityTypeImplementor<T> getEntityDescriptor() {
+	public EntityDescriptor<T> getEntityDescriptor() {
 		return entityDescriptor;
 	}
 
@@ -146,7 +146,7 @@ public class EntityGraphImpl<T> extends AbstractAttributeNodeContainer<T> implem
 	}
 
 	@Override
-	public boolean appliesTo(EntityTypeImplementor<? super T> entityDescriptor) {
+	public boolean appliesTo(EntityDescriptor<? super T> entityDescriptor) {
 		return appliesTo( entityDescriptor.getEntityName() );
 	}
 
@@ -167,7 +167,7 @@ public class EntityGraphImpl<T> extends AbstractAttributeNodeContainer<T> implem
 	}
 
 	@Override
-	ManagedTypeImplementor getManagedType() {
+	ManagedTypeDescriptor getManagedType() {
 		return entityDescriptor;
 	}
 }

@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import java.util.Set;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.spi.QuerySplitter;
 
 /**
@@ -39,5 +39,5 @@ public interface PolymorphicEntityValuedExpressableType<T> extends EntityValuedE
 	 *
 	 * @return All concrete implementors.
 	 */
-	Set<EntityTypeImplementor<?>> getImplementors();
+	Set<EntityDescriptor<?>> getImplementors();
 }

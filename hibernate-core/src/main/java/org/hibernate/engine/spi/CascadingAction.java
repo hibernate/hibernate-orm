@@ -10,7 +10,7 @@ import java.util.Iterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -79,7 +79,7 @@ public interface CascadingAction {
 	 * @param propertyType The property type
 	 * @param propertyIndex The index of the property within the owner.
 	 */
-	void noCascade(EventSource session, Object parent, EntityTypeImplementor persister, Type propertyType, int propertyIndex);
+	void noCascade(EventSource session, Object parent, EntityDescriptor persister, Type propertyType, int propertyIndex);
 
 	/**
 	 * Should this action be performed (or noCascade consulted) in the case of lazy properties.

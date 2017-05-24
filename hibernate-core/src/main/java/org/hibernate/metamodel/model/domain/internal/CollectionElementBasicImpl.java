@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementBasic;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
@@ -40,7 +40,7 @@ public class CollectionElementBasicImpl<J>
 	private final AttributeConverterDefinition attributeConverter;
 
 	public CollectionElementBasicImpl(
-			PersistentCollectionMetadata persister,
+			PersistentCollectionDescriptor persister,
 			Collection mappingBinding,
 			RuntimeModelCreationContext creationContext) {
 		super( persister );

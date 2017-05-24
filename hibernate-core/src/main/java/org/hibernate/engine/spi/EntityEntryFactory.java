@@ -9,7 +9,7 @@ package org.hibernate.engine.spi;
 import java.io.Serializable;
 
 import org.hibernate.LockMode;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Contract to build {@link org.hibernate.engine.spi.EntityEntry}
@@ -29,7 +29,7 @@ public interface EntityEntryFactory extends Serializable {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityTypeImplementor persister,
+			final EntityDescriptor persister,
 			final boolean disableVersionIncrement,
 			final PersistenceContext persistenceContext);
 }

@@ -9,7 +9,7 @@ package org.hibernate.test.naturalid.nullable;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -39,7 +39,7 @@ public class NullableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		// A, B, C, and D are mapped using annotations;
 		// none are mapped to be non-nullable, so all are nullable by annotations-specific default,
 		// except primitives
-		EntityTypeImplementor persister = sessionFactory().getEntityPersister( A.class.getName() );
+		EntityDescriptor persister = sessionFactory().getEntityPersister( A.class.getName() );
 		EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 		assertTrue( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "assC" )] );
 		assertTrue( persister.getPropertyNullability()[entityMetamodel.getPropertyIndex( "myname" )] );

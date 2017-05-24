@@ -18,7 +18,7 @@ import org.hibernate.event.spi.PostCollectionRemoveEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * The action for removing a collection
@@ -42,7 +42,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 	 */
 	public CollectionRemoveAction(
 				final PersistentCollection collection,
-				final PersistentCollectionMetadata persister,
+				final PersistentCollectionDescriptor persister,
 				final Serializable id,
 				final boolean emptySnapshot,
 				final SharedSessionContractImplementor session) {
@@ -72,7 +72,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 	 */
 	public CollectionRemoveAction(
 				final Object affectedOwner,
-				final PersistentCollectionMetadata persister,
+				final PersistentCollectionDescriptor persister,
 				final Serializable id,
 				final boolean emptySnapshot,
 				final SharedSessionContractImplementor session) {

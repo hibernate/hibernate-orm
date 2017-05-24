@@ -6,10 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression.domain;
 
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata.CollectionClassification;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor.CollectionClassification;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableContainerReferenceInfo;
 import org.hibernate.query.spi.NavigablePath;
@@ -96,7 +96,7 @@ public abstract class AbstractSqmCollectionIndexReference
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
+	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
 		// for most index classifications, there is none
 		return null;
 	}

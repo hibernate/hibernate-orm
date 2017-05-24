@@ -18,7 +18,7 @@ import org.hibernate.event.spi.PostCollectionUpdateEvent;
 import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -38,7 +38,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 	 */
 	public CollectionUpdateAction(
 				final PersistentCollection collection,
-				final PersistentCollectionMetadata persister,
+				final PersistentCollectionDescriptor persister,
 				final Serializable id,
 				final boolean emptySnapshot,
 				final SharedSessionContractImplementor session) {
@@ -50,7 +50,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 	public void execute() throws HibernateException {
 		final Serializable id = getKey();
 		final SharedSessionContractImplementor session = getSession();
-		final PersistentCollectionMetadata persister = getPersister();
+		final PersistentCollectionDescriptor persister = getPersister();
 		final PersistentCollection collection = getCollection();
 		final boolean affectedByFilters = persister.isAffectedByEnabledFilters( session );
 

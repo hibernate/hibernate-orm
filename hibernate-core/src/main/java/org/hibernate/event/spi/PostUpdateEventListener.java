@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Called afterQuery updating the datastore
@@ -18,5 +18,5 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
 public interface PostUpdateEventListener extends Serializable {
 	public void onPostUpdate(PostUpdateEvent event);
 
-	public boolean requiresPostCommitHanding(EntityTypeImplementor persister);
+	public boolean requiresPostCommitHanding(EntityDescriptor persister);
 }

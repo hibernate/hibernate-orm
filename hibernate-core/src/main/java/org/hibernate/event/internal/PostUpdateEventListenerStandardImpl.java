@@ -14,7 +14,7 @@ import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.CallbackType;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -43,7 +43,7 @@ public class PostUpdateEventListenerStandardImpl implements PostUpdateEventListe
 	}
 
 	@Override
-	public boolean requiresPostCommitHanding(EntityTypeImplementor persister) {
+	public boolean requiresPostCommitHanding(EntityDescriptor persister) {
 		return callbackRegistry.hasRegisteredCallbacks( persister.getMappedClass(), CallbackType.POST_UPDATE );
 	}
 }

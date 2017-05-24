@@ -8,7 +8,7 @@ package org.hibernate.engine.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.VersionSupport;
 
 import org.jboss.logging.Logger;
@@ -107,7 +107,7 @@ public final class Versioning {
 	 * @param version The optimistic locking value
 	 * @param persister The entity persister
 	 */
-	public static void setVersion(Object[] fields, Object version, EntityTypeImplementor persister) {
+	public static void setVersion(Object[] fields, Object version, EntityDescriptor persister) {
 		if ( !persister.isVersioned() ) {
 			return;
 		}
@@ -121,7 +121,7 @@ public final class Versioning {
 	 * @param persister The entity persister
 	 * @return The extracted optimistic locking value
 	 */
-	public static Object getVersion(Object[] fields, EntityTypeImplementor persister) {
+	public static Object getVersion(Object[] fields, EntityDescriptor persister) {
 		if ( !persister.isVersioned() ) {
 			return null;
 		}

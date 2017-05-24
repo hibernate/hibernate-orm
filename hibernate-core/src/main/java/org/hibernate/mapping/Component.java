@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.EntityMode;
@@ -32,10 +31,11 @@ import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.tuple.component.ComponentMetamodel;
-import org.hibernate.type.Type;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 
 /**
  * The mapping for a component, composite element,
@@ -76,6 +76,12 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Mana
 	public Component(InFlightMetadataCollector metadata, Table table, PersistentClass owner) throws MappingException {
 		super( metadata.getTypeConfiguration().getMetadataBuildingContext(), table );
 		this.owner = owner;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public EmbeddableJavaDescriptor getJavaTypeDescriptor() {
+		return (EmbeddableJavaDescriptor) super.getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -195,11 +201,16 @@ public class Component extends SimpleValue implements EmbeddedValueMapping, Mana
 	}
 
 	@Override
-	public Type getType() throws MappingException {
-		// TODO : temporary initial step towards HHH-1907
-		final ComponentMetamodel metamodel = new ComponentMetamodel( this, getBuildingContext().getBuildingOptions() );
-		final TypeConfiguration typeConfiguration = getBuildingContext().getBootstrapContext().getTypeConfiguration();
-		return isEmbedded() ? typeConfiguration.embeddedComponent( metamodel ) : typeConfiguration.component( metamodel );
+	public <X> EmbeddedTypeDescriptor<X> makeRuntimeDescriptor(
+			EmbeddedContainer embeddedContainer,
+			String localName,
+			RuntimeModelCreationContext context) {
+		return context.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
+				this,
+				embeddedContainer,
+				localName,
+				context
+		);
 	}
 
 	@Override

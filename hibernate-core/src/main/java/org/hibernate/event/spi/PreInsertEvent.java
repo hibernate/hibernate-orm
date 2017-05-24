@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Represents a <tt>pre-insert</tt> event, which occurs just prior to
@@ -33,7 +33,7 @@ public class PreInsertEvent extends AbstractPreDatabaseOperationEvent {
 			Object entity,
 			Serializable id,
 			Object[] state,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			EventSource source) {
 		super( source, entity, id, persister );
 		this.state = state;

@@ -28,7 +28,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractManagedType<T> implements ManagedTypeImplementor<T>, TypeConfigurationAware,
+public abstract class AbstractManagedType<T> implements ManagedTypeDescriptor<T>, TypeConfigurationAware,
 		InheritanceCapable<T> {
 	private static final Logger log = Logger.getLogger( AbstractManagedType.class );
 

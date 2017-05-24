@@ -27,8 +27,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -89,7 +89,7 @@ public class CollectionLoadContext {
 	 *
 	 * @return The loading collection (see discussion above).
 	 */
-	public PersistentCollection getLoadingCollection(final PersistentCollectionMetadata persister, final Serializable key) {
+	public PersistentCollection getLoadingCollection(final PersistentCollectionDescriptor persister, final Serializable key) {
 		final EntityMode em = persister.getOwnerEntityPersister().getEntityMetamodel().getEntityMode();
 		final CollectionKey collectionKey = new CollectionKey( persister, key, em );
 		if ( LOG.isTraceEnabled() ) {
@@ -146,7 +146,7 @@ public class CollectionLoadContext {
 	 *
 	 * @param persister The persister for which to complete loading.
 	 */
-	public void endLoadingCollections(PersistentCollectionMetadata persister) {
+	public void endLoadingCollections(PersistentCollectionDescriptor persister) {
 		final SharedSessionContractImplementor session = getLoadContext().getPersistenceContext().getSession();
 		if ( !loadContexts.hasLoadingCollectionEntries()
 				&& localLoadingCollectionKeys.isEmpty() ) {
@@ -202,7 +202,7 @@ public class CollectionLoadContext {
 		}
 	}
 
-	private void endLoadingCollections(PersistentCollectionMetadata persister, List<LoadingCollectionEntry> matchedCollectionEntries) {
+	private void endLoadingCollections(PersistentCollectionDescriptor persister, List<LoadingCollectionEntry> matchedCollectionEntries) {
 		final boolean debugEnabled = LOG.isDebugEnabled();
 		if ( matchedCollectionEntries == null ) {
 			if ( debugEnabled ) {
@@ -225,7 +225,7 @@ public class CollectionLoadContext {
 		}
 	}
 
-	private void endLoadingCollection(LoadingCollectionEntry lce, PersistentCollectionMetadata persister) {
+	private void endLoadingCollection(LoadingCollectionEntry lce, PersistentCollectionDescriptor persister) {
 		LOG.tracev( "Ending loading collection [{0}]", lce );
 		final SharedSessionContractImplementor session = getLoadContext().getPersistenceContext().getSession();
 
@@ -277,7 +277,7 @@ public class CollectionLoadContext {
 	 * @param lce The entry representing the collection to add
 	 * @param persister The persister
 	 */
-	private void addCollectionToCache(LoadingCollectionEntry lce, PersistentCollectionMetadata persister) {
+	private void addCollectionToCache(LoadingCollectionEntry lce, PersistentCollectionDescriptor persister) {
 		final SharedSessionContractImplementor session = getLoadContext().getPersistenceContext().getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 
@@ -340,7 +340,7 @@ public class CollectionLoadContext {
 		boolean isPutFromLoad = true;
 		if ( persister.isAssociation() ) {
 			for ( Serializable id : entry.getState() ) {
-				EntityTypeImplementor entityPersister = persister.getElementType().getElementPersister();
+				EntityDescriptor entityPersister = persister.getElementType().getElementPersister();
 				if ( session.getPersistenceContext().wasInsertedDuringTransaction( entityPersister, id ) ) {
 					isPutFromLoad = false;
 					break;

@@ -6,7 +6,7 @@
  */
 package org.hibernate;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.Type;
 
 /**
@@ -31,7 +31,7 @@ public interface CustomEntityDirtinessStrategy {
 	 *
 	 * @return {@code true} indicates the dirty check can be done; {@code false} indicates it cannot.
 	 */
-	public boolean canDirtyCheck(Object entity, EntityTypeImplementor persister, Session session);
+	public boolean canDirtyCheck(Object entity, EntityDescriptor persister, Session session);
 
 	/**
 	 * The callback used by Hibernate to determine if the given entity is dirty.  Only called if the previous
@@ -43,7 +43,7 @@ public interface CustomEntityDirtinessStrategy {
 	 *
 	 * @return {@code true} indicates the entity is dirty; {@link false} indicates the entity is not dirty.
 	 */
-	public boolean isDirty(Object entity, EntityTypeImplementor persister, Session session);
+	public boolean isDirty(Object entity, EntityDescriptor persister, Session session);
 
 	/**
 	 * Callback used by Hibernate to signal that the entity dirty flag should be cleared.  Generally this
@@ -53,7 +53,7 @@ public interface CustomEntityDirtinessStrategy {
 	 * @param persister The persister corresponding to the given entity
 	 * @param session The session from which this call originates.
 	 */
-	public void resetDirty(Object entity, EntityTypeImplementor persister, Session session);
+	public void resetDirty(Object entity, EntityDescriptor persister, Session session);
 
 	/**
 	 * Callback used to hook into Hibernate algorithm for determination of which attributes have changed.  Applications
@@ -65,7 +65,7 @@ public interface CustomEntityDirtinessStrategy {
 	 * @param session The session from which this call originates.
 	 * @param dirtyCheckContext The callback context
 	 */
-	public void findDirty(Object entity, EntityTypeImplementor persister, Session session, DirtyCheckContext dirtyCheckContext);
+	public void findDirty(Object entity, EntityDescriptor persister, Session session, DirtyCheckContext dirtyCheckContext);
 
 	/**
 	 * A callback to drive dirty checking.  Handed to the {@link CustomEntityDirtinessStrategy#findDirty} method
@@ -109,7 +109,7 @@ public interface CustomEntityDirtinessStrategy {
 		 *
 		 * @return The entity persister.
 		 */
-		public EntityTypeImplementor getContainingPersister();
+		public EntityDescriptor getContainingPersister();
 
 		/**
 		 * Many of Hibernate internals use arrays to define information about attributes.  This value

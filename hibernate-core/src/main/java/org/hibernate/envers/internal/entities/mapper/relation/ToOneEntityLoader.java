@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -53,7 +53,7 @@ public final class ToOneEntityLoader {
 			Object entityId,
 			Number revision,
 			boolean removed) {
-		final EntityTypeImplementor persister = versionsReader.getSessionImplementor()
+		final EntityDescriptor persister = versionsReader.getSessionImplementor()
 				.getFactory()
 				.getTypeConfiguration()
 				.findEntityPersister( entityName );
@@ -74,7 +74,7 @@ public final class ToOneEntityLoader {
 			Object entityId,
 			Number revision,
 			boolean removed) {
-		final EntityTypeImplementor persister = versionsReader.getSessionImplementor()
+		final EntityDescriptor persister = versionsReader.getSessionImplementor()
 				.getFactory()
 				.getTypeConfiguration()
 				.findEntityPersister( entityName );

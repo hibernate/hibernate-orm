@@ -15,7 +15,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.spi.AttributeNodeContainer;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.spi.NavigablePath;
@@ -149,7 +149,7 @@ public class FetchGraphBuilder {
 							}
 
 							@Override
-							public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
+							public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
 								return null;
 							}
 						},

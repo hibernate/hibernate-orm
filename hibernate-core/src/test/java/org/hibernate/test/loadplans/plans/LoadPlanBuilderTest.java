@@ -29,8 +29,8 @@ import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.Fetch;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.Return;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
@@ -51,7 +51,7 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testSimpleBuild() {
-		EntityTypeImplementor ep = (EntityTypeImplementor) sessionFactory().getClassMetadata( Message.class);
+		EntityDescriptor ep = (EntityDescriptor) sessionFactory().getClassMetadata( Message.class);
 		SqlSelectPlanBuilder strategy = new SqlSelectPlanBuilder(
 				sessionFactory(),
 				LoadQueryInfluencers.NONE,
@@ -74,7 +74,7 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCascadeBasedBuild() {
-		EntityTypeImplementor ep = (EntityTypeImplementor) sessionFactory().getClassMetadata( Message.class);
+		EntityDescriptor ep = (EntityDescriptor) sessionFactory().getClassMetadata( Message.class);
 		NavigableVisitationStrategyCascadeStyleLoadPlanBuildingImpl strategy = new NavigableVisitationStrategyCascadeStyleLoadPlanBuildingImpl(
 				CascadingActions.MERGE,
 				sessionFactory(),
@@ -98,7 +98,7 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCollectionInitializerCase() {
-		PersistentCollectionMetadata cp = sessionFactory().getCollectionPersister( Poster.class.getName() + ".messages" );
+		PersistentCollectionDescriptor cp = sessionFactory().getCollectionPersister( Poster.class.getName() + ".messages" );
 		SqlSelectPlanBuilder strategy = new SqlSelectPlanBuilder(
 				sessionFactory(),
 				LoadQueryInfluencers.NONE,

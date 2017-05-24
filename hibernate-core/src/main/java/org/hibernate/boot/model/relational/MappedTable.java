@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.relational;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -155,7 +156,7 @@ public interface MappedTable extends Exportable, Loggable {
 
 	Iterator<Index> getIndexIterator();
 
-	Iterator getForeignKeyIterator();
+	Collection<ForeignKey> getForeignKeys();
 
 	Iterator<UniqueKey> getUniqueKeyIterator();
 

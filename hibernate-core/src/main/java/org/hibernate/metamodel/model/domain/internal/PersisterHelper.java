@@ -35,11 +35,11 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement.ElementClassification;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata.CollectionClassification;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor.CollectionClassification;
 import org.hibernate.metamodel.model.domain.spi.AbstractPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.Disposition;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.SingularAttributeClassification;
@@ -47,9 +47,9 @@ import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.metamodel.model.relational.spi.UnionSubclassTable;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeFactory;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
@@ -74,7 +74,7 @@ public class PersisterHelper {
 
 	public static <O,N> PersistentAttribute<O,N> buildAttribute(
 			RuntimeModelCreationContext creationContext,
-			ManagedTypeImplementor<O> container,
+			ManagedTypeDescriptor<O> container,
 			PersistentAttributeMapping attributeMapping) {
 		if ( attributeMapping.getValueMapping() instanceof Collection ) {
 			return buildPluralAttribute(
@@ -95,7 +95,7 @@ public class PersisterHelper {
 	@SuppressWarnings("unchecked")
 	public static <O,N> AbstractPersistentAttribute<O,N> buildSingularAttribute(
 			RuntimeModelCreationContext creationContext,
-			ManagedTypeImplementor<O> source,
+			ManagedTypeDescriptor<O> source,
 			PersistentAttributeMapping attributeMapping) {
 		if ( attributeMapping.getValueMapping() instanceof Any ) {
 			throw new NotYetImplementedException();
@@ -106,7 +106,7 @@ public class PersisterHelper {
 					attributeMapping.getName(),
 					resolvePropertyAccess( source, attributeMapping, creationContext ),
 					Disposition.NORMAL,
-					creationContext.getPersisterFactory().createEmbeddablePersister(
+					creationContext.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
 							(Component) attributeMapping.getValueMapping(),
 							source,
 							attributeMapping.getName(),
@@ -122,7 +122,7 @@ public class PersisterHelper {
 				//		or a unique-FK one-to-one (logical).  If this is a real one-to-one then we should have
 				//		no columns passed here and should instead use the LHS (source) PK column(s)
 				assert columns == null || columns.size() == 0;
-				columns = ( (EntityTypeImplementor) source ).getHierarchy().getIdentifierDescriptor().getColumns();
+				columns = ( (EntityDescriptor) source ).getHierarchy().getIdentifierDescriptor().getColumns();
 			}
 			assert columns != null && columns.size() > 0;
 
@@ -215,7 +215,7 @@ public class PersisterHelper {
 		}
 	}
 
-	public int extractSubclassTableCount(EntityTypeImplementor persister) {
+	public int extractSubclassTableCount(EntityDescriptor persister) {
 		try {
 			return (Integer) subclassTableSpanMethod.invoke( persister );
 		}
@@ -233,7 +233,7 @@ public class PersisterHelper {
 		}
 	}
 
-	public int getSubclassPropertyTableNumber(EntityTypeImplementor persister, int subclassPropertyNumber) {
+	public int getSubclassPropertyTableNumber(EntityDescriptor persister, int subclassPropertyNumber) {
 		try {
 			return (Integer) subclassPropertyTableNumberMethod.invoke( persister, subclassPropertyNumber );
 		}
@@ -251,7 +251,7 @@ public class PersisterHelper {
 		}
 	}
 
-	public Table getPropertyTable(EntityTypeImplementor persister, String attributeName, Table[] tables) {
+	public Table getPropertyTable(EntityDescriptor persister, String attributeName, Table[] tables) {
 		final String tableName = ( (OuterJoinLoadable) persister ).getPropertyTableName( attributeName );
 		for ( Table table : tables ) {
 			if ( table instanceof UnionSubclassTable ) {
@@ -268,7 +268,7 @@ public class PersisterHelper {
 		);
 	}
 
-	public String[] getSubclassPropertyColumnExpressions(EntityTypeImplementor persister, int subclassPropertyNumber) {
+	public String[] getSubclassPropertyColumnExpressions(EntityDescriptor persister, int subclassPropertyNumber) {
 		try {
 			final String[][] columnExpressions = (String[][]) subclassPropertyColumnsMethod.invoke( persister );
 			return columnExpressions[subclassPropertyNumber];
@@ -287,7 +287,7 @@ public class PersisterHelper {
 		}
 	}
 
-	public String[] getSubclassPropertyFormulaExpressions(EntityTypeImplementor persister, int subclassPropertyNumber) {
+	public String[] getSubclassPropertyFormulaExpressions(EntityDescriptor persister, int subclassPropertyNumber) {
 		try {
 			final String[][] columnExpressions = (String[][]) subclassPropertyFormulasMethod.invoke( persister );
 			return columnExpressions[subclassPropertyNumber];
@@ -335,7 +335,7 @@ public class PersisterHelper {
 
 	public PersistentAttribute buildAttribute(
 			RuntimeModelCreationContext creationContext,
-			ManagedTypeImplementor source,
+			ManagedTypeDescriptor source,
 			PersistentAttributeMapping attributeMapping,
 			List<Column> columns) {
 		if ( attributeMapping.getValueMapping() instanceof Collection ) {
@@ -359,7 +359,7 @@ public class PersisterHelper {
 
 	public AbstractPersistentAttribute buildSingularAttribute(
 			RuntimeModelCreationContext creationContext,
-			ManagedTypeImplementor source,
+			ManagedTypeDescriptor source,
 			PersistentAttributeMapping attributeMapping,
 			List<Column> columns) {
 		if ( attributeMapping.getValueMapping() instanceof Any ) {
@@ -371,7 +371,7 @@ public class PersisterHelper {
 					attributeMapping.getName(),
 					resolvePropertyAccess( source, attributeMapping, creationContext ),
 					Disposition.NORMAL,
-					creationContext.getPersisterFactory().createEmbeddablePersister(
+					creationContext.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
 							(Component) attributeMapping.getValueMapping(),
 							source,
 							attributeMapping.getName(),
@@ -387,7 +387,7 @@ public class PersisterHelper {
 				//		or a unique-FK one-to-one (logical).  If this is a real one-to-one then we should have
 				//		no columns passed here and should instead use the LHS (source) PK column(s)
 				assert columns == null || columns.size() == 0;
-				columns = ( (EntityTypeImplementor) source ).getHierarchy().getIdentifierDescriptor().getColumns();
+				columns = ( (EntityDescriptor) source ).getHierarchy().getIdentifierDescriptor().getColumns();
 			}
 			assert columns != null && columns.size() > 0;
 
@@ -438,7 +438,7 @@ public class PersisterHelper {
 
 	private EntityType makeEntityType(RuntimeModelCreationContext creationContext, ToOne toOne) {
 		final String referencedEntityName = toOne.getReferencedEntityName();
-		final EntityTypeImplementor<?> entityPersister = creationContext.getTypeConfiguration().findEntityPersister( referencedEntityName );
+		final EntityDescriptor<?> entityPersister = creationContext.getTypeConfiguration().findEntityPersister( referencedEntityName );
 
 		return new EntityTypeImpl(
 				null,
@@ -486,15 +486,15 @@ public class PersisterHelper {
 
 	public PersistentAttribute buildPluralAttribute(
 			RuntimeModelCreationContext creationContext,
-			ManagedTypeImplementor source,
+			ManagedTypeDescriptor source,
 			PersistentAttributeMapping attributeMapping) {
-		final RuntimeModelNodeFactory persisterFactory = creationContext.getSessionFactory().getServiceRegistry().getService( RuntimeModelNodeFactory.class );
+		final RuntimeModelDescriptorFactory persisterFactory = creationContext.getSessionFactory().getServiceRegistry().getService( RuntimeModelDescriptorFactory.class );
 
 			// todo : resolve cache access
 		final CollectionRegionAccessStrategy cachingAccess = null;
 
 		// need PersisterCreationContext - we should always have access to that when building persisters, through finalized initialization
-		final PersistentCollectionMetadata collectionPersister = persisterFactory.createCollectionPersister(
+		final PersistentCollectionDescriptor collectionPersister = persisterFactory.createPersistentCollectionDescriptor(
 				(Collection) attributeMapping.getValueMapping(),
 				source,
 				attributeMapping.getName(),
@@ -506,7 +506,7 @@ public class PersisterHelper {
 	}
 
 	public static PropertyAccess resolvePropertyAccess(
-			ManagedTypeImplementor declarer,
+			ManagedTypeDescriptor declarer,
 			PersistentAttributeMapping attributeMapping,
 			RuntimeModelCreationContext persisterCreationContext) {
 		final PropertyAccessStrategyResolver accessStrategyResolver = persisterCreationContext.getSessionFactory()

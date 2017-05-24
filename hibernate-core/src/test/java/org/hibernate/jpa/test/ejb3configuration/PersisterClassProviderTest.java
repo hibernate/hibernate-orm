@@ -47,12 +47,12 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.creation.internal.PersisterClassResolverInitiator;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
-import org.hibernate.metamodel.model.domain.spi.AbstractEntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.AbstractEntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
@@ -92,17 +92,17 @@ public class PersisterClassProviderTest {
 
 	public static class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClassResolver {
 		@Override
-		public Class<? extends EntityTypeImplementor> getEntityPersisterClass(PersistentClass metadata) {
+		public Class<? extends EntityDescriptor> getEntityPersisterClass(PersistentClass metadata) {
 			return GoofyProvider.class;
 		}
 
 		@Override
-		public Class<? extends PersistentCollectionMetadata> getCollectionPersisterClass(Collection metadata) {
+		public Class<? extends PersistentCollectionDescriptor> getCollectionPersisterClass(Collection metadata) {
 			return null;
 		}
 	}
 
-	public static class GoofyProvider extends AbstractEntityTypeImplementor implements EntityTypeImplementor {
+	public static class GoofyProvider extends AbstractEntityDescriptor implements EntityDescriptor {
 
 		public GoofyProvider(
 				EntityMapping entityMapping,
@@ -582,7 +582,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public EntityTypeImplementor getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
+		public EntityDescriptor getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
 			return null;
 		}
 
@@ -607,7 +607,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public EntityTypeImplementor getEntityDescriptor() {
+		public EntityDescriptor getEntityDescriptor() {
 			return this;
 		}
 
@@ -620,7 +620,7 @@ public class PersisterClassProviderTest {
 		@Override
 		public void finishInstantiation(
 				EntityHierarchy entityHierarchy,
-				IdentifiableTypeImplementor superType,
+				IdentifiableTypeDescriptor superType,
 				IdentifiableTypeMapping bootMapping,
 				RuntimeModelCreationContext creationContext) {
 
@@ -634,7 +634,7 @@ public class PersisterClassProviderTest {
 		@Override
 		public void completeInitialization(
 				EntityHierarchy entityHierarchy,
-				IdentifiableTypeImplementor superType,
+				IdentifiableTypeDescriptor superType,
 				IdentifiableTypeMappingImplementor bootMapping,
 				RuntimeModelCreationContext creationContext) {
 

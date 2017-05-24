@@ -16,7 +16,7 @@ import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 
 import org.hibernate.Session;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 
 import org.hibernate.testing.TestForIssue;
@@ -80,7 +80,7 @@ public class JoinedSubclassWithExplicitDiscriminatorTest extends BaseCoreFunctio
 
 	@Test
 	public void metadataAssertions() {
-		EntityTypeImplementor p = sessionFactory().getEntityPersister( Dog.class.getName() );
+		EntityDescriptor p = sessionFactory().getEntityPersister( Dog.class.getName() );
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister dogPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "string", dogPersister.getDiscriminatorType().getName() );

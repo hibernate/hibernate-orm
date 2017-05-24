@@ -13,7 +13,7 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -87,7 +87,7 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCachedValueAfterEviction() {
-		PersistentCollectionMetadata persister = sessionFactory().getCollectionPersister( Company.class.getName() + ".users" );
+		PersistentCollectionDescriptor persister = sessionFactory().getCollectionPersister( Company.class.getName() + ".users" );
 
 		Session session = openSession();
 		SessionImplementor sessionImplementor = (SessionImplementor) session;

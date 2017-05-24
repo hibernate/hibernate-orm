@@ -8,18 +8,18 @@ package org.hibernate.cache.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface CacheKeysFactory {
-	Object createCollectionKey(Object id, PersistentCollectionMetadata persister, SessionFactoryImplementor factory, String tenantIdentifier);
+	Object createCollectionKey(Object id, PersistentCollectionDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier);
 
-	Object createEntityKey(Object id, EntityTypeImplementor persister, SessionFactoryImplementor factory, String tenantIdentifier);
+	Object createEntityKey(Object id, EntityDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier);
 
-	Object createNaturalIdKey(Object[] naturalIdValues, EntityTypeImplementor persister, SharedSessionContractImplementor session);
+	Object createNaturalIdKey(Object[] naturalIdValues, EntityDescriptor persister, SharedSessionContractImplementor session);
 
 	Object getEntityId(Object cacheKey);
 

@@ -22,8 +22,8 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ForeignKeyDirection;
@@ -55,7 +55,7 @@ public final class Cascade {
 	 */
 	public static void cascade(
 			final CascadingAction action, final CascadePoint cascadePoint,
-			final EventSource eventSource, final EntityTypeImplementor persister, final Object parent)
+			final EventSource eventSource, final EntityDescriptor persister, final Object parent)
 			throws HibernateException {
 		cascade( action, cascadePoint, eventSource, persister, parent, null );
 	}
@@ -71,7 +71,7 @@ public final class Cascade {
 	 */
 	public static void cascade(
 			final CascadingAction action, final CascadePoint cascadePoint,
-			final EventSource eventSource, final EntityTypeImplementor persister, final Object parent, final Object anything)
+			final EventSource eventSource, final EntityDescriptor persister, final Object parent, final Object anything)
 			throws HibernateException {
 
 		if ( persister.hasCascades() || action.requiresNoCascadeChecking() ) { // performance opt
@@ -344,7 +344,7 @@ public final class Cascade {
 			final CascadeStyle style,
 			final Object anything,
 			final CollectionType type) {
-		final PersistentCollectionMetadata persister = eventSource.getFactory().getTypeConfiguration().findCollectionPersister( type.getRole() );
+		final PersistentCollectionDescriptor persister = eventSource.getFactory().getTypeConfiguration().findCollectionPersister( type.getRole() );
 		final Type elemType = (Type) persister.getElementType();
 
 		CascadePoint elementsCascadePoint = cascadePoint;

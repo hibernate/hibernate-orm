@@ -16,13 +16,12 @@ import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
@@ -34,17 +33,17 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
  */
 public class PolymorphicEntityValuedExpressableTypeImpl<T> implements PolymorphicEntityValuedExpressableType<T> {
 	private final EntityJavaDescriptor<T> javaType;
-	private final Set<EntityTypeImplementor<?>> implementors;
+	private final Set<EntityDescriptor<?>> implementors;
 	private final NavigableRole navigableRole;
 
-	public PolymorphicEntityValuedExpressableTypeImpl(EntityJavaDescriptor<T> javaType, Set<EntityTypeImplementor<?>> implementors) {
+	public PolymorphicEntityValuedExpressableTypeImpl(EntityJavaDescriptor<T> javaType, Set<EntityDescriptor<?>> implementors) {
 		this.javaType = javaType;
 		this.implementors = implementors;
 		this.navigableRole = new NavigableRole( asLoggableText() );
 	}
 
 	@Override
-	public Set<EntityTypeImplementor<?>> getImplementors() {
+	public Set<EntityDescriptor<?>> getImplementors() {
 		return new HashSet<>( implementors );
 	}
 
@@ -59,7 +58,7 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements Polymorphi
 	}
 
 	@Override
-	public EntityTypeImplementor<T> getEntityDescriptor() {
+	public EntityDescriptor<T> getEntityDescriptor() {
 		// todo (6.0) - throw an exception?
 		return null;
 	}
@@ -95,7 +94,7 @@ public class PolymorphicEntityValuedExpressableTypeImpl<T> implements Polymorphi
 	public <N> Navigable<N> findNavigable(String navigableName) {
 		// only return navigables that all of the implementors define
 		Navigable navigable = null;
-		for ( EntityTypeImplementor implementor : implementors ) {
+		for ( EntityDescriptor implementor : implementors ) {
 			final Navigable current = implementor.findNavigable( navigableName );
 			if ( current == null ) {
 				return null;

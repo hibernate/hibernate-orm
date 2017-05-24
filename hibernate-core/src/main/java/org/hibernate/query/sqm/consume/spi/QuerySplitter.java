@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.internal.NavigableBindingHelper;
@@ -112,7 +112,7 @@ public class QuerySplitter {
 		final SqmSelectStatement[] expanded = new SqmSelectStatement[ unmappedPolymorphicDescriptor.getImplementors().size() ];
 
 		int i = -1;
-		for ( EntityTypeImplementor<?> mappedDescriptor : unmappedPolymorphicDescriptor.getImplementors() ) {
+		for ( EntityDescriptor<?> mappedDescriptor : unmappedPolymorphicDescriptor.getImplementors() ) {
 			i++;
 			final UnmappedPolymorphismReplacer replacer = new UnmappedPolymorphismReplacer(
 					statement,
@@ -128,7 +128,7 @@ public class QuerySplitter {
 	@SuppressWarnings("unchecked")
 	private static class UnmappedPolymorphismReplacer extends BaseSemanticQueryWalker {
 		private final SqmRoot unmappedPolymorphicFromElement;
-		private final EntityTypeImplementor mappedDescriptor;
+		private final EntityDescriptor mappedDescriptor;
 
 		private Map<SqmFrom,SqmFrom> sqmFromSqmCopyMap = new HashMap<>();
 		private Map<SqmNavigableReference, SqmNavigableReference> navigableBindingCopyMap = new HashMap<>();
@@ -136,7 +136,7 @@ public class QuerySplitter {
 		private UnmappedPolymorphismReplacer(
 				SqmSelectStatement selectStatement,
 				SqmRoot unmappedPolymorphicFromElement,
-				EntityTypeImplementor mappedDescriptor) {
+				EntityDescriptor mappedDescriptor) {
 			this.unmappedPolymorphicFromElement = unmappedPolymorphicFromElement;
 			this.mappedDescriptor = mappedDescriptor;
 		}

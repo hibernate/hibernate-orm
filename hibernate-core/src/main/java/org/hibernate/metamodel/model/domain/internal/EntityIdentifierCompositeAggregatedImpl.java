@@ -14,7 +14,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggrega
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
@@ -32,13 +32,13 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
 public class EntityIdentifierCompositeAggregatedImpl<O,J>
 		extends AbstractSingularPersistentAttribute<O,J>
 		implements EntityIdentifierCompositeAggregated<O,J> {
-	private final EmbeddedTypeImplementor<J> embeddedMetadata;
+	private final EmbeddedTypeDescriptor<J> embeddedMetadata;
 
 	@SuppressWarnings("unchecked")
 	public EntityIdentifierCompositeAggregatedImpl(
 			EntityHierarchy entityHierarchy,
 			Property idAttribute,
-			EmbeddedTypeImplementor<J> embeddedMetadata,
+			EmbeddedTypeDescriptor<J> embeddedMetadata,
 			RuntimeModelCreationContext creationContext) {
 		super(
 				entityHierarchy.getRootEntityType(),
@@ -52,7 +52,7 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 	}
 
 	@Override
-	public EmbeddedTypeImplementor getEmbeddedDescriptor() {
+	public EmbeddedTypeDescriptor getEmbeddedDescriptor() {
 		return embeddedMetadata;
 	}
 

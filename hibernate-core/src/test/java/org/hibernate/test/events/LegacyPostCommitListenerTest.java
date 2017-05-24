@@ -21,7 +21,7 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.hibernate.testing.TestForIssue;
@@ -226,7 +226,7 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		}
 
 		@Override
-		public boolean requiresPostCommitHanding(EntityTypeImplementor persister) {
+		public boolean requiresPostCommitHanding(EntityDescriptor persister) {
 			return true;
 		}
 	}
@@ -240,7 +240,7 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		}
 
 		@Override
-		public boolean requiresPostCommitHanding(EntityTypeImplementor persister) {
+		public boolean requiresPostCommitHanding(EntityDescriptor persister) {
 			return true;
 		}
 	}
@@ -254,7 +254,7 @@ public class LegacyPostCommitListenerTest extends BaseCoreFunctionalTestCase {
 		}
 
 		@Override
-		public boolean requiresPostCommitHanding(EntityTypeImplementor persister) {
+		public boolean requiresPostCommitHanding(EntityDescriptor persister) {
 			return true;
 		}
 	}

@@ -17,7 +17,7 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Proxy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 import org.junit.Test;
 
@@ -44,7 +44,7 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testUseOfDirectReferencesInCache() throws Exception {
-		EntityTypeImplementor persister = sessionFactory().getTypeConfiguration().findEntityPersister( MyReferenceData.class );
+		EntityDescriptor persister = sessionFactory().getTypeConfiguration().findEntityPersister( MyReferenceData.class );
 		assertFalse( persister.getJavaTypeDescriptor().getMutabilityPlan().isMutable() );
 		assertTrue( persister.buildCacheEntry( null, null, null, null ).isReferenceEntry() );
 		assertFalse( persister.hasProxy() );

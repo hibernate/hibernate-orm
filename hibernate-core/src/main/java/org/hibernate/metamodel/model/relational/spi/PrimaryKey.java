@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.model.relational.spi;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,8 +25,8 @@ public class PrimaryKey {
 		this.table = table;
 	}
 
-	public Collection<Column> getColumns() {
-		return Collections.unmodifiableCollection( columns );
+	public List<Column> getColumns() {
+		return Collections.unmodifiableList( columns );
 	}
 
 	public void addColumn(Column column) {

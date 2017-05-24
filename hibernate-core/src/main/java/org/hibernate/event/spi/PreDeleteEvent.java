@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 
@@ -38,7 +38,7 @@ public class PreDeleteEvent
 			Object entity,
 			Serializable id,
 			Object[] deletedState,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			EventSource source) {
 		super( source, entity, id, persister );
 		this.deletedState = deletedState;

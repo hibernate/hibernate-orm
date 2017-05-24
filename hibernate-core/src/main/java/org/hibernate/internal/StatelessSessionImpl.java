@@ -41,7 +41,7 @@ import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -88,7 +88,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Serializable insert(String entityName, Object entity) {
 		checkOpen();
-		EntityTypeImplementor persister = getEntityPersister( entityName, entity );
+		EntityDescriptor persister = getEntityPersister( entityName, entity );
 		Serializable id = persister.getIdentifierGenerator().generate( this, entity );
 		Object[] state = persister.getPropertyValues( entity );
 		if ( persister.isVersioned() ) {
@@ -124,7 +124,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void delete(String entityName, Object entity) {
 		checkOpen();
-		EntityTypeImplementor persister = getEntityPersister( entityName, entity );
+		EntityDescriptor persister = getEntityPersister( entityName, entity );
 		Serializable id = persister.getIdentifier( entity, this );
 		Object version = persister.getVersion( entity );
 		persister.delete( id, version, entity, this );
@@ -142,7 +142,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void update(String entityName, Object entity) {
 		checkOpen();
-		EntityTypeImplementor persister = getEntityPersister( entityName, entity );
+		EntityDescriptor persister = getEntityPersister( entityName, entity );
 		Serializable id = persister.getIdentifier( entity, this );
 		Object[] state = persister.getPropertyValues( entity );
 		Object oldVersion;
@@ -206,7 +206,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void refresh(String entityName, Object entity, LockMode lockMode) {
-		final EntityTypeImplementor persister = this.getEntityPersister( entityName, entity );
+		final EntityDescriptor persister = this.getEntityPersister( entityName, entity );
 		final Serializable id = persister.getIdentifier( entity, this );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Refreshing transient {0}", MessageHelper.infoString( persister, id, this.getFactory() ) );
@@ -270,7 +270,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean eager,
 			boolean nullable) throws HibernateException {
 		checkOpen();
-		EntityTypeImplementor persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		EntityDescriptor persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
 		// first, try to load it from the temp PC associated to this SS
 		Object loaded = temporaryPersistenceContext.getEntity( generateEntityKey( id, persister ) );
 		if ( loaded != null ) {
@@ -405,7 +405,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public EntityTypeImplementor getEntityPersister(String entityName, Object object)
+	public EntityDescriptor getEntityPersister(String entityName, Object object)
 			throws HibernateException {
 		checkOpen();
 		if ( entityName == null ) {
@@ -561,7 +561,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
-		EntityTypeImplementor persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		EntityDescriptor persister = getFactory().getTypeConfiguration().findEntityPersister( entityName );
 		if ( !( persister instanceof OuterJoinLoadable ) ) {
 			throw new MappingException( "class persister is not OuterJoinLoadable: " + entityName );
 		}

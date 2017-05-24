@@ -8,7 +8,6 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.io.Serializable;
 import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.Type;
 
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -17,7 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.CollectionLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeFactory;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupProducer;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
@@ -38,14 +37,14 @@ import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
  * <br>
  * May be considered an immutable view of the mapping object
  * <p/>
- * Unless a customer {@link RuntimeModelNodeFactory} is used, it is expected
+ * Unless a customer {@link RuntimeModelDescriptorFactory} is used, it is expected
  * that implementations of CollectionDefinition define a constructor accepting the following arguments:<ol>
  *     <li>
  *         {@link Collection} - The metadata about the collection to be handled
  *         by the persister
  *     </li>
  *     <li>
- *         {@link ManagedTypeImplementor} - Describes the thing the declares the collection
+ *         {@link ManagedTypeDescriptor} - Describes the thing the declares the collection
  *     </li>
  *     <li>
  *         String - The name of the collection's attribute relative to AttributeContainer
@@ -62,13 +61,13 @@ import org.hibernate.sql.ast.produce.spi.TableReferenceContributor;
  * @see org.hibernate.collection.spi.PersistentCollection
  * @author Gavin King
  */
-public interface PersistentCollectionMetadata<O,C,E>
+public interface PersistentCollectionDescriptor<O,C,E>
 		extends NavigableContainer<C>, RootTableGroupProducer, TableGroupJoinProducer,
 		TableReferenceContributor, EmbeddedContainer<C> {
 
 	Class[] CONSTRUCTOR_SIGNATURE = new Class[] {
 			Collection.class,
-			ManagedTypeImplementor.class,
+			ManagedTypeDescriptor.class,
 			String.class,
 			CollectionRegionAccessStrategy.class,
 			RuntimeModelCreationContext.class

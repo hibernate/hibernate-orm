@@ -24,22 +24,24 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
+import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.graph.internal.AbstractAttributeNodeContainer;
+import org.hibernate.graph.internal.AttributeNodeImpl;
+import org.hibernate.graph.internal.EntityGraphImpl;
+import org.hibernate.graph.internal.SubgraphImpl;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpa.graph.internal.AbstractGraphNode;
-import org.hibernate.jpa.graph.internal.AttributeNodeImpl;
-import org.hibernate.jpa.graph.internal.EntityGraphImpl;
-import org.hibernate.jpa.graph.internal.SubgraphImpl;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
 import org.hibernate.metamodel.model.domain.internal.EntityHierarchyImpl;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
-import org.hibernate.metamodel.model.relational.spi.DatabaseModelProducer;
+import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
+import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -56,13 +58,13 @@ public class RuntimeModelCreationProcess {
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final MetadataBuildingContext metadataBuildingContext;
-	private final RuntimeModelNodeFactory persisterFactory;
+	private final RuntimeModelDescriptorFactory descriptorFactory;
 
-	private final Map<EntityMappingHierarchy,IdentifiableTypeImplementor> rootRootByHierarchy = new HashMap<>();
-	private final Map<EntityMappingHierarchy,EntityTypeImplementor> rootEntityByHierarchy = new HashMap<>();
+	private final Map<EntityMappingHierarchy,IdentifiableTypeDescriptor> rootRootByHierarchy = new HashMap<>();
+	private final Map<EntityMappingHierarchy,EntityDescriptor> rootEntityByHierarchy = new HashMap<>();
 
-	private final Map<IdentifiableTypeMapping,IdentifiableTypeImplementor> runtimeByBoot = new HashMap<>();
-	private final Map<IdentifiableTypeImplementor,IdentifiableTypeMapping> bootByRuntime = new HashMap<>();
+	private final Map<IdentifiableTypeMapping,IdentifiableTypeDescriptor> runtimeByBoot = new HashMap<>();
+	private final Map<IdentifiableTypeDescriptor,IdentifiableTypeMapping> bootByRuntime = new HashMap<>();
 
 	public RuntimeModelCreationProcess(
 			SessionFactoryImplementor sessionFactory,
@@ -70,15 +72,19 @@ public class RuntimeModelCreationProcess {
 		this.sessionFactory = sessionFactory;
 		this.metadataBuildingContext = metadataBuildingContext;
 
-		this.persisterFactory = sessionFactory.getServiceRegistry().getService( RuntimeModelNodeFactory.class );
+		this.descriptorFactory = sessionFactory.getServiceRegistry().getService( RuntimeModelDescriptorFactory.class );
 	}
 
 	public void execute() {
 		final InFlightMetadataCollector mappingMetadata = metadataBuildingContext.getMetadataCollector();
 
+		// todo (7.0) : better design where all FKs are created b4 we enter here
+		generateBootModelForeignKeys( mappingMetadata );
+
 		final DatabaseObjectResolutionContextImpl dbObjectResolver = new DatabaseObjectResolutionContextImpl();
-		final DatabaseModel databaseModel = new DatabaseModelProducer( metadataBuildingContext.getBootstrapContext() ).produceDatabaseModel(
+		final DatabaseModel databaseModel = new RuntimeDatabaseModelProducer( metadataBuildingContext.getBootstrapContext() ).produceDatabaseModel(
 				mappingMetadata.getDatabase(),
+				dbObjectResolver,
 				dbObjectResolver
 		);
 
@@ -93,10 +99,10 @@ public class RuntimeModelCreationProcess {
 		);
 
 		for ( EntityMappingHierarchy entityHierarchy : mappingMetadata.getEntityHierarchies() ) {
-			final IdentifiableTypeImplementor superType = resolveSuper( entityHierarchy.getRootType(), creationContext );
+			final IdentifiableTypeDescriptor superType = resolveSuper( entityHierarchy.getRootType(), creationContext );
 			rootRootByHierarchy.put( entityHierarchy, superType );
 
-			final EntityTypeImplementor<?> rootEntityPersister = (EntityTypeImplementor<?>) createIdentifiableType(
+			final EntityDescriptor<?> rootEntityPersister = (EntityDescriptor<?>) createIdentifiableType(
 					entityHierarchy.getRootType(),
 					creationContext
 			);
@@ -107,9 +113,9 @@ public class RuntimeModelCreationProcess {
 
 		}
 
-		for ( Map.Entry<EntityMappingHierarchy, IdentifiableTypeImplementor> entry : rootRootByHierarchy.entrySet() ) {
-			final EntityTypeImplementor rootEntity = rootEntityByHierarchy.get( entry.getKey() );
-			final IdentifiableTypeImplementor rootRoot = rootRootByHierarchy.get( entry.getKey() );
+		for ( Map.Entry<EntityMappingHierarchy, IdentifiableTypeDescriptor> entry : rootRootByHierarchy.entrySet() ) {
+			final EntityDescriptor rootEntity = rootEntityByHierarchy.get( entry.getKey() );
+			final IdentifiableTypeDescriptor rootRoot = rootRootByHierarchy.get( entry.getKey() );
 			final RootClass rootMapping = (RootClass) bootByRuntime.get( rootEntity );
 
 			// todo (6.0) : these will all change based on the Cache changes planned for 6.0
@@ -128,9 +134,14 @@ public class RuntimeModelCreationProcess {
 			finishInitialization( rootRoot, bootByRuntime.get( rootRoot ), creationContext, runtimeHierarchy );
 		}
 
-		persisterFactory.finishUp( creationContext );
+		descriptorFactory.finishUp( creationContext );
 
 		mappingMetadata.getNamedEntityGraphs().values().forEach( this::applyNamedEntityGraph );
+	}
+
+	private void generateBootModelForeignKeys(InFlightMetadataCollector mappingMetadata) {
+		// walk the boot model and create all mapping FKs (so they are ready for db process)
+		throw new NotYetImplementedException(  );
 	}
 
 	private EntityRegionAccessStrategy resolveEntityCacheAccessStrategy(EntityMappingHierarchy mappingHierarchy) {
@@ -146,23 +157,19 @@ public class RuntimeModelCreationProcess {
 		return null;
 	}
 
-	private IdentifiableTypeImplementor<?> createIdentifiableType(
+	private IdentifiableTypeDescriptor<?> createIdentifiableType(
 			IdentifiableTypeMapping bootMapping,
 			RuntimeModelCreationContext creationContext) {
-		final IdentifiableTypeImplementor runtimeType;
+		final IdentifiableTypeDescriptor runtimeType;
 		if ( bootMapping instanceof PersistentClass ) {
-			runtimeType = creationContext.getPersisterFactory().createEntityPersister(
+			runtimeType = creationContext.getRuntimeModelDescriptorFactory().createEntityDescriptor(
 					(EntityMapping) bootMapping,
-					null,
-					null,
 					creationContext
 			);
 		}
 		else {
-			runtimeType = creationContext.getPersisterFactory().createMappedSuperclass(
+			runtimeType = creationContext.getRuntimeModelDescriptorFactory().createMappedSuperclassDescriptor(
 					(MappedSuperclassMapping) bootMapping,
-					null,
-					null,
 					creationContext
 			);
 		}
@@ -174,7 +181,7 @@ public class RuntimeModelCreationProcess {
 	}
 
 	private void finishInitialization(
-			IdentifiableTypeImplementor runtimeType,
+			IdentifiableTypeDescriptor runtimeType,
 			IdentifiableTypeMapping bootType,
 			RuntimeModelCreationContext creationContext,
 			EntityHierarchyImpl runtimeHierarchy) {
@@ -195,7 +202,7 @@ public class RuntimeModelCreationProcess {
 		}
 	}
 
-	private IdentifiableTypeImplementor resolveSuper(
+	private IdentifiableTypeDescriptor resolveSuper(
 			IdentifiableTypeMapping mappingType,
 			RuntimeModelCreationContext creationContext) {
 		if ( mappingType == null ) {
@@ -222,7 +229,7 @@ public class RuntimeModelCreationProcess {
 				definition.getJpaEntityName()
 		);
 
-		final EntityTypeImplementor<?> entityPersister = metadataBuildingContext.getBootstrapContext()
+		final EntityDescriptor<?> entityPersister = metadataBuildingContext.getBootstrapContext()
 				.getTypeConfiguration()
 				.findEntityPersister( definition.getEntityName() );
 		if ( entityPersister == null ) {
@@ -260,7 +267,7 @@ public class RuntimeModelCreationProcess {
 	private void applyNamedAttributeNodes(
 			NamedAttributeNode[] namedAttributeNodes,
 			NamedEntityGraph namedEntityGraph,
-			AbstractGraphNode graphNode) {
+			AbstractAttributeNodeContainer graphNode) {
 		for ( NamedAttributeNode namedAttributeNode : namedAttributeNodes ) {
 			final String value = namedAttributeNode.value();
 			AttributeNodeImpl attributeNode = graphNode.addAttribute( value );
@@ -336,8 +343,8 @@ public class RuntimeModelCreationProcess {
 		}
 
 		@Override
-		public RuntimeModelNodeFactory getPersisterFactory() {
-			return persisterFactory;
+		public RuntimeModelDescriptorFactory getRuntimeModelDescriptorFactory() {
+			return descriptorFactory;
 		}
 
 		@Override
@@ -351,17 +358,22 @@ public class RuntimeModelCreationProcess {
 		}
 
 		@Override
-		public void registerEntityPersister(EntityTypeImplementor entityPersister) {
+		public PersistentCollectionTuplizerFactory getPersistentCollectionTuplizerFactory() {
+			return metadataBuildingContext.getBootstrapContext().getPersistentCollectionTuplizerFactory();
+		}
+
+		@Override
+		public void registerEntityPersister(EntityDescriptor entityPersister) {
 			getTypeConfiguration().register( entityPersister );
 		}
 
 		@Override
-		public void registerCollectionPersister(PersistentCollectionMetadata collectionPersister) {
+		public void registerCollectionPersister(PersistentCollectionDescriptor collectionPersister) {
 			getTypeConfiguration().register( collectionPersister );
 		}
 
 		@Override
-		public void registerEmbeddablePersister(EmbeddedTypeImplementor embeddablePersister) {
+		public void registerEmbeddablePersister(EmbeddedTypeDescriptor embeddablePersister) {
 			getTypeConfiguration().register( embeddablePersister );
 		}
 	}

@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.produce.metamodel.internal;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
@@ -21,7 +21,7 @@ public class NavigableReferenceInfoImpl implements NavigableReferenceInfo {
 	private final NavigablePath path;
 	private final String uniqueIdentifier;
 	private final String identificationVariable;
-	private final EntityTypeImplementor intrinsicDowncastTarget;
+	private final EntityDescriptor intrinsicDowncastTarget;
 
 	public NavigableReferenceInfoImpl(
 			NavigableContainerReferenceInfoImpl containerReference,
@@ -29,7 +29,7 @@ public class NavigableReferenceInfoImpl implements NavigableReferenceInfo {
 			NavigablePath path,
 			String uniqueIdentifier,
 			String identificationVariable,
-			EntityTypeImplementor intrinsicDowncastTarget) {
+			EntityDescriptor intrinsicDowncastTarget) {
 		this.containerReference = containerReference;
 		this.navigable = navigable;
 		this.path = path;
@@ -79,7 +79,7 @@ public class NavigableReferenceInfoImpl implements NavigableReferenceInfo {
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
+	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
 		return intrinsicDowncastTarget;
 	}
 }

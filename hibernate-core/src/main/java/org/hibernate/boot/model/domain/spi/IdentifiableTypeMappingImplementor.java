@@ -9,6 +9,8 @@ package org.hibernate.boot.model.domain.spi;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -38,4 +40,6 @@ public interface IdentifiableTypeMappingImplementor extends IdentifiableTypeMapp
 	}
 
 	int nextSubclassId();
+
+	<X> IdentifiableTypeDescriptor<X> makeRuntimeDescriptor(RuntimeModelCreationContext context);
 }

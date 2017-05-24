@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
-
 /**
  * Models a persistent (mapped) attribute in Hibernate's "runtime model".
  *
@@ -15,7 +13,7 @@ import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
  */
 public interface PersistentAttribute<O,T> extends Navigable<T>, javax.persistence.metamodel.Attribute<O,T> {
 	@Override
-	ManagedTypeImplementor<O> getContainer();
+	ManagedTypeDescriptor<O> getContainer();
 
 	default String getAttributeName() {
 		return getNavigableName();
@@ -27,7 +25,7 @@ public interface PersistentAttribute<O,T> extends Navigable<T>, javax.persistenc
 	}
 
 	@Override
-	default ManagedTypeImplementor<O> getDeclaringType() {
+	default ManagedTypeDescriptor<O> getDeclaringType() {
 		return getContainer();
 	}
 

@@ -33,7 +33,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.Type;
@@ -116,7 +116,7 @@ public abstract class AbstractSaveEventListener
 			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
 		}
 
-		EntityTypeImplementor persister = source.getEntityPersister( entityName, entity );
+		EntityDescriptor persister = source.getEntityPersister( entityName, entity );
 		Serializable generatedId = persister.getIdentifierGenerator().generate( source, entity );
 		if ( generatedId == null ) {
 			throw new IdentifierGenerationException( "null id generated for:" + entity.getClass() );
@@ -162,7 +162,7 @@ public abstract class AbstractSaveEventListener
 	protected Serializable performSave(
 			Object entity,
 			Serializable id,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			boolean useIdentityColumn,
 			Object anything,
 			EventSource source,
@@ -205,7 +205,7 @@ public abstract class AbstractSaveEventListener
 		);
 	}
 
-	protected boolean invokeSaveLifecycle(Object entity, EntityTypeImplementor persister, EventSource source) {
+	protected boolean invokeSaveLifecycle(Object entity, EntityDescriptor persister, EventSource source) {
 		// Sub-insertions should occur beforeQuery containing insertion so
 		// Try to do the callback now
 		if ( persister.implementsLifecycle() ) {
@@ -237,7 +237,7 @@ public abstract class AbstractSaveEventListener
 	protected Serializable performSaveOrReplicate(
 			Object entity,
 			EntityKey key,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			boolean useIdentityColumn,
 			Object anything,
 			EventSource source,
@@ -322,7 +322,7 @@ public abstract class AbstractSaveEventListener
 			Object[] values,
 			Serializable id,
 			Object entity,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			boolean useIdentityColumn,
 			EventSource source,
 			boolean shouldDelayIdentityInserts) {
@@ -387,7 +387,7 @@ public abstract class AbstractSaveEventListener
 			Object entity,
 			Serializable id,
 			Object[] values,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			SessionImplementor source) {
 		boolean substitute = source.getInterceptor().onSave(
 				entity,
@@ -419,7 +419,7 @@ public abstract class AbstractSaveEventListener
 	 */
 	protected void cascadeBeforeSave(
 			EventSource source,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			Object entity,
 			Object anything) {
 
@@ -450,7 +450,7 @@ public abstract class AbstractSaveEventListener
 	 */
 	protected void cascadeAfterSave(
 			EventSource source,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			Object entity,
 			Object anything) {
 

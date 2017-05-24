@@ -17,7 +17,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.JpaMapJoinImplementor;
 import org.hibernate.query.criteria.JpaPathImplementor;
@@ -164,7 +164,7 @@ public class MapKeyHelpers {
 	public static class MapKeyAttribute<K>
 			implements SingularAttribute<Map<K,?>,K>, Bindable<K>, Serializable {
 		private final MapAttribute<?,K,?> attribute;
-		private final PersistentCollectionMetadata mapPersister;
+		private final PersistentCollectionDescriptor mapPersister;
 		private final org.hibernate.type.spi.Type mapKeyType;
 		private final Type<K> jpaType;
 		private final BindableType jpaBindableType;

@@ -10,9 +10,11 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.boot.model.domain.BasicValueMapping;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.NavigableBasicValued;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.relational.spi.Column;
@@ -39,22 +41,23 @@ public class SingularPersistentAttributeBasic<O,J>
 	private AttributeConverterDefinition attributeConverterInfo;
 
 	public SingularPersistentAttributeBasic(
-			ManagedTypeImplementor<O> declaringType,
+			ManagedTypeDescriptor<O> declaringType,
 			String name,
 			PropertyAccess propertyAccess,
-			BasicValuedExpressableType<J> expressableType,
 			Disposition disposition,
-			AttributeConverterDefinition attributeConverterInfo,
-			List<Column> columns) {
-		super( declaringType, name, propertyAccess, expressableType, disposition, true );
+			boolean nullable,
+			BasicValueMapping<J> basicValueMapping,
+			RuntimeModelCreationContext context) {
+		super( declaringType, name, propertyAccess, disposition, nullable, basicValueMapping );
 
+		this.boundColumn = basicValueMapping.getMappedColumn();
 		assert columns.size() == 1;
 
 		this.attributeConverterInfo = attributeConverterInfo;
 		this.boundColumn = columns.get( 0 );
 
 		// todo (6.0) : resolve SimpleValue -> BasicType
-		this.basicType = null;
+		this.basicType = basicType;
 	}
 
 	@Override

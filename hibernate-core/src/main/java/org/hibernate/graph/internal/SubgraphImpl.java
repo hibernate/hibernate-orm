@@ -13,20 +13,20 @@ import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeContainer;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 
 /**
  * @author Steve Ebersole
  */
 public class SubgraphImpl<T> extends AbstractAttributeNodeContainer<T> implements Subgraph<T>, AttributeNodeContainer {
-	private final ManagedTypeImplementor managedType;
+	private final ManagedTypeDescriptor managedType;
 	private final Class<T> subclass;
 
 	@SuppressWarnings("WeakerAccess")
 	public SubgraphImpl(
 			SessionFactoryImplementor entityManagerFactory,
-			ManagedTypeImplementor managedType,
+			ManagedTypeDescriptor managedType,
 			Class<T> subclass) {
 		super( entityManagerFactory, true );
 		this.managedType = managedType;
@@ -123,7 +123,7 @@ public class SubgraphImpl<T> extends AbstractAttributeNodeContainer<T> implement
 	}
 
 	@Override
-	ManagedTypeImplementor getManagedType() {
+	ManagedTypeDescriptor getManagedType() {
 		return managedType;
 	}
 }

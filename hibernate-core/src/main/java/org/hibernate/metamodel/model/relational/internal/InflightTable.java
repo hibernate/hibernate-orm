@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.relational.internal;
 
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Table;
 
 /**
@@ -14,4 +15,10 @@ import org.hibernate.metamodel.model.relational.spi.Table;
  */
 public interface InflightTable extends Table {
 	void addColumn(Column column);
+
+	ForeignKey createForeignKey(
+			String name,
+			boolean export,
+			Table targetTable,
+			ForeignKey.ColumnMappings columnMappings);
 }

@@ -55,7 +55,7 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
@@ -125,7 +125,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public EntityKey generateEntityKey(Serializable id, EntityTypeImplementor persister) {
+	public EntityKey generateEntityKey(Serializable id, EntityDescriptor persister) {
 		return delegate.generateEntityKey( id, persister );
 	}
 
@@ -209,7 +209,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public EntityTypeImplementor getEntityPersister(String entityName, Object object) throws HibernateException {
+	public EntityDescriptor getEntityPersister(String entityName, Object object) throws HibernateException {
 		return delegate.getEntityPersister( entityName, object );
 	}
 
@@ -1074,7 +1074,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Object instantiate(EntityTypeImplementor persister, Serializable id) throws HibernateException {
+	public Object instantiate(EntityDescriptor persister, Serializable id) throws HibernateException {
 		return delegate.instantiate( persister, id );
 	}
 

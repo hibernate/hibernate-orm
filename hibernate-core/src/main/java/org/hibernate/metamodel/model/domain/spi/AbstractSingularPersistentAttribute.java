@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.boot.model.domain.ValueMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 
 /**
@@ -19,13 +19,13 @@ public abstract class AbstractSingularPersistentAttribute<O,J>
 	private final Disposition disposition;
 
 	public AbstractSingularPersistentAttribute(
-			ManagedTypeImplementor<O> attributeContainer,
+			ManagedTypeDescriptor<O> attributeContainer,
 			String name,
 			PropertyAccess propertyAccess,
-			ExpressableType<J> expressableType,
 			Disposition disposition,
-			boolean nullable) {
-		super( attributeContainer, name, expressableType.getJavaTypeDescriptor(), propertyAccess );
+			boolean nullable,
+			ValueMapping<J> valueMapping) {
+		super( attributeContainer, name, valueMapping.getJavaTypeDescriptor(), propertyAccess );
 		this.disposition = disposition;
 		this.nullable = nullable;
 	}

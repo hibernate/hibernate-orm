@@ -29,7 +29,7 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -135,7 +135,7 @@ public class CacheLazyLoadNoTransTest extends BaseNonConfigCoreFunctionalTestCas
 
 	private boolean isCached(Serializable id, Class<?> entityClass, String attr) {
 		Session session = openSession();
-		PersistentCollectionMetadata persister = sessionFactory().getCollectionPersister( entityClass.getName() + "." + attr );
+		PersistentCollectionDescriptor persister = sessionFactory().getCollectionPersister( entityClass.getName() + "." + attr );
 		CollectionRegionAccessStrategy cache = persister.getCacheAccessStrategy();
 		Object key = cache.generateCacheKey( id, persister, sessionFactory(), session.getTenantIdentifier() );
 		Object cachedValue = cache.get(

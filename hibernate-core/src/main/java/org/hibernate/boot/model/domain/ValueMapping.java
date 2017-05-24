@@ -9,20 +9,21 @@ package org.hibernate.boot.model.domain;
 import java.util.List;
 
 import org.hibernate.FetchMode;
-import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.type.Type;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public interface ValueMapping {
+public interface ValueMapping<J> {
 	MappedTable getMappedTable();
 	List<MappedColumn> getMappedColumns();
 
-	Type getType() throws MappingException;
 	FetchMode getFetchMode();
 
-	// todo (6.0) : others as deemed appropriate - see o.h.mapping.Value
+	MetadataBuildingContext getMetadataBuildingContext();
+
+	JavaTypeDescriptor<J> getJavaTypeDescriptor();
 }

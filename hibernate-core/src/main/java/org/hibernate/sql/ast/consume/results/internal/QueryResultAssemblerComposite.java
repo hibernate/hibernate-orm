@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.consume.results.internal;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.ast.consume.results.spi.QueryResultAssembler;
@@ -23,12 +23,12 @@ import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 public class QueryResultAssemblerComposite implements QueryResultAssembler {
 	private final QueryResultCompositeImpl returnComposite;
 	private final List<SqlSelection> sqlSelections;
-	private final EmbeddedTypeImplementor embeddedPersister;
+	private final EmbeddedTypeDescriptor embeddedPersister;
 
 	public QueryResultAssemblerComposite(
 			QueryResultCompositeImpl returnComposite,
 			List<SqlSelection> sqlSelections,
-			EmbeddedTypeImplementor embeddedPersister) {
+			EmbeddedTypeDescriptor embeddedPersister) {
 
 		this.returnComposite = returnComposite;
 		this.sqlSelections = sqlSelections;

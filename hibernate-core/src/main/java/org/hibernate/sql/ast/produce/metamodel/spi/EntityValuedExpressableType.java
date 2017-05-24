@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
 /**
@@ -20,7 +20,7 @@ public interface EntityValuedExpressableType<T> extends ExpressableType<T>, Navi
 	// todo (6.0) : should this extend NavigableSource rather than just Navigable?
 	// 		or should this just specialize ExpressableType?
 
-	EntityTypeImplementor<T> getEntityDescriptor();
+	EntityDescriptor<T> getEntityDescriptor();
 
 	String getEntityName();
 	String getJpaEntityName();

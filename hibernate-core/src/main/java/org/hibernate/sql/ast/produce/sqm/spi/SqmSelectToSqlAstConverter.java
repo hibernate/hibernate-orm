@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeContainer;
 import org.hibernate.hql.internal.ast.tree.OrderByClause;
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.query.spi.EntityGraphQueryHint;
 import org.hibernate.query.spi.NavigablePath;
@@ -411,7 +411,7 @@ public class SqmSelectToSqlAstConverter
 		}
 
 		final SqmEntityReference binding = sqmRoot.getNavigableReference();
-		final EntityTypeImplementor entityMetadata = (EntityTypeImplementor) binding.getReferencedNavigable();
+		final EntityDescriptor entityMetadata = (EntityDescriptor) binding.getReferencedNavigable();
 		final EntityTableGroup group = entityMetadata.createRootTableGroup(
 				sqmRoot,
 				new RootTableGroupContext() {
@@ -530,7 +530,7 @@ public class SqmSelectToSqlAstConverter
 	@Override
 	public TableGroupJoin visitCrossJoinedFromElement(SqmCrossJoin joinedFromElement) {
 		final QuerySpec querySpec = currentQuerySpec();
-		final EntityTypeImplementor entityPersister = joinedFromElement.getIntrinsicSubclassEntityMetadata();
+		final EntityDescriptor entityPersister = joinedFromElement.getIntrinsicSubclassEntityMetadata();
 		final EntityTableGroup group = entityPersister.createRootTableGroup(
 				joinedFromElement,
 				new RootTableGroupContext() {

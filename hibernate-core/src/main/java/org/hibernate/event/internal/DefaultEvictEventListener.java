@@ -20,7 +20,7 @@ import org.hibernate.event.spi.EvictEvent;
 import org.hibernate.event.spi.EvictEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -59,7 +59,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 				throw new IllegalArgumentException( "Could not determine identifier of proxy passed to evict()" );
 			}
 
-			final EntityTypeImplementor persister = source.getFactory().getEntityPersister( li.getEntityName() );
+			final EntityDescriptor persister = source.getFactory().getEntityPersister( li.getEntityName() );
 			final EntityKey key = source.generateEntityKey( id, persister );
 			persistenceContext.removeProxy( key );
 
@@ -82,7 +82,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 				// see if the passed object is even an entity, and if not throw an exception
 				// 		this is different than legacy Hibernate behavior, but what JPA 2.1 is calling for
 				//		with EntityManager.detach
-				EntityTypeImplementor persister = null;
+				EntityDescriptor persister = null;
 				final String entityName = persistenceContext.getSession().guessEntityName( object );
 				if ( entityName != null ) {
 					try {
@@ -101,7 +101,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	protected void doEvict(
 			final Object object,
 			final EntityKey key,
-			final EntityTypeImplementor persister,
+			final EntityDescriptor persister,
 			final EventSource session)
 			throws HibernateException {
 

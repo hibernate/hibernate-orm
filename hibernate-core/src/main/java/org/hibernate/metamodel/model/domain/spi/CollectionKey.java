@@ -19,11 +19,11 @@ import org.hibernate.metamodel.model.relational.spi.Table;
  * @author Steve Ebersole
  */
 public class CollectionKey {
-	private final AbstractPersistentCollectionMetadata collectionPersister;
+	private final AbstractPersistentCollectionDescriptor collectionPersister;
 
 	private ForeignKey.ColumnMappings joinColumnMappings;
 
-	public CollectionKey(AbstractPersistentCollectionMetadata<?,?,?> collectionPersister, Collection mappingBinding) {
+	public CollectionKey(AbstractPersistentCollectionDescriptor<?,?,?> collectionPersister, Collection mappingBinding) {
 		this.collectionPersister = collectionPersister;
 	}
 
@@ -84,7 +84,7 @@ public class CollectionKey {
 		}
 		else {
 			// otherwise we just need to resolve the column names in the element table(s) (as the "collection table")
-			final EntityTypeImplementor elementPersister = ( (CollectionElementEntity) collectionPersister.getElementDescriptor() ).getEntityDescriptor();
+			final EntityDescriptor elementPersister = ( (CollectionElementEntity) collectionPersister.getElementDescriptor() ).getEntityDescriptor();
 
 			for ( int i = 0; i < columnNames.length; i++ ) {
 				// it is conceivable that the column already exists

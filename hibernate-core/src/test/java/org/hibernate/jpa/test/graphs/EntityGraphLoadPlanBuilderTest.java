@@ -37,7 +37,7 @@ import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;
 import org.hibernate.loader.plan.spi.Join;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.QuerySpace;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -322,7 +322,7 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		else {
 			loadQueryInfluencers.setLoadGraph( entityGraph );
 		}
-		EntityTypeImplementor ep = (EntityTypeImplementor) sfi().getClassMetadata( clazz );
+		EntityDescriptor ep = (EntityDescriptor) sfi().getClassMetadata( clazz );
 		AbstractMetamodelDrivenSqlSelectPlanBuilder strategy = Mode.FETCH == mode ? new FetchGraphLoadPlanBuildingStrategy(
 				sfi(), loadQueryInfluencers, LockMode.NONE
 		) : new LoadGraphLoadPlanBuildingStrategy( sfi(), loadQueryInfluencers, LockMode.NONE );

@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.id.enhanced.PooledOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
@@ -30,7 +30,7 @@ public class PooledSequenceTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNormalBoundary() {
-		EntityTypeImplementor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
+		EntityDescriptor persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		IdentifierGenerator identifierGenerator = persister.getIdentifierDescriptor().getIdentifierValueGenerator();
 		assertClassAssignability( SequenceStyleGenerator.class, identifierGenerator.getClass() );
 		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) identifierGenerator;

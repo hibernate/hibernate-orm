@@ -7,7 +7,7 @@
 package org.hibernate.tuple.component;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.spi.EmbeddedType;
@@ -37,7 +37,7 @@ public class CompositionBasedCompositionAttribute extends AbstractCompositionAtt
 	}
 
 	@Override
-	protected EntityTypeImplementor locateOwningPersister() {
+	protected EntityDescriptor locateOwningPersister() {
 		final AbstractCompositionAttribute source = (AbstractCompositionAttribute) getSource();
 		if ( EntityDefinition.class.isInstance( source.getSource() ) ) {
 			return EntityDefinition.class.cast( source.getSource() ).getEntityPersister();

@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -58,7 +58,7 @@ public class OneToOnePrimaryKeyJoinColumnMapper extends AbstractOneToOneMapper {
 	private Object createNotAuditedEntityReference(
 			AuditReaderImplementor versionsReader, Class<?> entityClass,
 			String entityName, Serializable primaryKey) {
-		final EntityTypeImplementor entityPersister = versionsReader.getSessionImplementor().getFactory()
+		final EntityDescriptor entityPersister = versionsReader.getSessionImplementor().getFactory()
 				.getTypeConfiguration().findEntityPersister( entityName );
 		if ( entityPersister.hasProxy() ) {
 			// If possible create a proxy. Returning complete object may affect performance.

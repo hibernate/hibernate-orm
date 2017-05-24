@@ -10,6 +10,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * Models any mapped "selectable reference".  This might be a reference to a
@@ -23,6 +24,8 @@ public interface MappedColumn {
 	 * a derived columns, this would be the formula expression.
 	 */
 	String getText();
+
+	SqlTypeDescriptor getSqlTypeDescriptor();
 
 	Column generateRuntimeColumn(
 			Table runtimeTable,

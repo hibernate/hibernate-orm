@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.internal.old.AbstractProducedQuery;
 
 /**
@@ -28,7 +28,7 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( NamedQueryLoader.class );
 
 	private final String queryName;
-	private final EntityTypeImplementor persister;
+	private final EntityDescriptor persister;
 
 	/**
 	 * Constructs the NamedQueryLoader
@@ -36,7 +36,7 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 	 * @param queryName The name of the named query to use
 	 * @param persister The corresponding persister for the entity we are loading
 	 */
-	public NamedQueryLoader(String queryName, EntityTypeImplementor persister) {
+	public NamedQueryLoader(String queryName, EntityDescriptor persister) {
 		super();
 		this.queryName = queryName;
 		this.persister = persister;

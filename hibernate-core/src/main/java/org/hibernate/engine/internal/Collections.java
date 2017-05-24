@@ -19,7 +19,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
 
@@ -54,7 +54,7 @@ public final class Collections {
 	private static void processDereferencedCollection(PersistentCollection coll, SessionImplementor session) {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final CollectionEntry entry = persistenceContext.getCollectionEntry( coll );
-		final PersistentCollectionMetadata loadedPersister = entry.getLoadedPersister();
+		final PersistentCollectionDescriptor loadedPersister = entry.getLoadedPersister();
 
 		if ( loadedPersister != null && LOG.isDebugEnabled() ) {
 			LOG.debugf(
@@ -157,7 +157,7 @@ public final class Collections {
 		}
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		final PersistentCollectionMetadata persister = factory.getTypeConfiguration().findCollectionPersister( type.getRole() );
+		final PersistentCollectionDescriptor persister = factory.getTypeConfiguration().findCollectionPersister( type.getRole() );
 
 		ce.setCurrentPersister( persister );
 		//TODO: better to pass the id in as an argument?
@@ -240,8 +240,8 @@ public final class Collections {
 		}
 		entry.setProcessed( true );
 
-		final PersistentCollectionMetadata loadedPersister = entry.getLoadedPersister();
-		final PersistentCollectionMetadata currentPersister = entry.getCurrentPersister();
+		final PersistentCollectionDescriptor loadedPersister = entry.getLoadedPersister();
+		final PersistentCollectionDescriptor currentPersister = entry.getCurrentPersister();
 		if ( loadedPersister != null || currentPersister != null ) {
 			// it is or was referenced _somewhere_
 

@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttribute<O,J> {
-	private final ManagedTypeImplementor<O> container;
+	private final ManagedTypeDescriptor<O> container;
 	private final JavaTypeDescriptor<J> javaTypeDescriptor;
 	private final PropertyAccess access;
 
@@ -26,7 +26,7 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 	private final String sqlAliasStem;
 
 	public AbstractPersistentAttribute(
-			ManagedTypeImplementor<O> container,
+			ManagedTypeDescriptor<O> container,
 			String name,
 			JavaTypeDescriptor<J> javaTypeDescriptor,
 			PropertyAccess access) {
@@ -44,7 +44,7 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 	}
 
 	@Override
-	public ManagedTypeImplementor<O> getContainer() {
+	public ManagedTypeDescriptor<O> getContainer() {
 		return container;
 	}
 

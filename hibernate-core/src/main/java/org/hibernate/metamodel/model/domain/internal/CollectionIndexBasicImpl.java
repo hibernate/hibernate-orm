@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexBasic;
 import org.hibernate.metamodel.model.domain.spi.ConvertibleNavigable;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
@@ -37,7 +37,7 @@ public class CollectionIndexBasicImpl<J>
 	private final AttributeConverterDefinition attributeConverter;
 
 	public CollectionIndexBasicImpl(
-			PersistentCollectionMetadata persister,
+			PersistentCollectionDescriptor persister,
 			IndexedCollection mappingBinding,
 			RuntimeModelCreationContext creationContext) {
 		super( persister );

@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.engine.profile;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Models the association of a given fetch.
@@ -13,7 +13,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
  * @author Steve Ebersole
  */
 public class Association {
-	private final EntityTypeImplementor owner;
+	private final EntityDescriptor owner;
 	private final String associationPath;
 	private final String role;
 
@@ -23,13 +23,13 @@ public class Association {
 	 * @param owner The entity owning the association
 	 * @param associationPath The path of the association, from the entity
 	 */
-	public Association(EntityTypeImplementor owner, String associationPath) {
+	public Association(EntityDescriptor owner, String associationPath) {
 		this.owner = owner;
 		this.associationPath = associationPath;
 		this.role = owner.getEntityName() + '.' + associationPath;
 	}
 
-	public EntityTypeImplementor getOwner() {
+	public EntityDescriptor getOwner() {
 		return owner;
 	}
 

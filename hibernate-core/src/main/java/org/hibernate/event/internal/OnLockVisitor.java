@@ -12,7 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -37,7 +37,7 @@ public class OnLockVisitor extends ReattachVisitor {
 		}
 
 		final SessionImplementor session = getSession();
-		final PersistentCollectionMetadata persister = session.getFactory().getTypeConfiguration().findCollectionPersister( type.getRole() );
+		final PersistentCollectionDescriptor persister = session.getFactory().getTypeConfiguration().findCollectionPersister( type.getRole() );
 
 		if ( collection instanceof PersistentCollection ) {
 			final PersistentCollection persistentCollection = (PersistentCollection) collection;

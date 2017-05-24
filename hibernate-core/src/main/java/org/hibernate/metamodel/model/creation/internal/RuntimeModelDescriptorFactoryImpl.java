@@ -16,37 +16,37 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
+import org.hibernate.boot.model.domain.EntityMapping;
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
+import org.hibernate.boot.model.domain.MappedSuperclassMapping;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.JoinedSubclass;
-import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedContainer;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceStrategy;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeFactory;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * The standard ORM implementation of the {@link RuntimeModelNodeFactory} contract
+ * The standard ORM implementation of the {@link RuntimeModelDescriptorFactory} contract
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
-public final class RuntimeModelNodeFactoryImpl implements RuntimeModelNodeFactory, ServiceRegistryAwareService {
+public final class RuntimeModelDescriptorFactoryImpl
+		implements RuntimeModelDescriptorFactory, ServiceRegistryAwareService {
 	private ServiceRegistryImplementor serviceRegistry;
 
 	private RuntimeModelNodeClassResolver persisterClassResolver;
@@ -89,17 +89,13 @@ public final class RuntimeModelNodeFactoryImpl implements RuntimeModelNodeFactor
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
-	public EntityTypeImplementor createEntityPersister(
-			PersistentClass entityBinding,
-			EntityRegionAccessStrategy entityCacheAccessStrategy,
-			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
-			RuntimeModelCreationContext creationContext) throws HibernateException {
-
+	public <J> EntityDescriptor<J> createEntityDescriptor(
+			EntityMapping bootMapping,
+			RuntimeModelCreationContext creationContext) {
 		// todo : MappedSuperclass...
 
 		// See if we had an existing (partially created) node...
-		EntityHierarchyNode entityHierarchyNode = nameToHierarchyNodeMap.get( entityBinding.getEntityName() );
+		EntityHierarchyNode entityHierarchyNode = nameToHierarchyNodeMap.get( bootMapping.getEntityName() );
 		if ( entityHierarchyNode != null ) {
 			// we create the EntityHierarchyNode for all super types before we
 			//		actually create the super's EntityPersister.  This check
@@ -108,21 +104,19 @@ public final class RuntimeModelNodeFactoryImpl implements RuntimeModelNodeFactor
 			assert entityHierarchyNode.getEntityPersister() == null;
 		}
 		else {
-			entityHierarchyNode = new EntityHierarchyNode( entityBinding );
-			nameToHierarchyNodeMap.put( entityBinding.getEntityName(), entityHierarchyNode );
+			entityHierarchyNode = new EntityHierarchyNode( bootMapping );
+			nameToHierarchyNodeMap.put( bootMapping.getEntityName(), entityHierarchyNode );
 		}
 
-		final EntityTypeImplementor entityPersister = instantiateEntityPersister(
-				entityBinding,
-				entityCacheAccessStrategy,
-				naturalIdCacheAccessStrategy,
+		final EntityDescriptor entityPersister = instantiateEntityPersister(
+				bootMapping,
 				creationContext
 		);
 
 
 		entityHierarchyNode.setEntityPersister( entityPersister );
 
-		final EntityHierarchyNode superTypeNode = interpretSuperTypeNode( entityBinding );
+		final EntityHierarchyNode superTypeNode = interpretSuperTypeNode( bootMapping );
 
 		if ( superTypeNode == null ) {
 			roots.add( entityHierarchyNode );
@@ -135,41 +129,33 @@ public final class RuntimeModelNodeFactoryImpl implements RuntimeModelNodeFactor
 	}
 
 	@SuppressWarnings("unchecked")
-	private EntityTypeImplementor instantiateEntityPersister(
-			PersistentClass entityBinding,
-			EntityRegionAccessStrategy entityCacheAccessStrategy,
-			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
+	private EntityDescriptor instantiateEntityPersister(
+			EntityMapping bootMapping,
 			RuntimeModelCreationContext creationContext) {
 		// If the metadata for the entity specified an explicit persister class, use it...
-		Class<? extends EntityTypeImplementor> persisterClass = entityBinding.getEntityPersisterClass();
+		Class<? extends EntityDescriptor> persisterClass = bootMapping.getEntityPersisterClass();
 		if ( persisterClass == null ) {
 			// Otherwise, use the persister class indicated by the PersisterClassResolver service
-			persisterClass = persisterClassResolver.getEntityPersisterClass( entityBinding );
+			persisterClass = persisterClassResolver.getEntityPersisterClass( bootMapping );
 		}
 
 		return instantiateEntityPersister(
 				persisterClass,
-				entityBinding,
-				entityCacheAccessStrategy,
-				naturalIdCacheAccessStrategy,
+				bootMapping,
 				creationContext
 		);
 	}
 
 	@SuppressWarnings( {"unchecked"})
-	private EntityTypeImplementor instantiateEntityPersister(
-			Class<? extends EntityTypeImplementor> persisterClass,
-			PersistentClass entityBinding,
-			EntityRegionAccessStrategy entityCacheAccessStrategy,
-			NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy,
+	private EntityDescriptor instantiateEntityPersister(
+			Class<? extends EntityDescriptor> persisterClass,
+			EntityMapping bootMapping,
 			RuntimeModelCreationContext creationContext) {
 		try {
-			final Constructor<? extends EntityTypeImplementor> constructor = persisterClass.getConstructor( EntityTypeImplementor.STANDARD_CONSTRUCTOR_SIG );
+			final Constructor<? extends EntityDescriptor> constructor = persisterClass.getConstructor( EntityDescriptor.STANDARD_CONSTRUCTOR_SIG );
 			try {
 				return constructor.newInstance(
-						entityBinding,
-						entityCacheAccessStrategy,
-						naturalIdCacheAccessStrategy,
+						bootMapping,
 						creationContext
 				);
 			}
@@ -221,43 +207,20 @@ public final class RuntimeModelNodeFactoryImpl implements RuntimeModelNodeFactor
 		}
 	}
 
-	private EntityHierarchyNode interpretSuperTypeNode(PersistentClass entityBinding) {
-		if ( entityBinding.getSuperMappedSuperclass() != null ) {
-			// If identifiableTypeMapping#getSuperMappedSuperclass() is not null, that is the direct super type
-			return interpretMappedSuperclass( entityBinding.getSuperMappedSuperclass() );
-		}
-		else if ( entityBinding.getSuperclass() != null ) {
-			// else, if identifiableTypeMapping#getSuperTypeMapping() is not null, that is the direct super type
-			// 		in this case we want to create the TypeHierarchyNode (if not already there), but not the persisters...
-			// 		that will happen on later call to
-			final String superTypeName = entityBinding.getSuperclass().getEntityName();
-			EntityHierarchyNode node = nameToHierarchyNodeMap.computeIfAbsent(
-					superTypeName,
-					k -> new EntityHierarchyNode( entityBinding.getSuperclass() )
-			);
-			return node;
-		}
-		else {
-			// else, there is no super.
-			return null;
-		}
-	}
-
-	private EntityHierarchyNode interpretMappedSuperclass(MappedSuperclass mappedSuperclass) {
-		if ( mappedSuperclass == null ) {
+	private EntityHierarchyNode interpretSuperTypeNode(IdentifiableTypeMapping bootMapping) {
+		if ( bootMapping.getSuperTypeMapping() == null ) {
 			return null;
 		}
 
-		assert mappedSuperclass.getMappedClass() != null;
-		final EntityHierarchyNode existing = nameToHierarchyNodeMap.get( mappedSuperclass.getMappedClass().getName() );
-		if ( existing != null ) {
-			return existing;
-		}
-
-		return makeMappedSuperclassTypeNode( mappedSuperclass );
+		final String superTypeName = bootMapping.getSuperTypeMapping().getName();
+		return nameToHierarchyNodeMap.computeIfAbsent(
+				superTypeName,
+				k -> new EntityHierarchyNode( bootMapping.getSuperTypeMapping() )
+		);
 	}
 
-	private EntityHierarchyNode makeMappedSuperclassTypeNode(MappedSuperclass mappedSuperclass) {
+	private EntityHierarchyNode makeMappedSuperclassTypeNode(MappedSuperclassMapping mappedSuperclass) {
+
 		assert mappedSuperclass.getMappedClass() != null;
 
 		final EntityHierarchyNode mappedSuperclassTypeSuperNode = interpretMappedSuperclass( mappedSuperclass.getSuperMappedSuperclass() );
@@ -271,14 +234,14 @@ public final class RuntimeModelNodeFactoryImpl implements RuntimeModelNodeFactor
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public PersistentCollectionMetadata createCollectionPersister(
+	public PersistentCollectionDescriptor createPersistentCollectionDescriptor(
 			Collection collectionBinding,
-			ManagedTypeImplementor source,
+			ManagedTypeDescriptor source,
 			String localName,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
 		// If the metadata for the collection specified an explicit persister class, use it
-		Class<? extends PersistentCollectionMetadata> persisterClass = collectionBinding.getCollectionPersisterClass();
+		Class<? extends PersistentCollectionDescriptor> persisterClass = collectionBinding.getCollectionPersisterClass();
 		if ( persisterClass == null ) {
 			// Otherwise, use the persister class indicated by the PersisterClassResolver service
 			persisterClass = persisterClassResolver.getCollectionPersisterClass( collectionBinding );
@@ -287,15 +250,15 @@ public final class RuntimeModelNodeFactoryImpl implements RuntimeModelNodeFactor
 	}
 
 	@SuppressWarnings( {"unchecked"})
-	private PersistentCollectionMetadata createCollectionPersister(
-			Class<? extends PersistentCollectionMetadata> persisterClass,
+	private PersistentCollectionDescriptor createCollectionPersister(
+			Class<? extends PersistentCollectionDescriptor> persisterClass,
 			Collection collectionBinding,
-			ManagedTypeImplementor source,
+			ManagedTypeDescriptor source,
 			String localName,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) {
 		try {
-			Constructor<? extends PersistentCollectionMetadata> constructor = persisterClass.getConstructor( PersistentCollectionMetadata.CONSTRUCTOR_SIGNATURE );
+			Constructor<? extends PersistentCollectionDescriptor> constructor = persisterClass.getConstructor( PersistentCollectionDescriptor.CONSTRUCTOR_SIGNATURE );
 			try {
 				return constructor.newInstance(
 						collectionBinding,
@@ -330,15 +293,15 @@ public final class RuntimeModelNodeFactoryImpl implements RuntimeModelNodeFactor
 	}
 
 	@Override
-	public EmbeddedTypeImplementor createEmbeddablePersister(
+	public EmbeddedTypeDescriptor createEmbeddedTypeDescriptor(
 			EmbeddedValueMapping embeddedValueMapping,
 			EmbeddedContainer source,
 			String localName,
 			RuntimeModelCreationContext creationContext) {
-		final Class<? extends EmbeddedTypeImplementor> persisterClass = persisterClassResolver.getEmbeddablePersisterClass( embeddedValueMapping );
+		final Class<? extends EmbeddedTypeDescriptor> persisterClass = persisterClassResolver.getEmbeddablePersisterClass( embeddedValueMapping );
 
 		try {
-			Constructor<? extends EmbeddedTypeImplementor> constructor = persisterClass.getConstructor( EmbeddedTypeImplementor.STANDARD_CTOR_SIGNATURE );
+			Constructor<? extends EmbeddedTypeDescriptor> constructor = persisterClass.getConstructor( EmbeddedTypeDescriptor.STANDARD_CTOR_SIGNATURE );
 			try {
 				return constructor.newInstance(
 						embeddedValueMapping,
@@ -389,10 +352,10 @@ public final class RuntimeModelNodeFactoryImpl implements RuntimeModelNodeFactor
 	public static class EntityHierarchyNode {
 		private final IdentifiableTypeMapping identifiableTypeMapping;
 
-		private EntityTypeImplementor entityPersister;
+		private EntityDescriptor entityPersister;
 		private Set<EntityHierarchyNode> subEntityNodes;
 
-		public EntityHierarchyNode(PersistentClass identifiableTypeMapping) {
+		public EntityHierarchyNode(IdentifiableTypeMapping identifiableTypeMapping) {
 			this.identifiableTypeMapping = identifiableTypeMapping;
 		}
 
@@ -400,11 +363,11 @@ public final class RuntimeModelNodeFactoryImpl implements RuntimeModelNodeFactor
 			return identifiableTypeMapping;
 		}
 
-		public EntityTypeImplementor getEntityPersister() {
+		public EntityDescriptor getEntityPersister() {
 			return entityPersister;
 		}
 
-		public void setEntityPersister(EntityTypeImplementor entityPersister) {
+		public void setEntityPersister(EntityDescriptor entityPersister) {
 			if ( this.entityPersister != null ) {
 				throw new IllegalStateException( "TypeHierarchyNode.entityPersister ws already defined" );
 			}
@@ -418,7 +381,7 @@ public final class RuntimeModelNodeFactoryImpl implements RuntimeModelNodeFactor
 			subEntityNodes.add( subEntityNode );
 		}
 
-		public void finishUp(IdentifiableTypeImplementor superType, RuntimeModelCreationContext creationContext) {
+		public void finishUp(IdentifiableTypeDescriptor superType, RuntimeModelCreationContext creationContext) {
 			if ( getEntityPersister() == null ) {
 				throw new HibernateException( "EntityPersister not yet known; cannot finishUp" );
 			}
@@ -461,14 +424,14 @@ public final class RuntimeModelNodeFactoryImpl implements RuntimeModelNodeFactor
 	// Deprecations
 
 	/**
-	 * @deprecated Use {@link RuntimeModelNodeFactoryImpl#ENTITY_PERSISTER_CONSTRUCTOR_ARGS} instead.
+	 * @deprecated Use {@link RuntimeModelDescriptorFactoryImpl#ENTITY_PERSISTER_CONSTRUCTOR_ARGS} instead.
 	 */
 	@Deprecated
-	public static final Class[] ENTITY_PERSISTER_CONSTRUCTOR_ARGS = EntityTypeImplementor.STANDARD_CONSTRUCTOR_SIG;
+	public static final Class[] ENTITY_PERSISTER_CONSTRUCTOR_ARGS = EntityDescriptor.STANDARD_CONSTRUCTOR_SIG;
 
 	/**
-	 * @deprecated Use {@link PersistentCollectionMetadata#CONSTRUCTOR_SIGNATURE} instead
+	 * @deprecated Use {@link PersistentCollectionDescriptor#CONSTRUCTOR_SIGNATURE} instead
 	 */
 	@Deprecated
-	public static final Class[] COLLECTION_PERSISTER_CONSTRUCTOR_ARGS = PersistentCollectionMetadata.CONSTRUCTOR_SIGNATURE;
+	public static final Class[] COLLECTION_PERSISTER_CONSTRUCTOR_ARGS = PersistentCollectionDescriptor.CONSTRUCTOR_SIGNATURE;
 }

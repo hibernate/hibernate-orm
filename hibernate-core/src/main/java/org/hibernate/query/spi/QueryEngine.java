@@ -74,4 +74,8 @@ public class QueryEngine {
 	public QueryInterpretations getQueryInterpretations() {
 		return queryInterpretations;
 	}
+
+	public void close() {
+
+	}
 }

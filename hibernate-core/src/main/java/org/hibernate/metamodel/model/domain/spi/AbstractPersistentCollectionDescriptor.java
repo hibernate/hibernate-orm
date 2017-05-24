@@ -40,31 +40,21 @@ import org.hibernate.metamodel.model.domain.internal.CollectionIndexEntityImpl;
 import org.hibernate.metamodel.model.domain.internal.PersisterHelper;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ElementColumnReferenceSource;
-import org.hibernate.sql.ast.produce.metamodel.spi.IndexColumnReferenceSource;
-import org.hibernate.sql.ast.produce.metamodel.spi.NavigableReferenceInfo;
-import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
-import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
-import org.hibernate.sql.ast.tree.spi.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.spi.from.TableReference;
-import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractPersistentCollectionMetadata<O,C,E> implements PersistentCollectionMetadata<O,C,E> {
+public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements PersistentCollectionDescriptor<O,C,E> {
 	private final SessionFactoryImplementor sessionFactory;
-	private final ManagedTypeImplementor source;
+	private final ManagedTypeDescriptor source;
 	private final NavigableRole navigableRole;
 	private final CollectionClassification collectionClassification;
 
@@ -90,9 +80,9 @@ public abstract class AbstractPersistentCollectionMetadata<O,C,E> implements Per
 
 
 
-	public AbstractPersistentCollectionMetadata(
+	public AbstractPersistentCollectionDescriptor(
 			Collection collectionBinding,
-			ManagedTypeImplementor source,
+			ManagedTypeDescriptor source,
 			String navigableName,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
@@ -154,7 +144,7 @@ public abstract class AbstractPersistentCollectionMetadata<O,C,E> implements Per
 
 	@SuppressWarnings("unchecked")
 	private static <J,T extends Type<J>> CollectionIndex<J> resolveIndexDescriptor(
-			PersistentCollectionMetadata persister,
+			PersistentCollectionDescriptor persister,
 			Collection collectionBinding,
 			Table separateCollectionTable,
 			RuntimeModelCreationContext creationContext) {
@@ -198,7 +188,7 @@ public abstract class AbstractPersistentCollectionMetadata<O,C,E> implements Per
 	}
 
 	private static List<Column> collectIndexColumns(
-			PersistentCollectionMetadata persister,
+			PersistentCollectionDescriptor persister,
 			IndexedCollection indexedCollectionBinding,
 			Table separateCollectionTable, RuntimeModelCreationContext creationContext) {
 		return PersisterHelper.makeValues(
@@ -217,7 +207,7 @@ public abstract class AbstractPersistentCollectionMetadata<O,C,E> implements Per
 
 	@SuppressWarnings("unchecked")
 	private static CollectionElement resolveElementDescriptor(
-			AbstractPersistentCollectionMetadata collectionPersister,
+			AbstractPersistentCollectionDescriptor collectionPersister,
 			Collection collectionBinding,
 			Table separateCollectionTable,
 			RuntimeModelCreationContext creationContext) {

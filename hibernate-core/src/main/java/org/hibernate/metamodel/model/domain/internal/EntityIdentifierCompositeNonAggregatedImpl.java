@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
@@ -34,12 +34,12 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 
 	public static final String NAVIGABLE_NAME = "{id}";
 
-	private final EmbeddedTypeImplementor<J> embeddedDescriptor;
+	private final EmbeddedTypeDescriptor<J> embeddedDescriptor;
 
 	@SuppressWarnings("unchecked")
 	public EntityIdentifierCompositeNonAggregatedImpl(
 			EntityHierarchy entityHierarchy,
-			EmbeddedTypeImplementor<J> embeddedDescriptor) {
+			EmbeddedTypeDescriptor<J> embeddedDescriptor) {
 		super(
 				entityHierarchy.getRootEntityType(),
 				NAVIGABLE_NAME,
@@ -52,7 +52,7 @@ public class EntityIdentifierCompositeNonAggregatedImpl<O,J>
 	}
 
 	@Override
-	public EmbeddedTypeImplementor getEmbeddedDescriptor() {
+	public EmbeddedTypeDescriptor getEmbeddedDescriptor() {
 		return embeddedDescriptor;
 	}
 

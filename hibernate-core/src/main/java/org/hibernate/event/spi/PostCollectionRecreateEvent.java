@@ -7,7 +7,7 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * An event that occurs afterQuery a collection is recreated
@@ -16,7 +16,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
  */
 public class PostCollectionRecreateEvent extends AbstractCollectionEvent {
 
-	public PostCollectionRecreateEvent( PersistentCollectionMetadata collectionPersister,
+	public PostCollectionRecreateEvent( PersistentCollectionDescriptor collectionPersister,
 										PersistentCollection collection,
 										EventSource source ) {
 		super( collectionPersister, collection, source,

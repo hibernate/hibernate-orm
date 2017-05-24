@@ -17,10 +17,11 @@ import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationProcess;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
-import org.hibernate.metamodel.model.domain.spi.MappedSuperclassImplementor;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.MappedSuperclassDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.descriptor.java.spi.ManagedJavaDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -35,7 +36,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	private final SessionFactoryImplementor sessionFactory;
 	private final TypeConfiguration typeConfiguration;
 
-	private final Map<ManagedJavaDescriptor<?>, MappedSuperclassImplementor<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
+	private final Map<ManagedJavaDescriptor<?>, MappedSuperclassDescriptor<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
 
 	/**
 	 * Instantiate the MetamodelImpl.
@@ -59,6 +60,8 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	public void initialize(
 			MetadataImplementor mappingMetadata,
 			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
+		assert typeConfiguration.getMetadataBuildingContext() != null;
+		new RuntimeModelCreationProcess( sessionFactory, typeConfiguration.getMetadataBuildingContext() ).execute();
 	}
 
 	@Override
@@ -69,7 +72,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <X> EntityType<X> entity(Class<X> cls) {
-		final EntityTypeImplementor entityPersister = getTypeConfiguration().findEntityPersister( cls );
+		final EntityDescriptor entityPersister = getTypeConfiguration().findEntityPersister( cls );
 		if ( entityPersister == null ) {
 			throw new IllegalArgumentException( "Not an entity: " + cls );
 		}
@@ -79,17 +82,17 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <X> ManagedType<X> managedType(Class<X> cls) {
-		final EntityTypeImplementor entityPersister = getTypeConfiguration().findEntityPersister( cls );
+		final EntityDescriptor entityPersister = getTypeConfiguration().findEntityPersister( cls );
 		if ( entityPersister != null ) {
 			return entityPersister;
 		}
 
-		final EmbeddedTypeImplementor embeddablePersister = getTypeConfiguration().findEmbeddablePersister( cls );
+		final EmbeddedTypeDescriptor embeddablePersister = getTypeConfiguration().findEmbeddablePersister( cls );
 		if ( embeddablePersister != null ) {
 			return embeddablePersister;
 		}
 
-		final MappedSuperclassImplementor ms = jpaMappedSuperclassTypeMap.get( cls );
+		final MappedSuperclassDescriptor ms = jpaMappedSuperclassTypeMap.get( cls );
 		if ( ms != null ) {
 			return ms;
 		}
@@ -100,7 +103,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public <X> EmbeddableType<X> embeddable(Class<X> cls) {
-		final EmbeddedTypeImplementor embeddablePersister = getTypeConfiguration().findEmbeddablePersister( cls );
+		final EmbeddedTypeDescriptor embeddablePersister = getTypeConfiguration().findEmbeddablePersister( cls );
 		if ( embeddablePersister != null ) {
 			return embeddablePersister;
 		}

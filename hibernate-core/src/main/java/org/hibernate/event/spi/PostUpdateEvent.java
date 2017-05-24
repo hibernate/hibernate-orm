@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Occurs afterQuery the datastore is updated
@@ -17,7 +17,7 @@ import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
  */
 public class PostUpdateEvent extends AbstractEvent {
 	private Object entity;
-	private EntityTypeImplementor persister;
+	private EntityDescriptor persister;
 	private Object[] state;
 	private Object[] oldState;
 	private Serializable id;
@@ -30,7 +30,7 @@ public class PostUpdateEvent extends AbstractEvent {
 			Object[] state,
 			Object[] oldState,
 			int[] dirtyProperties,
-			EntityTypeImplementor persister,
+			EntityDescriptor persister,
 			EventSource source
 	) {
 		super(source);
@@ -51,7 +51,7 @@ public class PostUpdateEvent extends AbstractEvent {
 	public Object[] getOldState() {
 		return oldState;
 	}
-	public EntityTypeImplementor getPersister() {
+	public EntityDescriptor getPersister() {
 		return persister;
 	}
 	public Object[] getState() {

@@ -11,7 +11,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.proxy.HibernateProxy;
 
 /**
@@ -86,7 +86,7 @@ public abstract class EntityTools {
 	 * @return Java class mapped to specified entity name.
 	 */
 	public static Class getEntityClass(SessionImplementor sessionImplementor, String entityName) {
-		final EntityTypeImplementor entityPersister = sessionImplementor.getFactory().getTypeConfiguration().findEntityPersister( entityName );
+		final EntityDescriptor entityPersister = sessionImplementor.getFactory().getTypeConfiguration().findEntityPersister( entityName );
 		return entityPersister.getMappedClass();
 	}
 }

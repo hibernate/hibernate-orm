@@ -16,7 +16,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * Persistent collections are treated as value objects by Hibernate.
@@ -46,7 +46,7 @@ import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
  * @author Gavin King
  */
 public interface PersistentCollection {
-	PersistentCollectionMetadata getCollectionMetadata();
+	PersistentCollectionDescriptor getCollectionMetadata();
 
 	/**
 	 * Get the owning entity. Note that the owner is only
@@ -148,7 +148,7 @@ public interface PersistentCollection {
 	 * @param disassembled The disassembled cached state
 	 * @param owner The collection owner
 	 */
-	void initializeFromCache(PersistentCollectionMetadata persister, Serializable disassembled, Object owner);
+	void initializeFromCache(PersistentCollectionDescriptor persister, Serializable disassembled, Object owner);
 
 	/**
 	 * Iterate all collection entries, during update of the database
@@ -157,7 +157,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The iterator
 	 */
-	Iterator entries(PersistentCollectionMetadata persister);
+	Iterator entries(PersistentCollectionDescriptor persister);
 
 	/**
 	 * Read a row from the JDBC result set
@@ -171,7 +171,7 @@ public interface PersistentCollection {
 	 * @throws HibernateException Generally indicates a problem resolving data read from the ResultSet
 	 * @throws SQLException Indicates a problem accessing the ResultSet
 	 */
-	Object readFrom(ResultSet rs, PersistentCollectionMetadata role, Object owner) throws SQLException;
+	Object readFrom(ResultSet rs, PersistentCollectionDescriptor role, Object owner) throws SQLException;
 
 	/**
 	 * Get the identifier of the given collection entry.  This refers to the collection identifier, not the
@@ -194,7 +194,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The index value
 	 */
-	Object getIndex(Object entry, int i, PersistentCollectionMetadata persister);
+	Object getIndex(Object entry, int i, PersistentCollectionDescriptor persister);
 	
 	/**
 	 * Get the value of the given collection entry.  Generally the given entry parameter value will just be returned.
@@ -223,7 +223,7 @@ public interface PersistentCollection {
 	 * @param persister The underlying collection persister.
 	 * @param anticipatedSize The anticipated size of the collection afterQuery initialization is complete.
 	 */
-	void beforeInitialize(PersistentCollectionMetadata persister, int anticipatedSize);
+	void beforeInitialize(PersistentCollectionDescriptor persister, int anticipatedSize);
 
 	/**
 	 * Does the current state exactly match the snapshot?
@@ -233,7 +233,7 @@ public interface PersistentCollection {
 	 * @return {@code true} if the current state and the snapshot state match.
 	 *
 	 */
-	boolean equalsSnapshot(PersistentCollectionMetadata persister);
+	boolean equalsSnapshot(PersistentCollectionDescriptor persister);
 
 	/**
 	 * Is the snapshot empty?
@@ -251,7 +251,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The disassembled state
 	 */
-	Serializable disassemble(PersistentCollectionMetadata persister) ;
+	Serializable disassemble(PersistentCollectionDescriptor persister) ;
 
 	/**
 	 * Do we need to completely recreate this collection when it changes?
@@ -260,7 +260,7 @@ public interface PersistentCollection {
 	 *
 	 * @return {@code true} if a change requires a recreate.
 	 */
-	boolean needsRecreate(PersistentCollectionMetadata persister);
+	boolean needsRecreate(PersistentCollectionDescriptor persister);
 
 	/**
 	 * Return a new snapshot of the current state of the collection
@@ -269,7 +269,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The snapshot
 	 */
-	Serializable getSnapshot(PersistentCollectionMetadata persister);
+	Serializable getSnapshot(PersistentCollectionDescriptor persister);
 
 	/**
 	 * To be called internally by the session, forcing immediate initialization.
@@ -322,7 +322,7 @@ public interface PersistentCollection {
 	 *
 	 * @return An iterator over the elements to delete
 	 */
-	Iterator getDeletes(PersistentCollectionMetadata persister, boolean indexIsFormula);
+	Iterator getDeletes(PersistentCollectionDescriptor persister, boolean indexIsFormula);
 
 	/**
 	 * Is this the wrapper for the given collection instance?
@@ -420,7 +420,7 @@ public interface PersistentCollection {
 	 *
 	 * @param persister The collection persister
 	 */
-	void preInsert(PersistentCollectionMetadata persister);
+	void preInsert(PersistentCollectionDescriptor persister);
 
 	/**
 	 * Called afterQuery inserting a row, to fetch the natively generated id
@@ -429,7 +429,7 @@ public interface PersistentCollection {
 	 * @param entry The collection element just inserted
 	 * @param i The element position/index
 	 */
-	void afterRowInsert(PersistentCollectionMetadata persister, Object entry, int i);
+	void afterRowInsert(PersistentCollectionDescriptor persister, Object entry, int i);
 
 	/**
 	 * get all "orphaned" elements

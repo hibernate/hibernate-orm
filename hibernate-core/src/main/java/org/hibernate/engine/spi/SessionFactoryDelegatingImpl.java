@@ -47,8 +47,8 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.NamedQueryRepository;
@@ -193,22 +193,22 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public EntityTypeImplementor getEntityPersister(String entityName) throws MappingException {
+	public EntityDescriptor getEntityPersister(String entityName) throws MappingException {
 		return delegate.getEntityPersister( entityName );
 	}
 
 	@Override
-	public Map<String, EntityTypeImplementor<?>> getEntityPersisters() {
+	public Map<String, EntityDescriptor<?>> getEntityPersisters() {
 		return delegate.getEntityPersisters();
 	}
 
 	@Override
-	public PersistentCollectionMetadata getCollectionPersister(String role) throws MappingException {
+	public PersistentCollectionDescriptor getCollectionPersister(String role) throws MappingException {
 		return delegate.getCollectionPersister( role );
 	}
 
 	@Override
-	public Map<String, PersistentCollectionMetadata<?,?,?>> getCollectionPersisters() {
+	public Map<String, PersistentCollectionDescriptor<?,?,?>> getCollectionPersisters() {
 		return delegate.getCollectionPersisters();
 	}
 
@@ -398,12 +398,12 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public EntityTypeImplementor locateEntityPersister(Class byClass) {
+	public EntityDescriptor locateEntityPersister(Class byClass) {
 		return delegate.locateEntityPersister( byClass );
 	}
 
 	@Override
-	public EntityTypeImplementor locateEntityPersister(String byName) {
+	public EntityDescriptor locateEntityPersister(String byName) {
 		return delegate.locateEntityPersister( byName );
 	}
 

@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Called afterQuery insterting an item in the datastore
@@ -28,5 +28,5 @@ public interface PostInsertEventListener extends Serializable {
 	 *
 	 * @return {@code true} if afterQuery transaction callbacks should be added.
 	 */
-	public boolean requiresPostCommitHanding(EntityTypeImplementor persister);
+	public boolean requiresPostCommitHanding(EntityDescriptor persister);
 }

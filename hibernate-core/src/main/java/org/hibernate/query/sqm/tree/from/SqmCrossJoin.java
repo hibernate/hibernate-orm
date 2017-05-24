@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
@@ -20,7 +20,7 @@ public class SqmCrossJoin extends AbstractSqmFrom implements SqmJoin {
 			SqmFromElementSpace fromElementSpace,
 			String uid,
 			String alias,
-			EntityTypeImplementor entityReference) {
+			EntityDescriptor entityReference) {
 		super(
 				fromElementSpace,
 				uid,

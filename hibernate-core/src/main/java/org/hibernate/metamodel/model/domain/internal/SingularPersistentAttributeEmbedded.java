@@ -10,9 +10,11 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.List;
 
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.mapping.Component;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeImplementor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableEmbeddedValued;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
@@ -44,25 +46,30 @@ public class SingularPersistentAttributeEmbedded<O,J>
 		extends AbstractSingularPersistentAttribute<O,J>
 		implements SingularPersistentAttribute<O,J>, NavigableEmbeddedValued<J>, Fetchable<J> {
 
-	private final EmbeddedTypeImplementor<J> embeddedDescriptor;
+	private final EmbeddedTypeDescriptor<J> embeddedDescriptor;
 
 	public SingularPersistentAttributeEmbedded(
-			ManagedTypeImplementor<O> declaringType,
+			ManagedTypeDescriptor<O> declaringType,
 			String attributeName,
 			PropertyAccess propertyAccess,
 			Disposition disposition,
-			EmbeddedTypeImplementor<J> embeddedDescriptor) {
-		super( declaringType, attributeName, propertyAccess, embeddedDescriptor, disposition, true );
-		this.embeddedDescriptor = embeddedDescriptor;
+			Component<J> embeddedMapping,
+			RuntimeModelCreationContext context) {
+		super( declaringType, attributeName, propertyAccess, disposition, true, embeddedMapping );
+
+		this.embeddedDescriptor = embeddedMapping.makeRuntimeDescriptor(
+				declaringType,
+				context
+		);
 	}
 
 	@Override
-	public ManagedTypeImplementor<O> getContainer() {
+	public ManagedTypeDescriptor<O> getContainer() {
 		return super.getContainer();
 	}
 
 	@Override
-	public EmbeddedTypeImplementor<J> getEmbeddedDescriptor() {
+	public EmbeddedTypeDescriptor<J> getEmbeddedDescriptor() {
 		return embeddedDescriptor;
 	}
 
@@ -168,7 +175,7 @@ public class SingularPersistentAttributeEmbedded<O,J>
 	}
 
 	@Override
-	public ManagedTypeImplementor<J> getFetchedManagedType() {
+	public ManagedTypeDescriptor<J> getFetchedManagedType() {
 		return embeddedDescriptor;
 	}
 

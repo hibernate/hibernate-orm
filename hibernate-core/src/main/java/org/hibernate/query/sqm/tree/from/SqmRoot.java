@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 
@@ -18,7 +18,7 @@ public class SqmRoot extends AbstractSqmFrom {
 			SqmFromElementSpace fromElementSpace,
 			String uid,
 			String alias,
-			EntityTypeImplementor entityReference) {
+			EntityDescriptor entityReference) {
 		super(
 				fromElementSpace,
 				uid,
@@ -40,7 +40,7 @@ public class SqmRoot extends AbstractSqmFrom {
 	}
 
 	@Override
-	public EntityTypeImplementor getIntrinsicSubclassEntityMetadata() {
+	public EntityDescriptor getIntrinsicSubclassEntityMetadata() {
 		// a root FromElement cannot indicate a subclass intrinsically (as part of its declaration)
 		return null;
 	}

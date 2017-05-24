@@ -23,7 +23,7 @@ import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggregated;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeNonAggregated;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
@@ -298,7 +298,7 @@ public abstract class AbstractMetamodelDrivenSqlSelectPlanBuilder
 	}
 
 	@Override
-	public void visitEntity(EntityTypeImplementor entity) {
+	public void visitEntity(EntityDescriptor entity) {
 		// the root entity is handled in #buildSqlSelectPlan and entity fetches are
 		//		handled in the actual "joinable navigable".  So nothing to do here
 		//		except propagate to the entity's navigables.

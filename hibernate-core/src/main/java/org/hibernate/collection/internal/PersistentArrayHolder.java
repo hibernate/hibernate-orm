@@ -18,7 +18,7 @@ import java.util.Iterator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.sql.NotYetImplementedException;
 
 import org.jboss.logging.Logger;
@@ -60,7 +60,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	 * @param session The session
 	 * @param persister The persister for the array
 	 */
-	public PersistentArrayHolder(SharedSessionContractImplementor session, PersistentCollectionMetadata persister) {
+	public PersistentArrayHolder(SharedSessionContractImplementor session, PersistentCollectionDescriptor persister) {
 		super( session );
 		elementClass = persister.getElementDescriptor().getJavaType();
 	}
@@ -68,7 +68,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 
 
 	@Override
-	public Serializable getSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
+	public Serializable getSnapshot(PersistentCollectionDescriptor persister) throws HibernateException {
 //		final int length = (array==null) ? tempList.size() : Array.getLength( array );
 		final int length = Array.getLength( array );
 		final Serializable result = (Serializable) Array.newInstance( persister.getElementDescriptor().getJavaType(), length );
@@ -114,7 +114,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	@Override
-	public boolean equalsSnapshot(PersistentCollectionMetadata persister) throws HibernateException {
+	public boolean equalsSnapshot(PersistentCollectionDescriptor persister) throws HibernateException {
 		throw new NotYetImplementedException(  );
 //		final Type elementType = getElementType( persister );
 //		final Serializable snapshot = getSnapshot();
@@ -152,7 +152,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Object readFrom(ResultSet rs, PersistentCollectionMetadata persister, Object owner) throws SQLException {
+	public Object readFrom(ResultSet rs, PersistentCollectionDescriptor persister, Object owner) throws SQLException {
 		throw new NotYetImplementedException(  );
 //		final Object element = persister.readElement( rs, owner, getSession() );
 //		final int index = (Integer) persister.readIndex( rs, getSession() );
@@ -165,7 +165,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Iterator entries(PersistentCollectionMetadata persister) {
+	public Iterator entries(PersistentCollectionDescriptor persister) {
 		return elements();
 	}
 
@@ -187,7 +187,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	@Override
-	public void beforeInitialize(PersistentCollectionMetadata persister, int anticipatedSize) {
+	public void beforeInitialize(PersistentCollectionDescriptor persister, int anticipatedSize) {
 		//if (tempList==null) throw new UnsupportedOperationException("Can't lazily initialize arrays");
 	}
 
@@ -197,7 +197,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	@Override
-	public void initializeFromCache(PersistentCollectionMetadata persister, Serializable disassembled, Object owner) {
+	public void initializeFromCache(PersistentCollectionDescriptor persister, Serializable disassembled, Object owner) {
 		final Serializable[] cached = (Serializable[]) disassembled;
 		array = Array.newInstance( persister.getElementDescriptor().getJavaType(), cached.length );
 
@@ -207,7 +207,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	@Override
-	public Serializable disassemble(PersistentCollectionMetadata persister) throws HibernateException {
+	public Serializable disassemble(PersistentCollectionDescriptor persister) throws HibernateException {
 		final int length = Array.getLength( array );
 		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
@@ -223,7 +223,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	@Override
-	public Iterator getDeletes(PersistentCollectionMetadata persister, boolean indexIsFormula) throws HibernateException {
+	public Iterator getDeletes(PersistentCollectionDescriptor persister, boolean indexIsFormula) throws HibernateException {
 		final java.util.List<Integer> deletes = new ArrayList<>();
 		final Serializable sn = getSnapshot();
 		final int snSize = Array.getLength( sn );
@@ -263,7 +263,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	@Override
-	public Object getIndex(Object entry, int i, PersistentCollectionMetadata persister) {
+	public Object getIndex(Object entry, int i, PersistentCollectionDescriptor persister) {
 		return i;
 	}
 

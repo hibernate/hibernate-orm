@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.type.Type;
 
 /**
@@ -38,7 +38,7 @@ public final class EntityPrinter {
 	 * @return the entity rendered to a string
 	 */
 	public String toString(String entityName, Object entity) throws HibernateException {
-		EntityTypeImplementor entityPersister = factory.getEntityPersister( entityName );
+		EntityDescriptor entityPersister = factory.getEntityPersister( entityName );
 
 		if ( entityPersister == null ) {
 			return entity.getClass().getName();

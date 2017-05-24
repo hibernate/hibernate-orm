@@ -15,7 +15,7 @@ import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 
 /**
  * Ehcache specific read-only collection region access strategy
@@ -74,7 +74,7 @@ public class ReadOnlyEhcacheCollectionRegionAccessStrategy
 	}
 
 	@Override
-	public Object generateCacheKey(Object id, PersistentCollectionMetadata persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	public Object generateCacheKey(Object id, PersistentCollectionDescriptor persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		return DefaultCacheKeysFactory.createCollectionKey( id, persister, factory, tenantIdentifier );
 	}
 

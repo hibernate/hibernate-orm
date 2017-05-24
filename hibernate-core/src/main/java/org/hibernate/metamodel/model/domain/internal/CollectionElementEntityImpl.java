@@ -13,10 +13,10 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementEntity;
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.JoinType;
@@ -37,10 +37,10 @@ public class CollectionElementEntityImpl<J>
 		implements CollectionElementEntity<J> {
 
 	private final ElementClassification elementClassification;
-	private final EntityTypeImplementor<J> entityDescriptor;
+	private final EntityDescriptor<J> entityDescriptor;
 
 	public CollectionElementEntityImpl(
-			PersistentCollectionMetadata persister,
+			PersistentCollectionDescriptor persister,
 			Collection mappingBinding,
 			ElementClassification elementClassification,
 			RuntimeModelCreationContext creationContext) {
@@ -52,7 +52,7 @@ public class CollectionElementEntityImpl<J>
 	}
 
 	@Override
-	public EntityTypeImplementor<J> getEntityDescriptor() {
+	public EntityDescriptor<J> getEntityDescriptor() {
 		return entityDescriptor;
 	}
 

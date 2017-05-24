@@ -8,13 +8,13 @@ package org.hibernate.cache.spi;
 
 import java.util.Comparator;
 
-import org.hibernate.metamodel.model.domain.spi.EntityTypeImplementor;
+import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 
 /**
  * Contract for sources of optimistically lockable data sent to the second level
  * cache.
  * <p/>
- * Note currently {@link EntityTypeImplementor}s are
+ * Note currently {@link EntityDescriptor}s are
  * the only viable source.
  *
  * @author Steve Ebersole

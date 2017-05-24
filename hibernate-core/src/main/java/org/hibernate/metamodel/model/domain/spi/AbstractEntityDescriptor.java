@@ -77,7 +77,6 @@ import org.hibernate.sql.ast.tree.spi.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.spi.predicate.Junction;
 import org.hibernate.sql.ast.tree.spi.predicate.Predicate;
 import org.hibernate.sql.ast.tree.spi.predicate.RelationalPredicate;
-import org.hibernate.sql.ast.tree.spi.select.EntityValuedSelectable;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -87,10 +86,10 @@ import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractEntityTypeImplementor<T>
+public abstract class AbstractEntityDescriptor<T>
 		extends AbstractIdentifiableType<T>
-		implements EntityTypeImplementor<T> {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractEntityTypeImplementor.class );
+		implements EntityDescriptor<T> {
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractEntityDescriptor.class );
 
 	private final SessionFactoryImplementor factory;
 
@@ -107,7 +106,7 @@ public abstract class AbstractEntityTypeImplementor<T>
 	private final EntityTuplizer tuplizer;
 
 	@SuppressWarnings("UnnecessaryBoxing")
-	public AbstractEntityTypeImplementor(
+	public AbstractEntityDescriptor(
 			EntityMapping entityMapping,
 			EntityRegionAccessStrategy cacheAccessStrategy,
 			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
@@ -200,7 +199,7 @@ public abstract class AbstractEntityTypeImplementor<T>
 	@Override
 	public void finishInitialization(
 			EntityHierarchy entityHierarchy,
-			IdentifiableTypeImplementor<? super T> superType,
+			IdentifiableTypeDescriptor<? super T> superType,
 			EntityMapping mappingDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		super.finishInitialization( entityHierarchy, superType, mappingDescriptor, creationContext );
@@ -279,7 +278,7 @@ public abstract class AbstractEntityTypeImplementor<T>
 	}
 
 	@Override
-	public EntityTypeImplementor<T> getEntityDescriptor() {
+	public EntityDescriptor<T> getEntityDescriptor() {
 		return this;
 	}
 

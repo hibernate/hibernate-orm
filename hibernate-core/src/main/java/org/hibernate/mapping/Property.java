@@ -14,12 +14,28 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.ValueMapping;
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.collection.spi.PersistentCollectionTuplizer;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.internal.PersisterHelper;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeBasic;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEntity;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute.SingularAttributeClassification;
+import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.Setter;
@@ -370,6 +386,124 @@ public class Property implements Serializable, PersistentAttributeMapping {
 
 	public void setLob(boolean lob) {
 		this.lob = lob;
+	}
+
+	@Override
+	public <O,T> PersistentAttribute<O,T> makeRuntimeAttribute(
+			ManagedTypeDescriptor<O> container,
+			SingularPersistentAttribute.Disposition singularAttributeDisposition,
+			RuntimeModelCreationContext context) {
+		assert value != null;
+
+		// todo (7.0) : better served through polymorphism
+
+		// todo (6.0) : how to handle synthetic/virtual properties?
+		assert !Backref.class.isInstance( this );
+		assert !IndexBackref.class.isInstance( this );
+		assert !SyntheticProperty.class.isInstance( this );
+
+		if ( value instanceof Collection ) {
+			return buildCollectionAttribute( container, context );
+		}
+		else {
+			return buildSingularAttribute( container, singularAttributeDisposition, context );
+		}
+	}
+	@SuppressWarnings("unchecked")
+	private <O,T> PluralPersistentAttribute<O,T,?> buildCollectionAttribute(
+			ManagedTypeDescriptor container,
+			RuntimeModelCreationContext context) {
+		// todo (6.0) : allow to define a specific tuplizer on the collection mapping
+		//		for now use the default
+		final PersistentCollectionTuplizer tuplizer = context.getPersistentCollectionTuplizerFactory()
+				.getImplicitTuplizer( value.getJavaTypeDescriptor().getJavaType() );
+		return tuplizer.generatePluralPersistentAttribute(
+				container,
+				this,
+				context
+		);
+	}
+
+	@SuppressWarnings("unchecked")
+	private <O,T> SingularPersistentAttribute<O,T> buildSingularAttribute(
+			ManagedTypeDescriptor container,
+			SingularPersistentAttribute.Disposition singularAttributeDisposition,
+			RuntimeModelCreationContext context) {
+		if ( value instanceof BasicValueMapping ) {
+			return new SingularPersistentAttributeBasic(
+					container,
+					name,
+					resolvePropertyAccess( container, context ),
+					singularAttributeDisposition,
+					isNullable(),
+					(BasicValueMapping) value,
+					context
+			);
+		}
+		else if ( value instanceof ToOne ) {
+			return new SingularPersistentAttributeEntity(
+					container,
+					name,
+					resolvePropertyAccess( container, context ),
+					isManyToOne( (ToOne) value )
+							? SingularAttributeClassification.MANY_TO_ONE
+							: SingularAttributeClassification.ONE_TO_ONE,
+					singularAttributeDisposition,
+					isNullable(),
+					(ToOne) value,
+					context
+			);
+		}
+		else if ( value instanceof Component ) {
+			return new SingularPersistentAttributeEmbedded(
+					container,
+					name,
+					resolvePropertyAccess( container, context ),
+					singularAttributeDisposition,
+					(Component) value,
+					context
+			);
+
+		}
+		else if ( value instanceof Any ) {
+			throw new NotYetImplementedException(  );
+		}
+
+		throw new MappingException( "Unrecognized ValueMapping type for conversion to runtime model : " + value );
+	}
+
+	private boolean isManyToOne(ToOne value) {
+		return false;
+	}
+
+
+	public PropertyAccess resolvePropertyAccess(
+			ManagedTypeDescriptor declarer,
+			RuntimeModelCreationContext persisterCreationContext) {
+		if ( persistentClass.getEntityMode() == EntityMode.MAP ) {
+			return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess( null, name );
+		}
+
+		final PropertyAccessStrategyResolver accessStrategyResolver = persisterCreationContext.getSessionFactory()
+				.getServiceRegistry()
+				.getService( PropertyAccessStrategyResolver.class );
+
+		if ( propertyAccessorName == null ) {
+			if ( persistentClass.getEntityMode() == EntityMode.MAP ) {
+				propertyAccessorName = "map";
+			}
+			else {
+				propertyAccessorName = "property";
+			}
+		}
+
+		final PropertyAccessStrategy propertyAccessStrategy = accessStrategyResolver.resolvePropertyAccessStrategy(
+				declarer.getJavaType(),
+				propertyAccessorName,
+				persistentClass.getEntityMode()
+		);
+
+		return  propertyAccessStrategy.buildPropertyAccess( declarer.getJavaType(), name );
 	}
 
 }

@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.relational.spi;
 
 import org.hibernate.naming.Identifier;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -14,12 +15,12 @@ import org.hibernate.naming.Identifier;
 public class PhysicalColumn implements Column {
 	private final Table table;
 	private final Identifier name;
-	private final int jdbcType;
+	private final SqlTypeDescriptor sqlTypeDescriptor;
 
-	public PhysicalColumn(Table table, Identifier name, int jdbcType) {
+	public PhysicalColumn(Table table, Identifier name, SqlTypeDescriptor sqlTypeDescriptor) {
 		this.table = table;
 		this.name = name;
-		this.jdbcType = jdbcType;
+		this.sqlTypeDescriptor = sqlTypeDescriptor;
 	}
 
 	public Identifier getName() {
@@ -36,8 +37,9 @@ public class PhysicalColumn implements Column {
 		return name.getCanonicalName();
 	}
 
-	public int getJdbcType() {
-		return jdbcType;
+	@Override
+	public SqlTypeDescriptor getSqlTypeDescriptor() {
+		return sqlTypeDescriptor;
 	}
 
 	@Override

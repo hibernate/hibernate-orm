@@ -45,7 +45,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassResolver;
 import org.hibernate.metamodel.model.domain.spi.AbstractEntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.AbstractPersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
@@ -78,14 +78,14 @@ import org.hibernate.type.Type;
 /**
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
-public class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClassResolver {
+public class GoofyRuntimeModelDescriptorClassProvider implements RuntimeModelDescriptorClassResolver {
 	@Override
 	public Class<? extends EntityDescriptor> getEntityPersisterClass(PersistentClass metadata) {
 		return NoopEntityPersister.class;
 	}
 
 	@Override
-	public Class<? extends PersistentCollectionDescriptor> getCollectionPersisterClass(Collection metadata) {
+	public Class<? extends PersistentCollectionDescriptor> getCollectionDescriptorClass(Collection bootMapping) {
 		return NoopCollectionPersister.class;
 	}
 

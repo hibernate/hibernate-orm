@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey.ColumnMappings;
 import org.hibernate.metamodel.model.relational.spi.Table;
 
 /**
@@ -21,5 +22,5 @@ public interface DatabaseObjectResolver {
 
 	Column resolveColumn(MappedColumn mappedColumn);
 
-	void resolveForeignKey(List<MappedColumn> constraintColumns, List<MappedColumn> mappedColumns);
+	ColumnMappings resolveColumnMappings(List<MappedColumn> columns, List<MappedColumn> otherColumns);
 }

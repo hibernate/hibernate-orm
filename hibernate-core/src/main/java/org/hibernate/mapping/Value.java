@@ -21,7 +21,7 @@ import org.hibernate.service.ServiceRegistry;
  *
  * @author Gavin King
  */
-public interface Value extends ValueMapping, Serializable {
+public interface Value<J> extends ValueMapping<J>, Serializable {
 	int getColumnSpan();
 
 	/**

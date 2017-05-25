@@ -19,13 +19,13 @@ import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TableReferenceJoinCollector;
 import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.sql.JoinType;
 import org.hibernate.sql.NotYetImplementedException;
-import org.hibernate.sql.ast.produce.spi.TableGroupContext;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBase;
+import org.hibernate.sql.ast.produce.spi.TableGroupContext;
+import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
 
@@ -108,11 +108,12 @@ public class CollectionElementEntityImpl<J>
 
 	@Override
 	public void applyTableReferenceJoins(
-			JoinType joinType,
+			ColumnReferenceSource lhs,
+			org.hibernate.sql.ast.JoinType joinType,
 			SqlAliasBase sqlAliasBase,
-			TableReferenceJoinCollector collector,
+			TableReferenceJoinCollector joinCollector,
 			TableGroupContext tableGroupContext) {
-		getEntityDescriptor().applyTableReferenceJoins( joinType, sqlAliasBase, collector, tableGroupContext );
+		getEntityDescriptor().applyTableReferenceJoins( lhs, joinType, sqlAliasBase, joinCollector, tableGroupContext );
 	}
 
 	@Override

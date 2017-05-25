@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Collections;
@@ -38,7 +37,7 @@ public class SingularPersistentAttributeBasic<O,J>
 
 	private final Column boundColumn;
 	private final BasicType<J> basicType;
-	private AttributeConverterDefinition attributeConverterInfo;
+	private final AttributeConverterDefinition converterDefinition;
 
 	public SingularPersistentAttributeBasic(
 			ManagedTypeDescriptor<O> declaringType,
@@ -50,14 +49,9 @@ public class SingularPersistentAttributeBasic<O,J>
 			RuntimeModelCreationContext context) {
 		super( declaringType, name, propertyAccess, disposition, nullable, basicValueMapping );
 
-		this.boundColumn = basicValueMapping.getMappedColumn();
-		assert columns.size() == 1;
-
-		this.attributeConverterInfo = attributeConverterInfo;
-		this.boundColumn = columns.get( 0 );
-
-		// todo (6.0) : resolve SimpleValue -> BasicType
-		this.basicType = basicType;
+		this.boundColumn = context.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );
+		this.basicType = basicValueMapping.resolveType();
+		this.converterDefinition = basicValueMapping.getAttributeConverterDefinition();
 	}
 
 	@Override
@@ -108,7 +102,7 @@ public class SingularPersistentAttributeBasic<O,J>
 
 	@Override
 	public AttributeConverterDefinition getAttributeConverter() {
-		return attributeConverterInfo;
+		return converterDefinition;
 	}
 
 	@Override

@@ -63,6 +63,8 @@ public class SingularPersistentAttributeEntity<O,J>
 
 	private final NavigableRole navigableRole;
 
+	private final String sqlAliasStem;
+
 
 	public SingularPersistentAttributeEntity(
 			ManagedTypeDescriptor<O> declaringType,
@@ -85,10 +87,12 @@ public class SingularPersistentAttributeEntity<O,J>
 		this.navigableRole = declaringType.getNavigableRole().append( name );
 
 		valueMapping.createForeignKey();
-		context.getDatabaseObjectResolver().resolveForeignKey(
+		joinColumnMappings = context.getDatabaseObjectResolver().resolveColumnMappings(
 				valueMapping.getConstraintColumns(),
 				valueMapping.getMappedColumns()
 		);
+
+		this.sqlAliasStem =  SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 	}
 
 	@Override
@@ -233,6 +237,11 @@ public class SingularPersistentAttributeEntity<O,J>
 	protected ForeignKey getForeignKey() {
 		// todo (6.0) : ForeignKey handling
 		return null;
+	}
+
+	@Override
+	public String getSqlAliasStem() {
+		return sqlAliasStem;
 	}
 
 	@Override

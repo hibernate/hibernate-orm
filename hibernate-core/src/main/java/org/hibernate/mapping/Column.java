@@ -30,6 +30,8 @@ public class Column implements Selectable, Serializable, Cloneable {
 	public static final int DEFAULT_PRECISION = 19;
 	public static final int DEFAULT_SCALE = 2;
 
+	private SqlTypeDescriptor sqlTypeDescriptor;
+
 	private int length = DEFAULT_LENGTH;
 	private int precision = DEFAULT_PRECISION;
 	private int scale = DEFAULT_SCALE;
@@ -139,6 +141,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 		return name.equals( column.name );
 	}
+
 	/**
 	 * Returns the underlying columns sqltypecode.
 	 * If null, it is because the sqltype code is unknown.
@@ -249,7 +252,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 				getName(),
 				jdbcEnvironment
 		);
-		return new PhysicalColumn( runtimeTable, physicalName, sqlTypeCode );
+		return new PhysicalColumn( runtimeTable, physicalName, sqlTypeDescriptor );
 	}
 
 	public int getPrecision() {

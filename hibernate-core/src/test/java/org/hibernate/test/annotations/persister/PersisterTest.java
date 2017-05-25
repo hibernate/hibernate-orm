@@ -24,7 +24,7 @@ public class PersisterTest extends BaseNonConfigCoreFunctionalTestCase {
 		//checks to see that the persister specified with the @Persister annotation takes precedence if a @Entity.persister() is also specified		
 		PersistentClass persistentClass = metadata().getEntityBinding( Deck.class.getName() );
 		assertEquals( "Incorrect Persister class for " + persistentClass.getMappedClass(), EntityPersister.class,
-				persistentClass.getEntityPersisterClass() );
+				persistentClass.getRuntimeEntityDescriptorClass() );
 	}
 
 	@Test
@@ -32,7 +32,7 @@ public class PersisterTest extends BaseNonConfigCoreFunctionalTestCase {
 		//tests the persister specified with an @Entity.persister()		
 		PersistentClass persistentClass = metadata().getEntityBinding( Card.class.getName() );
 		assertEquals( "Incorrect Persister class for " + persistentClass.getMappedClass(),
-				SingleTableEntityPersister.class, persistentClass.getEntityPersisterClass() );
+				SingleTableEntityPersister.class, persistentClass.getRuntimeEntityDescriptorClass() );
 	}
 
 	@Test

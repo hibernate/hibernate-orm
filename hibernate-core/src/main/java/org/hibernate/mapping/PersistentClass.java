@@ -7,9 +7,14 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
 import org.hibernate.EntityMode;
@@ -26,12 +31,13 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 
@@ -380,7 +386,9 @@ public abstract class PersistentClass
 
 	public abstract Table getRootTable();
 
-	protected abstract Collection<Join> getJoins();
+	protected Collection<Join> getJoins() {
+		return joins;
+	}
 
 	@Override
 	public Collection<MappedTableJoin> getSecondaryTables() {
@@ -654,33 +662,33 @@ public abstract class PersistentClass
 		getEntityMappingHierarchy().setOptimisticLockStyle( optimisticLockStyle );
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
-		Iterator iter = getPropertyIterator();
-		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
-			if ( !prop.isValid( mapping ) ) {
-				throw new MappingException(
-						"property mapping has wrong number of columns: " +
-								StringHelper.qualify( getEntityName(), prop.getName() ) +
-								" type: " +
-								prop.getType().getName()
-				);
-			}
-		}
-		checkPropertyDuplication();
-		checkColumnDuplication();
-	}
-
-	private void checkPropertyDuplication() throws MappingException {
-		HashSet<String> names = new HashSet<String>();
-		Iterator iter = getPropertyIterator();
-		while ( iter.hasNext() ) {
-			Property prop = (Property) iter.next();
-			if ( !names.add( prop.getName() ) ) {
-				throw new MappingException( "Duplicate property mapping of " + prop.getName() + " found in " + getEntityName() );
-			}
-		}
-	}
+//	public void validate(Mapping mapping) throws MappingException {
+//		Iterator iter = getPropertyIterator();
+//		while ( iter.hasNext() ) {
+//			Property prop = (Property) iter.next();
+//			if ( !prop.isValid( mapping ) ) {
+//				throw new MappingException(
+//						"property mapping has wrong number of columns: " +
+//								StringHelper.qualify( getEntityName(), prop.getName() ) +
+//								" type: " +
+//								prop.getType().getName()
+//				);
+//			}
+//		}
+//		checkPropertyDuplication();
+//		checkColumnDuplication();
+//	}
+//
+//	private void checkPropertyDuplication() throws MappingException {
+//		HashSet<String> names = new HashSet<String>();
+//		Iterator iter = getPropertyIterator();
+//		while ( iter.hasNext() ) {
+//			Property prop = (Property) iter.next();
+//			if ( !names.add( prop.getName() ) ) {
+//				throw new MappingException( "Duplicate property mapping of " + prop.getName() + " found in " + getEntityName() );
+//			}
+//		}
+//	}
 
 	public boolean isDiscriminatorValueNotNull() {
 		return NOT_NULL_DISCRIMINATOR_MAPPING.equals( getDiscriminatorValue() );
@@ -1090,5 +1098,13 @@ public abstract class PersistentClass
 	@Override
 	public String getExplicitTuplizerClassName() {
 		return tuplizerImpls.get( getEntityMode() );
+	}
+
+	@Override
+	public <X> IdentifiableTypeDescriptor<X> makeRuntimeDescriptor(RuntimeModelCreationContext creationContext) {
+		return creationContext.getRuntimeModelDescriptorFactory().createEntityDescriptor(
+				this,
+				creationContext
+		);
 	}
 }

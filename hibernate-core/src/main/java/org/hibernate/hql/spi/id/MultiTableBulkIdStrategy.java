@@ -13,8 +13,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.hql.internal.ast.HqlSqlWalker;
-import org.hibernate.persister.entity.Queryable;
 
 /**
  * Generalized strategy contract for handling multi-table bulk HQL operations.

@@ -9,8 +9,8 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionElement;
 import org.hibernate.metamodel.model.domain.spi.CollectionElementBasic;
@@ -45,14 +45,14 @@ public class CollectionElementBasicImpl<J>
 			RuntimeModelCreationContext creationContext) {
 		super( persister );
 
-		final SimpleValue simpleElementValueMapping = (SimpleValue) mappingBinding.getElement();
+		final BasicValueMapping simpleElementValueMapping = (BasicValueMapping) mappingBinding.getElement();
 
-		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( simpleElementValueMapping.getMappedColumns().get( 0 ) );
+		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( simpleElementValueMapping.getMappedColumn() );
 
 		// todo (6.0) : resolve SimpleValue -> BasicType
 		this.basicType = null;
 
-		this.attributeConverter = simpleElementValueMapping.getAttributeConverterDescriptor();
+		this.attributeConverter = simpleElementValueMapping.getAttributeConverterDefinition();
 
 		log.debugf(
 				"AttributeConverter [%s] being injected for elements of the '%s' collection; was : %s",

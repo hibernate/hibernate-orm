@@ -68,22 +68,21 @@ public abstract class IndexedCollection extends Collection {
 			getCollectionTable().createUniqueKey(list);*/
 		}
 	}
-
-	public void validate() throws MappingException {
-		super.validate();
-
-		assert getElement() != null : "IndexedCollection index not bound : " + getRole();
-
-		if ( !getIndex().isValid() ) {
-			throw new MappingException(
-				"collection index mapping has wrong number of columns: " +
-				getRole() +
-				" type: " +
-				getIndex().getType().getName()
-			);
-		}
-	}
-
+//
+//	public void validate() throws MappingException {
+//		super.validate();
+//
+//		assert getElement() != null : "IndexedCollection index not bound : " + getRole();
+//
+//		if ( !getIndex().isValid() ) {
+//			throw new MappingException(
+//				"collection index mapping has wrong number of columns: " +
+//				getRole() +
+//				" type: " +
+//				getIndex().getType().getName()
+//			);
+//		}
+//	}
 
 	
 	public boolean isList() {

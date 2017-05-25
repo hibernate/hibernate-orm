@@ -17,10 +17,11 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 /**
  * @author Steve Ebersole
  */
-public class RuntimeModelNodeFactoryServiceInitiator implements StandardServiceInitiator<RuntimeModelDescriptorFactory> {
-	public static final RuntimeModelNodeFactoryServiceInitiator INSTANCE = new RuntimeModelNodeFactoryServiceInitiator();
+public class RuntimeModelDescriptorFactoryServiceInitiator implements StandardServiceInitiator<RuntimeModelDescriptorFactory> {
+	public static final RuntimeModelDescriptorFactoryServiceInitiator INSTANCE = new RuntimeModelDescriptorFactoryServiceInitiator();
 
-	public static final String IMPL_NAME = "hibernate.persister.factory";
+	public static final String LEGACY_IMPL_NAME = "hibernate.persister.factory";
+	public static final String IMPL_NAME = "hibernate.model.descriptor_factory";
 
 	@Override
 	public Class<RuntimeModelDescriptorFactory> getServiceInitiated() {

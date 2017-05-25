@@ -41,9 +41,6 @@ public class CollectionElementEmbeddedImpl<J>
 			RuntimeModelCreationContext creationContext) {
 		super( persister );
 
-
-		// todo (6.0) : transform the EmbeddedValueMapping representing the collection element into a EmbeddedPersister
-
 		this.embeddedPersister = creationContext.getRuntimeModelDescriptorFactory().createEmbeddedTypeDescriptor(
 				(EmbeddedValueMapping) mapping.getElement(),
 				persister,

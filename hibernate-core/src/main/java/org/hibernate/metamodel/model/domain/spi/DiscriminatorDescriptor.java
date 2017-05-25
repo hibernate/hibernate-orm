@@ -13,7 +13,8 @@ package org.hibernate.metamodel.model.domain.spi;
  * @author Hardy Ferentschik
  */
 public interface DiscriminatorDescriptor<O,J>
-		extends DomainTypeExposer<J>, VirtualPersistentAttribute<O,J>, SingularPersistentAttribute<O,J> {
+		extends DomainTypeExposer<J>, VirtualPersistentAttribute<O,J>, SingularPersistentAttribute<O,J>, NavigableBasicValued<J> {
+
 	// todo (6.0) : why does this implement PersistentAttribute?
 	//		we do not support a model exposing the discriminator as a real attribute
 	// 		`@Discriminator` is only valid on TYPE
@@ -23,6 +24,11 @@ public interface DiscriminatorDescriptor<O,J>
 	 * hierarchy's discriminator.
 	 */
 	DiscriminatorMappings getDiscriminatorMappings();
+
+	@Override
+	default DomainType<J> getDomainType() {
+		return this;
+	}
 
 	@Override
 	default void visitNavigable(NavigableVisitationStrategy visitor) {

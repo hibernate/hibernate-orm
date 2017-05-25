@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.relational.spi;
 
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+
 /**
  * Represents the commonality between {@link PhysicalColumn} and {@link DerivedColumn}
  *
@@ -24,5 +26,13 @@ public interface Column {
 
 	String render(String identificationVariable);
 
-	int getJdbcType();
+	SqlTypeDescriptor getSqlTypeDescriptor();
+
+	/**
+	 * @deprecated Use {@link #getSqlTypeDescriptor()} instead
+	 */
+	@Deprecated
+	default int getJdbcType() {
+		return getSqlTypeDescriptor().getSqlType();
+	}
 }

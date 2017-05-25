@@ -234,10 +234,8 @@ public interface PersistentCollectionDescriptor<O,C,E>
 	 */
 	CacheEntryStructure getCacheEntryStructure();
 
-	/**
-	 * Get the persister of the entity that "owns" this collection
-	 */
-	EntityTypeImplementor getOwnerEntityPersister();
+	@Override
+	ManagedTypeDescriptor getContainer();
 
 	// consider whether we want to keep any of this legacy stuff
 

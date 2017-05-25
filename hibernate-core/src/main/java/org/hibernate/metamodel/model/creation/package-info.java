@@ -6,6 +6,7 @@
  */
 
 /**
- * todo : document
+ * Package for creation of Hibernate's run-time metamodel, as a conversion from its
+ * boot-time metamodel.
  */
 package org.hibernate.metamodel.model.creation;

@@ -21,7 +21,7 @@ public interface EntityMapping extends IdentifiableTypeMapping {
 	EntityMode getEntityMode();
 	String getExplicitTuplizerClassName();
 
-	Class getEntityPersisterClass();
+	Class getRuntimeEntityDescriptorClass();
 	void setEntityPersisterClass(Class entityPersisterClass);
 
 	@Override

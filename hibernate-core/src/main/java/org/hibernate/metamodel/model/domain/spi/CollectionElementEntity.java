@@ -6,12 +6,10 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import org.hibernate.sql.ast.produce.spi.TableGroupProducer;
-
 /**
  * @author Steve Ebersole
  */
-public interface CollectionElementEntity<E> extends CollectionElement<E>, EntityValuedNavigable<E>, TableGroupProducer {
+public interface CollectionElementEntity<E> extends CollectionElement<E>, EntityValuedNavigable<E> {
 	@Override
 	default void visitNavigable(NavigableVisitationStrategy visitor) {
 		visitor.visitCollectionElementEntity( this );

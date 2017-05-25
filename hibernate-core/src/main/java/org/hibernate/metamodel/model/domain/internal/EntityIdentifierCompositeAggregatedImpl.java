@@ -10,13 +10,13 @@ import java.util.List;
 
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggregated;
-import org.hibernate.metamodel.model.domain.spi.NavigableRole;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.EntityIdentifierCompositeAggregated;
+import org.hibernate.metamodel.model.domain.spi.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.NotYetImplementedException;
@@ -25,6 +25,8 @@ import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.descriptor.java.spi.EmbeddableJavaDescriptor;
+
+import static org.hibernate.metamodel.model.domain.internal.PersisterHelper.resolvePropertyAccess;
 
 /**
  * @author Steve Ebersole
@@ -43,10 +45,10 @@ public class EntityIdentifierCompositeAggregatedImpl<O,J>
 		super(
 				entityHierarchy.getRootEntityType(),
 				idAttribute.getName(),
-				PersisterHelper.resolvePropertyAccess( entityHierarchy.getRootEntityType(), idAttribute, creationContext ),
-				embeddedMetadata,
+				resolvePropertyAccess( entityHierarchy.getRootEntityType(), idAttribute, creationContext ),
 				Disposition.ID,
-				false
+				false,
+				idAttribute.getValue()
 		);
 		this.embeddedMetadata = embeddedMetadata;
 	}

@@ -8,8 +8,6 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.EntityMode;
 import org.hibernate.boot.model.domain.EmbeddedMapping;
@@ -26,6 +24,7 @@ import org.hibernate.metamodel.model.domain.spi.InheritanceCapable;
 import org.hibernate.metamodel.model.domain.spi.NavigableRole;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultCompositeImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
@@ -115,25 +114,16 @@ public class EmbeddedTypeDescriptorImpl<T>
 		bindAttributes( embeddedValueMapping, creationContext );
 	}
 
-	private final Map<PersistentAttribute,List<Column>> columnsByPersistentAttribute = new ConcurrentHashMap<>();
-
 	@SuppressWarnings("AccessStaticViaInstance")
 	private void bindAttributes(EmbeddedValueMapping embeddedValueMapping, RuntimeModelCreationContext creationContext) {
 		for ( PersistentAttributeMapping attributeMapping : embeddedValueMapping.getDeclaredPersistentAttributes() ) {
-			final PersistentAttribute persistentAttribute = PersisterHelper.INSTANCE.buildAttribute(
-					creationContext,
+			final PersistentAttribute persistentAttribute = attributeMapping.makeRuntimeAttribute(
 					this,
-					attributeMapping
+					SingularPersistentAttribute.Disposition.NORMAL,
+					creationContext
 			);
 
 			addAttribute( persistentAttribute );
-
-			// todo (6.0) : need to capture the List<Column> per attribute.
-			// 		^^ why?  why do we need this?  It does not seem necessary atm, although I forget what I was thinking here
-			columnsByPersistentAttribute.put(
-					persistentAttribute,
-					creationContext.getDatabaseObjectResolver().resolveColumns( attributeMapping )
-			);
 		}
 	}
 
@@ -168,11 +158,6 @@ public class EmbeddedTypeDescriptorImpl<T>
 	@SuppressWarnings("unchecked")
 	public EmbeddableJavaDescriptor<T> getJavaTypeDescriptor() {
 		return (EmbeddableJavaDescriptor<T>) super.getJavaTypeDescriptor();
-	}
-
-	@Override
-	public String getRolePrefix() {
-		return navigableRole.getFullPath();
 	}
 
 	@Override

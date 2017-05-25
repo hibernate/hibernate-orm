@@ -67,9 +67,9 @@ public interface RuntimeModelDescriptorFactory extends Service {
 	 *
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
-	PersistentCollectionDescriptor createPersistentCollectionDescriptor(
+	<O,C,E> PersistentCollectionDescriptor<O,C,E> createPersistentCollectionDescriptor(
 			Collection collectionBinding,
-			ManagedTypeDescriptor source,
+			ManagedTypeDescriptor<O> source,
 			String localName,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws HibernateException;

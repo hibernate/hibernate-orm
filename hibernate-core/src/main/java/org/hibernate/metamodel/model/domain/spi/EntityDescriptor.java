@@ -39,7 +39,7 @@ import org.hibernate.loader.spi.MultiIdEntityLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.loader.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassResolver;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorFactory;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
@@ -59,7 +59,7 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaDescriptor;
  * @author Steve Ebersole
  *
  * @see RuntimeModelDescriptorFactory
- * @see RuntimeModelNodeClassResolver
+ * @see RuntimeModelDescriptorClassResolver
  * @see #STANDARD_CONSTRUCTOR_SIG
  *
  * @since 6.0
@@ -707,4 +707,6 @@ public interface EntityDescriptor<T>
 	int[] resolveAttributeIndexes(String[] attributeNames);
 
 	boolean canUseReferenceCacheEntries();
+
+	void registerAffectingFetchProfile(String fetchProfileName);
 }

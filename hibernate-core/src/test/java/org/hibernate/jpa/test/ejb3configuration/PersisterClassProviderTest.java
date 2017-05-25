@@ -46,7 +46,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.model.creation.internal.PersisterClassResolverInitiator;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassResolver;
 import org.hibernate.metamodel.model.domain.spi.AbstractEntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
@@ -72,7 +72,7 @@ public class PersisterClassProviderTest {
 	@SuppressWarnings("unchecked")
 	public void testPersisterClassProvider() {
 		Map settings = SettingsGenerator.generateSettings(
-				PersisterClassResolverInitiator.IMPL_NAME, GoofyRuntimeModelNodeClassProvider.class,
+				PersisterClassResolverInitiator.IMPL_NAME, GoofyRuntimeModelDescriptorClassProvider.class,
 				AvailableSettings.LOADED_CLASSES, Arrays.asList( Bell.class )
 		);
 		try {
@@ -90,14 +90,14 @@ public class PersisterClassProviderTest {
 		}
 	}
 
-	public static class GoofyRuntimeModelNodeClassProvider implements RuntimeModelNodeClassResolver {
+	public static class GoofyRuntimeModelDescriptorClassProvider implements RuntimeModelDescriptorClassResolver {
 		@Override
 		public Class<? extends EntityDescriptor> getEntityPersisterClass(PersistentClass metadata) {
 			return GoofyProvider.class;
 		}
 
 		@Override
-		public Class<? extends PersistentCollectionDescriptor> getCollectionPersisterClass(Collection metadata) {
+		public Class<? extends PersistentCollectionDescriptor> getCollectionDescriptorClass(Collection bootMapping) {
 			return null;
 		}
 	}

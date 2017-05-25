@@ -30,7 +30,6 @@ import org.hibernate.boot.model.domain.MappedTableJoin;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.LoadQueryInfluencers.InternalFetchProfileType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -46,6 +45,7 @@ import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.internal.EntityIdentifierCompositeAggregatedImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityIdentifierSimpleImpl;
 import org.hibernate.metamodel.model.domain.internal.SingularPersistentAttributeEmbedded;
+import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.JoinedTableBinding;
@@ -93,10 +93,6 @@ public abstract class AbstractEntityDescriptor<T>
 
 	private final SessionFactoryImplementor factory;
 
-	// needed temporarily between construction of the persister and its afterInitialization call
-	private final EntityRegionAccessStrategy cacheAccessStrategy;
-	private final NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy;
-
 	private final NavigableRole navigableRole;
 
 	private final Table rootTable;
@@ -105,17 +101,15 @@ public abstract class AbstractEntityDescriptor<T>
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 	private final EntityTuplizer tuplizer;
 
+	private final String sqlAliasStem;
+
 	@SuppressWarnings("UnnecessaryBoxing")
 	public AbstractEntityDescriptor(
 			EntityMapping entityMapping,
-			EntityRegionAccessStrategy cacheAccessStrategy,
-			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws HibernateException {
 		super( resolveJavaTypeDescriptor( creationContext, entityMapping ) );
 
 		this.factory = creationContext.getSessionFactory();
-		this.cacheAccessStrategy = cacheAccessStrategy;
-		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
 
 		this.navigableRole = new NavigableRole( entityMapping.getEntityName() );
 
@@ -143,6 +137,8 @@ public abstract class AbstractEntityDescriptor<T>
 				getJavaTypeDescriptor().getEntityName(),
 				getJavaTypeDescriptor().getJpaEntityName()
 		);
+
+		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( getEntityName() );
 	}
 
 	// todo (6.0) : the root-table may not need to be phyically stored here
@@ -259,7 +255,7 @@ public abstract class AbstractEntityDescriptor<T>
 
 	@Override
 	public EntityRegionAccessStrategy getCacheAccessStrategy() {
-		return cacheAccessStrategy;
+		return getHierarchy().getEntityRegionAccessStrategy();
 	}
 
 	@Override
@@ -439,6 +435,10 @@ public abstract class AbstractEntityDescriptor<T>
 		return null;
 	}
 
+	@Override
+	public String getSqlAliasStem() {
+		return sqlAliasStem;
+	}
 
 	@Override
 	public EntityTableGroup createRootTableGroup(TableGroupInfoSource info, RootTableGroupContext tableGroupContext) {

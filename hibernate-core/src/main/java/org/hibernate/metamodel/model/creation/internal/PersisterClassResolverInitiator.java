@@ -10,36 +10,36 @@ import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelNodeClassResolver;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelDescriptorClassResolver;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * @author Steve Ebersole
  */
-public class PersisterClassResolverInitiator implements StandardServiceInitiator<RuntimeModelNodeClassResolver> {
+public class PersisterClassResolverInitiator implements StandardServiceInitiator<RuntimeModelDescriptorClassResolver> {
 	public static final PersisterClassResolverInitiator INSTANCE = new PersisterClassResolverInitiator();
 	public static final String IMPL_NAME = "hibernate.persister.resolver";
 
 	@Override
-	public Class<RuntimeModelNodeClassResolver> getServiceInitiated() {
-		return RuntimeModelNodeClassResolver.class;
+	public Class<RuntimeModelDescriptorClassResolver> getServiceInitiated() {
+		return RuntimeModelDescriptorClassResolver.class;
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public RuntimeModelNodeClassResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public RuntimeModelDescriptorClassResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		final Object customImpl = configurationValues.get( IMPL_NAME );
 		if ( customImpl == null ) {
-			return new StandardRuntimeModelNodeClassResolver();
+			return new StandardRuntimeModelDescriptorClassResolver();
 		}
 
-		if ( RuntimeModelNodeClassResolver.class.isInstance( customImpl ) ) {
-			return (RuntimeModelNodeClassResolver) customImpl;
+		if ( RuntimeModelDescriptorClassResolver.class.isInstance( customImpl ) ) {
+			return (RuntimeModelDescriptorClassResolver) customImpl;
 		}
 
-		final Class<? extends RuntimeModelNodeClassResolver> customImplClass = Class.class.isInstance( customImpl )
-				? (Class<? extends RuntimeModelNodeClassResolver>) customImpl
+		final Class<? extends RuntimeModelDescriptorClassResolver> customImplClass = Class.class.isInstance( customImpl )
+				? (Class<? extends RuntimeModelDescriptorClassResolver>) customImpl
 				: locate( registry, customImpl.toString() );
 
 		try {
@@ -50,7 +50,7 @@ public class PersisterClassResolverInitiator implements StandardServiceInitiator
 		}
 	}
 
-	private Class<? extends RuntimeModelNodeClassResolver> locate(ServiceRegistryImplementor registry, String className) {
+	private Class<? extends RuntimeModelDescriptorClassResolver> locate(ServiceRegistryImplementor registry, String className) {
 		return registry.getService( ClassLoaderService.class ).classForName( className );
 	}
 }

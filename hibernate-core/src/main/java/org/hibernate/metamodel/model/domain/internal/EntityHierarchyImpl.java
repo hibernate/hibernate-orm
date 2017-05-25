@@ -7,38 +7,33 @@
 
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.Collection;
 
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
-import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
-import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifier;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.InheritanceStrategy;
 import org.hibernate.metamodel.model.domain.spi.NaturalIdentifierDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.RowIdDescriptor;
 import org.hibernate.metamodel.model.domain.spi.TenantDiscrimination;
 import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
-import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.relational.spi.Table;
-import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
-import org.hibernate.type.spi.BasicType;
 
 import org.jboss.logging.Logger;
 
@@ -56,9 +51,10 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private final OptimisticLockStyle optimisticLockStyle;
 
 	private final EntityIdentifier identifierDescriptor;
-	private final RowIdDescriptor rowIdDescriptor;
 	private final DiscriminatorDescriptor discriminatorDescriptor;
 	private final VersionDescriptor versionDescriptor;
+	private final NaturalIdentifierDescriptor naturalIdentifierDescriptor;
+	private final RowIdDescriptor rowIdDescriptor;
 	private final TenantDiscrimination tenantDiscrimination;
 
 	private final String whereFragment;
@@ -76,15 +72,15 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		this.rootEntityPersister = rootEntityPersister;
 		this.caching = caching;
 		this.inheritanceStrategy = interpretInheritanceType( rootEntityBinding );
-		this.entityMode = rootEntityBinding.hasPojoRepresentation() ? EntityMode.POJO : EntityMode.MAP;
-		this.optimisticLockStyle = rootEntityBinding.getOptimisticLockStyle();
+		this.entityMode = rootEntityBinding.getEntityMappingHierarchy().getEntityMode();
+		this.optimisticLockStyle = rootEntityBinding.getEntityMappingHierarchy().getOptimisticLockStyle();
 
-		final Table identifierTable = resolveIdentifierTable( creationContext, rootEntityBinding );
-		this.identifierDescriptor = interpretIdentifierDescriptor( this, creationContext, rootEntityBinding, rootEntityPersister, identifierTable );
-		this.rowIdDescriptor = interpretRowIdDescriptor( this, creationContext, rootEntityBinding, identifierTable );
-		this.discriminatorDescriptor = interpretDiscriminatorDescriptor( this, creationContext, rootEntityBinding, identifierTable );
-		this.versionDescriptor = interpretVersionDescriptor( this, creationContext, rootEntityBinding, identifierTable );
-		this.tenantDiscrimination = interpretTenantDiscrimination( this, creationContext, rootEntityBinding, identifierTable );
+		this.identifierDescriptor = interpretIdentifierDescriptor( this, rootEntityBinding, rootEntityPersister, creationContext );
+		this.discriminatorDescriptor = interpretDiscriminatorDescriptor( this, rootEntityBinding, creationContext );
+		this.versionDescriptor = interpretVersionDescriptor( this, rootEntityBinding, creationContext );
+		this.rowIdDescriptor = interpretRowIdDescriptor( this, rootEntityBinding, creationContext );
+		this.tenantDiscrimination = interpretTenantDiscrimination( this, rootEntityBinding, creationContext );
+		this.naturalIdentifierDescriptor = interpretNaturalIdentifierDescriptor( this, rootEntityBinding, creationContext );
 
 		this.whereFragment = rootEntityBinding.getWhere();
 		this.mutable = rootEntityBinding.isMutable();
@@ -92,11 +88,11 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	private static InheritanceStrategy interpretInheritanceType(RootClass rootEntityBinding) {
-		if ( !rootEntityBinding.hasSubclasses() ) {
+		if ( !rootEntityBinding.getSubTypeMappings().isEmpty() ) {
 			return InheritanceStrategy.NONE;
 		}
 		else {
-			final Subclass subEntityBinding = (Subclass) rootEntityBinding.getDirectSubclasses().next();
+			final Subclass subEntityBinding = (Subclass) rootEntityBinding.getSubTypeMappings().iterator().next();
 			if ( subEntityBinding instanceof UnionSubclass ) {
 				return InheritanceStrategy.UNION;
 			}
@@ -109,18 +105,13 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		}
 	}
 
-	private static Table resolveIdentifierTable(RuntimeModelCreationContext creationContext, RootClass rootEntityBinding) {
-		return creationContext.getDatabaseObjectResolver().resolveTable( rootEntityBinding.getIdentityTable() );
-	}
-
 	@SuppressWarnings("unchecked")
 	private static EntityIdentifier interpretIdentifierDescriptor(
 			EntityHierarchyImpl hierarchy,
-			RuntimeModelCreationContext creationContext,
 			RootClass rootEntityBinding,
 			EntityDescriptor rootEntityPersister,
-			Table identifierTable) {
-		if ( rootEntityBinding.getIdentifierMapper() != null ) {
+			RuntimeModelCreationContext creationContext) {
+		if ( rootEntityBinding.getEntityMappingHierarchy().getIdentifierEmbeddedValueMapping() != null ) {
 			// should mean we have a "non-aggregated composite-id" (what we
 			// 		historically called an "embedded composite id")
 			return new EntityIdentifierCompositeNonAggregatedImpl(
@@ -153,8 +144,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 					hierarchy,
 					resolveIdAttributeDeclarer( rootEntityBinding, rootEntityPersister ),
 					rootEntityBinding.getIdentifierProperty(),
-					(BasicType) rootEntityBinding.getIdentifier().getType(),
-					resolveColumns( identifierTable, rootEntityBinding.getIdentifier(), creationContext ),
+					(BasicValueMapping) rootEntityBinding.getIdentifier(),
 					creationContext
 			);
 		}
@@ -167,51 +157,10 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		return rootEntityPersister;
 	}
 
-	private static List<Column> resolveColumns(
-			Table table,
-			Value value,
-			RuntimeModelCreationContext creationContext) {
-		final String[] columnNames = new String[ value.getColumnSpan() ];
-		final String[] formulas = value.hasFormula() ? new String[ value.getColumnSpan() ] : null;
-
-		final Iterator<Selectable> itr = value.getColumnIterator();
-		int i = 0;
-		while ( itr.hasNext() ) {
-			final Selectable selectable = itr.next();
-			if ( selectable instanceof org.hibernate.mapping.Column ) {
-				columnNames[i] = ( (org.hibernate.mapping.Column) selectable ).getQuotedName(
-						creationContext.getSessionFactory().getJdbcServices().getJdbcEnvironment().getDialect()
-				);
-			}
-			else {
-				if ( formulas == null ) {
-					throw new HibernateException( "Value indicated it does not have formulas, but a formula was encountered : " + selectable );
-				}
-				formulas[i] = ( (Formula) selectable ).getFormula();
-			}
-
-			// todo : keep track of readers/writers... how exactly?
-			// something like this vv ?
-			//		Column#applyReadExpression( col.getReadExpr( dialect ) )
-			//		Column#applyWriteExpression( col.getWriteExpr() )
-
-			i++;
-		}
-
-		return PersisterHelper.makeValues(
-				creationContext.getSessionFactory(),
-				value.getType(),
-				columnNames,
-				formulas,
-				table
-		);
-	}
-
 	private static RowIdDescriptor interpretRowIdDescriptor(
 			EntityHierarchyImpl hierarchy,
-			RuntimeModelCreationContext creationContext,
 			RootClass rootEntityBinding,
-			Table identifierTable) {
+			RuntimeModelCreationContext creationContext) {
 		if ( rootEntityBinding.getRootTable().getRowId() != null ) {
 			return new RowIdDescriptorImpl( hierarchy );
 		}
@@ -219,48 +168,39 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	private static DiscriminatorDescriptor interpretDiscriminatorDescriptor(
 			EntityHierarchyImpl hierarchy,
-			RuntimeModelCreationContext creationContext,
 			RootClass rootEntityBinding,
-			Table identifierTable) {
+			RuntimeModelCreationContext creationContext) {
+		creationContext.getDatabaseObjectResolver().resolveTable( rootEntityBinding.getRootTable() );
 		if ( rootEntityBinding.getDiscriminator() == null ) {
 			return null;
 		}
 
-		final List<Column> columns = resolveColumns( identifierTable, rootEntityBinding.getDiscriminator(), creationContext );
-		if ( columns.size() > 1 ) {
-			throw new MappingException( "Entity discriminator defined multiple columns : " + rootEntityBinding.getEntityName() );
-		}
 		return new DiscriminatorDescriptorImpl(
 				hierarchy,
-				(BasicType) rootEntityBinding.getDiscriminator().getType(),
-				columns.get( 0 )
+				(BasicValueMapping) rootEntityBinding.getDiscriminator(),
+				creationContext
 		);
 
 	}
 
+	@SuppressWarnings("unchecked")
 	private static VersionDescriptor interpretVersionDescriptor(
 			EntityHierarchyImpl hierarchy,
-			RuntimeModelCreationContext creationContext,
 			RootClass rootEntityBinding,
-			Table identifierTable) {
+			RuntimeModelCreationContext creationContext) {
 		if ( rootEntityBinding.getVersion() == null ) {
 			return null;
-		}
-
-		final List<Column> columns = resolveColumns( identifierTable, rootEntityBinding.getVersion().getValue(), creationContext );
-		if ( columns.size() > 1 ) {
-			throw new MappingException( "Entity discriminator defined multiple columns : " + rootEntityBinding.getEntityName() );
 		}
 
 		return new VersionDescriptorImpl(
 				hierarchy,
 				rootEntityBinding,
-				columns.get( 0 ),
 				rootEntityBinding.getVersion().getName(),
-				(BasicType) rootEntityBinding.getVersion().getType(),
 				false,
+				(BasicValueMapping) rootEntityBinding.getVersion().getValue(),
 				( (KeyValue) rootEntityBinding.getVersion().getValue() ).getNullValue(),
 				creationContext
 		);
@@ -268,10 +208,39 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 
 	private static TenantDiscrimination interpretTenantDiscrimination(
 			EntityHierarchyImpl hierarchy,
-			RuntimeModelCreationContext creationContext,
 			RootClass rootEntityBinding,
-			Table identifierTable) {
+			RuntimeModelCreationContext creationContext) {
 		return null;
+	}
+
+	private NaturalIdentifierDescriptor interpretNaturalIdentifierDescriptor(
+			EntityHierarchyImpl entityHierarchy,
+			RootClass rootEntityBinding,
+			RuntimeModelCreationContext creationContext) {
+		if ( !rootEntityBinding.hasNaturalId() ) {
+			return null;
+		}
+
+		final NaturalIdRegionAccessStrategy accessStrategy = creationContext.getSessionFactory()
+				.getCache()
+				.determineNaturalIdRegionAccessStrategy( rootEntityBinding );
+
+		return new NaturalIdentifierDescriptor() {
+			@Override
+			public Collection<PersistentAttribute> getPersistentAttributes() {
+				throw new NotYetImplementedException(  );
+			}
+
+			@Override
+			public Object[] resolveSnapshot(Object entityId, SharedSessionContractImplementor session) {
+				return new Object[0];
+			}
+
+			@Override
+			public NaturalIdRegionAccessStrategy getNaturalIdRegionAccessStrategy() {
+				return accessStrategy;
+			}
+		};
 	}
 
 
@@ -281,6 +250,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public EntityDescriptor getRootEntityType() {
 		return rootEntityPersister;
 	}
@@ -296,38 +266,42 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	@Override
-	public NaturalIdentifierDescriptor getNaturalIdentifierDescriptor() {
-		return null;
-	}
-
-	@Override
+	@SuppressWarnings("unchecked")
 	public EntityIdentifier getIdentifierDescriptor() {
 		return identifierDescriptor;
 	}
 
 	@Override
-	public RowIdDescriptor getRowIdDescriptor() {
-		return rowIdDescriptor;
-	}
-
-	@Override
+	@SuppressWarnings("unchecked")
 	public DiscriminatorDescriptor getDiscriminatorDescriptor() {
 		return discriminatorDescriptor;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public VersionDescriptor getVersionDescriptor() {
 		return versionDescriptor;
 	}
 
 	@Override
-	public OptimisticLockStyle getOptimisticLockStyle() {
-		return optimisticLockStyle;
+	public NaturalIdentifierDescriptor getNaturalIdentifierDescriptor() {
+		return naturalIdentifierDescriptor;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public RowIdDescriptor getRowIdDescriptor() {
+		return rowIdDescriptor;
 	}
 
 	@Override
 	public TenantDiscrimination getTenantDiscrimination() {
 		return tenantDiscrimination;
+	}
+
+	@Override
+	public OptimisticLockStyle getOptimisticLockStyle() {
+		return optimisticLockStyle;
 	}
 
 	@Override

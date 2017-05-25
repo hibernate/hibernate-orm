@@ -189,9 +189,9 @@ public class Subclass extends PersistentClass {
 		return getSuperclass().hasEmbeddedIdentifier();
 	}
 
-	public Class getEntityPersisterClass() {
+	public Class getRuntimeEntityDescriptorClass() {
 		if (classPersisterClass==null) {
-			return getSuperclass().getEntityPersisterClass();
+			return getSuperclass().getRuntimeEntityDescriptorClass();
 		}
 		else {
 			return classPersisterClass;

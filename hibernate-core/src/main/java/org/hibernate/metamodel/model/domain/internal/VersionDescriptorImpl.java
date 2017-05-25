@@ -9,32 +9,32 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
-import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
-import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
-import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
+import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
+import org.hibernate.metamodel.model.domain.spi.VersionDescriptor;
+import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.tree.internal.NavigableSelection;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.spi.BasicType;
+
+import static org.hibernate.metamodel.model.domain.internal.PersisterHelper.resolvePropertyAccess;
 
 /**
  * @author Steve Ebersole
  */
 public class VersionDescriptorImpl<O,J>
-		extends AbstractSingularPersistentAttribute<O,J,BasicType<J>>
+		extends AbstractSingularPersistentAttribute<O,J>
 		implements VersionDescriptor<O,J>, BasicValuedExpressableType<J> {
 	private final Column column;
 	private final String unsavedValue;
@@ -42,21 +42,20 @@ public class VersionDescriptorImpl<O,J>
 	public VersionDescriptorImpl(
 			EntityHierarchy hierarchy,
 			RootClass rootEntityBinding,
-			Column column,
 			String name,
-			BasicType<J> ormType,
 			boolean nullable,
+			BasicValueMapping<J> basicValueMapping,
 			String unsavedValue,
 			RuntimeModelCreationContext creationContext) {
 		super(
 				hierarchy.getRootEntityType(),
 				name,
-				PersisterHelper.resolvePropertyAccess( hierarchy.getRootEntityType(), rootEntityBinding.getVersion(), creationContext ),
-				ormType,
-				Disposition.NORMAL,
-				nullable
+				resolvePropertyAccess( hierarchy.getRootEntityType(), rootEntityBinding.getVersion(), creationContext ),
+				Disposition.VERSION,
+				nullable,
+				basicValueMapping
 		);
-		this.column = column;
+		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );
 		this.unsavedValue = unsavedValue;
 	}
 
@@ -92,13 +91,9 @@ public class VersionDescriptorImpl<O,J>
 	}
 
 	@Override
-	public BasicJavaDescriptor getJavaTypeDescriptor() {
+	@SuppressWarnings("unchecked")
+	public BasicJavaDescriptor<J> getJavaTypeDescriptor() {
 		return (BasicJavaDescriptor) super.getJavaTypeDescriptor();
-	}
-
-	@Override
-	public SqlTypeDescriptor getSqlTypeDescriptor() {
-		return getOrmType().getColumnMappings()[0].getSqlTypeDescriptor();
 	}
 
 	@Override
@@ -111,12 +106,11 @@ public class VersionDescriptorImpl<O,J>
 	public QueryResult generateQueryResult(
 			NavigableReference selectedExpression,
 			String resultVariable,
-			ColumnReferenceSource columnReferenceSource,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
 		return new QueryResultScalarImpl(
 				selectedExpression,
-				sqlSelectionResolver.resolveSqlSelection( columnReferenceSource.resolveColumnReference( column ) ),
+				sqlSelectionResolver.resolveSqlSelection( creationContext.currentColumnReferenceSource().resolveColumnReference( column ) ),
 				resultVariable,
 				this
 		);

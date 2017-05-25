@@ -6,17 +6,23 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.boot.model.domain.BasicValueMapping;
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractSingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
 import org.hibernate.metamodel.model.domain.spi.EntityIdentifierSimple;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NavigableBasicValued;
 import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.sql.ast.produce.result.internal.QueryResultScalarImpl;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
 import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
@@ -24,31 +30,36 @@ import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
 import org.hibernate.type.spi.BasicType;
 
+import static org.hibernate.metamodel.model.domain.internal.PersisterHelper.resolvePropertyAccess;
+
 /**
  * @author Steve Ebersole
  */
 public class EntityIdentifierSimpleImpl<O,J>
 		extends AbstractSingularPersistentAttribute<O,J>
-		implements EntityIdentifierSimple<O,J> {
+		implements EntityIdentifierSimple<O,J>, NavigableBasicValued<J> {
 
-	private final List<Column> columns;
+	private final String name;
+	private final Column column;
+	private final BasicType<J> basicType;
 
 	public EntityIdentifierSimpleImpl(
 			EntityHierarchy hierarchy,
 			IdentifiableTypeDescriptor declarer,
 			Property property,
-			BasicType<J> ormType,
-			List<Column> columns,
+			BasicValueMapping<J> basicValueMapping,
 			RuntimeModelCreationContext creationContext) {
 		super(
 				hierarchy.getRootEntityType(),
 				property.getName(),
-				PersisterHelper.resolvePropertyAccess( declarer, property, creationContext ),
-				ormType,
+				resolvePropertyAccess( declarer, property, creationContext ),
 				Disposition.ID,
-				false
+				false,
+				basicValueMapping
 		);
-		this.columns = columns;
+		this.name = property.getName();
+		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( basicValueMapping.getMappedColumn() );
+		this.basicType = basicValueMapping.resolveType();
 	}
 
 	@Override
@@ -58,12 +69,27 @@ public class EntityIdentifierSimpleImpl<O,J>
 
 	@Override
 	public List<Column> getColumns() {
-		return columns;
+		return Collections.singletonList( column );
 	}
 
 	@Override
 	public SingularPersistentAttribute<O,J> getIdAttribute() {
 		return this;
+	}
+
+	@Override
+	public IdentifierGenerator getIdentifierValueGenerator() {
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
+	public Column getBoundColumn() {
+		return column;
+	}
+
+	@Override
+	public BasicType<J> getBasicType() {
+		return basicType;
 	}
 
 	@Override
@@ -102,16 +128,18 @@ public class EntityIdentifierSimpleImpl<O,J>
 			String resultVariable,
 			SqlSelectionResolver sqlSelectionResolver,
 			QueryResultCreationContext creationContext) {
-		return getIdAttribute().generateQueryResult(
+		return new QueryResultScalarImpl(
 				selectedExpression,
+				sqlSelectionResolver.resolveSqlSelection(
+						creationContext.currentColumnReferenceSource().resolveColumnReference( column )
+				),
 				resultVariable,
-				sqlSelectionResolver,
-				creationContext
+				this
 		);
 	}
 
 	@Override
 	public String getName() {
-		return getIdAttribute().getName();
+		return name;
 	}
 }

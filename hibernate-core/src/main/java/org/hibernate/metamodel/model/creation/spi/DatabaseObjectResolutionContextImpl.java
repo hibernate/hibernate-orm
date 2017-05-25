@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.RuntimeDatabaseModelProducer;
 import org.hibernate.metamodel.model.relational.spi.ForeignKey;
@@ -50,6 +51,12 @@ public class DatabaseObjectResolutionContextImpl
 	@Override
 	public Column resolveColumn(MappedColumn mappedColumn) {
 		return columnMap.get( mappedColumn );
+	}
+
+	@Override
+	public void resolveForeignKey(
+			List<MappedColumn> constraintColumns, List<MappedColumn> mappedColumns) {
+		throw new NotYetImplementedException(  );
 	}
 
 	private static class ColumnMapping {

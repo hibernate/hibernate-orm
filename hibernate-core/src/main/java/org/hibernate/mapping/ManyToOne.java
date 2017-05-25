@@ -11,10 +11,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.type.spi.EntityType;
-import org.hibernate.type.Type;
 
 /**
  * A many-to-one association mapping
@@ -31,7 +28,7 @@ public class ManyToOne extends ToOne {
 	public void createForeignKey() throws MappingException {
 		// the case of a foreign key to something other than the pk is handled in createPropertyRefConstraints
 		if (referencedPropertyName==null && !hasFormula() ) {
-			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
+			createForeignKeyOfEntity( getReferencedEntityName() );
 		} 
 	}
 
@@ -61,8 +58,8 @@ public class ManyToOne extends ToOne {
 					
 					ForeignKey fk = getTable().createForeignKey( 
 							getForeignKeyName(), 
-							getConstraintColumns(), 
-							( (EntityType) getType() ).getAssociatedEntityName(),
+							getConstraintColumns(),
+							getReferencedEntityName(),
 							getForeignKeyDefinition(), 
 							refColumns
 					);

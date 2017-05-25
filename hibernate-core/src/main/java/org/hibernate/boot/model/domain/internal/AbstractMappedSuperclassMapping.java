@@ -6,13 +6,14 @@
  */
 package org.hibernate.boot.model.domain.internal;
 
-import javax.persistence.metamodel.Type;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.hibernate.boot.model.domain.EntityMappingHierarchy;
 import org.hibernate.boot.model.domain.MappedSuperclassMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.model.domain.spi.MappedSuperclassImplementor;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 
 /**
  * @author Chris Cranford
@@ -43,5 +44,13 @@ public abstract class AbstractMappedSuperclassMapping
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.MAPPED_SUPERCLASS;
+	}
+
+	@Override
+	public <X> IdentifiableTypeDescriptor<X> makeRuntimeDescriptor(RuntimeModelCreationContext creationContext) {
+		return creationContext.getRuntimeModelDescriptorFactory().createMappedSuperclassDescriptor(
+				this,
+				creationContext
+		);
 	}
 }

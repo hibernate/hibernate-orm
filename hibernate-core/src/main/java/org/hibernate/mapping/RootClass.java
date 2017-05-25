@@ -18,11 +18,12 @@ import org.hibernate.boot.model.domain.internal.EntityMappingHierarchyImpl;
 import org.hibernate.boot.model.domain.spi.EntityMappingHierarchyImplementor;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 
 /**
  * The root class of an inheritance hierarchy
@@ -207,7 +208,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
-	public Class getEntityPersisterClass() {
+	public Class getRuntimeEntityDescriptorClass() {
 		return entityPersisterClass;
 	}
 
@@ -296,42 +297,42 @@ public class RootClass extends PersistentClass implements TableOwner {
 		where = string;
 	}
 
-	@Override
-	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
-		if ( !getIdentifier().isValid( mapping ) ) {
-			throw new MappingException(
-					"identifier mapping has wrong number of columns: " +
-							getEntityName() +
-							" type: " +
-							getIdentifier().getType().getName()
-			);
-		}
-		checkCompositeIdentifier();
-	}
-
-	private void checkCompositeIdentifier() {
-		if ( getIdentifier() instanceof Component ) {
-			Component id = (Component) getIdentifier();
-			if ( !id.isDynamic() ) {
-				final Class idClass = id.getComponentClass();
-				if ( idClass != null ) {
-					final String idComponentClassName = idClass.getName();
-					if ( !ReflectHelper.overridesEquals( idClass ) ) {
-						LOG.compositeIdClassDoesNotOverrideEquals( idComponentClassName );
-					}
-					if ( !ReflectHelper.overridesHashCode( idClass ) ) {
-						LOG.compositeIdClassDoesNotOverrideHashCode( idComponentClassName );
-					}
-					if ( !Serializable.class.isAssignableFrom( idClass ) ) {
-						throw new MappingException(
-								"Composite-id class must implement Serializable: " + idComponentClassName
-						);
-					}
-				}
-			}
-		}
-	}
+//	@Override
+//	public void validate(Mapping mapping) throws MappingException {
+//		super.validate( mapping );
+//		if ( !getIdentifier().isValid( mapping ) ) {
+//			throw new MappingException(
+//					"identifier mapping has wrong number of columns: " +
+//							getEntityName() +
+//							" type: " +
+//							getIdentifier().getType().getName()
+//			);
+//		}
+//		checkCompositeIdentifier();
+//	}
+//
+//	private void checkCompositeIdentifier() {
+//		if ( getIdentifier() instanceof Component ) {
+//			Component id = (Component) getIdentifier();
+//			if ( !id.isDynamic() ) {
+//				final Class idClass = id.getComponentClass();
+//				if ( idClass != null ) {
+//					final String idComponentClassName = idClass.getName();
+//					if ( !ReflectHelper.overridesEquals( idClass ) ) {
+//						LOG.compositeIdClassDoesNotOverrideEquals( idComponentClassName );
+//					}
+//					if ( !ReflectHelper.overridesHashCode( idClass ) ) {
+//						LOG.compositeIdClassDoesNotOverrideHashCode( idComponentClassName );
+//					}
+//					if ( !Serializable.class.isAssignableFrom( idClass ) ) {
+//						throw new MappingException(
+//								"Composite-id class must implement Serializable: " + idComponentClassName
+//						);
+//					}
+//				}
+//			}
+//		}
+//	}
 
 	@Override
 	public String getCacheConcurrencyStrategy() {

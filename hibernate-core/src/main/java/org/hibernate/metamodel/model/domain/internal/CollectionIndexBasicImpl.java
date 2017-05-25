@@ -9,8 +9,8 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.mapping.IndexedCollection;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.AbstractCollectionIndex;
 import org.hibernate.metamodel.model.domain.spi.CollectionIndexBasic;
@@ -42,10 +42,10 @@ public class CollectionIndexBasicImpl<J>
 			RuntimeModelCreationContext creationContext) {
 		super( persister );
 
-		final SimpleValue simpleValueMapping = (SimpleValue) mappingBinding.getIndex();
-		this.column  = creationContext.getDatabaseObjectResolver().resolveColumn( simpleValueMapping.getMappedColumns().get( 0 ) );
+		final BasicValueMapping valueMapping = (BasicValueMapping) mappingBinding.getIndex();
+		this.column  = creationContext.getDatabaseObjectResolver().resolveColumn( valueMapping.getMappedColumn() );
 
-		this.attributeConverter = simpleValueMapping.getAttributeConverterDescriptor();
+		this.attributeConverter = valueMapping.getAttributeConverterDefinition();
 
 		// todo (6.0) : SimpleValue -> BasicType
 		this.basicType = null;

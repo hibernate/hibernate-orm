@@ -8,7 +8,6 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.lang.reflect.Member;
 
-import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 
@@ -23,7 +22,6 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 	private final PropertyAccess access;
 
 	private final NavigableRole navigableRole;
-	private final String sqlAliasStem;
 
 	public AbstractPersistentAttribute(
 			ManagedTypeDescriptor<O> container,
@@ -34,13 +32,7 @@ public abstract class AbstractPersistentAttribute<O,J> implements PersistentAttr
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.access = access;
 
-		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		this.navigableRole = container.getNavigableRole().append( name );
-	}
-
-	@Override
-	public String getSqlAliasStem() {
-		return sqlAliasStem;
 	}
 
 	@Override

@@ -11,20 +11,20 @@ import java.lang.reflect.Member;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.metamodel.model.relational.spi.Column;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.spi.DiscriminatorDescriptor;
+import org.hibernate.metamodel.model.domain.spi.DiscriminatorMappings;
 import org.hibernate.metamodel.model.domain.spi.EntityHierarchy;
-import org.hibernate.sql.ast.tree.spi.from.TableGroup;
-import org.hibernate.sql.ast.tree.spi.from.TableSpace;
-import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
-import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.produce.result.spi.Fetch;
-import org.hibernate.sql.ast.produce.result.spi.FetchParent;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.NavigableRole;
+import org.hibernate.metamodel.model.domain.spi.NavigableVisitationStrategy;
+import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
+import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
+import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
 import org.hibernate.type.spi.BasicType;
 
 /**
@@ -34,18 +34,21 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 	public static final String NAVIGABLE_NAME = "{discriminator}";
 
 	private final EntityHierarchy hierarchy;
-	private final BasicType<J> ormType;
+	private final BasicType<J> basicType;
 	private final Column column;
 
-	public DiscriminatorDescriptorImpl(EntityHierarchy hierarchy, BasicType<J> ormType, Column column) {
-		this.hierarchy = hierarchy;
-		this.ormType = ormType;
-		this.column = column;
-	}
+	private final NavigableRole navigableRole;
 
-	@Override
-	public BasicType<J> getOrmType() {
-		return ormType;
+	public DiscriminatorDescriptorImpl(
+			EntityHierarchy hierarchy,
+			BasicValueMapping<J> valueMapping,
+			RuntimeModelCreationContext creationContext) {
+		this.hierarchy = hierarchy;
+
+		this.basicType = valueMapping.resolveType();
+		this.column = creationContext.getDatabaseObjectResolver().resolveColumn( valueMapping.getMappedColumn() );
+
+		this.navigableRole = hierarchy.getRootEntityType().getNavigableRole().append( NAVIGABLE_NAME );
 	}
 
 	@Override
@@ -54,28 +57,28 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 	}
 
 	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
+	}
+
+	@Override
+	public DiscriminatorMappings getDiscriminatorMappings() {
+		// todo (6.0) : will probably need to collect these dynamically during "first phase" of runtime model creation
+		throw new NotYetImplementedException(  );
+	}
+
+	@Override
 	public void visitNavigable(NavigableVisitationStrategy visitor) {
-
+		visitor.visitDiscriminator( this );
 	}
 
 	@Override
-	public TableGroup buildTableGroup(
-			TableSpace tableSpace,
-			SqlAliasBaseManager sqlAliasBaseManager,
-			FromClauseIndex fromClauseIndex) {
-		throw new NotYetImplementedException();
-	}
-
-	@Override
-	public QueryResult generateReturn(
-			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Fetch generateFetch(
-			QueryResultCreationContext returnResolutionContext, TableGroup tableGroup, FetchParent fetchParent) {
-		throw new UnsupportedOperationException();
+	public QueryResult generateQueryResult(
+			NavigableReference selectedExpression,
+			String resultVariable,
+			SqlSelectionResolver sqlSelectionResolver,
+			QueryResultCreationContext creationContext) {
+		return null;
 	}
 
 	@Override
@@ -135,7 +138,7 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 
 	@Override
 	public Class<J> getBindableJavaType() {
-		return getOrmType().getJavaType();
+		return getBasicType().getJavaType();
 	}
 
 	@Override
@@ -159,11 +162,6 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 	}
 
 	@Override
-	public String getTypeName() {
-		return getOrmType().getJavaTypeDescriptor().getTypeName();
-	}
-
-	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;
 	}
@@ -171,5 +169,15 @@ public class DiscriminatorDescriptorImpl<O,J> implements DiscriminatorDescriptor
 	@Override
 	public SingularAttributeClassification getAttributeTypeClassification() {
 		return SingularAttributeClassification.BASIC;
+	}
+
+	@Override
+	public Column getBoundColumn() {
+		return column;
+	}
+
+	@Override
+	public BasicType<J> getBasicType() {
+		return basicType;
 	}
 }

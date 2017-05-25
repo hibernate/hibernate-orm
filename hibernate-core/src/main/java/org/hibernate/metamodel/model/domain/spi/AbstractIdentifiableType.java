@@ -6,13 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.boot.model.domain.IdentifiableTypeMapping;
 import org.hibernate.boot.model.domain.PersistentAttributeMapping;
-import org.hibernate.metamodel.model.domain.internal.PersisterHelper;
-import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.spi.IdentifiableJavaDescriptor;
 
@@ -57,15 +52,10 @@ public abstract class AbstractIdentifiableType<T> extends AbstractManagedType<T>
 		this.superclassType = superType;
 
 		for ( PersistentAttributeMapping attributeMapping : mappingDescriptor.getDeclaredPersistentAttributes() ) {
-
-			// todo : Columns
-			final List<Column> columns = Collections.emptyList();
-
-			final PersistentAttribute persistentAttribute = PersisterHelper.INSTANCE.buildAttribute(
-					creationContext,
+			final PersistentAttribute persistentAttribute = attributeMapping.makeRuntimeAttribute(
 					this,
-					attributeMapping,
-					columns
+					SingularPersistentAttribute.Disposition.NORMAL,
+					creationContext
 			);
 			addAttribute( persistentAttribute );
 		}

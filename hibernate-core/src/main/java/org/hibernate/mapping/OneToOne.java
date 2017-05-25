@@ -10,11 +10,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.spi.EntityType;
-import org.hibernate.type.Type;
 
 /**
  * A one-to-one association mapping
@@ -53,7 +50,7 @@ public class OneToOne extends ToOne {
 	public void createForeignKey() throws MappingException {
 		if ( constrained && referencedPropertyName==null) {
 			//TODO: handle the case of a foreign key to something other than the pk
-			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
+			createForeignKeyOfEntity( getReferencedEntityName() );
 		}
 	}
 

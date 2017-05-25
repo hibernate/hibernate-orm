@@ -6,9 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import java.util.List;
-
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.domain.BasicValueMapping;
 import org.hibernate.boot.model.domain.EmbeddedValueMapping;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedNamespace;
@@ -23,12 +22,13 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
-import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.model.domain.internal.CollectionElementBasicImpl;
@@ -37,8 +37,7 @@ import org.hibernate.metamodel.model.domain.internal.CollectionElementEntityImpl
 import org.hibernate.metamodel.model.domain.internal.CollectionIndexBasicImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionIndexEmbeddedImpl;
 import org.hibernate.metamodel.model.domain.internal.CollectionIndexEntityImpl;
-import org.hibernate.metamodel.model.domain.internal.PersisterHelper;
-import org.hibernate.metamodel.model.relational.spi.Column;
+import org.hibernate.metamodel.model.domain.internal.SqlAliasStemHelper;
 import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.produce.metamodel.spi.TableGroupInfoSource;
@@ -46,8 +45,9 @@ import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.tree.spi.from.TableGroup;
 import org.hibernate.sql.ast.tree.spi.from.TableGroupJoin;
-import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.metamodel.model.domain.internal.PersisterHelper.interpretCollectionClassification;
 
 /**
  * @author Steve Ebersole
@@ -78,6 +78,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 	private Table separateCollectionTable;
 
+	private final String sqlAliasStem;
 
 
 	public AbstractPersistentCollectionDescriptor(
@@ -89,7 +90,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		this.sessionFactory = creationContext.getSessionFactory();
 		this.source = source;
 		this.navigableRole = source.getNavigableRole().append( navigableName );
-		this.collectionClassification = PersisterHelper.interpretCollectionClassification( collectionBinding );
+		this.collectionClassification = interpretCollectionClassification( collectionBinding );
 		this.foreignKeyDescriptor = new CollectionKey( this, collectionBinding );
 
 		this.cacheAccessStrategy = cacheAccessStrategy;
@@ -102,6 +103,8 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 		else {
 			cacheEntryStructure = UnstructuredCacheEntry.INSTANCE;
 		}
+
+		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( navigableName );
 	}
 
 	@Override
@@ -123,14 +126,14 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 		if ( collectionBinding instanceof IdentifierCollection ) {
 			final IdentifierGenerator identifierGenerator = ( (IdentifierCollection) collectionBinding ).getIdentifier().createIdentifierGenerator(
-					creationContext.getSessionFactory().getIdentifierGeneratorFactory(),
+					creationContext.getIdentifierGeneratorFactory(),
 					dialect,
 					defaultCatalogName,
 					defaultSchemaName,
 					null
 			);
 			this.idDescriptor = new CollectionIdentifier(
-					(BasicType) ( (IdentifierCollection) collectionBinding ).getIdentifier().getType(),
+					( (BasicValueMapping) ( (IdentifierCollection) collectionBinding ).getIdentifier() ).resolveType(),
 					identifierGenerator
 			);
 		}
@@ -138,7 +141,7 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 			idDescriptor = null;
 		}
 
-		this.indexDescriptor = resolveIndexDescriptor( this, collectionBinding, separateCollectionTable, creationContext );
+		this.indexDescriptor = resolveIndexDescriptor( this, collectionBinding, creationContext );
 		this.elementDescriptor = resolveElementDescriptor( this, collectionBinding, separateCollectionTable, creationContext );
 	}
 
@@ -146,7 +149,6 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	private static <J,T extends Type<J>> CollectionIndex<J> resolveIndexDescriptor(
 			PersistentCollectionDescriptor persister,
 			Collection collectionBinding,
-			Table separateCollectionTable,
 			RuntimeModelCreationContext creationContext) {
 		if ( !IndexedCollection.class.isInstance( collectionBinding ) ) {
 			return null;
@@ -154,12 +156,28 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 
 		final IndexedCollection indexedCollectionMapping = (IndexedCollection) collectionBinding;
 		final Value indexValueMapping = indexedCollectionMapping.getIndex();
-		final Type<J> indexType = indexValueMapping.getType();
-		// todo (6.0) : collect index columns
-		final List<Column> columns = collectIndexColumns( persister, indexedCollectionMapping, separateCollectionTable, creationContext );
 
-		if ( indexValueMapping instanceof OneToMany
-				|| indexValueMapping instanceof ManyToOne ) {
+		if ( indexValueMapping instanceof Any ) {
+			throw new NotYetImplementedException(  );
+		}
+
+		if ( indexValueMapping instanceof BasicValueMapping ) {
+			return new CollectionIndexBasicImpl(
+					persister,
+					indexedCollectionMapping,
+					creationContext
+			);
+		}
+
+		if ( indexValueMapping instanceof EmbeddedValueMapping ) {
+			return new CollectionIndexEmbeddedImpl(
+					persister,
+					indexedCollectionMapping,
+					creationContext
+			);
+		}
+
+		if ( indexValueMapping instanceof OneToMany || indexValueMapping instanceof ManyToOne ) {
 			// NOTE : ManyToOne is used to signify the index is a many-to-many
 			return new CollectionIndexEntityImpl(
 					persister,
@@ -167,36 +185,10 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 					creationContext
 			);
 		}
-		else if ( indexValueMapping instanceof EmbeddedValueMapping ) {
-			return new CollectionIndexEmbeddedImpl(
-					persister,
-					indexedCollectionMapping,
-					creationContext
-			);
-		}
-		else if ( indexValueMapping instanceof SimpleValue ) {
-			return new CollectionIndexBasicImpl(
-					persister,
-					indexedCollectionMapping,
-					creationContext
-			);
-		}
-		else {
-			// should indicate an ANY index
-			throw new NotYetImplementedException(  );
-		}
-	}
 
-	private static List<Column> collectIndexColumns(
-			PersistentCollectionDescriptor persister,
-			IndexedCollection indexedCollectionBinding,
-			Table separateCollectionTable, RuntimeModelCreationContext creationContext) {
-		return PersisterHelper.makeValues(
-				creationContext.getSessionFactory(),
-				indexedCollectionBinding.getIndex().getType(),
-				indexedCollectionBinding.getIndex().getColumnIterator(),
-				// todo (6.0) : `separateCollectionTable` works for many-to-many and element-collections - need to account for one-to-many (no separateCollectionTable)
-				separateCollectionTable
+		throw new IllegalArgumentException(
+				"Could not determine proper CollectionIndex descriptor to generate.  Unrecognized ValueMapping : " +
+						indexValueMapping
 		);
 	}
 
@@ -208,57 +200,51 @@ public abstract class AbstractPersistentCollectionDescriptor<O,C,E> implements P
 	@SuppressWarnings("unchecked")
 	private static CollectionElement resolveElementDescriptor(
 			AbstractPersistentCollectionDescriptor collectionPersister,
-			Collection collectionBinding,
+			Collection bootCollectionDescriptor,
 			Table separateCollectionTable,
 			RuntimeModelCreationContext creationContext) {
-		final Type elementType = collectionBinding.getElement().getType();
 
-		if ( elementType.isAnyType() ) {
-			assert separateCollectionTable != null;
-
+		if ( bootCollectionDescriptor.getElement() instanceof Any ) {
 			throw new NotYetImplementedException(  );
-
-//			final java.util.List<Column> columns = PersisterHelper.makeValues(
-//					sessionFactory,
-//					elementType,
-//					getElementColumnNames(),
-//					null,
-//					this.separateCollectionTable
-//			);
-//
-//			return new CollectionElementAny(
-//					this,
-//					(AnyType) elementType,
-//					columns
-//			);
 		}
-		else if ( elementType.isComponentType() ) {
-			assert separateCollectionTable != null;
 
-			return new CollectionElementEmbeddedImpl(
+		if ( bootCollectionDescriptor.getElement() instanceof BasicValueMapping ) {
+			return new CollectionElementBasicImpl(
 					collectionPersister,
-					collectionBinding,
+					bootCollectionDescriptor,
 					creationContext
 			);
 		}
-		else if ( elementType.isEntityType() ) {
+
+		if ( bootCollectionDescriptor.getElement() instanceof EmbeddedValueMapping ) {
+			return new CollectionElementEmbeddedImpl(
+					collectionPersister,
+					bootCollectionDescriptor,
+					creationContext
+			);
+		}
+
+		if ( bootCollectionDescriptor.getElement() instanceof ToOne ) {
 			return new CollectionElementEntityImpl(
 					collectionPersister,
-					collectionBinding,
+					bootCollectionDescriptor,
 					separateCollectionTable == null
 							? CollectionElement.ElementClassification.MANY_TO_MANY
 							: CollectionElement.ElementClassification.ONE_TO_MANY,
 					creationContext
 			);
 		}
-		else {
-			assert separateCollectionTable != null;
-			return new CollectionElementBasicImpl(
-					collectionPersister,
-					collectionBinding,
-					creationContext
-			);
-		}
+
+		throw new IllegalArgumentException(
+				"Could not determine proper CollectionElement descriptor to generate.  Unrecognized ValueMapping : " +
+						bootCollectionDescriptor.getElement()
+		);
+	}
+
+
+	@Override
+	public String getSqlAliasStem() {
+		return sqlAliasStem;
 	}
 
 	@Override

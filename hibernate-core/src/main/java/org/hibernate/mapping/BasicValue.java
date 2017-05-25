@@ -17,6 +17,8 @@ import org.hibernate.boot.spi.AttributeConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.type.converter.spi.AttributeConverterDefinition;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
@@ -98,5 +100,15 @@ public class BasicValue extends SimpleValue implements BasicValueMapping {
 		}
 
 		super.setTypeName( typeName );
+	}
+
+	@Override
+	public BasicType resolveType() {
+		return basicTypeResolver.resolveBasicType();
+	}
+
+	@Override
+	public AttributeConverterDefinition getAttributeConverterDefinition() {
+		return attributeConverterDescriptor;
 	}
 }

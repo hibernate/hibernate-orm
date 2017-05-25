@@ -6,16 +6,15 @@
  */
 package org.hibernate.metamodel.model.creation.spi;
 
-import org.hibernate.boot.model.domain.PersistentAttributeMapping;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.internal.PersisterHelper;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
-import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -37,11 +36,15 @@ public interface RuntimeModelCreationContext {
 
 	RuntimeModelDescriptorFactory getRuntimeModelDescriptorFactory();
 
+	default IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+		return getSessionFactory().getServiceRegistry().getService( MutableIdentifierGeneratorFactory.class );
+	}
+
 	EntityTuplizerFactory getEntityTuplizerFactory();
 	ComponentTuplizerFactory getComponentTuplizerFactory();
 	PersistentCollectionTuplizerFactory getPersistentCollectionTuplizerFactory();
 
-	void registerEntityPersister(EntityDescriptor entityPersister);
-	void registerCollectionPersister(PersistentCollectionDescriptor collectionPersister);
-	void registerEmbeddablePersister(EmbeddedTypeDescriptor embeddablePersister);
+	void registerEntityDescriptor(EntityDescriptor entityDescriptor);
+	void registerCollectionDescriptor(PersistentCollectionDescriptor collectionDescriptor);
+	void registerEmbeddableDescriptor(EmbeddedTypeDescriptor embeddedTypeDescriptor);
 }

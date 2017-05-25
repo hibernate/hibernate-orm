@@ -6,11 +6,14 @@
  */
 package org.hibernate.dialect.unique;
 
-import java.util.Iterator;
+import java.util.Collection;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.UniqueKey;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
 /**
  * DB2 does not allow unique constraints on nullable columns.  Rather than
@@ -29,46 +32,90 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	}
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, RuntimeModelCreationContext modelCreationContext) {
+		final JdbcEnvironment jdbcEnvironment = getJdbcEnvironment( modelCreationContext );
 		if ( hasNullable( uniqueKey ) ) {
-			return org.hibernate.mapping.Index.buildSqlCreateIndexString(
+			return buildSqlCreateIndexString(
 					dialect,
-					uniqueKey.getName(),
-					uniqueKey.getTable(),
-					uniqueKey.columnIterator(),
+					uniqueKey.getName().getText(),
+					jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+							uniqueKey.getTable().getQualifiedTableName(),
+							jdbcEnvironment.getDialect()
+					),
+					uniqueKey.getColumns(),
 					uniqueKey.getColumnOrderMap(),
-					true,
-					metadata
+					true
 			);
 		}
 		else {
-			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, metadata );
+			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, modelCreationContext );
 		}
 	}
 	
 	@Override
-	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
+	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, RuntimeModelCreationContext modelCreationContext) {
+		final JdbcEnvironment jdbcEnvironment = getJdbcEnvironment( modelCreationContext );
 		if ( hasNullable( uniqueKey ) ) {
-			return org.hibernate.mapping.Index.buildSqlDropIndexString(
-					uniqueKey.getName(),
-					metadata.getDatabase().getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
+			return buildSqlDropIndexString(
+					uniqueKey.getName().getText(),
+					jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 							uniqueKey.getTable().getQualifiedTableName(),
-							metadata.getDatabase().getJdbcEnvironment().getDialect()
+							jdbcEnvironment.getDialect()
 					)
 			);
 		}
 		else {
-			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata );
+			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, modelCreationContext );
 		}
 	}
-	
-	private boolean hasNullable(org.hibernate.mapping.UniqueKey uniqueKey) {
-		final Iterator<org.hibernate.mapping.Column> iter = uniqueKey.columnIterator();
-		while ( iter.hasNext() ) {
-			if ( iter.next().isNullable() ) {
+
+	private JdbcEnvironment getJdbcEnvironment(RuntimeModelCreationContext modelCreationContext){
+		return modelCreationContext.getDatabaseModel().getJdbcEnvironment();
+	}
+
+	private boolean hasNullable(UniqueKey uniqueKey) {
+		for ( PhysicalColumn column : uniqueKey.getColumns() ) {
+			if ( column.isNullable() ) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	private String buildSqlDropIndexString(
+			String name,
+			String tableName) {
+		return "drop index " + StringHelper.qualify( tableName, name );
+	}
+
+	public static String buildSqlCreateIndexString(
+			Dialect dialect,
+			String name,
+			String tableName,
+			Collection<PhysicalColumn> columns,
+			java.util.Map<PhysicalColumn, String> columnOrderMap,
+			boolean unique) {
+		StringBuilder buf = new StringBuilder( "create" )
+				.append( unique ? " unique" : "" )
+				.append( " index " )
+				.append( dialect.qualifyIndexName() ? name : StringHelper.unqualify( name ) )
+				.append( " on " )
+				.append( tableName )
+				.append( " (" );
+		boolean isFirst = true;
+		for ( PhysicalColumn column : columns ) {
+			if ( isFirst ) {
+				isFirst = false;
+			}
+			else {
+				buf.append( ", " );
+			}
+			buf.append( column.getName().render( dialect ) );
+			if ( columnOrderMap.containsKey( column ) ) {
+				buf.append( " " ).append( columnOrderMap.get( column ) );
+			}
+		}
+		buf.append( ")" );
+		return buf.toString();
 	}
 }

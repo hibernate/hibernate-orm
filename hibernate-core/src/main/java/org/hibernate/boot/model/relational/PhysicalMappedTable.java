@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.relational;
 
+import org.hibernate.naming.spi.QualifiedName;
+
 /**
  * @author Steve Ebersole
  */

@@ -11,6 +11,8 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.naming.Identifier;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
+import org.hibernate.naming.QualifiedSequenceName;
+import org.hibernate.naming.spi.QualifiedNameParser;
 
 /**
  * Models a database {@code SEQUENCE}.

@@ -776,6 +776,19 @@ public class Table implements MappedTable, Serializable {
 			return new DerivedTable( getSubselect(), isAbstract() );
 		}
 
-		return new PhysicalTable( catalog, schema, name, isAbstract() );
+		final PhysicalTable table = new PhysicalTable(
+				catalog,
+				schema,
+				name,
+				isAbstract(),
+				hasPrimaryKey(),
+				getComment(),
+				namingStrategy,
+				jdbcEnvironment
+		);
+
+		table.setCheckConstraints( getCheckConstraints() );
+
+		return table;
 	}
 }

@@ -11,7 +11,7 @@ import java.sql.DatabaseMetaData;
 
 import org.hibernate.Incubating;
 import org.hibernate.naming.Identifier;
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.naming.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.ServiceRegistry;

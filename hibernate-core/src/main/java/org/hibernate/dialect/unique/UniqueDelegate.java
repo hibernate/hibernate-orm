@@ -6,9 +6,9 @@
  */
 package org.hibernate.dialect.unique;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.mapping.UniqueKey;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
 /**
  * Dialect-level delegate in charge of applying "uniqueness" to a column.  Uniqueness can be defined
@@ -58,26 +58,25 @@ public interface UniqueDelegate {
 	 * @return The fragment, typically in the form {@code ", unique(col1, col2), unique( col20)"}.  NOTE: The leading
 	 * comma is important!
 	 */
-	String getTableCreationUniqueConstraintsFragment(MappedTable table);
+	String getTableCreationUniqueConstraintsFragment(ExportableTable table);
 
 	/**
 	 * Get the SQL ALTER TABLE command to be used to create the given UniqueKey.
 	 *
 	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns
-	 * @param metadata Access to the bootstrap mapping information
+	 * @param modelCreationContext Access to the model creation context
 	 *
 	 * @return The ALTER TABLE command
 	 */
-	String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata);
+	String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, RuntimeModelCreationContext modelCreationContext);
 
 	/**
 	 * Get the SQL ALTER TABLE command to be used to drop the given UniqueKey.
 	 *
 	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns
-	 * @param metadata Access to the bootstrap mapping information
+	 * @param modelCreationContext Access to the model creation context
 	 *
 	 * @return The ALTER TABLE command
 	 */
-	String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata);
-
+	String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey,  RuntimeModelCreationContext modelCreationContext);
 }

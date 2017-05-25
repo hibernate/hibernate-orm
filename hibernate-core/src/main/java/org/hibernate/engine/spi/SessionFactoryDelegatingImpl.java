@@ -44,9 +44,7 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -105,31 +103,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public StatelessSession openStatelessSession(Connection connection) {
 		return delegate.openStatelessSession( connection );
-	}
-
-	@Override
-	public ClassMetadata getClassMetadata(Class entityClass) {
-		return delegate.getClassMetadata( entityClass );
-	}
-
-	@Override
-	public ClassMetadata getClassMetadata(String entityName) {
-		return delegate.getClassMetadata( entityName );
-	}
-
-	@Override
-	public CollectionMetadata getCollectionMetadata(String roleName) {
-		return delegate.getCollectionMetadata( roleName );
-	}
-
-	@Override
-	public Map<String, ClassMetadata> getAllClassMetadata() {
-		return delegate.getAllClassMetadata();
-	}
-
-	@Override
-	public Map getAllCollectionMetadata() {
-		return delegate.getAllCollectionMetadata();
 	}
 
 	@Override
@@ -413,26 +386,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return delegate.getIdentifierGeneratorFactory();
-	}
-
-	@Override
-	public Type getIdentifierType(String className) throws MappingException {
-		return delegate.getIdentifierType( className );
-	}
-
-	@Override
-	public String getIdentifierPropertyName(String className) throws MappingException {
-		return delegate.getIdentifierPropertyName( className );
-	}
-
-	@Override
-	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
-		return delegate.getReferencedPropertyType( className, propertyName );
-	}
-
-	@Override
 	public String getUuid() {
 		return delegate.getUuid();
 	}
@@ -493,12 +446,12 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Type resolveParameterBindType(Object bindValue) {
+	public AllowableParameterType resolveParameterBindType(Object bindValue) {
 		return delegate.resolveParameterBindType( bindValue );
 	}
 
 	@Override
-	public Type resolveParameterBindType(Class clazz) {
+	public AllowableParameterType resolveParameterBindType(Class clazz) {
 		return delegate.resolveParameterBindType( clazz );
 	}
 

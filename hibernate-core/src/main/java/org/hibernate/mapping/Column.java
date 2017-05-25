@@ -246,7 +246,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 				getName(),
 				jdbcEnvironment
 		);
-		return new PhysicalColumn( runtimeTable, physicalName, sqlTypeDescriptor );
+		return new PhysicalColumn( runtimeTable, physicalName, sqlTypeDescriptor, getDefaultValue(), isNullable(), isUnique() );
 	}
 
 	public int getPrecision() {

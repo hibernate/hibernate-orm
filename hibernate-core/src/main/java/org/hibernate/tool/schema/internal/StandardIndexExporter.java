@@ -8,13 +8,13 @@ package org.hibernate.tool.schema.internal;
 
 import java.util.Iterator;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.QualifiedNameImpl;
+import org.hibernate.naming.QualifiedNameImpl;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
@@ -28,8 +28,8 @@ public class StandardIndexExporter implements Exporter<Index> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(Index index, Metadata metadata) {
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+	public String[] getSqlCreateStrings(Index index, RuntimeModelCreationContext modelCreationContext) {
+		final JdbcEnvironment jdbcEnvironment = modelCreationContext.getDatabaseModel().getJdbcEnvironment();
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				index.getTable().getQualifiedTableName(),
 				dialect
@@ -73,12 +73,12 @@ public class StandardIndexExporter implements Exporter<Index> {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Index index, Metadata metadata) {
+	public String[] getSqlDropStrings(Index index, RuntimeModelCreationContext modelCreationContext) {
 		if ( ! dialect.dropConstraints() ) {
 			return NO_COMMANDS;
 		}
 
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+		final JdbcEnvironment jdbcEnvironment = modelCreationContext.getDatabaseModel().getJdbcEnvironment();
 		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				index.getTable().getQualifiedTableName(),
 				dialect

@@ -34,12 +34,7 @@ Configuration(s) specified but the install task does not exist in project :relea
 :hibernate-core:generateGrammarSource
 Starting custom Antlr (v4) grammar generation
 :hibernate-core:xjc
-:hibernate-core:compileJava/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/collection/spi/PersistentCollection.java:17: error: cannot find symbol
-import org.hibernate.loader.CollectionAliases;
-                           ^
-  symbol:   class CollectionAliases
-  location: package org.hibernate.loader
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SharedSessionContractImplementor.java:29: error: package org.hibernate.loader.custom does not exist
+:hibernate-core:compileJava/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SharedSessionContractImplementor.java:29: error: package org.hibernate.loader.custom does not exist
 import org.hibernate.loader.custom.CustomQuery;
                                   ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/profile/FetchProfile.java:14: error: cannot find symbol
@@ -47,11 +42,6 @@ import org.hibernate.type.internal.BagType;
                                   ^
   symbol:   class BagType
   location: package org.hibernate.type.internal
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/SQLFunction.java:12: error: cannot find symbol
-import org.hibernate.engine.spi.Mapping;
-                               ^
-  symbol:   class Mapping
-  location: package org.hibernate.engine.spi
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/Dialect.java:1168: error: cannot find symbol
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 	                                          ^
@@ -68,16 +58,6 @@ import org.hibernate.type.ComponentType;
                          ^
   symbol:   class ComponentType
   location: package org.hibernate.type
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/ActionQueue.java:49: error: cannot find symbol
-import org.hibernate.type.CollectionType;
-                         ^
-  symbol:   class CollectionType
-  location: package org.hibernate.type
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/ActionQueue.java:50: error: cannot find symbol
-import org.hibernate.type.spi.EntityType;
-                             ^
-  symbol:   class EntityType
-  location: package org.hibernate.type.spi
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SharedSessionContractImplementor.java:292: error: cannot find symbol
 	List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
 	                     ^
@@ -88,11 +68,6 @@ import org.hibernate.type.spi.EntityType;
 	                                               ^
   symbol:   class CustomQuery
   location: interface SharedSessionContractImplementor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Settings.java:306: error: cannot find symbol
-	public QueryTranslatorFactory getQueryTranslatorFactory() {
-	       ^
-  symbol:   class QueryTranslatorFactory
-  location: class Settings
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/model/TypeContributions.java:25: error: cannot find symbol
 	void contributeType(BasicType type, BasicTypeRegistry.Key key);
 	                                                     ^
@@ -136,16 +111,21 @@ import org.hibernate.hql.spi.QueryTranslatorFactory;
 			^
   symbol:   class QueryParameterBindingsImpl
   location: class QueryParameters
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/AggregateFunction.java:9: error: cannot find symbol
+import org.hibernate.sql.ast.produce.spi.AllowableFunctionReturnType;
+                                        ^
+  symbol:   class AllowableFunctionReturnType
+  location: package org.hibernate.sql.ast.produce.spi
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/NonStandardFunction.java:17: error: cannot find symbol
+import org.hibernate.sql.ast.produce.spi.AllowableFunctionReturnType;
+                                        ^
+  symbol:   class AllowableFunctionReturnType
+  location: package org.hibernate.sql.ast.produce.spi
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/action/internal/EntityUpdateAction.java:32: error: cannot find symbol
 import org.hibernate.type.TypeHelper;
                          ^
   symbol:   class TypeHelper
   location: package org.hibernate.type
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/NamedProcedureCallDefinition.java:31: error: cannot find symbol
-import org.hibernate.sql.ast.produce.result.spi.Return;
-                                               ^
-  symbol:   class Return
-  location: package org.hibernate.sql.ast.produce.result.spi
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CascadingAction.java:14: error: cannot find symbol
 import org.hibernate.type.CollectionType;
                          ^
@@ -197,6 +177,26 @@ import org.hibernate.persister.entity.Loadable;
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SubselectFetch.java:17: error: package org.hibernate.persister.entity does not exist
 import org.hibernate.persister.entity.PropertyMapping;
                                      ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/AggregateFunction.java:18: error: cannot find symbol
+	AllowableFunctionReturnType getType();
+	^
+  symbol:   class AllowableFunctionReturnType
+  location: interface AggregateFunction
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/NonStandardFunction.java:31: error: cannot find symbol
+	private final AllowableFunctionReturnType resultType;
+	              ^
+  symbol:   class AllowableFunctionReturnType
+  location: class NonStandardFunction
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/NonStandardFunction.java:35: error: cannot find symbol
+			AllowableFunctionReturnType resultType,
+			^
+  symbol:   class AllowableFunctionReturnType
+  location: class NonStandardFunction
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/NonStandardFunction.java:62: error: cannot find symbol
+	public AllowableFunctionReturnType getType() {
+	       ^
+  symbol:   class AllowableFunctionReturnType
+  location: class NonStandardFunction
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/CascadingAction.java:54: error: cannot find symbol
 			CollectionType collectionType,
 			^
@@ -232,11 +232,6 @@ import org.hibernate.persister.entity.PropertyMapping;
 	                                                                                   ^
   symbol:   class Key
   location: class BasicTypeRegistry
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/spi/AbstractDelegatingMetadataBuilderImplementor.java:157: error: cannot find symbol
-	public MetadataBuilder applyBasicType(BasicType type, BasicTypeRegistry.Key registryKey) {
-	                                                                       ^
-  symbol:   class Key
-  location: class BasicTypeRegistry
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/spi/BasicTypeRegistration.java:12: error: cannot find symbol
 import org.hibernate.usertype.CompositeUserType;
                              ^
@@ -260,6 +255,11 @@ import org.hibernate.usertype.CompositeUserType;
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/spi/BasicTypeRegistration.java:39: error: cannot find symbol
 	public BasicTypeRegistry.Key getRegistryKey() {
 	                        ^
+  symbol:   class Key
+  location: class BasicTypeRegistry
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/spi/AbstractDelegatingMetadataBuilderImplementor.java:156: error: cannot find symbol
+	public MetadataBuilder applyBasicType(BasicType type, BasicTypeRegistry.Key registryKey) {
+	                                                                       ^
   symbol:   class Key
   location: class BasicTypeRegistry
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/ProxyFactory.java:15: error: cannot find symbol
@@ -410,7 +410,7 @@ import org.hibernate.type.PostgresUUIDType;
                          ^
   symbol:   class PostgresUUIDType
   location: package org.hibernate.type
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/StandardSQLFunction.java:58: error: constructor StandardSQLFunction(String,Type) is already defined in class StandardSQLFunction
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/StandardSQLFunction.java:59: error: constructor StandardSQLFunction(String,Type) is already defined in class StandardSQLFunction
 	public StandardSQLFunction(String name, org.hibernate.type.Type registeredType) {
 	       ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/lock/AbstractSelectLockingStrategy.java:11: error: package org.hibernate.persister.entity does not exist
@@ -858,32 +858,6 @@ import org.hibernate.loader.custom.CustomQuery;
 	                                                      ^
   symbol:   class CustomQuery
   location: class SessionDelegatorBaseImpl
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:48: error: package org.hibernate.metadata does not exist
-import org.hibernate.metadata.ClassMetadata;
-                             ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:49: error: package org.hibernate.metadata does not exist
-import org.hibernate.metadata.CollectionMetadata;
-                             ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:111: error: cannot find symbol
-	public ClassMetadata getClassMetadata(Class entityClass) {
-	       ^
-  symbol:   class ClassMetadata
-  location: class SessionFactoryDelegatingImpl
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:116: error: cannot find symbol
-	public ClassMetadata getClassMetadata(String entityName) {
-	       ^
-  symbol:   class ClassMetadata
-  location: class SessionFactoryDelegatingImpl
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:121: error: cannot find symbol
-	public CollectionMetadata getCollectionMetadata(String roleName) {
-	       ^
-  symbol:   class CollectionMetadata
-  location: class SessionFactoryDelegatingImpl
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:126: error: cannot find symbol
-	public Map<String, ClassMetadata> getAllClassMetadata() {
-	                   ^
-  symbol:   class ClassMetadata
-  location: class SessionFactoryDelegatingImpl
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractSaveEventListener.java:40: error: cannot find symbol
 import org.hibernate.type.TypeHelper;
                          ^
@@ -992,16 +966,6 @@ import org.hibernate.type.TypeHelper;
                          ^
   symbol:   class TypeHelper
   location: package org.hibernate.type
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultRefreshEventListener.java:35: error: cannot find symbol
-import org.hibernate.type.CollectionType;
-                         ^
-  symbol:   class CollectionType
-  location: package org.hibernate.type
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultRefreshEventListener.java:36: error: cannot find symbol
-import org.hibernate.type.spi.EmbeddedType;
-                             ^
-  symbol:   class EmbeddedType
-  location: package org.hibernate.type.spi
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/OnLockVisitor.java:16: error: cannot find symbol
 import org.hibernate.type.CollectionType;
                          ^
@@ -1757,16 +1721,6 @@ import org.hibernate.type.spi.EmbeddedType;
 		                                    ^
   symbol:   class Type
   location: package org.hibernate.type.spi
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryImpl.java:40: error: package org.hibernate.jpa.graph.internal does not exist
-import org.hibernate.jpa.graph.internal.EntityGraphImpl;
-                                       ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryImpl.java:643: error: cannot find symbol
-	protected void applyEntityGraphQueryHint(String hintName, EntityGraphImpl entityGraph) {
-	                                                          ^
-  symbol:   class EntityGraphImpl
-  location: class NativeQueryImpl<R>
-  where R is a type-variable:
-    R extends Object declared in class NativeQueryImpl
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryInterpreterStandardImpl.java:12: error: package org.hibernate.loader.custom does not exist
 import org.hibernate.loader.custom.CustomQuery;
                                   ^
@@ -1852,6 +1806,47 @@ public class Factory extends ASTFactory implements OrderByTemplateTokenTypes {
 public class Factory extends ASTFactory implements OrderByTemplateTokenTypes {
                                                    ^
   symbol: class OrderByTemplateTokenTypes
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:11: error: package org.hibernate.hql.internal.ast.util does not exist
+import org.hibernate.hql.internal.ast.util.ASTPrinter;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:16: error: package antlr.collections does not exist
+import antlr.collections.AST;
+                        ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:25: error: cannot find symbol
+public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
+                                             ^
+  symbol: class GeneratedOrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:28: error: cannot find symbol
+	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
+	                     ^
+  symbol:   class ASTPrinter
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:37: error: cannot find symbol
+	protected void out(AST ast) {
+	                   ^
+  symbol:   class AST
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:47: error: cannot find symbol
+	public void traceIn(String ruleName, AST tree) {
+	                                     ^
+  symbol:   class AST
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:56: error: cannot find symbol
+	private String buildTraceNodeName(AST tree) {
+	                                  ^
+  symbol:   class AST
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:63: error: cannot find symbol
+	public void traceOut(String ruleName, AST tree) {
+	                                      ^
+  symbol:   class AST
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:13: error: package org.hibernate.hql.internal.ast.util does not exist
+import org.hibernate.hql.internal.ast.util.ASTPrinter;
+                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:9: error: package antlr.collections does not exist
+import antlr.collections.AST;
+                        ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:21: error: package antlr does not exist
 import antlr.CommonAST;
             ^
@@ -1940,47 +1935,6 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 			^
   symbol:   class AST
   location: class OrderByFragmentParser
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:9: error: package antlr.collections does not exist
-import antlr.collections.AST;
-                        ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:11: error: package org.hibernate.hql.internal.ast.util does not exist
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
-                                          ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:16: error: package antlr.collections does not exist
-import antlr.collections.AST;
-                        ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:25: error: cannot find symbol
-public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
-                                             ^
-  symbol: class GeneratedOrderByFragmentRenderer
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:28: error: cannot find symbol
-	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
-	                     ^
-  symbol:   class ASTPrinter
-  location: class OrderByFragmentRenderer
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:37: error: cannot find symbol
-	protected void out(AST ast) {
-	                   ^
-  symbol:   class AST
-  location: class OrderByFragmentRenderer
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:47: error: cannot find symbol
-	public void traceIn(String ruleName, AST tree) {
-	                                     ^
-  symbol:   class AST
-  location: class OrderByFragmentRenderer
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:56: error: cannot find symbol
-	private String buildTraceNodeName(AST tree) {
-	                                  ^
-  symbol:   class AST
-  location: class OrderByFragmentRenderer
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:63: error: cannot find symbol
-	public void traceOut(String ruleName, AST tree) {
-	                                      ^
-  symbol:   class AST
-  location: class OrderByFragmentRenderer
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:13: error: package org.hibernate.hql.internal.ast.util does not exist
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
-                                          ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/consume/results/internal/JdbcValuesSourceProcessingStateStandardImpl.java:43: error: cannot find symbol
 import org.hibernate.type.TypeHelper;
                          ^
@@ -2022,14 +1976,6 @@ import org.hibernate.type.spi.EntityType;
                              ^
   symbol:   class EntityType
   location: package org.hibernate.type.spi
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/sqm/spi/SqmSelectToSqlAstConverter.java:18: error: package org.hibernate.hql.internal.ast.tree does not exist
-import org.hibernate.hql.internal.ast.tree.OrderByClause;
-                                          ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/sqm/spi/SqmSelectToSqlAstConverter.java:289: error: cannot find symbol
-	public OrderByClause visitOrderByClause(SqmOrderByClause orderByClause) {
-	       ^
-  symbol:   class OrderByClause
-  location: class SqmSelectToSqlAstConverter
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/metamodel/spi/NamedQueryCollectionInitializer.java:16: error: package org.hibernate.loader.collection does not exist
 import org.hibernate.loader.collection.CollectionInitializer;
                                       ^
@@ -2053,6 +1999,16 @@ import org.hibernate.hql.internal.antlr.SqlStatementLexer;
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/hbm2ddl/MultipleLinesSqlCommandExtractor.java:13: error: package org.hibernate.hql.internal.antlr does not exist
 import org.hibernate.hql.internal.antlr.SqlStatementParser;
                                        ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:307: error: cannot find symbol
+			MappedNamespace namespace,
+			^
+  symbol:   class MappedNamespace
+  location: class SchemaDropperImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:339: error: cannot find symbol
+	private static void checkExportIdentifier(Exportable exportable, Set<String> exportIdentifiers) {
+	                                          ^
+  symbol:   class Exportable
+  location: class SchemaDropperImpl
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/CompositeBasedBasicAttribute.java:10: error: package org.hibernate.persister.walking.spi does not exist
 import org.hibernate.persister.walking.spi.AttributeSource;
                                           ^
@@ -2802,6 +2758,12 @@ import org.hibernate.type.ComponentType;
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/Dialect.java:1928: error: incompatible types: StandardTableExporter cannot be converted to Exporter<MappedTable>
 		return tableExporter;
 		       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/Dialect.java:1932: error: incompatible types: StandardSequenceExporter cannot be converted to Exporter<MappedSequence>
+		return sequenceExporter;
+		       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/Dialect.java:1944: error: incompatible types: StandardUniqueKeyExporter cannot be converted to Exporter<Constraint>
+		return uniqueKeyExporter;
+		       ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/loading/internal/LoadingCollectionEntry.java:56: error: cannot find symbol
 		return getClass().getName() + "<rs=" + resultSet + ", coll=" + MessageHelper.collectionInfoString( persister.getRole(), key ) + ">@" + Integer.toHexString( hashCode() );
 		                                                                                                            ^
@@ -2827,204 +2789,41 @@ import org.hibernate.type.ComponentType;
 				     ^
   symbol:   class BagType
   location: class FetchProfile
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Settings.java:307: error: cannot find symbol
-		return sessionFactoryOptions.getServiceRegistry().getService( QueryTranslatorFactory.class );
-		                                                              ^
-  symbol:   class QueryTranslatorFactory
-  location: class Settings
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/metamodel/spi/EntityValuedExpressableType.java:37: error: method does not override or implement a method from a supertype
 	@Override
 	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/domain/EntityReference.java:20: error: EntityReference is not abstract and does not override abstract method addNavigableReference(NavigableReference) in NavigableContainerReference
-public class EntityReference implements NavigableContainerReference {
-       ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/domain/EntityReference.java:47: error: constructor EntityValuedSelectable in class EntityValuedSelectable cannot be applied to given types;
-		this.selectable = new EntityValuedSelectable(
-		                  ^
-  required: NavigableReference,NavigablePath,ColumnReferenceSource,boolean
-  found: EntityReference,NavigablePath,ColumnReferenceSource,EntityDescriptor,boolean
-  reason: actual and formal argument lists differ in length
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/domain/PluralAttributeElementReference.java:62: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/domain/PluralAttributeIndexReference.java:62: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/AbstractLiteral.java:73: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/QueryLiteral.java:19: error: QueryLiteral is not abstract and does not override abstract method bindParameterValue(PreparedStatement,int,ParameterBindingContext) in JdbcParameterBinder
-public class QueryLiteral extends AbstractLiteral {
-       ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:30: error: type argument Table is not within bounds of type-variable T
-public class StandardTableExporter implements Exporter<Table> {
-                                                       ^
-  where T is a type-variable:
-    T extends Exportable declared in interface Exporter
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:40: error: cannot find symbol
-				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
-				                              ^
-  symbol:   method getCatalog()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:40: error: cannot find symbol
-				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
-				                                                  ^
-  symbol:   method isCatalogQuoted()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:41: error: cannot find symbol
-				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
-				                              ^
-  symbol:   method getSchema()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:41: error: cannot find symbol
-				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
-				                                                 ^
-  symbol:   method isSchemaQuoted()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:42: error: cannot find symbol
-				table.getNameIdentifier()
-				     ^
-  symbol:   method getNameIdentifier()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:47: error: cannot find symbol
-				new StringBuilder( tableCreateString( table.hasPrimaryKey() ) )
-				                                           ^
-  symbol:   method hasPrimaryKey()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:58: error: cannot find symbol
-		boolean isPrimaryKeyIdentity = table.hasPrimaryKey()
-		                                    ^
-  symbol:   method hasPrimaryKey()
-  location: variable table of type Table
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:59: error: cannot find symbol
 				&& table.getIdentifierValue() != null
 				        ^
   symbol:   method getIdentifierValue()
-  location: variable table of type Table
+  location: variable table of type ExportableTable
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:60: error: cannot find symbol
-				&& table.getIdentifierValue().isIdentityColumn( metadata.getIdentifierGeneratorFactory(), dialect );
-				                                                        ^
-  symbol:   method getIdentifierGeneratorFactory()
-  location: variable metadata of type Metadata
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:60: error: cannot find symbol
-				&& table.getIdentifierValue().isIdentityColumn( metadata.getIdentifierGeneratorFactory(), dialect );
+				&& table.getIdentifierValue().isIdentityColumn( modelCreationContext.getIdentifierGeneratorFactory(), dialect );
 				        ^
   symbol:   method getIdentifierValue()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:68: error: cannot find symbol
-		if ( table.hasPrimaryKey() ) {
-		          ^
-  symbol:   method hasPrimaryKey()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:73: error: cannot find symbol
-		final Iterator columnItr = table.getColumnIterator();
-		                                ^
-  symbol:   method getColumnIterator()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:90: error: no suitable method found for getSqlType(Dialect,Metadata)
-					buf.append( col.getSqlType( dialect, metadata ) );
-					               ^
-    method Column.getSqlType(Dialect) is not applicable
-      (actual and formal argument lists differ in length)
-    method Column.getSqlType() is not applicable
-      (actual and formal argument lists differ in length)
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:93: error: method getSqlTypeCode in class Column cannot be applied to given types;
-						.append( dialect.getIdentityColumnSupport().getIdentityColumnString( col.getSqlTypeCode( metadata ) ) );
-						                                                                        ^
-  required: no arguments
-  found: Metadata
-  reason: actual and formal argument lists differ in length
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:96: error: no suitable method found for getSqlType(Dialect,Metadata)
-				buf.append( col.getSqlType( dialect, metadata )  );
-				               ^
-    method Column.getSqlType(Dialect) is not applicable
-      (actual and formal argument lists differ in length)
-    method Column.getSqlType() is not applicable
-      (actual and formal argument lists differ in length)
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:113: error: no suitable method found for generateName(String,Table,Column)
-				String keyName = Constraint.generateName( "UK_", table, col );
-				                           ^
-    method Constraint.generateName(String,MappedTable,Column...) is not applicable
-      (argument mismatch; Table cannot be converted to MappedTable)
-    method Constraint.generateName(String,MappedTable,List<Column>) is not applicable
-      (argument mismatch; Table cannot be converted to MappedTable)
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:114: error: cannot find symbol
-				UniqueKey uk = table.getOrCreateUniqueKey( keyName );
-				                    ^
-  symbol:   method getOrCreateUniqueKey(String)
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:133: error: cannot find symbol
-		if ( table.hasPrimaryKey() ) {
-		          ^
-  symbol:   method hasPrimaryKey()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:135: error: cannot find symbol
+  location: variable table of type ExportableTable
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:115: error: incompatible types: PhysicalColumn cannot be converted to Column
+								.getColumnDefinitionUniquenessFragment( col )
+								                                        ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:119: error: cannot find symbol
+			if ( col.getCheckConstraint() != null && dialect.supportsColumnCheck() ) {
+			        ^
+  symbol:   method getCheckConstraint()
+  location: variable col of type PhysicalColumn
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:121: error: cannot find symbol
+						.append( col.getCheckConstraint() )
+						            ^
+  symbol:   method getCheckConstraint()
+  location: variable col of type PhysicalColumn
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:132: error: cannot find symbol
 					.append( table.getPrimaryKey().sqlConstraintString( dialect ) );
 					                              ^
   symbol:   method sqlConstraintString(Dialect)
   location: class PrimaryKey
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:138: error: incompatible types: Table cannot be converted to MappedTable
-		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table ) );
-		                                                                                   ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:144: error: cannot find symbol
-		if ( table.getComment() != null ) {
-		          ^
-  symbol:   method getComment()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:145: error: cannot find symbol
-			buf.append( dialect.getTableComment( table.getComment() ) );
-			                                          ^
-  symbol:   method getComment()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:162: error: cannot find symbol
-			if ( table.getComment() != null ) {
-			          ^
-  symbol:   method getComment()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:163: error: cannot find symbol
-				sqlStrings.add( "comment on table " + tableName + " is '" + table.getComment() + "'" );
-				                                                                 ^
-  symbol:   method getComment()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:165: error: cannot find symbol
-			final Iterator iter = table.getColumnIterator();
-			                           ^
-  symbol:   method getColumnIterator()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:177: error: cannot find symbol
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:175: error: cannot find symbol
 		for ( InitCommand initCommand : table.getInitCommands() ) {
 		                                     ^
   symbol:   method getInitCommands()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:188: error: cannot find symbol
-			final Iterator<String> checkConstraints = table.getCheckConstraints().iterator();
-			                                               ^
-  symbol:   method getCheckConstraints()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:210: error: cannot find symbol
-				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
-				                              ^
-  symbol:   method getCatalog()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:210: error: cannot find symbol
-				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
-				                                                  ^
-  symbol:   method isCatalogQuoted()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:211: error: cannot find symbol
-				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
-				                              ^
-  symbol:   method getSchema()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:211: error: cannot find symbol
-				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
-				                                                 ^
-  symbol:   method isSchemaQuoted()
-  location: variable table of type Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/StandardTableExporter.java:212: error: cannot find symbol
-				table.getNameIdentifier()
-				     ^
-  symbol:   method getNameIdentifier()
   location: variable table of type Table
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/QueryParameters.java:43: error: package ParserHelper does not exist
 	private static final String SYMBOLS = ParserHelper.HQL_SEPARATORS.replace( "'", "" );
@@ -3087,41 +2886,6 @@ public class StandardTableExporter implements Exporter<Table> {
 					                                           ^
   symbol:   method makeColumn(String,int)
   location: interface Table
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/ActionQueue.java:1137: error: cannot find symbol
-			Type[] propertyTypes = action.getPersister().getClassMetadata().getPropertyTypes();
-			                                            ^
-  symbol:   method getClassMetadata()
-  location: interface EntityDescriptor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/ActionQueue.java:1142: error: cannot find symbol
-				if ( type.isEntityType() && value != null ) {
-				         ^
-  symbol:   method isEntityType()
-  location: variable type of type Type
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/ActionQueue.java:1143: error: cannot find symbol
-					EntityType entityType = (EntityType) type;
-					^
-  symbol:   class EntityType
-  location: class InsertActionSorter
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/ActionQueue.java:1143: error: cannot find symbol
-					EntityType entityType = (EntityType) type;
-					                         ^
-  symbol:   class EntityType
-  location: class InsertActionSorter
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/ActionQueue.java:1147: error: cannot find symbol
-				else if ( type.isCollectionType() && value != null ) {
-				              ^
-  symbol:   method isCollectionType()
-  location: variable type of type Type
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/ActionQueue.java:1148: error: cannot find symbol
-					CollectionType collectionType = (CollectionType) type;
-					^
-  symbol:   class CollectionType
-  location: class InsertActionSorter
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/ActionQueue.java:1148: error: cannot find symbol
-					CollectionType collectionType = (CollectionType) type;
-					                                 ^
-  symbol:   class CollectionType
-  location: class InsertActionSorter
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/ReplicationMode.java:54: error: cannot find symbol
 			return type == null || type.getComparator().compare( currentVersion, newVersion ) <= 0;
 			                           ^
@@ -3434,21 +3198,34 @@ public class ComparisonPredicate
 			          ^
   symbol:   class NotYetImplementedException
   location: class Property
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/action/internal/EntityAction.java:131: error: cannot find symbol
-		return persister.getPropertySpaces();
-		                ^
-  symbol:   method getPropertySpaces()
-  location: variable persister of type EntityDescriptor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/action/internal/EntityAction.java:155: error: cannot find symbol
-			return persister.getIdentifierType().getComparator().compare( id, action.id );
-			                                    ^
-  symbol:   method getComparator()
-  location: interface Type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/domain/EntityReference.java:20: error: EntityReference is not abstract and does not override abstract method addNavigableReference(NavigableReference) in NavigableContainerReference
+public class EntityReference implements NavigableContainerReference {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/domain/EntityReference.java:47: error: constructor EntityValuedSelectable in class EntityValuedSelectable cannot be applied to given types;
+		this.selectable = new EntityValuedSelectable(
+		                  ^
+  required: NavigableReference,NavigablePath,ColumnReferenceSource,boolean
+  found: EntityReference,NavigablePath,ColumnReferenceSource,EntityDescriptor,boolean
+  reason: actual and formal argument lists differ in length
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/domain/PluralAttributeElementReference.java:62: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/domain/PluralAttributeIndexReference.java:62: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/AbstractLiteral.java:73: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/tree/spi/expression/QueryLiteral.java:19: error: QueryLiteral is not abstract and does not override abstract method bindParameterValue(PreparedStatement,int,ParameterBindingContext) in JdbcParameterBinder
+public class QueryLiteral extends AbstractLiteral {
+       ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/action/internal/AbstractEntityInsertAction.java:128: error: cannot find symbol
 				( getPersister().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				                ^
   symbol:   method isMutable()
-  location: interface EntityDescriptor
+  location: interface EntityDescriptor<CAP#1>
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends Object from capture of ?
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/action/internal/EntityUpdateAction.java:100: error: cannot find symbol
 		if ( ! persister.hasNaturalIdentifier() ) {
 		                ^
@@ -3552,16 +3329,17 @@ public class MappedSuperclass extends AbstractMappedSuperclassMapping implements
 					            ^
   symbol:   method isPassNullsEnabled()
   location: variable registration of type ParameterRegistrationImplementor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/NamedProcedureCallDefinition.java:84: error: cannot find symbol
-		final List<Return> collectedQueryReturns = new ArrayList<>();
-		           ^
-  symbol:   class Return
-  location: class NamedProcedureCallDefinition
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/NamedProcedureCallDefinition.java:99: error: cannot find symbol
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/NamedProcedureCallDefinition.java:97: error: cannot find symbol
 						public void addQueryReturns(Return... queryReturns) {
 						                            ^
   symbol: class Return
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/NamedProcedureCallDefinition.java:125: error: cannot find symbol
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/NamedProcedureCallDefinition.java:90: error: <anonymous org.hibernate.cfg.annotations.NamedProcedureCallDefinition$1> is not abstract and does not override abstract method addQueryResult(QueryResult...) in ResultClassesResolutionContext
+					new Util.ResultClassesResolutionContext() {
+					                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/NamedProcedureCallDefinition.java:96: error: method does not override or implement a method from a supertype
+						@Override
+						^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/NamedProcedureCallDefinition.java:123: error: cannot find symbol
 						public void addQueryReturns(Return... queryReturns) {
 						                            ^
   symbol: class Return
@@ -3785,11 +3563,6 @@ public class QueryStructure<T> implements JpaQuerySpec<T> {
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/criteria/internal/QueryStructure.java:222: error: incompatible types: List<JpaSubquery<?>> cannot be converted to List<Subquery<?>>
 		return subqueries;
 		       ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/result/spi/FetchAttribute.java:25: error: cannot find symbol
-		return (PersistentAttribute) getFetchedNavigable();
-		                             ^
-  symbol:   method getFetchedNavigable()
-  location: interface FetchAttribute
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/spi/ParameterBindImplementor.java:15: error: types QueryParameterBinding<T> and ParameterBind<T> are incompatible; both define getBindType(), but with unrelated return types
 public interface ParameterBindImplementor<T> extends ParameterBind<T>, QueryParameterBinding<T> {
        ^
@@ -3810,6 +3583,11 @@ public class BasicTypeProducerRegistryImpl implements BasicTypeProducerRegistry 
   required: TypeDefinition,TypeConfiguration
   found: String,TypeDefinition,TypeConfiguration
   reason: actual and formal argument lists differ in length
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/result/spi/FetchAttribute.java:25: error: cannot find symbol
+		return (PersistentAttribute) getFetchedNavigable();
+		                             ^
+  symbol:   method getFetchedNavigable()
+  location: interface FetchAttribute
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/tree/expression/domain/SqmEntityTypedReference.java:22: error: method does not override or implement a method from a supertype
 	@Override
 	^
@@ -4280,48 +4058,48 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements JpaRoot<X>, Se
     R#4 extends Object declared in method <O#4,R#4>from(ClassmateContext,AttributeConverter<O#4,R#4>,boolean)
   where CAP#1 is a fresh type-variable:
     CAP#1 extends AttributeConverter<?,?> from capture of ? extends AttributeConverter<?,?>
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/internal/MetadataImpl.java:64: error: MetadataImpl is not abstract and does not override abstract method getEntityHierarchies() in Metadata
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/internal/MetadataImpl.java:62: error: MetadataImpl is not abstract and does not override abstract method getEntityHierarchies() in Metadata
 public class MetadataImpl implements MetadataImplementor, Serializable {
        ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/internal/MetadataImpl.java:336: error: method validate in class PersistentClass cannot be applied to given types;
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/internal/MetadataImpl.java:334: error: method validate in class PersistentClass cannot be applied to given types;
 			entityBinding.validate( this );
 			             ^
   required: no arguments
   found: MetadataImpl
   reason: actual and formal argument lists differ in length
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/internal/MetadataImpl.java:340: error: method validate in class Collection cannot be applied to given types;
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/boot/internal/MetadataImpl.java:338: error: method validate in class Collection cannot be applied to given types;
 			collectionBinding.validate( this );
 			                 ^
   required: no arguments
   found: MetadataImpl
   reason: actual and formal argument lists differ in length
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3Column.java:237: error: no suitable constructor found for Column(no arguments)
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3Column.java:236: error: no suitable constructor found for Column(no arguments)
 			this.mappingColumn = new Column();
 			                     ^
     constructor Column.Column(String) is not applicable
       (actual and formal argument lists differ in length)
     constructor Column.Column(Identifier) is not applicable
       (actual and formal argument lists differ in length)
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3JoinColumn.java:257: error: incompatible types: Identifier cannot be converted to String
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3JoinColumn.java:256: error: incompatible types: Identifier cannot be converted to String
 			if ( StringHelper.isEmpty( joinColumn.getLogicalColumnName() )
 			                                                          ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3JoinColumn.java:341: error: cannot find symbol
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3JoinColumn.java:340: error: cannot find symbol
 		String defaultName = context.getMetadataCollector().getLogicalColumnName(
 		                                                   ^
   symbol:   method getLogicalColumnName(Table,String)
   location: interface InFlightMetadataCollector
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3JoinColumn.java:463: error: cannot find symbol
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3JoinColumn.java:462: error: cannot find symbol
 		String logicalReferencedColumn = getBuildingContext().getMetadataCollector().getLogicalColumnName(
 		                                                                            ^
   symbol:   method getLogicalColumnName(Table,String)
   location: interface InFlightMetadataCollector
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3JoinColumn.java:467: error: incompatible types: Identifier cannot be converted to String
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3JoinColumn.java:466: error: incompatible types: Identifier cannot be converted to String
 		String columnName = buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
 		                                          ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3JoinColumn.java:473: error: incompatible types: String cannot be converted to Identifier
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3JoinColumn.java:472: error: incompatible types: String cannot be converted to Identifier
 				columnName,
 				^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3JoinColumn.java:745: error: incompatible types: String cannot be converted to Identifier
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/Ejb3JoinColumn.java:744: error: incompatible types: String cannot be converted to Identifier
 				column.getQuotedName(),
 				                    ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/cfg/annotations/SimpleValueBinder.java:145: error: cannot find symbol
@@ -4932,6 +4710,16 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			             ^
   symbol:   method getColumnSpan()
   location: variable type of type Type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/AggregateProjection.java:41: error: cannot find symbol
+				getFunction( criteriaQuery ).getReturnType(
+				                            ^
+  symbol:   method getReturnType(Type)
+  location: interface SqmFunctionTemplate
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/AggregateProjection.java:49: error: cannot find symbol
+		final String functionFragment = getFunction( criteriaQuery ).render(
+		                                                            ^
+  symbol:   method render(Type,List,SessionFactoryImplementor)
+  location: interface SqmFunctionTemplate
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/AbstractEmptinessExpression.java:50: error: cannot find symbol
 		final QueryableCollection collectionPersister = getQueryableCollection( entityName, actualPropertyName, factory );
 		      ^
@@ -5082,6 +4870,16 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 								 ^
   symbol:   class EmbeddedType
   location: class Example
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/RowCountProjection.java:27: error: cannot find symbol
+		final Type countFunctionReturnType = getFunction( criteriaQuery ).getReturnType( null );
+		                                                                 ^
+  symbol:   method getReturnType(<null>)
+  location: interface SqmFunctionTemplate
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/criterion/RowCountProjection.java:33: error: cannot find symbol
+		return getFunction( criteriaQuery ).render( null, ARGS, criteriaQuery.getFactory() ) + " as y" + position + '_';
+		                                   ^
+  symbol:   method render(<null>,List,SessionFactoryImplementor)
+  location: interface SqmFunctionTemplate
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/AbstractHANADialect.java:247: error: cannot find symbol
 		registerHibernateType( Types.NCLOB, StandardSpiBasicTypes.NCLOB.getName() );
 		                                                               ^
@@ -5107,16 +4905,236 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		                                  ^
   symbol:   variable PostgresUUIDType
   location: class PostgreSQL82Dialect
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/StandardAnsiSqlAggregationFunctions.java:92: error: cannot find symbol
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/TrimFunctionTemplate.java:22: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/TrimFunctionTemplate.java:27: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/TrimFunctionTemplate.java:32: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/TrimFunctionTemplate.java:37: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AnsiTrimFunction.java:16: error: AnsiTrimFunction is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
+public class AnsiTrimFunction extends TrimFunctionTemplate {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/StandardSQLFunction.java:24: error: StandardSQLFunction is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
+public class StandardSQLFunction implements SqmFunctionTemplate {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/StandardSQLFunction.java:94: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/StandardSQLFunction.java:99: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/StandardSQLFunction.java:104: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/StandardSQLFunction.java:109: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/StandardAnsiSqlAggregationFunctions.java:93: error: cannot find symbol
 				final int[] jdbcTypeCodes = firstArgumentType.sqlTypes();
 				                                             ^
   symbol:   method sqlTypes()
   location: variable firstArgumentType of type Type
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/StandardAnsiSqlAggregationFunctions.java:199: error: cannot find symbol
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/StandardAnsiSqlAggregationFunctions.java:200: error: cannot find symbol
 				final int[] jdbcTypeCodes = type.sqlTypes();
 				                                ^
   symbol:   method sqlTypes()
   location: variable type of type Type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/NoArgSQLFunction.java:21: error: NoArgSQLFunction is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
+public class NoArgSQLFunction implements SqmFunctionTemplate {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/NoArgSQLFunction.java:49: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/NoArgSQLFunction.java:54: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/NoArgSQLFunction.java:59: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/NoArgSQLFunction.java:64: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AbstractAnsiTrimEmulationFunction.java:29: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AbstractAnsiTrimEmulationFunction.java:34: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AbstractAnsiTrimEmulationFunction.java:39: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AbstractAnsiTrimEmulationFunction.java:44: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AbstractAnsiTrimEmulationFunction.java:65: error: cannot find symbol
+			return resolveBothSpaceTrimFunction().render( argumentType, args, factory );
+			                                     ^
+  symbol:   method render(Type,List,SessionFactoryImplementor)
+  location: interface SqmFunctionTemplate
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AbstractAnsiTrimEmulationFunction.java:70: error: cannot find symbol
+			return resolveBothSpaceTrimFromFunction().render( argumentType, args, factory );
+			                                         ^
+  symbol:   method render(Type,List,SessionFactoryImplementor)
+  location: interface SqmFunctionTemplate
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AbstractAnsiTrimEmulationFunction.java:129: error: cannot find symbol
+					return resolveBothSpaceTrimFunction().render( argumentType, argsToUse, factory );
+					                                     ^
+  symbol:   method render(Type,List<String>,SessionFactoryImplementor)
+  location: interface SqmFunctionTemplate
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AbstractAnsiTrimEmulationFunction.java:132: error: cannot find symbol
+					return resolveLeadingSpaceTrimFunction().render( argumentType, argsToUse, factory );
+					                                        ^
+  symbol:   method render(Type,List<String>,SessionFactoryImplementor)
+  location: interface SqmFunctionTemplate
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AbstractAnsiTrimEmulationFunction.java:135: error: cannot find symbol
+					return resolveTrailingSpaceTrimFunction().render( argumentType, argsToUse, factory );
+					                                         ^
+  symbol:   method render(Type,List<String>,SessionFactoryImplementor)
+  location: interface SqmFunctionTemplate
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AbstractAnsiTrimEmulationFunction.java:140: error: cannot find symbol
+					return resolveBothTrimFunction().render( argumentType, argsToUse, factory );
+					                                ^
+  symbol:   method render(Type,List<String>,SessionFactoryImplementor)
+  location: interface SqmFunctionTemplate
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AbstractAnsiTrimEmulationFunction.java:143: error: cannot find symbol
+					return resolveLeadingTrimFunction().render( argumentType, argsToUse, factory );
+					                                   ^
+  symbol:   method render(Type,List<String>,SessionFactoryImplementor)
+  location: interface SqmFunctionTemplate
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AbstractAnsiTrimEmulationFunction.java:146: error: cannot find symbol
+					return resolveTrailingTrimFunction().render( argumentType, argsToUse, factory );
+					                                    ^
+  symbol:   method render(Type,List<String>,SessionFactoryImplementor)
+  location: interface SqmFunctionTemplate
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/AnsiTrimEmulationFunction.java:20: error: AnsiTrimEmulationFunction is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
+public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/CastFunction.java:21: error: CastFunction is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
+public class CastFunction implements SqmFunctionTemplate {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/CastFunction.java:27: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/CastFunction.java:32: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/CastFunction.java:37: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/CastFunction.java:43: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/CharIndexFunction.java:21: error: CharIndexFunction is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
+public class CharIndexFunction implements SqmFunctionTemplate {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/CharIndexFunction.java:22: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/CharIndexFunction.java:27: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/CharIndexFunction.java:32: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/CharIndexFunction.java:37: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/ConvertFunction.java:21: error: ConvertFunction is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
+public class ConvertFunction implements SqmFunctionTemplate {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/ConvertFunction.java:22: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/ConvertFunction.java:27: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/ConvertFunction.java:32: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/ConvertFunction.java:37: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/DerbyConcatFunction.java:32: error: DerbyConcatFunction is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
+public class DerbyConcatFunction implements SqmFunctionTemplate {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/DerbyConcatFunction.java:38: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/DerbyConcatFunction.java:48: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/DerbyConcatFunction.java:58: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/DerbyConcatFunction.java:73: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/NvlFunction.java:21: error: NvlFunction is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
+public class NvlFunction implements SqmFunctionTemplate {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/NvlFunction.java:22: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/NvlFunction.java:27: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/NvlFunction.java:32: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/NvlFunction.java:37: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/PositionSubstringFunction.java:21: error: PositionSubstringFunction is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
+public class PositionSubstringFunction implements SqmFunctionTemplate {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/PositionSubstringFunction.java:22: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/PositionSubstringFunction.java:27: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/PositionSubstringFunction.java:32: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/PositionSubstringFunction.java:37: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/SQLFunctionTemplate.java:28: error: SQLFunctionTemplate is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
+public class SQLFunctionTemplate implements SqmFunctionTemplate {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/SQLFunctionTemplate.java:56: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/SQLFunctionTemplate.java:61: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/SQLFunctionTemplate.java:66: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/SQLFunctionTemplate.java:71: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/VarArgsSQLFunction.java:21: error: VarArgsSQLFunction is not abstract and does not override abstract method makeSqmFunctionExpression(List<SqmExpression>,AllowableFunctionReturnType) in SqmFunctionTemplate
+public class VarArgsSQLFunction implements SqmFunctionTemplate {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/VarArgsSQLFunction.java:60: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/VarArgsSQLFunction.java:65: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/VarArgsSQLFunction.java:70: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/dialect/function/VarArgsSQLFunction.java:75: error: method does not override or implement a method from a supertype
+	@Override
+	^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/internal/EntityEntryContext.java:84: error: cannot find symbol
 		if ( entityEntry.getPersister().isMutable() ) {
 		                               ^
@@ -5834,116 +5852,21 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:1157: error: resolveParameterBindType(Class) in SessionDelegatorBaseImpl cannot implement resolveParameterBindType(Class) in QueryParameterBindingTypeResolver
 	public Type resolveParameterBindType(Class clazz) {
 	            ^
-  return type Type is not compatible with AllowableType
+  return type Type is not compatible with AllowableParameterType
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:1152: error: resolveParameterBindType(Object) in SessionDelegatorBaseImpl cannot implement resolveParameterBindType(Object) in QueryParameterBindingTypeResolver
 	public Type resolveParameterBindType(Object bindValue) {
 	            ^
-  return type Type is not compatible with AllowableType
+  return type Type is not compatible with AllowableParameterType
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:1151: error: method does not override or implement a method from a supertype
 	@Override
 	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:1153: error: incompatible types: AllowableType cannot be converted to Type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:1153: error: incompatible types: AllowableParameterType cannot be converted to Type
 		return delegate.resolveParameterBindType( bindValue );
 		                                        ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:1156: error: method does not override or implement a method from a supertype
 	@Override
 	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:1158: error: incompatible types: AllowableType cannot be converted to Type
-		return delegate.resolveParameterBindType( clazz );
-		                                        ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:68: error: SessionFactoryDelegatingImpl is not abstract and does not override abstract method resolveParameterBindType(Class) in QueryParameterBindingTypeResolver
-public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, SessionFactory {
-       ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:501: error: resolveParameterBindType(Class) in SessionFactoryDelegatingImpl cannot implement resolveParameterBindType(Class) in QueryParameterBindingTypeResolver
-	public Type resolveParameterBindType(Class clazz) {
-	            ^
-  return type Type is not compatible with AllowableType
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:496: error: resolveParameterBindType(Object) in SessionFactoryDelegatingImpl cannot implement resolveParameterBindType(Object) in QueryParameterBindingTypeResolver
-	public Type resolveParameterBindType(Object bindValue) {
-	            ^
-  return type Type is not compatible with AllowableType
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:110: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:112: error: cannot find symbol
-		return delegate.getClassMetadata( entityClass );
-		               ^
-  symbol:   method getClassMetadata(Class)
-  location: variable delegate of type SessionFactoryImplementor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:115: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:117: error: cannot find symbol
-		return delegate.getClassMetadata( entityName );
-		               ^
-  symbol:   method getClassMetadata(String)
-  location: variable delegate of type SessionFactoryImplementor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:120: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:122: error: cannot find symbol
-		return delegate.getCollectionMetadata( roleName );
-		               ^
-  symbol:   method getCollectionMetadata(String)
-  location: variable delegate of type SessionFactoryImplementor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:125: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:127: error: cannot find symbol
-		return delegate.getAllClassMetadata();
-		               ^
-  symbol:   method getAllClassMetadata()
-  location: variable delegate of type SessionFactoryImplementor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:130: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:132: error: cannot find symbol
-		return delegate.getAllCollectionMetadata();
-		               ^
-  symbol:   method getAllCollectionMetadata()
-  location: variable delegate of type SessionFactoryImplementor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:415: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:417: error: cannot find symbol
-		return delegate.getIdentifierGeneratorFactory();
-		               ^
-  symbol:   method getIdentifierGeneratorFactory()
-  location: variable delegate of type SessionFactoryImplementor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:420: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:422: error: cannot find symbol
-		return delegate.getIdentifierType( className );
-		               ^
-  symbol:   method getIdentifierType(String)
-  location: variable delegate of type SessionFactoryImplementor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:425: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:427: error: cannot find symbol
-		return delegate.getIdentifierPropertyName( className );
-		               ^
-  symbol:   method getIdentifierPropertyName(String)
-  location: variable delegate of type SessionFactoryImplementor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:430: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:432: error: cannot find symbol
-		return delegate.getReferencedPropertyType( className, propertyName );
-		               ^
-  symbol:   method getReferencedPropertyType(String,String)
-  location: variable delegate of type SessionFactoryImplementor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:495: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:497: error: incompatible types: AllowableType cannot be converted to Type
-		return delegate.resolveParameterBindType( bindValue );
-		                                        ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:500: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionFactoryDelegatingImpl.java:502: error: incompatible types: AllowableType cannot be converted to Type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/engine/spi/SessionDelegatorBaseImpl.java:1158: error: incompatible types: AllowableParameterType cannot be converted to Type
 		return delegate.resolveParameterBindType( clazz );
 		                                        ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/AbstractReassociateEventListener.java:61: error: cannot find symbol
@@ -6245,36 +6168,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 			               ^
   symbol:   variable TypeHelper
   location: class DefaultMergeEventListener
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultRefreshEventListener.java:138: error: cannot find symbol
-			if ( persister.hasCollections() ) {
-			              ^
-  symbol:   method hasCollections()
-  location: variable persister of type EntityDescriptor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultRefreshEventListener.java:185: error: cannot find symbol
-			if ( !persister.isMutable() ) {
-			               ^
-  symbol:   method isMutable()
-  location: variable persister of type EntityDescriptor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultRefreshEventListener.java:205: error: cannot find symbol
-				PersistentCollectionDescriptor collectionPersister = source.getFactory().getTypeConfiguration().findCollectionPersister( ( (CollectionType) type ).getRole() );
-				                                                                                                                            ^
-  symbol:   class CollectionType
-  location: class DefaultRefreshEventListener
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultRefreshEventListener.java:224: error: cannot find symbol
-			else if ( type.isComponentType() ) {
-			              ^
-  symbol:   method isComponentType()
-  location: variable type of type Type
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultRefreshEventListener.java:225: error: cannot find symbol
-				EmbeddedType actype = (EmbeddedType) type;
-				^
-  symbol:   class EmbeddedType
-  location: class DefaultRefreshEventListener
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultRefreshEventListener.java:225: error: cannot find symbol
-				EmbeddedType actype = (EmbeddedType) type;
-				                       ^
-  symbol:   class EmbeddedType
-  location: class DefaultRefreshEventListener
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultReplicateEventListener.java:104: error: cannot find symbol
 					persister.getVersionType()
 					         ^
@@ -6330,6 +6223,26 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 				                   ^
   symbol:   variable CollectionType
   location: class WrapVisitor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultRefreshEventListener.java:203: error: cannot find symbol
+				PersistentCollectionDescriptor collectionPersister = source.getFactory().getTypeConfiguration().findCollectionPersister( ( (CollectionType) type ).getRole() );
+				                                                                                                                            ^
+  symbol:   class CollectionType
+  location: class DefaultRefreshEventListener
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultRefreshEventListener.java:222: error: cannot find symbol
+			else if ( type.isComponentType() ) {
+			              ^
+  symbol:   method isComponentType()
+  location: variable type of type Type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultRefreshEventListener.java:223: error: cannot find symbol
+				EmbeddedType actype = (EmbeddedType) type;
+				^
+  symbol:   class EmbeddedType
+  location: class DefaultRefreshEventListener
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultRefreshEventListener.java:223: error: cannot find symbol
+				EmbeddedType actype = (EmbeddedType) type;
+				                       ^
+  symbol:   class EmbeddedType
+  location: class DefaultRefreshEventListener
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/hql/spi/id/AbstractMultiTableBulkIdStrategyImpl.java:144: error: no suitable method found for getSqlType(Dialect,MetadataImplementor)
 			buffer.append( column.getSqlType( dialect, metadata ) );
 			                     ^
@@ -6576,9 +6489,6 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/enhanced/TableGenerator.java:345: error: method does not override or implement a method from a supertype
 	@Override
 	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/MultipleHiLoPerTableGenerator.java:80: error: MultipleHiLoPerTableGenerator is not abstract and does not override abstract method configure(JavaTypeDescriptor,Properties,ServiceRegistry) in Configurable
-public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenerator, Configurable {
-       ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/IdentifierGeneratorHelper.java:101: error: cannot find symbol
 		if ( CustomType.class.isInstance( type ) ) {
 		     ^
@@ -6681,6 +6591,9 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 			                                                                 ^
   symbol:   variable PropertyPath
   location: class ForeignGenerator
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/id/MultipleHiLoPerTableGenerator.java:80: error: MultipleHiLoPerTableGenerator is not abstract and does not override abstract method configure(JavaTypeDescriptor,Properties,ServiceRegistry) in Configurable
+public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenerator, Configurable {
+       ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/internal/DynamicFilterAliasGenerator.java:31: error: cannot find symbol
 					AbstractEntityPersister.getTableId( table, tables )
 					^
@@ -7447,9 +7360,13 @@ public class RowIdDescriptorImpl implements RowIdDescriptor {
   return type org.hibernate.type.descriptor.java.JavaTypeDescriptor is not compatible with org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor
   where T is a type-variable:
     T extends Object declared in interface Navigable
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/domain/internal/RowIdDescriptorImpl.java:43: error: incompatible types: String cannot be converted to Identifier
-				"ROW_ID",
-				^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/domain/internal/RowIdDescriptorImpl.java:41: error: no suitable constructor found for PhysicalColumn(Table,String,int)
+		column = new PhysicalColumn(
+		         ^
+    constructor PhysicalColumn.PhysicalColumn(Table,Identifier,SqlTypeDescriptor,String,boolean,boolean) is not applicable
+      (actual and formal argument lists differ in length)
+    constructor PhysicalColumn.PhysicalColumn(Table,Identifier,SqlTypeDescriptor,String,boolean,boolean,String) is not applicable
+      (actual and formal argument lists differ in length)
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/domain/internal/RowIdDescriptorImpl.java:49: error: method does not override or implement a method from a supertype
 	@Override
 	^
@@ -7511,6 +7428,11 @@ public class SingleTableEntityDescriptor<T> extends AbstractEntityDescriptor<T> 
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/domain/spi/AbstractCollectionElement.java:44: error: method does not override or implement a method from a supertype
 	@Override
 	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/domain/internal/VersionDescriptorImpl.java:36: error: VersionDescriptorImpl is not abstract and does not override abstract method getBasicType() in BasicValuedExpressableType
+public class VersionDescriptorImpl<O,J>
+       ^
+  where J is a type-variable:
+    J extends Object declared in class VersionDescriptorImpl
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/domain/spi/CalendarVersionSupport.java:19: error: CalendarVersionSupport is not abstract and does not override abstract method toLoggableString(Object) in VersionSupport
 public class CalendarVersionSupport implements VersionSupport<Calendar> {
        ^
@@ -7562,9 +7484,6 @@ public class UnionSubclassTable extends AbstractTable implements Table {
 		                                  ^
   symbol:   method locateColumn(String)
   location: class PhysicalTable
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/relational/spi/PhysicalTable.java:17: error: PhysicalTable is not abstract and does not override abstract method createForeignKey(String,boolean,Table,ColumnMappings) in InflightTable
-public class PhysicalTable extends AbstractTable implements Table, Exportable {
-       ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/metamodel/model/relational/spi/DerivedColumn.java:12: error: DerivedColumn is not abstract and does not override abstract method getSqlTypeDescriptor() in Column
 public class DerivedColumn implements Column {
        ^
@@ -7689,7 +7608,7 @@ public class DerivedTable extends AbstractTable {
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/AbstractQuery.java:1149: error: incompatible types: ExpressableType cannot be converted to Type
 		Type type = locateBinding( namedParam ).getBindType();
 		                                                   ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/AbstractQuery.java:1154: error: incompatible types: AllowableType cannot be converted to Type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/AbstractQuery.java:1154: error: incompatible types: AllowableParameterType cannot be converted to Type
 			type = getSession().getFactory().resolveParameterBindType( retType );
 			                                                         ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/AbstractQuery.java:1202: error: cannot find symbol
@@ -7760,10 +7679,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/QueryParameterBindingImpl.java:50: error: method does not override or implement a method from a supertype
 	@Override
 	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/QueryParameterBindingImpl.java:92: error: incompatible types: AllowableType cannot be converted to Type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/QueryParameterBindingImpl.java:92: error: incompatible types: AllowableParameterType cannot be converted to Type
 			this.bindType = typeResolver.resolveParameterBindType( value );
 			                                                     ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/QueryParameterBindingImpl.java:132: error: incompatible types: AllowableType cannot be converted to Type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/QueryParameterBindingImpl.java:132: error: incompatible types: AllowableParameterType cannot be converted to Type
 			this.bindType = typeResolver.resolveParameterBindType( values.iterator().next() );
 			                                                     ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/ParameterBindImpl.java:21: error: ParameterBindImpl is not abstract and does not override abstract method getBindType() in QueryParameterBinding
@@ -7827,22 +7746,6 @@ public class ParameterBindImpl<T> extends QueryParameterBindingImpl<T> implement
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/ParameterRegistrationStandardImpl.java:52: error: method does not override or implement a method from a supertype
 	@Override
 	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/Util.java:189: error: cannot find symbol
-			context.addQuerySpaces( (String[]) entityDescriptor.getQuerySpaces() );
-			                                                   ^
-  symbol:   method getQuerySpaces()
-  location: variable entityDescriptor of type EntityDescriptor
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/Util.java:198: error: cannot find symbol
-							creationContext
-							^
-  symbol:   variable creationContext
-  location: class Util
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/procedure/internal/Util.java:260: error: constructor QueryResultEntityImpl in class QueryResultEntityImpl cannot be applied to given types;
-					final QueryResultEntityImpl entityReturn = new QueryResultEntityImpl(
-					                                           ^
-  required: EntityReference,String,Map<PersistentAttribute,SqlSelectionGroup>,NavigablePath,QueryResultCreationContext
-  found: <null>,EntityDescriptor,<null>,<null>,NavigablePath,<null>
-  reason: actual and formal argument lists differ in length
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/proxy/AbstractLazyInitializer.java:113: error: cannot find symbol
 					setReadOnly( s.getPersistenceContext().isDefaultReadOnly() || !persister.isMutable() );
 					                                                                        ^
@@ -8198,16 +8101,6 @@ public class JpaCompoundPredicate
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NamedQueryParameterBinder.java:18: error: NamedQueryParameterBinder is not abstract and does not override abstract method bindParameterValue(PreparedStatement,int,ParameterBindingContext) in JdbcParameterBinder
 public class NamedQueryParameterBinder extends AbstractParameterBinder {
        ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryImpl.java:554: error: cannot find symbol
-		addQuerySpaces( getSession().getFactory().getTypeConfiguration().resolveEntityPersister( entityName ).getQuerySpaces() );
-		                                                                                                     ^
-  symbol:   method getQuerySpaces()
-  location: interface EntityDescriptor<Object>
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryImpl.java:561: error: cannot find symbol
-		addQuerySpaces( getSession().getFactory().getTypeConfiguration().resolveEntityPersister( entityClass ).getQuerySpaces() );
-		                                                                                                      ^
-  symbol:   method getQuerySpaces()
-  location: interface EntityDescriptor
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/internal/sql/NativeQueryInterpreterStandardImpl.java:36: error: cannot find symbol
 		CustomQuery customQuery = new SQLCustomQuery(
 		^
@@ -8255,6 +8148,9 @@ public class PositionalQueryParameterBinderImpl extends AbstractParameterBinder 
   location: class QueryParameterNamedImpl<T>
   where T is a type-variable:
     T extends Object declared in class QueryParameterNamedImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/consume/spi/QuerySplitter.java:775: error: incompatible types: AllowableFunctionReturnType cannot be converted to BasicValuedExpressableType
+					expression.getExpressionType(),
+					                            ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/internal/SemanticQueryProducerImpl.java:44: error: cannot find symbol
 		final HqlParser parser = HqlParseTreeBuilder.INSTANCE.parseHql( query );
 		      ^
@@ -8318,6 +8214,20 @@ public class TreatedNavigableReference extends AbstractSqmNavigableReference imp
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/tree/expression/domain/SqmMaxElementReferenceBasic.java:16: error: SqmMaxElementReferenceBasic is not abstract and does not override abstract method getJavaTypeDescriptor() in ExpressableType
 public class SqmMaxElementReferenceBasic
        ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/spi/PatternBasedSqmFunctionTemplate.java:76: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/spi/PatternBasedSqmFunctionTemplate.java:81: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/spi/PatternBasedSqmFunctionTemplate.java:91: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/produce/spi/PatternBasedSqmFunctionTemplate.java:98: error: cannot find symbol
+		return renderer.getTemplate();
+		               ^
+  symbol:   method getTemplate()
+  location: variable renderer of type PatternRenderer
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/query/sqm/tree/expression/domain/SqmCollectionElementReferenceBasic.java:15: error: SqmCollectionElementReferenceBasic is not abstract and does not override abstract method getJavaTypeDescriptor() in ExpressableType
 public class SqmCollectionElementReferenceBasic extends AbstractSqmCollectionElementReference implements
        ^
@@ -8455,6 +8365,128 @@ public class NodeSupport extends CommonAST implements Node {
 			     ^
   symbol:   variable SORT_KEY
   location: class Factory
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:28: error: cannot find symbol
+	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
+	                                              ^
+  symbol:   class ASTPrinter
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:28: error: cannot find symbol
+	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
+	                                                          ^
+  symbol:   class GeneratedOrderByFragmentRendererTokenTypes
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:36: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:46: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:48: error: cannot find symbol
+		if ( inputState.guessing > 0 ) {
+		     ^
+  symbol:   variable inputState
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:62: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:64: error: cannot find symbol
+		if ( inputState.guessing > 0 ) {
+		     ^
+  symbol:   variable inputState
+  location: class OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:71: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:39: error: cannot find symbol
+		GeneratedOrderByLexer lexer = new GeneratedOrderByLexer( new StringReader( fragment ) );
+		^
+  symbol:   class GeneratedOrderByLexer
+  location: class OrderByFragmentTranslator
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:39: error: cannot find symbol
+		GeneratedOrderByLexer lexer = new GeneratedOrderByLexer( new StringReader( fragment ) );
+		                                  ^
+  symbol:   class GeneratedOrderByLexer
+  location: class OrderByFragmentTranslator
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:46: error: cannot find symbol
+			parser.orderByFragment();
+			      ^
+  symbol:   method orderByFragment()
+  location: variable parser of type OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:56: error: cannot find symbol
+			ASTPrinter printer = new ASTPrinter( OrderByTemplateTokenTypes.class );
+			^
+  symbol:   class ASTPrinter
+  location: class OrderByFragmentTranslator
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:56: error: cannot find symbol
+			ASTPrinter printer = new ASTPrinter( OrderByTemplateTokenTypes.class );
+			                         ^
+  symbol:   class ASTPrinter
+  location: class OrderByFragmentTranslator
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:56: error: cannot find symbol
+			ASTPrinter printer = new ASTPrinter( OrderByTemplateTokenTypes.class );
+			                                     ^
+  symbol:   class OrderByTemplateTokenTypes
+  location: class OrderByFragmentTranslator
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:57: error: cannot find symbol
+			LOG.trace( printer.showAsString( parser.getAST(), "--- {order-by fragment} ---" ) );
+			                                       ^
+  symbol:   method getAST()
+  location: variable parser of type OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:63: error: cannot find symbol
+			renderer.orderByFragment( parser.getAST() );
+			                                ^
+  symbol:   method getAST()
+  location: variable parser of type OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:72: error: cannot find symbol
+		return new StandardOrderByTranslationImpl( renderer.getRenderedFragment(), parser.getColumnReferences() );
+		                                                   ^
+  symbol:   method getRenderedFragment()
+  location: variable renderer of type OrderByFragmentRenderer
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderingSpecification.java:31: error: cannot find symbol
+			ordering = resolve( getText() );
+			                    ^
+  symbol:   method getText()
+  location: class OrderingSpecification
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:23: error: cannot find symbol
+		return ( SortKey ) getFirstChild();
+		                   ^
+  symbol:   method getFirstChild()
+  location: class SortSpecification
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:32: error: cannot find symbol
+		AST possible = getSortKey().getNextSibling();
+		^
+  symbol:   class AST
+  location: class SortSpecification
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:32: error: cannot find symbol
+		AST possible = getSortKey().getNextSibling();
+		                           ^
+  symbol:   method getNextSibling()
+  location: class SortKey
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:33: error: cannot find symbol
+		return  possible != null && OrderByTemplateTokenTypes.COLLATE == possible.getType()
+		                            ^
+  symbol:   variable OrderByTemplateTokenTypes
+  location: class SortSpecification
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:47: error: cannot find symbol
+		AST possible = getSortKey().getNextSibling();
+		^
+  symbol:   class AST
+  location: class SortSpecification
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:47: error: cannot find symbol
+		AST possible = getSortKey().getNextSibling();
+		                           ^
+  symbol:   method getNextSibling()
+  location: class SortKey
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:53: error: cannot find symbol
+		if ( OrderByTemplateTokenTypes.COLLATE == possible.getType() ) {
+		     ^
+  symbol:   variable OrderByTemplateTokenTypes
+  location: class SortSpecification
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:58: error: cannot find symbol
+		return possible != null && OrderByTemplateTokenTypes.ORDER_SPEC == possible.getType()
+		                           ^
+  symbol:   variable OrderByTemplateTokenTypes
+  location: class SortSpecification
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:40: error: cannot find symbol
 		super.setASTFactory( new Factory() );
 		^
@@ -8494,6 +8526,11 @@ public class NodeSupport extends CommonAST implements Node {
 		^
   symbol:   class AST
   location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:89: error: cannot find symbol
+			return !function.hasParenthesesIfNoArguments();
+			                ^
+  symbol:   method hasParenthesesIfNoArguments()
+  location: variable function of type SqmFunctionTemplate
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:94: error: method does not override or implement a method from a supertype
 	@Override
 	^
@@ -8512,6 +8549,11 @@ public class NodeSupport extends CommonAST implements Node {
 			       ^
   symbol:   method getASTFactory()
   location: class OrderByFragmentParser
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:128: error: cannot find symbol
+			final String text = function.render( null, expressions, context.getSessionFactory() );
+			                            ^
+  symbol:   method render(<null>,ArrayList,SessionFactoryImplementor)
+  location: variable function of type SqmFunctionTemplate
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:129: error: cannot find symbol
 			return getASTFactory().create( OrderByTemplateTokenTypes.IDENT, text );
 			                               ^
@@ -8667,128 +8709,6 @@ public class NodeSupport extends CommonAST implements Node {
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentParser.java:312: error: method does not override or implement a method from a supertype
 	@Override
 	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderingSpecification.java:31: error: cannot find symbol
-			ordering = resolve( getText() );
-			                    ^
-  symbol:   method getText()
-  location: class OrderingSpecification
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:23: error: cannot find symbol
-		return ( SortKey ) getFirstChild();
-		                   ^
-  symbol:   method getFirstChild()
-  location: class SortSpecification
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:32: error: cannot find symbol
-		AST possible = getSortKey().getNextSibling();
-		^
-  symbol:   class AST
-  location: class SortSpecification
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:32: error: cannot find symbol
-		AST possible = getSortKey().getNextSibling();
-		                           ^
-  symbol:   method getNextSibling()
-  location: class SortKey
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:33: error: cannot find symbol
-		return  possible != null && OrderByTemplateTokenTypes.COLLATE == possible.getType()
-		                            ^
-  symbol:   variable OrderByTemplateTokenTypes
-  location: class SortSpecification
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:47: error: cannot find symbol
-		AST possible = getSortKey().getNextSibling();
-		^
-  symbol:   class AST
-  location: class SortSpecification
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:47: error: cannot find symbol
-		AST possible = getSortKey().getNextSibling();
-		                           ^
-  symbol:   method getNextSibling()
-  location: class SortKey
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:53: error: cannot find symbol
-		if ( OrderByTemplateTokenTypes.COLLATE == possible.getType() ) {
-		     ^
-  symbol:   variable OrderByTemplateTokenTypes
-  location: class SortSpecification
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/SortSpecification.java:58: error: cannot find symbol
-		return possible != null && OrderByTemplateTokenTypes.ORDER_SPEC == possible.getType()
-		                           ^
-  symbol:   variable OrderByTemplateTokenTypes
-  location: class SortSpecification
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:28: error: cannot find symbol
-	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
-	                                              ^
-  symbol:   class ASTPrinter
-  location: class OrderByFragmentRenderer
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:28: error: cannot find symbol
-	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
-	                                                          ^
-  symbol:   class GeneratedOrderByFragmentRendererTokenTypes
-  location: class OrderByFragmentRenderer
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:36: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:46: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:48: error: cannot find symbol
-		if ( inputState.guessing > 0 ) {
-		     ^
-  symbol:   variable inputState
-  location: class OrderByFragmentRenderer
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:62: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:64: error: cannot find symbol
-		if ( inputState.guessing > 0 ) {
-		     ^
-  symbol:   variable inputState
-  location: class OrderByFragmentRenderer
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentRenderer.java:71: error: method does not override or implement a method from a supertype
-	@Override
-	^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:39: error: cannot find symbol
-		GeneratedOrderByLexer lexer = new GeneratedOrderByLexer( new StringReader( fragment ) );
-		^
-  symbol:   class GeneratedOrderByLexer
-  location: class OrderByFragmentTranslator
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:39: error: cannot find symbol
-		GeneratedOrderByLexer lexer = new GeneratedOrderByLexer( new StringReader( fragment ) );
-		                                  ^
-  symbol:   class GeneratedOrderByLexer
-  location: class OrderByFragmentTranslator
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:46: error: cannot find symbol
-			parser.orderByFragment();
-			      ^
-  symbol:   method orderByFragment()
-  location: variable parser of type OrderByFragmentParser
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:56: error: cannot find symbol
-			ASTPrinter printer = new ASTPrinter( OrderByTemplateTokenTypes.class );
-			^
-  symbol:   class ASTPrinter
-  location: class OrderByFragmentTranslator
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:56: error: cannot find symbol
-			ASTPrinter printer = new ASTPrinter( OrderByTemplateTokenTypes.class );
-			                         ^
-  symbol:   class ASTPrinter
-  location: class OrderByFragmentTranslator
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:56: error: cannot find symbol
-			ASTPrinter printer = new ASTPrinter( OrderByTemplateTokenTypes.class );
-			                                     ^
-  symbol:   class OrderByTemplateTokenTypes
-  location: class OrderByFragmentTranslator
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:57: error: cannot find symbol
-			LOG.trace( printer.showAsString( parser.getAST(), "--- {order-by fragment} ---" ) );
-			                                       ^
-  symbol:   method getAST()
-  location: variable parser of type OrderByFragmentParser
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:63: error: cannot find symbol
-			renderer.orderByFragment( parser.getAST() );
-			                                ^
-  symbol:   method getAST()
-  location: variable parser of type OrderByFragmentParser
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ordering/antlr/OrderByFragmentTranslator.java:72: error: cannot find symbol
-		return new StandardOrderByTranslationImpl( renderer.getRenderedFragment(), parser.getColumnReferences() );
-		                                                   ^
-  symbol:   method getRenderedFragment()
-  location: variable renderer of type OrderByFragmentRenderer
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/consume/results/internal/JdbcValuesSourceProcessingStateStandardImpl.java:245: error: cannot find symbol
 				hydratedState[i] = types[i].resolve( value, session, entity );
 				                           ^
@@ -8939,7 +8859,7 @@ public interface FetchCompositeAttribute extends FetchComposite, FetchAttribute 
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/sqm/spi/ConversionHelper.java:66: error: incompatible types: ExpressableType cannot be converted to Type
 			return parameter.getType();
 			                        ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/sqm/spi/ConversionHelper.java:73: error: incompatible types: AllowableType cannot be converted to Type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/sqm/spi/ConversionHelper.java:73: error: incompatible types: AllowableParameterType cannot be converted to Type
 			return persistenceContext.resolveParameterBindType( binding.getBindValue() );
 			                                                  ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/ast/produce/sqm/spi/ConversionHelper.java:90: error: cannot find symbol
@@ -9002,6 +8922,11 @@ public interface FetchCompositeAttribute extends FetchComposite, FetchAttribute 
 		                                  ^
   symbol:   method getJdbcLiteralFormatter()
   location: variable type of type Type
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/sql/Template.java:751: error: cannot find symbol
+		return ! function.hasParenthesesIfNoArguments();
+		                 ^
+  symbol:   method hasParenthesesIfNoArguments()
+  location: variable function of type SqmFunctionTemplate
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/hbm2ddl/MultipleLinesSqlCommandExtractor.java:24: error: cannot find symbol
 		final SqlStatementLexer lexer = new SqlStatementLexer( reader );
 		      ^
@@ -9022,6 +8947,9 @@ public interface FetchCompositeAttribute extends FetchComposite, FetchAttribute 
 		                                      ^
   symbol:   class SqlStatementParser
   location: class MultipleLinesSqlCommandExtractor
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/hbm2ddl/SchemaExport.java:290: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+						metadata,
+						^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/hbm2ddl/ForeignKeyMetadata.java:50: error: cannot find symbol
 		String refName = (String) references.get(column.getName().toLowerCase(Locale.ROOT));
 		                                               ^
@@ -9035,41 +8963,72 @@ public interface FetchCompositeAttribute extends FetchComposite, FetchAttribute 
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/hbm2ddl/ForeignKeyMetadata.java:65: error: incompatible types: org.hibernate.mapping.Column cannot be converted to org.hibernate.metamodel.model.relational.spi.Column
 					Column column = fk.getColumn( i );
 					                            ^
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:295: error: cannot find symbol
-				table.sqlAlterStrings(
-				     ^
-  symbol:   method sqlAlterStrings(Dialect,Metadata,TableInformation,String,String)
-  location: variable table of type MappedTable
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:413: error: cannot find symbol
-			final Iterator<ForeignKey> fkItr = table.getForeignKeyIterator();
-			                                        ^
-  symbol:   method getForeignKeyIterator()
-  location: variable table of type MappedTable
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:486: error: cannot find symbol
-				final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
-				                                                ^
-  symbol:   method getPhysicalName()
-  location: variable namespace of type MappedNamespace
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:502: error: cannot find symbol
-					&& namespace.getPhysicalName().getSchema() != null
-					            ^
-  symbol:   method getPhysicalName()
-  location: variable namespace of type MappedNamespace
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:506: error: cannot find symbol
-						dialect.getCreateSchemaCommand( namespace.getPhysicalName().getSchema().render( dialect ) ),
-						                                         ^
-  symbol:   method getPhysicalName()
-  location: variable namespace of type MappedNamespace
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:551: error: cannot find symbol
-		final Identifier identifier = database.getDefaultNamespace().getPhysicalName().getCatalog();
-		                                                            ^
-  symbol:   method getPhysicalName()
-  location: class MappedNamespace
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:556: error: cannot find symbol
-		final Identifier identifier = database.getDefaultNamespace().getPhysicalName().getSchema();
-		                                                            ^
-  symbol:   method getPhysicalName()
-  location: class MappedNamespace
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:170: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+								.getSqlDropStrings( auxiliaryDatabaseObject, metadata ),
+								                                             ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:218: error: incompatible types: MappedNamespace cannot be converted to Namespace
+			if ( schemaFilter.includeNamespace( namespace ) ) {
+			                                    ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:227: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+										metadata
+										^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:240: error: incompatible types: MappedNamespace cannot be converted to Namespace
+			if ( schemaFilter.includeNamespace( namespace ) ) {
+			                                    ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:243: error: incompatible types: MappedTable cannot be converted to Table
+					if ( schemaFilter.includeTable( table ) ) {
+					                                ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:276: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+				dialect.getTableExporter().getSqlCreateStrings( table, metadata ),
+				                                                       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:330: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+							exporter.getSqlCreateStrings( index, metadata ),
+							                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:373: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+								exporter.getSqlDropStrings( uniqueKey, metadata ),
+								                                       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:382: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+							exporter.getSqlCreateStrings( uniqueKey, metadata ),
+							                                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaMigrator.java:429: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+								exporter.getSqlCreateStrings( foreignKey, metadata ),
+								                                          ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/GroupedSchemaMigratorImpl.java:53: error: incompatible types: MappedNamespace cannot be converted to Namespace
+		if ( schemaFilter.includeNamespace( namespace ) ) {
+		                                    ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/GroupedSchemaMigratorImpl.java:67: error: incompatible types: MappedTable cannot be converted to Table
+				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
+				                                ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/GroupedSchemaMigratorImpl.java:81: error: incompatible types: MappedTable cannot be converted to Table
+				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
+				                                ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaValidator.java:88: error: incompatible types: MappedNamespace cannot be converted to Namespace
+			if ( schemaFilter.includeNamespace( namespace ) ) {
+			                                    ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaValidator.java:94: error: incompatible types: MappedNamespace cannot be converted to Namespace
+			if ( schemaFilter.includeNamespace( namespace ) ) {
+			                                    ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/AbstractSchemaValidator.java:96: error: incompatible types: MappedSequence cannot be converted to Sequence
+					if ( schemaFilter.includeSequence( sequence ) ) {
+					                                   ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/GroupedSchemaValidatorImpl.java:41: error: incompatible types: MappedTable cannot be converted to Table
+			if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
+			                                ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/IndividuallySchemaMigratorImpl.java:54: error: incompatible types: MappedNamespace cannot be converted to Namespace
+		if ( schemaFilter.includeNamespace( namespace ) ) {
+		                                    ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/IndividuallySchemaMigratorImpl.java:67: error: incompatible types: MappedTable cannot be converted to Table
+				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
+				                                ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/IndividuallySchemaMigratorImpl.java:81: error: incompatible types: MappedTable cannot be converted to Table
+				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
+				                                ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/IndividuallySchemaValidatorImpl.java:40: error: incompatible types: MappedTable cannot be converted to Table
+			if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
+			                                ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:227: error: incompatible types: MappedNamespace cannot be converted to Namespace
+				if ( !schemaFilter.includeNamespace( namespace ) ) {
+				                                     ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:233: error: cannot find symbol
 					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
 					                                                ^
@@ -9085,31 +9044,145 @@ public interface FetchCompositeAttribute extends FetchComposite, FetchAttribute 
 							                                         ^
   symbol:   method getPhysicalName()
   location: variable namespace of type MappedNamespace
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:268: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+								metadata
+								^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:280: error: incompatible types: MappedNamespace cannot be converted to Namespace
+			if ( !schemaFilter.includeNamespace( namespace ) ) {
+			                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:286: error: incompatible types: MappedSequence cannot be converted to Sequence
+				if ( !schemaFilter.includeSequence( sequence ) ) {
+				                                    ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:293: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+								metadata
+								^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:311: error: incompatible types: MappedTable cannot be converted to Table
+				if ( !schemaFilter.includeTable( table ) ) {
+				                                 ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:316: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+						dialect.getTableExporter().getSqlCreateStrings( table, metadata ),
+						                                                       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:328: error: incompatible types: MappedTable cannot be converted to Table
+				if ( !schemaFilter.includeTable( table ) ) {
+				                                 ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:337: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+							dialect.getIndexExporter().getSqlCreateStrings( index, metadata ),
+							                                                       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:350: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+							dialect.getUniqueKeyExporter().getSqlCreateStrings( uniqueKey, metadata ),
+							                                                               ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:363: error: incompatible types: MappedNamespace cannot be converted to Namespace
+			if ( !schemaFilter.includeNamespace( namespace ) ) {
+			                                     ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:368: error: incompatible types: MappedTable cannot be converted to Table
+				if ( !schemaFilter.includeTable( table ) ) {
+				                                 ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:372: error: cannot find symbol
 				final Iterator fkItr = table.getForeignKeyIterator();
 				                            ^
   symbol:   method getForeignKeyIterator()
   location: variable table of type MappedTable
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:278: error: cannot find symbol
-				if ( tryToDropSchemas && namespace.getPhysicalName().getSchema() != null ) {
-				                                  ^
-  symbol:   method getPhysicalName()
-  location: variable namespace of type MappedNamespace
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:281: error: cannot find symbol
-									namespace.getPhysicalName().getSchema().render( dialect )
-									         ^
-  symbol:   method getPhysicalName()
-  location: variable namespace of type MappedNamespace
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:290: error: cannot find symbol
-					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
-					                                                ^
-  symbol:   method getPhysicalName()
-  location: variable namespace of type MappedNamespace
-/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:328: error: cannot find symbol
-			final Iterator fks = table.getForeignKeyIterator();
-			                          ^
-  symbol:   method getForeignKeyIterator()
-  location: variable table of type MappedTable
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:376: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata ),
+							                                                                 ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaCreatorImpl.java:391: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings( auxiliaryDatabaseObject, metadata ),
+						                                                                                           ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:66: error: SchemaDropperImpl is not abstract and does not override abstract method buildDelayedAction(RuntimeModelCreationContext,ExecutionOptions,SourceDescriptor) in SchemaDropper
+public class SchemaDropperImpl implements SchemaDropper {
+       ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:205: error: cannot find symbol
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+		                                                                ^
+  symbol:   method getAuxiliaryDatabaseObjects()
+  location: variable database of type DatabaseModel
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:228: error: cannot find symbol
+			applyConstraintDropping( namespace, metadata, formatter, options, targets );
+			                                    ^
+  symbol:   variable metadata
+  location: class SchemaDropperImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:239: error: cannot find symbol
+				applySqlStrings( dialect.getTableExporter().getSqlDropStrings( table, metadata ), formatter, options,targets );
+				                                                                      ^
+  symbol:   variable metadata
+  location: class SchemaDropperImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:242: error: cannot find symbol
+			for ( MappedSequence sequence : namespace.getSequences() ) {
+			      ^
+  symbol:   class MappedSequence
+  location: class SchemaDropperImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:247: error: cannot find symbol
+				applySqlStrings( dialect.getSequenceExporter().getSqlDropStrings( sequence, metadata ), formatter, options, targets );
+				                                                                            ^
+  symbol:   variable metadata
+  location: class SchemaDropperImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:251: error: cannot find symbol
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
+		                                                                ^
+  symbol:   method getAuxiliaryDatabaseObjects()
+  location: variable database of type DatabaseModel
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:270: error: cannot find symbol
+			for ( MappedNamespace namespace : database.getNamespaces() ) {
+			      ^
+  symbol:   class MappedNamespace
+  location: class SchemaDropperImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:318: error: cannot find symbol
+		for ( MappedTable table : namespace.getTables() ) {
+		      ^
+  symbol:   class MappedTable
+  location: class SchemaDropperImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:330: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+						dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, metadata ),
+						                                                               ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:390: error: cannot find symbol
+		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMetadataBuildingOptions()
+		                                           ^
+  symbol:   class MetadataImplementor
+  location: class SchemaDropperImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:411: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+		dropFromCreationContext( metadata, options, dialect, FormatStyle.NONE.getFormatter(), target );
+		                         ^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:416: error: method does not override or implement a method from a supertype
+	@Override
+	^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:422: error: no suitable method found for doDrop(Metadata,ExecutionOptions,Dialect,SourceDescriptor,JournalingGenerationTarget)
+		doDrop( metadata, options, tool.getServiceRegistry().getService( JdbcEnvironment.class ).getDialect(), sourceDescriptor, target );
+		^
+    method SchemaDropperImpl.doDrop(RuntimeModelCreationContext,ExecutionOptions,Dialect,SourceDescriptor,GenerationTarget...) is not applicable
+      (argument mismatch; Metadata cannot be converted to RuntimeModelCreationContext)
+    method SchemaDropperImpl.doDrop(Metadata,boolean,GenerationTarget...) is not applicable
+      (argument mismatch; ExecutionOptions cannot be converted to boolean)
+    method SchemaDropperImpl.doDrop(Metadata,ServiceRegistry,Map,boolean,GenerationTarget...) is not applicable
+      (argument mismatch; ExecutionOptions cannot be converted to ServiceRegistry)
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:430: error: cannot find symbol
+		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry();
+		                                           ^
+  symbol:   class MetadataImplementor
+  location: class SchemaDropperImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/internal/SchemaDropperImpl.java:459: error: no suitable method found for doDrop(Metadata,<anonymous ExecutionOptions>,Dialect,<anonymous SourceDescriptor>,GenerationTarget[])
+		doDrop(
+		^
+    method SchemaDropperImpl.doDrop(RuntimeModelCreationContext,ExecutionOptions,Dialect,SourceDescriptor,GenerationTarget...) is not applicable
+      (argument mismatch; Metadata cannot be converted to RuntimeModelCreationContext)
+    method SchemaDropperImpl.doDrop(Metadata,boolean,GenerationTarget...) is not applicable
+      (argument mismatch; <anonymous ExecutionOptions> cannot be converted to boolean)
+    method SchemaDropperImpl.doDrop(Metadata,ServiceRegistry,Map,boolean,GenerationTarget...) is not applicable
+      (argument mismatch; <anonymous ExecutionOptions> cannot be converted to ServiceRegistry)
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/spi/SchemaManagementToolCoordinator.java:78: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+							metadata,
+							^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/spi/SchemaManagementToolCoordinator.java:145: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+						metadata,
+						^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/spi/SchemaManagementToolCoordinator.java:170: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+						metadata,
+						^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/spi/SchemaManagementToolCoordinator.java:278: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+						metadata,
+						^
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tool/schema/spi/SchemaManagementToolCoordinator.java:303: error: incompatible types: Metadata cannot be converted to RuntimeModelCreationContext
+						metadata,
+						^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/tuple/component/ComponentMetamodel.java:66: error: incompatible types: MetadataBuildingOptions cannot be converted to BootstrapContextImpl
 		final ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory( metadataBuildingOptions );
 		                                                                                        ^
@@ -9694,6 +9767,14 @@ public interface FetchCompositeAttribute extends FetchComposite, FetchAttribute 
   required: String
   found: no arguments
   reason: actual and formal argument lists differ in length
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/type/internal/BasicTypeImpl.java:28: error: BasicTypeImpl is not abstract and does not override abstract method getBasicType() in BasicValuedExpressableType
+public class BasicTypeImpl<T> implements BasicType<T>, SqlSelectionReader<T> {
+       ^
+  where T is a type-variable:
+    T extends Object declared in class BasicTypeImpl
+/home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/type/internal/BooleanBasicTypeImpl.java:17: error: BooleanBasicTypeImpl is not abstract and does not override abstract method getBasicType() in BasicValuedExpressableType
+public class BooleanBasicTypeImpl<U> extends BasicTypeImpl<Boolean> implements BooleanBasicType<U> {
+       ^
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/boot/internal/TypeContributorImpl.java:27: error: cannot find symbol
 		typeContributions.contributeType( RevisionTypeType.INSTANCE, RevisionTypeType.INSTANCE.getRegistryKey() );
 		                                                                                      ^
@@ -10018,7 +10099,7 @@ public interface FetchCompositeAttribute extends FetchComposite, FetchAttribute 
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/internal/entities/mapper/relation/lazy/AbstractDelegateSessionImplementor.java:18: error: resolveParameterBindType(Class) in SessionDelegatorBaseImpl cannot implement resolveParameterBindType(Class) in QueryParameterBindingTypeResolver
 public abstract class AbstractDelegateSessionImplementor extends SessionDelegatorBaseImpl implements SessionImplementor {
                 ^
-  return type Type is not compatible with AllowableType
+  return type Type is not compatible with AllowableParameterType
 /home/aboriero/hibernate/wip60/hibernate-orm/hibernate-core/src/main/java/org/hibernate/envers/internal/entities/mapper/relation/lazy/ToOneDelegateSessionImplementor.java:19: error: ToOneDelegateSessionImplementor is not abstract and does not override abstract method resolveParameterBindType(Class) in QueryParameterBindingTypeResolver
 public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImplementor {
        ^
@@ -10137,7 +10218,7 @@ Note: Recompile with -Xlint:deprecation for details.
 Note: Some input files use unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
 Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
-2113 errors
+2166 errors
  FAILED
 
 FAILURE: Build failed with an exception.
@@ -10151,4 +10232,4 @@ Run with --stacktrace option to get the stack trace. Run with --info or --debug 
 
 BUILD FAILED
 
-Total time: 10.235 secs
+Total time: 12.163 secs

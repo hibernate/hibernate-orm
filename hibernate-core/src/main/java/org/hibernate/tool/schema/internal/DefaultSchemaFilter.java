@@ -6,9 +6,9 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import org.hibernate.boot.model.relational.MappedSequence;
-import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.metamodel.model.relational.spi.Sequence;
+import org.hibernate.metamodel.model.relational.spi.Table;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 
 /**
@@ -18,17 +18,17 @@ public class DefaultSchemaFilter implements SchemaFilter {
 	public static final DefaultSchemaFilter INSTANCE = new DefaultSchemaFilter();
 
 	@Override
-	public boolean includeNamespace( MappedNamespace namespace ) {
+	public boolean includeNamespace( Namespace namespace ) {
 		return true;
 	}
 
 	@Override
-	public boolean includeTable(MappedTable table) {
+	public boolean includeTable(Table table) {
 		return true;
 	}
 
 	@Override
-	public boolean includeSequence(MappedSequence sequence) {
+	public boolean includeSequence(Sequence sequence) {
 		return true;
 	}
 }

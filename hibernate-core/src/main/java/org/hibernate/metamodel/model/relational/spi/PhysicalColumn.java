@@ -16,11 +16,36 @@ public class PhysicalColumn implements Column {
 	private final Table table;
 	private final Identifier name;
 	private final SqlTypeDescriptor sqlTypeDescriptor;
+	private final String defaultValue;
+	private final boolean isNullable;
+	private final boolean isUnique;
+	private String comment;
 
-	public PhysicalColumn(Table table, Identifier name, SqlTypeDescriptor sqlTypeDescriptor) {
+	public PhysicalColumn(
+			Table table,
+			Identifier name,
+			SqlTypeDescriptor sqlTypeDescriptor,
+			String defaultValue,
+			boolean isNullable,
+			boolean isUnique) {
+		this( table, name, sqlTypeDescriptor, defaultValue, isNullable, isUnique, null );
+	}
+
+	public PhysicalColumn(
+			Table table,
+			Identifier name,
+			SqlTypeDescriptor sqlTypeDescriptor,
+			String defaultValue,
+			boolean isNullable,
+			boolean isUnique,
+			String comment) {
 		this.table = table;
 		this.name = name;
 		this.sqlTypeDescriptor = sqlTypeDescriptor;
+		this.defaultValue = defaultValue;
+		this.isNullable = isNullable;
+		this.isUnique = isUnique;
+		this.comment = comment;
 	}
 
 	public Identifier getName() {
@@ -55,5 +80,21 @@ public class PhysicalColumn implements Column {
 	@Override
 	public String toLoggableString() {
 		return "PhysicalColumn(" + name + ");";
+	}
+
+	public String getDefaultValue() {
+		return defaultValue;
+	}
+
+	public boolean isNullable() {
+		return isNullable;
+	}
+
+	public boolean isUnique() {
+		return isUnique;
+	}
+
+	public String getComment() {
+		return comment;
 	}
 }

@@ -6,13 +6,11 @@
  */
 package org.hibernate.dialect.unique;
 
-import java.util.Iterator;
-
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.mapping.UniqueKey;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
+import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
 /**
  * The default UniqueDelegate implementation for most dialects.  Uses
@@ -40,61 +38,74 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	}
 
 	@Override
-	public String getTableCreationUniqueConstraintsFragment(MappedTable table) {
+	public String getTableCreationUniqueConstraintsFragment(ExportableTable table) {
 		return null;
 	}
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+	public String getAlterTableToAddUniqueKeyCommand(
+			UniqueKey uniqueKey,
+			RuntimeModelCreationContext modelCreationContext) {
 
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				uniqueKey.getTable().getQualifiedTableName(),
-				dialect
-		);
+		final String tableName = modelCreationContext
+				.getDatabaseModel()
+				.getJdbcEnvironment()
+				.getQualifiedObjectNameFormatter()
+				.format(
+						uniqueKey.getTable().getQualifiedTableName(),
+						dialect
+				);
 
-		final String constraintName = dialect.quote( uniqueKey.getName() );
+		final String constraintName = uniqueKey.getName().render( dialect );
 		return "alter table " + tableName + " add constraint " + constraintName + " " + uniqueConstraintSql( uniqueKey );
+
+	}
+
+	@Override
+	public String getAlterTableToDropUniqueKeyCommand(
+			UniqueKey uniqueKey,
+			RuntimeModelCreationContext modelCreationContext) {
+
+		final String tableName = modelCreationContext
+				.getDatabaseModel()
+				.getJdbcEnvironment()
+				.getQualifiedObjectNameFormatter()
+				.format(
+						uniqueKey.getTable().getQualifiedTableName(),
+						dialect
+				);
+
+		final StringBuilder buf = new StringBuilder( "alter table " );
+		buf.append( tableName );
+		buf.append( " drop constraint " );
+		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
+			buf.append( "if exists " );
+		}
+		buf.append( uniqueKey.getName().render( dialect ) );
+		if ( dialect.supportsIfExistsAfterConstraintName() ) {
+			buf.append( " if exists" );
+		}
+		return buf.toString();
 	}
 
 	protected String uniqueConstraintSql(UniqueKey uniqueKey) {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "unique (" );
-		final Iterator<org.hibernate.mapping.Column> columnIterator = uniqueKey.columnIterator();
-		while ( columnIterator.hasNext() ) {
-			final org.hibernate.mapping.Column column = columnIterator.next();
-			sb.append( column.getQuotedName( dialect ) );
+		boolean isFirst = true;
+		for ( PhysicalColumn column : uniqueKey.getColumns() ) {
+			if ( isFirst ) {
+				isFirst = false;
+			}
+			else {
+				sb.append( ", " );
+			}
+			sb.append( column.getName().render( dialect ) );
 			if ( uniqueKey.getColumnOrderMap().containsKey( column ) ) {
 				sb.append( " " ).append( uniqueKey.getColumnOrderMap().get( column ) );
-			}
-			if ( columnIterator.hasNext() ) {
-				sb.append( ", " );
 			}
 		}
 
 		return sb.append( ')' ).toString();
-	}
-
-	@Override
-	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				uniqueKey.getTable().getQualifiedTableName(),
-				dialect
-		);
-
-		final StringBuilder buf = new StringBuilder( "alter table " );
-		buf.append( tableName );
-		buf.append(" drop constraint " );
-		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
-			buf.append( "if exists " );
-		}
-		buf.append( dialect.quote( uniqueKey.getName() ) );
-		if ( dialect.supportsIfExistsAfterConstraintName() ) {
-			buf.append( " if exists" );
-		}
-		return buf.toString();
 	}
 
 }

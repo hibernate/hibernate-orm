@@ -12,7 +12,7 @@ import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.boot.model.relational.NamespaceName;
+import org.hibernate.naming.NamespaceName;
 import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.MappedNamespace;
 import org.hibernate.cfg.AvailableSettings;

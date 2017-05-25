@@ -6,25 +6,10 @@
  */
 package org.hibernate.id;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-
-import org.hibernate.FetchMode;
-import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.Value;
-import org.hibernate.mapping.ValueVisitor;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

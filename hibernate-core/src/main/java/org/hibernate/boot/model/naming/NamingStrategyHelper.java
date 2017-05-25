@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.naming;
 
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.naming.Identifier;
 
@@ -20,7 +21,7 @@ public interface NamingStrategyHelper {
 	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getBuildingOptions()} ->
 	 * {@link org.hibernate.boot.spi.MetadataBuildingOptions#getImplicitNamingStrategy()}
 	 * <p/>
-	 * For proper quoting, {@link org.hibernate.boot.model.relational.Database#toIdentifier(String)}
+	 * For proper quoting, {@link Database#toIdentifier(String)}
 	 * should be used via
 	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getMetadataCollector()} ->
 	 * {@link org.hibernate.boot.spi.InFlightMetadataCollector#getDatabase()}
@@ -38,7 +39,7 @@ public interface NamingStrategyHelper {
 	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getBuildingOptions()} ->
 	 * {@link org.hibernate.boot.spi.MetadataBuildingOptions#getImplicitNamingStrategy()}
 	 * <p/>
-	 * For proper quoting, {@link org.hibernate.boot.model.relational.Database#toIdentifier(String)}
+	 * For proper quoting, {@link Database#toIdentifier(String)}
 	 * should be used via
 	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getMetadataCollector()} ->
 	 * {@link org.hibernate.boot.spi.InFlightMetadataCollector#getDatabase()}
@@ -57,7 +58,7 @@ public interface NamingStrategyHelper {
 	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getBuildingOptions()} ->
 	 * {@link org.hibernate.boot.spi.MetadataBuildingOptions#getPhysicalNamingStrategy()}
 	 * <p/>
-	 * For proper quoting, {@link org.hibernate.boot.model.relational.Database#toIdentifier(String)}
+	 * For proper quoting, {@link Database#toIdentifier(String)}
 	 * should be used via
 	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getMetadataCollector()} ->
 	 * {@link org.hibernate.boot.spi.InFlightMetadataCollector#getDatabase()}

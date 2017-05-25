@@ -8,11 +8,14 @@ package org.hibernate.metamodel.model.relational.spi;
 
 import java.util.Collection;
 
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+
 /**
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
 public interface DatabaseModel {
-	Collection<Namespace> getNameSpaces();
+	Collection<Namespace> getNamespaces();
 
+	JdbcEnvironment getJdbcEnvironment();
 }

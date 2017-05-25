@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
@@ -289,20 +290,20 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			GenerationTarget... targets) {
 		final Database database = metadata.getDatabase();
 
+		// todo: (6.0) create and use a StandardTableAlter
+		throw new NotYetImplementedException(  );
 		//noinspection unchecked
-		applySqlStrings(
-				false,
-				table.sqlAlterStrings(
-						dialect,
-						metadata,
-						tableInformation,
-						getDefaultCatalogName( database, dialect ),
-						getDefaultSchemaName( database, dialect )
-				),
-				formatter,
-				options,
-				targets
-		);
+//		applySqlStrings(
+//				false,
+//				table.sqlAlterStrings(
+//						dialect,
+//						metadata,
+//						tableInformation
+//				),
+//				formatter,
+//				options,
+//				targets
+//		);
 	}
 
 	protected void applyIndexes(
@@ -409,10 +410,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		if ( dialect.hasAlterTable() ) {
 			final Exporter<ForeignKey> exporter = dialect.getForeignKeyExporter();
 
-			@SuppressWarnings("unchecked")
-			final Iterator<ForeignKey> fkItr = table.getForeignKeyIterator();
-			while ( fkItr.hasNext() ) {
-				final ForeignKey foreignKey = fkItr.next();
+			for ( ForeignKey foreignKey : table.getForeignKeys() ) {
 				if ( foreignKey.isPhysicalConstraint() && foreignKey.isCreationEnabled() ) {
 					ForeignKeyInformation existingForeignKey = null;
 					if ( tableInformation != null ) {
@@ -483,7 +481,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
 			if ( tryToCreateCatalogs ) {
 				final Identifier catalogLogicalName = namespace.getName().getCatalog();
-				final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+				final Identifier catalogPhysicalName = namespace.getCatalogName();
 
 				if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName )
 						&& !existingDatabase.catalogExists( catalogLogicalName ) ) {
@@ -499,11 +497,11 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 
 			if ( tryToCreateSchemas
-					&& namespace.getPhysicalName().getSchema() != null
+					&& namespace.getSchemaName() != null
 					&& !existingDatabase.schemaExists( namespace.getName() ) ) {
 				applySqlStrings(
 						false,
-						dialect.getCreateSchemaCommand( namespace.getPhysicalName().getSchema().render( dialect ) ),
+						dialect.getCreateSchemaCommand( namespace.getSchemaName().render( dialect ) ),
 						formatter,
 						options,
 						targets
@@ -533,27 +531,27 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 	}
 
-	private static void applySqlStrings(
-			boolean quiet,
-			Iterator<String> sqlStrings,
-			Formatter formatter,
-			ExecutionOptions options,
-			GenerationTarget... targets) {
-		if ( sqlStrings != null ) {
-			while ( sqlStrings.hasNext() ) {
-				final String sqlString = sqlStrings.next();
-				applySqlString( quiet, sqlString, formatter, options, targets );
-			}
-		}
-	}
+//	private static void applySqlStrings(
+//			boolean quiet,
+//			Iterator<String> sqlStrings,
+//			Formatter formatter,
+//			ExecutionOptions options,
+//			GenerationTarget... targets) {
+//		if ( sqlStrings != null ) {
+//			while ( sqlStrings.hasNext() ) {
+//				final String sqlString = sqlStrings.next();
+//				applySqlString( quiet, sqlString, formatter, options, targets );
+//			}
+//		}
+//	}
 
-	private String getDefaultCatalogName(Database database, Dialect dialect) {
-		final Identifier identifier = database.getDefaultNamespace().getPhysicalName().getCatalog();
-		return identifier == null ? null : identifier.render( dialect );
-	}
-
-	private String getDefaultSchemaName(Database database, Dialect dialect) {
-		final Identifier identifier = database.getDefaultNamespace().getPhysicalName().getSchema();
-		return identifier == null ? null : identifier.render( dialect );
-	}
+//	private String getDefaultCatalogName(Database database, Dialect dialect) {
+//		final Identifier identifier = database.getDefaultNamespace().getCatalogName();
+//		return identifier == null ? null : identifier.render( dialect );
+//	}
+//
+//	private String getDefaultSchemaName(Database database, Dialect dialect) {
+//		final Identifier identifier = database.getDefaultNamespace().getSchemaName();
+//		return identifier == null ? null : identifier.render( dialect );
+//	}
 }

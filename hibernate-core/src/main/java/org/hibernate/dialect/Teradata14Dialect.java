@@ -15,8 +15,7 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.QualifiedNameImpl;
+import org.hibernate.naming.QualifiedNameImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -27,6 +26,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -214,8 +214,8 @@ public class Teradata14Dialect extends TeradataDialect {
 		}
 
 		@Override
-		public String[] getSqlCreateStrings(Index index, Metadata metadata) {
-			final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+		public String[] getSqlCreateStrings(Index index, RuntimeModelCreationContext modelCreationContext) {
+			final JdbcEnvironment jdbcEnvironment = modelCreationContext.getDatabaseModel().getJdbcEnvironment();
 			final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 					index.getTable().getQualifiedTableName(),
 					jdbcEnvironment.getDialect()

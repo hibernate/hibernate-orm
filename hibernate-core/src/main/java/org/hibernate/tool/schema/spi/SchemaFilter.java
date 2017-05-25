@@ -7,9 +7,9 @@
 package org.hibernate.tool.schema.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.model.relational.MappedSequence;
-import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.MappedNamespace;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.metamodel.model.relational.spi.Sequence;
+import org.hibernate.metamodel.model.relational.spi.Table;
 
 /**
  * Defines a filter for Hibernate's schema tooling.
@@ -27,7 +27,7 @@ public interface SchemaFilter {
 	 *
 	 * @return {@code true} to include the namespace; {@code false} otherwise
 	 */
-	boolean includeNamespace(MappedNamespace namespace);
+	boolean includeNamespace(Namespace namespace);
 
 	/**
 	 * Should the given table be included?  If {@code true}, the
@@ -38,7 +38,7 @@ public interface SchemaFilter {
 	 *
 	 * @return {@code true} to include the table; {@code false} otherwise
 	 */
-	boolean includeTable(MappedTable table);
+	boolean includeTable(Table table);
 
 	/**
 	 * Should the given sequence be included?  If {@code true}, the
@@ -49,6 +49,6 @@ public interface SchemaFilter {
 	 *
 	 * @return {@code true} to include the sequence; {@code false} otherwise
 	 */
-	boolean includeSequence(MappedSequence sequence);
+	boolean includeSequence(Sequence sequence);
 
 }

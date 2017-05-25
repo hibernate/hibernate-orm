@@ -10,8 +10,8 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.naming.Identifier;
-import org.hibernate.boot.model.relational.QualifiedName;
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.naming.spi.QualifiedName;
+import org.hibernate.naming.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;

@@ -8,6 +8,7 @@ package org.hibernate.metamodel.model.relational.spi;
 
 import java.util.Collection;
 
+
 /**
  * Represents a table in the mapping in terms of what ANSI SQL calls a
  * "table reference".  Specifically, this models the commonality between
@@ -21,6 +22,8 @@ public interface Table {
 	PrimaryKey getPrimaryKey();
 
 	boolean isAbstract();
+
+	boolean isExportable();
 
 	Collection<Column> getColumns();
 	Column getColumn(String name);

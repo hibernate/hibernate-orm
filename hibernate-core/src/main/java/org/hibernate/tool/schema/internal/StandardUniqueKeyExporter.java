@@ -6,10 +6,9 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.Constraint;
-import org.hibernate.mapping.UniqueKey;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
@@ -18,7 +17,7 @@ import org.hibernate.tool.schema.spi.Exporter;
  * 
  * @author Brett Meyer
  */
-public class StandardUniqueKeyExporter implements Exporter<Constraint> {
+public class StandardUniqueKeyExporter implements Exporter<UniqueKey> {
 	private final Dialect dialect;
 
 	public StandardUniqueKeyExporter(Dialect dialect) {
@@ -26,21 +25,21 @@ public class StandardUniqueKeyExporter implements Exporter<Constraint> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(Constraint constraint, Metadata metadata) {
+	public String[] getSqlCreateStrings(UniqueKey uniqueKey, RuntimeModelCreationContext modelCreationContext) {
 		return new String[] {
 				dialect.getUniqueDelegate().getAlterTableToAddUniqueKeyCommand(
-						(UniqueKey) constraint,
-						metadata
+						uniqueKey,
+						modelCreationContext
 				)
 		};
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Constraint constraint, Metadata metadata) {
+	public String[] getSqlDropStrings(UniqueKey uniqueKey, RuntimeModelCreationContext modelCreationContext) {
 		return new String[] {
 				dialect.getUniqueDelegate().getAlterTableToDropUniqueKeyCommand(
-						(UniqueKey) constraint,
-						metadata
+						uniqueKey,
+						modelCreationContext
 				)
 		};
 	}

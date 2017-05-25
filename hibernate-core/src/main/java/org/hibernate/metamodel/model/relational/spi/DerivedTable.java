@@ -25,6 +25,11 @@ public class DerivedTable extends AbstractTable {
 	}
 
 	@Override
+	public boolean isExportable() {
+		return false;
+	}
+
+	@Override
 	public String toString() {
 		return "DerivedTable(" + expression + ")";
 	}

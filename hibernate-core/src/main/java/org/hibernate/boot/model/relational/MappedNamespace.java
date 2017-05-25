@@ -17,6 +17,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.Table;
+import org.hibernate.naming.NamespaceName;
 import org.hibernate.naming.spi.RelationalNamespace;
 
 /**

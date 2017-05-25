@@ -6,9 +6,10 @@
  */
 package org.hibernate.dialect.unique;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.UniqueKey;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 
 /**
  * Informix requires the constraint name to come last on the alter table.
@@ -24,15 +25,21 @@ public class InformixUniqueDelegate extends DefaultUniqueDelegate {
 	// legacy model ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey,  RuntimeModelCreationContext modelCreationContext) {
+		final JdbcEnvironment jdbcEnvironment = getJdbcEnvironment( modelCreationContext );
+
 		// Do this here, rather than allowing UniqueKey/Constraint to do it.
 		// We need full, simplified control over whether or not it happens.
-		final String tableName = metadata.getDatabase().getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
+		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
 				uniqueKey.getTable().getQualifiedTableName(),
-				metadata.getDatabase().getJdbcEnvironment().getDialect()
+				jdbcEnvironment.getDialect()
 		);
-		final String constraintName = dialect.quote( uniqueKey.getName() );
+		final String constraintName = uniqueKey.getName().render( dialect );
 		return "alter table " + tableName + " add constraint " + uniqueConstraintSql( uniqueKey ) + " constraint " + constraintName;
+	}
+
+	private JdbcEnvironment getJdbcEnvironment(RuntimeModelCreationContext modelCreationContext){
+		return modelCreationContext.getDatabaseModel().getJdbcEnvironment();
 	}
 
 }

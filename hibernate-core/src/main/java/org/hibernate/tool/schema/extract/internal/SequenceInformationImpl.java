@@ -6,7 +6,7 @@
  */
 package org.hibernate.tool.schema.extract.internal;
 
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.naming.QualifiedSequenceName;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
 /**

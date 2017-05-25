@@ -115,7 +115,7 @@ public abstract class ObjectNameNormalizer {
 	 * that typically might be needed for accessing:<ul>
 	 *     <li>{@link org.hibernate.boot.model.naming.ImplicitNamingStrategy}</li>
 	 *     <li>{@link org.hibernate.boot.model.naming.PhysicalNamingStrategy}</li>
-	 *     <li>{@link org.hibernate.boot.model.relational.Database}</li>
+	 *     <li>{@link Database}</li>
 	 * </ul>
 	 *
 	 * @return The current building context

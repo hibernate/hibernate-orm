@@ -20,6 +20,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.naming.Identifier;
+import org.hibernate.naming.NamespaceName;
 
 /**
  * @author Steve Ebersole

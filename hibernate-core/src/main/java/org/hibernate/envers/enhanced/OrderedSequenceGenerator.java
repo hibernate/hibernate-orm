@@ -8,7 +8,7 @@ package org.hibernate.envers.enhanced;
 
 import java.util.Properties;
 
-import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.naming.spi.QualifiedName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.enhanced.DatabaseStructure;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;

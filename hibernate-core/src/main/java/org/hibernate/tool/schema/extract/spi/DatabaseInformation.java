@@ -7,10 +7,10 @@
 package org.hibernate.tool.schema.extract.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.model.relational.NamespaceName;
+import org.hibernate.naming.NamespaceName;
 import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.MappedNamespace;
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.naming.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 
 /**

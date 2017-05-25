@@ -20,7 +20,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.model.relational.MappedNamespace;
-import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.naming.spi.QualifiedName;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;

@@ -6,9 +6,21 @@
  */
 package org.hibernate.metamodel.model.relational.spi;
 
+import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.naming.QualifiedSequenceName;
+import org.hibernate.naming.Identifier;
+
 /**
  * @author Steve Ebersole
  */
-public interface Sequence {
+public interface Sequence extends Exportable {
 	String getLoggableView();
+
+	int getInitialValue();
+
+	int getIncrementSize();
+
+	Identifier getName();
+
+	QualifiedSequenceName getQaulifiedName();
 }

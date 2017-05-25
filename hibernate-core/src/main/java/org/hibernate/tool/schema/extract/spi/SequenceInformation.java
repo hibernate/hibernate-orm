@@ -6,7 +6,7 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.naming.QualifiedSequenceName;
 
 /**
  * Access to information about existing sequences.

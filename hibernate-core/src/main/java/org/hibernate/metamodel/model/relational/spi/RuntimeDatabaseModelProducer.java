@@ -67,7 +67,7 @@ public class RuntimeDatabaseModelProducer {
 		}
 
 		private DatabaseModel execute() {
-			final DatabaseModelImpl runtimeDatabaseModel = new DatabaseModelImpl();
+			final DatabaseModelImpl runtimeDatabaseModel = new DatabaseModelImpl( bootDatabaseModel.getJdbcEnvironment() );
 
 			for ( MappedNamespace bootModelNamespace : bootDatabaseModel.getNamespaces() ) {
 				final NamespaceImpl runtimeModelNamespace = generateNamespace(

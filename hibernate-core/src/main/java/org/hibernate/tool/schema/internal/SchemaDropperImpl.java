@@ -16,14 +16,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.Exportable;
-import org.hibernate.boot.model.relational.MappedSequence;
-import org.hibernate.boot.model.relational.MappedTable;
-import org.hibernate.boot.model.relational.MappedNamespace;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.metamodel.model.creation.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.model.relational.spi.DatabaseModel;
+import org.hibernate.metamodel.model.relational.spi.Namespace;
+import org.hibernate.metamodel.model.relational.spi.Table;
+import org.hibernate.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -97,7 +95,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 	@Override
 	public void doDrop(
-			Metadata metadata,
+			RuntimeModelCreationContext modelCreationContext,
 			ExecutionOptions options,
 			SourceDescriptor sourceDescriptor,
 			TargetDescriptor targetDescriptor) {
@@ -109,11 +107,11 @@ public class SchemaDropperImpl implements SchemaDropper {
 		final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 		final GenerationTarget[] targets = tool.buildGenerationTargets( targetDescriptor, jdbcContext, options.getConfigurationValues(), true );
 
-		doDrop( metadata, options, jdbcContext.getDialect(), sourceDescriptor, targets );
+		doDrop( modelCreationContext, options, jdbcContext.getDialect(), sourceDescriptor, targets );
 	}
 
 	public void doDrop(
-			Metadata metadata,
+			RuntimeModelCreationContext modelCreationContext,
 			ExecutionOptions options,
 			Dialect dialect,
 			SourceDescriptor sourceDescriptor,
@@ -123,7 +121,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 
 		try {
-			performDrop( metadata, options, dialect, sourceDescriptor, targets );
+			performDrop( modelCreationContext, options, dialect, sourceDescriptor, targets );
 		}
 		finally {
 			for ( GenerationTarget target : targets ) {
@@ -138,7 +136,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	private void performDrop(
-			Metadata metadata,
+			RuntimeModelCreationContext modelCreationContext,
 			ExecutionOptions options,
 			Dialect dialect,
 			SourceDescriptor sourceDescriptor,
@@ -151,15 +149,15 @@ public class SchemaDropperImpl implements SchemaDropper {
 			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
 		}
 		else if ( sourceDescriptor.getSourceType() == SourceType.METADATA ) {
-			dropFromMetadata( metadata, options, dialect, formatter, targets );
+			dropFromCreationContext( modelCreationContext, options, dialect, formatter, targets );
 		}
 		else if ( sourceDescriptor.getSourceType() == SourceType.METADATA_THEN_SCRIPT ) {
-			dropFromMetadata( metadata, options, dialect, formatter, targets );
+			dropFromCreationContext( modelCreationContext, options, dialect, formatter, targets );
 			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
 		}
 		else {
 			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
-			dropFromMetadata( metadata, options, dialect, formatter, targets );
+			dropFromCreationContext( modelCreationContext, options, dialect, formatter, targets );
 		}
 	}
 
@@ -180,13 +178,13 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 	}
 
-	private void dropFromMetadata(
-			Metadata metadata,
+	private void dropFromCreationContext(
+			RuntimeModelCreationContext modelCreationContext,
 			ExecutionOptions options,
 			Dialect dialect,
 			Formatter formatter,
 			GenerationTarget... targets) {
-		final Database database = metadata.getDatabase();
+		final DatabaseModel database = modelCreationContext.getDatabaseModel();
 		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
 		boolean tryToDropCatalogs = false;
@@ -213,14 +211,14 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 
 			applySqlStrings(
-					dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, metadata ),
+					dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, modelCreationContext ),
 					formatter,
 					options,
 					targets
 			);
 		}
 
-		for ( MappedNamespace namespace : database.getNamespaces() ) {
+		for ( Namespace namespace : database.getNamespaces() ) {
 
 			if ( !schemaFilter.includeNamespace( namespace ) ) {
 				continue;
@@ -230,8 +228,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 			applyConstraintDropping( namespace, metadata, formatter, options, targets );
 
 			// now it's safe to drop the tables
-			for ( MappedTable table : namespace.getTables() ) {
-				if ( !table.isPhysicalTable() ) {
+			for ( Table table : namespace.getTables() ) {
+				if ( !table.isExportable() ) {
 					continue;
 				}
 				if ( !schemaFilter.includeTable( table ) ) {
@@ -410,7 +408,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 		};
 
-		dropFromMetadata( metadata, options, dialect, FormatStyle.NONE.getFormatter(), target );
+		dropFromCreationContext( metadata, options, dialect, FormatStyle.NONE.getFormatter(), target );
 
 		return target.commands;
 	}

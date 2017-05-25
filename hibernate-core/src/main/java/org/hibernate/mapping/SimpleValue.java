@@ -75,11 +75,6 @@ public class SimpleValue implements KeyValue {
 	private boolean cascadeDeleteEnabled;
 
 
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return null;
-	}
-
 	public SimpleValue(MetadataBuildingContext buildingContext) {
 		this.buildingContext = buildingContext;
 	}
@@ -92,6 +87,11 @@ public class SimpleValue implements KeyValue {
 	@Override
 	public MetadataBuildingContext getMetadataBuildingContext() {
 		return buildingContext;
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return basicTypeParameters.getJavaTypeDescriptor();
 	}
 
 	/**
@@ -119,7 +119,10 @@ public class SimpleValue implements KeyValue {
 		if ( !columns.contains(column) ) {
 			columns.add(column);
 		}
-		column.setValue(this);
+		column.setSqlTypeDescriptor( getBasicTypeParameters().getSqlTypeDescriptor() );
+		if ( getTable() != null ) {
+			column.setTableName( getTable().getNameIdentifier() );
+		}
 		column.setTypeIndex( columns.size() - 1 );
 	}
 

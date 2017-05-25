@@ -49,33 +49,6 @@ public class OneToOne extends ToOne {
 	public void setEntityName(String propertyName) {
 		this.entityName = entityName==null ? null : entityName.intern();
 	}
-	
-	public Type getType() throws MappingException {
-		if ( getColumnIterator().hasNext() ) {
-			return getBuildingContext().getBootstrapContext().getTypeConfiguration().specialOneToOne(
-					getReferencedEntityName(), 
-					foreignKeyType,
-					referenceToPrimaryKey, 
-					referencedPropertyName,
-					isLazy(),
-					isUnwrapProxy(),
-					entityName,
-					propertyName
-			);
-		}
-		else {
-			return getBuildingContext().getBootstrapContext().getTypeConfiguration().oneToOne(
-					getReferencedEntityName(), 
-					foreignKeyType,
-					referenceToPrimaryKey, 
-					referencedPropertyName,
-					isLazy(),
-					isUnwrapProxy(),
-					entityName,
-					propertyName
-			);
-		}
-	}
 
 	public void createForeignKey() throws MappingException {
 		if ( constrained && referencedPropertyName==null) {

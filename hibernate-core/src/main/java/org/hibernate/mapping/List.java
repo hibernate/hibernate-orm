@@ -26,11 +26,6 @@ public class List extends IndexedCollection {
 		super( metadata, owner );
 	}
 
-	public CollectionType getDefaultCollectionType() throws MappingException {
-		return getMetadata().getTypeConfiguration()
-				.list( getRole(), getReferencedPropertyName() );
-	}
-
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

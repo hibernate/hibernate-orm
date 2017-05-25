@@ -83,6 +83,8 @@ public abstract class IndexedCollection extends Collection {
 			);
 		}
 	}
+
+
 	
 	public boolean isList() {
 		return false;

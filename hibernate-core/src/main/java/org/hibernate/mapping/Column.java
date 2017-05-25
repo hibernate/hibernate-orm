@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -18,6 +17,7 @@ import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
 import org.hibernate.naming.Identifier;
 import org.hibernate.sql.Template;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 
 /**
  * A column of a relational database table
@@ -33,7 +33,6 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private int length = DEFAULT_LENGTH;
 	private int precision = DEFAULT_PRECISION;
 	private int scale = DEFAULT_SCALE;
-	private Value value;
 	private int typeIndex;
 	private Identifier name;
 	private boolean nullable = true;
@@ -47,11 +46,11 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private String defaultValue;
 	private String customWrite;
 	private String customRead;
+	private SqlTypeDescriptor sqlTypeDescriptor;
+	private Identifier tableName;
 
-	public Column() {
-	}
 
-	public Column(String columnName) {
+	public Column(String columnName){
 		setName( Identifier.toIdentifier( columnName ) );
 	}
 
@@ -67,16 +66,20 @@ public class Column implements Selectable, Serializable, Cloneable {
 		this.length = length;
 	}
 
-	public Value getValue() {
-		return value;
-	}
-
 	public void setValue(Value value) {
 		this.value = value;
 	}
 
 	public Identifier getName() {
 		return name;
+	}
+
+	public Identifier getTableName(){
+		return tableName;
+	}
+
+	public void setTableName(Identifier tableName) {
+		this.tableName = tableName;
 	}
 
 	public void setName(Identifier columnName) {
@@ -136,29 +139,6 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 		return name.equals( column.name );
 	}
-
-	public int getSqlTypeCode(Mapping mapping) throws MappingException {
-		Type type = getValue().getType();
-		try {
-			int sqlTypeCode = type.sqlTypes()[getTypeIndex()];
-			if ( getSqlTypeCode() != null && getSqlTypeCode() != sqlTypeCode ) {
-				throw new MappingException( "SQLType code's does not match. mapped as " + sqlTypeCode + " but is " + getSqlTypeCode() );
-			}
-			return sqlTypeCode;
-		}
-		catch (Exception e) {
-			throw new MappingException(
-					"Could not determine type for column " +
-							name +
-							" of type " +
-							type.getClass().getName() +
-							": " +
-							e.getClass().getName(),
-					e
-			);
-		}
-	}
-
 	/**
 	 * Returns the underlying columns sqltypecode.
 	 * If null, it is because the sqltype code is unknown.
@@ -251,6 +231,15 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	@Override
+	public SqlTypeDescriptor getSqlTypeDescriptor() {
+		return sqlTypeDescriptor;
+	}
+
+	public void setSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor){
+		this.sqlTypeDescriptor = sqlTypeDescriptor;
+	}
+
+	@Override
 	public org.hibernate.metamodel.model.relational.spi.Column generateRuntimeColumn(
 			org.hibernate.metamodel.model.relational.spi.Table runtimeTable,
 			PhysicalNamingStrategy namingStrategy,
@@ -320,12 +309,11 @@ public class Column implements Selectable, Serializable, Cloneable {
 	 */
 	@Override
 	public Column clone() {
-		Column copy = new Column();
+		Column copy = new Column( name );
+		copy.setTableName( tableName );
 		copy.setLength( length );
 		copy.setScale( scale );
-		copy.setValue( value );
 		copy.setTypeIndex( typeIndex );
-		copy.setName( name );
 		copy.setNullable( nullable );
 		copy.setPrecision( precision );
 		copy.setUnique( unique );
@@ -337,6 +325,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		copy.setDefaultValue( defaultValue );
 		copy.setCustomRead( customRead );
 		copy.setCustomWrite( customWrite );
+		copy.setSqlTypeDescriptor( sqlTypeDescriptor );
 		return copy;
 	}
 

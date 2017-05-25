@@ -55,8 +55,8 @@ public class NamingStrategyTest extends BaseNonConfigCoreFunctionalTestCase {
     public void testDatabaseTableNames() {
         PersistentClass classMapping = metadata().getEntityBinding( Item.class.getName() );
         Column secTabColumn = (Column) classMapping.getProperty( "specialPrice" ).getColumnIterator().next();
-        assertEquals( "TAB_ITEMS_SEC", secTabColumn.getValue().getTable().getName() );
+        assertEquals( "TAB_ITEMS_SEC", secTabColumn.getTableName().getText() );
         Column tabColumn = (Column) classMapping.getProperty( "price" ).getColumnIterator().next();
-        assertEquals( "TAB_ITEMS", tabColumn.getValue().getTable().getName() );
+        assertEquals( "TAB_ITEMS", tabColumn.getTableName().getText() );
     }
 }

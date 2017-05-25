@@ -184,11 +184,10 @@ public class OneToOneSecondPass implements SecondPass {
 					Iterator otherSideJoinKeyColumns = otherSideJoin.getKey().getColumnIterator();
 					while ( otherSideJoinKeyColumns.hasNext() ) {
 						Column column = (Column) otherSideJoinKeyColumns.next();
-						Column copy = new Column();
+						Column copy = new Column(column.getName());
 						copy.setLength( column.getLength() );
 						copy.setScale( column.getScale() );
-						copy.setValue( manyToOne );
-						copy.setName( column.getQuotedName() );
+						copy.setTableName( column.getTableName() );
 						copy.setNullable( column.isNullable() );
 						copy.setPrecision( column.getPrecision() );
 						copy.setUnique( column.isUnique() );
@@ -196,6 +195,7 @@ public class OneToOneSecondPass implements SecondPass {
 						copy.setCheckConstraint( column.getCheckConstraint() );
 						copy.setComment( column.getComment() );
 						copy.setDefaultValue( column.getDefaultValue() );
+						copy.setSqlTypeDescriptor( column.getSqlTypeDescriptor() );
 						manyToOne.addColumn( copy );
 					}
 					mappedByJoin.addProperty( prop );
@@ -297,11 +297,10 @@ public class OneToOneSecondPass implements SecondPass {
 		Iterator mappedByColumns = otherSideProperty.getValue().getColumnIterator();
 		while ( mappedByColumns.hasNext() ) {
 			Column column = (Column) mappedByColumns.next();
-			Column copy = new Column();
+			Column copy = new Column(column.getName());
 			copy.setLength( column.getLength() );
 			copy.setScale( column.getScale() );
-			copy.setValue( key );
-			copy.setName( column.getQuotedName() );
+			copy.setTableName( column.getTableName() );
 			copy.setNullable( column.isNullable() );
 			copy.setPrecision( column.getPrecision() );
 			copy.setUnique( column.isUnique() );
@@ -309,6 +308,7 @@ public class OneToOneSecondPass implements SecondPass {
 			copy.setCheckConstraint( column.getCheckConstraint() );
 			copy.setComment( column.getComment() );
 			copy.setDefaultValue( column.getDefaultValue() );
+			copy.setSqlTypeDescriptor( column.getSqlTypeDescriptor() );
 			key.addColumn( copy );
 		}
 		persistentClass.addJoin( join );

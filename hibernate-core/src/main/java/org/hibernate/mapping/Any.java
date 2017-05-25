@@ -40,14 +40,6 @@ public class Any extends SimpleValue {
 		this.identifierTypeName = identifierType;
 	}
 
-	public Type getType() throws MappingException {
-		return getBuildingContext().getMetadataCollector().any(
-				keyTypeResolver.resolveBasicType(),
-				discriminatorTypeResolver.resolveBasicType(),
-				discriminatorMap
-		);
-	}
-
 	public void setTypeByReflection(String propertyClass, String propertyName) {}
 
 	public String getMetaType() {

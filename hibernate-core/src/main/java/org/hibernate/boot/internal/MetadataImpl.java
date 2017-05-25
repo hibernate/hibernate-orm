@@ -193,11 +193,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return identifierGeneratorFactory;
-	}
-
-	@Override
 	public java.util.Collection<PersistentClass> getEntityBindings() {
 		return entityBindingMap.values();
 	}
@@ -351,43 +346,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return mappedSuperclassMap == null
 				? Collections.emptySet()
 				: new HashSet<>( mappedSuperclassMap.values() );
-	}
-
-	@Override
-	public Type getIdentifierType(String entityName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
-		}
-		return pc.getIdentifier().getType();
-	}
-
-	@Override
-	public String getIdentifierPropertyName(String entityName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
-		}
-		if ( !pc.hasIdentifierProperty() ) {
-			return null;
-		}
-		return pc.getIdentifierProperty().getName();
-	}
-
-	@Override
-	public Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
-		final PersistentClass pc = entityBindingMap.get( entityName );
-		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
-		}
-		Property prop = pc.getReferencedProperty( propertyName );
-		if ( prop == null ) {
-			throw new MappingException(
-					"property not known: " +
-							entityName + '.' + propertyName
-			);
-		}
-		return prop.getType();
 	}
 
 	@Override

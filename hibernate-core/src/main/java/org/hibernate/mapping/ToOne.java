@@ -39,7 +39,6 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	}
 
 	public abstract void createForeignKey() throws MappingException;
-	public abstract Type getType() throws MappingException;
 
 	public String getReferencedPropertyName() {
 		return referencedPropertyName;

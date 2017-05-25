@@ -14,6 +14,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.FilterConfiguration;
@@ -167,8 +168,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return role;
 	}
 
-	public abstract CollectionType getDefaultCollectionType() throws MappingException;
-
 	public boolean isPrimitiveArray() {
 		return false;
 	}
@@ -287,6 +286,11 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return fetchMode;
 	}
 
+	@Override
+	public MetadataBuildingContext getMetadataBuildingContext() {
+		return ;
+	}
+
 	public void setFetchMode(FetchMode fetchMode) {
 		this.fetchMode = fetchMode;
 	}
@@ -380,20 +384,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	public int getColumnSpan() {
 		return 0;
-	}
-
-	public Type getType() throws MappingException {
-		return getCollectionType();
-	}
-
-	public CollectionType getCollectionType() {
-		if ( typeName == null ) {
-			return getDefaultCollectionType();
-		}
-		else {
-			return metadata.getTypeConfiguration()
-					.customCollection( typeName, typeParameters, role, referencedPropertyName );
-		}
 	}
 
 	public boolean isNullable() {

@@ -105,9 +105,6 @@ public class RelationalObjectBinder {
 			ColumnNamingDelegate columnNamingDelegate) {
 		Table table = simpleValue.getTable();
 
-		final Column column = new Column();
-		column.setValue( simpleValue );
-
 		// resolve column name
 		final Identifier logicalName;
 		if ( StringHelper.isNotEmpty( columnSource.getName() ) ) {
@@ -117,10 +114,12 @@ public class RelationalObjectBinder {
 			logicalName = columnNamingDelegate.determineImplicitName( sourceDocument );
 		}
 
-		column.setName( logicalName );
+		final Column column = new Column( logicalName );
+		column.setSqlTypeDescriptor( simpleValue.getBasicTypeParameters().getSqlTypeDescriptor() );
 
 		if ( table != null ) {
 			table.addColumn( column );
+			column.setTableName( table.getNameIdentifier() );
 		}
 
 		if ( columnSource.getSizeSource() != null ) {

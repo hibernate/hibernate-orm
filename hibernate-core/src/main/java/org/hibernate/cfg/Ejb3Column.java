@@ -364,10 +364,14 @@ public class Ejb3Column {
 			value.addFormula( formula );
 		}
 		else {
-			getMappingColumn().setValue( value );
-			value.addColumn( getMappingColumn() );
-			value.getTable().addColumn( getMappingColumn() );
 			table = value.getTable();
+			final Column mappingColumn = getMappingColumn();
+			mappingColumn.setSqlTypeDescriptor( value.getBasicTypeParameters().getSqlTypeDescriptor() );
+			if(table!= null) {
+				mappingColumn.setTableName( table.getNameIdentifier());
+			}
+			value.addColumn( mappingColumn );
+			table.addColumn( mappingColumn );
 		}
 	}
 

@@ -1047,7 +1047,7 @@ The two possible strategies are defined by the https://docs.jboss.org/hibernate/
 CASCADE:: Use the database FOREIGN KEY cascade capabilities.
 NO_ACTION:: Take no action.
 
-//TODO: Add example
+See the <<chapters/pc/PersistenceContext.adoc#pc-cascade-on-delete, `@OnDelete` cascade>> chapter for more info.
 
 [[annotations-hibernate-optimisticlock]]
 ==== `@OptimisticLock`

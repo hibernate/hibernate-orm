@@ -696,6 +696,7 @@ Even if just the `Person` parent entity was persisted, Hibernate has managed to 
 
 The `CascadeType.MERGE` allows us to merge a child entity along with the parent one.
 
+[[pc-cascade-merge-example]]
 .`CascadeType.MERGE` example
 ====
 [source, JAVA, indent=0]
@@ -755,6 +756,7 @@ Such a use case requires the use of the `PessimisticLockScope.EXTENDED` value of
 
 However, `CascadeType.LOCK` allows us to reattach a parent entity along with its children to the currently running Persistence Context.
 
+[[pc-cascade-lock-example]]
 .`CascadeType.LOCK` example
 ====
 [source, JAVA, indent=0]
@@ -769,6 +771,7 @@ include::{sourcedir}/CascadeLockTest.java[tags=pc-cascade-lock-example]
 The `CascadeType.REFRESH` is used to propagate the refresh operation from a parent entity to a child.
 The refresh operation will discard the current entity state, and it will override it using the one loaded from the database.
 
+[[pc-cascade-refresh-example]]
 .`CascadeType.REFRESH` example
 ====
 [source, JAVA, indent=0]
@@ -790,6 +793,7 @@ In the aforementioned example, you can see that both the `Person` and `Phone` en
 The `CascadeType.REPLICATE` is to replicate both the parent and the child entities.
 The replicate operation allows you to synchronize entities coming from different sources of data.
 
+[[pc-cascade-replicate-example]]
 .`CascadeType.REPLICATE` example
 ====
 [source, JAVA, indent=0]
@@ -805,3 +809,42 @@ include::{extrasdir}/pc-cascade-replicate-example.sql[]
 
 As illustrated by the SQL statements being generated, both the `Person` and `Phone` entities are replicated to the underlying database rows.
 
+[[pc-cascade-on-delete]]
+==== `@OnDelete` cascade
+
+While the previous cascade types propagate entity state transitions, the `@OnDelete` cascade is a DDL-level FK feature which allows you
+to remove a child record whenever the parent row is deleted.
+
+So, when annotating the `@ManyToOne` association with `@OnDelete( action = OnDeleteAction.CASCADE )`,
+the automatic schema generator will apply the ON DELETE CASCADE SQL directive to the Foreign Key declaration,
+as illustrated by the following example.
+
+[[pc-cascade-on-delete-mapping-example]]
+.`@OnDelete` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-cascade-on-delete-mapping-example.sql[]
+----
+====
+
+Now, you can just remove the `Person` entity, and the associated `Phone` is going to be removed automatically.
+
+[[pc-cascade-on-delete-example]]
+.`@OnDelete` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/pc-cascade-on-delete-example.sql[]
+----
+====

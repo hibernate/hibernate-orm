@@ -578,7 +578,7 @@ The http://docs.oracle.com/javaee/7/api/javax/persistence/UniqueConstraint.html[
 
 The http://docs.oracle.com/javaee/7/api/javax/persistence/Version.html[`@Version`] annotation is used to specify the version attribute used for optimistic locking.
 
-See the <<chapters/domain/entity.adoc#entity-pojo-optlock, Optimistic locking mapping>> section for more info.
+See the <<chapters/locking/Locking.adoc#locking-optimistic, Optimistic locking mapping>> section for more info.
 
 [[annotations-hibernate]]
 === Hibernate annotations
@@ -1068,7 +1068,7 @@ VERSION:: The implicit optimistic locking mechanism is using a dedicated version
 ALL:: The implicit optimistic locking mechanism is using *all* attributes as part of an expanded WHERE clause restriction for the `UPDATE` and `DELETE` SQL statements.
 DIRTY:: The implicit optimistic locking mechanism is using the *dirty* attributes (the attributes that were modified) as part of an expanded WHERE clause restriction for the `UPDATE` and `DELETE` SQL statements.
 
-See the <<chapters/domain/entity.adoc#entity-pojo-optlock-versionless, Versionless optimistic locking>> section for more info.
+See the <<chapters/locking/Locking.adoc#locking-optimistic-versionless, Versionless optimistic locking>> section for more info.
 
 [[annotations-hibernate-orderby]]
 ==== `@OrderBy`

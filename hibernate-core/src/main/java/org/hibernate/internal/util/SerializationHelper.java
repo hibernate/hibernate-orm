@@ -17,9 +17,9 @@ import java.io.OutputStream;
 import java.io.Serializable;
 
 import org.hibernate.Hibernate;
+import org.hibernate.exception.SerializationException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.type.SerializationException;
 
 /**
  * <p>Assists with the serialization process and performs additional functionality based

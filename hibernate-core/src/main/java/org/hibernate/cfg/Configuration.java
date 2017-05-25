@@ -56,7 +56,7 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.SerializationException;
+import org.hibernate.exception.SerializationException;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 

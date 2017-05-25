@@ -34,7 +34,7 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.query.spi.QueryMessageLogger;
-import org.hibernate.type.SerializationException;
+import org.hibernate.exception.SerializationException;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.Type;
 

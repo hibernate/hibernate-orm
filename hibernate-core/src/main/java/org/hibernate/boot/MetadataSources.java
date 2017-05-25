@@ -38,11 +38,11 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuilderFactory;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
+import org.hibernate.exception.SerializationException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.SerializationException;
 import org.w3c.dom.Document;
 
 /**
@@ -359,7 +359,7 @@ public class MetadataSources implements Serializable {
 	 *
 	 * @return The dom "deserialized" from the cached file.
 	 *
-	 * @throws org.hibernate.type.SerializationException Indicates a problem deserializing the cached dom tree
+	 * @throws org.hibernate.exception.SerializationException Indicates a problem deserializing the cached dom tree
 	 * @throws java.io.FileNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
 	public MetadataSources addCacheableFileStrictly(File file) throws SerializationException, FileNotFoundException {

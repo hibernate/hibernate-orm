@@ -1054,7 +1054,7 @@ See the <<chapters/pc/PersistenceContext.adoc#pc-cascade-on-delete, `@OnDelete` 
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLock.html[`@OptimisticLock`] annotation is used to specify if the current annotated attribute will trigger an entity version increment upon being modified.
 
-//TODO: Add example
+See the <<chapters/locking/Locking.adoc#locking-optimistic-exclude-attribute, Excluding attributes>> section for more info.
 
 [[annotations-hibernate-optimisticlocking]]
 ==== `@OptimisticLocking`

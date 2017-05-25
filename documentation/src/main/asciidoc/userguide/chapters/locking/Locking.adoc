@@ -142,6 +142,51 @@ include::{extrasdir}/locking-optimistic-version-timestamp-source-persist-example
 ----
 ====
 
+[[locking-optimistic-exclude-attribute]]
+===== Excluding attributes
+
+By default, every entity attribute modification is going to trigger a version incrementation.
+If there is an entity property which should not bump up the entity version,
+then you need to annotate it with the Hibernate https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLock.html[`@OptimisticLock`] annotation,
+as illustrated in the following example.
+
+[[locking-optimistic-exclude-attribute-mapping-example]]
+.@OptimisticLock mapping example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/OptimisticLockTest.java[tags=locking-optimistic-exclude-attribute-mapping-example]
+----
+====
+
+This way, if one tread modifies the `Phone` number while a second thread increments the `callCount` attribute,
+the two concurrent transactions are not going to conflict as illustrated by the following example.
+
+[[locking-optimistic-exclude-attribute-example]]
+.@OptimisticLock exlude attribute example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/OptimisticLockTest.java[tags=locking-optimistic-exclude-attribute-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/locking-optimistic-exclude-attribute-example.sql[]
+----
+====
+
+When Bob changes the `Phone` entity `callCount`, the entity version is not bumped up.
+That's why Alice's UPDATE succeeds since the entity version is still 0, even if Bob has changed the record
+since Alice loaded it.
+
+[WARNING]
+====
+Although there is no conflict between Bob and Alice, Alice's UPDATE overrides Bob's change to the `callCount` attribute.
+
+For this reason, you should only use this feature if you can accommodate lost updates on the excluded entity properties.
+====
+
 [[locking-optimistic-versionless]]
 ===== Versionless optimistic locking
 

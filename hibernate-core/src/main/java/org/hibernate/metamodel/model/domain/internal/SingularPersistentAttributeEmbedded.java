@@ -53,12 +53,13 @@ public class SingularPersistentAttributeEmbedded<O,J>
 			String attributeName,
 			PropertyAccess propertyAccess,
 			Disposition disposition,
-			Component<J> embeddedMapping,
+			Component embeddedMapping,
 			RuntimeModelCreationContext context) {
 		super( declaringType, attributeName, propertyAccess, disposition, true, embeddedMapping );
 
 		this.embeddedDescriptor = embeddedMapping.makeRuntimeDescriptor(
 				declaringType,
+				attributeName,
 				context
 		);
 	}

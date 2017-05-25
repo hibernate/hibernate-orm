@@ -6,14 +6,9 @@
  */
 package org.hibernate.engine.internal;
 
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.persister.entity.Joinable;
-import org.hibernate.persister.entity.OuterJoinLoadable;
-import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.type.spi.AssociationType;
 
 /**
  * Helper for dealing with joins.

@@ -7,7 +7,6 @@
 package org.hibernate.cfg.annotations;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -53,9 +52,7 @@ import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
 import org.hibernate.type.spi.BasicTypeParameters;
-import org.hibernate.type.spi.BasicTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.usertype.DynamicParameterizedType;
 
 import org.jboss.logging.Logger;
 
@@ -503,31 +500,31 @@ public class SimpleValueBinder<T> {
 			simpleValue.setTypeName( timeStampVersionType );
 		}
 		
-		if ( simpleValue.getTypeName() != null && simpleValue.getTypeName().length() > 0
-				&& simpleValue.getBuildingContext().basicType( simpleValue.getTypeName() ) == null ) {
-			try {
-				Class typeClass = buildingContext.getBootstrapContext().getClassLoaderAccess().classForName( simpleValue.getTypeName() );
-
-				if ( typeClass != null && DynamicParameterizedType.class.isAssignableFrom( typeClass ) ) {
-					Properties parameters = simpleValue.getTypeParameters();
-					if ( parameters == null ) {
-						parameters = new Properties();
-					}
-					parameters.put( DynamicParameterizedType.IS_DYNAMIC, Boolean.toString( true ) );
-					parameters.put( DynamicParameterizedType.RETURNED_CLASS, returnedClassName );
-					parameters.put( DynamicParameterizedType.IS_PRIMARY_KEY, Boolean.toString( key ) );
-
-					parameters.put( DynamicParameterizedType.ENTITY, persistentClassName );
-					parameters.put( DynamicParameterizedType.XPROPERTY, xproperty );
-					parameters.put( DynamicParameterizedType.PROPERTY, xproperty.getName() );
-					parameters.put( DynamicParameterizedType.ACCESS_TYPE, accessType.getType() );
-					simpleValue.setTypeParameters( parameters );
-				}
-			}
-			catch (ClassLoadingException e) {
-				throw new MappingException( "Could not determine type for: " + simpleValue.getTypeName(), e );
-			}
-		}
+//		if ( simpleValue.getTypeName() != null && simpleValue.getTypeName().length() > 0
+//				&& simpleValue.getBuildingContext().basicType( simpleValue.getTypeName() ) == null ) {
+//			try {
+//				Class typeClass = buildingContext.getBootstrapContext().getClassLoaderAccess().classForName( simpleValue.getTypeName() );
+//
+//				if ( typeClass != null && DynamicParameterizedType.class.isAssignableFrom( typeClass ) ) {
+//					Properties parameters = simpleValue.getTypeParameters();
+//					if ( parameters == null ) {
+//						parameters = new Properties();
+//					}
+//					parameters.put( DynamicParameterizedType.IS_DYNAMIC, Boolean.toString( true ) );
+//					parameters.put( DynamicParameterizedType.RETURNED_CLASS, returnedClassName );
+//					parameters.put( DynamicParameterizedType.IS_PRIMARY_KEY, Boolean.toString( key ) );
+//
+//					parameters.put( DynamicParameterizedType.ENTITY, persistentClassName );
+//					parameters.put( DynamicParameterizedType.XPROPERTY, xproperty );
+//					parameters.put( DynamicParameterizedType.PROPERTY, xproperty.getName() );
+//					parameters.put( DynamicParameterizedType.ACCESS_TYPE, accessType.getType() );
+//					simpleValue.setTypeParameters( parameters );
+//				}
+//			}
+//			catch (ClassLoadingException e) {
+//				throw new MappingException( "Could not determine type for: " + simpleValue.getTypeName(), e );
+//			}
+//		}
 
 	}
 

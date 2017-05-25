@@ -9,8 +9,6 @@ package org.hibernate.mapping;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -32,6 +30,7 @@ public class UniqueKey extends Constraint {
 		return columnOrderMap;
 	}
 
+	@Override
 	public String generatedConstraintNamePrefix() {
 		return "UK_";
 	}

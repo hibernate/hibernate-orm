@@ -6,7 +6,7 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
  * A bag permits duplicates, so it has no primary key
@@ -14,8 +14,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
  * @author Gavin King
  */
 public class Bag extends Collection {
-	public Bag(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
+	public Bag(MetadataBuildingContext buildingContext, PersistentClass owner) {
+		super( buildingContext, owner );
 	}
 
 	void createPrimaryKey() {

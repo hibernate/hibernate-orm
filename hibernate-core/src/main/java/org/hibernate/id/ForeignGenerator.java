@@ -14,10 +14,8 @@ import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.spi.EntityType;
 import org.hibernate.type.Type;
 
 /**
@@ -63,14 +61,14 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 	}
 
 
-	@Override
-	public void configure(Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		propertyName = params.getProperty( "property" );
-		entityName = params.getProperty( ENTITY_NAME );
-		if ( propertyName==null ) {
-			throw new MappingException( "param named \"property\" is required for foreign id generation strategy" );
-		}
-	}
+//	@Override
+//	public void configure(Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+//		propertyName = params.getProperty( "property" );
+//		entityName = params.getProperty( ENTITY_NAME );
+//		if ( propertyName==null ) {
+//			throw new MappingException( "param named \"property\" is required for foreign id generation strategy" );
+//		}
+//	}
 
 	@Override
 	public Serializable generate(SharedSessionContractImplementor sessionImplementor, Object object) {

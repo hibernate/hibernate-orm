@@ -149,7 +149,6 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.IsThisStillNeededException;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Constraint;
@@ -166,6 +165,8 @@ import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
+import org.hibernate.naming.Identifier;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.type.Type;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -1017,7 +1018,7 @@ public final class AnnotationBinder {
 			);
 			propertyHolder.setInIdClass( null );
 			inferredData = new PropertyPreloadedData(
-					propertyAccessor, PropertyPath.IDENTIFIER_MAPPER_PROPERTY, compositeClass
+					propertyAccessor, NavigablePath.IDENTIFIER_MAPPER_PROPERTY, compositeClass
 			);
 			Component mapper = fillComponent(
 					propertyHolder,
@@ -1050,7 +1051,7 @@ public final class AnnotationBinder {
 			}
 
 			Property property = new Property();
-			property.setName( PropertyPath.IDENTIFIER_MAPPER_PROPERTY );
+			property.setName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
 			property.setUpdateable( false );
 			property.setInsertable( false );
 			property.setValue( mapper );
@@ -3066,7 +3067,7 @@ public final class AnnotationBinder {
 			}
 			else {
 				Iterator idColumns = identifier.getColumnIterator();
-				List<String> idColumnNames = new ArrayList<>();
+				List<Identifier> idColumnNames = new ArrayList<>();
 				org.hibernate.mapping.Column currentColumn;
 				if ( identifier.getColumnSpan() != joinColumns.length ) {
 					mapToPK = false;

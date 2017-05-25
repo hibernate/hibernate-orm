@@ -13,24 +13,12 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.tuple.HydratedCompoundValueHandler;
-import org.hibernate.persister.walking.internal.FetchStrategyHelper;
-import org.hibernate.persister.walking.internal.StandardAnyTypeDefinition;
-import org.hibernate.persister.walking.spi.AnyMappingDefinition;
-import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.AssociationKey;
-import org.hibernate.persister.walking.spi.CollectionDefinition;
-import org.hibernate.persister.walking.spi.EntityDefinition;
-import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.tuple.AbstractNonIdentifierAttribute;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.tuple.NonIdentifierAttribute;
-import org.hibernate.type.AnyType;
-import org.hibernate.type.spi.AssociationType;
 
 /**
  * @author Steve Ebersole

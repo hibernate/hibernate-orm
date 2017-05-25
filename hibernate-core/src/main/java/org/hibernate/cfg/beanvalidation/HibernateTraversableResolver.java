@@ -16,8 +16,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.EmbeddedType;
 import org.hibernate.type.Type;
 
 /**

@@ -6,7 +6,6 @@
  */
 package org.hibernate.cfg;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.Column;
@@ -22,13 +21,13 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * PropertyHolder for composites (Embeddable/Embedded).
@@ -351,7 +350,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			if ( userPropertyName != null ) result = super.getOverriddenColumn( userPropertyName );
 		}
 		if ( result == null ) {
-			String userPropertyName = extractUserPropertyName( PropertyPath.IDENTIFIER_MAPPER_PROPERTY, propertyName );
+			String userPropertyName = extractUserPropertyName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY, propertyName );
 			if ( userPropertyName != null ) result = super.getOverriddenColumn( userPropertyName );
 		}
 		return result;

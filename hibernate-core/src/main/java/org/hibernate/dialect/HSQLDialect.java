@@ -106,6 +106,8 @@ public class HSQLDialect extends Dialect {
 	 */
 	private int hsqldbVersion = 180;
 	private final LimitHandler limitHandler;
+	private final String timestampWithTimeZone;
+	private final String timeWithTimeZone;
 
 
 	/**
@@ -252,6 +254,20 @@ public class HSQLDialect extends Dialect {
 
 		// function templates
 		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
+		
+		if ( hsqldbVersion >= 240 ) {
+			// starting with 2.4.0 TIMESTAMP WITH TIME ZONE and TIME WITH TIME ZONE are supported
+			timeWithTimeZone = "time with time zone";
+			timestampWithTimeZone = "timestamp with time zone";
+		}
+		else {
+			timeWithTimeZone = "time";
+			timestampWithTimeZone = "timestamp";
+		}
+
+		// when registration in superclass happens the instance variable is null
+		registerColumnType( Types.TIME_WITH_TIMEZONE, getTimeWithTimeZone() );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, getTimestampWithTimeZone() );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
@@ -569,6 +585,16 @@ public class HSQLDialect extends Dialect {
 	public String getCurrentTimestampSQLFunctionName() {
 		// the standard SQL function name is current_timestamp...
 		return "current_timestamp";
+	}
+
+	@Override
+	protected String getTimeWithTimeZone() {
+		return timeWithTimeZone;
+	}
+
+	@Override
+	protected String getTimestampWithTimeZone() {
+		return timestampWithTimeZone;
 	}
 
 	/**

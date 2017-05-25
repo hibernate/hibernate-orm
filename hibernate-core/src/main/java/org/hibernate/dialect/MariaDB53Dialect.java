@@ -60,4 +60,9 @@ public class MariaDB53Dialect extends MariaDBDialect {
 		// from_unixtime(), timestamp() are functions that return TIMESTAMP that do not support a
 		// fractional seconds precision argument (so there's no need to override them here):
 	}
+
+	@Override
+	protected String getTimestampWithTimeZone() {
+		return "datetime(6)";
+	}
 }

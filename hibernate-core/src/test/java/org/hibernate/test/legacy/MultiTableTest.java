@@ -30,9 +30,12 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
+
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 
@@ -247,6 +250,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect( value = H2Dialect.class, comment = "Feature not supported: MVCC=TRUE && FOR UPDATE && JOIN")
 	public void testMultiTable() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -490,7 +494,7 @@ public class MultiTableTest extends LegacyTestCase {
 
 		// HANA currently requires specifying table name by 'FOR UPDATE of t1.c1'
 		// if there are more than one tables/views/subqueries in the FROM clause
-		if ( !( getDialect() instanceof AbstractHANADialect ) ) {
+		if ( !( getDialect() instanceof AbstractHANADialect || getDialect() instanceof H2Dialect ) ) {
 			s = openSession();
 			t = s.beginTransaction();
 			multi = (Multi) s.load( Top.class, multiId, LockMode.UPGRADE );

@@ -9,7 +9,7 @@ package org.hibernate.spatial.dialect.oracle;
 import java.util.List;
 
 import org.hibernate.QueryException;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 
@@ -18,7 +18,7 @@ import org.hibernate.type.Type;
  *
  * @author Karel Maesen
  */
-class SDOObjectMethod implements SQLFunction {
+class SDOObjectMethod implements SqmFunctionTemplate {
 
 	private final Type type;
 
@@ -32,7 +32,7 @@ class SDOObjectMethod implements SQLFunction {
 	/*
 		  * (non-Javadoc)
 		  *
-		  * @see org.hibernate.dialect.function.SQLFunction#getReturnType(org.hibernate.type.Type,
+		  * @see org.hibernate.query.sqm.produce.spi.SQLFunction#getReturnType(org.hibernate.type.Type,
 		  *      org.hibernate.engine.Mapping)
 		  */
 
@@ -44,7 +44,7 @@ class SDOObjectMethod implements SQLFunction {
 	/*
 		  * (non-Javadoc)
 		  *
-		  * @see org.hibernate.dialect.function.SQLFunction#hasArguments()
+		  * @see org.hibernate.query.sqm.produce.spi.SQLFunction#hasArguments()
 		  */
 
 	public boolean hasArguments() {
@@ -54,7 +54,7 @@ class SDOObjectMethod implements SQLFunction {
 	/*
 		  * (non-Javadoc)
 		  *
-		  * @see org.hibernate.dialect.function.SQLFunction#hasParenthesesIfNoArguments()
+		  * @see org.hibernate.query.sqm.produce.spi.SQLFunction#hasParenthesesIfNoArguments()
 		  */
 
 	public boolean hasParenthesesIfNoArguments() {
@@ -68,7 +68,7 @@ class SDOObjectMethod implements SQLFunction {
 	/*
 		  * (non-Javadoc)
 		  *
-		  * @see org.hibernate.dialect.function.SQLFunction#render(java.util.List,
+		  * @see org.hibernate.query.sqm.produce.spi.SQLFunction#render(java.util.List,
 		  *      org.hibernate.engine.SessionFactoryImplementor)
 		  */
 

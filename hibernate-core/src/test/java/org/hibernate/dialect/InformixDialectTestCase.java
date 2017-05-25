@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
@@ -46,8 +46,8 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10800")
 	public void testCurrentTimestampFunction() {
-		Map<String, SQLFunction> functions = dialect.getFunctions();
-		SQLFunction sqlFunction = functions.get( "current_timestamp" );
+		Map<String, SqmFunctionTemplate> functions = dialect.getFunctions();
+		SqmFunctionTemplate sqlFunction = functions.get( "current_timestamp" );
 
 		Type firstArgumentType = null;
 		Mapping mapping = null;
@@ -62,8 +62,8 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10800")
 	public void testCurrentDateFunction() {
-		Map<String, SQLFunction> functions = dialect.getFunctions();
-		SQLFunction sqlFunction = functions.get( "current_date" );
+		Map<String, SqmFunctionTemplate> functions = dialect.getFunctions();
+		SqmFunctionTemplate sqlFunction = functions.get( "current_date" );
 
 		Type firstArgumentType = null;
 		Mapping mapping = null;

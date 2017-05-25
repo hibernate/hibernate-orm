@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.expression.function;
 
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
  * Marker interface to more readily identify "aggregate functions".
@@ -14,6 +15,9 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  * @author Steve Ebersole
  */
 public interface AggregateFunctionSqmExpression extends FunctionSqmExpression {
+	@Override
+	BasicValuedExpressableType getExpressionType();
+
 	SqmExpression getArgument();
 	boolean isDistinct();
 }

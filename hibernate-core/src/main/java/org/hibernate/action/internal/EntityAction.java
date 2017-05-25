@@ -122,13 +122,13 @@ public abstract class EntityAction
 	 *
 	 * @return The entity persister
 	 */
-	public final EntityDescriptor getPersister() {
+	public final EntityDescriptor<?> getPersister() {
 		return persister;
 	}
 
 	@Override
 	public final Serializable[] getPropertySpaces() {
-		return persister.getPropertySpaces();
+		return persister.getAffectedTableNames();
 	}
 
 	@Override
@@ -152,7 +152,7 @@ public abstract class EntityAction
 		}
 		else {
 			//then by id
-			return persister.getIdentifierType().getComparator().compare( id, action.id );
+			return persister.getIdentifierType().getJavaTypeDescriptor().getComparator().compare( id, action.id );
 		}
 	}
 

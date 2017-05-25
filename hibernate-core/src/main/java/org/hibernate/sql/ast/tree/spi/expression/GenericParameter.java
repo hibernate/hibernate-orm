@@ -31,7 +31,4 @@ public interface GenericParameter extends ParameterSpec, JdbcParameterBinder, Ex
 
 	QueryParameterBinding resolveBinding(ParameterBindingContext context);
 
-	interface AllowableType<T> extends ExpressableType<T> {
-		int getNumberOfJdbcParametersForRestriction();
-	}
 }

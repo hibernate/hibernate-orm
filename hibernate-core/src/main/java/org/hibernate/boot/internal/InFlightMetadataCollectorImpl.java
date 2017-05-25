@@ -70,7 +70,7 @@ import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -143,7 +143,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final Map<String, FetchProfile> fetchProfileMap = new HashMap<>();
 	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap = new HashMap<>();
 
-	private Map<String, SQLFunction> sqlFunctionMap;
+	private Map<String, SqmFunctionTemplate> sqlFunctionMap;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// All the annotation-processing-specific state :(
@@ -173,7 +173,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 		this.identifierGeneratorFactory = options.getServiceRegistry().getService( MutableIdentifierGeneratorFactory.class );
 
-		for ( Map.Entry<String, SQLFunction> sqlFunctionEntry : bootstrapContext.getSqlFunctions().entrySet() ) {
+		for ( Map.Entry<String, SqmFunctionTemplate> sqlFunctionEntry : bootstrapContext.getSqlFunctions().entrySet() ) {
 			if ( sqlFunctionMap == null ) {
 				// we need this to be a ConcurrentHashMap for the one we ultimately pass along to the SF
 				// but is this the reference that gets passed along?
@@ -228,7 +228,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public Map<String, SQLFunction> getSqlFunctionMap() {
+	public Map<String, SqmFunctionTemplate> getSqlFunctionMap() {
 		return sqlFunctionMap;
 	}
 

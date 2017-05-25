@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -46,9 +47,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.spi.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.sql.NotYetImplementedException;
 
 /**
  * Responsible for maintaining the queue of actions related to events.
@@ -1134,22 +1133,28 @@ public class ActionQueue {
 		 */
 		private void addParentChildEntityNames(AbstractEntityInsertAction action, BatchIdentifier batchIdentifier) {
 			Object[] propertyValues = action.getState();
-			Type[] propertyTypes = action.getPersister().getClassMetadata().getPropertyTypes();
 
-			for ( int i = 0; i < propertyValues.length; i++ ) {
-				Object value = propertyValues[i];
-				Type type = propertyTypes[i];
-				if ( type.isEntityType() && value != null ) {
-					EntityType entityType = (EntityType) type;
-					String entityName = entityType.getName();
-					batchIdentifier.getParentEntityNames().add( entityName );
-				}
-				else if ( type.isCollectionType() && value != null ) {
-					CollectionType collectionType = (CollectionType) type;
-					String entityName = collectionType.getAssociatedEntityName( ( (SessionImplementor) action.getSession() ).getSessionFactory() );
-					batchIdentifier.getChildEntityNames().add( entityName );
-				}
+			for ( Attribute<?, ?> attribute : action.getPersister().getAttributes() ) {
+
 			}
+
+			// todo (6.0) : relate PersistentAttribute with array indices used in state arrays and elsewhere
+			throw new NotYetImplementedException(  );
+//
+//			for ( int i = 0; i < propertyValues.length; i++ ) {
+//				Object value = propertyValues[i];
+//				Type type = propertyTypes[i];
+//				if ( type.isEntityType() && value != null ) {
+//					EntityType entityType = (EntityType) type;
+//					String entityName = entityType.getName();
+//					batchIdentifier.getParentEntityNames().add( entityName );
+//				}
+//				else if ( type.isCollectionType() && value != null ) {
+//					CollectionType collectionType = (CollectionType) type;
+//					String entityName = collectionType.getAssociatedEntityName( ( (SessionImplementor) action.getSession() ).getSessionFactory() );
+//					batchIdentifier.getChildEntityNames().add( entityName );
+//				}
+//			}
 		}
 
 		private void addToBatch(BatchIdentifier batchIdentifier, AbstractEntityInsertAction action) {

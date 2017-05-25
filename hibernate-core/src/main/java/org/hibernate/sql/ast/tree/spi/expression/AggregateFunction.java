@@ -6,12 +6,17 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
+import org.hibernate.sql.ast.produce.spi.AllowableFunctionReturnType;
+
 /**
  * Marker interface to more readily identify "aggregate functions".
  *
  * @author Steve Ebersole
  */
 public interface AggregateFunction extends Function {
+	@Override
+	AllowableFunctionReturnType getType();
+
 	Expression getArgument();
 	boolean isDistinct();
 }

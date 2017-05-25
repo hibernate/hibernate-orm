@@ -14,6 +14,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
@@ -27,12 +28,12 @@ import org.hibernate.type.spi.BasicType;
 public class NonStandardFunction implements ScalarFunction {
 	private final String functionName;
 	private final List<Expression> arguments;
-	private final BasicValuedExpressableType resultType;
+	private final AllowableFunctionReturnType resultType;
 
 	public NonStandardFunction(
 			String functionName,
-			List<Expression> arguments,
-			BasicValuedExpressableType resultType) {
+			AllowableFunctionReturnType resultType,
+			List<Expression> arguments) {
 		this.functionName = functionName;
 		this.arguments = arguments;
 		this.resultType = resultType;
@@ -40,12 +41,12 @@ public class NonStandardFunction implements ScalarFunction {
 
 	public NonStandardFunction(
 			String functionName,
-			BasicType resultType,
+			BasicValuedExpressableType resultType,
 			Expression... arguments) {
 		this(
 				functionName,
-				Arrays.asList( arguments ),
-				resultType
+				resultType,
+				Arrays.asList( arguments )
 		);
 	}
 
@@ -58,7 +59,7 @@ public class NonStandardFunction implements ScalarFunction {
 	}
 
 	@Override
-	public BasicValuedExpressableType getType() {
+	public AllowableFunctionReturnType getType() {
 		return resultType;
 	}
 

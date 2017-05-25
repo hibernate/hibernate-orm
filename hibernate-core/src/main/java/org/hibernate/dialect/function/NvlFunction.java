@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.type.Type;
 
 /**
@@ -17,7 +18,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class NvlFunction implements SQLFunction {
+public class NvlFunction implements SqmFunctionTemplate {
 	@Override
 	public boolean hasArguments() {
 		return true;

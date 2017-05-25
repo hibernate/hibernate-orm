@@ -24,7 +24,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Cache71Dialect;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 
@@ -551,7 +551,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 	private String locateAppropriateDialectFunctionNameForAliasTest() {
 		for (Iterator itr = getDialect().getFunctions().entrySet().iterator(); itr.hasNext(); ) {
 			final Map.Entry entry = (Map.Entry) itr.next();
-			final SQLFunction function = (SQLFunction) entry.getValue();
+			final SqmFunctionTemplate function = (SqmFunctionTemplate) entry.getValue();
 			if ( !function.hasArguments() && !function.hasParenthesesIfNoArguments() ) {
 				return (String) entry.getKey();
 			}

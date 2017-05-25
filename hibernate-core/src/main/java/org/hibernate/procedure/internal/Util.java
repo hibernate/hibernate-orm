@@ -164,7 +164,7 @@ public class Util {
 		 *
 		 * @param queryReturns The query returns
 		 */
-		void addQueryReturns(QueryResult... queryReturns);
+		void addQueryResult(QueryResult... queryReturns);
 
 		/**
 		 * Callback to add query spaces indicated by the result set mapping(s)
@@ -183,22 +183,24 @@ public class Util {
 	public static void resolveResultClasses(
 			ResultClassesResolutionContext context,
 			Class... resultClasses) {
-		int i = 0;
-		for ( Class resultClass : resultClasses ) {
-			final EntityDescriptor entityDescriptor = context.getSessionFactory().getTypeConfiguration().findEntityPersister( resultClass.getName() );
-			context.addQuerySpaces( (String[]) entityDescriptor.getQuerySpaces() );
-			context.addQueryReturns(
-					new QueryResultEntityImpl(
-							entityDescriptor,
-							null,
-							// todo : SqlSelection map
-							null,
-							new NavigablePath( entityDescriptor.getEntityName() ),
 
-							creationContext
-					)
-			);
-		}
+//		int i = 0;
+//		for ( Class resultClass : resultClasses ) {
+//			final EntityDescriptor entityDescriptor = context.getSessionFactory().getTypeConfiguration().findEntityPersister( resultClass.getName() );
+//			context.addQuerySpaces( (String[]) entityDescriptor.getAffectedTableNames() );
+//			context.addQueryResult( entityDescriptor.generateQueryResult(  )
+//					new QueryResultEntityImpl(
+//							entityDescriptor,
+//							null,
+//							// todo : SqlSelection map
+//							null,
+//							new NavigablePath( entityDescriptor.getEntityName() ),
+//							null
+//					)
+//			);
+//		}
+
+		throw new NotYetImplementedException(  );
 	}
 
 	private static class QueryReturnResolver {
@@ -227,56 +229,57 @@ public class Util {
 			//		aliases here as a key to resolve SqlSelections
 			//	todo : implement ^^
 
-			for ( NativeSQLQueryReturn nativeQueryReturn : mapping.getQueryReturns() ) {
-				if ( nativeQueryReturn instanceof NativeSQLQueryScalarReturn ) {
-					final NativeSQLQueryScalarReturn rtn = (NativeSQLQueryScalarReturn) nativeQueryReturn;
-					final QueryResultScalarImpl scalarReturn = new QueryResultScalarImpl(
-							null,
-							resolveSqlSelection( (BasicType) rtn.getType(), rtn.getColumnAlias() ),
-							null,
-							(BasicType) rtn.getType()
-					);
-					context.addQueryReturns( scalarReturn );
-				}
-				else if ( nativeQueryReturn instanceof NativeSQLQueryConstructorReturn ) {
-					final NativeSQLQueryConstructorReturn rtn = (NativeSQLQueryConstructorReturn) nativeQueryReturn;
-					final QueryResultDynamicInstantiationImpl dynamicInstantiationReturn = new QueryResultDynamicInstantiationImpl(
-							new DynamicInstantiation( rtn.getTargetClass() ),
-							null,
-							buildDynamicInstantiationAssembler( rtn )
-					);
-					context.addQueryReturns( dynamicInstantiationReturn );
-				}
-				else if ( nativeQueryReturn instanceof NativeSQLQueryCollectionReturn ) {
-					final NativeSQLQueryCollectionReturn rtn = (NativeSQLQueryCollectionReturn) nativeQueryReturn;
-					final String role = rtn.getOwnerEntityName() + '.' + rtn.getOwnerProperty();
-					final PersistentCollectionDescriptor persister = context.getSessionFactory().getTypeConfiguration().findCollectionPersister( role );
-					//context.addQueryReturns( ... );
-					throw new NotYetImplementedException( "Collection Returns not yet implemented" );
-				}
-				else if ( nativeQueryReturn instanceof NativeSQLQueryRootReturn ) {
-					final NativeSQLQueryRootReturn rtn = (NativeSQLQueryRootReturn) nativeQueryReturn;
-					final EntityDescriptor persister = context.getSessionFactory().getTypeConfiguration().findEntityPersister( rtn.getReturnEntityName() );
-					final QueryResultEntityImpl entityReturn = new QueryResultEntityImpl(
-							null,
-							persister,
-							null,
-							// todo : SqlSelections
-							null,
-							new NavigablePath( persister.getEntityName() ),
-							null
-					);
-					context.addQueryReturns( entityReturn );
-					if ( fetchParentMap == null ) {
-						fetchParentMap = new HashMap<>();
-					}
-					fetchParentMap.put( rtn.getAlias(), entityReturn );
-				}
-				else if ( nativeQueryReturn instanceof NativeSQLQueryJoinReturn ) {
-					final NativeSQLQueryJoinReturn rtn = (NativeSQLQueryJoinReturn) nativeQueryReturn;
-					// tod finish
-				}
-			}
+			throw new NotYetImplementedException(  );
+//			for ( NativeSQLQueryReturn nativeQueryReturn : mapping.getQueryReturns() ) {
+//				if ( nativeQueryReturn instanceof NativeSQLQueryScalarReturn ) {
+//					final NativeSQLQueryScalarReturn rtn = (NativeSQLQueryScalarReturn) nativeQueryReturn;
+//					final QueryResultScalarImpl scalarReturn = new QueryResultScalarImpl(
+//							null,
+//							resolveSqlSelection( (BasicType) rtn.getType(), rtn.getColumnAlias() ),
+//							null,
+//							(BasicType) rtn.getType()
+//					);
+//					context.addQueryReturns( scalarReturn );
+//				}
+//				else if ( nativeQueryReturn instanceof NativeSQLQueryConstructorReturn ) {
+//					final NativeSQLQueryConstructorReturn rtn = (NativeSQLQueryConstructorReturn) nativeQueryReturn;
+//					final QueryResultDynamicInstantiationImpl dynamicInstantiationReturn = new QueryResultDynamicInstantiationImpl(
+//							new DynamicInstantiation( rtn.getTargetClass() ),
+//							null,
+//							buildDynamicInstantiationAssembler( rtn )
+//					);
+//					context.addQueryReturns( dynamicInstantiationReturn );
+//				}
+//				else if ( nativeQueryReturn instanceof NativeSQLQueryCollectionReturn ) {
+//					final NativeSQLQueryCollectionReturn rtn = (NativeSQLQueryCollectionReturn) nativeQueryReturn;
+//					final String role = rtn.getOwnerEntityName() + '.' + rtn.getOwnerProperty();
+//					final PersistentCollectionDescriptor persister = context.getSessionFactory().getTypeConfiguration().findCollectionPersister( role );
+//					//context.addQueryReturns( ... );
+//					throw new NotYetImplementedException( "Collection Returns not yet implemented" );
+//				}
+//				else if ( nativeQueryReturn instanceof NativeSQLQueryRootReturn ) {
+//					final NativeSQLQueryRootReturn rtn = (NativeSQLQueryRootReturn) nativeQueryReturn;
+//					final EntityDescriptor persister = context.getSessionFactory().getTypeConfiguration().findEntityPersister( rtn.getReturnEntityName() );
+//					final QueryResultEntityImpl entityReturn = new QueryResultEntityImpl(
+//							null,
+//							persister,
+//							null,
+//							// todo : SqlSelections
+//							null,
+//							new NavigablePath( persister.getEntityName() ),
+//							null
+//					);
+//					context.addQueryReturns( entityReturn );
+//					if ( fetchParentMap == null ) {
+//						fetchParentMap = new HashMap<>();
+//					}
+//					fetchParentMap.put( rtn.getAlias(), entityReturn );
+//				}
+//				else if ( nativeQueryReturn instanceof NativeSQLQueryJoinReturn ) {
+//					final NativeSQLQueryJoinReturn rtn = (NativeSQLQueryJoinReturn) nativeQueryReturn;
+//					// tod finish
+//				}
+//			}
 		}
 
 		private SqlSelection resolveSqlSelection(BasicType ormType, String alias) {

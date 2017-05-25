@@ -36,8 +36,8 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.spi.EntityGraphImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
@@ -551,14 +551,14 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 
 	@Override
 	public NativeQueryImplementor<R> addSynchronizedEntityName(String entityName) throws MappingException {
-		addQuerySpaces( getSession().getFactory().getTypeConfiguration().resolveEntityPersister( entityName ).getQuerySpaces() );
+		addQuerySpaces( getSession().getFactory().getTypeConfiguration().resolveEntityPersister( entityName ).getAffectedTableNames() );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public NativeQueryImplementor<R> addSynchronizedEntityClass(Class entityClass) throws MappingException {
-		addQuerySpaces( getSession().getFactory().getTypeConfiguration().resolveEntityPersister( entityClass ).getQuerySpaces() );
+		addQuerySpaces( getSession().getFactory().getTypeConfiguration().resolveEntityPersister( entityClass ).getAffectedTableNames() );
 		return this;
 	}
 
@@ -640,7 +640,7 @@ public class NativeQueryImpl<R> extends AbstractQuery<R> implements NativeQueryI
 	}
 
 	@Override
-	protected void applyEntityGraphQueryHint(String hintName, EntityGraphImpl entityGraph) {
+	protected void applyEntityGraphQueryHint(String hintName, EntityGraphImplementor entityGraph) {
 		// technically we *could* support EntityGraph applied to NativeQuery
 		// 		but that would mean that loading the eager state that was not loaded by
 		// 		the SQL would need to be performed as a follow-up (N+1)

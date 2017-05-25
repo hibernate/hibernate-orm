@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.type.Type;
 
 /**
@@ -54,12 +54,12 @@ public class AggregateProjection extends SimpleProjection {
 		return functionFragment + " as y" + loc + '_';
 	}
 
-	protected SQLFunction getFunction(CriteriaQuery criteriaQuery) {
+	protected SqmFunctionTemplate getFunction(CriteriaQuery criteriaQuery) {
 		return getFunction( getFunctionName(), criteriaQuery );
 	}
 
-	protected SQLFunction getFunction(String functionName, CriteriaQuery criteriaQuery) {
-		final SQLFunction function = criteriaQuery.getFactory()
+	protected SqmFunctionTemplate getFunction(String functionName, CriteriaQuery criteriaQuery) {
+		final SqmFunctionTemplate function = criteriaQuery.getFactory()
 				.getSqlFunctionRegistry()
 				.findSQLFunction( functionName );
 		if ( function == null ) {

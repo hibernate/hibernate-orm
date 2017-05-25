@@ -42,7 +42,7 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.engine.config.internal.ConfigurationServiceImpl;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
@@ -139,7 +139,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		);
 
 		if ( metadata.getSqlFunctionMap() != null ) {
-			for ( Map.Entry<String, SQLFunction> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
+			for ( Map.Entry<String, SqmFunctionTemplate> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
 				applySqlFunction( sqlFunctionEntry.getKey(), sqlFunctionEntry.getValue() );
 			}
 		}
@@ -484,9 +484,9 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applySqlFunction(String registrationName, SQLFunction sqlFunction) {
+	public SessionFactoryBuilder applySqlFunction(String registrationName, SqmFunctionTemplate sqlFunction) {
 		if ( this.options.sqlFunctions == null ) {
-			this.options.sqlFunctions = new HashMap<String, SQLFunction>();
+			this.options.sqlFunctions = new HashMap<String, SqmFunctionTemplate>();
 		}
 		this.options.sqlFunctions.put( registrationName, sqlFunction );
 		return this;
@@ -624,7 +624,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean wrapResultSetsEnabled;
 		private TimeZone jdbcTimeZone;
 
-		private Map<String, SQLFunction> sqlFunctions;
+		private Map<String, SqmFunctionTemplate> sqlFunctions;
 
 		public SessionFactoryOptionsStateStandardImpl(
 				StandardServiceRegistry serviceRegistry,
@@ -1260,8 +1260,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
-		public Map<String, SQLFunction> getCustomSqlFunctionMap() {
-			return sqlFunctions == null ? Collections.<String, SQLFunction>emptyMap() : sqlFunctions;
+		public Map<String, SqmFunctionTemplate> getCustomSqlFunctionMap() {
+			return sqlFunctions == null ? Collections.<String, SqmFunctionTemplate>emptyMap() : sqlFunctions;
 		}
 
 		@Override
@@ -1588,7 +1588,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public Map<String, SQLFunction> getCustomSqlFunctionMap() {
+	public Map<String, SqmFunctionTemplate> getCustomSqlFunctionMap() {
 		return options.getCustomSqlFunctionMap();
 	}
 

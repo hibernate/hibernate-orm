@@ -30,7 +30,7 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TeradataDialect;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.ReturnMetadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -780,7 +780,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		assertTranslation( "from Animal an where an.bodyWeight > abs(3/5)" );
 		assertTranslation( "from Animal an where an.bodyWeight > abs(3+5)" );
 		assertTranslation( "from Animal an where an.bodyWeight > abs(3*5)" );
-		SQLFunction concat = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "concat");
+		SqmFunctionTemplate concat = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "concat");
 		List list = new ArrayList();
 		list.add("'fat'");
 		list.add("'skinny'");

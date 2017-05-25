@@ -150,4 +150,6 @@ public interface SqlAstWalker {
 	void visitNullnessPredicate(NullnessPredicate nullnessPredicate);
 
 	void visitRelationalPredicate(RelationalPredicate relationalPredicate);
+
+	void visitSelfRenderingExpression(SelfRenderingExpression expression);
 }

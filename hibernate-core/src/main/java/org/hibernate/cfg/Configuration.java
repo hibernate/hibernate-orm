@@ -43,7 +43,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
@@ -102,7 +102,7 @@ public class Configuration {
 	private Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
 	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 
-	private Map<String, SQLFunction> sqlFunctions;
+	private Map<String, SqmFunctionTemplate> sqlFunctions;
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 	private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
 
@@ -677,7 +677,7 @@ public class Configuration {
 			}
 		}
 		if ( sqlFunctions != null ) {
-			for ( Map.Entry<String, SQLFunction> entry : sqlFunctions.entrySet() ) {
+			for ( Map.Entry<String, SqmFunctionTemplate> entry : sqlFunctions.entrySet() ) {
 				metadataBuilder.applySqlFunction( entry.getKey(), entry.getValue() );
 			}
 		}
@@ -733,13 +733,13 @@ public class Configuration {
 
 
 
-	public Map<String,SQLFunction> getSqlFunctions() {
+	public Map<String,SqmFunctionTemplate> getSqlFunctions() {
 		return sqlFunctions;
 	}
 
-	public void addSqlFunction(String functionName, SQLFunction function) {
+	public void addSqlFunction(String functionName, SqmFunctionTemplate function) {
 		if ( sqlFunctions == null ) {
-			sqlFunctions = new HashMap<String, SQLFunction>();
+			sqlFunctions = new HashMap<String, SqmFunctionTemplate>();
 		}
 		sqlFunctions.put( functionName, function );
 	}

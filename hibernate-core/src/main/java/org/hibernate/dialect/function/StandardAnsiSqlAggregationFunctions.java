@@ -15,6 +15,7 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.Type;
 
@@ -214,7 +215,7 @@ public class StandardAnsiSqlAggregationFunctions {
 	 *
 	 * @param functionMap The map of functions to push to
 	 */
-	public static void primeFunctionMap(Map<String, SQLFunction> functionMap) {
+	public static void primeFunctionMap(Map<String, SqmFunctionTemplate> functionMap) {
 		functionMap.put( AvgFunction.INSTANCE.getName(), AvgFunction.INSTANCE );
 		functionMap.put( CountFunction.INSTANCE.getName(), CountFunction.INSTANCE );
 		functionMap.put( MaxFunction.INSTANCE.getName(), MaxFunction.INSTANCE );

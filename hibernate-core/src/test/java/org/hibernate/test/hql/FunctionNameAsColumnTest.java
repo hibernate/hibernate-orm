@@ -17,7 +17,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
@@ -182,7 +182,7 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testGetMultiColumnSameNameAsNoArgFunctionHQL() throws Exception {
-		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
+		SqmFunctionTemplate function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
 		if ( function == null || function.hasParenthesesIfNoArguments() ) {
 			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
 			return;
@@ -228,7 +228,7 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testGetMultiColumnSameNameAsNoArgFunctionCriteria() {
-		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
+		SqmFunctionTemplate function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
 		if ( function == null || function.hasParenthesesIfNoArguments() ) {
 			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
 			return;
@@ -274,7 +274,7 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNoArgFcnAndColumnSameNameAsNoArgFunctionHQL() {
-		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
+		SqmFunctionTemplate function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
 		if ( function == null || function.hasParenthesesIfNoArguments() ) {
 			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
 			return;

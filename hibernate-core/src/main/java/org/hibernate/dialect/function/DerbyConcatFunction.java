@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.Type;
 
@@ -28,7 +29,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class DerbyConcatFunction implements SQLFunction {
+public class DerbyConcatFunction implements SqmFunctionTemplate {
 	/**
 	 * {@inheritDoc}
 	 * <p/>

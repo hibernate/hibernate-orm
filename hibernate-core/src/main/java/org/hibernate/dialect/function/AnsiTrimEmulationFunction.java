@@ -5,10 +5,11 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.dialect.function;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
- * A {@link SQLFunction} implementation that emulates the ANSI SQL trim function
+ * A {@link SqmFunctionTemplate} implementation that emulates the ANSI SQL trim function
  * on dialects which do not support the full definition.  However, this function
  * definition does assume the availability of ltrim, rtrim, and replace functions
  * which it uses in various combinations to emulate the desired ANSI trim()
@@ -146,14 +147,14 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 				"' '" +
 			")";
 
-	private final SQLFunction leadingSpaceTrim;
-	private final SQLFunction trailingSpaceTrim;
-	private final SQLFunction bothSpaceTrim;
-	private final SQLFunction bothSpaceTrimFrom;
+	private final SqmFunctionTemplate leadingSpaceTrim;
+	private final SqmFunctionTemplate trailingSpaceTrim;
+	private final SqmFunctionTemplate bothSpaceTrim;
+	private final SqmFunctionTemplate bothSpaceTrimFrom;
 
-	private final SQLFunction leadingTrim;
-	private final SQLFunction trailingTrim;
-	private final SQLFunction bothTrim;
+	private final SqmFunctionTemplate leadingTrim;
+	private final SqmFunctionTemplate trailingTrim;
+	private final SqmFunctionTemplate bothTrim;
 
 	/**
 	 * Constructs a new AnsiTrimEmulationFunction using {@link #LTRIM}, {@link #RTRIM}, and {@link #REPLACE}
@@ -221,7 +222,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected SQLFunction resolveBothSpaceTrimFunction() {
+	protected SqmFunctionTemplate resolveBothSpaceTrimFunction() {
 		return bothSpaceTrim;
 	}
 
@@ -229,7 +230,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected SQLFunction resolveBothSpaceTrimFromFunction() {
+	protected SqmFunctionTemplate resolveBothSpaceTrimFromFunction() {
 		return bothSpaceTrimFrom;
 	}
 
@@ -237,7 +238,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected SQLFunction resolveLeadingSpaceTrimFunction() {
+	protected SqmFunctionTemplate resolveLeadingSpaceTrimFunction() {
 		return leadingSpaceTrim;
 	}
 
@@ -245,7 +246,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected SQLFunction resolveTrailingSpaceTrimFunction() {
+	protected SqmFunctionTemplate resolveTrailingSpaceTrimFunction() {
 		return trailingSpaceTrim;
 	}
 
@@ -253,7 +254,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected SQLFunction resolveBothTrimFunction() {
+	protected SqmFunctionTemplate resolveBothTrimFunction() {
 		return bothTrim;
 	}
 
@@ -261,7 +262,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected SQLFunction resolveLeadingTrimFunction() {
+	protected SqmFunctionTemplate resolveLeadingTrimFunction() {
 		return leadingTrim;
 	}
 
@@ -269,7 +270,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected SQLFunction resolveTrailingTrimFunction() {
+	protected SqmFunctionTemplate resolveTrailingTrimFunction() {
 		return trailingTrim;
 	}
 }

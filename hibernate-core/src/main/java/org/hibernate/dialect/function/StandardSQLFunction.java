@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.type.Type;
 
 /**
@@ -20,7 +21,7 @@ import org.hibernate.type.Type;
  *
  * @author David Channon
  */
-public class StandardSQLFunction implements SQLFunction {
+public class StandardSQLFunction implements SqmFunctionTemplate {
 	private final String name;
 	private final Type registeredType;
 

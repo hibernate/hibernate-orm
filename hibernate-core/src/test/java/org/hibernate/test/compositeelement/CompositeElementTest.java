@@ -12,7 +12,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
@@ -38,7 +38,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 		Component childComponents = ( Component ) children.getElement();
 		Formula f = ( Formula ) childComponents.getProperty( "bioLength" ).getValue().getColumnIterator().next();
 
-		SQLFunction lengthFunction = metadata.getDatabase().getJdbcEnvironment().getDialect().getFunctions().get( "length" );
+		SqmFunctionTemplate lengthFunction = metadata.getDatabase().getJdbcEnvironment().getDialect().getFunctions().get( "length" );
 		if ( lengthFunction != null ) {
 			ArrayList args = new ArrayList();
 			args.add( "bio" );

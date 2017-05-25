@@ -6,30 +6,25 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractFunctionSqmExpression implements FunctionSqmExpression {
-	private final BasicValuedExpressableType resultType;
+	private final AllowableFunctionReturnType resultType;
 
-	public AbstractFunctionSqmExpression(BasicValuedExpressableType resultType) {
+	public AbstractFunctionSqmExpression(AllowableFunctionReturnType resultType) {
 		this.resultType = resultType;
 	}
 
 	@Override
-	public BasicValuedExpressableType getFunctionResultType() {
+	public AllowableFunctionReturnType getExpressionType() {
 		return resultType;
 	}
 
 	@Override
-	public BasicValuedExpressableType getExpressionType() {
-		return getFunctionResultType();
-	}
-
-	@Override
-	public BasicValuedExpressableType getInferableType() {
-		return getFunctionResultType();
+	public AllowableFunctionReturnType getInferableType() {
+		return getExpressionType();
 	}
 }

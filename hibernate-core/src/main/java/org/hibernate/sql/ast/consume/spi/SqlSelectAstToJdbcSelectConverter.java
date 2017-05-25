@@ -23,6 +23,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
 import org.hibernate.sql.ast.tree.spi.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSearchedExpression;
@@ -522,7 +523,7 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker,
 		}
 	}
 
-	private GenericParameter.AllowableType resolveType(GenericParameter parameter) {
+	private AllowableParameterType resolveType(GenericParameter parameter) {
 		// todo (6.0) : decide which types of ExpressableTypes to support for parameters.  see below in method too
 		// 		for now limit parameters to just basic types.
 
@@ -713,6 +714,10 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker,
 		unaryOperationExpression.getOperand().accept( this );
 	}
 
+	@Override
+	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
+		  expression.renderToSql( this );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Predicates

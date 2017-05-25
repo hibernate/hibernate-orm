@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,9 +31,11 @@ import org.hibernate.boot.model.domain.MappedTableJoin;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.LoadQueryInfluencers.InternalFetchProfileType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
@@ -430,9 +433,38 @@ public abstract class AbstractEntityDescriptor<T>
 		return null;
 	}
 
+	private Map<LockMode,EntityLocker> lockers;
+
 	@Override
 	public EntityLocker getLocker(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
-		return null;
+		EntityLocker entityLocker = null;
+		if ( lockers == null ) {
+			lockers = new ConcurrentHashMap<>();
+		}
+		else {
+			entityLocker = lockers.get( lockOptions.getLockMode() );
+		}
+
+		if ( entityLocker == null ) {
+			throw new NotYetImplementedException(  );
+//			entityLocker = new EntityLocker() {
+//				final LockingStrategy strategy = getFactory().getJdbcServices()
+//						.getJdbcEnvironment()
+//						.getDialect()
+//						.getLockingStrategy( ... );
+//				@Override
+//				public void lock(
+//						Serializable id,
+//						Object version,
+//						Object object,
+//						SharedSessionContractImplementor session,
+//						Options options) {
+//					strategy.lock( id, version, object, options.getTimeout(), session );
+//				}
+//			};
+//			lockers.put( lockOptions.getLockMode(), entityLocker );
+		}
+		return entityLocker;
 	}
 
 	@Override

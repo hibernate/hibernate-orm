@@ -11,11 +11,12 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.Type;
 
 /**
- * A {@link org.hibernate.dialect.function.SQLFunction} providing support for implementing TRIM functionality
+ * A {@link SqmFunctionTemplate} providing support for implementing TRIM functionality
  * (as defined by both the ANSI SQL and JPA specs) in cases where the dialect may not support the full <tt>trim</tt>
  * function itself.
  * <p/>
@@ -24,7 +25,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
+public abstract class AbstractAnsiTrimEmulationFunction implements SqmFunctionTemplate {
 	@Override
 	public final boolean hasArguments() {
 		return true;
@@ -155,31 +156,31 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 	 *
 	 * @return The sql function
 	 */
-	protected abstract SQLFunction resolveBothSpaceTrimFunction();
+	protected abstract SqmFunctionTemplate resolveBothSpaceTrimFunction();
 
 	/**
 	 * Resolve the function definition which should be used to trim both leading and trailing spaces.
 	 * <p/>
 	 * The same as {#link resolveBothSpaceTrimFunction} except that here the<tt>FROM</tt> is included and
-	 * will need to be accounted for during {@link SQLFunction#render} processing.
+	 * will need to be accounted for during {@link SqmFunctionTemplate#render} processing.
 	 * 
 	 * @return The sql function
 	 */
-	protected abstract SQLFunction resolveBothSpaceTrimFromFunction();
+	protected abstract SqmFunctionTemplate resolveBothSpaceTrimFromFunction();
 
 	/**
 	 * Resolve the function definition which should be used to trim leading spaces.
 	 *
 	 * @return The sql function
 	 */
-	protected abstract SQLFunction resolveLeadingSpaceTrimFunction();
+	protected abstract SqmFunctionTemplate resolveLeadingSpaceTrimFunction();
 
 	/**
 	 * Resolve the function definition which should be used to trim trailing spaces.
 	 *
 	 * @return The sql function
 	 */
-	protected abstract SQLFunction resolveTrailingSpaceTrimFunction();
+	protected abstract SqmFunctionTemplate resolveTrailingSpaceTrimFunction();
 
 	/**
 	 * Resolve the function definition which should be used to trim the specified character from both the
@@ -187,7 +188,7 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 	 *
 	 * @return The sql function
 	 */
-	protected abstract SQLFunction resolveBothTrimFunction();
+	protected abstract SqmFunctionTemplate resolveBothTrimFunction();
 
 	/**
 	 * Resolve the function definition which should be used to trim the specified character from the
@@ -195,7 +196,7 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 	 *
 	 * @return The sql function
 	 */
-	protected abstract SQLFunction resolveLeadingTrimFunction();
+	protected abstract SqmFunctionTemplate resolveLeadingTrimFunction();
 
 	/**
 	 * Resolve the function definition which should be used to trim the specified character from the
@@ -203,5 +204,5 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 	 *
 	 * @return The sql function
 	 */
-	protected abstract SQLFunction resolveTrailingTrimFunction();
+	protected abstract SqmFunctionTemplate resolveTrailingTrimFunction();
 }

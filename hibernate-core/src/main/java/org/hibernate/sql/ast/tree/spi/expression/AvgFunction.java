@@ -6,13 +6,13 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
  * @author Steve Ebersole
  */
-public class AvgFunction extends AbstractAggregateFunction implements AggregateFunction {
+public class AvgFunction extends AbstractAggregateFunction {
 	public AvgFunction(Expression argument, boolean distinct, BasicValuedExpressableType resultType) {
 		super( argument, distinct, resultType );
 	}

@@ -15,7 +15,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -107,7 +107,7 @@ public final class Template {
 				sqlWhereString,
 				placeholder,
 				dialect,
-				new SQLFunctionRegistry( dialect, java.util.Collections.<String, SQLFunction>emptyMap() )
+				new SQLFunctionRegistry( dialect, java.util.Collections.<String, SqmFunctionTemplate>emptyMap() )
 		);
 	}
 
@@ -741,7 +741,7 @@ public final class Template {
 		if ( "(".equals( nextToken ) ) {
 			return true;
 		}
-		SQLFunction function = functionRegistry.findSQLFunction(lcToken);
+		SqmFunctionTemplate function = functionRegistry.findSQLFunction( lcToken);
 		if ( function == null ) {
 			// lcToken does not refer to a function
 			return false;

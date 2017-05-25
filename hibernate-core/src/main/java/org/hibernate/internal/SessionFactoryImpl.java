@@ -120,7 +120,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.sql.ast.produce.metamodel.spi.Fetchable;
-import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
@@ -978,7 +978,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public GenericParameter.AllowableType resolveParameterBindType(Object bindValue) {
+	public AllowableParameterType resolveParameterBindType(Object bindValue) {
 		if ( bindValue == null ) {
 			// we can't guess
 			return null;
@@ -988,7 +988,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public GenericParameter.AllowableType resolveParameterBindType(Class clazz) {
+	public AllowableParameterType resolveParameterBindType(Class clazz) {
 		// for now we only support basic types as allowable for query parameters
 		return typeConfiguration.getBasicTypeRegistry().getBasicType( clazz );
 	}

@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 
 /**
  * A resolver for Type based on a parameter value being bound, when no
@@ -15,6 +15,6 @@ import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
  * @author Steve Ebersole
  */
 public interface QueryParameterBindingTypeResolver {
-	GenericParameter.AllowableType resolveParameterBindType(Object bindValue);
-	GenericParameter.AllowableType resolveParameterBindType(Class clazz);
+	AllowableParameterType resolveParameterBindType(Object bindValue);
+	AllowableParameterType resolveParameterBindType(Class clazz);
 }

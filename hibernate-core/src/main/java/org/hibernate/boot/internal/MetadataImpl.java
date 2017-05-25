@@ -33,7 +33,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -47,11 +47,9 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.query.spi.NamedQueryRepository;
-import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -82,7 +80,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	private final Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
-	private final Map<String, SQLFunction> sqlFunctionMap;
+	private final Map<String, SqmFunctionTemplate> sqlFunctionMap;
 	private final Database database;
 	private final AuditMetadataBuilderImplementor auditMetadataBuilder;
 	private final BootstrapContext bootstrapContext;
@@ -105,7 +103,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
 			Map<String, ResultSetMappingDefinition> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
-			Map<String, SQLFunction> sqlFunctionMap,
+			Map<String, SqmFunctionTemplate> sqlFunctionMap,
 			Database database,
 			AuditMetadataBuilderImplementor auditMetadataBuilder,
 			BootstrapContext bootstrapContext ) {
@@ -288,7 +286,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public Map<String, SQLFunction> getSqlFunctionMap() {
+	public Map<String, SqmFunctionTemplate> getSqlFunctionMap() {
 		return sqlFunctionMap;
 	}
 

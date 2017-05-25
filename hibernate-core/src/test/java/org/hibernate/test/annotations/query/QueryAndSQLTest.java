@@ -27,7 +27,7 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -65,7 +65,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNativeQueryWithFormulaAttribute() {
-		SQLFunction dateFunction = getDialect().getFunctions().get( "current_date" );
+		SqmFunctionTemplate dateFunction = getDialect().getFunctions().get( "current_date" );
 		String dateFunctionRendered = dateFunction.render(
 				null,
 				java.util.Collections.EMPTY_LIST,

@@ -33,7 +33,7 @@ import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.dialect.TimesTenDialect;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 
 import org.junit.Test;
 
@@ -628,7 +628,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	private String locateAppropriateDialectFunctionNameForAliasTest() {
 		for (Iterator itr = getDialect().getFunctions().entrySet().iterator(); itr.hasNext(); ) {
 			final Map.Entry entry = (Map.Entry) itr.next();
-			final SQLFunction function = (SQLFunction) entry.getValue();
+			final SqmFunctionTemplate function = (SqmFunctionTemplate) entry.getValue();
 			if ( !function.hasArguments() && !function.hasParenthesesIfNoArguments() ) {
 				return (String) entry.getKey();
 			}

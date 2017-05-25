@@ -19,7 +19,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
@@ -60,7 +60,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		Component component = ( Component ) personProperty.getValue();
 		Formula f = ( Formula ) component.getProperty( "yob" ).getValue().getColumnIterator().next();
 
-		SQLFunction yearFunction = metadata.getDatabase().getJdbcEnvironment().getDialect().getFunctions().get( "year" );
+		SqmFunctionTemplate yearFunction = metadata.getDatabase().getJdbcEnvironment().getDialect().getFunctions().get( "year" );
 		if ( yearFunction == null ) {
 			// the dialect not know to support a year() function, so rely on the
 			// ANSI SQL extract function

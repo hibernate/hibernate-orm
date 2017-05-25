@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.type.Type;
 
@@ -33,9 +33,9 @@ public class RowCountProjection extends SimpleProjection {
 		return getFunction( criteriaQuery ).render( null, ARGS, criteriaQuery.getFactory() ) + " as y" + position + '_';
 	}
 
-	protected SQLFunction getFunction(CriteriaQuery criteriaQuery) {
+	protected SqmFunctionTemplate getFunction(CriteriaQuery criteriaQuery) {
 		final SQLFunctionRegistry sqlFunctionRegistry = criteriaQuery.getFactory().getSqlFunctionRegistry();
-		final SQLFunction function = sqlFunctionRegistry.findSQLFunction( "count" );
+		final SqmFunctionTemplate function = sqlFunctionRegistry.findSQLFunction( "count" );
 		if ( function == null ) {
 			throw new HibernateException( "Unable to locate count function mapping" );
 		}

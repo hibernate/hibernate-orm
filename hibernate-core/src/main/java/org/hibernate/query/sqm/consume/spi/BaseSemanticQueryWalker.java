@@ -92,6 +92,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.set.SqmAssignment;
 import org.hibernate.query.sqm.tree.set.SqmSetClause;
+import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 
 /**
  * @author Steve Ebersole
@@ -378,6 +379,11 @@ public class BaseSemanticQueryWalker<T> implements SemanticQueryWalker<T> {
 	@Override
 	public T visitGenericFunction(GenericFunctionSqmExpression expression) {
 		return (T) expression;
+	}
+
+	@Override
+	public T visitSqlAstFunctionProducer(SqlAstFunctionProducer sqlAstFunctionProducer) {
+		return (T) sqlAstFunctionProducer;
 	}
 
 	@Override

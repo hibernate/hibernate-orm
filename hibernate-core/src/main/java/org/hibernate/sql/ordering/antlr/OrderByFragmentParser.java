@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.Template;
 
@@ -79,7 +79,7 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 
 		// otherwise, in order for this to be a function logically it has to be a function that does not
 		// have arguments.  So try to assert that using the registry of known functions
-		final SQLFunction function = context.getSqlFunctionRegistry().findSQLFunction( ast.getText() );
+		final SqmFunctionTemplate function = context.getSqlFunctionRegistry().findSQLFunction( ast.getText() );
 		if ( function == null ) {
 			// no registered function, so we cannot know for certain
 			return false;
@@ -103,7 +103,7 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 		}
 
 		final String functionName = ast.getText();
-		final SQLFunction function = context.getSqlFunctionRegistry().findSQLFunction( functionName );
+		final SqmFunctionTemplate function = context.getSqlFunctionRegistry().findSQLFunction( functionName );
 		if ( function == null ) {
 			String text = functionName;
 			if ( child != null ) {

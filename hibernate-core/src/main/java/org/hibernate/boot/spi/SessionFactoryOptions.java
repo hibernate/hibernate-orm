@@ -23,7 +23,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -197,7 +197,7 @@ public interface SessionFactoryOptions {
 	 */
 	EntityNotFoundDelegate getEntityNotFoundDelegate();
 
-	Map<String, SQLFunction> getCustomSqlFunctionMap();
+	Map<String, SqmFunctionTemplate> getCustomSqlFunctionMap();
 
 	void setCheckNullability(boolean enabled);
 

@@ -24,7 +24,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -172,7 +172,7 @@ public interface SessionFactoryOptionsState {
 
 	EntityNotFoundDelegate getEntityNotFoundDelegate();
 
-	Map<String, SQLFunction> getCustomSqlFunctionMap();
+	Map<String, SqmFunctionTemplate> getCustomSqlFunctionMap();
 
 	boolean isPreferUserTransaction();
 

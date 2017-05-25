@@ -19,16 +19,14 @@ import javax.persistence.StoredProcedureParameter;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.internal.ProcedureCallMementoImpl;
 import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.sql.ast.consume.results.internal.RowReaderNoResultsExpectedImpl;
-import org.hibernate.sql.ast.produce.result.spi.Return;
+import org.hibernate.sql.ast.produce.result.spi.QueryResult;
 
 import static org.hibernate.procedure.internal.ProcedureCallMementoImpl.ParameterMemento;
 
@@ -81,8 +79,8 @@ public class NamedProcedureCallDefinition {
 	public ProcedureCallMemento toMemento(
 			final SessionFactoryImplementor sessionFactory,
 			final Map<String,ResultSetMappingDefinition> resultSetMappingDefinitions) {
-		final List<Return> collectedQueryReturns = new ArrayList<>();
-		final Set<String> collectedQuerySpaces = new HashSet<String>();
+		final List<QueryResult> collQueryResults = new ArrayList<>();
+		final Set<String> collectedQuerySpaces = new HashSet<>();
 
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;
 		final boolean specifiesResultSetMappings = resultSetMappings != null && resultSetMappings.length > 0;
@@ -97,7 +95,7 @@ public class NamedProcedureCallDefinition {
 
 						@Override
 						public void addQueryReturns(Return... queryReturns) {
-							Collections.addAll( collectedQueryReturns, queryReturns );
+							Collections.addAll( collQueryResults, queryReturns );
 						}
 
 						@Override
@@ -123,7 +121,7 @@ public class NamedProcedureCallDefinition {
 
 						@Override
 						public void addQueryReturns(Return... queryReturns) {
-							Collections.addAll( collectedQueryReturns, queryReturns );
+							Collections.addAll( collQueryResults, queryReturns );
 						}
 
 						@Override

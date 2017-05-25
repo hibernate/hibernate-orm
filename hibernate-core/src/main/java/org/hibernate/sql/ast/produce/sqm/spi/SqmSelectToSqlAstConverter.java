@@ -4,10 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
 package org.hibernate.sql.ast.produce.sqm.spi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +15,6 @@ import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeContainer;
-import org.hibernate.hql.internal.ast.tree.OrderByClause;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.metamodel.model.domain.spi.Navigable;
@@ -55,6 +54,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
 import org.hibernate.query.sqm.tree.expression.function.AvgFunctionSqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.CountFunctionSqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.CountStarFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.GenericFunctionSqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.MaxFunctionSqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.MinFunctionSqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.SumFunctionSqmExpression;
@@ -95,13 +95,12 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.produce.result.spi.FetchParent;
 import org.hibernate.sql.ast.produce.result.spi.QueryResult;
-import org.hibernate.sql.ast.produce.result.spi.QueryResultCreationContext;
-import org.hibernate.sql.ast.produce.result.spi.SqlSelectionResolver;
 import org.hibernate.sql.ast.produce.spi.FromClauseIndex;
 import org.hibernate.sql.ast.produce.spi.JoinedTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.RootTableGroupContext;
 import org.hibernate.sql.ast.produce.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.produce.spi.SqlAstBuildingContext;
+import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 import org.hibernate.sql.ast.produce.spi.TableGroupJoinProducer;
 import org.hibernate.sql.ast.produce.sqm.internal.FetchGraphBuilder;
@@ -162,8 +161,8 @@ import org.jboss.logging.Logger;
  */
 @SuppressWarnings("unchecked")
 public class SqmSelectToSqlAstConverter
-		extends BaseSemanticQueryWalker
-		implements SqlSelectionResolver, QueryResultCreationContext {
+		extends BaseSemanticQueryWalker<Object>
+		implements SqmToSqlAstConverter<Object> {
 	private static final Logger log = Logger.getLogger( SqmSelectToSqlAstConverter.class );
 
 	private FetchGraphBuilder fetchGraphBuilder;
@@ -286,8 +285,9 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public OrderByClause visitOrderByClause(SqmOrderByClause orderByClause) {
-		throw new AssertionFailure( "Unexpected visitor call" );
+	public Void visitOrderByClause(SqmOrderByClause orderByClause) {
+		super.visitOrderByClause( orderByClause );
+		return null;
 	}
 
 	@Override
@@ -847,6 +847,45 @@ public class SqmSelectToSqlAstConverter
 				expression.getPosition(),
 				expression.getExpressionType()
 		);
+	}
+
+	@Override
+	public Object visitGenericFunction(GenericFunctionSqmExpression expression) {
+		shallownessStack.push( Shallowness.FUNCTION );
+		try {
+			return new NonStandardFunction(
+					expression.getFunctionName(),
+					expression.getExpressionType(),
+					visitArguments( expression.getArguments() )
+			);
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
+
+	private List<Expression> visitArguments(List<SqmExpression> sqmArguments) {
+		if ( sqmArguments == null || sqmArguments.isEmpty() ) {
+			return Collections.emptyList();
+		}
+
+		final ArrayList<Expression> sqlAstArguments = new ArrayList<>();
+		for ( SqmExpression sqmArgument : sqmArguments ) {
+			sqlAstArguments.add( (Expression) sqmArgument.accept( this ) );
+		}
+
+		return sqlAstArguments;
+	}
+
+	@Override
+	public Object visitSqlAstFunctionProducer(SqlAstFunctionProducer sqlAstFunctionProducer) {
+		shallownessStack.push( Shallowness.FUNCTION );
+		try {
+			return sqlAstFunctionProducer.convertToSqlAst( this );
+		}
+		finally {
+			shallownessStack.pop();
+		}
 	}
 
 	@Override

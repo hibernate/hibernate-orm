@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.dialect.function.StaticPrecisionFspTimestampFunction;
 
 /**
@@ -47,7 +47,7 @@ public class MySQL57InnoDBDialect extends MySQL5InnoDBDialect {
 		// The following are synonyms for now(fsp), where fsp defaults to 0 on MySQL 5.7:
 		// current_timestamp([fsp]), localtime(fsp), localtimestamp(fsp).
 		// Register the same StaticPrecisionFspTimestampFunction for all 4 functions.
-		final SQLFunction currentTimestampFunction = new StaticPrecisionFspTimestampFunction("now", 6 );
+		final SqmFunctionTemplate currentTimestampFunction = new StaticPrecisionFspTimestampFunction( "now", 6 );
 
 		registerFunction( "now", currentTimestampFunction );
 		registerFunction( "current_timestamp", currentTimestampFunction );

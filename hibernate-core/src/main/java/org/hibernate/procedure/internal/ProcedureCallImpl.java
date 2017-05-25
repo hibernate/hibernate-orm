@@ -138,7 +138,7 @@ public class ProcedureCallImpl<R>
 					}
 
 					@Override
-					public void addQueryReturns(QueryResult... queryReturns) {
+					public void addQueryResult(QueryResult... queryReturns) {
 						for ( QueryResult queryReturn : queryReturns ) {
 							returnAssemblers.add( queryReturn.getResultAssembler() );
 							if ( queryReturn instanceof InitializerSource ) {

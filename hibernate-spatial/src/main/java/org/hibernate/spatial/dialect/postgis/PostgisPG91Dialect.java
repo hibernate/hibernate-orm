@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.PostgreSQL91Dialect;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
@@ -34,7 +34,7 @@ public class PostgisPG91Dialect extends PostgreSQL91Dialect implements SpatialDi
 				PGGeometryTypeDescriptor.INSTANCE.getSqlType(),
 				"GEOMETRY"
 		);
-		for ( Map.Entry<String, SQLFunction> entry : support.functionsToRegister() ) {
+		for ( Map.Entry<String, SqmFunctionTemplate> entry : support.functionsToRegister() ) {
 			registerFunction( entry.getKey(), entry.getValue() );
 		}
 	}

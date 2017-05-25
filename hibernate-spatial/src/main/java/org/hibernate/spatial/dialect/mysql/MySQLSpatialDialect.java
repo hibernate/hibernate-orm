@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.JTSGeometryType;
@@ -34,7 +34,7 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 				MySQLGeometryTypeDescriptor.INSTANCE.getSqlType(),
 				"GEOMETRY"
 		);
-		for ( Map.Entry<String, SQLFunction> entry : new MySQLSpatialFunctions() ) {
+		for ( Map.Entry<String, SqmFunctionTemplate> entry : new MySQLSpatialFunctions() ) {
 			registerFunction( entry.getKey(), entry.getValue() );
 		}
 	}

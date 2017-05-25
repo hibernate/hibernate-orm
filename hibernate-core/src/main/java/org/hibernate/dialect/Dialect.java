@@ -37,7 +37,7 @@ import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastFunction;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardAnsiSqlAggregationFunctions;
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -83,7 +83,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
-import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.service.ServiceRegistry;
@@ -102,10 +101,10 @@ import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.Type;
+import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.  Subclasses implement Hibernate compatibility
@@ -142,7 +141,7 @@ public abstract class Dialect implements ConversionContext {
 	private final TypeNames hibernateTypeNames = new TypeNames();
 
 	private final Properties properties = new Properties();
-	private final Map<String, SQLFunction> sqlFunctions = new HashMap<>();
+	private final Map<String, SqmFunctionTemplate> sqlFunctions = new HashMap<>();
 	private final Set<String> sqlKeywords = new HashSet<>();
 
 	private final UniqueDelegate uniqueDelegate;
@@ -716,7 +715,7 @@ public abstract class Dialect implements ConversionContext {
 
 	// function support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	protected void registerFunction(String name, SQLFunction function) {
+	protected void registerFunction(String name, SqmFunctionTemplate function) {
 		// HHH-7721: SQLFunctionRegistry expects all lowercase.  Enforce,
 		// just in case a user's customer dialect uses mixed cases.
 		sqlFunctions.put( name.toLowerCase( Locale.ROOT ), function );
@@ -724,11 +723,11 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Retrieves a map of the dialect's registered functions
-	 * (functionName => {@link org.hibernate.dialect.function.SQLFunction}).
+	 * (functionName => {@link SqmFunctionTemplate}).
 	 *
 	 * @return The map of registered functions.
 	 */
-	public final Map<String, SQLFunction> getFunctions() {
+	public final Map<String, SqmFunctionTemplate> getFunctions() {
 		return sqlFunctions;
 	}
 

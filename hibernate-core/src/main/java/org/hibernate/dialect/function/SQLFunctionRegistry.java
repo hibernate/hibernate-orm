@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 
 /**
  * Defines a registry for SQLFunction instances
@@ -17,7 +18,7 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class SQLFunctionRegistry {
-	private final Map<String,SQLFunction> functionMap = new TreeMap<String, SQLFunction>(String.CASE_INSENSITIVE_ORDER);
+	private final Map<String,SqmFunctionTemplate> functionMap = new TreeMap<String, SqmFunctionTemplate>( String.CASE_INSENSITIVE_ORDER);
 
 	/**
 	 * Constructs a SQLFunctionRegistry
@@ -25,7 +26,7 @@ public class SQLFunctionRegistry {
 	 * @param dialect The dialect
 	 * @param userFunctionMap Any application-supplied function definitions
 	 */
-	public SQLFunctionRegistry(Dialect dialect, Map<String, SQLFunction> userFunctionMap) {
+	public SQLFunctionRegistry(Dialect dialect, Map<String, SqmFunctionTemplate> userFunctionMap) {
 		// Apply the Dialect functions first
 		functionMap.putAll( dialect.getFunctions() );
 		// so that user supplied functions "override" them
@@ -41,7 +42,7 @@ public class SQLFunctionRegistry {
 	 *
 	 * @return The located function, maye return {@code null}
 	 */
-	public SQLFunction findSQLFunction(String functionName) {
+	public SqmFunctionTemplate findSQLFunction(String functionName) {
 		return functionMap.get( functionName );
 	}
 

@@ -37,7 +37,7 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -79,7 +79,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	private IndexView jandexView;
 
-	private HashMap<String,SQLFunction> sqlFunctionMap;
+	private HashMap<String,SqmFunctionTemplate> sqlFunctionMap;
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 	private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
@@ -254,7 +254,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public Map<String, SQLFunction> getSqlFunctions() {
+	public Map<String, SqmFunctionTemplate> getSqlFunctions() {
 		return sqlFunctionMap == null ? Collections.emptyMap() : sqlFunctionMap;
 	}
 
@@ -336,7 +336,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.jandexView = jandexView;
 	}
 
-	public void addSqlFunction(String functionName, SQLFunction function) {
+	public void addSqlFunction(String functionName, SqmFunctionTemplate function) {
 		if ( this.sqlFunctionMap == null ) {
 			this.sqlFunctionMap = new HashMap<>();
 		}

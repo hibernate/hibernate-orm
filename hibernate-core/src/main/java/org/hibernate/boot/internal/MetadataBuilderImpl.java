@@ -53,7 +53,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MetadataSourceType;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.internal.CoreLogging;
@@ -297,7 +297,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 
 	@Override
-	public MetadataBuilder applySqlFunction(String functionName, SQLFunction function) {
+	public MetadataBuilder applySqlFunction(String functionName, SqmFunctionTemplate function) {
 		this.bootstrapContext.addSqlFunction( functionName, function );
 		return this;
 	}

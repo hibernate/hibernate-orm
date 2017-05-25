@@ -6,14 +6,18 @@
  */
 package org.hibernate.sql.ast.produce.metamodel.spi;
 
-import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
 public interface BasicValuedExpressableType<J>
-		extends ExpressableType<J>, GenericParameter.AllowableType<J> {
+		extends ExpressableType<J>, AllowableParameterType<J>, AllowableFunctionReturnType<J> {
+	BasicType<J> getBasicType();
+
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;

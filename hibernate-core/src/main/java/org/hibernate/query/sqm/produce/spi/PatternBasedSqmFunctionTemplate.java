@@ -1,16 +1,23 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.dialect.function;
+package org.hibernate.query.sqm.produce.spi;
 
 import java.util.List;
 
 import org.hibernate.QueryException;
+import org.hibernate.dialect.function.TemplateRenderer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.produce.internal.PatternRenderer;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.FunctionSqmExpression;
+import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
+import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.type.Type;
 
 /**
@@ -25,9 +32,9 @@ import org.hibernate.type.Type;
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  */
-public class SQLFunctionTemplate implements SqmFunctionTemplate {
+public class PatternBasedSqmFunctionTemplate implements SqmFunctionTemplate, SqlAstFunctionProducer {
 	private final Type type;
-	private final TemplateRenderer renderer;
+	private final PatternRenderer renderer;
 	private final boolean hasParenthesesIfNoArgs;
 
 	/**
@@ -36,7 +43,7 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 	 * @param type The functions return type
 	 * @param template The function template
 	 */
-	public SQLFunctionTemplate(Type type, String template) {
+	public PatternBasedSqmFunctionTemplate(Type type, String template) {
 		this( type, template, true );
 	}
 
@@ -47,11 +54,25 @@ public class SQLFunctionTemplate implements SqmFunctionTemplate {
 	 * @param template The function template
 	 * @param hasParenthesesIfNoArgs If there are no arguments, are parentheses required?
 	 */
-	public SQLFunctionTemplate(Type type, String template, boolean hasParenthesesIfNoArgs) {
+	public PatternBasedSqmFunctionTemplate(Type type, String template, boolean hasParenthesesIfNoArgs) {
 		this.type = type;
-		this.renderer = new TemplateRenderer( template );
+		this.renderer = new PatternRenderer( template );
 		this.hasParenthesesIfNoArgs = hasParenthesesIfNoArgs;
 	}
+
+	@Override
+	public FunctionSqmExpression makeSqmFunctionExpression(
+			List<SqmExpression> arguments,
+			AllowableFunctionReturnType impliedResultType) {
+		return this;
+	}
+
+	@Override
+	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+		return new
+		return null;
+	}
+
 
 	@Override
 	public String render(Type argumentType, List args, SessionFactoryImplementor factory) {

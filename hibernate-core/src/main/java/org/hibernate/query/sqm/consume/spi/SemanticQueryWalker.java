@@ -89,6 +89,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.set.SqmAssignment;
 import org.hibernate.query.sqm.tree.set.SqmSetClause;
+import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 
 /**
  * @author Steve Ebersole
@@ -177,6 +178,8 @@ public interface SemanticQueryWalker<T> {
 	T visitAttributeReferenceExpression(SqmAttributeReference expression);
 
 	T visitGenericFunction(GenericFunctionSqmExpression expression);
+
+	T visitSqlAstFunctionProducer(SqlAstFunctionProducer sqlAstFunctionProducer);
 
 	T visitCastFunction(CastFunctionSqmExpression expression);
 

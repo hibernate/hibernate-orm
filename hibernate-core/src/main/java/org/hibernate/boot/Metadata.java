@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -19,10 +18,9 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.mapping.Collection;
@@ -40,7 +38,7 @@ import org.hibernate.mapping.Table;
  *
  * @since 5.0
  */
-public interface Metadata extends Mapping {
+public interface Metadata {
 	/**
 	 * Get the builder for {@link org.hibernate.SessionFactory} instances based on this metamodel,
 	 *
@@ -198,5 +196,5 @@ public interface Metadata extends Mapping {
 	java.util.Collection<Table> collectTableMappings();
 	java.util.Collection<MappedTable> collectMappedTableMappings();
 
-	Map<String,SQLFunction> getSqlFunctionMap();
+	Map<String,SqmFunctionTemplate> getSqlFunctionMap();
 }

@@ -11,9 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
-import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.produce.internal.NavigableBindingHelper;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
@@ -86,6 +85,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.set.SqmAssignment;
 import org.hibernate.query.sqm.tree.set.SqmSetClause;
+import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 
 /**
  * Handles splitting queries containing unmapped polymorphic references.
@@ -640,6 +641,14 @@ public class QuerySplitter {
 		}
 
 		@Override
+		public SqlAstFunctionProducer visitSqlAstFunctionProducer(SqlAstFunctionProducer functionProducer) {
+			// todo (6.0) : likely this needs a copy too
+			//		how to model that?
+			//		for now, return the same reference
+			return functionProducer;
+		}
+
+		@Override
 		public AvgFunctionSqmExpression visitAvgFunction(AvgFunctionSqmExpression expression) {
 			return new AvgFunctionSqmExpression(
 					(SqmExpression) expression.getArgument().accept( this ),
@@ -763,7 +772,7 @@ public class QuerySplitter {
 			}
 
 			return new ConcatFunctionSqmExpression(
-					expression.getFunctionResultType(),
+					expression.getExpressionType(),
 					arguments
 			);
 		}

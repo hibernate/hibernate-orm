@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -14,6 +14,9 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  */
 public interface FunctionSqmExpression extends SqmExpression {
 	String getFunctionName();
-	BasicValuedExpressableType getFunctionResultType();
+
+	@Override
+	AllowableFunctionReturnType getExpressionType();
+
 	boolean hasArguments();
 }

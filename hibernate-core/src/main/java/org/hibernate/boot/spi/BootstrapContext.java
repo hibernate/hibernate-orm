@@ -7,7 +7,6 @@
 package org.hibernate.boot.spi;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -18,12 +17,11 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.type.spi.BasicTypeProducerRegistry;
-import org.hibernate.boot.model.type.spi.BasicTypeResolver;
 import org.hibernate.boot.model.type.spi.BasicTypeResolverRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -150,7 +148,7 @@ public interface BootstrapContext {
 	 *
 	 * @return The SQLFunctions registered through MetadataBuilder
 	 */
-	Map<String,SQLFunction> getSqlFunctions();
+	Map<String,SqmFunctionTemplate> getSqlFunctions();
 
 	/**
 	 * Access to any AuxiliaryDatabaseObject explicitly registered with the MetadataBuilder.  This

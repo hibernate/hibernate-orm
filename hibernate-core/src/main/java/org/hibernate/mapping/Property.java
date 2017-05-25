@@ -236,9 +236,9 @@ public class Property implements Serializable, PersistentAttributeMapping {
 		this.metaAttributes = metas;
 	}
 
-//	public boolean isValid(Mapping mapping) throws MappingException {
-//		return getValue().isValid(mapping);
-//	}
+	public boolean isValid() throws MappingException {
+		return getValue().isValid();
+	}
 
 	public String toString() {
 		return getClass().getName() + '(' + name + ')';

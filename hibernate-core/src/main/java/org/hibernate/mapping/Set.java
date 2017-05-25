@@ -38,21 +38,6 @@ public class Set extends Collection {
 		return true;
 	}
 
-	public CollectionType getDefaultCollectionType() {
-		if ( isSorted() ) {
-			return getMetadata().getTypeConfiguration()
-					.sortedSet( getRole(), getReferencedPropertyName(), getComparator() );
-		}
-		else if ( hasOrder() ) {
-			return getMetadata().getTypeConfiguration()
-					.orderedSet( getRole(), getReferencedPropertyName() );
-		}
-		else {
-			return getMetadata().getTypeConfiguration()
-					.set( getRole(), getReferencedPropertyName() );
-		}
-	}
-
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			MappedPrimaryKey pk = new MappedPrimaryKey( getCollectionTable() );

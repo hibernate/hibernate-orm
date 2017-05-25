@@ -67,9 +67,7 @@ public class DenormalizedTable extends Table implements DenormalizedMappedTable 
 	@Override
 	public void createForeignKeys() {
 		includedTable.createForeignKeys();
-		Iterator iter = includedTable.getForeignKeyIterator();
-		while ( iter.hasNext() ) {
-			ForeignKey fk = (ForeignKey) iter.next();
+		for( ForeignKey fk :includedTable.getForeignKeys()){
 			createForeignKey(
 					Constraint.generateName(
 							fk.generatedConstraintNamePrefix(),

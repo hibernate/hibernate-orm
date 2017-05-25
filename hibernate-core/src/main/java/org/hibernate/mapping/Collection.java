@@ -15,12 +15,10 @@ import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
 
 /**
  * Mapping for a collection. Subclasses specialize to particular collection styles.
@@ -32,7 +30,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
 
-	private final MetadataImplementor metadata;
+	private final MetadataBuildingContext buildingContext;
 	private PersistentClass owner;
 
 	private KeyValue key;
@@ -82,18 +80,16 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	private String loaderName;
 
-	protected Collection(MetadataImplementor metadata, PersistentClass owner) {
-		this.metadata = metadata;
+	protected Collection(MetadataBuildingContext buildingContext, PersistentClass owner) {
+		this.buildingContext = buildingContext;
 		this.owner = owner;
-	}
-
-	public MetadataImplementor getMetadata() {
-		return metadata;
 	}
 
 	@Override
 	public ServiceRegistry getServiceRegistry() {
-		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
+		return getMetadataBuildingContext()
+				.getBuildingOptions()
+				.getServiceRegistry();
 	}
 
 	public boolean isSet() {
@@ -141,7 +137,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public Comparator getComparator() {
 		if ( comparator == null && comparatorClassName != null ) {
 			try {
-				final ClassLoaderService classLoaderService = getMetadata().getMetadataBuildingOptions()
+				final ClassLoaderService classLoaderService = getMetadataBuildingContext()
+						.getBuildingOptions()
 						.getServiceRegistry()
 						.getService( ClassLoaderService.class );
 				setComparator( (Comparator) classLoaderService.classForName( comparatorClassName ).newInstance() );
@@ -288,7 +285,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	@Override
 	public MetadataBuildingContext getMetadataBuildingContext() {
-		return ;
+		return buildingContext;
 	}
 
 	public void setFetchMode(FetchMode fetchMode) {
@@ -318,7 +315,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 					"collection foreign key mapping has wrong number of columns: "
 							+ getRole()
 							+ " type: "
-							+ getKey().getType().getJavaType().getName()
+							+ getKey().getJavaTypeDescriptor().getTypeName()
 			);
 		}
 		if ( !getElement().isValid() ) {
@@ -326,7 +323,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 					"collection element mapping has wrong number of columns: "
 							+ getRole()
 							+ " type: "
-							+ getElement().getType().getJavaType().getName()
+							+ getElement().getJavaTypeDescriptor().getTypeName()
 			);
 		}
 

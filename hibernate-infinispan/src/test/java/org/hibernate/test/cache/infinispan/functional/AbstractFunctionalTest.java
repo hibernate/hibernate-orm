@@ -147,9 +147,8 @@ public abstract class AbstractFunctionalTest extends BaseNonConfigCoreFunctional
 				versionProperty.setName("version");
 				SimpleValue value = new SimpleValue( (InFlightMetadataCollector) metadata, rootClazz.getTable());
 				value.setTypeName("long");
-				Column column = new Column();
-				column.setValue(value);
-				column.setName("version");
+				Column column = new Column("version");
+				column.setSqlTypeDescriptor( value.getBasicTypeParameters().getSqlTypeDescriptor() );
 				value.addColumn(column);
 				rootClazz.getTable().addColumn(column);
 				versionProperty.setValue(value);

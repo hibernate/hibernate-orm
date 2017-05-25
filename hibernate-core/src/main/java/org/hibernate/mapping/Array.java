@@ -11,7 +11,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.descriptor.java.spi.Primitive;
-import org.hibernate.type.Type;
 
 /**
  * An array mapping has a primary key consisting of the key columns + index column.
@@ -27,14 +26,14 @@ public class Array extends List {
 
 	public Class getElementClass() throws MappingException {
 		if ( elementClassName == null ) {
-			Type elementType = getElement().getType();
 			return isPrimitiveArray()
-					? ( (Primitive) elementType.getJavaTypeDescriptor() ).getPrimitiveClass()
-					: elementType.getJavaTypeDescriptor().getJavaType();
+					? ( (Primitive) getElement().getJavaTypeDescriptor() ).getPrimitiveClass()
+					: getElement().getJavaTypeDescriptor().getJavaType();
 		}
 		else {
 			try {
-				return getMetadata().getMetadataBuildingOptions()
+				return getMetadataBuildingContext()
+						.getBuildingOptions()
 						.getServiceRegistry()
 						.getService( ClassLoaderService.class )
 						.classForName( elementClassName );
@@ -43,12 +42,6 @@ public class Array extends List {
 				throw new MappingException( e );
 			}
 		}
-	}
-
-	@Override
-	public CollectionType getDefaultCollectionType() throws MappingException {
-		return getMetadata().getTypeConfiguration()
-				.array( getRole(), getReferencedPropertyName(), getElementClass() );
 	}
 
 	@Override

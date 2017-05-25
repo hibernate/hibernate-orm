@@ -6,10 +6,8 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.type.Type;
 
 /**
  * A value which is "typed" by reference to some other
@@ -28,10 +26,6 @@ public class DependantValue extends SimpleValue {
 		this.wrappedValue = prototype;
 	}
 
-	public Type getType() throws MappingException {
-		return wrappedValue.getType();
-	}
-
 	public void setTypeUsingReflection(String className, String propertyName) {}
 	
 	public Object accept(ValueVisitor visitor) {
@@ -40,7 +34,6 @@ public class DependantValue extends SimpleValue {
 
 	public boolean isNullable() {
 		return nullable;
-	
 	}
 	
 	public void setNullable(boolean nullable) {

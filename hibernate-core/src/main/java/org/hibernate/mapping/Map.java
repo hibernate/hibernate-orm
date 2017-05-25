@@ -8,7 +8,6 @@ package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.spi.CollectionType;
 
 /**
  * A map has a primary key consisting of
@@ -23,22 +22,6 @@ public class Map extends IndexedCollection {
 	public boolean isMap() {
 		return true;
 	}
-
-	public CollectionType getDefaultCollectionType() {
-		if ( isSorted() ) {
-			return getMetadata().getTypeConfiguration()
-					.sortedMap( getRole(), getReferencedPropertyName(), getComparator() );
-		}
-		else if ( hasOrder() ) {
-			return getMetadata().getTypeConfiguration()
-					.orderedMap( getRole(), getReferencedPropertyName() );
-		}
-		else {
-			return getMetadata().getTypeConfiguration()
-					.map( getRole(), getReferencedPropertyName() );
-		}
-	}
-
 
 	public void createAllKeys() throws MappingException {
 		super.createAllKeys();

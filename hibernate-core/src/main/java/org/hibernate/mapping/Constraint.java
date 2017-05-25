@@ -14,14 +14,11 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 
 /**
  * A relational constraint.

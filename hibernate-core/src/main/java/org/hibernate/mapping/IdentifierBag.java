@@ -6,21 +6,15 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.spi.CollectionType;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
  * An <tt>IdentifierBag</tt> has a primary key consisting of
  * just the identifier column
  */
 public class IdentifierBag extends IdentifierCollection {
-	public IdentifierBag(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
-
-	public CollectionType getDefaultCollectionType() {
-		return getMetadata().getTypeConfiguration()
-				.idbag( getRole(), getReferencedPropertyName() );
+	public IdentifierBag(MetadataBuildingContext buildingContext, PersistentClass owner) {
+		super( buildingContext, owner );
 	}
 
 	public Object accept(ValueVisitor visitor) {

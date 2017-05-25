@@ -30,8 +30,6 @@ public class Column implements Selectable, Serializable, Cloneable {
 	public static final int DEFAULT_PRECISION = 19;
 	public static final int DEFAULT_SCALE = 2;
 
-	private SqlTypeDescriptor sqlTypeDescriptor;
-
 	private int length = DEFAULT_LENGTH;
 	private int precision = DEFAULT_PRECISION;
 	private int scale = DEFAULT_SCALE;
@@ -66,10 +64,6 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	public void setLength(int length) {
 		this.length = length;
-	}
-
-	public void setValue(Value value) {
-		this.value = value;
 	}
 
 	public Identifier getName() {

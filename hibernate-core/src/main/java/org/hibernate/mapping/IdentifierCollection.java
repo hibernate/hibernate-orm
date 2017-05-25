@@ -7,7 +7,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
  * A collection with a synthetic "identifier" column
@@ -18,8 +18,8 @@ public abstract class IdentifierCollection extends Collection {
 
 	private KeyValue identifier;
 
-	public IdentifierCollection(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
+	public IdentifierCollection(MetadataBuildingContext buildingContext, PersistentClass owner) {
+		super( buildingContext, owner );
 	}
 
 	public KeyValue getIdentifier() {
@@ -57,7 +57,7 @@ public abstract class IdentifierCollection extends Collection {
 				"collection id mapping has wrong number of columns: " +
 				getRole() +
 				" type: " +
-				getIdentifier().getType().getName()
+				getIdentifier().getJavaTypeDescriptor().getTypeName()
 			);
 		}
 	}

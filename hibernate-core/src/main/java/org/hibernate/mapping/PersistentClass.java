@@ -662,33 +662,33 @@ public abstract class PersistentClass
 		getEntityMappingHierarchy().setOptimisticLockStyle( optimisticLockStyle );
 	}
 
-//	public void validate(Mapping mapping) throws MappingException {
-//		Iterator iter = getPropertyIterator();
-//		while ( iter.hasNext() ) {
-//			Property prop = (Property) iter.next();
-//			if ( !prop.isValid( mapping ) ) {
-//				throw new MappingException(
-//						"property mapping has wrong number of columns: " +
-//								StringHelper.qualify( getEntityName(), prop.getName() ) +
-//								" type: " +
-//								prop.getType().getName()
-//				);
-//			}
-//		}
-//		checkPropertyDuplication();
-//		checkColumnDuplication();
-//	}
-//
-//	private void checkPropertyDuplication() throws MappingException {
-//		HashSet<String> names = new HashSet<String>();
-//		Iterator iter = getPropertyIterator();
-//		while ( iter.hasNext() ) {
-//			Property prop = (Property) iter.next();
-//			if ( !names.add( prop.getName() ) ) {
-//				throw new MappingException( "Duplicate property mapping of " + prop.getName() + " found in " + getEntityName() );
-//			}
-//		}
-//	}
+	public void validate() throws MappingException {
+		Iterator iter = getPropertyIterator();
+		while ( iter.hasNext() ) {
+			Property prop = (Property) iter.next();
+			if ( !prop.isValid(  ) ) {
+				throw new MappingException(
+						"property mapping has wrong number of columns: " +
+								StringHelper.qualify( getEntityName(), prop.getName() ) +
+								" type: " +
+								prop.getValueMapping().getJavaTypeDescriptor().getTypeName()
+				);
+			}
+		}
+		checkPropertyDuplication();
+		checkColumnDuplication();
+	}
+
+	private void checkPropertyDuplication() throws MappingException {
+		HashSet<String> names = new HashSet<String>();
+		Iterator iter = getPropertyIterator();
+		while ( iter.hasNext() ) {
+			Property prop = (Property) iter.next();
+			if ( !names.add( prop.getName() ) ) {
+				throw new MappingException( "Duplicate property mapping of " + prop.getName() + " found in " + getEntityName() );
+			}
+		}
+	}
 
 	public boolean isDiscriminatorValueNotNull() {
 		return NOT_NULL_DISCRIMINATOR_MAPPING.equals( getDiscriminatorValue() );

@@ -38,7 +38,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.BasicTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -323,9 +322,9 @@ public class MetadataBuildingProcess {
 			}
 
 			@Override
-			public void contributeType(BasicType type, BasicTypeRegistry.Key key) {
+			public void contributeType(BasicType type) {
 				// register the BasicType with the BasicTypeRegistry
-				bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register( type, key );
+				bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register( type );
 			}
 
 			@Override

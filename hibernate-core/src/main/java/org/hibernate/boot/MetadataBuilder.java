@@ -22,7 +22,6 @@ import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
-import org.hibernate.type.spi.BasicTypeRegistry;
 
 import org.jboss.jandex.IndexView;
 
@@ -290,15 +289,6 @@ public interface MetadataBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	MetadataBuilder applyBasicType(org.hibernate.type.spi.BasicType type);
-
-	/**
-	 * Specify an additional or overridden basic type mapping.
-	 *
-	 * @param type The type addition or override.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	MetadataBuilder applyBasicType(org.hibernate.type.spi.BasicType type, BasicTypeRegistry.Key registryKey);
 
 	/**
 	 * Apply an explicit TypeContributor (implicit application via ServiceLoader will still happen too)

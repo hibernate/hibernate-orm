@@ -9,7 +9,6 @@ package org.hibernate.boot.model;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.BasicTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -22,7 +21,7 @@ public interface TypeContributions {
 
 	void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor);
 
-	void contributeType(BasicType type, BasicTypeRegistry.Key key);
+	void contributeType(BasicType type);
 
 	TypeConfiguration getTypeConfiguration();
 }

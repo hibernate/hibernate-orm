@@ -63,7 +63,6 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
-import org.hibernate.type.spi.BasicTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -236,12 +235,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyBasicType(org.hibernate.type.spi.BasicType type) {
-		return applyBasicType( type, BasicTypeRegistry.Key.from( type ) );
-	}
-
-	@Override
-	public MetadataBuilder applyBasicType(org.hibernate.type.spi.BasicType type, BasicTypeRegistry.Key registryKey) {
-		bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register( type, registryKey );
+		bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register( type );
 		return this;
 	}
 
@@ -262,9 +256,9 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public void contributeType(org.hibernate.type.spi.BasicType type, BasicTypeRegistry.Key registryKey) {
+	public void contributeType(org.hibernate.type.spi.BasicType type) {
 		// register the BasicType with the BasicTypeRegistry
-		this.bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register( type, registryKey );
+		this.bootstrapContext.getTypeConfiguration().getBasicTypeRegistry().register( type );
 	}
 
 	@Override

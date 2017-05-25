@@ -24,6 +24,6 @@ public class TypeContributorImpl implements TypeContributor {
 		if ( !enversService.isEnabled() ) {
 			return;
 		}
-		typeContributions.contributeType( RevisionTypeType.INSTANCE, RevisionTypeType.INSTANCE.getRegistryKey() );
+		typeContributions.contributeType( RevisionTypeType.INSTANCE );
 	}
 }

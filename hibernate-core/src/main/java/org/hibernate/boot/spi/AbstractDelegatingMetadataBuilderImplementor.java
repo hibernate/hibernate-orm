@@ -24,7 +24,6 @@ import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
 import org.hibernate.type.spi.BasicType;
-import org.hibernate.type.spi.BasicTypeRegistry;
 
 import org.jboss.jandex.IndexView;
 
@@ -149,12 +148,6 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Abs
 	@Override
 	public MetadataBuilder applyBasicType(BasicType type) {
 		delegate.applyBasicType( type );
-		return this;
-	}
-
-	@Override
-	public MetadataBuilder applyBasicType(BasicType type, BasicTypeRegistry.Key registryKey) {
-		delegate.applyBasicType( type, registryKey );
 		return this;
 	}
 

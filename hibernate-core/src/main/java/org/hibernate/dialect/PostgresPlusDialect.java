@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.NvlFunction;
+import org.hibernate.query.sqm.produce.function.spi.NvlFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 

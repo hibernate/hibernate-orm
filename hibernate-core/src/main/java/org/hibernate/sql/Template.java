@@ -15,7 +15,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;

@@ -58,6 +58,7 @@ import org.hibernate.query.sqm.tree.expression.function.GenericFunctionSqmExpres
 import org.hibernate.query.sqm.tree.expression.function.MaxFunctionSqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.MinFunctionSqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.SumFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.TrimFunctionSqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -124,6 +125,7 @@ import org.hibernate.sql.ast.tree.spi.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
+import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.spi.expression.domain.ColumnReferenceSource;
 import org.hibernate.sql.ast.tree.spi.expression.domain.NavigableReference;
@@ -1109,6 +1111,15 @@ public class SqmSelectToSqlAstConverter
 		return new NullifFunction(
 				(Expression) expression.getFirstArgument().accept( this ),
 				(Expression) expression.getSecondArgument().accept( this )
+		);
+	}
+
+	@Override
+	public Object visitTrimFunction(TrimFunctionSqmExpression expression) {
+		return new TrimFunction(
+				expression.getSpecification(),
+				(Expression) expression.getTrimCharacter().accept( this ),
+				(Expression) expression.getSource().accept( this )
 		);
 	}
 

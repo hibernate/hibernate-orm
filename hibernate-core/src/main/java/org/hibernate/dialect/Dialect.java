@@ -37,7 +37,7 @@ import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastFunction;
-import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardAnsiSqlAggregationFunctions;
 import org.hibernate.dialect.function.StandardSQLFunction;

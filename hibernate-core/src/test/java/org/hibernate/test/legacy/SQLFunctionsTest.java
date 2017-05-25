@@ -33,7 +33,7 @@ import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.dialect.TimesTenDialect;
-import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
 
 import org.junit.Test;
 

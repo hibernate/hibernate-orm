@@ -24,7 +24,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Cache71Dialect;
-import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 

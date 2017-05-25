@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
 
 /**
  * Defines a registry for SQLFunction instances

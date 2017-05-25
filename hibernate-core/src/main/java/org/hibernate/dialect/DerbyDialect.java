@@ -13,7 +13,7 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
-import org.hibernate.dialect.function.AnsiTrimFunction;
+import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
 import org.hibernate.dialect.function.DerbyConcatFunction;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -65,7 +65,7 @@ public class DerbyDialect extends DB2Dialect {
 		}
 
 		registerFunction( "concat", new DerbyConcatFunction() );
-		registerFunction( "trim", new AnsiTrimFunction() );
+		registerFunction( "trim", new AnsiTrimFunctionTemplate() );
 		registerColumnType( Types.BLOB, "blob" );
 		registerDerbyKeywords();
 		determineDriverVersion();

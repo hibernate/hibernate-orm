@@ -11,6 +11,7 @@ import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -21,6 +22,9 @@ import org.hibernate.metamodel.model.domain.spi.CollectionElement;
 import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor.CollectionClassification;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
+import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.spi.TrimSpecificationExpressionWrapper;
+import org.hibernate.query.sqm.tree.expression.function.FunctionSqmExpression;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
@@ -168,6 +172,7 @@ import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.sql.ast.tree.spi.TrimSpecification;
 
 import org.jboss.logging.Logger;
 
@@ -2251,8 +2256,24 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	@Override
-	public TrimFunctionSqmExpression visitTrimFunction(HqlParser.TrimFunctionContext ctx) {
+	public FunctionSqmExpression visitTrimFunction(HqlParser.TrimFunctionContext ctx) {
 		final SqmExpression source = (SqmExpression) ctx.expression().accept( this );
+
+		final SqmFunctionTemplate trimFunctionTemplate = parsingContext.getSessionFactory()
+				.getSqlFunctionRegistry()
+				.findSQLFunction( "trim" );
+
+		if ( trimFunctionTemplate != null ) {
+			return trimFunctionTemplate.makeSqmFunctionExpression(
+					Arrays.asList(
+							TrimSpecificationExpressionWrapper.wrap( visitTrimSpecification( ctx.trimSpecification() ) ),
+							visitTrimCharacter( ctx.trimCharacter() ),
+							source
+					),
+					resolveExpressableTypeBasic( String.class )
+			);
+		}
+
 		return new TrimFunctionSqmExpression(
 				(BasicValuedExpressableType) source.getExpressionType(),
 				visitTrimSpecification( ctx.trimSpecification() ),
@@ -2262,16 +2283,16 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	@Override
-	public TrimFunctionSqmExpression.Specification visitTrimSpecification(HqlParser.TrimSpecificationContext ctx) {
+	public TrimSpecification visitTrimSpecification(HqlParser.TrimSpecificationContext ctx) {
 		if ( ctx.LEADING() != null ) {
-			return TrimFunctionSqmExpression.Specification.LEADING;
+			return TrimSpecification.LEADING;
 		}
 		else if ( ctx.TRAILING() != null ) {
-			return TrimFunctionSqmExpression.Specification.TRAILING;
+			return TrimSpecification.TRAILING;
 		}
 
 		// JPA says the default is BOTH
-		return TrimFunctionSqmExpression.Specification.BOTH;
+		return TrimSpecification.BOTH;
 	}
 
 	@Override

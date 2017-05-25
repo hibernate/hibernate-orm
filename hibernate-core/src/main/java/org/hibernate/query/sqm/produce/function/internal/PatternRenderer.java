@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.produce.internal;
+package org.hibernate.query.sqm.produce.function.internal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.sql.ast.tree.spi.expression.Expression;
 
 /**
  * Delegate for handling function "templates".
@@ -22,6 +23,7 @@ public class PatternRenderer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PatternRenderer.class );
 
 	private final String pattern;
+	private final boolean useParenthesisIfNoArgs;
 	private final String[] chunks;
 	private final int[] paramIndexes;
 
@@ -29,9 +31,11 @@ public class PatternRenderer {
 	 * Constructs a template renderer
 	 *
 	 * @param pattern The template
+	 * @param useParenthesisIfNoArgs
 	 */
-	public PatternRenderer(String pattern) {
+	public PatternRenderer(String pattern, boolean useParenthesisIfNoArgs) {
 		this.pattern = pattern;
+		this.useParenthesisIfNoArgs = useParenthesisIfNoArgs;
 
 		final List<String> chunkList = new ArrayList<>();
 		final List<Integer> paramList = new ArrayList<>();
@@ -94,11 +98,12 @@ public class PatternRenderer {
 	 * @return The rendered template with replacements
 	 */
 	@SuppressWarnings({ "UnusedDeclaration" })
-	public String render(List args, SessionFactoryImplementor factory) {
+	public String render(List<Expression> args, SessionFactoryImplementor factory) {
 		final int numberOfArguments = args.size();
 		if ( getAnticipatedNumberOfArguments() > 0 && numberOfArguments != getAnticipatedNumberOfArguments() ) {
 			LOG.missingArguments( getAnticipatedNumberOfArguments(), numberOfArguments );
 		}
+
 		final StringBuilder buf = new StringBuilder();
 		for ( int i = 0; i < chunks.length; ++i ) {
 			if ( i < paramIndexes.length ) {

@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
+import org.hibernate.query.sqm.produce.function.spi.AnsiTrimEmulationFunctionTemplate;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
@@ -46,8 +46,8 @@ public class SybaseASE15Dialect extends SybaseDialect {
 		registerFunction( "mod", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "?1 % ?2" ) );
 		registerFunction( "bit_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datalength(?1) * 8" ) );
 		registerFunction(
-				"trim", new AnsiTrimEmulationFunction(
-						AnsiTrimEmulationFunction.LTRIM, AnsiTrimEmulationFunction.RTRIM, "str_replace"
+				"trim", new AnsiTrimEmulationFunctionTemplate(
+						AnsiTrimEmulationFunctionTemplate.LTRIM, AnsiTrimEmulationFunctionTemplate.RTRIM, "str_replace"
 				)
 		);
 

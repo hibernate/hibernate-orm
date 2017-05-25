@@ -11,7 +11,7 @@ import java.util.Locale;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
+import org.hibernate.query.sqm.produce.function.spi.AnsiTrimEmulationFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -52,7 +52,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		registerFunction( "mod", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "?1 % ?2" ) );
 		registerFunction( "bit_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datalength(?1) * 8" ) );
 
-		registerFunction( "trim", new AnsiTrimEmulationFunction() );
+		registerFunction( "trim", new AnsiTrimEmulationFunctionTemplate() );
 
 		registerKeyword( "top" );
 		registerKeyword( "key" );

@@ -21,7 +21,7 @@ import org.hibernate.boot.model.type.spi.BasicTypeResolverRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.collection.spi.PersistentCollectionTuplizerFactory;
-import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
 import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.spi.TypeConfiguration;

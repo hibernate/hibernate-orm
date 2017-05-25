@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.expression.function;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.tree.spi.TrimSpecification;
 
 /**
  * @author Steve Ebersole
@@ -16,19 +17,13 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 public class TrimFunctionSqmExpression extends AbstractFunctionSqmExpression {
 	public static final String NAME = "trim";
 
-	public enum Specification {
-		LEADING,
-		TRAILING,
-		BOTH
-	}
-
-	private final Specification specification;
+	private final TrimSpecification specification;
 	private final SqmExpression trimCharacter;
 	private final SqmExpression source;
 
 	public TrimFunctionSqmExpression(
 			BasicValuedExpressableType resultType,
-			Specification specification,
+			TrimSpecification specification,
 			SqmExpression trimCharacter,
 			SqmExpression source) {
 		super( resultType );
@@ -39,6 +34,18 @@ public class TrimFunctionSqmExpression extends AbstractFunctionSqmExpression {
 		assert specification != null;
 		assert trimCharacter != null;
 		assert source != null;
+	}
+
+	public TrimSpecification getSpecification() {
+		return specification;
+	}
+
+	public SqmExpression getTrimCharacter() {
+		return trimCharacter;
+	}
+
+	public SqmExpression getSource() {
+		return source;
 	}
 
 	@Override

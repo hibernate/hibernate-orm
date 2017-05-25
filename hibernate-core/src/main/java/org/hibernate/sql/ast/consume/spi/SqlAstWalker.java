@@ -25,6 +25,7 @@ import org.hibernate.sql.ast.tree.spi.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
+import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeElementReference;
@@ -101,6 +102,8 @@ public interface SqlAstWalker {
 
 	void visitColumnReferenceExpression(ColumnReference columnReference);
 
+	void visitDynamicInstantiation(DynamicInstantiation<?> dynamicInstantiation);
+
 	void visitCoalesceFunction(CoalesceFunction coalesceExpression);
 
 	void visitConcatFunction(ConcatFunction concatExpression);
@@ -108,8 +111,6 @@ public interface SqlAstWalker {
 	void visitCountFunction(CountFunction countFunction);
 
 	void visitCountStarFunction(CountStarFunction function);
-
-	void visitDynamicInstantiation(DynamicInstantiation<?> dynamicInstantiation);
 
 	void visitMaxFunction(MaxFunction maxFunction);
 
@@ -152,4 +153,6 @@ public interface SqlAstWalker {
 	void visitRelationalPredicate(RelationalPredicate relationalPredicate);
 
 	void visitSelfRenderingExpression(SelfRenderingExpression expression);
+
+	void visitTrimFunction(TrimFunction trimFunction);
 }

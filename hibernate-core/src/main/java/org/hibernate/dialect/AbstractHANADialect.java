@@ -22,7 +22,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.function.AnsiTrimFunction;
+import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -347,7 +347,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		registerFunction( "substr_after", new StandardSQLFunction( "substr_after", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "substr_before", new StandardSQLFunction( "substr_before", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "substring", new StandardSQLFunction( "substring", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "trim", new AnsiTrimFunction() );
+		registerFunction( "trim", new AnsiTrimFunctionTemplate() );
 		registerFunction( "ucase", new StandardSQLFunction( "ucase", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "unicode", new StandardSQLFunction( "unicode", StandardSpiBasicTypes.INTEGER ) );
 		registerFunction( "bit_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "length(to_binary(?1))*8" ) );

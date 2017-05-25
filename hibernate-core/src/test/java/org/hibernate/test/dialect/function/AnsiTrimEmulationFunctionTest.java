@@ -9,7 +9,7 @@ package org.hibernate.test.dialect.function;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
+import org.hibernate.query.sqm.produce.function.spi.AnsiTrimEmulationFunctionTemplate;
 
 import org.junit.Test;
 
@@ -24,7 +24,7 @@ public class AnsiTrimEmulationFunctionTest  {
 	private static final String trimSource = "a.column";
     @Test
 	public void testBasicSqlServerProcessing() {
-		AnsiTrimEmulationFunction function = new AnsiTrimEmulationFunction();
+		AnsiTrimEmulationFunctionTemplate function = new AnsiTrimEmulationFunctionTemplate();
 
 		performBasicSpaceTrimmingTests( function );
 
@@ -54,9 +54,9 @@ public class AnsiTrimEmulationFunctionTest  {
 	}
     @Test
 	public void testBasicSybaseProcessing() {
-		AnsiTrimEmulationFunction function = new AnsiTrimEmulationFunction(
-				AnsiTrimEmulationFunction.LTRIM,
-				AnsiTrimEmulationFunction.RTRIM,
+		AnsiTrimEmulationFunctionTemplate function = new AnsiTrimEmulationFunctionTemplate(
+				AnsiTrimEmulationFunctionTemplate.LTRIM,
+				AnsiTrimEmulationFunctionTemplate.RTRIM,
 				"str_replace"
 		);
 
@@ -87,7 +87,7 @@ public class AnsiTrimEmulationFunctionTest  {
 		assertEquals( expected, rendered );
 	}
 
-	private void performBasicSpaceTrimmingTests(AnsiTrimEmulationFunction function) {
+	private void performBasicSpaceTrimmingTests(AnsiTrimEmulationFunctionTemplate function) {
 		// -> trim(a.column)
 		String rendered = function.render( null, argList( trimSource ), null );
 		assertEquals( "ltrim(rtrim(a.column))", rendered );

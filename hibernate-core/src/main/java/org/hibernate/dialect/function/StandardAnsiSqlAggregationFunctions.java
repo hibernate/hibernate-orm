@@ -15,7 +15,7 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 import org.hibernate.type.Type;
 

@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.sqm.tree.expression.function.TrimFunctionSqmExpression;
 import org.hibernate.query.sqm.tree.order.SqmSortOrder;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.SemanticException;
@@ -43,6 +44,7 @@ import org.hibernate.sql.ast.tree.spi.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
+import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeElementReference;
@@ -82,8 +84,8 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker,
-		JdbcParameterBinder.ParameterBindingContext {
+public class SqlSelectAstToJdbcSelectConverter
+		implements SqlSelectAstWalker, JdbcParameterBinder.ParameterBindingContext {
 	private static final Logger log = Logger.getLogger( SqlSelectAstToJdbcSelectConverter.class );
 
 	/**
@@ -716,7 +718,20 @@ public class SqlSelectAstToJdbcSelectConverter implements SqlSelectAstWalker,
 
 	@Override
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
-		  expression.renderToSql( this );
+		  expression.renderToSql( sqlAppender, this, getSession().getFactory() );
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void visitTrimFunction(TrimFunction trimFunction) {
+		sqlAppender.appendSql( "trim(" );
+		sqlAppender.appendSql( trimFunction.getSpecification().toSqlText() );
+		sqlAppender.appendSql( " " );
+		trimFunction.getTrimCharacter().accept( this );
+		sqlAppender.appendSql( " from " );
+		trimFunction.getSource().accept( this );
+		sqlAppender.appendSql( ")" );
+
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

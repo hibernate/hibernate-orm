@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.PostgreSQL93Dialect;
-import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;

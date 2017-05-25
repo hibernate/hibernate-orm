@@ -17,7 +17,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.query.sqm.produce.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;

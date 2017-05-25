@@ -566,6 +566,11 @@ public class MySQLDialect extends Dialect {
 		return storageEngine.getTableTypeString( getEngineKeyword());
 	}
 
+	@Override
+	protected String getTimestampWithTimeZone() {
+		return "datetime";
+	}
+
 	protected String getEngineKeyword() {
 		return "type";
 	}

@@ -36,7 +36,7 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.MappedSequence;
 import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.CastFunction;
+import org.hibernate.query.sqm.produce.function.spi.CastFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardAnsiSqlAggregationFunctions;
@@ -166,7 +166,7 @@ public abstract class Dialect implements ConversionContext {
 		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardSpiBasicTypes.DOUBLE) );
 		registerFunction( "upper", new StandardSQLFunction("upper") );
 		registerFunction( "lower", new StandardSQLFunction("lower") );
-		registerFunction( "cast", new CastFunction() );
+		registerFunction( "cast", new CastFunctionTemplate() );
 		registerFunction( "extract", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(?1 ?2 ?3)") );
 
 		//map second/minute/hour/day/month/year to ANSI extract(), override on subclasses

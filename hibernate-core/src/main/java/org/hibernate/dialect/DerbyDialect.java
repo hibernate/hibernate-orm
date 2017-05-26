@@ -14,7 +14,7 @@ import java.util.Locale;
 
 import org.hibernate.MappingException;
 import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
-import org.hibernate.dialect.function.DerbyConcatFunction;
+import org.hibernate.query.sqm.produce.function.DerbyConcatFunctionTemplate;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
@@ -64,7 +64,7 @@ public class DerbyDialect extends DB2Dialect {
 			LOG.deprecatedDerbyDialect();
 		}
 
-		registerFunction( "concat", new DerbyConcatFunction() );
+		registerFunction( "concat", new DerbyConcatFunctionTemplate() );
 		registerFunction( "trim", new AnsiTrimFunctionTemplate() );
 		registerColumnType( Types.BLOB, "blob" );
 		registerDerbyKeywords();

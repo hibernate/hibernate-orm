@@ -30,6 +30,7 @@ public class AnsiTrimFunctionTemplate implements SqmFunctionTemplate {
 		// 2) trim char
 		// 3) source
 		assert arguments.size() == 3;
+
 		return new TrimFunctionSqmExpression(
 				StandardSpiBasicTypes.STRING,
 				( (TrimSpecificationExpressionWrapper) arguments.get( 0 ) ).getSpecification(),

@@ -17,7 +17,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.CharIndexFunction;
+import org.hibernate.query.sqm.produce.function.spi.CharIndexFunctionTemplate;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -111,7 +111,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 
 		registerFunction( "length", new StandardSQLFunction( "len", StandardSpiBasicTypes.INTEGER ) );
 		registerFunction( "trim", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "ltrim(rtrim(?1))" ) );
-		registerFunction( "locate", new CharIndexFunction() );
+		registerFunction( "locate", new CharIndexFunctionTemplate() );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}

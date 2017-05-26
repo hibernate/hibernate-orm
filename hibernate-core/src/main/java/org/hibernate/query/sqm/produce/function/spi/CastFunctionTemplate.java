@@ -9,26 +9,25 @@ package org.hibernate.query.sqm.produce.function.spi;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.produce.function.internal.SelfRenderingFunctionSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.CastFunctionSqmExpression;
 import org.hibernate.query.sqm.tree.expression.function.FunctionSqmExpression;
 
 /**
+ * ANSI-SQL style {@code cast(foo as type)} where the type is a Hibernate type
+ *
+ * @author Gavin King
  * @author Steve Ebersole
  */
-public abstract class AbstractSelfRenderingFunctionTemplate implements SqmFunctionTemplate {
+public class CastFunctionTemplate implements SqmFunctionTemplate {
 	@Override
 	public FunctionSqmExpression makeSqmFunctionExpression(
 			List<SqmExpression> arguments,
 			AllowableFunctionReturnType impliedResultType) {
-		return new SelfRenderingFunctionSqmExpression(
-				getRenderingFunctionSupport( arguments, impliedResultType ),
-				arguments,
+		assert arguments.size() == 1;
+		return new CastFunctionSqmExpression(
+				arguments.get( 0 ),
 				impliedResultType
 		);
 	}
-
-	protected abstract SelfRenderingFunctionSupport getRenderingFunctionSupport(
-			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType);
 }

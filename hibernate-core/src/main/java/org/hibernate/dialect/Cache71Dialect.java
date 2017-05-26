@@ -14,7 +14,7 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.ConditionalParenthesisFunction;
-import org.hibernate.dialect.function.ConvertFunction;
+import org.hibernate.query.sqm.produce.function.ConvertFunctionTemplate;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.query.sqm.produce.function.spi.NvlFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
@@ -259,7 +259,7 @@ public class Cache71Dialect extends Dialect {
 		registerFunction( "cot", new StandardJDBCEscapeFunction( "cot", StandardSpiBasicTypes.DOUBLE ) );
 		registerFunction( "coalesce", new VarArgsSQLFunction( "coalesce(", ",", ")" ) );
 		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "", "||", "" ) );
-		registerFunction( "convert", new ConvertFunction() );
+		registerFunction( "convert", new ConvertFunctionTemplate() );
 		registerFunction( "curdate", new StandardJDBCEscapeFunction( "curdate", StandardSpiBasicTypes.DATE ) );
 		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardSpiBasicTypes.DATE, false ) );
 		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardSpiBasicTypes.TIME, false ) );

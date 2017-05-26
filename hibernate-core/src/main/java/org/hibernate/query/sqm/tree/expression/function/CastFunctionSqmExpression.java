@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -18,7 +18,7 @@ public class CastFunctionSqmExpression extends AbstractFunctionSqmExpression imp
 
 	private final SqmExpression expressionToCast;
 
-	public CastFunctionSqmExpression(SqmExpression expressionToCast, BasicValuedExpressableType castTargetType) {
+	public CastFunctionSqmExpression(SqmExpression expressionToCast, AllowableFunctionReturnType castTargetType) {
 		super( castTargetType );
 		this.expressionToCast = expressionToCast;
 	}

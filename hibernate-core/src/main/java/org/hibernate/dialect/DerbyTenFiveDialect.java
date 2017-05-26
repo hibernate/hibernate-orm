@@ -7,7 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
-import org.hibernate.dialect.function.DerbyConcatFunction;
+import org.hibernate.query.sqm.produce.function.DerbyConcatFunctionTemplate;
 
 
 /**
@@ -26,7 +26,7 @@ public class DerbyTenFiveDialect extends DerbyDialect {
 	 */
 	public DerbyTenFiveDialect() {
 		super();
-		registerFunction( "concat", new DerbyConcatFunction() );
+		registerFunction( "concat", new DerbyConcatFunctionTemplate() );
 		registerFunction( "trim", new AnsiTrimFunctionTemplate() );
 	}
 

@@ -13,14 +13,33 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class CastFunctionSqmExpression extends AbstractFunctionSqmExpression implements FunctionSqmExpression {
+public class SqmCastFunction extends AbstractSqmFunction implements SqmFunction {
 	public static final String NAME = "cast";
 
 	private final SqmExpression expressionToCast;
+	private final String explicitSqlCastTarget;
 
-	public CastFunctionSqmExpression(SqmExpression expressionToCast, AllowableFunctionReturnType castTargetType) {
+	public SqmCastFunction(
+			SqmExpression expressionToCast,
+			AllowableFunctionReturnType castTargetType) {
+		this( expressionToCast, castTargetType, null );
+	}
+
+	public SqmCastFunction(
+			SqmExpression expressionToCast,
+			AllowableFunctionReturnType castTargetType,
+			String explicitSqlCastTarget) {
 		super( castTargetType );
 		this.expressionToCast = expressionToCast;
+		this.explicitSqlCastTarget = explicitSqlCastTarget;
+	}
+
+	public SqmExpression getExpressionToCast() {
+		return expressionToCast;
+	}
+
+	public String getExplicitSqlCastTarget() {
+		return explicitSqlCastTarget;
 	}
 
 	@Override
@@ -31,10 +50,6 @@ public class CastFunctionSqmExpression extends AbstractFunctionSqmExpression imp
 	@Override
 	public boolean hasArguments() {
 		return true;
-	}
-
-	public SqmExpression getExpressionToCast() {
-		return expressionToCast;
 	}
 
 	@Override

@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.ast.produce;
 
-import org.hibernate.HibernateException;
-
 /**
  * Represents a problem in the SQM in terms of improper syntax used.
  * <p/>
@@ -16,7 +14,7 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public class SyntaxException extends HibernateException {
+public class SyntaxException extends SqlTreeException {
 	public SyntaxException(String message) {
 		super( message );
 	}

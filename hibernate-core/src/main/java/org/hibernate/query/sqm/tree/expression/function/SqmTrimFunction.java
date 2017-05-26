@@ -14,14 +14,14 @@ import org.hibernate.sql.ast.tree.spi.TrimSpecification;
 /**
  * @author Steve Ebersole
  */
-public class TrimFunctionSqmExpression extends AbstractFunctionSqmExpression {
+public class SqmTrimFunction extends AbstractSqmFunction {
 	public static final String NAME = "trim";
 
 	private final TrimSpecification specification;
 	private final SqmExpression trimCharacter;
 	private final SqmExpression source;
 
-	public TrimFunctionSqmExpression(
+	public SqmTrimFunction(
 			BasicValuedExpressableType resultType,
 			TrimSpecification specification,
 			SqmExpression trimCharacter,

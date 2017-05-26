@@ -10,8 +10,8 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.CastFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.FunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 
 /**
  * ANSI-SQL style {@code cast(foo as type)} where the type is a Hibernate type
@@ -21,11 +21,11 @@ import org.hibernate.query.sqm.tree.expression.function.FunctionSqmExpression;
  */
 public class CastFunctionTemplate implements SqmFunctionTemplate {
 	@Override
-	public FunctionSqmExpression makeSqmFunctionExpression(
+	public SqmFunction makeSqmFunctionExpression(
 			List<SqmExpression> arguments,
 			AllowableFunctionReturnType impliedResultType) {
 		assert arguments.size() == 1;
-		return new CastFunctionSqmExpression(
+		return new SqmCastFunction(
 				arguments.get( 0 ),
 				impliedResultType
 		);

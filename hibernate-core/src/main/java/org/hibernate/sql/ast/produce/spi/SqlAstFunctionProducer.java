@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.produce.spi;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.expression.function.FunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.sqm.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -23,7 +23,7 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
  *
  * @author Steve Ebersole
  */
-public interface SqlAstFunctionProducer extends FunctionSqmExpression {
+public interface SqlAstFunctionProducer extends SqmFunction {
 	Expression convertToSqlAst(SqmToSqlAstConverter walker);
 
 	@Override

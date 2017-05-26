@@ -20,7 +20,7 @@ public class LongVarbinarySqlDescriptor extends VarbinarySqlDescriptor {
 	}
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.LONGVARBINARY;
 	}
 }

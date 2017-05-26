@@ -12,29 +12,27 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
-import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor.CollectionClassification;
 import org.hibernate.metamodel.model.domain.spi.NavigableContainer;
+import org.hibernate.metamodel.model.domain.spi.PersistentCollectionDescriptor.CollectionClassification;
 import org.hibernate.metamodel.model.domain.spi.PluralPersistentAttribute;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
-import org.hibernate.query.sqm.produce.spi.TrimSpecificationExpressionWrapper;
-import org.hibernate.query.sqm.tree.expression.function.FunctionSqmExpression;
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
-import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.query.sqm.LiteralNumberFormatException;
 import org.hibernate.query.sqm.NotYetImplementedException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.UnknownEntityException;
+import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.internal.NavigableBindingHelper;
 import org.hibernate.query.sqm.produce.internal.QuerySpecProcessingStateDmlImpl;
 import org.hibernate.query.sqm.produce.internal.QuerySpecProcessingStateStandardImpl;
@@ -50,6 +48,7 @@ import org.hibernate.query.sqm.produce.spi.ImplicitAliasGenerator;
 import org.hibernate.query.sqm.produce.spi.ParameterDeclarationContext;
 import org.hibernate.query.sqm.produce.spi.ParsingContext;
 import org.hibernate.query.sqm.produce.spi.QuerySpecProcessingState;
+import org.hibernate.query.sqm.produce.spi.TrimSpecificationExpressionWrapper;
 import org.hibernate.query.sqm.tree.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -115,26 +114,27 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceBasic;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceEmbeddable;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceEntity;
+import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableResolutionContext;
-import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
-import org.hibernate.query.sqm.tree.expression.function.AggregateFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.AvgFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.CastFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.ConcatFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.CountFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.CountStarFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.GenericFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.LowerFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.MaxFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.MinFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.SubstringFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.SumFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.TrimFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.UpperFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.Distinctable;
+import org.hibernate.query.sqm.tree.expression.function.SqmAggregateFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmLowerFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmUpperFunction;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -172,6 +172,10 @@ import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
+import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.ast.tree.spi.TrimSpecification;
 
 import org.jboss.logging.Logger;
@@ -2111,16 +2115,16 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	@Override
-	public GenericFunctionSqmExpression visitJpaNonStandardFunction(HqlParser.JpaNonStandardFunctionContext ctx) {
+	public SqmGenericFunction visitJpaNonStandardFunction(HqlParser.JpaNonStandardFunctionContext ctx) {
 		final String functionName = ctx.nonStandardFunctionName().getText();
 		final List<SqmExpression> functionArguments = visitNonStandardFunctionArguments( ctx.nonStandardFunctionArguments() );
 
 		// todo : integrate some form of SqlFunction look-up using the ParsingContext so we can resolve the "type"
-		return new GenericFunctionSqmExpression( functionName, null, functionArguments );
+		return new SqmGenericFunction( functionName, null, functionArguments );
 	}
 
 	@Override
-	public GenericFunctionSqmExpression visitNonStandardFunction(HqlParser.NonStandardFunctionContext ctx) {
+	public SqmGenericFunction visitNonStandardFunction(HqlParser.NonStandardFunctionContext ctx) {
 		if ( parsingContext.getSessionFactory().getSessionFactoryOptions().isStrictJpaQueryLanguageCompliance() ) {
 			throw new StrictJpaComplianceViolation(
 					"Encountered non-compliant non-standard function call [" +
@@ -2133,7 +2137,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		final List<SqmExpression> functionArguments = visitNonStandardFunctionArguments( ctx.nonStandardFunctionArguments() );
 
 		// todo : integrate some form of SqlFunction look-up using the ParsingContext so we can resolve the "type"
-		return new GenericFunctionSqmExpression( functionName, null, functionArguments );
+		return new SqmGenericFunction( functionName, null, functionArguments );
 	}
 
 	@Override
@@ -2166,97 +2170,165 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	@Override
-	public AggregateFunctionSqmExpression visitAggregateFunction(HqlParser.AggregateFunctionContext ctx) {
-		return (AggregateFunctionSqmExpression) super.visitAggregateFunction( ctx );
+	public SqmAggregateFunction visitAggregateFunction(HqlParser.AggregateFunctionContext ctx) {
+		return (SqmAggregateFunction) super.visitAggregateFunction( ctx );
 	}
 
 	@Override
-	public AvgFunctionSqmExpression visitAvgFunction(HqlParser.AvgFunctionContext ctx) {
-		final SqmExpression expr = (SqmExpression) ctx.expression().accept( this );
-		return new AvgFunctionSqmExpression(
-				expr,
+	public SqmExpression visitAvgFunction(HqlParser.AvgFunctionContext ctx) {
+		return generateAggregateFunction(
+				(sqmFunctionTemplate, sqmArgument) -> sqmFunctionTemplate.makeSqmFunctionExpression(
+						Collections.singletonList( sqmArgument ),
+						(AllowableFunctionReturnType) sqmArgument.getExpressionType()
+				),
+				sqmArgument -> new SqmAvgFunction(
+						sqmArgument,
+						(AllowableFunctionReturnType) sqmArgument.getExpressionType()
+				),
+				SqmAvgFunction.NAME,
 				ctx.DISTINCT() != null,
-				(BasicValuedExpressableType) expr.getExpressionType()
+				ctx.expression()
 		);
 	}
 
 	@Override
-	public CastFunctionSqmExpression visitCastFunction(HqlParser.CastFunctionContext ctx) {
-		return new CastFunctionSqmExpression(
+	public SqmCastFunction visitCastFunction(HqlParser.CastFunctionContext ctx) {
+		return new SqmCastFunction(
 				(SqmExpression) ctx.expression().accept( this ),
 				parsingContext.getSessionFactory().getTypeConfiguration().resolveCastTargetType( ctx.dataType().IDENTIFIER().getText() )
 		);
 	}
 
 	@Override
-	public ConcatFunctionSqmExpression visitConcatFunction(HqlParser.ConcatFunctionContext ctx) {
+	public SqmConcatFunction visitConcatFunction(HqlParser.ConcatFunctionContext ctx) {
 		final List<SqmExpression> arguments = new ArrayList<>();
 		for ( HqlParser.ExpressionContext argument : ctx.expression() ) {
 			arguments.add( (SqmExpression) argument.accept( this ) );
 		}
 
-		return new ConcatFunctionSqmExpression( (BasicValuedExpressableType) arguments.get( 0 ).getExpressionType(), arguments );
+		return new SqmConcatFunction( (BasicValuedExpressableType) arguments.get( 0 ).getExpressionType(), arguments );
 	}
 
 	@Override
-	public AggregateFunctionSqmExpression visitCountFunction(HqlParser.CountFunctionContext ctx) {
+	public SqmExpression visitCountFunction(HqlParser.CountFunctionContext ctx) {
+		final boolean isCountStar = ctx.ASTERISK() != null;
 		final BasicValuedExpressableType longType = resolveExpressableTypeBasic( Long.class );
-		if ( ctx.ASTERISK() != null ) {
-			return new CountStarFunctionSqmExpression( ctx.DISTINCT() != null, longType );
+
+		return generateAggregateFunction(
+				(sqmFunctionTemplate, sqmArgument) -> {
+					final List<SqmExpression> arguments = isCountStar
+							? Collections.singletonList( SqmCountStarFunction.STAR )
+							: Collections.singletonList( sqmArgument );
+					return sqmFunctionTemplate.makeSqmFunctionExpression(
+							arguments,
+							(AllowableFunctionReturnType) sqmArgument.getExpressionType()
+					);
+				},
+				sqmArgument -> isCountStar
+						? new SqmCountStarFunction( longType )
+						:  new SqmCountFunction( sqmArgument, longType ),
+				SqmCountFunction.NAME,
+				ctx.DISTINCT() != null, ctx.expression()
+		);
+	}
+
+	private void applyDistinct(SqmExpression result) {
+		if ( result instanceof Distinctable ) {
+			( (Distinctable) result ).makeDistinct();
 		}
 		else {
-			return new CountFunctionSqmExpression(
-					(SqmExpression) ctx.expression().accept( this ),
-					ctx.DISTINCT() != null,
-					longType
-			);
+			log.debugf( "COUNT SqmFunction result [%s] did not implement %s; cannot apply DISTINCT", result, Distinctable.class.getName() );
 		}
 	}
 
 	@Override
-	public MaxFunctionSqmExpression visitMaxFunction(HqlParser.MaxFunctionContext ctx) {
-		final SqmExpression expr = (SqmExpression) ctx.expression().accept( this );
-		return new MaxFunctionSqmExpression(
-				expr,
+	public SqmExpression visitMaxFunction(HqlParser.MaxFunctionContext ctx) {
+		return generateAggregateFunction(
+				(template, sqmArgument) -> template.makeSqmFunctionExpression(
+						Collections.singletonList( sqmArgument ),
+						(BasicValuedExpressableType) sqmArgument.getExpressionType()
+				),
+				sqmArgument -> new SqmMaxFunction(
+						sqmArgument,
+						(BasicValuedExpressableType) sqmArgument.getExpressionType()
+				),
+				SqmCountFunction.NAME,
+				ctx.DISTINCT() != null, ctx.expression()
+		);
+	}
+
+	private SqmExpression generateAggregateFunction(
+			BiFunction<SqmFunctionTemplate, SqmExpression, SqmExpression> templatedGenerator,
+			Function<SqmExpression, SqmExpression> nonTemplatedGenerator,
+			String name,
+			boolean isDistinct,
+			HqlParser.ExpressionContext antlrArgumentExpression) {
+		final SqmFunctionTemplate template = parsingContext.getSessionFactory().getSqlFunctionRegistry()
+				.findSQLFunction( name );
+
+		final SqmExpression sqmArgument = (SqmExpression) antlrArgumentExpression.accept( this );
+
+		final SqmExpression result;
+		if ( template == null ) {
+			result = nonTemplatedGenerator.apply( sqmArgument );
+		}
+		else {
+			result = templatedGenerator.apply( template, sqmArgument );
+		}
+
+		if ( isDistinct ) {
+			applyDistinct( result );
+		}
+
+		return result;
+	}
+
+	@Override
+	public SqmExpression visitMinFunction(HqlParser.MinFunctionContext ctx) {
+		return generateAggregateFunction(
+				(sqmFunctionTemplate, sqmArgument) -> sqmFunctionTemplate.makeSqmFunctionExpression(
+						Collections.singletonList( sqmArgument ),
+						(AllowableFunctionReturnType) sqmArgument.getExpressionType()
+				),
+				sqmArgument -> new SqmMinFunction(
+						sqmArgument,
+						(AllowableFunctionReturnType) sqmArgument.getExpressionType()
+				),
+				SqmCountFunction.NAME,
 				ctx.DISTINCT() != null,
-				(BasicValuedExpressableType) expr.getExpressionType()
+				ctx.expression()
 		);
 	}
 
 	@Override
-	public MinFunctionSqmExpression visitMinFunction(HqlParser.MinFunctionContext ctx) {
-		final SqmExpression expr = (SqmExpression) ctx.expression().accept( this );
-		return new MinFunctionSqmExpression(
-				expr,
-				ctx.DISTINCT() != null,
-				(BasicValuedExpressableType) expr.getExpressionType()
-		);
-	}
-
-	@Override
-	public SubstringFunctionSqmExpression visitSubstringFunction(HqlParser.SubstringFunctionContext ctx) {
+	public SqmExpression visitSubstringFunction(HqlParser.SubstringFunctionContext ctx) {
 		final SqmExpression source = (SqmExpression) ctx.expression().accept( this );
 		final SqmExpression start = (SqmExpression) ctx.substringFunctionStartArgument().accept( this );
 		final SqmExpression length = ctx.substringFunctionLengthArgument() == null
 				? null
 				: (SqmExpression) ctx.substringFunctionLengthArgument().accept( this );
-		return new SubstringFunctionSqmExpression( (BasicValuedExpressableType) source.getExpressionType(), source, start, length );
+		return new SqmSubstringFunction( (BasicValuedExpressableType) source.getExpressionType(), source, start, length );
 	}
 
 	@Override
-	public SumFunctionSqmExpression visitSumFunction(HqlParser.SumFunctionContext ctx) {
-		final SqmExpression expr = (SqmExpression) ctx.expression().accept( this );
-		return new SumFunctionSqmExpression(
-				expr,
+	public SqmExpression visitSumFunction(HqlParser.SumFunctionContext ctx) {
+		return generateAggregateFunction(
+				(sqmFunctionTemplate, sqmArgument) -> sqmFunctionTemplate.makeSqmFunctionExpression(
+						Collections.singletonList( sqmArgument ),
+						(AllowableFunctionReturnType) sqmArgument.getExpressionType()
+				),
+				sqmArgument -> new SqmSumFunction(
+						sqmArgument,
+						(AllowableFunctionReturnType) sqmArgument.getExpressionType()
+				),
+				SqmSumFunction.NAME,
 				ctx.DISTINCT() != null,
-				parsingContext.getSessionFactory()
-						.getTypeConfiguration()
-						.resolveSumFunctionType( (BasicValuedExpressableType) expr.getExpressionType() )
+				ctx.expression()
 		);
 	}
 
 	@Override
-	public FunctionSqmExpression visitTrimFunction(HqlParser.TrimFunctionContext ctx) {
+	public SqmExpression visitTrimFunction(HqlParser.TrimFunctionContext ctx) {
 		final SqmExpression source = (SqmExpression) ctx.expression().accept( this );
 
 		final SqmFunctionTemplate trimFunctionTemplate = parsingContext.getSessionFactory()
@@ -2274,7 +2346,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 			);
 		}
 
-		return new TrimFunctionSqmExpression(
+		return new SqmTrimFunction(
 				(BasicValuedExpressableType) source.getExpressionType(),
 				visitTrimSpecification( ctx.trimSpecification() ),
 				visitTrimCharacter( ctx.trimCharacter() ),
@@ -2325,20 +2397,20 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	@Override
-	public UpperFunctionSqmExpression visitUpperFunction(HqlParser.UpperFunctionContext ctx) {
+	public SqmUpperFunction visitUpperFunction(HqlParser.UpperFunctionContext ctx) {
 		final SqmExpression expression = (SqmExpression) ctx.expression().accept( this );
-		return new UpperFunctionSqmExpression(
+		return new SqmUpperFunction(
 				(BasicValuedExpressableType) expression.getExpressionType(),
 				expression
 		);
 	}
 
 	@Override
-	public LowerFunctionSqmExpression visitLowerFunction(HqlParser.LowerFunctionContext ctx) {
+	public SqmLowerFunction visitLowerFunction(HqlParser.LowerFunctionContext ctx) {
 		// todo (6.0) : why pass both the expression and its expression-type?
 		//			can't we just pass the expression?
 		final SqmExpression expression = (SqmExpression) ctx.expression().accept( this );
-		return new LowerFunctionSqmExpression(
+		return new SqmLowerFunction(
 				(BasicValuedExpressableType) expression.getExpressionType(),
 				expression
 		);

@@ -6,20 +6,24 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class MinFunctionSqmExpression
-		extends AbstractAggregateFunctionSqmExpression
-		implements AggregateFunctionSqmExpression {
+public class SqmMinFunction
+		extends AbstractSqmAggregateFunction
+		implements SqmAggregateFunction {
 	public static final String NAME = "min";
 
-	public MinFunctionSqmExpression(SqmExpression argument, boolean distinct, BasicValuedExpressableType resultType) {
-		super( argument, distinct, resultType );
+	public SqmMinFunction(SqmExpression argument) {
+		super( argument, (AllowableFunctionReturnType) argument.getExpressionType() );
+	}
+
+	public SqmMinFunction(SqmExpression argument, AllowableFunctionReturnType resultType) {
+		super( argument, resultType );
 	}
 
 	@Override

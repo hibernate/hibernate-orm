@@ -20,7 +20,7 @@ import org.hibernate.QueryException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.Oracle10gDialect;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
@@ -69,9 +69,9 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 		registerFunction( "dimension", new GetDimensionFunction() );
 		registerFunction( "geometrytype", new GetGeometryTypeFunction() );
 		registerFunction( "srid", new SDOObjectProperty( "SDO_SRID", StandardBasicTypes.INTEGER ) );
-		registerFunction( "envelope", new StandardSQLFunction( "SDO_GEOM.SDO_MBR" ) );
+		registerFunction( "envelope", new StandardSqmFunctionTemplate( "SDO_GEOM.SDO_MBR" ) );
 		registerFunction( "astext", new AsTextFunction() );
-		registerFunction( "asbinary", new StandardSQLFunction( "SDO_UTIL.TO_WKBGEOMETRY", StandardBasicTypes.BINARY ) );
+		registerFunction( "asbinary", new StandardSqmFunctionTemplate( "SDO_UTIL.TO_WKBGEOMETRY", StandardBasicTypes.BINARY ) );
 		registerFunction(
 				"isempty",
 				new WrappedOGCFunction( "OGC_ISEMPTY", StandardBasicTypes.BOOLEAN, new boolean[] {true} )
@@ -122,7 +122,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 
 		//other common functions
 
-		registerFunction( "transform", new StandardSQLFunction( "SDO_CS.TRANSFORM" ) );
+		registerFunction( "transform", new StandardSqmFunctionTemplate( "SDO_CS.TRANSFORM" ) );
 
 		// Oracle specific Aggregate functions
 		registerFunction(
@@ -443,7 +443,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 	/**
 	 * Implementation of the OGC astext function for HQL.
 	 */
-	private static class AsTextFunction extends StandardSQLFunction {
+	private static class AsTextFunction extends StandardSqmFunctionTemplate {
 
 		private AsTextFunction() {
 			super( "astext", StandardBasicTypes.STRING );
@@ -462,7 +462,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 	/**
 	 * HQL Spatial relation function.
 	 */
-	private class SpatialRelateFunction extends StandardSQLFunction {
+	private class SpatialRelateFunction extends StandardSqmFunctionTemplate {
 		private final int relation;
 
 		private SpatialRelateFunction(final String name, final int relation) {
@@ -496,7 +496,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 
 	}
 
-	private class SpatialAnalysisFunction extends StandardSQLFunction {
+	private class SpatialAnalysisFunction extends StandardSqmFunctionTemplate {
 		private final int analysis;
 
 		private SpatialAnalysisFunction(String name, Type returnType, int analysis) {
@@ -517,7 +517,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 
 	}
 
-	private class SpatialAggregationFunction extends StandardSQLFunction {
+	private class SpatialAggregationFunction extends StandardSqmFunctionTemplate {
 
 		private final int aggregation;
 

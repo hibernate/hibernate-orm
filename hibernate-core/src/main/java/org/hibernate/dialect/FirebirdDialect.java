@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
@@ -48,7 +48,7 @@ public class FirebirdDialect extends InterbaseDialect {
 
 	public FirebirdDialect() {
 		super();
-		registerFunction( "replace", new StandardSQLFunction( "replace", StandardBasicTypes.STRING ) );
+		registerFunction( "replace", new StandardSqmFunctionTemplate( "replace", StandardBasicTypes.STRING ) );
 	}
 	
 	@Override

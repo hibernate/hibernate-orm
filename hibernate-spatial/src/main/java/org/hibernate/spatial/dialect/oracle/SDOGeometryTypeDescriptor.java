@@ -35,7 +35,7 @@ public class SDOGeometryTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.STRUCT;
 	}
 

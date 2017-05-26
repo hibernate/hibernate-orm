@@ -20,7 +20,7 @@ public class NCharSqlDescriptor extends NVarcharSqlDescriptor {
 	}
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.NCHAR;
 	}
 }

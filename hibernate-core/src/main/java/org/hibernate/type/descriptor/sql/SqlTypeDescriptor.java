@@ -20,5 +20,5 @@ public interface SqlTypeDescriptor {
 	 *
 	 * @return typeCode The JDBC/SQL type-code
 	 */
-	int getSqlType();
+	int getJdbcTypeCode();
 }

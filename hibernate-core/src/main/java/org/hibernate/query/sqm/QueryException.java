@@ -11,12 +11,12 @@ package org.hibernate.query.sqm;
  *
  * @author Steve Ebersole
  */
-public class QueryException extends RuntimeException {
+public class QueryException extends org.hibernate.QueryException {
 	public QueryException(String message) {
 		super( message );
 	}
 
-	public QueryException(String message, Throwable cause) {
+	public QueryException(String message, Exception cause) {
 		super( message, cause );
 	}
 }

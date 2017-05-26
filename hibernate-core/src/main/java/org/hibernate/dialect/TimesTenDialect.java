@@ -10,8 +10,8 @@ import java.sql.Types;
 
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
@@ -74,16 +74,16 @@ public class TimesTenDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
-		registerFunction( "concat", new StandardSQLFunction( "concat", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod" ) );
-		registerFunction( "to_char", new StandardSQLFunction( "to_char", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardSpiBasicTypes.TIMESTAMP ) );
-		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardSpiBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "getdate", new NoArgSQLFunction( "getdate", StandardSpiBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "nvl", new StandardSQLFunction( "nvl" ) );
+		registerFunction( "lower", new StandardSqmFunctionTemplate( "lower" ) );
+		registerFunction( "upper", new StandardSqmFunctionTemplate( "upper" ) );
+		registerFunction( "rtrim", new StandardSqmFunctionTemplate( "rtrim" ) );
+		registerFunction( "concat", new StandardSqmFunctionTemplate( "concat", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "mod", new StandardSqmFunctionTemplate( "mod" ) );
+		registerFunction( "to_char", new StandardSqmFunctionTemplate( "to_char", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "to_date", new StandardSqmFunctionTemplate( "to_date", StandardSpiBasicTypes.TIMESTAMP ) );
+		registerFunction( "sysdate", new NoArgsSqmFunctionTemplate( "sysdate", StandardSpiBasicTypes.TIMESTAMP, false ) );
+		registerFunction( "getdate", new NoArgsSqmFunctionTemplate( "getdate", StandardSpiBasicTypes.TIMESTAMP, false ) );
+		registerFunction( "nvl", new StandardSqmFunctionTemplate( "nvl" ) );
 
 	}
 

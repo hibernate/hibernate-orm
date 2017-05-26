@@ -7,7 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.DerbyConcatFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.DerbyConcatFunctionTemplate;
 
 
 /**

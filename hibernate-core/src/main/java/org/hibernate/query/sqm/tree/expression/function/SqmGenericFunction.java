@@ -15,11 +15,11 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class GenericFunctionSqmExpression extends AbstractFunctionSqmExpression {
+public class SqmGenericFunction extends AbstractSqmFunction {
 	private final String functionName;
 	private final List<SqmExpression> arguments;
 
-	public GenericFunctionSqmExpression(
+	public SqmGenericFunction(
 			String functionName,
 			AllowableFunctionReturnType resultType,
 			List<SqmExpression> arguments) {

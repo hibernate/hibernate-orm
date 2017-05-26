@@ -33,6 +33,6 @@ public interface Column {
 	 */
 	@Deprecated
 	default int getJdbcType() {
-		return getSqlTypeDescriptor().getSqlType();
+		return getSqlTypeDescriptor().getJdbcTypeCode();
 	}
 }

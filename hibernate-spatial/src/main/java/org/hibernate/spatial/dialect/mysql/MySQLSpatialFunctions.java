@@ -6,7 +6,7 @@
  */
 package org.hibernate.spatial.dialect.mysql;
 
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -20,47 +20,47 @@ class MySQLSpatialFunctions extends SpatialFunctionsRegistry {
 
 	MySQLSpatialFunctions(){
 		functionMap.put(
-				"dimension", new StandardSQLFunction(
+				"dimension", new StandardSqmFunctionTemplate(
 				"dimension",
 				StandardBasicTypes.INTEGER
 		)
 		);
 		functionMap.put(
-				"geometrytype", new StandardSQLFunction(
+				"geometrytype", new StandardSqmFunctionTemplate(
 				"geometrytype", StandardBasicTypes.STRING
 		)
 		);
 		functionMap.put(
-				"srid", new StandardSQLFunction(
+				"srid", new StandardSqmFunctionTemplate(
 				"srid",
 				StandardBasicTypes.INTEGER
 		)
 		);
 		functionMap.put(
-				"envelope", new StandardSQLFunction(
+				"envelope", new StandardSqmFunctionTemplate(
 				"envelope"
 		)
 		);
 		functionMap.put(
-				"astext", new StandardSQLFunction(
+				"astext", new StandardSqmFunctionTemplate(
 				"astext",
 				StandardBasicTypes.STRING
 		)
 		);
 		functionMap.put(
-				"asbinary", new StandardSQLFunction(
+				"asbinary", new StandardSqmFunctionTemplate(
 				"asbinary",
 				StandardBasicTypes.BINARY
 		)
 		);
 		functionMap.put(
-				"isempty", new StandardSQLFunction(
+				"isempty", new StandardSqmFunctionTemplate(
 				"isempty",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		functionMap.put(
-				"issimple", new StandardSQLFunction(
+				"issimple", new StandardSqmFunctionTemplate(
 				"issimple",
 				StandardBasicTypes.BOOLEAN
 		)
@@ -73,49 +73,49 @@ class MySQLSpatialFunctions extends SpatialFunctionsRegistry {
 
 		// Register functions for spatial relation constructs
 		functionMap.put(
-				"overlaps", new StandardSQLFunction(
+				"overlaps", new StandardSqmFunctionTemplate(
 				"overlaps",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		functionMap.put(
-				"intersects", new StandardSQLFunction(
+				"intersects", new StandardSqmFunctionTemplate(
 				"intersects",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		functionMap.put(
-				"equals", new StandardSQLFunction(
+				"equals", new StandardSqmFunctionTemplate(
 				"equals",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		functionMap.put(
-				"contains", new StandardSQLFunction(
+				"contains", new StandardSqmFunctionTemplate(
 				"contains",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		functionMap.put(
-				"crosses", new StandardSQLFunction(
+				"crosses", new StandardSqmFunctionTemplate(
 				"crosses",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		functionMap.put(
-				"disjoint", new StandardSQLFunction(
+				"disjoint", new StandardSqmFunctionTemplate(
 				"disjoint",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		functionMap.put(
-				"touches", new StandardSQLFunction(
+				"touches", new StandardSqmFunctionTemplate(
 				"touches",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		functionMap.put(
-				"within", new StandardSQLFunction(
+				"within", new StandardSqmFunctionTemplate(
 				"within",
 				StandardBasicTypes.BOOLEAN
 		)

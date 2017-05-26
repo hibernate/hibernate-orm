@@ -15,4 +15,8 @@ import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
  * @author Steve Ebersole
  */
 public interface Function extends Expression, Selectable, SqlSelectable {
+	@Override
+	default Selectable getSelectable() {
+		return this;
+	}
 }

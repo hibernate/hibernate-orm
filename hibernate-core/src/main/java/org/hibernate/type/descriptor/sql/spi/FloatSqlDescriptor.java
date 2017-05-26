@@ -23,7 +23,7 @@ public class FloatSqlDescriptor extends RealSqlDescriptor {
 	}
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.FLOAT;
 	}
 

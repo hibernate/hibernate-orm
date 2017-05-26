@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.produce.function.internal;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.produce.function.spi.PatternBasedSqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
@@ -19,27 +18,30 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
 /**
  * @author Steve Ebersole
  */
-public class SelfRenderingFunctionSqmExpression implements SqlAstFunctionProducer {
+public class SelfRenderingSqmFunction implements SqlAstFunctionProducer {
 	private final SelfRenderingFunctionSupport renderingSupport;
 	private final List<SqmExpression> sqmArguments;
 	private final AllowableFunctionReturnType impliedResultType;
 
-	public SelfRenderingFunctionSqmExpression(
+	public SelfRenderingSqmFunction(
 			SelfRenderingFunctionSupport renderingSupport,
 			List<SqmExpression> sqmArguments,
 			AllowableFunctionReturnType impliedResultType) {
-
 		this.renderingSupport = renderingSupport;
+		this.sqmArguments = sqmArguments;
+		this.impliedResultType = impliedResultType;
+	}
+
+	public SelfRenderingSqmFunction(
+			List<SqmExpression> sqmArguments,
+			AllowableFunctionReturnType impliedResultType) {
+		this.renderingSupport = null;
 		this.sqmArguments = sqmArguments;
 		this.impliedResultType = impliedResultType;
 	}
 
 	@Override
 	public AllowableFunctionReturnType getExpressionType() {
-		if ( getRenderingSupport().functionReturnType() != null ) {
-			return getRenderingSupport().functionReturnType();
-		}
-
 		return impliedResultType;
 	}
 

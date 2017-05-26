@@ -48,19 +48,19 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmMapEntryBinding;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMaxElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmMinIndexReferenceBasic;
-import org.hibernate.query.sqm.tree.expression.function.AvgFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.CastFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.ConcatFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.CountFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.CountStarFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.GenericFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.LowerFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.MaxFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.MinFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.SubstringFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.SumFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.TrimFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.UpperFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmLowerFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmUpperFunction;
 import org.hibernate.query.sqm.tree.from.SqmFromElementSpace;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
@@ -177,23 +177,23 @@ public interface SemanticQueryWalker<T> {
 
 	T visitAttributeReferenceExpression(SqmAttributeReference expression);
 
-	T visitGenericFunction(GenericFunctionSqmExpression expression);
+	T visitGenericFunction(SqmGenericFunction expression);
 
 	T visitSqlAstFunctionProducer(SqlAstFunctionProducer sqlAstFunctionProducer);
 
-	T visitCastFunction(CastFunctionSqmExpression expression);
+	T visitCastFunction(SqmCastFunction expression);
 
-	T visitAvgFunction(AvgFunctionSqmExpression expression);
+	T visitAvgFunction(SqmAvgFunction expression);
 
-	T visitCountStarFunction(CountStarFunctionSqmExpression expression);
+	T visitCountStarFunction(SqmCountStarFunction expression);
 
-	T visitCountFunction(CountFunctionSqmExpression expression);
+	T visitCountFunction(SqmCountFunction expression);
 
-	T visitMaxFunction(MaxFunctionSqmExpression expression);
+	T visitMaxFunction(SqmMaxFunction expression);
 
-	T visitMinFunction(MinFunctionSqmExpression expression);
+	T visitMinFunction(SqmMinFunction expression);
 
-	T visitSumFunction(SumFunctionSqmExpression expression);
+	T visitSumFunction(SqmSumFunction expression);
 
 	T visitPluralAttributeSizeFunction(CollectionSizeSqmExpression function);
 
@@ -237,7 +237,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitConcatExpression(ConcatSqmExpression expression);
 
-	T visitConcatFunction(ConcatFunctionSqmExpression expression);
+	T visitConcatFunction(SqmConcatFunction expression);
 
 	T visitConstantEnumExpression(ConstantEnumSqmExpression expression);
 
@@ -255,13 +255,13 @@ public interface SemanticQueryWalker<T> {
 
 	T visitNullifExpression(NullifSqmExpression expression);
 
-	T visitSubstringFunction(SubstringFunctionSqmExpression expression);
+	T visitSubstringFunction(SqmSubstringFunction expression);
 
-	T visitTrimFunction(TrimFunctionSqmExpression expression);
+	T visitTrimFunction(SqmTrimFunction expression);
 
-	T visitUpperFunction(UpperFunctionSqmExpression expression);
+	T visitUpperFunction(SqmUpperFunction expression);
 
-	T visitLowerFunction(LowerFunctionSqmExpression expression);
+	T visitLowerFunction(SqmLowerFunction expression);
 
 	T visitEntityIdentifierBinding(SqmEntityIdentifierReference sqmEntityIdentifierBinding);
 }

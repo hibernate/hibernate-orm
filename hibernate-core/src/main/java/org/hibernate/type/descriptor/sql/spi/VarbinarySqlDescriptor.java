@@ -30,7 +30,7 @@ public class VarbinarySqlDescriptor implements SqlTypeDescriptor {
 	public VarbinarySqlDescriptor() {
 	}
 
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.VARBINARY;
 	}
 

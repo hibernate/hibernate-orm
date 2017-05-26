@@ -32,7 +32,7 @@ public class BigIntSqlDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.BIGINT;
 	}
 

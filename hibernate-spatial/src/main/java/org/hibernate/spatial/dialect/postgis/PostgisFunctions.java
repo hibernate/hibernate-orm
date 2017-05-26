@@ -8,7 +8,7 @@ package org.hibernate.spatial.dialect.postgis;
 
 import java.util.List;
 
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 import org.hibernate.type.StandardBasicTypes;
@@ -24,108 +24,108 @@ class PostgisFunctions extends SpatialFunctionsRegistry {
 	PostgisFunctions() {
 
 		put(
-				"dimension", new StandardSQLFunction(
+				"dimension", new StandardSqmFunctionTemplate(
 						"st_dimension",
 						StandardBasicTypes.INTEGER
 				)
 		);
 		put(
-				"geometrytype", new StandardSQLFunction(
+				"geometrytype", new StandardSqmFunctionTemplate(
 						"st_geometrytype", StandardBasicTypes.STRING
 				)
 		);
 		put(
-				"srid", new StandardSQLFunction(
+				"srid", new StandardSqmFunctionTemplate(
 						"st_srid",
 						StandardBasicTypes.INTEGER
 				)
 		);
 		put(
-				"envelope", new StandardSQLFunction(
+				"envelope", new StandardSqmFunctionTemplate(
 						"st_envelope"
 				)
 		);
 		put(
-				"astext", new StandardSQLFunction(
+				"astext", new StandardSqmFunctionTemplate(
 						"st_astext",
 						StandardBasicTypes.STRING
 				)
 		);
 		put(
-				"asbinary", new StandardSQLFunction(
+				"asbinary", new StandardSqmFunctionTemplate(
 						"st_asbinary",
 						StandardBasicTypes.BINARY
 				)
 		);
 		put(
-				"isempty", new StandardSQLFunction(
+				"isempty", new StandardSqmFunctionTemplate(
 						"st_isempty",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		put(
-				"issimple", new StandardSQLFunction(
+				"issimple", new StandardSqmFunctionTemplate(
 						"st_issimple",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		put(
-				"boundary", new StandardSQLFunction(
+				"boundary", new StandardSqmFunctionTemplate(
 						"st_boundary"
 				)
 		);
 
 		// Register functions for spatial relation constructs
 		put(
-				"overlaps", new StandardSQLFunction(
+				"overlaps", new StandardSqmFunctionTemplate(
 						"st_overlaps",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		put(
-				"intersects", new StandardSQLFunction(
+				"intersects", new StandardSqmFunctionTemplate(
 						"st_intersects",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		put(
-				"equals", new StandardSQLFunction(
+				"equals", new StandardSqmFunctionTemplate(
 						"st_equals",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		put(
-				"contains", new StandardSQLFunction(
+				"contains", new StandardSqmFunctionTemplate(
 						"st_contains",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		put(
-				"crosses", new StandardSQLFunction(
+				"crosses", new StandardSqmFunctionTemplate(
 						"st_crosses",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		put(
-				"disjoint", new StandardSQLFunction(
+				"disjoint", new StandardSqmFunctionTemplate(
 						"st_disjoint",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		put(
-				"touches", new StandardSQLFunction(
+				"touches", new StandardSqmFunctionTemplate(
 						"st_touches",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		put(
-				"within", new StandardSQLFunction(
+				"within", new StandardSqmFunctionTemplate(
 						"st_within",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		put(
-				"relate", new StandardSQLFunction(
+				"relate", new StandardSqmFunctionTemplate(
 						"st_relate",
 						StandardBasicTypes.BOOLEAN
 				)
@@ -133,37 +133,37 @@ class PostgisFunctions extends SpatialFunctionsRegistry {
 
 		// register the spatial analysis functions
 		put(
-				"distance", new StandardSQLFunction(
+				"distance", new StandardSqmFunctionTemplate(
 						"st_distance",
 						StandardBasicTypes.DOUBLE
 				)
 		);
 		put(
-				"buffer", new StandardSQLFunction(
+				"buffer", new StandardSqmFunctionTemplate(
 						"st_buffer"
 				)
 		);
 		put(
-				"convexhull", new StandardSQLFunction(
+				"convexhull", new StandardSqmFunctionTemplate(
 						"st_convexhull"
 				)
 		);
 		put(
-				"difference", new StandardSQLFunction(
+				"difference", new StandardSqmFunctionTemplate(
 						"st_difference"
 				)
 		);
 		put(
-				"intersection", new StandardSQLFunction(
+				"intersection", new StandardSqmFunctionTemplate(
 						"st_intersection"
 				)
 		);
 		put(
 				"symdifference",
-				new StandardSQLFunction( "st_symdifference" )
+				new StandardSqmFunctionTemplate( "st_symdifference" )
 		);
 		put(
-				"geomunion", new StandardSQLFunction(
+				"geomunion", new StandardSqmFunctionTemplate(
 						"st_union"
 				)
 		);
@@ -175,19 +175,19 @@ class PostgisFunctions extends SpatialFunctionsRegistry {
 
 		//other common functions
 		put(
-				"dwithin", new StandardSQLFunction(
+				"dwithin", new StandardSqmFunctionTemplate(
 						"st_dwithin",
 						StandardBasicTypes.BOOLEAN
 				)
 		);
 		put(
-				"transform", new StandardSQLFunction(
+				"transform", new StandardSqmFunctionTemplate(
 						"st_transform"
 				)
 		);
 	}
 
-	private static class ExtentFunction extends StandardSQLFunction {
+	private static class ExtentFunction extends StandardSqmFunctionTemplate {
 
 		public ExtentFunction() {
 			super( "st_extent" );

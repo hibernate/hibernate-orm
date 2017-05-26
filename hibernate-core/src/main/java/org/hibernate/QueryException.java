@@ -8,7 +8,10 @@ package org.hibernate;
 
 /**
  * A problem occurred translating a Hibernate query to SQL due to invalid query syntax, etc.
+ *
+ * @deprecated Use {@link org.hibernate.query.sqm.QueryException} instead
  */
+@Deprecated
 public class QueryException extends HibernateException {
 	private final String queryString;
 

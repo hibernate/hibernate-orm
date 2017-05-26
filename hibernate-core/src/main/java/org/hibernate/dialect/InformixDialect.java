@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 
-import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.NvlFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
@@ -79,8 +79,8 @@ public class InformixDialect extends Dialect {
 		registerFunction( "substr", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "substr(?1, ?2, ?3)"));
 		registerFunction( "coalesce", new NvlFunction());
 		registerFunction( "nvl", new NvlFunction());
-		registerFunction( "current_timestamp", new NoArgSQLFunction( "current", StandardSpiBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "today", StandardSpiBasicTypes.DATE, false ) );
+		registerFunction( "current_timestamp", new NoArgsSqmFunctionTemplate( "current", StandardSpiBasicTypes.TIMESTAMP, false ) );
+		registerFunction( "current_date", new NoArgsSqmFunctionTemplate( "today", StandardSpiBasicTypes.DATE, false ) );
 
 		uniqueDelegate = new InformixUniqueDelegate( this );
 	}

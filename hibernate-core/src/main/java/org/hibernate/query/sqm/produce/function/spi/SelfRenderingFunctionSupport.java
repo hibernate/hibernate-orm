@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.produce.function.spi;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
@@ -21,10 +20,6 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
  * @author Steve Ebersole
  */
 public interface SelfRenderingFunctionSupport {
-	SqmFunctionTemplate getSqmFunctionTemplate();
-
-	AllowableFunctionReturnType functionReturnType();
-
 	void render(
 			SqlAppender sqlAppender,
 			List<Expression> sqlAstArguments,

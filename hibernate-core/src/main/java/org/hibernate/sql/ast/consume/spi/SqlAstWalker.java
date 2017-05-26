@@ -11,6 +11,7 @@ import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
 import org.hibernate.sql.ast.tree.spi.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.tree.spi.expression.CastFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CoalesceFunction;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.ConcatFunction;
@@ -155,4 +156,6 @@ public interface SqlAstWalker {
 	void visitSelfRenderingExpression(SelfRenderingExpression expression);
 
 	void visitTrimFunction(TrimFunction trimFunction);
+
+	void visitCastFunction(CastFunction castFunction);
 }

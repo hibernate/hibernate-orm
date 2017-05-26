@@ -45,7 +45,7 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 	public static final PGGeometryTypeDescriptor INSTANCE = new PGGeometryTypeDescriptor();
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.OTHER;
 	}
 

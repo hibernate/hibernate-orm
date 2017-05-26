@@ -30,11 +30,11 @@ import org.hibernate.sql.ast.tree.spi.select.SqlSelectable;
  * @author Steve Ebersole
  */
 public class SelfRenderingFunctionSqlAstExpression implements SelfRenderingExpression, Selectable, SqlSelectable {
-	private final SelfRenderingFunctionSqmExpression sqmExpression;
+	private final SelfRenderingSqmFunction sqmExpression;
 	private final List<Expression> sqlAstArguments;
 
 	public SelfRenderingFunctionSqlAstExpression(
-			SelfRenderingFunctionSqmExpression sqmExpression,
+			SelfRenderingSqmFunction sqmExpression,
 			SqmToSqlAstConverter walker) {
 		this.sqmExpression = sqmExpression;
 		this.sqlAstArguments = resolveSqlAstArguments( sqmExpression.getSqmArguments(), walker );

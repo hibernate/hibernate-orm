@@ -28,7 +28,7 @@ public class LongVarcharSqlDescriptor extends VarcharSqlDescriptor {
 	}
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.LONGVARCHAR;
 	}
 }

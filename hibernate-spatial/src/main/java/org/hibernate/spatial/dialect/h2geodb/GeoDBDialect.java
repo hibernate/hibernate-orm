@@ -9,7 +9,7 @@ package org.hibernate.spatial.dialect.h2geodb;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 
 
@@ -40,39 +40,39 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 		super();
 
 		// Register Geometry column type
-		registerColumnType( GeoDBGeometryTypeDescriptor.INSTANCE.getSqlType(), "GEOMETRY" );
+		registerColumnType( GeoDBGeometryTypeDescriptor.INSTANCE.getJdbcTypeCode(), "GEOMETRY" );
 
 		// Register functions that operate on spatial types
-		registerFunction( "dimension", new StandardSQLFunction( "ST_Dimension", StandardBasicTypes.INTEGER ) );
-		registerFunction( "geometrytype", new StandardSQLFunction( "GeometryType", StandardBasicTypes.STRING ) );
-		registerFunction( "srid", new StandardSQLFunction( "ST_SRID", StandardBasicTypes.INTEGER ) );
-		registerFunction( "envelope", new StandardSQLFunction( "ST_Envelope" ) );
-		registerFunction( "astext", new StandardSQLFunction( "ST_AsText", StandardBasicTypes.STRING ) );
-		registerFunction( "asbinary", new StandardSQLFunction( "ST_AsEWKB", StandardBasicTypes.BINARY ) );
-		registerFunction( "isempty", new StandardSQLFunction( "ST_IsEmpty", StandardBasicTypes.BOOLEAN ) );
-		registerFunction( "issimple", new StandardSQLFunction( "ST_IsSimple", StandardBasicTypes.BOOLEAN ) );
-		registerFunction( "boundary", new StandardSQLFunction( "ST_Boundary" ) );
+		registerFunction( "dimension", new StandardSqmFunctionTemplate( "ST_Dimension", StandardBasicTypes.INTEGER ) );
+		registerFunction( "geometrytype", new StandardSqmFunctionTemplate( "GeometryType", StandardBasicTypes.STRING ) );
+		registerFunction( "srid", new StandardSqmFunctionTemplate( "ST_SRID", StandardBasicTypes.INTEGER ) );
+		registerFunction( "envelope", new StandardSqmFunctionTemplate( "ST_Envelope" ) );
+		registerFunction( "astext", new StandardSqmFunctionTemplate( "ST_AsText", StandardBasicTypes.STRING ) );
+		registerFunction( "asbinary", new StandardSqmFunctionTemplate( "ST_AsEWKB", StandardBasicTypes.BINARY ) );
+		registerFunction( "isempty", new StandardSqmFunctionTemplate( "ST_IsEmpty", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "issimple", new StandardSqmFunctionTemplate( "ST_IsSimple", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "boundary", new StandardSqmFunctionTemplate( "ST_Boundary" ) );
 
 		// Register functions for spatial relation constructs
-		registerFunction( "overlaps", new StandardSQLFunction( "ST_Overlaps", StandardBasicTypes.BOOLEAN ) );
-		registerFunction( "intersects", new StandardSQLFunction( "ST_Intersects", StandardBasicTypes.BOOLEAN ) );
-		registerFunction( "equals", new StandardSQLFunction( "ST_Equals", StandardBasicTypes.BOOLEAN ) );
-		registerFunction( "contains", new StandardSQLFunction( "ST_Contains", StandardBasicTypes.BOOLEAN ) );
-		registerFunction( "crosses", new StandardSQLFunction( "ST_Crosses", StandardBasicTypes.BOOLEAN ) );
-		registerFunction( "disjoint", new StandardSQLFunction( "ST_Disjoint", StandardBasicTypes.BOOLEAN ) );
-		registerFunction( "touches", new StandardSQLFunction( "ST_Touches", StandardBasicTypes.BOOLEAN ) );
-		registerFunction( "within", new StandardSQLFunction( "ST_Within", StandardBasicTypes.BOOLEAN ) );
-		registerFunction( "relate", new StandardSQLFunction( "ST_Relate", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "overlaps", new StandardSqmFunctionTemplate( "ST_Overlaps", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "intersects", new StandardSqmFunctionTemplate( "ST_Intersects", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "equals", new StandardSqmFunctionTemplate( "ST_Equals", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "contains", new StandardSqmFunctionTemplate( "ST_Contains", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "crosses", new StandardSqmFunctionTemplate( "ST_Crosses", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "disjoint", new StandardSqmFunctionTemplate( "ST_Disjoint", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "touches", new StandardSqmFunctionTemplate( "ST_Touches", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "within", new StandardSqmFunctionTemplate( "ST_Within", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "relate", new StandardSqmFunctionTemplate( "ST_Relate", StandardBasicTypes.BOOLEAN ) );
 		// register the spatial analysis functions
-		registerFunction( "distance", new StandardSQLFunction( "ST_Distance", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "buffer", new StandardSQLFunction( "ST_Buffer" ) );
-		registerFunction( "convexhull", new StandardSQLFunction( "ST_ConvexHull" ) );
-		registerFunction( "difference", new StandardSQLFunction( "ST_Difference" ) );
-		registerFunction( "intersection", new StandardSQLFunction( "ST_Intersection" ) );
-		registerFunction( "symdifference", new StandardSQLFunction( "ST_SymDifference" ) );
-		registerFunction( "geomunion", new StandardSQLFunction( "ST_Union" ) );
+		registerFunction( "distance", new StandardSqmFunctionTemplate( "ST_Distance", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "buffer", new StandardSqmFunctionTemplate( "ST_Buffer" ) );
+		registerFunction( "convexhull", new StandardSqmFunctionTemplate( "ST_ConvexHull" ) );
+		registerFunction( "difference", new StandardSqmFunctionTemplate( "ST_Difference" ) );
+		registerFunction( "intersection", new StandardSqmFunctionTemplate( "ST_Intersection" ) );
+		registerFunction( "symdifference", new StandardSqmFunctionTemplate( "ST_SymDifference" ) );
+		registerFunction( "geomunion", new StandardSqmFunctionTemplate( "ST_Union" ) );
 
-		registerFunction( "dwithin", new StandardSQLFunction( "ST_DWithin", StandardBasicTypes.BOOLEAN ) );
+		registerFunction( "dwithin", new StandardSqmFunctionTemplate( "ST_DWithin", StandardBasicTypes.BOOLEAN ) );
 
 	}
 

@@ -9,26 +9,28 @@ package org.hibernate.sql.ast.consume.spi;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.persistence.EnumType;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.sqm.tree.expression.function.TrimFunctionSqmExpression;
 import org.hibernate.query.sqm.tree.order.SqmSortOrder;
 import org.hibernate.sql.NotYetImplementedException;
 import org.hibernate.sql.ast.consume.SemanticException;
 import org.hibernate.sql.ast.consume.internal.JdbcSelectImpl;
+import org.hibernate.sql.ast.produce.SqlTreeException;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlSelectPlan;
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
 import org.hibernate.sql.ast.tree.spi.SelectStatement;
-import org.hibernate.metamodel.model.domain.spi.AllowableParameterType;
 import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
 import org.hibernate.sql.ast.tree.spi.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.tree.spi.expression.CastFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CoalesceFunction;
 import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.ConcatFunction;
@@ -73,7 +75,10 @@ import org.hibernate.sql.ast.tree.spi.select.SelectClause;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
 import org.hibernate.sql.ast.tree.spi.select.SqlSelection;
 import org.hibernate.sql.ast.tree.spi.sort.SortSpecification;
+import org.hibernate.type.descriptor.java.spi.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
 import org.hibernate.type.spi.BasicType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
@@ -85,7 +90,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class SqlSelectAstToJdbcSelectConverter
-		implements SqlSelectAstWalker, JdbcParameterBinder.ParameterBindingContext {
+		implements SqlSelectAstWalker, JdbcParameterBinder.ParameterBindingContext, JdbcRecommendedSqlTypeMappingContext {
 	private static final Logger log = Logger.getLogger( SqlSelectAstToJdbcSelectConverter.class );
 
 	/**
@@ -734,6 +739,35 @@ public class SqlSelectAstToJdbcSelectConverter
 
 	}
 
+	@Override
+	public void visitCastFunction(CastFunction castFunction) {
+		sqlAppender.appendSql( "cast(" );
+		castFunction.getExpressionToCast().accept( this );
+		sqlAppender.appendSql( " as " );
+		sqlAppender.appendSql( determineCastTargetTypeSqlExpression( castFunction ) );
+		sqlAppender.appendSql( ")" );
+	}
+
+	private String determineCastTargetTypeSqlExpression(CastFunction castFunction) {
+		if ( castFunction.getExplicitCastTargetTypeSqlExpression() != null ) {
+			return castFunction.getExplicitCastTargetTypeSqlExpression();
+		}
+
+		final BasicValuedExpressableType castResultType = castFunction.getCastResultType();
+
+		if ( castResultType == null ) {
+			throw new SqlTreeException(
+					"CastFunction did not define an explicit cast target SQL expression and its return type was null"
+			);
+		}
+
+		final BasicJavaDescriptor javaTypeDescriptor = castResultType.getJavaTypeDescriptor();
+		return persistenceContext.getJdbcServices()
+				.getDialect()
+				.getCastTypeName( javaTypeDescriptor.getJdbcRecommendedSqlType( this ).getJdbcTypeCode() );
+	}
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Predicates
 
@@ -867,6 +901,34 @@ public class SqlSelectAstToJdbcSelectConverter
 		appendSql( relationalPredicate.getOperator().sqlText() );
 		relationalPredicate.getRightHandExpression().accept( this );
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JdbcRecommendedSqlTypeMappingContext
+
+	@Override
+	public boolean isNationalized() {
+		return false;
+	}
+
+	@Override
+	public boolean isLob() {
+		return false;
+	}
+
+	@Override
+	public EnumType getEnumeratedType() {
+		return EnumType.ORDINAL;
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return persistenceContext.getFactory().getTypeConfiguration();
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Misc
 
 	@Override
 	@SuppressWarnings("unchecked")

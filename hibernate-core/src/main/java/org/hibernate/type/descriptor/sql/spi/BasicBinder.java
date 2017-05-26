@@ -53,11 +53,11 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 						String.format(
 								NULL_BIND_MSG_TEMPLATE,
 								index,
-								JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() )
+								JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() )
 						)
 				);
 			}
-			st.setNull( index, sqlDescriptor.getSqlType() );
+			st.setNull( index, sqlDescriptor.getJdbcTypeCode() );
 		}
 		else {
 			if ( traceEnabled ) {
@@ -65,7 +65,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 						String.format(
 								BIND_MSG_TEMPLATE,
 								index,
-								JdbcTypeNameMapper.getTypeName( sqlDescriptor.getSqlType() ),
+								JdbcTypeNameMapper.getTypeName( sqlDescriptor.getJdbcTypeCode() ),
 								getJavaDescriptor().extractLoggableRepresentation( value )
 						)
 				);
@@ -83,11 +83,11 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 						String.format(
 								NULL_BIND_MSG_TEMPLATE,
 								name,
-								JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() )
+								JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() )
 						)
 				);
 			}
-			st.setNull( name, sqlDescriptor.getSqlType() );
+			st.setNull( name, sqlDescriptor.getJdbcTypeCode() );
 		}
 		else {
 			if ( traceEnabled ) {
@@ -95,7 +95,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 						String.format(
 								BIND_MSG_TEMPLATE,
 								name,
-								JdbcTypeNameMapper.getTypeName( sqlDescriptor.getSqlType() ),
+								JdbcTypeNameMapper.getTypeName( sqlDescriptor.getJdbcTypeCode() ),
 								getJavaDescriptor().extractLoggableRepresentation( value )
 						)
 				);

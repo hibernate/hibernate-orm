@@ -14,7 +14,6 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * Emulation of <tt>locate()</tt> on Sybase
@@ -24,21 +23,21 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 public class CharIndexFunctionTemplate
 		extends AbstractSelfRenderingFunctionTemplate
 		implements SelfRenderingFunctionSupport {
+	public CharIndexFunctionTemplate(
+			AllowableFunctionReturnType returnType,
+			ArgumentsValidator argumentsValidator) {
+		super( returnType, argumentsValidator );
+	}
+
+	public CharIndexFunctionTemplate(AllowableFunctionReturnType returnType) {
+		super( returnType );
+	}
+
 	@Override
-	SelfRenderingFunctionSupport getRenderingFunctionSupport(
+	protected SelfRenderingFunctionSupport getRenderingFunctionSupport(
 			List<SqmExpression> arguments,
 			AllowableFunctionReturnType impliedResultType) {
 		return this;
-	}
-
-	@Override
-	public SqmFunctionTemplate getSqmFunctionTemplate() {
-		return this;
-	}
-
-	@Override
-	public AllowableFunctionReturnType functionReturnType() {
-		return StandardSpiBasicTypes.INTEGER;
 	}
 
 	@Override

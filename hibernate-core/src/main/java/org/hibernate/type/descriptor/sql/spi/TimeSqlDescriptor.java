@@ -36,7 +36,7 @@ public class TimeSqlDescriptor implements TemporalSqlDescriptor {
 	}
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.TIME;
 	}
 

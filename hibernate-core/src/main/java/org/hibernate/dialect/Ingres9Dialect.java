@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Ingres9IdentityColumnSupport;
@@ -78,15 +78,15 @@ public class Ingres9Dialect extends IngresDialect {
 	 * Register functions current_time, current_timestamp, current_date
 	 */
 	protected void registerDateTimeFunctions() {
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardSpiBasicTypes.TIME, false ) );
+		registerFunction( "current_time", new NoArgsSqmFunctionTemplate( "current_time", StandardSpiBasicTypes.TIME, false ) );
 		registerFunction(
-				"current_timestamp", new NoArgSQLFunction(
+				"current_timestamp", new NoArgsSqmFunctionTemplate(
 						"current_timestamp",
 						StandardSpiBasicTypes.TIMESTAMP,
 						false
 		)
 		);
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardSpiBasicTypes.DATE, false ) );
+		registerFunction( "current_date", new NoArgsSqmFunctionTemplate( "current_date", StandardSpiBasicTypes.DATE, false ) );
 	}
 
 	/**

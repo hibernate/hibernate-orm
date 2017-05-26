@@ -31,8 +31,8 @@ public class MultiplicityType implements CompositeUserType {
 			"count", "glarch"
 	};
 	private static final int[] SQL_TYPES = new int[] {
-			IntegerSqlDescriptor.INSTANCE.getSqlType(),
-			VarcharSqlDescriptor.INSTANCE.getSqlType()
+			IntegerSqlDescriptor.INSTANCE.getJdbcTypeCode(),
+			VarcharSqlDescriptor.INSTANCE.getJdbcTypeCode()
 	};
 	private static final Type[] TYPES = new Type[] {
 			StandardSpiBasicTypes.INTEGER,

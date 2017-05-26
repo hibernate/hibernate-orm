@@ -33,7 +33,7 @@ public class BitSqlDescriptor implements SqlTypeDescriptor {
 	public BitSqlDescriptor() {
 	}
 
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.BIT;
 	}
 

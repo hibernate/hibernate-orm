@@ -29,7 +29,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptor;
  */
 public abstract class NClobSqlDescriptor implements SqlTypeDescriptor {
 	@Override
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.NCLOB;
 	}
 

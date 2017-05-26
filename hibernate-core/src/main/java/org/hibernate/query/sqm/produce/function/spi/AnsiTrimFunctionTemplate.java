@@ -11,8 +11,8 @@ import java.util.List;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.spi.TrimSpecificationExpressionWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.FunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.TrimFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -23,7 +23,7 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
  */
 public class AnsiTrimFunctionTemplate implements SqmFunctionTemplate {
 	@Override
-	public FunctionSqmExpression makeSqmFunctionExpression(
+	public SqmFunction makeSqmFunctionExpression(
 			List<SqmExpression> arguments,
 			AllowableFunctionReturnType impliedResultType) {
 		// 1) LEADING/TRAILING/BOTH
@@ -31,7 +31,7 @@ public class AnsiTrimFunctionTemplate implements SqmFunctionTemplate {
 		// 3) source
 		assert arguments.size() == 3;
 
-		return new TrimFunctionSqmExpression(
+		return new SqmTrimFunction(
 				StandardSpiBasicTypes.STRING,
 				( (TrimSpecificationExpressionWrapper) arguments.get( 0 ) ).getSpecification(),
 				arguments.get( 1 ),

@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.sql.ast.produce.spi.AllowableFunctionReturnType;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 
 /**
  * Marker interface to more readily identify "aggregate functions".
@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.produce.spi.AllowableFunctionReturnType;
  */
 public interface AggregateFunction extends Function {
 	@Override
-	AllowableFunctionReturnType getType();
+	BasicValuedExpressableType getType();
 
 	Expression getArgument();
 	boolean isDistinct();

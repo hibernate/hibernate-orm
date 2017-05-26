@@ -57,7 +57,7 @@ public class PatternBasedSqmFunctionTemplate extends AbstractSelfRenderingFuncti
 	}
 
 	@Override
-	SelfRenderingFunctionSupport getRenderingFunctionSupport(
+	protected SelfRenderingFunctionSupport getRenderingFunctionSupport(
 			List<SqmExpression> arguments,
 			AllowableFunctionReturnType impliedResultType) {
 		return this;

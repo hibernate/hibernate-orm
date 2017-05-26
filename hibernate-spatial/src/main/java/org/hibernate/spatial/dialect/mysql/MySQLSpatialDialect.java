@@ -31,7 +31,7 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 	public MySQLSpatialDialect() {
 		super();
 		registerColumnType(
-				MySQLGeometryTypeDescriptor.INSTANCE.getSqlType(),
+				MySQLGeometryTypeDescriptor.INSTANCE.getJdbcTypeCode(),
 				"GEOMETRY"
 		);
 		for ( Map.Entry<String, SqmFunctionTemplate> entry : new MySQLSpatialFunctions() ) {

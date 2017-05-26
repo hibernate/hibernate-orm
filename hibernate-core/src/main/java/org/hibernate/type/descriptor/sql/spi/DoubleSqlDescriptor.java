@@ -32,7 +32,7 @@ public class DoubleSqlDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.DOUBLE;
 	}
 

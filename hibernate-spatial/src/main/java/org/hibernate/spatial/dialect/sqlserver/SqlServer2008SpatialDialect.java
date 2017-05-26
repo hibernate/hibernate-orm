@@ -39,7 +39,7 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 		super();
 
 		registerColumnType(
-				SqlServer2008GeometryTypeDescriptor.INSTANCE.getSqlType(),
+				SqlServer2008GeometryTypeDescriptor.INSTANCE.getJdbcTypeCode(),
 				"GEOMETRY"
 		);
 

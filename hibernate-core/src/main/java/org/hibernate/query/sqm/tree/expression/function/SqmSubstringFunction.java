@@ -13,14 +13,14 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SubstringFunctionSqmExpression extends AbstractFunctionSqmExpression {
+public class SqmSubstringFunction extends AbstractSqmFunction {
 	public static final String NAME = "substr";
 
 	private final SqmExpression source;
 	private final SqmExpression startPosition;
 	private final SqmExpression length;
 
-	public SubstringFunctionSqmExpression(
+	public SqmSubstringFunction(
 			BasicValuedExpressableType resultType,
 			SqmExpression source,
 			SqmExpression startPosition,

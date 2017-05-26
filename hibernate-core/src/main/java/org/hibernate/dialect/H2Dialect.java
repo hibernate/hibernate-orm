@@ -13,9 +13,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -35,6 +32,9 @@ import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.query.sqm.produce.function.spi.NoArgsSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.StandardAnsiSqlSqmAggregationFunctionTemplates.AvgFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -130,7 +130,7 @@ public class H2Dialect extends Dialect {
 		registerColumnType( Types.CLOB, "clob" );
 
 		// Aggregations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "avg", new AvgWithArgumentCastFunction( "double" ) );
+		registerFunction( "avg", new AvgFunctionTemplate( "double" ) );
 
 		// select topic, syntax from information_schema.help
 		// where section like 'Function%' order by section, topic
@@ -138,82 +138,82 @@ public class H2Dialect extends Dialect {
 		// see also ->  http://www.h2database.com/html/functions.html
 
 		// Numeric Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "acos", new StandardSQLFunction( "acos", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "asin", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardSQLFunction( "atan", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "atan2", new StandardSQLFunction( "atan2", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "bitand", new StandardSQLFunction( "bitand", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "bitor", new StandardSQLFunction( "bitor", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "bitxor", new StandardSQLFunction( "bitxor", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "ceiling", new StandardSQLFunction( "ceiling", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "compress", new StandardSQLFunction( "compress", StandardSpiBasicTypes.BINARY ) );
-		registerFunction( "cot", new StandardSQLFunction( "cot", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "decrypt", new StandardSQLFunction( "decrypt", StandardSpiBasicTypes.BINARY ) );
-		registerFunction( "degrees", new StandardSQLFunction( "degrees", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "encrypt", new StandardSQLFunction( "encrypt", StandardSpiBasicTypes.BINARY ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "expand", new StandardSQLFunction( "compress", StandardSpiBasicTypes.BINARY ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "hash", new StandardSQLFunction( "hash", StandardSpiBasicTypes.BINARY ) );
-		registerFunction( "log", new StandardSQLFunction( "log", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new StandardSQLFunction( "log10", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "pi", new NoArgSQLFunction( "pi", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "power", new StandardSQLFunction( "power", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "radians", new StandardSQLFunction( "radians", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "rand", new NoArgSQLFunction( "rand", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "round", new StandardSQLFunction( "round", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "roundmagic", new StandardSQLFunction( "roundmagic", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "tan", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "truncate", new StandardSQLFunction( "truncate", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "acos", new StandardSqmFunctionTemplate( "acos", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "asin", new StandardSqmFunctionTemplate( "asin", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "atan", new StandardSqmFunctionTemplate( "atan", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "atan2", new StandardSqmFunctionTemplate( "atan2", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "bitand", new StandardSqmFunctionTemplate( "bitand", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "bitor", new StandardSqmFunctionTemplate( "bitor", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "bitxor", new StandardSqmFunctionTemplate( "bitxor", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "ceiling", new StandardSqmFunctionTemplate( "ceiling", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "cos", new StandardSqmFunctionTemplate( "cos", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "compress", new StandardSqmFunctionTemplate( "compress", StandardSpiBasicTypes.BINARY ) );
+		registerFunction( "cot", new StandardSqmFunctionTemplate( "cot", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "decrypt", new StandardSqmFunctionTemplate( "decrypt", StandardSpiBasicTypes.BINARY ) );
+		registerFunction( "degrees", new StandardSqmFunctionTemplate( "degrees", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "encrypt", new StandardSqmFunctionTemplate( "encrypt", StandardSpiBasicTypes.BINARY ) );
+		registerFunction( "exp", new StandardSqmFunctionTemplate( "exp", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "expand", new StandardSqmFunctionTemplate( "compress", StandardSpiBasicTypes.BINARY ) );
+		registerFunction( "floor", new StandardSqmFunctionTemplate( "floor", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "hash", new StandardSqmFunctionTemplate( "hash", StandardSpiBasicTypes.BINARY ) );
+		registerFunction( "log", new StandardSqmFunctionTemplate( "log", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "log10", new StandardSqmFunctionTemplate( "log10", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "pi", new NoArgsSqmFunctionTemplate( "pi", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "power", new StandardSqmFunctionTemplate( "power", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "radians", new StandardSqmFunctionTemplate( "radians", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "rand", new NoArgsSqmFunctionTemplate( "rand", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "round", new StandardSqmFunctionTemplate( "round", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "roundmagic", new StandardSqmFunctionTemplate( "roundmagic", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "sign", new StandardSqmFunctionTemplate( "sign", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "sin", new StandardSqmFunctionTemplate( "sin", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "tan", new StandardSqmFunctionTemplate( "tan", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "truncate", new StandardSqmFunctionTemplate( "truncate", StandardSpiBasicTypes.DOUBLE ) );
 
 		// String Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "char", new StandardSQLFunction( "char", StandardSpiBasicTypes.CHARACTER ) );
+		registerFunction( "ascii", new StandardSqmFunctionTemplate( "ascii", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "char", new StandardSqmFunctionTemplate( "char", StandardSpiBasicTypes.CHARACTER ) );
 		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "(", "||", ")" ) );
-		registerFunction( "difference", new StandardSQLFunction( "difference", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "hextoraw", new StandardSQLFunction( "hextoraw", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "insert", new StandardSQLFunction( "lower", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "left", new StandardSQLFunction( "left", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "lcase", new StandardSQLFunction( "lcase", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "octet_length", new StandardSQLFunction( "octet_length", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "position", new StandardSQLFunction( "position", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "rawtohex", new StandardSQLFunction( "rawtohex", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "repeat", new StandardSQLFunction( "repeat", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "replace", new StandardSQLFunction( "replace", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "right", new StandardSQLFunction( "right", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "soundex", new StandardSQLFunction( "soundex", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "space", new StandardSQLFunction( "space", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "stringencode", new StandardSQLFunction( "stringencode", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "stringdecode", new StandardSQLFunction( "stringdecode", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "stringtoutf8", new StandardSQLFunction( "stringtoutf8", StandardSpiBasicTypes.BINARY ) );
-		registerFunction( "ucase", new StandardSQLFunction( "ucase", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "utf8tostring", new StandardSQLFunction( "utf8tostring", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "difference", new StandardSqmFunctionTemplate( "difference", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "hextoraw", new StandardSqmFunctionTemplate( "hextoraw", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "insert", new StandardSqmFunctionTemplate( "lower", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "left", new StandardSqmFunctionTemplate( "left", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "lcase", new StandardSqmFunctionTemplate( "lcase", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "ltrim", new StandardSqmFunctionTemplate( "ltrim", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "octet_length", new StandardSqmFunctionTemplate( "octet_length", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "position", new StandardSqmFunctionTemplate( "position", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "rawtohex", new StandardSqmFunctionTemplate( "rawtohex", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "repeat", new StandardSqmFunctionTemplate( "repeat", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "replace", new StandardSqmFunctionTemplate( "replace", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "right", new StandardSqmFunctionTemplate( "right", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "rtrim", new StandardSqmFunctionTemplate( "rtrim", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "soundex", new StandardSqmFunctionTemplate( "soundex", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "space", new StandardSqmFunctionTemplate( "space", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "stringencode", new StandardSqmFunctionTemplate( "stringencode", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "stringdecode", new StandardSqmFunctionTemplate( "stringdecode", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "stringtoutf8", new StandardSqmFunctionTemplate( "stringtoutf8", StandardSpiBasicTypes.BINARY ) );
+		registerFunction( "ucase", new StandardSqmFunctionTemplate( "ucase", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "utf8tostring", new StandardSqmFunctionTemplate( "utf8tostring", StandardSpiBasicTypes.STRING ) );
 
 		// Time and Date Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "curdate", new NoArgSQLFunction( "curdate", StandardSpiBasicTypes.DATE ) );
-		registerFunction( "curtime", new NoArgSQLFunction( "curtime", StandardSpiBasicTypes.TIME ) );
-		registerFunction( "curtimestamp", new NoArgSQLFunction( "curtimestamp", StandardSpiBasicTypes.TIME ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardSpiBasicTypes.DATE ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardSpiBasicTypes.TIME ) );
-		registerFunction( "current_timestamp", new NoArgSQLFunction( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP ) );
-		registerFunction( "datediff", new StandardSQLFunction( "datediff", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayname", new StandardSQLFunction( "dayname", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "dayofmonth", new StandardSQLFunction( "dayofmonth", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayofweek", new StandardSQLFunction( "dayofweek", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new StandardSQLFunction( "dayofyear", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "monthname", new StandardSQLFunction( "monthname", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "now", new NoArgSQLFunction( "now", StandardSpiBasicTypes.TIMESTAMP ) );
-		registerFunction( "quarter", new StandardSQLFunction( "quarter", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "week", new StandardSQLFunction( "week", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "curdate", new NoArgsSqmFunctionTemplate( "curdate", StandardSpiBasicTypes.DATE ) );
+		registerFunction( "curtime", new NoArgsSqmFunctionTemplate( "curtime", StandardSpiBasicTypes.TIME ) );
+		registerFunction( "curtimestamp", new NoArgsSqmFunctionTemplate( "curtimestamp", StandardSpiBasicTypes.TIME ) );
+		registerFunction( "current_date", new NoArgsSqmFunctionTemplate( "current_date", StandardSpiBasicTypes.DATE ) );
+		registerFunction( "current_time", new NoArgsSqmFunctionTemplate( "current_time", StandardSpiBasicTypes.TIME ) );
+		registerFunction( "current_timestamp", new NoArgsSqmFunctionTemplate( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP ) );
+		registerFunction( "datediff", new StandardSqmFunctionTemplate( "datediff", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "dayname", new StandardSqmFunctionTemplate( "dayname", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "dayofmonth", new StandardSqmFunctionTemplate( "dayofmonth", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "dayofweek", new StandardSqmFunctionTemplate( "dayofweek", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "dayofyear", new StandardSqmFunctionTemplate( "dayofyear", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "monthname", new StandardSqmFunctionTemplate( "monthname", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "now", new NoArgsSqmFunctionTemplate( "now", StandardSpiBasicTypes.TIMESTAMP ) );
+		registerFunction( "quarter", new StandardSqmFunctionTemplate( "quarter", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "week", new StandardSqmFunctionTemplate( "week", StandardSpiBasicTypes.INTEGER ) );
 
 		// System Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "database", new NoArgSQLFunction( "database", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "user", new NoArgSQLFunction( "user", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "database", new NoArgsSqmFunctionTemplate( "database", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "user", new NoArgsSqmFunctionTemplate( "user", StandardSpiBasicTypes.STRING ) );
 
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235

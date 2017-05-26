@@ -10,9 +10,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.NvlFunction;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -28,27 +28,27 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 	public PostgresPlusDialect() {
 		super();
 
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
-		registerFunction( "soundex", new StandardSQLFunction( "soundex" ) );
-		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardSpiBasicTypes.DATE, false ) );
-		registerFunction( "rowid", new NoArgSQLFunction( "rowid", StandardSpiBasicTypes.LONG, false ) );
-		registerFunction( "rownum", new NoArgSQLFunction( "rownum", StandardSpiBasicTypes.LONG, false ) );
-		registerFunction( "instr", new StandardSQLFunction( "instr", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "lpad", new StandardSQLFunction( "lpad", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "replace", new StandardSQLFunction( "replace", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "rpad", new StandardSQLFunction( "rpad", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "translate", new StandardSQLFunction( "translate", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "substring", new StandardSQLFunction( "substr", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "ltrim", new StandardSqmFunctionTemplate( "ltrim" ) );
+		registerFunction( "rtrim", new StandardSqmFunctionTemplate( "rtrim" ) );
+		registerFunction( "soundex", new StandardSqmFunctionTemplate( "soundex" ) );
+		registerFunction( "sysdate", new NoArgsSqmFunctionTemplate( "sysdate", StandardSpiBasicTypes.DATE, false ) );
+		registerFunction( "rowid", new NoArgsSqmFunctionTemplate( "rowid", StandardSpiBasicTypes.LONG, false ) );
+		registerFunction( "rownum", new NoArgsSqmFunctionTemplate( "rownum", StandardSpiBasicTypes.LONG, false ) );
+		registerFunction( "instr", new StandardSqmFunctionTemplate( "instr", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "lpad", new StandardSqmFunctionTemplate( "lpad", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "replace", new StandardSqmFunctionTemplate( "replace", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "rpad", new StandardSqmFunctionTemplate( "rpad", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "translate", new StandardSqmFunctionTemplate( "translate", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "substring", new StandardSqmFunctionTemplate( "substr", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "coalesce", new NvlFunction() );
-		registerFunction( "atan2", new StandardSQLFunction( "atan2", StandardSpiBasicTypes.FLOAT ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "nvl", new StandardSQLFunction( "nvl" ) );
-		registerFunction( "nvl2", new StandardSQLFunction( "nvl2" ) );
-		registerFunction( "power", new StandardSQLFunction( "power", StandardSpiBasicTypes.FLOAT ) );
-		registerFunction( "add_months", new StandardSQLFunction( "add_months", StandardSpiBasicTypes.DATE ) );
-		registerFunction( "months_between", new StandardSQLFunction( "months_between", StandardSpiBasicTypes.FLOAT ) );
-		registerFunction( "next_day", new StandardSQLFunction( "next_day", StandardSpiBasicTypes.DATE ) );
+		registerFunction( "atan2", new StandardSqmFunctionTemplate( "atan2", StandardSpiBasicTypes.FLOAT ) );
+		registerFunction( "mod", new StandardSqmFunctionTemplate( "mod", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "nvl", new StandardSqmFunctionTemplate( "nvl" ) );
+		registerFunction( "nvl2", new StandardSqmFunctionTemplate( "nvl2" ) );
+		registerFunction( "power", new StandardSqmFunctionTemplate( "power", StandardSpiBasicTypes.FLOAT ) );
+		registerFunction( "add_months", new StandardSqmFunctionTemplate( "add_months", StandardSpiBasicTypes.DATE ) );
+		registerFunction( "months_between", new StandardSqmFunctionTemplate( "months_between", StandardSpiBasicTypes.FLOAT ) );
+		registerFunction( "next_day", new StandardSqmFunctionTemplate( "next_day", StandardSpiBasicTypes.DATE ) );
 	}
 
 	@Override

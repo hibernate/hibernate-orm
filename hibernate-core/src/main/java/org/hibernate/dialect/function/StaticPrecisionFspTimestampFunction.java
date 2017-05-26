@@ -19,7 +19,7 @@ import org.hibernate.type.Type;
  *
  * @author Gail Badner
  */
-public class StaticPrecisionFspTimestampFunction extends NoArgSQLFunction {
+public class StaticPrecisionFspTimestampFunction extends NoArgsSqmFunctionTemplate {
 	private final String renderedString;
 
 	/**

@@ -33,7 +33,7 @@ public class MySQL5InnoDBSpatialDialect extends MySQL5InnoDBDialect implements S
 	public MySQL5InnoDBSpatialDialect() {
 		super();
 		registerColumnType(
-				MySQLGeometryTypeDescriptor.INSTANCE.getSqlType(),
+				MySQLGeometryTypeDescriptor.INSTANCE.getJdbcTypeCode(),
 				"GEOMETRY"
 		);
 		for ( Map.Entry<String, SqmFunctionTemplate> entry : new MySQLSpatialFunctions() ) {

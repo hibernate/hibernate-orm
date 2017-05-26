@@ -10,12 +10,12 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.FunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.GenericFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 
 /**
  * SqmFunctionTemplate implementation support for basic implementations
- * generating a {@link GenericFunctionSqmExpression}
+ * generating a {@link SqmGenericFunction}
  *
  * @author Steve Ebersole
  */
@@ -27,10 +27,10 @@ public abstract class AbstractGenericSqmFunctionTemplate implements SqmFunctionT
 	}
 
 	@Override
-	public FunctionSqmExpression makeSqmFunctionExpression(
+	public SqmFunction makeSqmFunctionExpression(
 			List<SqmExpression> arguments,
 			AllowableFunctionReturnType impliedResultType) {
-		return new GenericFunctionSqmExpression(
+		return new SqmGenericFunction(
 				name,
 				impliedResultType,
 				arguments

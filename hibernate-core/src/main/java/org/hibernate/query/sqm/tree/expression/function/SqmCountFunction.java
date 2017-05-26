@@ -6,18 +6,18 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class CountFunctionSqmExpression extends AbstractAggregateFunctionSqmExpression {
+public class SqmCountFunction extends AbstractSqmAggregateFunction {
 	public static final String NAME = "count";
 
-	public CountFunctionSqmExpression(SqmExpression argument, boolean distinct, BasicValuedExpressableType resultType) {
-		super( argument, distinct, resultType );
+	public SqmCountFunction(SqmExpression argument, AllowableFunctionReturnType resultType) {
+		super( argument, resultType );
 	}
 
 	@Override

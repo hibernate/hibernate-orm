@@ -31,7 +31,7 @@ public class BooleanSqlDescriptor implements SqlTypeDescriptor {
 	public BooleanSqlDescriptor() {
 	}
 
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.BOOLEAN;
 	}
 

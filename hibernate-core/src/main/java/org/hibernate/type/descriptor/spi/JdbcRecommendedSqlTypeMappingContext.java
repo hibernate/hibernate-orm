@@ -26,21 +26,27 @@ public interface JdbcRecommendedSqlTypeMappingContext {
 	 *
 	 * @return {@code true} if nationalized character datatype should be used; {@code false} otherwise.
 	 */
-	boolean isNationalized();
+	default boolean isNationalized() {
+		return false;
+	}
 
 	/**
 	 * Was LOB datatype requested for the given Java type?
 	 *
 	 * @return {@code true} if LOB datatype should be used; {@code false} otherwise.
 	 */
-	boolean isLob();
+	default boolean isLob() {
+		return false;
+	}
 
 	/**
 	 * For enum mappings, what style of storage was requested (name vs. ordinal)?
 	 *
 	 * @return The enum type.
 	 */
-	EnumType getEnumeratedType();
+	default EnumType getEnumeratedType() {
+		return EnumType.ORDINAL;
+	}
 
 	/**
 	 * When mapping a boolean type to the database what is the preferred SQL type code to use?

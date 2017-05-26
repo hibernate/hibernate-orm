@@ -4,21 +4,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.produce.function;
+package org.hibernate.query.sqm.produce.function.spi;
 
 import java.util.List;
 
-import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.produce.function.spi.AbstractSelfRenderingFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.QueryException;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
-import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
  * A Cach&eacute; defintion of a convert function.
@@ -28,15 +24,12 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 public class ConvertFunctionTemplate
 		extends AbstractSelfRenderingFunctionTemplate
 		implements SelfRenderingFunctionSupport {
-
-	@Override
-	public SqmFunctionTemplate getSqmFunctionTemplate() {
-		return null;
+	public ConvertFunctionTemplate() {
+		super( StandardArgumentsValidators.between( 2, 3 ) );
 	}
 
-	@Override
-	public AllowableFunctionReturnType functionReturnType() {
-		return StandardSpiBasicTypes.STRING;
+	public ConvertFunctionTemplate(AllowableFunctionReturnType returnType) {
+		super( returnType );
 	}
 
 	@Override

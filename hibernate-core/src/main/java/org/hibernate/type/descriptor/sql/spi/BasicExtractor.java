@@ -50,7 +50,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 				log.tracef(
 						"extracted value ([%s] : [%s]) - [null]",
 						position,
-						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() )
+						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() )
 				);
 			}
 			return null;
@@ -60,7 +60,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 				log.tracef(
 						"extracted value ([%s] : [%s]) - [%s]",
 						position,
-						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() ),
+						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() ),
 						getJavaDescriptor().extractLoggableRepresentation( value )
 				);
 			}
@@ -93,7 +93,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 				log.tracef(
 						"extracted procedure output  parameter ([%s] : [%s]) - [null]",
 						index,
-						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() )
+						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() )
 				);
 			}
 			return null;
@@ -103,7 +103,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 				log.tracef(
 						"extracted procedure output  parameter ([%s] : [%s]) - [%s]",
 						index,
-						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() ),
+						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() ),
 						getJavaDescriptor().extractLoggableRepresentation( value )
 				);
 			}
@@ -136,7 +136,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 				log.tracef(
 						"extracted named procedure output  parameter ([%s] : [%s]) - [null]",
 						name,
-						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() )
+						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() )
 				);
 			}
 			return null;
@@ -146,7 +146,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 				log.tracef(
 						"extracted named procedure output  parameter ([%s] : [%s]) - [%s]",
 						name,
-						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() ),
+						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getJdbcTypeCode() ),
 						getJavaDescriptor().extractLoggableRepresentation( value )
 				);
 			}

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -13,12 +14,17 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SumFunctionSqmExpression extends AbstractAggregateFunctionSqmExpression
-		implements AggregateFunctionSqmExpression {
-	public static final String NAME = "sum";
+public class SqmMaxFunction
+		extends AbstractSqmAggregateFunction
+		implements SqmAggregateFunction {
+	public static final String NAME = "max";
 
-	public SumFunctionSqmExpression(SqmExpression argument, boolean distinct, BasicValuedExpressableType resultType) {
-		super( argument, distinct, resultType );
+	public SqmMaxFunction(SqmExpression argument) {
+		super( argument, (AllowableFunctionReturnType) argument.getExpressionType() );
+	}
+
+	public SqmMaxFunction(SqmExpression argument, BasicValuedExpressableType resultType) {
+		super( argument, resultType );
 	}
 
 	@Override
@@ -28,11 +34,11 @@ public class SumFunctionSqmExpression extends AbstractAggregateFunctionSqmExpres
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitSumFunction( this );
+		return walker.visitMaxFunction( this );
 	}
 
 	@Override
 	public String asLoggableText() {
-		return "SUM(" + getArgument().asLoggableText() + ")";
+		return "MAX(" + getArgument().asLoggableText() + ")";
 	}
 }

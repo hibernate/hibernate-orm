@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.from;
 import org.hibernate.metamodel.model.domain.spi.EntityDescriptor;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
+import org.hibernate.sql.ast.produce.metamodel.spi.EntityValuedExpressableType;
 
 /**
  * @author Steve Ebersole
@@ -18,13 +19,13 @@ public class SqmRoot extends AbstractSqmFrom {
 			SqmFromElementSpace fromElementSpace,
 			String uid,
 			String alias,
-			EntityDescriptor entityReference) {
+			EntityValuedExpressableType entityReference) {
 		super(
 				fromElementSpace,
 				uid,
 				alias,
 				new SqmEntityReference( entityReference ),
-				entityReference
+				null
 		);
 
 		getNavigableReference().injectExportedFromElement( this );

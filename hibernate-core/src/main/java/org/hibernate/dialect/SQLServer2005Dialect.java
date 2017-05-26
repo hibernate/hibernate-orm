@@ -13,7 +13,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
-import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.exception.LockTimeoutException;
@@ -54,7 +54,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		// HHH-8435 fix
 		registerColumnType( Types.NCLOB, "nvarchar(MAX)" );
 
-		registerFunction( "row_number", new NoArgSQLFunction( "row_number", StandardSpiBasicTypes.INTEGER, true ) );
+		registerFunction( "row_number", new NoArgsSqmFunctionTemplate( "row_number", StandardSpiBasicTypes.INTEGER, true ) );
 	}
 
 	@Override

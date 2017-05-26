@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.produce.spi.criteria;
 
 import java.util.List;
 
+import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.produce.spi.ParsingContext;
 import org.hibernate.query.sqm.produce.spi.criteria.from.JpaFrom;
@@ -23,14 +24,13 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SubQuerySqmExpression;
 import org.hibernate.query.sqm.tree.expression.UnaryOperationSqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
-import org.hibernate.query.sqm.tree.expression.function.AvgFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.CastFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.CountFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.CountStarFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.GenericFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.MaxFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.MinFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.SumFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
 import org.hibernate.query.sqm.tree.predicate.AndSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.BetweenSqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.BooleanExpressionSqmPredicate;
@@ -82,44 +82,44 @@ public interface CriteriaVisitor {
 
 	SqmSingularAttributeReference visitAttributeReference(JpaFrom<?, ?> attributeSource, String attributeName);
 
-	GenericFunctionSqmExpression visitFunction(
+	SqmGenericFunction visitFunction(
 			String name,
 			BasicValuedExpressableType resultTypeDescriptor,
 			List<JpaExpression<?>> arguments);
-	GenericFunctionSqmExpression visitFunction(
+	SqmGenericFunction visitFunction(
 			String name,
 			BasicValuedExpressableType resultTypeDescriptor,
 			JpaExpression<?>... arguments);
 
-	AvgFunctionSqmExpression visitAvgFunction(JpaExpression<?> expression, boolean distinct);
-	AvgFunctionSqmExpression visitAvgFunction(
+	SqmAvgFunction visitAvgFunction(JpaExpression<?> expression, boolean distinct);
+	SqmAvgFunction visitAvgFunction(
 			JpaExpression<?> expression,
 			boolean distinct,
 			BasicValuedExpressableType resultType);
 
-	CountFunctionSqmExpression visitCountFunction(JpaExpression<?> expression, boolean distinct);
-	CountFunctionSqmExpression visitCountFunction(
+	SqmCountFunction visitCountFunction(JpaExpression<?> expression, boolean distinct);
+	SqmCountFunction visitCountFunction(
 			JpaExpression<?> expression,
 			boolean distinct,
 			BasicValuedExpressableType resultType);
 
-	CountStarFunctionSqmExpression visitCountStarFunction(boolean distinct);
-	CountStarFunctionSqmExpression visitCountStarFunction(boolean distinct, BasicValuedExpressableType resultType);
+	SqmCountStarFunction visitCountStarFunction(boolean distinct);
+	SqmCountStarFunction visitCountStarFunction(boolean distinct, BasicValuedExpressableType resultType);
 
-	MaxFunctionSqmExpression visitMaxFunction(JpaExpression<?> expression, boolean distinct);
-	MaxFunctionSqmExpression visitMaxFunction(
+	SqmMaxFunction visitMaxFunction(JpaExpression<?> expression, boolean distinct);
+	SqmMaxFunction visitMaxFunction(
 			JpaExpression<?> expression,
 			boolean distinct,
 			BasicValuedExpressableType resultType);
 
-	MinFunctionSqmExpression visitMinFunction(JpaExpression<?> expression, boolean distinct);
-	MinFunctionSqmExpression visitMinFunction(
+	SqmMinFunction visitMinFunction(JpaExpression<?> expression, boolean distinct);
+	SqmMinFunction visitMinFunction(
 			JpaExpression<?> expression,
 			boolean distinct,
 			BasicValuedExpressableType resultType);
 
-	SumFunctionSqmExpression visitSumFunction(JpaExpression<?> expression, boolean distinct);
-	SumFunctionSqmExpression visitSumFunction(
+	SqmSumFunction visitSumFunction(JpaExpression<?> expression, boolean distinct);
+	SqmSumFunction visitSumFunction(
 			JpaExpression<?> expression,
 			boolean distinct,
 			BasicValuedExpressableType resultType);
@@ -179,9 +179,9 @@ public interface CriteriaVisitor {
 
 	SqmExpression visitParameter(String name, int position, Class javaType);
 
-	<T,C> CastFunctionSqmExpression visitCastFunction(JpaExpression<T> expressionToCast, Class<C> castTarget);
+	<T,C> SqmCastFunction visitCastFunction(JpaExpression<T> expressionToCast, Class<C> castTarget);
 
-	GenericFunctionSqmExpression visitGenericFunction(
+	SqmGenericFunction visitGenericFunction(
 			String functionName,
 			BasicValuedExpressableType resultType,
 			List<JpaExpression<?>> arguments);

@@ -41,7 +41,7 @@ public class SqlServer2008GeometryTypeDescriptor implements SqlTypeDescriptor {
 	public static final SqlServer2008GeometryTypeDescriptor INSTANCE = new SqlServer2008GeometryTypeDescriptor();
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.ARRAY;
 	}
 

@@ -13,12 +13,12 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class UpperFunctionSqmExpression extends AbstractFunctionSqmExpression {
-	public static final String NAME = "upper";
+public class SqmLowerFunction extends AbstractSqmFunction {
+	public static final String NAME = "lower";
 
 	private SqmExpression expression;
 
-	public UpperFunctionSqmExpression(BasicValuedExpressableType resultType, SqmExpression expression) {
+	public SqmLowerFunction(BasicValuedExpressableType resultType, SqmExpression expression) {
 		super( resultType );
 		this.expression = expression;
 
@@ -41,11 +41,11 @@ public class UpperFunctionSqmExpression extends AbstractFunctionSqmExpression {
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitUpperFunction( this );
+		return walker.visitLowerFunction( this );
 	}
 
 	@Override
 	public String asLoggableText() {
-		return "UPPER(" + getExpression().asLoggableText() + ")";
+		return "LOWER(" + getExpression().asLoggableText() + ")";
 	}
 }

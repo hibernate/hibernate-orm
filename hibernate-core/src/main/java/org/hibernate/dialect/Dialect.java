@@ -39,8 +39,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.query.sqm.produce.function.spi.CastFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardAnsiSqlAggregationFunctions;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.query.sqm.produce.function.spi.StandardAnsiSqlSqmAggregationFunctionTemplates;
+import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -151,21 +151,21 @@ public abstract class Dialect implements ConversionContext {
 
 	protected Dialect() {
 		LOG.usingDialect( this );
-		StandardAnsiSqlAggregationFunctions.primeFunctionMap( sqlFunctions );
+		StandardAnsiSqlSqmAggregationFunctionTemplates.primeFunctionMap( sqlFunctions );
 
 		// standard sql92 functions (can be overridden by subclasses)
 		registerFunction( "substring", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "substring(?1, ?2, ?3)" ) );
 		registerFunction( "locate", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "locate(?1, ?2, ?3)" ) );
 		registerFunction( "trim", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "trim(?1 ?2 ?3 ?4)" ) );
-		registerFunction( "length", new StandardSQLFunction( "length", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "bit_length", new StandardSQLFunction( "bit_length", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "coalesce", new StandardSQLFunction( "coalesce" ) );
-		registerFunction( "nullif", new StandardSQLFunction( "nullif" ) );
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod", StandardSpiBasicTypes.INTEGER) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "upper", new StandardSQLFunction("upper") );
-		registerFunction( "lower", new StandardSQLFunction("lower") );
+		registerFunction( "length", new StandardSqmFunctionTemplate( "length", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "bit_length", new StandardSqmFunctionTemplate( "bit_length", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "coalesce", new StandardSqmFunctionTemplate( "coalesce" ) );
+		registerFunction( "nullif", new StandardSqmFunctionTemplate( "nullif" ) );
+		registerFunction( "abs", new StandardSqmFunctionTemplate( "abs" ) );
+		registerFunction( "mod", new StandardSqmFunctionTemplate( "mod", StandardSpiBasicTypes.INTEGER) );
+		registerFunction( "sqrt", new StandardSqmFunctionTemplate( "sqrt", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "upper", new StandardSqmFunctionTemplate( "upper") );
+		registerFunction( "lower", new StandardSqmFunctionTemplate( "lower") );
 		registerFunction( "cast", new CastFunctionTemplate() );
 		registerFunction( "extract", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(?1 ?2 ?3)") );
 
@@ -439,7 +439,7 @@ public abstract class Dialect implements ConversionContext {
 	 * If the passed {@code sqlTypeDescriptor} allows itself to be remapped (per
 	 * {@link SqlTypeDescriptor#canBeRemapped()}), then this method uses
 	 * {@link #getSqlTypeDescriptorOverride}  to get an optional override based on the SQL code returned by
-	 * {@link SqlTypeDescriptor#getSqlType()}.
+	 * {@link SqlTypeDescriptor#getJdbcTypeCode()}.
 	 * <p/>
 	 * If this dialect does not provide an override or if the {@code sqlTypeDescriptor} does not allow itself to be
 	 * remapped, then this method simply returns the original passed {@code sqlTypeDescriptor}
@@ -459,7 +459,7 @@ public abstract class Dialect implements ConversionContext {
 			return sqlTypeDescriptor;
 		}
 
-		final SqlTypeDescriptor overridden = getSqlTypeDescriptorOverride( sqlTypeDescriptor.getSqlType() );
+		final SqlTypeDescriptor overridden = getSqlTypeDescriptorOverride( sqlTypeDescriptor.getJdbcTypeCode() );
 		return overridden == null ? sqlTypeDescriptor : overridden;
 	}
 

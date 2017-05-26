@@ -14,7 +14,7 @@ import java.util.Locale;
 
 import org.hibernate.MappingException;
 import org.hibernate.query.sqm.produce.function.spi.AnsiTrimFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.DerbyConcatFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.DerbyConcatFunctionTemplate;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;

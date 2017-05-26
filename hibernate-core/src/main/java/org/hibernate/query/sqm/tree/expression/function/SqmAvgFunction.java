@@ -6,20 +6,24 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class AvgFunctionSqmExpression
-		extends AbstractAggregateFunctionSqmExpression
-		implements AggregateFunctionSqmExpression {
+public class SqmAvgFunction
+		extends AbstractSqmAggregateFunction
+		implements SqmAggregateFunction {
 	public static final String NAME = "avg";
 
-	public AvgFunctionSqmExpression(SqmExpression argument, boolean distinct, BasicValuedExpressableType resultType) {
-		super( argument, distinct, resultType );
+	public SqmAvgFunction(SqmExpression argument) {
+		super( argument, (AllowableFunctionReturnType) argument.getExpressionType() );
+	}
+
+	public SqmAvgFunction(SqmExpression argument, AllowableFunctionReturnType resultType) {
+		super( argument, resultType );
 	}
 
 	@Override

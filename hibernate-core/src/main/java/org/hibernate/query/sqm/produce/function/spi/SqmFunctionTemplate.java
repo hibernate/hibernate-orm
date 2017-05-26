@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.FunctionSqmExpression;
 
 /**
  * Extension for supplying support for non-standard (ANSI SQL) functions
@@ -22,7 +21,15 @@ import org.hibernate.query.sqm.tree.expression.function.FunctionSqmExpression;
  * @author Steve Ebersole
  */
 public interface SqmFunctionTemplate {
-	FunctionSqmExpression makeSqmFunctionExpression(
+	/**
+	 * Generate an SqmExpression instance from this template.
+	 * <p/>
+	 * Note that this returns SqmExpression rather than the more
+	 * restrictive SqmFunctionExpression to allow implementors
+	 * to transform the source function expression into any
+	 * "expressable form".
+	 */
+	SqmExpression makeSqmFunctionExpression(
 			List<SqmExpression> arguments,
 			AllowableFunctionReturnType impliedResultType);
 }

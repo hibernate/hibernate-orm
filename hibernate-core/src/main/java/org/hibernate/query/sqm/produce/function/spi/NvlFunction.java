@@ -22,40 +22,18 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
  * @author Steve Ebersole
  */
 public class NvlFunction extends AbstractSelfRenderingFunctionTemplate {
+	public NvlFunction() {
+		super( null, null );
+	}
+
 	@Override
-	SelfRenderingFunctionSupport getRenderingFunctionSupport(
+	public SelfRenderingFunctionSupport getRenderingFunctionSupport(
 			List<SqmExpression> arguments,
 			AllowableFunctionReturnType impliedResultType) {
-		return new SelfRenderingFunctionSupportImpl( this, arguments, impliedResultType );
+		return new SelfRenderingFunctionSupportImpl();
 	}
 
 	private static class SelfRenderingFunctionSupportImpl implements SelfRenderingFunctionSupport {
-		private final AllowableFunctionReturnType resolvedType;
-		private final NvlFunction nvlFunction;
-
-		public SelfRenderingFunctionSupportImpl(
-				NvlFunction nvlFunction,
-				List<SqmExpression> arguments,
-				AllowableFunctionReturnType impliedResultType) {
-			this.nvlFunction = nvlFunction;
-			if ( impliedResultType != null ) {
-				this.resolvedType = impliedResultType;
-			}
-			else {
-				this.resolvedType = (AllowableFunctionReturnType) arguments.get( 0 ).getExpressionType();
-			}
-		}
-
-		@Override
-		public SqmFunctionTemplate getSqmFunctionTemplate() {
-			return nvlFunction;
-		}
-
-		@Override
-		public AllowableFunctionReturnType functionReturnType() {
-			return resolvedType;
-		}
-
 		@Override
 		public void render(
 				SqlAppender sqlAppender,

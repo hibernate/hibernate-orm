@@ -9,7 +9,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.query.sqm.produce.function.spi.AnsiTrimEmulationFunctionTemplate;
-import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
@@ -61,8 +61,8 @@ public class SybaseASE15Dialect extends SybaseDialect {
 		registerFunction( "col_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "col_length(?1, ?2)" ) );
 		registerFunction( "col_name", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "col_name(?1, ?2)" ) );
 		// Sybase has created current_date and current_time inplace of getdate()
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardSpiBasicTypes.TIME ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardSpiBasicTypes.DATE ) );
+		registerFunction( "current_time", new NoArgsSqmFunctionTemplate( "current_time", StandardSpiBasicTypes.TIME ) );
+		registerFunction( "current_date", new NoArgsSqmFunctionTemplate( "current_date", StandardSpiBasicTypes.DATE ) );
 
 
 		registerFunction( "data_pages", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "data_pages(?1, ?2)" ) );
@@ -150,7 +150,7 @@ public class SybaseASE15Dialect extends SybaseDialect {
 		registerFunction( "variance", new SQLFunctionTemplate( StandardSpiBasicTypes.DOUBLE, "variance" ) );
 		registerFunction( "var_pop", new SQLFunctionTemplate( StandardSpiBasicTypes.DOUBLE, "var_pop" ) );
 		registerFunction( "var_samp", new SQLFunctionTemplate( StandardSpiBasicTypes.DOUBLE, "var_samp" ) );
-		registerFunction( "sysdate", new NoArgSQLFunction( "getdate", StandardSpiBasicTypes.TIMESTAMP) );
+		registerFunction( "sysdate", new NoArgsSqmFunctionTemplate( "getdate", StandardSpiBasicTypes.TIMESTAMP) );
 
 		registerSybaseKeywords();
 	}

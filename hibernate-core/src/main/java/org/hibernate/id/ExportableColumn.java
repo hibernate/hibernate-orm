@@ -22,7 +22,7 @@ public class ExportableColumn extends Column {
 				table,
 				name,
 				type,
-				database.getDialect().getTypeName( type.getColumnDescriptor().getSqlTypeDescriptor().getSqlType() )
+				database.getDialect().getTypeName( type.getColumnDescriptor().getSqlTypeDescriptor().getJdbcTypeCode() )
 		);
 	}
 

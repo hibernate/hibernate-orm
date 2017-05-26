@@ -51,14 +51,15 @@ import org.hibernate.query.sqm.tree.expression.PositionalParameterSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.UnaryOperationSqmExpression;
 import org.hibernate.query.sqm.tree.expression.domain.SqmEntityReference;
-import org.hibernate.query.sqm.tree.expression.function.AvgFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.CountFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.CountStarFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.GenericFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.MaxFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.MinFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.SumFunctionSqmExpression;
-import org.hibernate.query.sqm.tree.expression.function.TrimFunctionSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmSumFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmTrimFunction;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -112,6 +113,7 @@ import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
 import org.hibernate.sql.ast.tree.spi.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.tree.spi.expression.CastFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CoalesceFunction;
 import org.hibernate.sql.ast.tree.spi.expression.ConcatFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountFunction;
@@ -852,7 +854,7 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public Object visitGenericFunction(GenericFunctionSqmExpression expression) {
+	public Object visitGenericFunction(SqmGenericFunction expression) {
 		shallownessStack.push( Shallowness.FUNCTION );
 		try {
 			return new NonStandardFunction(
@@ -891,7 +893,23 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public AvgFunction visitAvgFunction(AvgFunctionSqmExpression expression) {
+	public Object visitCastFunction(SqmCastFunction expression) {
+		shallownessStack.push( Shallowness.FUNCTION );
+
+		try {
+			return new CastFunction(
+					(Expression) expression.getExpressionToCast().accept( this ),
+					(BasicValuedExpressableType) expression.getExpressionType(),
+					expression.getExplicitSqlCastTarget()
+			);
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
+
+	@Override
+	public AvgFunction visitAvgFunction(SqmAvgFunction expression) {
 		shallownessStack.push( Shallowness.FUNCTION );
 
 		try {
@@ -907,7 +925,7 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public MaxFunction visitMaxFunction(MaxFunctionSqmExpression expression) {
+	public MaxFunction visitMaxFunction(SqmMaxFunction expression) {
 		shallownessStack.push( Shallowness.FUNCTION );
 
 		try {
@@ -923,7 +941,7 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public MinFunction visitMinFunction(MinFunctionSqmExpression expression) {
+	public MinFunction visitMinFunction(SqmMinFunction expression) {
 		shallownessStack.push( Shallowness.FUNCTION );
 
 		try {
@@ -939,7 +957,7 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public SumFunction visitSumFunction(SumFunctionSqmExpression expression) {
+	public SumFunction visitSumFunction(SqmSumFunction expression) {
 		shallownessStack.push( Shallowness.FUNCTION );
 
 		try {
@@ -955,7 +973,7 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public CountFunction visitCountFunction(CountFunctionSqmExpression expression) {
+	public CountFunction visitCountFunction(SqmCountFunction expression) {
 		shallownessStack.push( Shallowness.FUNCTION );
 
 		try {
@@ -971,7 +989,7 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public CountStarFunction visitCountStarFunction(CountStarFunctionSqmExpression expression) {
+	public CountStarFunction visitCountStarFunction(SqmCountStarFunction expression) {
 		shallownessStack.push( Shallowness.FUNCTION );
 
 		try {
@@ -1115,7 +1133,7 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public Object visitTrimFunction(TrimFunctionSqmExpression expression) {
+	public Object visitTrimFunction(SqmTrimFunction expression) {
 		return new TrimFunction(
 				expression.getSpecification(),
 				(Expression) expression.getTrimCharacter().accept( this ),

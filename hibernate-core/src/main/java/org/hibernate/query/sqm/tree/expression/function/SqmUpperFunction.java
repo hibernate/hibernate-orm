@@ -6,34 +6,23 @@
  */
 package org.hibernate.query.sqm.tree.expression.function;
 
-import java.util.List;
-
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
- * Differs from {@link ConcatSqmExpression} in that
- * the function can have multiple arguments, whereas ConcatExpression only has 2.
- *
- * @see ConcatSqmExpression
- *
  * @author Steve Ebersole
  */
-public class ConcatFunctionSqmExpression extends AbstractFunctionSqmExpression {
-	public static final String NAME = "concat";
+public class SqmUpperFunction extends AbstractSqmFunction {
+	public static final String NAME = "upper";
 
-	private final List<SqmExpression> expressions;
+	private SqmExpression expression;
 
-	public ConcatFunctionSqmExpression(
-			BasicValuedExpressableType resultType,
-			List<SqmExpression> expressions) {
+	public SqmUpperFunction(BasicValuedExpressableType resultType, SqmExpression expression) {
 		super( resultType );
-		this.expressions = expressions;
+		this.expression = expression;
 
-		assert expressions != null;
-		assert expressions.size() >= 2;
+		assert expression != null;
 	}
 
 	@Override
@@ -41,22 +30,22 @@ public class ConcatFunctionSqmExpression extends AbstractFunctionSqmExpression {
 		return NAME;
 	}
 
+	public SqmExpression getExpression() {
+		return expression;
+	}
+
 	@Override
 	public boolean hasArguments() {
 		return true;
 	}
 
-	public List<SqmExpression> getExpressions() {
-		return expressions;
-	}
-
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitConcatFunction( this );
+		return walker.visitUpperFunction( this );
 	}
 
 	@Override
 	public String asLoggableText() {
-		return "CONCAT(...)";
+		return "UPPER(" + getExpression().asLoggableText() + ")";
 	}
 }

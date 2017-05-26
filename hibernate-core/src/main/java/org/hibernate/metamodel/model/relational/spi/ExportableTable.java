@@ -28,4 +28,6 @@ public interface ExportableTable extends Table, Exportable {
 	UniqueKey getUniqueKey(PhysicalColumn col);
 
 	List<String> getCheckConstraints();
+
+	Collection<ForeignKey> getForeignKeys();
 }

@@ -34,6 +34,7 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	private boolean hasPrimaryKey;
 	private String commment;
 	private List<String> checkConstraints = new ArrayList<>();
+	private List<ForeignKey> foreignKeys = new ArrayList<>(  );
 
 	public PhysicalTable(
 			Identifier catalogName,
@@ -156,9 +157,16 @@ public class PhysicalTable extends AbstractTable implements ExportableTable {
 	}
 
 	@Override
+	public Collection<ForeignKey> getForeignKeys() {
+		return foreignKeys;
+	}
+
+	@Override
 	public ForeignKey createForeignKey(
 			String name, boolean export, Table targetTable, ForeignKey.ColumnMappings columnMappings) {
-		return new ForeignKey( name, export, this, targetTable, columnMappings );
+		final ForeignKey foreignKey = new ForeignKey( name, export, this, targetTable, columnMappings );
+		foreignKeys.add( foreignKey );
+		return foreignKey;
 	}
 
 	public QualifiedTableName getQualifiedTableName(){

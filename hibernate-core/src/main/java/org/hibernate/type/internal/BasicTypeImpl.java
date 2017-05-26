@@ -48,6 +48,11 @@ public class BasicTypeImpl<T> implements BasicType<T>, SqlSelectionReader<T> {
 	}
 
 	@Override
+	public BasicType<T> getBasicType() {
+		return this;
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public BasicJavaDescriptor<T> getJavaTypeDescriptor() {
 		return javaDescriptor;

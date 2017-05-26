@@ -33,9 +33,13 @@ import org.hibernate.NullPrecedence;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.MappedSequence;
-import org.hibernate.boot.model.relational.MappedTable;
 import org.hibernate.cfg.Environment;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Index;
+import org.hibernate.metamodel.model.relational.spi.ExportableTable;
+import org.hibernate.metamodel.model.relational.spi.ForeignKey;
+import org.hibernate.metamodel.model.relational.spi.Sequence;
+import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.query.sqm.produce.function.spi.CastFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
@@ -79,10 +83,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.loader.BatchLoadSizingStrategy;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Constraint;
-import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Index;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.service.ServiceRegistry;
@@ -1924,11 +1924,11 @@ public abstract class Dialect implements ConversionContext {
 	private StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
 	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
 
-	public Exporter<MappedTable> getTableExporter() {
+	public Exporter<ExportableTable> getTableExporter() {
 		return tableExporter;
 	}
 
-	public Exporter<MappedSequence> getSequenceExporter() {
+	public Exporter<Sequence> getSequenceExporter() {
 		return sequenceExporter;
 	}
 
@@ -1940,7 +1940,7 @@ public abstract class Dialect implements ConversionContext {
 		return foreignKeyExporter;
 	}
 
-	public Exporter<Constraint> getUniqueKeyExporter() {
+	public Exporter<UniqueKey> getUniqueKeyExporter() {
 		return uniqueKeyExporter;
 	}
 

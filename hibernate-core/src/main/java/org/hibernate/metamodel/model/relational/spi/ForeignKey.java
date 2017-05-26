@@ -8,10 +8,13 @@ package org.hibernate.metamodel.model.relational.spi;
 
 import java.util.List;
 
+import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.internal.util.StringHelper;
+
 /**
  * @author Steve Ebersole
  */
-public class ForeignKey {
+public class ForeignKey implements Exportable {
 	private final String name;
 	private final Table referringTable;
 	private final Table targetTable;
@@ -50,6 +53,11 @@ public class ForeignKey {
 
 	public boolean isExportationEnabled() {
 		return export;
+	}
+
+	@Override
+	public String getExportIdentifier() {
+		return StringHelper.qualify( ( (ExportableTable) referringTable ).getTableName().getText(), "FK-" + getName() );
 	}
 
 	/**

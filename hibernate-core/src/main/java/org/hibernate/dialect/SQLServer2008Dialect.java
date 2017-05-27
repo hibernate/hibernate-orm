@@ -27,6 +27,10 @@ public class SQLServer2008Dialect extends SQLServer2005Dialect {
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "time" );
 		registerColumnType( Types.TIMESTAMP, "datetime2" );
+		// https://static.javadoc.io/com.microsoft.sqlserver/mssql-jdbc/6.1.7.jre8-preview/microsoft/sql/Types.html
+		// https://docs.microsoft.com/en-us/sql/t-sql/data-types/data-types-transact-sql
+		registerColumnType( -155, "datetimeoffset" );
+		registerColumnType( -145, "uniqueidentifier" );
 		registerColumnType( Types.NVARCHAR, NVARCHAR_MAX_LENGTH, "nvarchar($l)" );
 		registerColumnType( Types.NVARCHAR, "nvarchar(MAX)" );
 
@@ -34,7 +38,7 @@ public class SQLServer2008Dialect extends SQLServer2005Dialect {
 				"current_timestamp", new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP, false )
 		);
 	}
-	
+
 	@Override
 	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
 		final StringBuilder orderByElement = new StringBuilder();

@@ -15,8 +15,8 @@ import java.util.StringTokenizer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
+import org.hibernate.dialect.function.SqmFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.ordering.antlr.ColumnMapper;
@@ -88,17 +88,17 @@ public final class Template {
 
 	private Template() {}
 
-	public static String renderWhereStringTemplate(String sqlWhereString, Dialect dialect, SQLFunctionRegistry functionRegistry) {
+	public static String renderWhereStringTemplate(String sqlWhereString, Dialect dialect, SqmFunctionRegistry functionRegistry) {
 		return renderWhereStringTemplate(sqlWhereString, TEMPLATE, dialect, functionRegistry);
 	}
 
 	/**
-	 * Same functionality as {@link #renderWhereStringTemplate(String, String, Dialect, SQLFunctionRegistry)},
+	 * Same functionality as {@link #renderWhereStringTemplate(String, String, Dialect, SqmFunctionRegistry)},
 	 * except that a SQLFunctionRegistry is not provided (i.e., only the dialect-defined functions are
 	 * considered).  This is only intended for use by the annotations project until the
 	 * many-to-many/map-key-from-target-table feature is pulled into core.
 	 *
-	 * @deprecated Only intended for annotations usage; use {@link #renderWhereStringTemplate(String, String, Dialect, SQLFunctionRegistry)} instead
+	 * @deprecated Only intended for annotations usage; use {@link #renderWhereStringTemplate(String, String, Dialect, SqmFunctionRegistry)} instead
 	 */
 	@Deprecated
 	@SuppressWarnings({ "JavaDoc" })
@@ -107,7 +107,7 @@ public final class Template {
 				sqlWhereString,
 				placeholder,
 				dialect,
-				new SQLFunctionRegistry( dialect, java.util.Collections.<String, SqmFunctionTemplate>emptyMap() )
+				new SqmFunctionRegistry( dialect, java.util.Collections.<String, SqmFunctionTemplate>emptyMap() )
 		);
 	}
 
@@ -122,7 +122,7 @@ public final class Template {
 	 * @param functionRegistry The registry of all sql functions
 	 * @return The rendered sql fragment
 	 */
-	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect, SQLFunctionRegistry functionRegistry ) {
+	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect, SqmFunctionRegistry functionRegistry ) {
 
 		// IMPL NOTE : The basic process here is to tokenize the incoming string and to iterate over each token
 		//		in turn.  As we process each token, we set a series of flags used to indicate the type of context in
@@ -642,7 +642,7 @@ public final class Template {
 	public static String renderOrderByStringTemplate(
 			String orderByFragment,
 			Dialect dialect,
-			SQLFunctionRegistry functionRegistry) {
+			SqmFunctionRegistry functionRegistry) {
 		return renderOrderByStringTemplate(
 				orderByFragment,
 				NoOpColumnMapper.INSTANCE,
@@ -657,7 +657,7 @@ public final class Template {
 			final ColumnMapper columnMapper,
 			final SessionFactoryImplementor sessionFactory,
 			final Dialect dialect,
-			final SQLFunctionRegistry functionRegistry) {
+			final SqmFunctionRegistry functionRegistry) {
 		return translateOrderBy(
 				orderByFragment,
 				columnMapper,
@@ -692,7 +692,7 @@ public final class Template {
 			final ColumnMapper columnMapper,
 			final SessionFactoryImplementor sessionFactory,
 			final Dialect dialect,
-			final SQLFunctionRegistry functionRegistry) {
+			final SqmFunctionRegistry functionRegistry) {
 		TranslationContext context = new TranslationContext() {
 			public SessionFactoryImplementor getSessionFactory() {
 				return sessionFactory;
@@ -702,7 +702,7 @@ public final class Template {
 				return dialect;
 			}
 
-			public SQLFunctionRegistry getSqlFunctionRegistry() {
+			public SqmFunctionRegistry getSqlFunctionRegistry() {
 				return functionRegistry;
 			}
 
@@ -722,7 +722,7 @@ public final class Template {
 			String lcToken,
 			String nextToken,
 			Dialect dialect,
-			SQLFunctionRegistry functionRegistry) {
+			SqmFunctionRegistry functionRegistry) {
 		return "(".equals( nextToken ) ||
 				KEYWORDS.contains( lcToken ) ||
 				isType( lcToken, dialect ) ||
@@ -735,7 +735,7 @@ public final class Template {
 		return dialect.isTypeNameRegistered( lcToken );
 	}
 
-	private static boolean isFunction(String lcToken, String nextToken, SQLFunctionRegistry functionRegistry) {
+	private static boolean isFunction(String lcToken, String nextToken, SqmFunctionRegistry functionRegistry) {
 		// checking for "(" is currently redundant because it is checked beforeQuery getting here;
 		// doing the check anyhow, in case that earlier check goes away;
 		if ( "(".equals( nextToken ) ) {

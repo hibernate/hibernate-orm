@@ -9,7 +9,7 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.dialect.function.SqmFunctionRegistry;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.DerivedColumn;
@@ -34,7 +34,7 @@ public class Formula implements Selectable, Serializable {
 	}
 
 	@Override
-	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
+	public String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry) {
 		return Template.renderWhereStringTemplate(formula, dialect, functionRegistry);
 	}
 

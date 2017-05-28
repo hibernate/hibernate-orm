@@ -9,6 +9,11 @@ package org.hibernate.query.sqm.produce.function.spi;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -16,25 +21,42 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  */
 public abstract class AbstractSqmFunctionTemplate implements SqmFunctionTemplate {
 	private final ArgumentsValidator argumentsValidator;
+	private final FunctionReturnTypeResolver returnTypeResolver;
 
 	public AbstractSqmFunctionTemplate() {
-		this( null );
+		this( null, null );
 	}
 
 	public AbstractSqmFunctionTemplate(ArgumentsValidator argumentsValidator) {
-		this.argumentsValidator = argumentsValidator;
+		this( argumentsValidator, null );
 	}
 
+	public AbstractSqmFunctionTemplate(FunctionReturnTypeResolver returnTypeResolver) {
+		this( null, returnTypeResolver );
+	}
+
+	public AbstractSqmFunctionTemplate(
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver) {
+		this.argumentsValidator = argumentsValidator == null
+				? StandardArgumentsValidators.NONE
+				: argumentsValidator;
+		this.returnTypeResolver = returnTypeResolver == null
+				? StandardFunctionReturnTypeResolvers.useFirstNonNull()
+				: returnTypeResolver;
+	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public final SqmExpression makeSqmFunctionExpression(
 			List<SqmExpression> arguments,
 			AllowableFunctionReturnType impliedResultType) {
-		if ( argumentsValidator != null ) {
-			argumentsValidator.validate( arguments );
-		}
+		argumentsValidator.validate( arguments );
 
-		return generateSqmFunctionExpression( arguments, impliedResultType );
+		return generateSqmFunctionExpression(
+				arguments,
+				returnTypeResolver.resolveFunctionReturnType( impliedResultType, arguments )
+		);
 	}
 
 	protected abstract SqmExpression generateSqmFunctionExpression(

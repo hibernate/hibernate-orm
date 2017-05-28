@@ -6,6 +6,11 @@
  */
 
 /**
- * Package defining support for {@link org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate} handling
+ * Package defining support for {@link org.hibernate.query.sqm.produce.function.SqmFunctionTemplate} handling.
+ * <p/>
+ * Between {@link org.hibernate.query.sqm.produce.function.ArgumentsValidator} and
+ * {@link org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver} creating
+ * function templates is generally a simple matter of composition
  */
+@org.hibernate.Incubating
 package org.hibernate.query.sqm.produce.function;

@@ -9,6 +9,8 @@ package org.hibernate.query.sqm.produce.function.spi;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -16,46 +18,35 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  * @author Steve Ebersole
  */
 public abstract class AbstractSelfRenderingFunctionTemplate extends AbstractSqmFunctionTemplate {
-	private final AllowableFunctionReturnType invariantReturnType;
-
 	public AbstractSelfRenderingFunctionTemplate(
-			AllowableFunctionReturnType invariantReturnType,
+			FunctionReturnTypeResolver returnTypeResolver,
 			ArgumentsValidator argumentsValidator) {
-		super( argumentsValidator );
-		this.invariantReturnType = invariantReturnType;
+		super( argumentsValidator, returnTypeResolver );
 	}
 
-	public AbstractSelfRenderingFunctionTemplate(AllowableFunctionReturnType invariantReturnType) {
-		super();
-		this.invariantReturnType = invariantReturnType;
+	public AbstractSelfRenderingFunctionTemplate() {
 	}
 
 	public AbstractSelfRenderingFunctionTemplate(ArgumentsValidator argumentsValidator) {
 		super( argumentsValidator );
-		this.invariantReturnType = null;
 	}
 
-	/**
-	 * Get the invariant return type registered with the template when it was
-	 * created.  If the function does not have an invariant type, returns
-	 * {@code null}
-	 */
-	public AllowableFunctionReturnType getInvariantReturnType() {
-		return invariantReturnType;
+	public AbstractSelfRenderingFunctionTemplate(FunctionReturnTypeResolver returnTypeResolver) {
+		super( returnTypeResolver );
 	}
 
 	@Override
 	protected SqmExpression generateSqmFunctionExpression(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType) {
+			AllowableFunctionReturnType resolvedReturnType) {
 		return new SelfRenderingSqmFunction(
-				getRenderingFunctionSupport( arguments, impliedResultType ),
+				getRenderingFunctionSupport( arguments, resolvedReturnType ),
 				arguments,
-				impliedResultType
+				resolvedReturnType
 		);
 	}
 
 	protected abstract SelfRenderingFunctionSupport getRenderingFunctionSupport(
 			List<SqmExpression> arguments,
-			AllowableFunctionReturnType impliedResultType);
+			AllowableFunctionReturnType resolvedReturnType);
 }

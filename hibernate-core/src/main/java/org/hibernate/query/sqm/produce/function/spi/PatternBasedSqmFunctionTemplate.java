@@ -10,6 +10,8 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
@@ -28,48 +30,25 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  */
-public class PatternBasedSqmFunctionTemplate extends AbstractSelfRenderingFunctionTemplate implements SelfRenderingFunctionSupport {
+public class PatternBasedSqmFunctionTemplate extends AbstractSelfRenderingFunctionTemplate
+		implements SelfRenderingFunctionSupport {
 	private final PatternRenderer renderer;
-	private final AllowableFunctionReturnType type;
-	private final boolean hasParenthesesIfNoArgs;
 
 	/**
-	 * Constructs a SQLFunctionTemplate
-	 *
-	 * @param type The functions return type
-	 * @param template The function template
+	 * Constructs a pattern-based function template
 	 */
-	public PatternBasedSqmFunctionTemplate(AllowableFunctionReturnType type, String template) {
-		this( type, template, true );
-	}
-
-	/**
-	 * Constructs a SQLFunctionTemplate
-	 *
-	 * @param type The functions return type
-	 * @param template The function template
-	 * @param hasParenthesesIfNoArgs If there are no arguments, are parentheses required?
-	 */
-	public PatternBasedSqmFunctionTemplate(AllowableFunctionReturnType type, String template, boolean hasParenthesesIfNoArgs) {
-		this.type = type;
-		this.renderer = new PatternRenderer( template, hasParenthesesIfNoArgs );
-		this.hasParenthesesIfNoArgs = hasParenthesesIfNoArgs;
+	public PatternBasedSqmFunctionTemplate(
+			PatternRenderer renderer,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver) {
+		super( returnTypeResolver, argumentsValidator );
+		this.renderer = renderer;
 	}
 
 	@Override
 	protected SelfRenderingFunctionSupport getRenderingFunctionSupport(
 			List<SqmExpression> arguments,
 			AllowableFunctionReturnType impliedResultType) {
-		return this;
-	}
-
-	@Override
-	public AllowableFunctionReturnType functionReturnType() {
-		return type;
-	}
-
-	@Override
-	public SqmFunctionTemplate getSqmFunctionTemplate() {
 		return this;
 	}
 
@@ -81,4 +60,5 @@ public class PatternBasedSqmFunctionTemplate extends AbstractSelfRenderingFuncti
 			SessionFactoryImplementor sessionFactory) {
 		sqlAppender.appendSql( renderer.render( sqlAstArguments, sessionFactory ) );
 	}
+
 }

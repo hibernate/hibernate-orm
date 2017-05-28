@@ -6,28 +6,18 @@
  */
 
 /**
- * Semantic Query Model (SQM) defines:<ul>
- *     <li>
- *         An actual query tree modeling the "meaning" (semantic) of a user supplied query.  See
+ * = Semantic Query Model (SQM)
+ *
+ * Hibernate's SQM defines:
+ *
+ * * An actual query tree modeling the "meaning" (semantic) of a user supplied query.  See
  *         the {@link org.hibernate.query.sqm.tree} package.
- *     </li>
- *     <li>
- *         Support for producing an SQM tree based on HQL/JPQL via Antlr or
+ * * Support for producing an SQM tree based on HQL/JPQL via Antlr or
  *         based on JPA-based (although eventually extended) Criteria tree via
- *         walking.
- *         <p/>
- *         <i>
- *             Would be nice later to be able to define our JPA Criteria impls based
- *                 on the SQM tree itself, meaning no walking to convert - we'd kind of
- *                 build the SQM as the user defines the Criteria, rather than a separate
- *                 "conversion walk".  However, this absolutely requires folding the SQM
- *                 project into ORM.
- *         </i>
- *         See {@link org.hibernate.query.sqm.produce}.
- *     </li>
- *     <li>
- *         Walking (or generally consuming) SQM trees.  See {@link org.hibernate.query.sqm.consume}.
- *     </li>
- * </ul>
+ *         walking.  See {@link org.hibernate.query.sqm.produce}.
+ * * Walking (or generally consuming) SQM trees.  See {@link org.hibernate.query.sqm.consume}.
+ *
+ * Note that this entire package is considered incubating
  */
+@org.hibernate.Incubating
 package org.hibernate.query.sqm;

@@ -37,7 +37,7 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;

@@ -10,12 +10,12 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.Type;
 
 /**
- * Support for slightly more general templating than {@link StandardSqmFunctionTemplate}, with an unlimited number of arguments.
+ * Support for slightly more general templating than {@link NamedSqmFunctionTemplate}, with an unlimited number of arguments.
  *
  * @author Gavin King
  */

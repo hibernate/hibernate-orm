@@ -19,7 +19,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;

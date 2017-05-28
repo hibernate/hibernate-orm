@@ -13,7 +13,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.query.sqm.produce.function.spi.AnsiTrimEmulationFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -46,7 +46,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		registerFunction( "second", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(second, ?1)" ) );
 		registerFunction( "minute", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(minute, ?1)" ) );
 		registerFunction( "hour", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(hour, ?1)" ) );
-		registerFunction( "locate", new StandardSqmFunctionTemplate( "charindex", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "locate", new NamedSqmFunctionTemplate( "charindex", StandardSpiBasicTypes.INTEGER ) );
 
 		registerFunction( "extract", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "datepart(?1, ?3)" ) );
 		registerFunction( "mod", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "?1 % ?2" ) );

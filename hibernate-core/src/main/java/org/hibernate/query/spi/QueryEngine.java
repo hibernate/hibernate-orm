@@ -9,7 +9,7 @@ package org.hibernate.query.spi;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.dialect.function.SqmFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
@@ -30,14 +30,18 @@ public class QueryEngine {
 	private final CriteriaBuilderImpl criteriaBuilder;
 	private final SemanticQueryProducer semanticQueryProducer;
 	private final QueryInterpretations queryInterpretations;
+	private final SqmFunctionRegistry sqmFunctionRegistry;
 
-	public QueryEngine(SessionFactoryImplementor sessionFactory, MetadataImplementor bootTimeModel) {
+	public QueryEngine(
+			SessionFactoryImplementor sessionFactory,
+			NamedQueryRepository namedQueryRepository,
+			SqmFunctionRegistry sqmFunctionRegistry) {
 		this.sessionFactory = sessionFactory;
-
-		this.namedQueryRepository = bootTimeModel.buildNamedQueryRepository( sessionFactory );
+		this.namedQueryRepository = namedQueryRepository;
 		this.semanticQueryProducer = new SemanticQueryProducerImpl( sessionFactory );
 		this.criteriaBuilder = new CriteriaBuilderImpl( sessionFactory );
 		this.queryInterpretations = new QueryInterpretationsImpl( sessionFactory );
+		this.sqmFunctionRegistry = sqmFunctionRegistry;
 
 		//checking for named queries
 		if ( sessionFactory.getSessionFactoryOptions().isNamedQueryStartupCheckingEnabled() ) {
@@ -73,6 +77,10 @@ public class QueryEngine {
 
 	public QueryInterpretations getQueryInterpretations() {
 		return queryInterpretations;
+	}
+
+	public SqmFunctionRegistry getSqmFunctionRegistry() {
+		return sqmFunctionRegistry;
 	}
 
 	public void close() {

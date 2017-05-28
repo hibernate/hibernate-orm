@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 
 /**
  * Registers all available spatial functions for a <code>Dialect</code>

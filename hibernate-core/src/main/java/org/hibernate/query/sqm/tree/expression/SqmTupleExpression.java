@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,10 @@ public class SqmTupleExpression implements SqmExpression {
 
 	public SqmTupleExpression(SqmExpression groupedExpression) {
 		this( Collections.singletonList( groupedExpression ) );
+	}
+
+	public SqmTupleExpression(SqmExpression... groupedExpressions) {
+		this( Arrays.asList( groupedExpressions ));
 	}
 
 	public SqmTupleExpression(List<SqmExpression> groupedExpressions) {

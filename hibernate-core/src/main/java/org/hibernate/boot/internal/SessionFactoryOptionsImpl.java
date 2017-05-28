@@ -24,7 +24,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.dialect.function.SqmFunctionRegistry;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -126,7 +126,7 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	private final boolean wrapResultSetsEnabled;
 	private final TimeZone jdbcTimeZone;
 
-	private final Map<String, SqmFunctionTemplate> sqlFunctions;
+	private final SqmFunctionRegistry sqmFunctionRegistry = new SqmFunctionRegistry();
 	private final QueryLiteralRendering queryLiteralRendering;
 
 	public SessionFactoryOptionsImpl(SessionFactoryOptionsState state) {
@@ -203,8 +203,6 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 		this.scrollableResultSetsEnabled = state.isScrollableResultSetsEnabled();
 		this.wrapResultSetsEnabled = state.isWrapResultSetsEnabled();
 		this.commentsEnabled = state.isCommentsEnabled();
-
-		this.sqlFunctions = state.getCustomSqlFunctionMap();
 
 		this.jdbcTimeZone = state.getJdbcTimeZone();
 	}
@@ -509,8 +507,8 @@ public class SessionFactoryOptionsImpl implements SessionFactoryOptions {
 	}
 
 	@Override
-	public Map<String, SqmFunctionTemplate> getCustomSqlFunctionMap() {
-		return sqlFunctions;
+	public SqmFunctionRegistry getSqmFunctionRegistry() {
+		return sqmFunctionRegistry;
 	}
 
 	@Override

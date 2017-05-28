@@ -19,7 +19,9 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.dialect.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.PatternFunctionTemplateBuilder;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -675,8 +677,11 @@ public interface SessionFactoryBuilder {
 	 */
 	SessionFactoryBuilder applySqlComments(boolean enabled);
 
+	// todo (6.0) : revisit discussion with Christian regarding the timing of when registering function templates should happen...
+	SqmFunctionRegistry getSqmFunctionRegistry();
+
 	/**
-	 * Apply a SQLFunction to the underlying {@link org.hibernate.dialect.function.SQLFunctionRegistry}.
+	 * Apply a SQLFunction to the underlying {@link SqmFunctionRegistry}.
 	 * <p/>
 	 * TODO : Ultimately I would like this to move to {@link org.hibernate.boot.MetadataBuilder} in conjunction with allowing mappings to reference SQLFunctions.
 	 * today mappings can only name SQL functions directly, not through the SQLFunctionRegistry indirection
@@ -686,7 +691,10 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	SessionFactoryBuilder applySqlFunction(String registrationName, SqmFunctionTemplate sqlFunction);
+	default SessionFactoryBuilder applySqlFunction(String registrationName, SqmFunctionTemplate sqlFunction) {
+		getSqmFunctionRegistry().register( registrationName, sqlFunction );
+		return this;
+	}
 
 	SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow);
 

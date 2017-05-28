@@ -17,7 +17,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.dialect.function.SqmFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.service.ServiceRegistry;
@@ -87,7 +87,7 @@ public class TemplateTest extends BaseUnitTestCase {
 
 	private static final Dialect DIALECT = new HSQLDialect();
 
-	private static final SQLFunctionRegistry FUNCTION_REGISTRY = new SQLFunctionRegistry( DIALECT, Collections.EMPTY_MAP );
+	private static final SqmFunctionRegistry FUNCTION_REGISTRY = new SqmFunctionRegistry( DIALECT, Collections.EMPTY_MAP );
 
 	private static SessionFactoryImplementor SESSION_FACTORY = null; // Required for ORDER BY rendering.
 

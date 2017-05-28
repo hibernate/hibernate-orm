@@ -10,7 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
-import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
@@ -53,17 +53,17 @@ public class MckoiDialect extends Dialect {
 		registerColumnType( Types.BLOB, "blob" );
 		registerColumnType( Types.CLOB, "clob" );
 
-		registerFunction( "upper", new StandardSqmFunctionTemplate( "upper") );
-		registerFunction( "lower", new StandardSqmFunctionTemplate( "lower") );
-		registerFunction( "sqrt", new StandardSqmFunctionTemplate( "sqrt", StandardBasicTypes.DOUBLE) );
-		registerFunction( "abs", new StandardSqmFunctionTemplate( "abs") );
-		registerFunction( "sign", new StandardSqmFunctionTemplate( "sign", StandardBasicTypes.INTEGER ) );
-		registerFunction( "round", new StandardSqmFunctionTemplate( "round", StandardBasicTypes.INTEGER ) );
-		registerFunction( "mod", new StandardSqmFunctionTemplate( "mod", StandardBasicTypes.INTEGER ) );
-		registerFunction( "least", new StandardSqmFunctionTemplate( "least") );
-		registerFunction( "greatest", new StandardSqmFunctionTemplate( "greatest") );
-		registerFunction( "user", new StandardSqmFunctionTemplate( "user", StandardBasicTypes.STRING ) );
-		registerFunction( "concat", new StandardSqmFunctionTemplate( "concat", StandardBasicTypes.STRING ) );
+		registerFunction( "upper", new NamedSqmFunctionTemplate( "upper") );
+		registerFunction( "lower", new NamedSqmFunctionTemplate( "lower") );
+		registerFunction( "sqrt", new NamedSqmFunctionTemplate( "sqrt", StandardBasicTypes.DOUBLE) );
+		registerFunction( "abs", new NamedSqmFunctionTemplate( "abs") );
+		registerFunction( "sign", new NamedSqmFunctionTemplate( "sign", StandardBasicTypes.INTEGER ) );
+		registerFunction( "round", new NamedSqmFunctionTemplate( "round", StandardBasicTypes.INTEGER ) );
+		registerFunction( "mod", new NamedSqmFunctionTemplate( "mod", StandardBasicTypes.INTEGER ) );
+		registerFunction( "least", new NamedSqmFunctionTemplate( "least") );
+		registerFunction( "greatest", new NamedSqmFunctionTemplate( "greatest") );
+		registerFunction( "user", new NamedSqmFunctionTemplate( "user", StandardBasicTypes.STRING ) );
+		registerFunction( "concat", new NamedSqmFunctionTemplate( "concat", StandardBasicTypes.STRING ) );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}

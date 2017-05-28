@@ -8,14 +8,14 @@ package org.hibernate.mapping;
 
 import org.hibernate.boot.model.relational.MappedColumn;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.dialect.function.SqmFunctionRegistry;
 
 /**
  * Models the commonality between a column and a formula (computed value).
  */
 public interface Selectable extends MappedColumn {
 	boolean isFormula();
-	String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry);
+	String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry);
 	String getText(Dialect dialect);
 	String getText();
 }

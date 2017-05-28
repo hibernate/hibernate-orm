@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.JTSGeometryType;

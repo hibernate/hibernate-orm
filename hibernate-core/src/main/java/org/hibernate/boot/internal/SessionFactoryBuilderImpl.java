@@ -9,7 +9,6 @@ package org.hibernate.boot.internal;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +41,7 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.dialect.function.SqmFunctionRegistry;
 import org.hibernate.engine.config.internal.ConfigurationServiceImpl;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
@@ -54,6 +53,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.QueryLiteralRendering;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -484,12 +484,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applySqlFunction(String registrationName, SqmFunctionTemplate sqlFunction) {
-		if ( this.options.sqlFunctions == null ) {
-			this.options.sqlFunctions = new HashMap<String, SqmFunctionTemplate>();
-		}
-		this.options.sqlFunctions.put( registrationName, sqlFunction );
-		return this;
+	public SqmFunctionRegistry getSqmFunctionRegistry() {
+		return this.options.sqmFunctionRegistry;
 	}
 
 	@Override
@@ -624,7 +620,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean wrapResultSetsEnabled;
 		private TimeZone jdbcTimeZone;
 
-		private Map<String, SqmFunctionTemplate> sqlFunctions;
+		private SqmFunctionRegistry sqmFunctionRegistry = new SqmFunctionRegistry();
 
 		public SessionFactoryOptionsStateStandardImpl(
 				StandardServiceRegistry serviceRegistry,
@@ -1260,8 +1256,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		}
 
 		@Override
-		public Map<String, SqmFunctionTemplate> getCustomSqlFunctionMap() {
-			return sqlFunctions == null ? Collections.<String, SqmFunctionTemplate>emptyMap() : sqlFunctions;
+		public SqmFunctionRegistry getSqmFunctionRegistry() {
+			return sqmFunctionRegistry;
 		}
 
 		@Override
@@ -1585,11 +1581,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return options.getEntityNotFoundDelegate();
-	}
-
-	@Override
-	public Map<String, SqmFunctionTemplate> getCustomSqlFunctionMap() {
-		return options.getCustomSqlFunctionMap();
 	}
 
 	@Override

@@ -50,7 +50,7 @@ from an API perspective.
 	* `org.hibernate.persister` moved to `org.hibernate.metamodel`.  Also most references
 		to "persister" are replaced with "more appropriate names"
 	* `org.hibernate.mapping` deprecated in favor of the new `org.hibernate.boot.model` package
-	* `org.hibernate.dialect.function.SQLFunction` -> `org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate`
+	* `org.hibernate.dialect.function.SQLFunction` -> `org.hibernate.query.sqm.produce.function.SqmFunctionTemplate`
 
 == Removed deprecations
 

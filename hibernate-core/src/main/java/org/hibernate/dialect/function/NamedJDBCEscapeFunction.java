@@ -8,24 +8,26 @@ package org.hibernate.dialect.function;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.type.Type;
 
 /**
- * Analogous to {@link StandardSqmFunctionTemplate}
+ * Analogous to {@link NamedSqmFunctionTemplate}
  * except that standard JDBC escape sequences (i.e. {fn blah}) are used when
  * rendering the SQL.
  *
  * @author Steve Ebersole
  */
-public class StandardJDBCEscapeFunction extends StandardSqmFunctionTemplate {
+public class NamedJDBCEscapeFunction extends NamedSqmFunctionTemplate {
+
+	// todo (6.0) : migrate uses of this to simply use the NamedFunctionTemplateBuilder.setUseJdbcEscapeSyntax()
 	/**
 	 * Constructs a StandardJDBCEscapeFunction
 	 *
 	 * @param name The function name
 	 * @param typeValue The function return type
 	 */
-	public StandardJDBCEscapeFunction(String name, Type typeValue) {
+	public NamedJDBCEscapeFunction(String name, Type typeValue) {
 		super( name, typeValue );
 	}
 

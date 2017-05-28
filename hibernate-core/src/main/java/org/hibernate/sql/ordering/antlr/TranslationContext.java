@@ -7,7 +7,7 @@
 package org.hibernate.sql.ordering.antlr;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.dialect.function.SqmFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -35,7 +35,7 @@ public interface TranslationContext {
 	 *
 	 * @return The SQL function registry.
 	 */
-	public SQLFunctionRegistry getSqlFunctionRegistry();
+	public SqmFunctionRegistry getSqlFunctionRegistry();
 
 	/**
 	 * Retrieves the <tt>column mapper</tt> for this context.

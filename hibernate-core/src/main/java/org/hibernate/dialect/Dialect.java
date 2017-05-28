@@ -16,7 +16,6 @@ import java.sql.NClob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -24,6 +23,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -41,10 +41,7 @@ import org.hibernate.metamodel.model.relational.spi.ForeignKey;
 import org.hibernate.metamodel.model.relational.spi.Sequence;
 import org.hibernate.metamodel.model.relational.spi.UniqueKey;
 import org.hibernate.query.sqm.produce.function.spi.CastFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.StandardAnsiSqlSqmAggregationFunctionTemplates;
-import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
+import org.hibernate.dialect.function.SqmFunctionRegistry;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -85,6 +82,8 @@ import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.loader.BatchLoadSizingStrategy;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.CastFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.ANSIJoinFragment;
@@ -101,9 +100,11 @@ import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.spi.ClobSqlDescriptor;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
@@ -141,7 +142,6 @@ public abstract class Dialect implements ConversionContext {
 	private final TypeNames hibernateTypeNames = new TypeNames();
 
 	private final Properties properties = new Properties();
-	private final Map<String, SqmFunctionTemplate> sqlFunctions = new HashMap<>();
 	private final Set<String> sqlKeywords = new HashSet<>();
 
 	private final UniqueDelegate uniqueDelegate;
@@ -151,33 +151,6 @@ public abstract class Dialect implements ConversionContext {
 
 	protected Dialect() {
 		LOG.usingDialect( this );
-		StandardAnsiSqlSqmAggregationFunctionTemplates.primeFunctionMap( sqlFunctions );
-
-		// standard sql92 functions (can be overridden by subclasses)
-		registerFunction( "substring", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "substring(?1, ?2, ?3)" ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "locate(?1, ?2, ?3)" ) );
-		registerFunction( "trim", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "trim(?1 ?2 ?3 ?4)" ) );
-		registerFunction( "length", new StandardSqmFunctionTemplate( "length", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "bit_length", new StandardSqmFunctionTemplate( "bit_length", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "coalesce", new StandardSqmFunctionTemplate( "coalesce" ) );
-		registerFunction( "nullif", new StandardSqmFunctionTemplate( "nullif" ) );
-		registerFunction( "abs", new StandardSqmFunctionTemplate( "abs" ) );
-		registerFunction( "mod", new StandardSqmFunctionTemplate( "mod", StandardSpiBasicTypes.INTEGER) );
-		registerFunction( "sqrt", new StandardSqmFunctionTemplate( "sqrt", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "upper", new StandardSqmFunctionTemplate( "upper") );
-		registerFunction( "lower", new StandardSqmFunctionTemplate( "lower") );
-		registerFunction( "cast", new CastFunctionTemplate() );
-		registerFunction( "extract", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(?1 ?2 ?3)") );
-
-		//map second/minute/hour/day/month/year to ANSI extract(), override on subclasses
-		registerFunction( "second", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(second from ?1)") );
-		registerFunction( "minute", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(minute from ?1)") );
-		registerFunction( "hour", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(hour from ?1)") );
-		registerFunction( "day", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(day from ?1)") );
-		registerFunction( "month", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(month from ?1)") );
-		registerFunction( "year", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "extract(year from ?1)") );
-
-		registerFunction( "str", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "cast(?1 as char)") );
 
 		registerColumnType( Types.BIT, "bit" );
 		registerColumnType( Types.BOOLEAN, "boolean" );
@@ -239,6 +212,103 @@ public abstract class Dialect implements ConversionContext {
 		}
 
 		uniqueDelegate = new DefaultUniqueDelegate( this );
+	}
+
+	/**
+	 * Initialize the given registry with any dialect-specific functions.
+	 * Note that standard JPA functions which the underlying database
+	 * supports as defined in JPA do not need to be registered here :
+	 * Hibernate has an inherent understanding of how to handle these
+	 * functions.  These include:
+	 *
+	 * 		* avg
+	 * 		* count
+	 * 		* max
+	 * 		* min
+	 * 		* sum
+	 *
+	 * 		* concat
+	 * 		* substring
+	 * 		* trim
+	 * 		* lower
+	 * 		* upper
+	 * 		* locate
+	 * 		* length
+	 *
+	 * 		* abs
+	 * 		* mod
+	 * 		* sqrt
+	 *
+	 * 		* current_date
+	 * 		* current_time
+	 * 		* current_timestamp
+	 *
+	 * Hibernate defines the additional set of "standard" functions
+	 * that it agrees to support against any database.  Dialects *must*
+	 * implement support for these if the underlying database
+	 * does not support them, generally through registering custom
+	 * templates for emulating those functions.  These include:
+	 *
+	 * 		* bit_length
+	 * 		* coalesce
+	 * 		* nullif
+	 * 		* cast
+	 * 		* extract
+	 * 		* second		- defined as `extract(second from ?1)`
+	 * 		* minute		- defined as `extract(minute from ?1)`
+	 * 		* hour			- defined as `extract(hour from ?1)`
+	 * 		* day			- defined as `extract(day from ?1)`
+	 * 		* month			- defined as `extract(month from ?1)`
+	 * 		* year			- defined as `extract(year from ?1)`
+	 * 		* str 			- defined as `cast(?1 as CHAR )`
+	 *
+	 */
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		registry.namedTemplateBuilder( "bit_length" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		registry.registerNamed( "coalesce" );
+		registry.registerNamed( "nullif" );
+		registry.register( "cast", new CastFunctionTemplate() );
+
+		registry.patternTemplateBuilder( "extract", "extract(?1 from ?2)" )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		registry.patternTemplateBuilder( "second", "extract(second from ?1)" )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		registry.patternTemplateBuilder( "minute", "extract(minute from ?1)" )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		registry.patternTemplateBuilder( "hour", "extract(hour from ?1)" )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		registry.patternTemplateBuilder( "day", "extract(day from ?1)" )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		registry.patternTemplateBuilder( "month", "extract(month from ?1)" )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		registry.patternTemplateBuilder( "year", "extract(year from ?1)" )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		registry.patternTemplateBuilder( "str", "cast(?1 as char)" )
+				.setExactArgumentCount( 1 )
+				.register();
+
+	}
+
+	protected void primeSqlTypeDescriptorRegistry(SqlTypeDescriptorRegistry registry) {
+
 	}
 
 	/**
@@ -308,7 +378,34 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		// by default, nothing to do
+
+		// note: this one is called as we being to process (boot) Metadata into (runtime) metamodel
 	}
+
+	// todo (6.0) : new overall Dialect design?
+	//		original (and currently) Dialect is designed/intended to be completely
+	// 			static information - that works great until databases have have
+	//			deviations between versison for the information we need (which
+	//			is highly likely.  note that "static" here means information that
+	//			the Dialect can know about the underlying database, but without
+	//			actually being able to query the db through JDBC, which would be
+	// 			an example of doing it dynamically
+	//		so might be better to design a better intention, such that Dialect
+	//			is built with has access to information about the underlying
+	//			database either through the JDBC Connection or some form of
+	//			"extracted metadata".  I think the former is both more flexible/powerful
+	//			and simple (if there is no Connection the Dialect can just do what it
+	//			does today
+	//
+	// todo (6.0) : a related point is to consider a singular JDBC Connection
+	// 		that is:
+	//			1) opened once at the stat of bootstrapping (at what specific point?)
+	//			2) can be accessed by different bootstrapping aspects - only ever opening
+	// 				that one for all of bootstrap.  practically this may have to be
+	//				2 Connections because of the "break" between the boot service registry
+	// 				(building JdbcServices, etc) and handling metadata.
+	//			3) closed at conclusion
+
 
 	/**
 	 * Get the name of the database type associated with the given
@@ -710,25 +807,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	protected void registerHibernateType(int code, String name) {
 		hibernateTypeNames.put( code, name );
-	}
-
-
-	// function support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	protected void registerFunction(String name, SqmFunctionTemplate function) {
-		// HHH-7721: SQLFunctionRegistry expects all lowercase.  Enforce,
-		// just in case a user's customer dialect uses mixed cases.
-		sqlFunctions.put( name.toLowerCase( Locale.ROOT ), function );
-	}
-
-	/**
-	 * Retrieves a map of the dialect's registered functions
-	 * (functionName => {@link SqmFunctionTemplate}).
-	 *
-	 * @return The map of registered functions.
-	 */
-	public final Map<String, SqmFunctionTemplate> getFunctions() {
-		return sqlFunctions;
 	}
 
 

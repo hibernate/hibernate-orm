@@ -16,8 +16,8 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
@@ -55,14 +55,14 @@ public class MySQL56SpatialDialect extends MySQL5Dialect implements SpatialDiale
 	}
 
 	private MySQLSpatialFunctions overrideObjectShapeFunctions(MySQLSpatialFunctions mysqlFunctions) {
-		mysqlFunctions.put( "contains", new StandardSqmFunctionTemplate( "ST_Contains", StandardBasicTypes.BOOLEAN ) );
-		mysqlFunctions.put( "crosses", new StandardSqmFunctionTemplate( "ST_Crosses", StandardBasicTypes.BOOLEAN ) );
-		mysqlFunctions.put( "disjoint", new StandardSqmFunctionTemplate( "ST_Disjoint", StandardBasicTypes.BOOLEAN ) );
-		mysqlFunctions.put( "equals", new StandardSqmFunctionTemplate( "ST_Equals", StandardBasicTypes.BOOLEAN ) );
-		mysqlFunctions.put( "intersects", new StandardSqmFunctionTemplate( "ST_Intersects", StandardBasicTypes.BOOLEAN ) );
-		mysqlFunctions.put( "overlaps", new StandardSqmFunctionTemplate( "ST_Overlaps", StandardBasicTypes.BOOLEAN ) );
-		mysqlFunctions.put( "touches", new StandardSqmFunctionTemplate( "ST_Touches", StandardBasicTypes.BOOLEAN ) );
-		mysqlFunctions.put( "within", new StandardSqmFunctionTemplate( "ST_Within", StandardBasicTypes.BOOLEAN ) );
+		mysqlFunctions.put( "contains", new NamedSqmFunctionTemplate( "ST_Contains", StandardBasicTypes.BOOLEAN ) );
+		mysqlFunctions.put( "crosses", new NamedSqmFunctionTemplate( "ST_Crosses", StandardBasicTypes.BOOLEAN ) );
+		mysqlFunctions.put( "disjoint", new NamedSqmFunctionTemplate( "ST_Disjoint", StandardBasicTypes.BOOLEAN ) );
+		mysqlFunctions.put( "equals", new NamedSqmFunctionTemplate( "ST_Equals", StandardBasicTypes.BOOLEAN ) );
+		mysqlFunctions.put( "intersects", new NamedSqmFunctionTemplate( "ST_Intersects", StandardBasicTypes.BOOLEAN ) );
+		mysqlFunctions.put( "overlaps", new NamedSqmFunctionTemplate( "ST_Overlaps", StandardBasicTypes.BOOLEAN ) );
+		mysqlFunctions.put( "touches", new NamedSqmFunctionTemplate( "ST_Touches", StandardBasicTypes.BOOLEAN ) );
+		mysqlFunctions.put( "within", new NamedSqmFunctionTemplate( "ST_Within", StandardBasicTypes.BOOLEAN ) );
 		return mysqlFunctions;
 	}
 

@@ -11,7 +11,7 @@ import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.dialect.function.SqmFunctionRegistry;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.relational.spi.PhysicalColumn;
 import org.hibernate.metamodel.model.relational.spi.PhysicalNamingStrategy;
@@ -194,7 +194,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	@Override
-	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
+	public String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry) {
 		return hasCustomRead()
 				? Template.renderWhereStringTemplate( customRead, dialect, functionRegistry )
 				: Template.TEMPLATE + '.' + name.render( dialect );

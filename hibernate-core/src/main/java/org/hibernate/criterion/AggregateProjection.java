@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.type.Type;
 
 /**
@@ -60,7 +60,7 @@ public class AggregateProjection extends SimpleProjection {
 
 	protected SqmFunctionTemplate getFunction(String functionName, CriteriaQuery criteriaQuery) {
 		final SqmFunctionTemplate function = criteriaQuery.getFactory()
-				.getSqlFunctionRegistry()
+				.getSqmFunctionRegistry()
 				.findSQLFunction( functionName );
 		if ( function == null ) {
 			throw new HibernateException( "Unable to locate mapping for function named [" + functionName + "]" );

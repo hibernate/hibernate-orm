@@ -9,7 +9,7 @@ package org.hibernate.spatial.dialect.oracle;
 import java.util.List;
 
 import org.hibernate.QueryException;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 

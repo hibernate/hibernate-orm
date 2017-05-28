@@ -21,7 +21,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
 import org.hibernate.dialect.function.PostgresLocateEmulationTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQL81IdentityColumnSupport;
@@ -101,54 +101,54 @@ public class PostgreSQL81Dialect extends Dialect {
 		registerColumnType( Types.NUMERIC, "numeric($p, $s)" );
 		registerColumnType( Types.OTHER, "uuid" );
 
-		registerFunction( "abs", new StandardSqmFunctionTemplate( "abs") );
-		registerFunction( "sign", new StandardSqmFunctionTemplate( "sign", StandardSpiBasicTypes.INTEGER) );
+		registerFunction( "abs", new NamedSqmFunctionTemplate( "abs") );
+		registerFunction( "sign", new NamedSqmFunctionTemplate( "sign", StandardSpiBasicTypes.INTEGER) );
 
-		registerFunction( "acos", new StandardSqmFunctionTemplate( "acos", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "asin", new StandardSqmFunctionTemplate( "asin", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "atan", new StandardSqmFunctionTemplate( "atan", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "cos", new StandardSqmFunctionTemplate( "cos", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "cot", new StandardSqmFunctionTemplate( "cot", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "exp", new StandardSqmFunctionTemplate( "exp", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "ln", new StandardSqmFunctionTemplate( "ln", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "log", new StandardSqmFunctionTemplate( "log", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "sin", new StandardSqmFunctionTemplate( "sin", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "sqrt", new StandardSqmFunctionTemplate( "sqrt", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "cbrt", new StandardSqmFunctionTemplate( "cbrt", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "tan", new StandardSqmFunctionTemplate( "tan", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "radians", new StandardSqmFunctionTemplate( "radians", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "degrees", new StandardSqmFunctionTemplate( "degrees", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "acos", new NamedSqmFunctionTemplate( "acos", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "asin", new NamedSqmFunctionTemplate( "asin", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "atan", new NamedSqmFunctionTemplate( "atan", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "cos", new NamedSqmFunctionTemplate( "cos", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "cot", new NamedSqmFunctionTemplate( "cot", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "exp", new NamedSqmFunctionTemplate( "exp", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "ln", new NamedSqmFunctionTemplate( "ln", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "log", new NamedSqmFunctionTemplate( "log", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "sin", new NamedSqmFunctionTemplate( "sin", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "sqrt", new NamedSqmFunctionTemplate( "sqrt", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "cbrt", new NamedSqmFunctionTemplate( "cbrt", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "tan", new NamedSqmFunctionTemplate( "tan", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "radians", new NamedSqmFunctionTemplate( "radians", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "degrees", new NamedSqmFunctionTemplate( "degrees", StandardSpiBasicTypes.DOUBLE) );
 
-		registerFunction( "stddev", new StandardSqmFunctionTemplate( "stddev", StandardSpiBasicTypes.DOUBLE) );
-		registerFunction( "variance", new StandardSqmFunctionTemplate( "variance", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "stddev", new NamedSqmFunctionTemplate( "stddev", StandardSpiBasicTypes.DOUBLE) );
+		registerFunction( "variance", new NamedSqmFunctionTemplate( "variance", StandardSpiBasicTypes.DOUBLE) );
 
 		registerFunction( "random", new NoArgsSqmFunctionTemplate( "random", StandardSpiBasicTypes.DOUBLE) );
 		registerFunction( "rand", new NoArgsSqmFunctionTemplate( "random", StandardSpiBasicTypes.DOUBLE) );
 
-		registerFunction( "round", new StandardSqmFunctionTemplate( "round") );
-		registerFunction( "trunc", new StandardSqmFunctionTemplate( "trunc") );
-		registerFunction( "ceil", new StandardSqmFunctionTemplate( "ceil") );
-		registerFunction( "floor", new StandardSqmFunctionTemplate( "floor") );
+		registerFunction( "round", new NamedSqmFunctionTemplate( "round") );
+		registerFunction( "trunc", new NamedSqmFunctionTemplate( "trunc") );
+		registerFunction( "ceil", new NamedSqmFunctionTemplate( "ceil") );
+		registerFunction( "floor", new NamedSqmFunctionTemplate( "floor") );
 
-		registerFunction( "chr", new StandardSqmFunctionTemplate( "chr", StandardSpiBasicTypes.CHARACTER) );
-		registerFunction( "lower", new StandardSqmFunctionTemplate( "lower") );
-		registerFunction( "upper", new StandardSqmFunctionTemplate( "upper") );
-		registerFunction( "substr", new StandardSqmFunctionTemplate( "substr", StandardSpiBasicTypes.STRING) );
-		registerFunction( "initcap", new StandardSqmFunctionTemplate( "initcap") );
-		registerFunction( "to_ascii", new StandardSqmFunctionTemplate( "to_ascii") );
-		registerFunction( "quote_ident", new StandardSqmFunctionTemplate( "quote_ident", StandardSpiBasicTypes.STRING) );
-		registerFunction( "quote_literal", new StandardSqmFunctionTemplate( "quote_literal", StandardSpiBasicTypes.STRING) );
-		registerFunction( "md5", new StandardSqmFunctionTemplate( "md5", StandardSpiBasicTypes.STRING) );
-		registerFunction( "ascii", new StandardSqmFunctionTemplate( "ascii", StandardSpiBasicTypes.INTEGER) );
-		registerFunction( "char_length", new StandardSqmFunctionTemplate( "char_length", StandardSpiBasicTypes.LONG) );
-		registerFunction( "bit_length", new StandardSqmFunctionTemplate( "bit_length", StandardSpiBasicTypes.LONG) );
-		registerFunction( "octet_length", new StandardSqmFunctionTemplate( "octet_length", StandardSpiBasicTypes.LONG) );
+		registerFunction( "chr", new NamedSqmFunctionTemplate( "chr", StandardSpiBasicTypes.CHARACTER) );
+		registerFunction( "lower", new NamedSqmFunctionTemplate( "lower") );
+		registerFunction( "upper", new NamedSqmFunctionTemplate( "upper") );
+		registerFunction( "substr", new NamedSqmFunctionTemplate( "substr", StandardSpiBasicTypes.STRING) );
+		registerFunction( "initcap", new NamedSqmFunctionTemplate( "initcap") );
+		registerFunction( "to_ascii", new NamedSqmFunctionTemplate( "to_ascii") );
+		registerFunction( "quote_ident", new NamedSqmFunctionTemplate( "quote_ident", StandardSpiBasicTypes.STRING) );
+		registerFunction( "quote_literal", new NamedSqmFunctionTemplate( "quote_literal", StandardSpiBasicTypes.STRING) );
+		registerFunction( "md5", new NamedSqmFunctionTemplate( "md5", StandardSpiBasicTypes.STRING) );
+		registerFunction( "ascii", new NamedSqmFunctionTemplate( "ascii", StandardSpiBasicTypes.INTEGER) );
+		registerFunction( "char_length", new NamedSqmFunctionTemplate( "char_length", StandardSpiBasicTypes.LONG) );
+		registerFunction( "bit_length", new NamedSqmFunctionTemplate( "bit_length", StandardSpiBasicTypes.LONG) );
+		registerFunction( "octet_length", new NamedSqmFunctionTemplate( "octet_length", StandardSpiBasicTypes.LONG) );
 
-		registerFunction( "age", new StandardSqmFunctionTemplate( "age") );
+		registerFunction( "age", new NamedSqmFunctionTemplate( "age") );
 		registerFunction( "current_date", new NoArgsSqmFunctionTemplate( "current_date", StandardSpiBasicTypes.DATE, false) );
 		registerFunction( "current_time", new NoArgsSqmFunctionTemplate( "current_time", StandardSpiBasicTypes.TIME, false) );
 		registerFunction( "current_timestamp", new NoArgsSqmFunctionTemplate( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP, false) );
-		registerFunction( "date_trunc", new StandardSqmFunctionTemplate( "date_trunc", StandardSpiBasicTypes.TIMESTAMP ) );
+		registerFunction( "date_trunc", new NamedSqmFunctionTemplate( "date_trunc", StandardSpiBasicTypes.TIMESTAMP ) );
 		registerFunction( "localtime", new NoArgsSqmFunctionTemplate( "localtime", StandardSpiBasicTypes.TIME, false) );
 		registerFunction( "localtimestamp", new NoArgsSqmFunctionTemplate( "localtimestamp", StandardSpiBasicTypes.TIMESTAMP, false) );
 		registerFunction( "now", new NoArgsSqmFunctionTemplate( "now", StandardSpiBasicTypes.TIMESTAMP) );
@@ -160,10 +160,10 @@ public class PostgreSQL81Dialect extends Dialect {
 		registerFunction( "current_database", new NoArgsSqmFunctionTemplate( "current_database", StandardSpiBasicTypes.STRING, true) );
 		registerFunction( "current_schema", new NoArgsSqmFunctionTemplate( "current_schema", StandardSpiBasicTypes.STRING, true) );
 		
-		registerFunction( "to_char", new StandardSqmFunctionTemplate( "to_char", StandardSpiBasicTypes.STRING) );
-		registerFunction( "to_date", new StandardSqmFunctionTemplate( "to_date", StandardSpiBasicTypes.DATE) );
-		registerFunction( "to_timestamp", new StandardSqmFunctionTemplate( "to_timestamp", StandardSpiBasicTypes.TIMESTAMP) );
-		registerFunction( "to_number", new StandardSqmFunctionTemplate( "to_number", StandardSpiBasicTypes.BIG_DECIMAL) );
+		registerFunction( "to_char", new NamedSqmFunctionTemplate( "to_char", StandardSpiBasicTypes.STRING) );
+		registerFunction( "to_date", new NamedSqmFunctionTemplate( "to_date", StandardSpiBasicTypes.DATE) );
+		registerFunction( "to_timestamp", new NamedSqmFunctionTemplate( "to_timestamp", StandardSpiBasicTypes.TIMESTAMP) );
+		registerFunction( "to_number", new NamedSqmFunctionTemplate( "to_number", StandardSpiBasicTypes.BIG_DECIMAL) );
 
 		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "(", "||", ")" ) );
 

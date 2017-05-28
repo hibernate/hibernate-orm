@@ -11,7 +11,7 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.NvlFunction;
+import org.hibernate.dialect.function.NvlFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;

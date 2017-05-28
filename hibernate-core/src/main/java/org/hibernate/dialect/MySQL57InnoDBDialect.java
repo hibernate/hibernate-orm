@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.dialect.function.StaticPrecisionFspTimestampFunction;
 
 /**

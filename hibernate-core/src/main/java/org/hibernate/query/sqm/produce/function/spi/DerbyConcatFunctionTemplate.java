@@ -12,6 +12,7 @@ import java.util.Optional;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
 import org.hibernate.query.sqm.tree.expression.ParameterSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;

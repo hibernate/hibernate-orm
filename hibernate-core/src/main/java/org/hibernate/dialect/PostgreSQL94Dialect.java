@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -19,10 +19,10 @@ public class PostgreSQL94Dialect extends PostgreSQL93Dialect {
 	 */
 	public PostgreSQL94Dialect() {
 		super();
-		registerFunction( "make_interval", new StandardSqmFunctionTemplate( "make_interval", StandardBasicTypes.TIMESTAMP) );
-		registerFunction( "make_timestamp", new StandardSqmFunctionTemplate( "make_timestamp", StandardBasicTypes.TIMESTAMP) );
-		registerFunction( "make_timestamptz", new StandardSqmFunctionTemplate( "make_timestamptz", StandardBasicTypes.TIMESTAMP) );
-		registerFunction( "make_date", new StandardSqmFunctionTemplate( "make_date", StandardBasicTypes.DATE) );
-		registerFunction( "make_time", new StandardSqmFunctionTemplate( "make_time", StandardBasicTypes.TIME) );
+		registerFunction( "make_interval", new NamedSqmFunctionTemplate( "make_interval", StandardBasicTypes.TIMESTAMP) );
+		registerFunction( "make_timestamp", new NamedSqmFunctionTemplate( "make_timestamp", StandardBasicTypes.TIMESTAMP) );
+		registerFunction( "make_timestamptz", new NamedSqmFunctionTemplate( "make_timestamptz", StandardBasicTypes.TIMESTAMP) );
+		registerFunction( "make_date", new NamedSqmFunctionTemplate( "make_date", StandardBasicTypes.DATE) );
+		registerFunction( "make_time", new NamedSqmFunctionTemplate( "make_time", StandardBasicTypes.TIME) );
 	}
 }

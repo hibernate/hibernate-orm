@@ -13,6 +13,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.function.SqmFunctionRegistry;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -34,7 +35,7 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.query.sqm.produce.function.spi.NoArgsSqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.StandardAnsiSqlSqmAggregationFunctionTemplates.AvgFunctionTemplate;
-import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -129,95 +130,337 @@ public class H2Dialect extends Dialect {
 		registerColumnType( Types.BLOB, "blob" );
 		registerColumnType( Types.CLOB, "clob" );
 
-		// Aggregations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "avg", new AvgFunctionTemplate( "double" ) );
-
-		// select topic, syntax from information_schema.help
-		// where section like 'Function%' order by section, topic
-		//
-		// see also ->  http://www.h2database.com/html/functions.html
-
-		// Numeric Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "acos", new StandardSqmFunctionTemplate( "acos", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSqmFunctionTemplate( "asin", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardSqmFunctionTemplate( "atan", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "atan2", new StandardSqmFunctionTemplate( "atan2", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "bitand", new StandardSqmFunctionTemplate( "bitand", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "bitor", new StandardSqmFunctionTemplate( "bitor", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "bitxor", new StandardSqmFunctionTemplate( "bitxor", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "ceiling", new StandardSqmFunctionTemplate( "ceiling", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new StandardSqmFunctionTemplate( "cos", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "compress", new StandardSqmFunctionTemplate( "compress", StandardSpiBasicTypes.BINARY ) );
-		registerFunction( "cot", new StandardSqmFunctionTemplate( "cot", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "decrypt", new StandardSqmFunctionTemplate( "decrypt", StandardSpiBasicTypes.BINARY ) );
-		registerFunction( "degrees", new StandardSqmFunctionTemplate( "degrees", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "encrypt", new StandardSqmFunctionTemplate( "encrypt", StandardSpiBasicTypes.BINARY ) );
-		registerFunction( "exp", new StandardSqmFunctionTemplate( "exp", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "expand", new StandardSqmFunctionTemplate( "compress", StandardSpiBasicTypes.BINARY ) );
-		registerFunction( "floor", new StandardSqmFunctionTemplate( "floor", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "hash", new StandardSqmFunctionTemplate( "hash", StandardSpiBasicTypes.BINARY ) );
-		registerFunction( "log", new StandardSqmFunctionTemplate( "log", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new StandardSqmFunctionTemplate( "log10", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "pi", new NoArgsSqmFunctionTemplate( "pi", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "power", new StandardSqmFunctionTemplate( "power", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "radians", new StandardSqmFunctionTemplate( "radians", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "rand", new NoArgsSqmFunctionTemplate( "rand", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "round", new StandardSqmFunctionTemplate( "round", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "roundmagic", new StandardSqmFunctionTemplate( "roundmagic", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "sign", new StandardSqmFunctionTemplate( "sign", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "sin", new StandardSqmFunctionTemplate( "sin", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSqmFunctionTemplate( "tan", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "truncate", new StandardSqmFunctionTemplate( "truncate", StandardSpiBasicTypes.DOUBLE ) );
-
-		// String Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "ascii", new StandardSqmFunctionTemplate( "ascii", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "char", new StandardSqmFunctionTemplate( "char", StandardSpiBasicTypes.CHARACTER ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "(", "||", ")" ) );
-		registerFunction( "difference", new StandardSqmFunctionTemplate( "difference", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "hextoraw", new StandardSqmFunctionTemplate( "hextoraw", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "insert", new StandardSqmFunctionTemplate( "lower", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "left", new StandardSqmFunctionTemplate( "left", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "lcase", new StandardSqmFunctionTemplate( "lcase", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "ltrim", new StandardSqmFunctionTemplate( "ltrim", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "octet_length", new StandardSqmFunctionTemplate( "octet_length", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "position", new StandardSqmFunctionTemplate( "position", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "rawtohex", new StandardSqmFunctionTemplate( "rawtohex", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "repeat", new StandardSqmFunctionTemplate( "repeat", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "replace", new StandardSqmFunctionTemplate( "replace", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "right", new StandardSqmFunctionTemplate( "right", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "rtrim", new StandardSqmFunctionTemplate( "rtrim", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "soundex", new StandardSqmFunctionTemplate( "soundex", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "space", new StandardSqmFunctionTemplate( "space", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "stringencode", new StandardSqmFunctionTemplate( "stringencode", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "stringdecode", new StandardSqmFunctionTemplate( "stringdecode", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "stringtoutf8", new StandardSqmFunctionTemplate( "stringtoutf8", StandardSpiBasicTypes.BINARY ) );
-		registerFunction( "ucase", new StandardSqmFunctionTemplate( "ucase", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "utf8tostring", new StandardSqmFunctionTemplate( "utf8tostring", StandardSpiBasicTypes.STRING ) );
-
-		// Time and Date Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "curdate", new NoArgsSqmFunctionTemplate( "curdate", StandardSpiBasicTypes.DATE ) );
-		registerFunction( "curtime", new NoArgsSqmFunctionTemplate( "curtime", StandardSpiBasicTypes.TIME ) );
-		registerFunction( "curtimestamp", new NoArgsSqmFunctionTemplate( "curtimestamp", StandardSpiBasicTypes.TIME ) );
-		registerFunction( "current_date", new NoArgsSqmFunctionTemplate( "current_date", StandardSpiBasicTypes.DATE ) );
-		registerFunction( "current_time", new NoArgsSqmFunctionTemplate( "current_time", StandardSpiBasicTypes.TIME ) );
-		registerFunction( "current_timestamp", new NoArgsSqmFunctionTemplate( "current_timestamp", StandardSpiBasicTypes.TIMESTAMP ) );
-		registerFunction( "datediff", new StandardSqmFunctionTemplate( "datediff", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayname", new StandardSqmFunctionTemplate( "dayname", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "dayofmonth", new StandardSqmFunctionTemplate( "dayofmonth", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayofweek", new StandardSqmFunctionTemplate( "dayofweek", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new StandardSqmFunctionTemplate( "dayofyear", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "monthname", new StandardSqmFunctionTemplate( "monthname", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "now", new NoArgsSqmFunctionTemplate( "now", StandardSpiBasicTypes.TIMESTAMP ) );
-		registerFunction( "quarter", new StandardSqmFunctionTemplate( "quarter", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "week", new StandardSqmFunctionTemplate( "week", StandardSpiBasicTypes.INTEGER ) );
-
-		// System Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "database", new NoArgsSqmFunctionTemplate( "database", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "user", new NoArgsSqmFunctionTemplate( "user", StandardSpiBasicTypes.STRING ) );
-
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		// Aggregations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		registry.register( "avg", new AvgFunctionTemplate( "double" ) );
+
+
+		// Numeric Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		registry.namedTemplateBuilder( "acos" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		registry.namedTemplateBuilder( "asin" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		registry.namedTemplateBuilder( "atan" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		registry.namedTemplateBuilder( "atan2" )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		registry.namedTemplateBuilder( "bitand" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "bitor" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "bitxor" )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "ceiling" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "cos" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.namedTemplateBuilder( "compress" )
+				.setArgumentCountBetween( 1, 2 )
+				.setInvariantType( StandardSpiBasicTypes.BINARY )
+				.register();
+
+		registry.namedTemplateBuilder( "cot" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.namedTemplateBuilder( "decrypt" )
+				.setExactArgumentCount( 3 )
+				.setInvariantType( StandardSpiBasicTypes.BINARY )
+				.register();
+
+		registry.namedTemplateBuilder( "degrees" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.namedTemplateBuilder( "encrypt" )
+				.setExactArgumentCount( 3 )
+				.setInvariantType( StandardSpiBasicTypes.BINARY )
+				.register();
+
+		registry.namedTemplateBuilder( "exp" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.namedTemplateBuilder( "expand" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.BINARY )
+				.register();
+
+		registry.namedTemplateBuilder( "floor" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.namedTemplateBuilder( "hash" )
+				.setExactArgumentCount( 3 )
+				.setInvariantType( StandardSpiBasicTypes.BINARY )
+				.register();
+
+		registry.namedTemplateBuilder( "log" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.namedTemplateBuilder( "log10" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.namedTemplateBuilder( "pi" )
+				.setExactArgumentCount( 0 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.namedTemplateBuilder( "power" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.namedTemplateBuilder( "radians" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.namedTemplateBuilder( "rand" )
+				.setArgumentCountBetween( 0, 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.namedTemplateBuilder( "round" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.namedTemplateBuilder( "roundmagic" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+		registry.namedTemplateBuilder( "sign" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "sin" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "tan" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "truncate" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
+				.register();
+
+
+		// String Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		registry.namedTemplateBuilder( "ascii" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "char" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
+				.register();
+
+		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "(", "||", ")" ) );
+
+		registry.namedTemplateBuilder( "difference" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "hextoraw" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "insert" )
+				.setExactArgumentCount( 4 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "insert" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "insert" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.registerAlternateKey( "lcase", "lower" );
+
+		registry.namedTemplateBuilder( "ltrim" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "octet_length" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "position" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "rawtohex" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "repeat" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "replace" )
+				.setArgumentCountBetween( 2, 3 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "right" )
+				.setArgumentCountBetween( 2, 3 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "rtrim" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "soundex" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "space" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "stringencode" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "stringdecode" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "stringtoutf8" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.BINARY )
+				.register();
+
+		registry.registerAlternateKey( "ucase", "upper" );
+
+		registry.namedTemplateBuilder( "utf8tostring" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+
+		// Time and Date Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		registry.registerAlternateKey( "curdate", "current_date" );
+		registry.registerAlternateKey( "curtime", "current_time" );
+		registry.registerAlternateKey( "curtimestamp", "current_timestamp" );
+
+		registry.namedTemplateBuilder( "datediff" )
+				.setExactArgumentCount( 3 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "dayname" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "dayofmonth" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "dayofweek" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "dayofyear" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.registerAlternateKey( "now", "current_timestamp" );
+
+		registry.namedTemplateBuilder( "quarter" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "week" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+
+		// System Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		registry.namedTemplateBuilder( "database" )
+				.setExactArgumentCount( 0 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "user" )
+				.setExactArgumentCount( 0 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
 	}
 
 	@Override

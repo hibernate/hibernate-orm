@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.spi.TrimSpecificationExpressionWrapper;
 import org.hibernate.query.sqm.tree.expression.LiteralCharacterSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralStringSqmExpression;

@@ -7,7 +7,7 @@
 
 package org.hibernate.spatial.dialect.postgis;
 
-import org.hibernate.query.sqm.produce.function.spi.StandardSqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
@@ -35,108 +35,108 @@ public class PostgisNoSQLMM extends PostgisDialect {
 		// first argument is the OGC standard functionname, second the name as
 		// it occurs in the spatial dialect
 		registerFunction(
-				"dimension", new StandardSqmFunctionTemplate(
+				"dimension", new NamedSqmFunctionTemplate(
 				"dimension",
 				StandardBasicTypes.INTEGER
 		)
 		);
 		registerFunction(
-				"geometrytype", new StandardSqmFunctionTemplate(
+				"geometrytype", new NamedSqmFunctionTemplate(
 				"geometrytype", StandardBasicTypes.STRING
 		)
 		);
 		registerFunction(
-				"srid", new StandardSqmFunctionTemplate(
+				"srid", new NamedSqmFunctionTemplate(
 				"srid",
 				StandardBasicTypes.INTEGER
 		)
 		);
 		registerFunction(
-				"envelope", new StandardSqmFunctionTemplate(
+				"envelope", new NamedSqmFunctionTemplate(
 				"envelope"
 		)
 		);
 		registerFunction(
-				"astext", new StandardSqmFunctionTemplate(
+				"astext", new NamedSqmFunctionTemplate(
 				"astext",
 				StandardBasicTypes.STRING
 		)
 		);
 		registerFunction(
-				"asbinary", new StandardSqmFunctionTemplate(
+				"asbinary", new NamedSqmFunctionTemplate(
 				"asbinary",
 				StandardBasicTypes.BINARY
 		)
 		);
 		registerFunction(
-				"isempty", new StandardSqmFunctionTemplate(
+				"isempty", new NamedSqmFunctionTemplate(
 				"isempty",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		registerFunction(
-				"issimple", new StandardSqmFunctionTemplate(
+				"issimple", new NamedSqmFunctionTemplate(
 				"issimple",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		registerFunction(
-				"boundary", new StandardSqmFunctionTemplate(
+				"boundary", new NamedSqmFunctionTemplate(
 				"boundary"
 		)
 		);
 
 		// Register functions for spatial relation constructs
 		registerFunction(
-				"overlaps", new StandardSqmFunctionTemplate(
+				"overlaps", new NamedSqmFunctionTemplate(
 				"overlaps",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		registerFunction(
-				"intersects", new StandardSqmFunctionTemplate(
+				"intersects", new NamedSqmFunctionTemplate(
 				"intersects",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		registerFunction(
-				"equals", new StandardSqmFunctionTemplate(
+				"equals", new NamedSqmFunctionTemplate(
 				"equals",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		registerFunction(
-				"contains", new StandardSqmFunctionTemplate(
+				"contains", new NamedSqmFunctionTemplate(
 				"contains",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		registerFunction(
-				"crosses", new StandardSqmFunctionTemplate(
+				"crosses", new NamedSqmFunctionTemplate(
 				"crosses",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		registerFunction(
-				"disjoint", new StandardSqmFunctionTemplate(
+				"disjoint", new NamedSqmFunctionTemplate(
 				"disjoint",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		registerFunction(
-				"touches", new StandardSqmFunctionTemplate(
+				"touches", new NamedSqmFunctionTemplate(
 				"touches",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		registerFunction(
-				"within", new StandardSqmFunctionTemplate(
+				"within", new NamedSqmFunctionTemplate(
 				"within",
 				StandardBasicTypes.BOOLEAN
 		)
 		);
 		registerFunction(
-				"relate", new StandardSqmFunctionTemplate(
+				"relate", new NamedSqmFunctionTemplate(
 				"relate",
 				StandardBasicTypes.BOOLEAN
 		)
@@ -144,51 +144,51 @@ public class PostgisNoSQLMM extends PostgisDialect {
 
 		// register the spatial analysis functions
 		registerFunction(
-				"distance", new StandardSqmFunctionTemplate(
+				"distance", new NamedSqmFunctionTemplate(
 				"distance",
 				StandardBasicTypes.DOUBLE
 		)
 		);
 		registerFunction(
-				"buffer", new StandardSqmFunctionTemplate(
+				"buffer", new NamedSqmFunctionTemplate(
 				"buffer"
 		)
 		);
 		registerFunction(
-				"convexhull", new StandardSqmFunctionTemplate(
+				"convexhull", new NamedSqmFunctionTemplate(
 				"convexhull"
 		)
 		);
 		registerFunction(
-				"difference", new StandardSqmFunctionTemplate(
+				"difference", new NamedSqmFunctionTemplate(
 				"difference"
 		)
 		);
 		registerFunction(
-				"intersection", new StandardSqmFunctionTemplate(
+				"intersection", new NamedSqmFunctionTemplate(
 				"intersection"
 		)
 		);
 		registerFunction(
 				"symdifference",
-				new StandardSqmFunctionTemplate( "symdifference" )
+				new NamedSqmFunctionTemplate( "symdifference" )
 		);
 		registerFunction(
-				"geomunion", new StandardSqmFunctionTemplate(
+				"geomunion", new NamedSqmFunctionTemplate(
 				"geomunion"
 		)
 		);
 
 		//register Spatial Aggregate function
 		registerFunction(
-				"extent", new StandardSqmFunctionTemplate(
+				"extent", new NamedSqmFunctionTemplate(
 				"extent"
 		)
 		);
 
 		//other common spatial functions
 		registerFunction(
-				"transform", new StandardSqmFunctionTemplate(
+				"transform", new NamedSqmFunctionTemplate(
 				"transform"
 		)
 		);

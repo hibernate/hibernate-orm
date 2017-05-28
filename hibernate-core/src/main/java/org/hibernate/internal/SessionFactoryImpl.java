@@ -63,7 +63,7 @@ import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.dialect.function.SqmFunctionRegistry;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -170,7 +170,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
 	private transient JdbcServices jdbcServices;
 
-	private final transient SQLFunctionRegistry sqlFunctionRegistry;
+	private final transient SqmFunctionRegistry sqmFunctionRegistry;
 
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
@@ -238,7 +238,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 		}
 		maskOutSensitiveInformation( this.properties );
-		this.sqlFunctionRegistry = new SQLFunctionRegistry( jdbcServices.getJdbcEnvironment().getDialect(), options.getCustomSqlFunctionMap() );
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
 		this.jpaPersistenceUnitUtil = new PersistenceUnitUtilImpl( this );
 
@@ -303,7 +302,16 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			);
 			this.metamodel.initialize( metadata, determineJpaMetaModelPopulationSetting( properties ) );
 
-			this.queryEngine = new QueryEngine( this, metadata );
+
+			this.sqmFunctionRegistry = new SqmFunctionRegistry();
+			jdbcServices.getDialect().initializeFunctionRegistry( sqmFunctionRegistry );
+			sessionFactoryOptions.getSqmFunctionRegistry().overlay( sqmFunctionRegistry );
+
+			this.queryEngine = new QueryEngine(
+					this,
+					metadata.buildNamedQueryRepository( this ),
+					sqmFunctionRegistry
+			);
 
 			settings.getMultiTableBulkIdStrategy().prepare(
 					jdbcServices,
@@ -969,8 +977,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return sessionFactoryOptions.getEntityNotFoundDelegate();
 	}
 
-	public SQLFunctionRegistry getSqlFunctionRegistry() {
-		return sqlFunctionRegistry;
+	public SqmFunctionRegistry getSqmFunctionRegistry() {
+		return sqmFunctionRegistry;
 	}
 
 	public FetchProfile getFetchProfile(String name) {

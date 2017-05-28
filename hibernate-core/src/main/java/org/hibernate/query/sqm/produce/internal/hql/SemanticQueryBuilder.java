@@ -32,7 +32,7 @@ import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.UnknownEntityException;
-import org.hibernate.query.sqm.produce.function.spi.SqmFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.internal.NavigableBindingHelper;
 import org.hibernate.query.sqm.produce.internal.QuerySpecProcessingStateDmlImpl;
 import org.hibernate.query.sqm.produce.internal.QuerySpecProcessingStateStandardImpl;
@@ -2263,7 +2263,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 			String name,
 			boolean isDistinct,
 			HqlParser.ExpressionContext antlrArgumentExpression) {
-		final SqmFunctionTemplate template = parsingContext.getSessionFactory().getSqlFunctionRegistry()
+		final SqmFunctionTemplate template = parsingContext.getSessionFactory().getSqmFunctionRegistry()
 				.findSQLFunction( name );
 
 		final SqmExpression sqmArgument = (SqmExpression) antlrArgumentExpression.accept( this );
@@ -2332,7 +2332,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		final SqmExpression source = (SqmExpression) ctx.expression().accept( this );
 
 		final SqmFunctionTemplate trimFunctionTemplate = parsingContext.getSessionFactory()
-				.getSqlFunctionRegistry()
+				.getSqmFunctionRegistry()
 				.findSQLFunction( "trim" );
 
 		if ( trimFunctionTemplate != null ) {

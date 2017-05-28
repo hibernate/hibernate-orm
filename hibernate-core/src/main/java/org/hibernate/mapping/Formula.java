@@ -9,7 +9,7 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.relational.spi.Column;
 import org.hibernate.metamodel.model.relational.spi.DerivedColumn;

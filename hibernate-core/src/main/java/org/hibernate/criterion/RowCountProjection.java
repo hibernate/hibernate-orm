@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
-import org.hibernate.dialect.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.type.Type;
 
 /**

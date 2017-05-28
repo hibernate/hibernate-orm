@@ -36,7 +36,7 @@ import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;

@@ -7,7 +7,7 @@
 package org.hibernate.sql.ordering.antlr;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**

@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.dialect.function.SqmFunctionRegistry;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 

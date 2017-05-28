@@ -17,7 +17,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.service.ServiceRegistry;

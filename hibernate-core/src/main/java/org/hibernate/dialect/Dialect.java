@@ -2921,6 +2921,24 @@ public abstract class Dialect implements ConversionContext {
 		return legacyLimitHandlerBehavior;
 	}
 
+	/**
+	 * Inline String literal.
+	 *
+	 * @return escaped String
+	 */
+	public String inlineLiteral(String literal) {
+		return String.format( "\'%s\'", escapeLiteral( literal ) );
+	}
+
+	/**
+	 * Escape String literal.
+	 *
+	 * @return escaped String
+	 */
+	protected String escapeLiteral(String literal) {
+		return literal.replace("'", "''");
+	}
+
 	private void resolveLegacyLimitHandlerBehavior(ServiceRegistry serviceRegistry) {
 		// HHH-11194
 		// Temporary solution to set whether legacy limit handler behavior should be used.

@@ -44,7 +44,6 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.internal.ConfigurationServiceImpl;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
@@ -53,6 +52,7 @@ import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -564,6 +564,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		private boolean wrapResultSetsEnabled;
 		private TimeZone jdbcTimeZone;
 		private boolean queryParametersValidationEnabled;
+		private LiteralHandlingMode criteriaLiteralHandlingMode;
 
 		private Map<String, SQLFunction> sqlFunctions;
 
@@ -775,6 +776,13 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 					VALIDATE_QUERY_PARAMETERS,
 					configurationSettings,
 					true
+			);
+
+			this.criteriaLiteralHandlingMode = strategySelector.resolveStrategy(
+					LiteralHandlingMode.class,
+					configurationSettings.get( CRITERIA_LITERAL_HANDLING_MODE ),
+					LiteralHandlingMode.AUTO,
+					(clazz) -> LiteralHandlingMode.AUTO
 			);
 		}
 
@@ -1216,6 +1224,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		public boolean isQueryParametersValidationEnabled() {
 			return this.queryParametersValidationEnabled;
 		}
+
+		@Override
+		public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
+			return this.criteriaLiteralHandlingMode;
+		}
 	}
 
 	@Override
@@ -1543,5 +1556,10 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public boolean isQueryParametersValidationEnabled() {
 		return options.isQueryParametersValidationEnabled();
+	}
+
+	@Override
+	public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
+		return options.getCriteriaLiteralHandlingMode();
 	}
 }

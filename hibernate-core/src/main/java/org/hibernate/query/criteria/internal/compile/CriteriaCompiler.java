@@ -14,9 +14,13 @@ import java.util.Map;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.ParameterExpression;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.type.Type;
 
@@ -46,6 +50,14 @@ public class CriteriaCompiler implements Serializable {
 
 		final Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap = new HashMap<>();
 		final List<ImplicitParameterBinding> implicitParameterBindings = new ArrayList<>();
+
+		final SessionFactoryImplementor sessionFactory = entityManager.getSessionFactory();
+
+		final LiteralHandlingMode criteriaLiteralHandlingMode = sessionFactory
+				.getSessionFactoryOptions()
+				.getCriteriaLiteralHandlingMode();
+
+		final Dialect dialect = sessionFactory.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 
 		RenderingContext renderingContext = new RenderingContext() {
 			private int aliasCount;
@@ -121,6 +133,16 @@ public class CriteriaCompiler implements Serializable {
 					);
 				}
 				return hibernateType.getName();
+			}
+
+			@Override
+			public Dialect getDialect() {
+				return dialect;
+			}
+
+			@Override
+			public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
+				return criteriaLiteralHandlingMode;
 			}
 		};
 

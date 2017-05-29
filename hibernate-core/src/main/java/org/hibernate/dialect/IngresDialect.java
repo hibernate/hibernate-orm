@@ -9,8 +9,13 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
+import org.hibernate.dialect.function.PostgresLocateEmulationTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.spi.FunctionAsExpressionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
@@ -76,76 +81,6 @@ public class IngresDialect extends Dialect {
 		registerColumnType( Types.TIMESTAMP, "timestamp with time zone" );
 		registerColumnType( Types.BLOB, "blob" );
 		registerColumnType( Types.CLOB, "clob" );
-
-		registerFunction( "abs", new NamedSqmFunctionTemplate( "abs" ) );
-		registerFunction( "atan", new NamedSqmFunctionTemplate( "atan", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "bit_add", new NamedSqmFunctionTemplate( "bit_add" ) );
-		registerFunction( "bit_and", new NamedSqmFunctionTemplate( "bit_and" ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "octet_length(hex(?1))*4" ) );
-		registerFunction( "bit_not", new NamedSqmFunctionTemplate( "bit_not" ) );
-		registerFunction( "bit_or", new NamedSqmFunctionTemplate( "bit_or" ) );
-		registerFunction( "bit_xor", new NamedSqmFunctionTemplate( "bit_xor" ) );
-		registerFunction( "character_length", new NamedSqmFunctionTemplate( "character_length", StandardSpiBasicTypes.LONG ) );
-		registerFunction( "charextract", new NamedSqmFunctionTemplate( "charextract", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "(", "+", ")" ) );
-		registerFunction( "cos", new NamedSqmFunctionTemplate( "cos", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "current_user", new NoArgsSqmFunctionTemplate( "current_user", StandardSpiBasicTypes.STRING, false ) );
-		registerFunction( "current_time", new NoArgsSqmFunctionTemplate( "date('now')", StandardSpiBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "current_timestamp", new NoArgsSqmFunctionTemplate( "date('now')", StandardSpiBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "current_date", new NoArgsSqmFunctionTemplate( "date('now')", StandardSpiBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "date_trunc", new NamedSqmFunctionTemplate( "date_trunc", StandardSpiBasicTypes.TIMESTAMP ) );
-		registerFunction( "day", new NamedSqmFunctionTemplate( "day", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dba", new NoArgsSqmFunctionTemplate( "dba", StandardSpiBasicTypes.STRING, true ) );
-		registerFunction( "dow", new NamedSqmFunctionTemplate( "dow", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "extract", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "date_part('?1', ?3)" ) );
-		registerFunction( "exp", new NamedSqmFunctionTemplate( "exp", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "gmt_timestamp", new NamedSqmFunctionTemplate( "gmt_timestamp", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "hash", new NamedSqmFunctionTemplate( "hash", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "hex", new NamedSqmFunctionTemplate( "hex", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "hour", new NamedSqmFunctionTemplate( "hour", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "initial_user", new NoArgsSqmFunctionTemplate( "initial_user", StandardSpiBasicTypes.STRING, false ) );
-		registerFunction( "intextract", new NamedSqmFunctionTemplate( "intextract", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "left", new NamedSqmFunctionTemplate( "left", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardSpiBasicTypes.LONG, "locate(?1, ?2)" ) );
-		registerFunction( "length", new NamedSqmFunctionTemplate( "length", StandardSpiBasicTypes.LONG ) );
-		registerFunction( "ln", new NamedSqmFunctionTemplate( "ln", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "log", new NamedSqmFunctionTemplate( "log", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "lower", new NamedSqmFunctionTemplate( "lower" ) );
-		registerFunction( "lowercase", new NamedSqmFunctionTemplate( "lowercase" ) );
-		registerFunction( "minute", new NamedSqmFunctionTemplate( "minute", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "month", new NamedSqmFunctionTemplate( "month", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "octet_length", new NamedSqmFunctionTemplate( "octet_length", StandardSpiBasicTypes.LONG ) );
-		registerFunction( "pad", new NamedSqmFunctionTemplate( "pad", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "position", new NamedSqmFunctionTemplate( "position", StandardSpiBasicTypes.LONG ) );
-		registerFunction( "power", new NamedSqmFunctionTemplate( "power", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "random", new NoArgsSqmFunctionTemplate( "random", StandardSpiBasicTypes.LONG, true ) );
-		registerFunction( "randomf", new NoArgsSqmFunctionTemplate( "randomf", StandardSpiBasicTypes.DOUBLE, true ) );
-		registerFunction( "right", new NamedSqmFunctionTemplate( "right", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "session_user", new NoArgsSqmFunctionTemplate( "session_user", StandardSpiBasicTypes.STRING, false ) );
-		registerFunction( "second", new NamedSqmFunctionTemplate( "second", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "size", new NoArgsSqmFunctionTemplate( "size", StandardSpiBasicTypes.LONG, true ) );
-		registerFunction( "squeeze", new NamedSqmFunctionTemplate( "squeeze" ) );
-		registerFunction( "sin", new NamedSqmFunctionTemplate( "sin", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "soundex", new NamedSqmFunctionTemplate( "soundex", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "sqrt", new NamedSqmFunctionTemplate( "sqrt", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "substring", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "substring(?1 FROM ?2 FOR ?3)" ) );
-		registerFunction( "system_user", new NoArgsSqmFunctionTemplate( "system_user", StandardSpiBasicTypes.STRING, false ) );
-		//registerFunction( "trim", new StandardSQLFunction( "trim", StandardBasicTypes.STRING ) );
-		registerFunction( "unhex", new NamedSqmFunctionTemplate( "unhex", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "upper", new NamedSqmFunctionTemplate( "upper" ) );
-		registerFunction( "uppercase", new NamedSqmFunctionTemplate( "uppercase" ) );
-		registerFunction( "user", new NoArgsSqmFunctionTemplate( "user", StandardSpiBasicTypes.STRING, false ) );
-		registerFunction( "usercode", new NoArgsSqmFunctionTemplate( "usercode", StandardSpiBasicTypes.STRING, true ) );
-		registerFunction( "username", new NoArgsSqmFunctionTemplate( "username", StandardSpiBasicTypes.STRING, true ) );
-		registerFunction( "uuid_create", new NamedSqmFunctionTemplate( "uuid_create", StandardSpiBasicTypes.BYTE ) );
-		registerFunction( "uuid_compare", new NamedSqmFunctionTemplate( "uuid_compare", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "uuid_from_char", new NamedSqmFunctionTemplate( "uuid_from_char", StandardSpiBasicTypes.BYTE ) );
-		registerFunction( "uuid_to_char", new NamedSqmFunctionTemplate( "uuid_to_char", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "year", new NamedSqmFunctionTemplate( "year", StandardSpiBasicTypes.INTEGER ) );
-		// Casting to char of numeric values introduces space padding up to the
-		// maximum width of a value for that return type.  Casting to varchar
-		// does not introduce space padding.
-		registerFunction( "str", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "cast(?1 as varchar)") );
 		// Ingres driver supports getGeneratedKeys but only in the following
 		// form:
 		// The Ingres DBMS returns only a single table key or a single object
@@ -161,6 +96,155 @@ public class IngresDialect extends Dialect {
 		// of true, false or unknown. Using the tinyint type requires
 		// substitions of true and false.
 		getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
+		CommonFunctionFactory.atan( registry );
+
+		registry.namedTemplateBuilder( "bit_and" )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		registry.namedTemplateBuilder( "bit_add" )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		registry.patternTemplateBuilder( "bit_length", "octet_length(hex(?1))*4" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "bit_or" )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		registry.namedTemplateBuilder( "bit_xor" )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		registry.namedTemplateBuilder( "bit_not" )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		registry.registerAlternateKey( "character_length", "length" );
+
+		registry.namedTemplateBuilder( "charextract" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.register(
+				"concat",
+				new FunctionAsExpressionTemplate(
+						"(",
+						"+",
+						")",
+						StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING )
+				)
+		);
+
+		CommonFunctionFactory.cos( registry );
+
+		registry.noArgsBuilder( "current_user" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "date_trunc" )
+				.setInvariantType( StandardSpiBasicTypes.TIMESTAMP )
+				.register();
+
+		registry.namedTemplateBuilder( "day" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.noArgsBuilder( "dba" )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
+
+		registry.namedTemplateBuilder( "dow" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.patternTemplateBuilder( "extract", "date_part('?1', ?2)" )
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		CommonFunctionFactory.exp( registry );
+
+		registry.registerNoArgs( "gmt_timestamp", StandardSpiBasicTypes.STRING );
+
+		registerFunction( "hash", new NamedSqmFunctionTemplate( "hash", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "hex", new NamedSqmFunctionTemplate( "hex", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "hour", new NamedSqmFunctionTemplate( "hour", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "initial_user", new NoArgsSqmFunctionTemplate( "initial_user", StandardSpiBasicTypes.STRING, false ) );
+		registerFunction( "intextract", new NamedSqmFunctionTemplate( "intextract", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "left", new NamedSqmFunctionTemplate( "left", StandardSpiBasicTypes.STRING ) );
+
+		registry.register( "locate", new PostgresLocateEmulationTemplate() );
+
+		CommonFunctionFactory.ln( registry );
+		CommonFunctionFactory.log( registry );
+
+		registry.registerAlternateKey( "lowercase", "lower" );
+
+		registry.namedTemplateBuilder( "minute" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "month" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registerFunction( "octet_length", new NamedSqmFunctionTemplate( "octet_length", StandardSpiBasicTypes.LONG ) );
+		registerFunction( "pad", new NamedSqmFunctionTemplate( "pad", StandardSpiBasicTypes.STRING ) );
+
+		CommonFunctionFactory.position( registry );
+
+		registerFunction( "power", new NamedSqmFunctionTemplate( "power", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "random", new NoArgsSqmFunctionTemplate( "random", StandardSpiBasicTypes.LONG, true ) );
+		registerFunction( "randomf", new NoArgsSqmFunctionTemplate( "randomf", StandardSpiBasicTypes.DOUBLE, true ) );
+		registerFunction( "right", new NamedSqmFunctionTemplate( "right", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "session_user", new NoArgsSqmFunctionTemplate( "session_user", StandardSpiBasicTypes.STRING, false ) );
+
+		registry.namedTemplateBuilder( "second" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registerFunction( "size", new NoArgsSqmFunctionTemplate( "size", StandardSpiBasicTypes.LONG, true ) );
+		registerFunction( "squeeze", new NamedSqmFunctionTemplate( "squeeze" ) );
+
+		CommonFunctionFactory.sin( registry );
+		CommonFunctionFactory.soundex( registry );
+
+		registerFunction( "substring", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "substring(?1 FROM ?2 FOR ?3)" ) );
+		registerFunction( "system_user", new NoArgsSqmFunctionTemplate( "system_user", StandardSpiBasicTypes.STRING, false ) );
+		//registerFunction( "trim", new StandardSQLFunction( "trim", StandardBasicTypes.STRING ) );
+		registerFunction( "unhex", new NamedSqmFunctionTemplate( "unhex", StandardSpiBasicTypes.STRING ) );
+
+		registry.registerAlternateKey( "uppercase", "upper" );
+
+		registerFunction( "user", new NoArgsSqmFunctionTemplate( "user", StandardSpiBasicTypes.STRING, false ) );
+		registerFunction( "usercode", new NoArgsSqmFunctionTemplate( "usercode", StandardSpiBasicTypes.STRING, true ) );
+		registerFunction( "username", new NoArgsSqmFunctionTemplate( "username", StandardSpiBasicTypes.STRING, true ) );
+		registerFunction( "uuid_create", new NamedSqmFunctionTemplate( "uuid_create", StandardSpiBasicTypes.BYTE ) );
+		registerFunction( "uuid_compare", new NamedSqmFunctionTemplate( "uuid_compare", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "uuid_from_char", new NamedSqmFunctionTemplate( "uuid_from_char", StandardSpiBasicTypes.BYTE ) );
+		registerFunction( "uuid_to_char", new NamedSqmFunctionTemplate( "uuid_to_char", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "year", new NamedSqmFunctionTemplate( "year", StandardSpiBasicTypes.INTEGER ) );
+		// Casting to char of numeric values introduces space padding up to the
+		// maximum width of a value for that return type.  Casting to varchar
+		// does not introduce space padding.
+		registerFunction( "str", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "cast(?1 as varchar)") );
 	}
 
 	@Override

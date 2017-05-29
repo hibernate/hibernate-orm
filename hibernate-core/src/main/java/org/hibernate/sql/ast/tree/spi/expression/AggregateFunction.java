@@ -13,7 +13,7 @@ import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
  *
  * @author Steve Ebersole
  */
-public interface AggregateFunction extends Function {
+public interface AggregateFunction extends StandardFunction {
 	@Override
 	BasicValuedExpressableType getType();
 

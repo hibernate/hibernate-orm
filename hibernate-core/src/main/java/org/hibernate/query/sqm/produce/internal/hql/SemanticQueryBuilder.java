@@ -20,6 +20,7 @@ import java.util.function.Function;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.spi.CollectionElement;
@@ -59,7 +60,7 @@ import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.query.sqm.tree.expression.CaseSearchedSqmExpression;
 import org.hibernate.query.sqm.tree.expression.CaseSimpleSqmExpression;
-import org.hibernate.query.sqm.tree.expression.CoalesceSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.CollectionSizeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
 import org.hibernate.query.sqm.tree.expression.ConstantEnumSqmExpression;
@@ -80,7 +81,7 @@ import org.hibernate.query.sqm.tree.expression.LiteralSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralStringSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralTrueSqmExpression;
 import org.hibernate.query.sqm.tree.expression.NamedParameterSqmExpression;
-import org.hibernate.query.sqm.tree.expression.NullifSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.SqmNullifFunction;
 import org.hibernate.query.sqm.tree.expression.ParameterSqmExpression;
 import org.hibernate.query.sqm.tree.expression.ParameterizedEntityTypeSqmExpression;
 import org.hibernate.query.sqm.tree.expression.PositionalParameterSqmExpression;
@@ -121,6 +122,7 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReferenc
 import org.hibernate.query.sqm.tree.expression.domain.SqmRestrictedCollectionElementReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
 import org.hibernate.query.sqm.tree.expression.function.Distinctable;
+import org.hibernate.query.sqm.tree.expression.function.SqmAbsFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAggregateFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCastFunction;
@@ -1878,8 +1880,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	@Override
-	public CoalesceSqmExpression visitCoalesceExpression(HqlParser.CoalesceExpressionContext ctx) {
-		CoalesceSqmExpression coalesceExpression = new CoalesceSqmExpression();
+	public SqmCoalesceFunction visitCoalesceExpression(HqlParser.CoalesceExpressionContext ctx) {
+		SqmCoalesceFunction coalesceExpression = new SqmCoalesceFunction();
 		for ( HqlParser.ExpressionContext expressionContext : ctx.coalesce().expression() ) {
 			coalesceExpression.value( (SqmExpression) expressionContext.accept( this ) );
 		}
@@ -1887,8 +1889,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	@Override
-	public NullifSqmExpression visitNullIfExpression(HqlParser.NullIfExpressionContext ctx) {
-		return new NullifSqmExpression(
+	public SqmNullifFunction visitNullIfExpression(HqlParser.NullIfExpressionContext ctx) {
+		return new SqmNullifFunction(
 				(SqmExpression) ctx.nullIf().expression( 0 ).accept( this ),
 				(SqmExpression) ctx.nullIf().expression( 1 ).accept( this )
 		);
@@ -2114,6 +2116,10 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		return param;
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Functions
+
 	@Override
 	public SqmGenericFunction visitJpaNonStandardFunction(HqlParser.JpaNonStandardFunctionContext ctx) {
 		final String functionName = ctx.nonStandardFunctionName().getText();
@@ -2175,6 +2181,19 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	@Override
+	public SqmExpression visitAbsFunction(HqlParser.AbsFunctionContext ctx) {
+		return generateSingleArgFunction(
+				(sqmFunctionTemplate, sqmArgument) -> sqmFunctionTemplate.makeSqmFunctionExpression(
+						Collections.singletonList( sqmArgument ),
+						(AllowableFunctionReturnType) sqmArgument.getExpressionType()
+				),
+				arguments -> new SqmAbsFunction( arguments, null ),
+				SqmAbsFunction.NAME,
+				ctx.expression()
+		);
+	}
+
+	@Override
 	public SqmExpression visitAvgFunction(HqlParser.AvgFunctionContext ctx) {
 		return generateAggregateFunction(
 				(sqmFunctionTemplate, sqmArgument) -> sqmFunctionTemplate.makeSqmFunctionExpression(
@@ -2192,11 +2211,44 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 	}
 
 	@Override
-	public SqmCastFunction visitCastFunction(HqlParser.CastFunctionContext ctx) {
-		return new SqmCastFunction(
-				(SqmExpression) ctx.expression().accept( this ),
-				parsingContext.getSessionFactory().getTypeConfiguration().resolveCastTargetType( ctx.dataType().IDENTIFIER().getText() )
-		);
+	public SqmExpression visitCastFunction(HqlParser.CastFunctionContext ctx) {
+		final SqmFunctionTemplate template = parsingContext.getSessionFactory()
+				.getQueryEngine()
+				.getSqmFunctionRegistry()
+				.findFunctionTemplate( SqmCastFunction.NAME );
+
+		final SqmExpression expressionToCast = (SqmExpression) ctx.expression().accept( this );
+		final SqmExpression castTargetExpression = interpretCastTarget( ctx.castTarget() );
+
+		//parsingContext.getSessionFactory().getTypeConfiguration().resolveCastTargetType( ctx.dataType().IDENTIFIER().getText() )
+
+		if ( template == null ) {
+			// use the standard CAST support
+			return new SqmCastFunction(
+					expressionToCast,
+					castTargetExpression,
+					(AllowableFunctionReturnType) castTargetExpression.getExpressionType()
+			);
+		}
+		else {
+			return template.makeSqmFunctionExpression(
+					Arrays.asList( expressionToCast, castTargetExpression ),
+					(AllowableFunctionReturnType) castTargetExpression.getExpressionType()
+			);
+		}
+	}
+
+	private SqmExpression interpretCastTarget(HqlParser.CastTargetContext castTargetContext) {
+		// todo (6.0) : what are the allowable forms of specifying cast-target?
+		// 		the exactness of this is being discussed on the dev ml.  Most
+		//		likely we will accept either:
+		//			1) a String, which might represent:
+		//				a) a Java type name
+		//				b) a java.sql.Types field name (e.g. VARCHAR...)
+		//				c) (not huge fan of this...) a "pass-thru" value
+		//			2) an int signifying the SqlTypeDescriptor (JDBC type code)
+
+		throw new org.hibernate.sql.NotYetImplementedException(  );
 	}
 
 	@Override
@@ -2232,13 +2284,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		);
 	}
 
-	private void applyDistinct(SqmExpression result) {
-		if ( result instanceof Distinctable ) {
-			( (Distinctable) result ).makeDistinct();
-		}
-		else {
-			log.debugf( "COUNT SqmFunction result [%s] did not implement %s; cannot apply DISTINCT", result, Distinctable.class.getName() );
-		}
+	@Override
+	public Object visitLocateFunction(HqlParser.LocateFunctionContext ctx) {
+		return super.visitLocateFunction( ctx );
 	}
 
 	@Override
@@ -2263,8 +2311,10 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 			String name,
 			boolean isDistinct,
 			HqlParser.ExpressionContext antlrArgumentExpression) {
-		final SqmFunctionTemplate template = parsingContext.getSessionFactory().getSqmFunctionRegistry()
-				.findSQLFunction( name );
+		final SqmFunctionTemplate template = parsingContext.getSessionFactory()
+				.getQueryEngine()
+				.getSqmFunctionRegistry()
+				.findFunctionTemplate( name );
 
 		final SqmExpression sqmArgument = (SqmExpression) antlrArgumentExpression.accept( this );
 
@@ -2281,6 +2331,102 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 		}
 
 		return result;
+	}
+
+	private void applyDistinct(SqmExpression result) {
+		if ( result instanceof Distinctable ) {
+			( (Distinctable) result ).makeDistinct();
+		}
+		else {
+			log.debugf( "COUNT SqmFunction result [%s] did not implement %s; cannot apply DISTINCT", result, Distinctable.class.getName() );
+		}
+	}
+
+	private SqmExpression generateSingleArgFunction(
+			BiFunction<SqmFunctionTemplate, SqmExpression, SqmExpression> templatedGenerator,
+			Function<SqmExpression, SqmExpression> nonTemplatedGenerator,
+			String name,
+			HqlParser.ExpressionContext antlrArgument) {
+		final SqmFunctionTemplate template = parsingContext.getSessionFactory()
+				.getQueryEngine()
+				.getSqmFunctionRegistry()
+				.findFunctionTemplate( name );
+
+		final SqmExpression sqmArgument = (SqmExpression) antlrArgument.accept( this );
+
+		if ( template == null ) {
+			return nonTemplatedGenerator.apply( sqmArgument );
+		}
+		else {
+			return templatedGenerator.apply( template, sqmArgument );
+		}
+	}
+
+	private SqmExpression generateMultiArgFunction(
+			BiFunction<SqmFunctionTemplate, List<SqmExpression>, SqmExpression> templatedGenerator,
+			Function<List<SqmExpression>, SqmExpression> nonTemplatedGenerator,
+			String name,
+			HqlParser.ExpressionContext... antlrArguments) {
+		final SqmFunctionTemplate template = parsingContext.getSessionFactory()
+				.getQueryEngine()
+				.getSqmFunctionRegistry()
+				.findFunctionTemplate( name );
+
+		final List<SqmExpression> sqmArguments = collectArguments( antlrArguments );
+
+		if ( template == null ) {
+			return nonTemplatedGenerator.apply( sqmArguments );
+		}
+		else {
+			return templatedGenerator.apply( template, sqmArguments );
+		}
+	}
+
+	private List<SqmExpression> collectArguments(HqlParser.ExpressionContext[] antlrArguments) {
+		if ( antlrArguments == null || antlrArguments.length <= 0 ) {
+			return Collections.emptyList();
+		}
+		else {
+			final List<SqmExpression> sqmArguments = CollectionHelper.arrayList( antlrArguments.length );
+			for ( HqlParser.ExpressionContext antlrArgument : antlrArguments ) {
+				sqmArguments.add( (SqmExpression) antlrArgument.accept( this ) );
+			}
+			return sqmArguments;
+		}
+	}
+
+
+	private SqmExpression generateMultiArgFunction(
+			BiFunction<SqmFunctionTemplate, List<SqmExpression>, SqmExpression> templatedGenerator,
+			Function<List<SqmExpression>, SqmExpression> nonTemplatedGenerator,
+			String name,
+			List<HqlParser.ExpressionContext> antlrArguments) {
+		final SqmFunctionTemplate template = parsingContext.getSessionFactory()
+				.getQueryEngine()
+				.getSqmFunctionRegistry()
+				.findFunctionTemplate( name );
+
+		final List<SqmExpression> sqmArguments = collectArguments( antlrArguments );
+
+		if ( template == null ) {
+			return nonTemplatedGenerator.apply( sqmArguments );
+		}
+		else {
+			return templatedGenerator.apply( template, sqmArguments );
+		}
+	}
+
+	private List<SqmExpression> collectArguments(List<HqlParser.ExpressionContext> antlrArguments) {
+		if ( antlrArguments == null || antlrArguments.isEmpty() ) {
+			return Collections.emptyList();
+		}
+		else {
+			final List<SqmExpression> sqmArguments = CollectionHelper.arrayList( antlrArguments.size() );
+			for ( HqlParser.ExpressionContext antlrArgument : antlrArguments ) {
+				sqmArguments.add( (SqmExpression) antlrArgument.accept( this ) );
+			}
+			return sqmArguments;
+		}
 	}
 
 	@Override
@@ -2333,7 +2479,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 
 		final SqmFunctionTemplate trimFunctionTemplate = parsingContext.getSessionFactory()
 				.getSqmFunctionRegistry()
-				.findSQLFunction( "trim" );
+				.findFunctionTemplate( "trim" );
 
 		if ( trimFunctionTemplate != null ) {
 			return trimFunctionTemplate.makeSqmFunctionExpression(

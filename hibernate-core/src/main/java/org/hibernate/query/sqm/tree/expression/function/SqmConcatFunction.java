@@ -17,6 +17,9 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  * Differs from {@link ConcatSqmExpression} in that
  * the function can have multiple arguments, whereas ConcatExpression only has 2.
  *
+ * CONCAT is also one of Hibernate's standard SQM functions which every Dialect
+ * must support.
+ *
  * @see ConcatSqmExpression
  *
  * @author Steve Ebersole

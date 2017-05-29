@@ -780,7 +780,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		assertTranslation( "from Animal an where an.bodyWeight > abs(3/5)" );
 		assertTranslation( "from Animal an where an.bodyWeight > abs(3+5)" );
 		assertTranslation( "from Animal an where an.bodyWeight > abs(3*5)" );
-		SqmFunctionTemplate concat = sessionFactory().getSqmFunctionRegistry().findSQLFunction( "concat");
+		SqmFunctionTemplate concat = sessionFactory().getSqmFunctionRegistry().findFunctionTemplate( "concat");
 		List list = new ArrayList();
 		list.add("'fat'");
 		list.add("'skinny'");

@@ -14,7 +14,8 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  * @author Steve Ebersole
  */
 public class SqmSubstringFunction extends AbstractSqmFunction {
-	public static final String NAME = "substr";
+	public static final String NAME = "substring";
+	public static final String ALT_NAME = "substr";
 
 	private final SqmExpression source;
 	private final SqmExpression startPosition;
@@ -60,7 +61,9 @@ public class SqmSubstringFunction extends AbstractSqmFunction {
 
 	@Override
 	public String asLoggableText() {
-		StringBuilder buff = new StringBuilder( "SUBSTR(" + getSource().asLoggableText() );
+		StringBuilder buff = new StringBuilder( NAME )
+				.append( '(' )
+				.append( getSource().asLoggableText() );
 
 		if ( getStartPosition() != null ) {
 			buff.append( ", " ).append( getStartPosition().asLoggableText() );

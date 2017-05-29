@@ -9,14 +9,11 @@ package org.hibernate.sql.ast.tree.spi.expression;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
-import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
-import org.hibernate.sql.ast.tree.spi.select.Selectable;
-import org.hibernate.sql.ast.tree.spi.select.Selection;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractAggregateFunction implements AggregateFunction {
+public abstract class AbstractAggregateFunction extends AbstractStandardFunction implements AggregateFunction {
 	private final Expression argument;
 	private final boolean distinct;
 	private final BasicValuedExpressableType resultType;
@@ -38,24 +35,12 @@ public abstract class AbstractAggregateFunction implements AggregateFunction {
 	}
 
 	@Override
-	public Selectable getSelectable() {
-		return this;
-	}
-
-	@Override
-	public Selection createSelection(Expression selectedExpression, String resultVariable) {
-		assert selectedExpression == this;
-
-		return new BasicValuedNonNavigableSelection( selectedExpression, resultVariable, this );
-	}
-
-	@Override
 	public Expression getArgument() {
 		return argument;
 	}
 
 	@Override
 	public SqlSelectionReader getSqlSelectionReader() {
-		return new SqlSelectionReaderImpl( (BasicValuedExpressableType) getType() );
+		return new SqlSelectionReaderImpl( getType() );
 	}
 }

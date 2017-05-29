@@ -182,7 +182,7 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testGetMultiColumnSameNameAsNoArgFunctionHQL() throws Exception {
-		SqmFunctionTemplate function = sessionFactory().getSqmFunctionRegistry().findSQLFunction( "current_date" );
+		SqmFunctionTemplate function = sessionFactory().getSqmFunctionRegistry().findFunctionTemplate( "current_date" );
 		if ( function == null || function.hasParenthesesIfNoArguments() ) {
 			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
 			return;
@@ -228,7 +228,7 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testGetMultiColumnSameNameAsNoArgFunctionCriteria() {
-		SqmFunctionTemplate function = sessionFactory().getSqmFunctionRegistry().findSQLFunction( "current_date" );
+		SqmFunctionTemplate function = sessionFactory().getSqmFunctionRegistry().findFunctionTemplate( "current_date" );
 		if ( function == null || function.hasParenthesesIfNoArguments() ) {
 			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
 			return;
@@ -274,7 +274,7 @@ public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNoArgFcnAndColumnSameNameAsNoArgFunctionHQL() {
-		SqmFunctionTemplate function = sessionFactory().getSqmFunctionRegistry().findSQLFunction( "current_date" );
+		SqmFunctionTemplate function = sessionFactory().getSqmFunctionRegistry().findFunctionTemplate( "current_date" );
 		if ( function == null || function.hasParenthesesIfNoArguments() ) {
 			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
 			return;

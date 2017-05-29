@@ -741,7 +741,7 @@ public final class Template {
 		if ( "(".equals( nextToken ) ) {
 			return true;
 		}
-		SqmFunctionTemplate function = functionRegistry.findSQLFunction( lcToken);
+		SqmFunctionTemplate function = functionRegistry.findFunctionTemplate( lcToken);
 		if ( function == null ) {
 			// lcToken does not refer to a function
 			return false;

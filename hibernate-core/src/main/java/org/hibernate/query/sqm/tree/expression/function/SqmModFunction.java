@@ -8,32 +8,39 @@ package org.hibernate.query.sqm.tree.expression.function;
 
 import java.util.Locale;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmLowerFunction extends AbstractSqmFunction {
-	public static final String NAME = "lower";
+public class SqmModFunction extends AbstractSqmFunction {
+	public static final String NAME = "mod";
 
-	private SqmExpression argument;
+	private final SqmExpression dividend;
+	private final SqmExpression divisor;
 
-	public SqmLowerFunction(BasicValuedExpressableType resultType, SqmExpression argument) {
+	public SqmModFunction(
+			SqmExpression dividend,
+			SqmExpression divisor,
+			AllowableFunctionReturnType resultType) {
 		super( resultType );
-		this.argument = argument;
+		this.dividend = dividend;
+		this.divisor = divisor;
+	}
 
-		assert argument != null;
+	public SqmExpression getDividend() {
+		return dividend;
+	}
+
+	public SqmExpression getDivisor() {
+		return divisor;
 	}
 
 	@Override
 	public String getFunctionName() {
 		return NAME;
-	}
-
-	public SqmExpression getArgument() {
-		return argument;
 	}
 
 	@Override
@@ -43,16 +50,17 @@ public class SqmLowerFunction extends AbstractSqmFunction {
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitLowerFunction( this );
+		return walker.visitModFunction( this );
 	}
 
 	@Override
 	public String asLoggableText() {
 		return String.format(
 				Locale.ROOT,
-				"%s( %s )",
+				"%s( %s, %s )",
 				NAME,
-				getArgument().asLoggableText()
+				dividend.asLoggableText(),
+				divisor.asLoggableText()
 		);
 	}
 }

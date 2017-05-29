@@ -35,7 +35,7 @@ public class RowCountProjection extends SimpleProjection {
 
 	protected SqmFunctionTemplate getFunction(CriteriaQuery criteriaQuery) {
 		final SqmFunctionRegistry sqlFunctionRegistry = criteriaQuery.getFactory().getSqmFunctionRegistry();
-		final SqmFunctionTemplate function = sqlFunctionRegistry.findSQLFunction( "count" );
+		final SqmFunctionTemplate function = sqlFunctionRegistry.findFunctionTemplate( "count" );
 		if ( function == null ) {
 			throw new HibernateException( "Unable to locate count function mapping" );
 		}

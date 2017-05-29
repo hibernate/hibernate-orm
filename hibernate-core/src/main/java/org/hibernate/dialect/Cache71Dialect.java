@@ -14,6 +14,7 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.ConvertFunctionTemplate;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.spi.NoArgsSqmFunctionTemplate;
 import org.hibernate.dialect.function.NvlFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
@@ -241,8 +242,16 @@ public class Cache71Dialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
 		getDefaultProperties().setProperty( Environment.USE_SQL_COMMENTS, "false" );
+	}
 
-		registerFunction( "abs", new NamedSqmFunctionTemplate( "abs" ) );
+	protected final void register71Functions() {
+		this.registerFunction( "str", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "str(", ",", ")" ) );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
+		super.initializeFunctionRegistry( registry );
+
 		registerFunction( "acos", new NamedJDBCEscapeFunction( "acos", StandardSpiBasicTypes.DOUBLE ) );
 		registerFunction( "%alphaup", new NamedSqmFunctionTemplate( "%alphaup", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "ascii", new NamedSqmFunctionTemplate( "ascii", StandardSpiBasicTypes.STRING ) );
@@ -259,21 +268,6 @@ public class Cache71Dialect extends Dialect {
 		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "", "||", "" ) );
 		registerFunction( "convert", new ConvertFunctionTemplate() );
 		registerFunction( "curdate", new NamedJDBCEscapeFunction( "curdate", StandardSpiBasicTypes.DATE ) );
-		registerFunction(
-				"current_date",
-				new NoArgsSqmFunctionTemplate( "current_date", false, StandardSpiBasicTypes.DATE )
-		);
-		registerFunction(
-				"current_time",
-				new NoArgsSqmFunctionTemplate( "current_time", false, StandardSpiBasicTypes.TIME )
-		);
-		registerFunction(
-				"current_timestamp",
-				new NamedSqmFunctionTemplate.Builder( "current_timestamp" )
-						.setUseParenthesesWhenNoArgs( false )
-						.setInvariantType( StandardSpiBasicTypes.TIMESTAMP  )
-						.make()
-		);
 		registerFunction( "curtime", new NamedJDBCEscapeFunction( "curtime", StandardSpiBasicTypes.TIME ) );
 		registerFunction( "database", new NamedJDBCEscapeFunction( "database", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "dateadd", new VarArgsSQLFunction( StandardSpiBasicTypes.TIMESTAMP, "dateadd(", ",", ")" ) );
@@ -373,11 +367,9 @@ public class Cache71Dialect extends Dialect {
 		registerFunction( "year", new NamedJDBCEscapeFunction( "year", StandardSpiBasicTypes.INTEGER ) );
 	}
 
-	protected final void register71Functions() {
-		this.registerFunction( "str", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "str(", ",", ")" ) );
-	}
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 	@Override
 	public boolean hasAlterTable() {

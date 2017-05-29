@@ -506,10 +506,10 @@ standardFunction
 
 
 castFunction
-	: CAST LEFT_PAREN expression AS dataType RIGHT_PAREN
+	: CAST LEFT_PAREN expression AS castTarget RIGHT_PAREN
 	;
 
-dataType
+castTarget
 	: IDENTIFIER
 	;
 
@@ -518,7 +518,7 @@ concatFunction
 	;
 
 substringFunction
-	: SUBSTRING LEFT_PAREN expression COMMA substringFunctionStartArgument (COMMA substringFunctionLengthArgument)? RIGHT_PAREN
+	: (SUBSTRING | SUBSTR) LEFT_PAREN expression COMMA substringFunctionStartArgument (COMMA substringFunctionLengthArgument)? RIGHT_PAREN
 	;
 
 substringFunctionStartArgument

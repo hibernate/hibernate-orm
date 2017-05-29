@@ -7,9 +7,9 @@
 package org.hibernate.sql.ast.tree.spi.expression;
 
 /**
- * A function specifically defined by JPA
+ * A function with support explicitly defined by JPA or Hibernate
  *
  * @author Steve Ebersole
  */
-public interface StandardFunction extends ScalarFunction {
+public interface StandardFunction extends Function {
 }

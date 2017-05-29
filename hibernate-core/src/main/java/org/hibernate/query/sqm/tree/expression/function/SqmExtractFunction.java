@@ -8,32 +8,39 @@ package org.hibernate.query.sqm.tree.expression.function;
 
 import java.util.Locale;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.consume.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmLowerFunction extends AbstractSqmFunction {
-	public static final String NAME = "lower";
+public class SqmExtractFunction extends AbstractSqmFunction {
+	public static final String NAME = "extract";
 
-	private SqmExpression argument;
+	private final SqmExpression unitToExtract;
+	private final SqmExpression extractionSource;
 
-	public SqmLowerFunction(BasicValuedExpressableType resultType, SqmExpression argument) {
+	public SqmExtractFunction(
+			SqmExpression unitToExtract,
+			SqmExpression extractionSource,
+			AllowableFunctionReturnType resultType) {
 		super( resultType );
-		this.argument = argument;
+		this.unitToExtract = unitToExtract;
+		this.extractionSource = extractionSource;
+	}
 
-		assert argument != null;
+	public SqmExpression getUnitToExtract() {
+		return unitToExtract;
+	}
+
+	public SqmExpression getExtractionSource() {
+		return extractionSource;
 	}
 
 	@Override
 	public String getFunctionName() {
 		return NAME;
-	}
-
-	public SqmExpression getArgument() {
-		return argument;
 	}
 
 	@Override
@@ -43,16 +50,17 @@ public class SqmLowerFunction extends AbstractSqmFunction {
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitLowerFunction( this );
+		return walker.visitExtractFunction( this );
 	}
 
 	@Override
 	public String asLoggableText() {
 		return String.format(
 				Locale.ROOT,
-				"%s( %s )",
+				"%s( %s from %s )",
 				NAME,
-				getArgument().asLoggableText()
+				getUnitToExtract().asLoggableText(),
+				getExtractionSource().asLoggableText()
 		);
 	}
 }

@@ -7,13 +7,14 @@
 
 package org.hibernate.sql.ast.tree.spi.expression;
 
+import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
@@ -21,10 +22,15 @@ import org.hibernate.type.spi.BasicType;
 public class NullifFunction implements StandardFunction {
 	private final Expression first;
 	private final Expression second;
+	private final AllowableFunctionReturnType type;
 
-	public NullifFunction(Expression first, Expression second) {
+	public NullifFunction(
+			Expression first,
+			Expression second,
+			AllowableFunctionReturnType type) {
 		this.first = first;
 		this.second = second;
+		this.type = type;
 	}
 
 	public Expression getFirstArgument() {
@@ -36,8 +42,8 @@ public class NullifFunction implements StandardFunction {
 	}
 
 	@Override
-	public BasicType getType() {
-		return (BasicType) first.getType();
+	public BasicValuedExpressableType getType() {
+		return (BasicValuedExpressableType) type;
 	}
 
 	@Override

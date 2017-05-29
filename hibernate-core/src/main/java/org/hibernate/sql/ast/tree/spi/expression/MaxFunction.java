@@ -12,7 +12,7 @@ import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
 /**
  * @author Steve Ebersole
  */
-public class MaxFunction extends AbstractAggregateFunction implements AggregateFunction {
+public class MaxFunction extends AbstractAggregateFunction {
 	public MaxFunction(Expression argument, boolean distinct, BasicValuedExpressableType resultType) {
 		super( argument, distinct, resultType );
 	}

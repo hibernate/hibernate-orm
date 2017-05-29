@@ -56,7 +56,7 @@ import org.hibernate.query.sqm.tree.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.SqmUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
-import org.hibernate.query.sqm.tree.expression.CoalesceSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
 import org.hibernate.query.sqm.tree.expression.ConstantEnumSqmExpression;
 import org.hibernate.query.sqm.tree.expression.EntityTypeLiteralSqmExpression;
@@ -864,8 +864,8 @@ public class CriteriaInterpreter implements CriteriaVisitor {
 	}
 
 	@Override
-	public CoalesceSqmExpression visitCoalesce(List<JpaExpression<?>> arguments) {
-		final CoalesceSqmExpression coalesce = new CoalesceSqmExpression();
+	public SqmCoalesceFunction visitCoalesce(List<JpaExpression<?>> arguments) {
+		final SqmCoalesceFunction coalesce = new SqmCoalesceFunction();
 		arguments.forEach( argument -> coalesce.value( argument.visitExpression( this ) ) );
 		return coalesce;
 	}

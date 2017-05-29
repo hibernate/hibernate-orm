@@ -13,8 +13,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -33,6 +32,9 @@ import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.spi.FunctionAsExpressionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.StandardAnsiSqlSqmAggregationFunctionTemplates.AvgFunctionTemplate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
@@ -142,20 +144,9 @@ public class H2Dialect extends Dialect {
 
 
 		// Numeric Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registry.namedTemplateBuilder( "acos" )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		registry.namedTemplateBuilder( "asin" )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		registry.namedTemplateBuilder( "atan" )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.setExactArgumentCount( 1 )
-				.register();
+		CommonFunctionFactory.acos( registry );
+		CommonFunctionFactory.asin( registry );
+		CommonFunctionFactory.atan( registry );
 
 		registry.namedTemplateBuilder( "atan2" )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
@@ -174,70 +165,45 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.register();
 
-		registry.namedTemplateBuilder( "ceiling" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
+		CommonFunctionFactory.ceiling( registry );
 
-		registry.namedTemplateBuilder( "cos" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
+		CommonFunctionFactory.cos( registry );
 
 		registry.namedTemplateBuilder( "compress" )
 				.setArgumentCountBetween( 1, 2 )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.register();
 
-		registry.namedTemplateBuilder( "cot" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
+		CommonFunctionFactory.cot( registry );
 
 		registry.namedTemplateBuilder( "decrypt" )
 				.setExactArgumentCount( 3 )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.register();
 
-		registry.namedTemplateBuilder( "degrees" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
+		CommonFunctionFactory.degrees( registry );
 
 		registry.namedTemplateBuilder( "encrypt" )
 				.setExactArgumentCount( 3 )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.register();
 
-		registry.namedTemplateBuilder( "exp" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
+		CommonFunctionFactory.exp( registry );
 
 		registry.namedTemplateBuilder( "expand" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.register();
 
-		registry.namedTemplateBuilder( "floor" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
+		CommonFunctionFactory.floor( registry );
 
 		registry.namedTemplateBuilder( "hash" )
 				.setExactArgumentCount( 3 )
 				.setInvariantType( StandardSpiBasicTypes.BINARY )
 				.register();
 
-		registry.namedTemplateBuilder( "log" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
-
-		registry.namedTemplateBuilder( "log10" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
+		CommonFunctionFactory.log( registry );
+		CommonFunctionFactory.log10( registry );
 
 		registry.namedTemplateBuilder( "pi" )
 				.setExactArgumentCount( 0 )
@@ -249,40 +215,25 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
 
-		registry.namedTemplateBuilder( "radians" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
+		CommonFunctionFactory.radians( registry );
 
 		registry.namedTemplateBuilder( "rand" )
 				.setArgumentCountBetween( 0, 1 )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
 
-		registry.namedTemplateBuilder( "round" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
-				.register();
+		CommonFunctionFactory.round( registry );
 
 		registry.namedTemplateBuilder( "roundmagic" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardSpiBasicTypes.DOUBLE )
 				.register();
 
-		registry.namedTemplateBuilder( "sign" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
+		CommonFunctionFactory.sign( registry );
 
-		registry.namedTemplateBuilder( "sin" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
+		CommonFunctionFactory.sin( registry );
 
-		registry.namedTemplateBuilder( "tan" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
+		CommonFunctionFactory.tan( registry );
 
 		registry.namedTemplateBuilder( "truncate" )
 				.setExactArgumentCount( 1 )
@@ -302,7 +253,15 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.CHARACTER )
 				.register();
 
-		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "(", "||", ")" ) );
+		registry.register(
+				"concat",
+				new FunctionAsExpressionTemplate(
+						"(",
+						"||",
+						")",
+						StandardFunctionReturnTypeResolvers.invariant( StandardSpiBasicTypes.STRING )
+				)
+		);
 
 		registry.namedTemplateBuilder( "difference" )
 				.setExactArgumentCount( 2 )
@@ -341,10 +300,7 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.INTEGER )
 				.register();
 
-		registry.namedTemplateBuilder( "position" )
-				.setExactArgumentCount( 2 )
-				.setInvariantType( StandardSpiBasicTypes.INTEGER )
-				.register();
+		CommonFunctionFactory.position( registry );
 
 		registry.namedTemplateBuilder( "rawtohex" )
 				.setExactArgumentCount( 1 )
@@ -371,10 +327,7 @@ public class H2Dialect extends Dialect {
 				.setInvariantType( StandardSpiBasicTypes.STRING )
 				.register();
 
-		registry.namedTemplateBuilder( "soundex" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardSpiBasicTypes.STRING )
-				.register();
+		CommonFunctionFactory.soundex( registry );
 
 		registry.namedTemplateBuilder( "space" )
 				.setExactArgumentCount( 1 )

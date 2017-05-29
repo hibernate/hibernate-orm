@@ -15,7 +15,7 @@ import org.hibernate.query.sqm.produce.spi.criteria.from.JpaFrom;
 import org.hibernate.query.sqm.produce.spi.criteria.from.JpaRoot;
 import org.hibernate.query.sqm.produce.spi.criteria.path.JpaPluralAttributePath;
 import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
-import org.hibernate.query.sqm.tree.expression.CoalesceSqmExpression;
+import org.hibernate.query.sqm.tree.expression.function.SqmCoalesceFunction;
 import org.hibernate.query.sqm.tree.expression.ConcatSqmExpression;
 import org.hibernate.query.sqm.tree.expression.ConstantEnumSqmExpression;
 import org.hibernate.query.sqm.tree.expression.EntityTypeLiteralSqmExpression;
@@ -133,7 +133,7 @@ public interface CriteriaVisitor {
 			JpaExpression<?> expression2,
 			BasicValuedExpressableType resultType);
 
-	CoalesceSqmExpression visitCoalesce(List<JpaExpression<?>> expressions);
+	SqmCoalesceFunction visitCoalesce(List<JpaExpression<?>> expressions);
 
 	EntityTypeLiteralSqmExpression visitEntityType(String identificationVariable);
 	EntityTypeLiteralSqmExpression visitEntityType(String identificationVariable, String attributeName);

@@ -24,7 +24,7 @@ import org.hibernate.type.spi.BasicType;
  *
  * @author Steve Ebersole
  */
-public class NonStandardFunction implements ScalarFunction {
+public class NonStandardFunction implements Function {
 	private final String functionName;
 	private final List<Expression> arguments;
 	private final AllowableFunctionReturnType resultType;

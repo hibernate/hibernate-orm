@@ -61,7 +61,7 @@ public class AggregateProjection extends SimpleProjection {
 	protected SqmFunctionTemplate getFunction(String functionName, CriteriaQuery criteriaQuery) {
 		final SqmFunctionTemplate function = criteriaQuery.getFactory()
 				.getSqmFunctionRegistry()
-				.findSQLFunction( functionName );
+				.findFunctionTemplate( functionName );
 		if ( function == null ) {
 			throw new HibernateException( "Unable to locate mapping for function named [" + functionName + "]" );
 		}

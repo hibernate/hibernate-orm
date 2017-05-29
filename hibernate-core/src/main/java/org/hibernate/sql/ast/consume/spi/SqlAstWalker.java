@@ -7,8 +7,10 @@
 package org.hibernate.sql.ast.consume.spi;
 
 import org.hibernate.sql.ast.tree.spi.QuerySpec;
+import org.hibernate.sql.ast.tree.spi.expression.AbsFunction;
 import org.hibernate.sql.ast.tree.spi.expression.AvgFunction;
 import org.hibernate.sql.ast.tree.spi.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.tree.spi.expression.BitLengthFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.spi.expression.CastFunction;
@@ -17,17 +19,27 @@ import org.hibernate.sql.ast.tree.spi.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.spi.expression.ConcatFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountFunction;
 import org.hibernate.sql.ast.tree.spi.expression.CountStarFunction;
+import org.hibernate.sql.ast.tree.spi.expression.CurrentDateFunction;
+import org.hibernate.sql.ast.tree.spi.expression.CurrentTimeFunction;
+import org.hibernate.sql.ast.tree.spi.expression.CurrentTimestampFunction;
+import org.hibernate.sql.ast.tree.spi.expression.ExtractFunction;
 import org.hibernate.sql.ast.tree.spi.expression.GenericParameter;
+import org.hibernate.sql.ast.tree.spi.expression.LengthFunction;
+import org.hibernate.sql.ast.tree.spi.expression.LocateFunction;
+import org.hibernate.sql.ast.tree.spi.expression.LowerFunction;
 import org.hibernate.sql.ast.tree.spi.expression.MaxFunction;
 import org.hibernate.sql.ast.tree.spi.expression.MinFunction;
+import org.hibernate.sql.ast.tree.spi.expression.ModFunction;
 import org.hibernate.sql.ast.tree.spi.expression.NamedParameter;
 import org.hibernate.sql.ast.tree.spi.expression.NonStandardFunction;
 import org.hibernate.sql.ast.tree.spi.expression.NullifFunction;
 import org.hibernate.sql.ast.tree.spi.expression.PositionalParameter;
 import org.hibernate.sql.ast.tree.spi.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.spi.expression.SqrtFunction;
 import org.hibernate.sql.ast.tree.spi.expression.SumFunction;
 import org.hibernate.sql.ast.tree.spi.expression.TrimFunction;
 import org.hibernate.sql.ast.tree.spi.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.spi.expression.UpperFunction;
 import org.hibernate.sql.ast.tree.spi.expression.domain.EntityReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeElementReference;
 import org.hibernate.sql.ast.tree.spi.expression.domain.PluralAttributeIndexReference;
@@ -93,8 +105,6 @@ public interface SqlAstWalker {
 
 	void visitColumnReference(ColumnReference columnReference);
 
-	void visitAvgFunction(AvgFunction avgFunction);
-
 	void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression);
 
 	void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression);
@@ -107,29 +117,13 @@ public interface SqlAstWalker {
 
 	void visitCoalesceFunction(CoalesceFunction coalesceExpression);
 
-	void visitConcatFunction(ConcatFunction concatExpression);
-
-	void visitCountFunction(CountFunction countFunction);
-
-	void visitCountStarFunction(CountStarFunction function);
-
-	void visitMaxFunction(MaxFunction maxFunction);
-
-	void visitMinFunction(MinFunction minFunction);
-
 	void visitNamedParameter(NamedParameter namedParameter);
 
 	void visitGenericParameter(GenericParameter parameter);
 
-	void visitNonStandardFunctionExpression(NonStandardFunction functionExpression);
-
-	void visitNullifFunction(NullifFunction function);
-
 	void visitPositionalParameter(PositionalParameter positionalParameter);
 
 	void visitQueryLiteral(QueryLiteral queryLiteral);
-
-	void visitSumFunction(SumFunction sumFunction);
 
 	void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression);
 
@@ -155,7 +149,53 @@ public interface SqlAstWalker {
 
 	void visitSelfRenderingExpression(SelfRenderingExpression expression);
 
-	void visitTrimFunction(TrimFunction trimFunction);
 
-	void visitCastFunction(CastFunction castFunction);
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// functions
+
+	void visitNonStandardFunctionExpression(NonStandardFunction function);
+
+	void visitAbsFunction(AbsFunction function);
+
+	void visitAvgFunction(AvgFunction function);
+
+	void visitBitLengthFunction(BitLengthFunction function);
+
+	void visitCastFunction(CastFunction function);
+
+	void visitConcatFunction(ConcatFunction function);
+
+	void visitCountFunction(CountFunction function);
+
+	void visitCountStarFunction(CountStarFunction function);
+
+	void visitCurrentDateFunction(CurrentDateFunction function);
+
+	void visitCurrentTimeFunction(CurrentTimeFunction function);
+
+	void visitCurrentTimestampFunction(CurrentTimestampFunction function);
+
+	void visitExtractFunction(ExtractFunction extractFunction);
+
+	void visitLengthFunction(LengthFunction function);
+
+	void visitLocateFunction(LocateFunction function);
+
+	void visitLowerFunction(LowerFunction function);
+
+	void visitMaxFunction(MaxFunction function);
+
+	void visitMinFunction(MinFunction function);
+
+	void visitModFunction(ModFunction function);
+
+	void visitNullifFunction(NullifFunction function);
+
+	void visitSqrtFunction(SqrtFunction function);
+
+	void visitSumFunction(SumFunction function);
+
+	void visitTrimFunction(TrimFunction function);
+
+	void visitUpperFunction(UpperFunction function);
 }

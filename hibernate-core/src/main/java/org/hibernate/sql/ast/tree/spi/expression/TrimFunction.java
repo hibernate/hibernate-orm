@@ -17,7 +17,7 @@ import org.hibernate.type.spi.StandardSpiBasicTypes;
 /**
  * @author Steve Ebersole
  */
-public class TrimFunction implements Function {
+public class TrimFunction implements StandardFunction {
 	private final TrimSpecification specification;
 	private final Expression trimCharacter;
 	private final Expression source;

@@ -6,39 +6,32 @@
  */
 package org.hibernate.sql.ast.tree.spi.expression;
 
-import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
+import java.util.List;
+
 import org.hibernate.sql.ast.consume.results.internal.SqlSelectionReaderImpl;
 import org.hibernate.sql.ast.consume.results.spi.SqlSelectionReader;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.tree.internal.BasicValuedNonNavigableSelection;
 import org.hibernate.sql.ast.tree.spi.select.Selectable;
 import org.hibernate.sql.ast.tree.spi.select.Selection;
-import org.hibernate.type.spi.BasicType;
 
 /**
  * @author Steve Ebersole
  */
 public class ConcatFunction implements StandardFunction {
-	private final Expression lhsOperand;
-	private final Expression rhsOperand;
+	private final List<Expression> expressions;
 	private final BasicValuedExpressableType type;
 
-	public ConcatFunction(Expression lhsOperand, Expression rhsOperand) {
-		this( lhsOperand, rhsOperand, (BasicType) lhsOperand.getType() );
-	}
-
-	public ConcatFunction(Expression lhsOperand, Expression rhsOperand, BasicValuedExpressableType type) {
-		this.lhsOperand = lhsOperand;
-		this.rhsOperand = rhsOperand;
+	public ConcatFunction(
+			List<Expression> expressions,
+			BasicValuedExpressableType type) {
+		this.expressions = expressions;
 		this.type = type;
 	}
 
-	public Expression getLeftHandOperand() {
-		return lhsOperand;
-	}
-
-	public Expression getRightHandOperand() {
-		return rhsOperand;
+	public List<Expression> getExpressions() {
+		return expressions;
 	}
 
 	@Override

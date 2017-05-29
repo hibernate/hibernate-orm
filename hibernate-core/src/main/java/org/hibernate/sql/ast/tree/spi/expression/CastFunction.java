@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.tree.spi.select.Selection;
 /**
  * @author Steve Ebersole
  */
-public class CastFunction implements Function {
+public class CastFunction implements StandardFunction {
 	private final Expression expressionToCast;
 	private final BasicValuedExpressableType castResultType;
 	private final String explicitCastTargetTypeSqlExpression;

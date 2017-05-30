@@ -12,7 +12,7 @@ Hibernate also allows you to specify handwritten SQL (including stored procedure
 [[sql-jpa-query]]
 === Creating a native query using JPA
 
-Execution of native SQL queries is controlled via the `SQLQuery` interface, which is obtained by calling `Session.createSQLQuery()`.
+Execution of native SQL queries is controlled via the `NativeQuery` interface, which is obtained by calling `Session.createNativeQuery()`.
 The following sections describe how to use this API for querying.
 
 [[sql-scalar-query]]

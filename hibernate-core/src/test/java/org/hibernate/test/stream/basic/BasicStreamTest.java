@@ -6,17 +6,19 @@
  */
 package org.hibernate.test.stream.basic;
 
-import java.util.Optional;
 import java.util.stream.Stream;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Tuple;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 import org.hibernate.Session;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.query.Query;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -24,7 +26,7 @@ import org.junit.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertNotNull;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Steve Ebersole
@@ -92,6 +94,33 @@ public class BasicStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 		finally {
 			session.close();
 		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11743")
+	public void testTupleStream() {
+		doInHibernate( this::sessionFactory, session -> {
+			MyEntity entity = new MyEntity();
+			entity.id = 2;
+			entity.name = "an entity";
+			session.persist( entity );
+		} );
+
+		//test tuple stream using criteria
+		doInHibernate( this::sessionFactory, session -> {
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Tuple> criteria = cb.createTupleQuery();
+			Root<MyEntity> me = criteria.from( MyEntity.class );
+			criteria.multiselect( me.get( "id" ), me.get( "name" ) );
+			Stream<Tuple> data = session.createQuery( criteria ).stream();
+			data.forEach( tuple -> assertTyping( Tuple.class, tuple ) );
+		} );
+
+		//test tuple stream using JPQL
+		doInHibernate( this::sessionFactory, session -> {
+			Stream<Tuple> data = session.createQuery( "SELECT me.id, me.name FROM MyEntity me", Tuple.class ).stream();
+			data.forEach( tuple -> assertTyping( Tuple.class, tuple ) );
+		} );
 	}
 
 	@Entity(name = "MyEntity")

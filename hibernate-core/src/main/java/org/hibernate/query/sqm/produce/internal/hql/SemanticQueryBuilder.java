@@ -33,6 +33,7 @@ import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SemanticException;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.UnknownEntityException;
+import org.hibernate.query.sqm.produce.SqmProductionException;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.internal.NavigableBindingHelper;
 import org.hibernate.query.sqm.produce.internal.QuerySpecProcessingStateDmlImpl;
@@ -2222,12 +2223,16 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmNav
 
 		//parsingContext.getSessionFactory().getTypeConfiguration().resolveCastTargetType( ctx.dataType().IDENTIFIER().getText() )
 
+		if ( !AllowableFunctionReturnType.class.isInstance( castTargetExpression ) ) {
+			throw new SqmProductionException( "Found cast target expression [%s] which is not allowed as a function return" );
+		}
+
 		if ( template == null ) {
 			// use the standard CAST support
 			return new SqmCastFunction(
 					expressionToCast,
-					castTargetExpression,
-					(AllowableFunctionReturnType) castTargetExpression.getExpressionType()
+					(AllowableFunctionReturnType) castTargetExpression,
+					castTargetExpression.getExpressionType().toString()
 			);
 		}
 		else {

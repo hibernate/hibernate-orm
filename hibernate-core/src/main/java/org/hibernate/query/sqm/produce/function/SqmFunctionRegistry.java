@@ -35,13 +35,15 @@ public class SqmFunctionRegistry {
 	 * no such function is found.
 	 */
 	public SqmFunctionTemplate findFunctionTemplate(String functionName) {
-		SqmFunctionTemplate found = functionMap.get( functionName );
+		SqmFunctionTemplate found = null;
+
+		final String alternateKeyResolution = alternateKeyMap.get( functionName );
+		if ( alternateKeyResolution != null ) {
+			found = functionMap.get( alternateKeyResolution );
+		}
 
 		if ( found == null ) {
-			final String alternateKeyResolution = alternateKeyMap.get( functionName );
-			if ( alternateKeyResolution != null ) {
-				found = functionMap.get( alternateKeyResolution );
-			}
+			found = functionMap.get( functionName );
 		}
 
 		return found;
@@ -50,7 +52,7 @@ public class SqmFunctionRegistry {
 	/**
 	 * Register a function template by name
 	 */
-	public SqmFunctionRegistry register(String registrationKey, SqmFunctionTemplate function) {
+	public SqmFunctionTemplate register(String registrationKey, SqmFunctionTemplate function) {
 		final SqmFunctionTemplate priorRegistration = functionMap.put( registrationKey, function );
 		log.debugf(
 				"Registered SqmFunctionTemplate [%s] under %s; prior registration was %s",
@@ -59,16 +61,15 @@ public class SqmFunctionRegistry {
 				priorRegistration
 		);
 
-		return this;
+		return function;
 	}
 
 	/**
 	 * Register a pattern-based template by name.  Shortcut for building the template
 	 * via {@link #patternTemplateBuilder} accepting its defaults.
 	 */
-	public SqmFunctionRegistry registerPattern(String name, String pattern) {
-		patternTemplateBuilder( name, pattern ).register();
-		return this;
+	public SqmFunctionTemplate registerPattern(String name, String pattern) {
+		return patternTemplateBuilder( name, pattern ).register();
 	}
 
 	/**
@@ -90,9 +91,8 @@ public class SqmFunctionRegistry {
 	 *
 	 * @param name The function name (and registration key)
 	 */
-	public SqmFunctionRegistry registerNamed(String name) {
-		namedTemplateBuilder( name ).register();
-		return this;
+	public SqmFunctionTemplate registerNamed(String name) {
+		return namedTemplateBuilder( name ).register();
 	}
 
 	/**
@@ -102,9 +102,8 @@ public class SqmFunctionRegistry {
 	 *
 	 * @param name The function name (and registration key)
 	 */
-	public SqmFunctionRegistry registerNamed(String name, AllowableFunctionReturnType returnType) {
-		namedTemplateBuilder( name ).setInvariantType( returnType ).register();
-		return this;
+	public SqmFunctionTemplate registerNamed(String name, AllowableFunctionReturnType returnType) {
+		return namedTemplateBuilder( name ).setInvariantType( returnType ).register();
 	}
 
 	/**
@@ -149,22 +148,28 @@ public class SqmFunctionRegistry {
 	 *
 	 * @param name The function name (and registration key)
 	 */
-	public SqmFunctionRegistry registerNoArgs(String name) {
+	public SqmFunctionTemplate registerNoArgs(String name) {
 		return registerNoArgs( name, name );
 	}
 
-	public SqmFunctionRegistry registerNoArgs(String registrationKey, String name) {
+	public SqmFunctionTemplate registerNoArgs(String registrationKey, String name) {
 		return noArgsBuilder( registrationKey, name ).register();
 	}
 
-	public SqmFunctionRegistry registerNoArgs(String name, AllowableFunctionReturnType returnType) {
+	public SqmFunctionTemplate registerNoArgs(String name, AllowableFunctionReturnType returnType) {
 		return registerNoArgs( name, name, returnType );
 	}
 
-	public SqmFunctionRegistry registerNoArgs(String registrationKey, String name, AllowableFunctionReturnType returnType) {
+	public SqmFunctionTemplate registerNoArgs(String registrationKey, String name, AllowableFunctionReturnType returnType) {
 		return noArgsBuilder( registrationKey, name )
 				.setInvariantType( returnType )
 				.register();
+	}
+
+	public SqmFunctionTemplate wrapInJdbcEscape(String registrationKey, SqmFunctionTemplate wrapped) {
+		final JdbcFunctionEscapeWrapperTemplate wrapperTemplate = new JdbcFunctionEscapeWrapperTemplate( wrapped );
+		register( registrationKey, wrapperTemplate );
+		return wrapperTemplate;
 	}
 
 	public void registerAlternateKey(String alternateKey, String mappedKey) {
@@ -174,11 +179,12 @@ public class SqmFunctionRegistry {
 
 	/**
 	 * Overlay (put on top) the functions registered here on top of the
-	 * incoming registry, potentially overidding its registrations
+	 * incoming registry, potentially overriding its registrations
 	 */
 	public void overlay(SqmFunctionRegistry registryToOverly) {
 		// NOTE : done in this "direction" as it is easier to access the
 		//		functionMap directly in performing this operation
 		functionMap.forEach( registryToOverly::register );
+		alternateKeyMap.forEach( registryToOverly::registerAlternateKey );
 	}
 }

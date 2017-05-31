@@ -510,6 +510,13 @@ castFunction
 	;
 
 castTarget
+	// should allow either
+	// 		- named cast (IDENTIFIER)
+	//			- JavaTypeDescriptorRegistry (imported) key
+	//			- java.sql.Types field NAME (alias for its value as a coded cast)
+	//			- "pass through"
+	//		- coded cast (INTEGER_LITERAL)
+	//			- SqlTypeDescriptorRegistry key
 	: IDENTIFIER
 	;
 

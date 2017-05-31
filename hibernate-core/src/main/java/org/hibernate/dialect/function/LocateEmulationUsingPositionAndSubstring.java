@@ -11,34 +11,90 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.internal.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.spi.AbstractSqmFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.SelfRenderingFunctionSupport;
+import org.hibernate.query.sqm.produce.function.spi.SqmFunctionRegistryAware;
 import org.hibernate.query.sqm.tree.expression.BinaryArithmeticSqmExpression;
 import org.hibernate.query.sqm.tree.expression.LiteralIntegerSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTupleExpression;
-import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmNonStandardFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmSubstringFunction;
 import org.hibernate.sql.ast.consume.spi.SqlAppender;
 import org.hibernate.sql.ast.consume.spi.SqlAstWalker;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.ExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 import org.hibernate.sql.ast.tree.spi.expression.Expression;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
 /**
- * Emulation of <tt>locate()</tt> on PostgreSQL
+ * Emulation of <tt>locate()</tt> on using Dialect's position and substring
+ * functions for Dialects which do not support locate or only support the
+ * 2-argument form
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class PostgresLocateEmulationTemplate extends AbstractSqmFunctionTemplate {
+public class LocateEmulationUsingPositionAndSubstring
+		extends AbstractSqmFunctionTemplate
+		implements SqmFunctionRegistryAware {
 	public static final SqmExpression ONE = new LiteralIntegerSqmExpression( 1 );
 
+	private final SqmFunctionProducer positionFunctionProducer;
+	private final SqmFunctionProducer substringFunctionProducer;
 
-	public PostgresLocateEmulationTemplate() {
+	private SqmFunctionRegistry registry;
+
+	public LocateEmulationUsingPositionAndSubstring() {
+		this(
+				(registry, type, arguments) -> {
+					final SqmFunctionTemplate template = registry.findFunctionTemplate( "substring" );
+					if ( template == null ) {
+						return new SqmSubstringFunction(
+								(BasicValuedExpressableType) type,
+								arguments.get( 1 ),
+								arguments.get( 2 ),
+								null
+						);
+					}
+					else {
+						return template.makeSqmFunctionExpression( arguments, type );
+					}
+				}
+		);
+	}
+
+	public LocateEmulationUsingPositionAndSubstring(SqmFunctionProducer substringFunctionProducer) {
+		this(
+				(registry, type, arguments) -> {
+					final SqmFunctionTemplate template = registry.findFunctionTemplate( "substring" );
+					if ( template == null ) {
+						return new PositionFunction(
+								arguments.get( 0 ),
+								arguments.get( 1 ),
+								type
+						);
+					}
+					else {
+						return template.makeSqmFunctionExpression( arguments, type );
+					}
+				},
+				substringFunctionProducer
+		);
+	}
+
+	public LocateEmulationUsingPositionAndSubstring(
+			SqmFunctionProducer positionFunctionProducer,
+			SqmFunctionProducer substringFunctionProducer) {
 		super( StandardArgumentsValidators.between( 2, 3 ) );
+
+		this.positionFunctionProducer = positionFunctionProducer;
+		this.substringFunctionProducer = substringFunctionProducer;
 	}
 
 	@Override
@@ -69,13 +125,17 @@ public class PostgresLocateEmulationTemplate extends AbstractSqmFunctionTemplate
 
 		// (position( $pattern in substring($string, $start) ) + $start-1)
 
-		final SqmGenericFunction substringCall = new SqmGenericFunction(
-				"substring",
+		final SqmExpression substringCall = substringFunctionProducer.produce(
+				registry,
 				impliedResultType,
 				Arrays.asList( string, start )
 		);
 
-		final PositionFunction positionCall = new PositionFunction( pattern, substringCall, impliedResultType );
+		final SqmExpression positionCall = positionFunctionProducer.produce(
+				registry,
+				impliedResultType,
+				Arrays.asList( pattern, substringCall )
+		);
 
 		final SqmExpression startMinusOne = new BinaryArithmeticSqmExpression(
 				BinaryArithmeticSqmExpression.Operation.SUBTRACT,
@@ -105,9 +165,14 @@ public class PostgresLocateEmulationTemplate extends AbstractSqmFunctionTemplate
 		);
 	}
 
+	@Override
+	public void injectRegistry(SqmFunctionRegistry registry) {
+		this.registry = registry;
+	}
+
 	public static class PositionFunction
 			extends SelfRenderingSqmFunction
-			implements SelfRenderingFunctionSupport, SqlAstFunctionProducer {
+			implements SelfRenderingFunctionSupport, SqlAstFunctionProducer, SqmNonStandardFunction {
 		public PositionFunction(
 				SqmExpression pattern,
 				SqmExpression string,

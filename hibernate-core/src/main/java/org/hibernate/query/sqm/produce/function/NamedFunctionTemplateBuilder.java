@@ -26,8 +26,6 @@ public class NamedFunctionTemplateBuilder {
 	private FunctionReturnTypeResolver returnTypeResolver;
 
 	private boolean useParenthesesWhenNoArgs;
-	private boolean useJdbcEscapeSyntax;
-	private int exactArgumentCount;
 
 	public NamedFunctionTemplateBuilder(SqmFunctionRegistry registry, String functionName) {
 		this.registry = registry;
@@ -52,7 +50,7 @@ public class NamedFunctionTemplateBuilder {
 	}
 
 	public NamedFunctionTemplateBuilder setExactArgumentCount(int exactArgumentCount) {
-		return setArgumentsValidator( StandardArgumentsValidators.count( exactArgumentCount ) );
+		return setArgumentsValidator( StandardArgumentsValidators.exactly( exactArgumentCount ) );
 	}
 
 	public NamedFunctionTemplateBuilder setReturnTypeResolver(FunctionReturnTypeResolver returnTypeResolver) {
@@ -70,23 +68,15 @@ public class NamedFunctionTemplateBuilder {
 		return this;
 	}
 
-	public NamedFunctionTemplateBuilder setUseJdbcEscapeSyntax(boolean useJdbcEscapeSyntax) {
-		this.useJdbcEscapeSyntax = useJdbcEscapeSyntax;
-		return this;
-	}
-
-	public SqmFunctionRegistry register() {
-		registry.register(
+	public SqmFunctionTemplate register() {
+		return registry.register(
 				registrationKey,
 				new NamedSqmFunctionTemplate(
 						functionName,
 						useParenthesesWhenNoArgs,
-						useJdbcEscapeSyntax,
 						argumentsValidator,
 						returnTypeResolver
 				)
 		);
-
-		return registry;
 	}
 }

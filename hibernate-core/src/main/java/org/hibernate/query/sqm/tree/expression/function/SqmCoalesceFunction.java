@@ -21,9 +21,16 @@ public class SqmCoalesceFunction extends AbstractSqmFunction {
 
 	private List<SqmExpression> arguments = new ArrayList<>();
 
+	public SqmCoalesceFunction() {
+		this( null );
+	}
+
+	public SqmCoalesceFunction(AllowableFunctionReturnType resultType) {
+		this( resultType, null );
+	}
+
 	public SqmCoalesceFunction(
-			List<SqmExpression> arguments,
-			AllowableFunctionReturnType resultType) {
+			AllowableFunctionReturnType resultType, List<SqmExpression> arguments) {
 		super( resultType );
 		this.arguments = arguments;
 	}

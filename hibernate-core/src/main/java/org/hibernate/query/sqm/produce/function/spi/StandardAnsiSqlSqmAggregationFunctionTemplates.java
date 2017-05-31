@@ -41,7 +41,7 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 		public static final CountFunctionTemplate INSTANCE = new CountFunctionTemplate();
 
 		private CountFunctionTemplate() {
-			super( StandardArgumentsValidators.count( 1 ) );
+			super( StandardArgumentsValidators.exactly( 1 ) );
 		}
 
 		@Override
@@ -71,7 +71,7 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 		private final String sqlCastTypeForFloatingPointArgTypes;
 
 		public AvgFunctionTemplate(String sqlCastTypeForFloatingPointArgTypes) {
-			super( StandardArgumentsValidators.count( 1 ) );
+			super( StandardArgumentsValidators.exactly( 1 ) );
 			this.sqlCastTypeForFloatingPointArgTypes = sqlCastTypeForFloatingPointArgTypes;
 		}
 
@@ -103,7 +103,7 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 		public static final MaxFunctionTemplate INSTANCE = new MaxFunctionTemplate();
 
 		protected MaxFunctionTemplate() {
-			super( StandardArgumentsValidators.count( 1 ) );
+			super( StandardArgumentsValidators.exactly( 1 ) );
 		}
 
 		@Override
@@ -124,7 +124,7 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 		public static final MinFunctionTemplate INSTANCE = new MinFunctionTemplate();
 
 		protected MinFunctionTemplate() {
-			super( StandardArgumentsValidators.count( 1 ) );
+			super( StandardArgumentsValidators.exactly( 1 ) );
 		}
 
 		@Override
@@ -146,7 +146,7 @@ public class StandardAnsiSqlSqmAggregationFunctionTemplates {
 		public static final SumFunctionTemplate INSTANCE = new SumFunctionTemplate();
 
 		protected SumFunctionTemplate() {
-			super( StandardArgumentsValidators.count( 1 ) );
+			super( StandardArgumentsValidators.exactly( 1 ) );
 		}
 
 		@Override

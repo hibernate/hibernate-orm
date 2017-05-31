@@ -31,6 +31,9 @@ public interface SqlAstFunctionProducer extends SqmFunction {
 		return walker.visitSqlAstFunctionProducer( this );
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// these are not needed since we perform the production of the SQL AST directly
+
 	@Override
 	default String asLoggableText() {
 		return null;

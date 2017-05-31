@@ -35,7 +35,7 @@ public class PatternFunctionTemplateBuilder {
 	}
 
 	public PatternFunctionTemplateBuilder setExactArgumentCount(int exactArgumentCount) {
-		return setArgumentsValidator( StandardArgumentsValidators.count( exactArgumentCount ) );
+		return setArgumentsValidator( StandardArgumentsValidators.exactly( exactArgumentCount ) );
 	}
 
 	public PatternFunctionTemplateBuilder setArgumentsBetween(int min, int max) {
@@ -57,8 +57,8 @@ public class PatternFunctionTemplateBuilder {
 		return this;
 	}
 
-	public SqmFunctionRegistry register() {
-		registry.register(
+	public SqmFunctionTemplate register() {
+		return registry.register(
 				registrationKey,
 				new PatternBasedSqmFunctionTemplate(
 						new PatternRenderer( pattern, useParenthesesWhenNoArgs ),
@@ -66,7 +66,5 @@ public class PatternFunctionTemplateBuilder {
 						returnTypeResolver
 				)
 		);
-
-		return registry;
 	}
 }

@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
-import org.hibernate.dialect.function.NvlFunction;
+import org.hibernate.dialect.function.NvlFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
@@ -151,7 +151,7 @@ public class Oracle9Dialect extends Dialect {
 		registerFunction( "substring", new NamedSqmFunctionTemplate( "substr", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "locate", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "instr(?2,?1)" ) );
 		registerFunction( "bit_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "vsize(?1)*8" ) );
-		registerFunction( "coalesce", new NvlFunction() );
+		registerFunction( "coalesce", new NvlFunctionTemplate() );
 
 		// Multi-param numeric dialect functions...
 		registerFunction( "atan2", new NamedSqmFunctionTemplate( "atan2", StandardSpiBasicTypes.FLOAT ) );

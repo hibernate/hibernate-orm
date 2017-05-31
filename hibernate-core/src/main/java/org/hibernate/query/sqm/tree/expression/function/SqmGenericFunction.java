@@ -15,7 +15,10 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SqmGenericFunction extends AbstractSqmFunction {
+public class SqmGenericFunction extends AbstractSqmFunction implements SqmNonStandardFunction {
+
+	// todo (6.0) : rename this (and friends) using the "non-standard" wording
+
 	private final String functionName;
 	private final List<SqmExpression> arguments;
 

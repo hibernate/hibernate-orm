@@ -19,7 +19,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
-import org.hibernate.dialect.function.PostgresLocateEmulationTemplate;
+import org.hibernate.dialect.function.LocateEmulationUsingPositionAndSubstring;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
@@ -167,7 +167,7 @@ public class PostgreSQL81Dialect extends Dialect {
 
 		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "(", "||", ")" ) );
 
-		registerFunction( "locate", new PostgresLocateEmulationTemplate() );
+		registerFunction( "locate", new LocateEmulationUsingPositionAndSubstring() );
 
 		registerFunction( "str", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "cast(?1 as varchar)") );
 

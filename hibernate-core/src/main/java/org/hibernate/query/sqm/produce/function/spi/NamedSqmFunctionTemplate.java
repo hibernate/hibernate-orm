@@ -30,19 +30,16 @@ import org.hibernate.sql.ast.tree.spi.expression.Expression;
 public class NamedSqmFunctionTemplate extends AbstractSelfRenderingFunctionTemplate {
 	private final String functionName;
 	private final boolean useParenthesesWhenNoArgs;
-	private final boolean useJdbcEscapeSyntax;
 
 	public NamedSqmFunctionTemplate(
 			String functionName,
 			boolean useParenthesesWhenNoArgs,
-			boolean useJdbcEscapeSyntax,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver) {
 		super( returnTypeResolver, argumentsValidator );
 
 		this.functionName = functionName;
 		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
-		this.useJdbcEscapeSyntax = useJdbcEscapeSyntax;
 	}
 
 	/**
@@ -74,10 +71,6 @@ public class NamedSqmFunctionTemplate extends AbstractSelfRenderingFunctionTempl
 				SessionFactoryImplementor sessionFactory) {
 			final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();
 
-			if ( useJdbcEscapeSyntax ) {
-				sqlAppender.appendSql( "{fn " );
-			}
-
 			sqlAppender.appendSql( functionName );
 			if ( useParens ) {
 				sqlAppender.appendSql( "(" );
@@ -94,10 +87,6 @@ public class NamedSqmFunctionTemplate extends AbstractSelfRenderingFunctionTempl
 
 			if ( useParens ) {
 				sqlAppender.appendSql( ")" );
-			}
-
-			if ( useJdbcEscapeSyntax ) {
-				sqlAppender.appendSql( "}" );
 			}
 		}
 	}

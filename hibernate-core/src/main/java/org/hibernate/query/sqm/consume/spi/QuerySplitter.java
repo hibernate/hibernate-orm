@@ -46,10 +46,12 @@ import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableContainerRefer
 import org.hibernate.query.sqm.tree.expression.domain.SqmNavigableReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmPluralAttributeReference;
 import org.hibernate.query.sqm.tree.expression.domain.SqmSingularAttributeReference;
+import org.hibernate.query.sqm.tree.expression.function.Distinctable;
 import org.hibernate.query.sqm.tree.expression.function.SqmAvgFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmConcatFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmCountStarFunction;
+import org.hibernate.query.sqm.tree.expression.function.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmGenericFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMaxFunction;
 import org.hibernate.query.sqm.tree.expression.function.SqmMinFunction;
@@ -85,6 +87,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.set.SqmAssignment;
 import org.hibernate.query.sqm.tree.set.SqmSetClause;
+import org.hibernate.sql.ast.produce.metamodel.spi.BasicValuedExpressableType;
 import org.hibernate.sql.ast.produce.metamodel.spi.PolymorphicEntityValuedExpressableType;
 import org.hibernate.sql.ast.produce.spi.SqlAstFunctionProducer;
 
@@ -650,54 +653,74 @@ public class QuerySplitter {
 
 		@Override
 		public SqmAvgFunction visitAvgFunction(SqmAvgFunction expression) {
-			return new SqmAvgFunction(
-					(SqmExpression) expression.getArgument().accept( this ),
-					expression.isDistinct(),
-					expression.getExpressionType()
+			return handleDistinct(
+					new SqmAvgFunction(
+							(SqmExpression) expression.getArgument().accept( this ),
+							expression.getExpressionType()
+					),
+					expression.isDistinct()
 			);
+		}
+
+		private <T extends SqmFunction> T handleDistinct(T function, boolean shouldMakeDistinction) {
+			if ( function instanceof Distinctable
+					&& shouldMakeDistinction ) {
+				( (Distinctable) function ).makeDistinct();
+			}
+
+			return function;
 		}
 
 		@Override
 		public SqmCountStarFunction visitCountStarFunction(SqmCountStarFunction expression) {
-			return new SqmCountStarFunction(
-					expression.isDistinct(),
-					expression.getExpressionType()
+			return handleDistinct(
+					new SqmCountStarFunction( expression.getExpressionType() ),
+					expression.isDistinct()
 			);
+
 		}
 
 		@Override
 		public SqmCountFunction visitCountFunction(SqmCountFunction expression) {
-			return new SqmCountFunction(
-					(SqmExpression) expression.getArgument().accept( this ),
-					expression.isDistinct(),
-					expression.getExpressionType()
+			return handleDistinct(
+					new SqmCountFunction(
+							(SqmExpression) expression.getArgument().accept( this ),
+							expression.getExpressionType()
+					),
+					expression.isDistinct()
 			);
 		}
 
 		@Override
 		public SqmMaxFunction visitMaxFunction(SqmMaxFunction expression) {
-			return new SqmMaxFunction(
-					(SqmExpression) expression.getArgument().accept( this ),
-					expression.isDistinct(),
-					expression.getExpressionType()
+			return handleDistinct(
+					new SqmMaxFunction(
+							(SqmExpression) expression.getArgument().accept( this ),
+							expression.getExpressionType()
+					),
+					expression.isDistinct()
 			);
 		}
 
 		@Override
 		public SqmMinFunction visitMinFunction(SqmMinFunction expression) {
-			return new SqmMinFunction(
-					(SqmExpression) expression.getArgument().accept( this ),
-					expression.isDistinct(),
-					expression.getExpressionType()
+			return handleDistinct(
+					new SqmMinFunction(
+							(SqmExpression) expression.getArgument().accept( this ),
+							expression.getExpressionType()
+					),
+					expression.isDistinct()
 			);
 		}
 
 		@Override
 		public SqmSumFunction visitSumFunction(SqmSumFunction expression) {
-			return new SqmSumFunction(
-					(SqmExpression) expression.getArgument().accept( this ),
-					expression.isDistinct(),
-					expression.getExpressionType()
+			return handleDistinct(
+					new SqmSumFunction(
+							(SqmExpression) expression.getArgument().accept( this ),
+							expression.getExpressionType()
+					),
+					expression.isDistinct()
 			);
 		}
 
@@ -772,7 +795,7 @@ public class QuerySplitter {
 			}
 
 			return new SqmConcatFunction(
-					expression.getExpressionType(),
+					(BasicValuedExpressableType) expression.getExpressionType(),
 					arguments
 			);
 		}

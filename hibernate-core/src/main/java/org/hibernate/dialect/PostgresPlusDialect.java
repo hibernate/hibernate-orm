@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
-import org.hibernate.dialect.function.NvlFunction;
+import org.hibernate.dialect.function.NvlFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
 
@@ -40,7 +40,7 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		registerFunction( "rpad", new NamedSqmFunctionTemplate( "rpad", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "translate", new NamedSqmFunctionTemplate( "translate", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "substring", new NamedSqmFunctionTemplate( "substr", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "coalesce", new NvlFunction() );
+		registerFunction( "coalesce", new NvlFunctionTemplate() );
 		registerFunction( "atan2", new NamedSqmFunctionTemplate( "atan2", StandardSpiBasicTypes.FLOAT ) );
 		registerFunction( "mod", new NamedSqmFunctionTemplate( "mod", StandardSpiBasicTypes.INTEGER ) );
 		registerFunction( "nvl", new NamedSqmFunctionTemplate( "nvl" ) );

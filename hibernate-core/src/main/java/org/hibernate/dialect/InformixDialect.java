@@ -11,7 +11,7 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.dialect.function.NoArgsSqmFunctionTemplate;
-import org.hibernate.dialect.function.NvlFunction;
+import org.hibernate.dialect.function.NvlFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -77,8 +77,8 @@ public class InformixDialect extends Dialect {
 		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "(", "||", ")" ) );
 		registerFunction( "substring", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "substring(?1 FROM ?2 FOR ?3)"));
 		registerFunction( "substr", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "substr(?1, ?2, ?3)"));
-		registerFunction( "coalesce", new NvlFunction());
-		registerFunction( "nvl", new NvlFunction());
+		registerFunction( "coalesce", new NvlFunctionTemplate());
+		registerFunction( "nvl", new NvlFunctionTemplate());
 		registerFunction( "current_timestamp", new NoArgsSqmFunctionTemplate( "current", StandardSpiBasicTypes.TIMESTAMP, false ) );
 		registerFunction( "current_date", new NoArgsSqmFunctionTemplate( "today", StandardSpiBasicTypes.DATE, false ) );
 

@@ -51,7 +51,7 @@ public final class StandardArgumentsValidators {
 		};
 	}
 
-	public static ArgumentsValidator count(int number) {
+	public static ArgumentsValidator exactly(int number) {
 		return arguments -> {
 			if ( arguments.size() != number ) {
 				throw new QueryException(

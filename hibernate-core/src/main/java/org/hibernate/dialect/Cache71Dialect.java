@@ -13,12 +13,13 @@ import java.sql.Types;
 
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ConvertFunctionTemplate;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.spi.NoArgsSqmFunctionTemplate;
-import org.hibernate.dialect.function.NvlFunction;
+import org.hibernate.dialect.function.NvlFunctionTemplate;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.NamedJDBCEscapeFunction;
+import org.hibernate.query.sqm.produce.function.JdbcFunctionEscapeWrapperTemplate;
 import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.Chache71IdentityColumnSupport;
@@ -244,56 +245,95 @@ public class Cache71Dialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.USE_SQL_COMMENTS, "false" );
 	}
 
-	protected final void register71Functions() {
-		this.registerFunction( "str", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "str(", ",", ")" ) );
-	}
-
 	@Override
 	public void initializeFunctionRegistry(SqmFunctionRegistry registry) {
 		super.initializeFunctionRegistry( registry );
 
-		registerFunction( "acos", new NamedJDBCEscapeFunction( "acos", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "%alphaup", new NamedSqmFunctionTemplate( "%alphaup", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "ascii", new NamedSqmFunctionTemplate( "ascii", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "asin", new NamedJDBCEscapeFunction( "asin", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new NamedJDBCEscapeFunction( "atan", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardSpiBasicTypes.INTEGER, "($length(?1)*8)" ) );
-		registerFunction( "ceiling", new NamedSqmFunctionTemplate( "ceiling", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "char", new NamedJDBCEscapeFunction( "char", StandardSpiBasicTypes.CHARACTER ) );
-		registerFunction( "character_length", new NamedSqmFunctionTemplate( "character_length", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "char_length", new NamedSqmFunctionTemplate( "char_length", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "cos", new NamedJDBCEscapeFunction( "cos", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new NamedJDBCEscapeFunction( "cot", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "coalesce", new VarArgsSQLFunction( "coalesce(", ",", ")" ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "", "||", "" ) );
-		registerFunction( "convert", new ConvertFunctionTemplate() );
-		registerFunction( "curdate", new NamedJDBCEscapeFunction( "curdate", StandardSpiBasicTypes.DATE ) );
-		registerFunction( "curtime", new NamedJDBCEscapeFunction( "curtime", StandardSpiBasicTypes.TIME ) );
-		registerFunction( "database", new NamedJDBCEscapeFunction( "database", StandardSpiBasicTypes.STRING ) );
+		commonFunctionRegistrations( registry );
+		register71Functions( registry );
+	}
+
+	protected void commonFunctionRegistrations(SqmFunctionRegistry registry) {
+		CommonFunctionFactory.acos( registry );
+
+		registry.namedTemplateBuilder( "%alphaup" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		registry.namedTemplateBuilder( "ascii" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.STRING )
+				.register();
+
+		CommonFunctionFactory.asin( registry );
+		CommonFunctionFactory.atan( registry );
+
+		registry.patternTemplateBuilder( "bit_length", "($length(?1)*8)" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		CommonFunctionFactory.ceiling( registry );
+
+		registry.wrapInJdbcEscape(
+				"char",
+				registry.namedTemplateBuilder( "char" )
+						.setExactArgumentCount( 1 )
+						.setInvariantType( StandardSpiBasicTypes.INTEGER )
+						.register()
+		);
+
+		registry.namedTemplateBuilder( "bit_length" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "character_length" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+		registry.namedTemplateBuilder( "char_length" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+				.register();
+
+
+		CommonFunctionFactory.cos( registry );
+		CommonFunctionFactory.cot( registry );
+
+		registry.register( "concat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "", "||", "" ) );
+
+		registry.register( "convert", new ConvertFunctionTemplate() );
+
+		registerFunction( "curdate", new JdbcFunctionEscapeWrapperTemplate( "curdate", StandardSpiBasicTypes.DATE ) );
+		registerFunction( "curtime", new JdbcFunctionEscapeWrapperTemplate( "curtime", StandardSpiBasicTypes.TIME ) );
+		registerFunction( "database", new JdbcFunctionEscapeWrapperTemplate( "database", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "dateadd", new VarArgsSQLFunction( StandardSpiBasicTypes.TIMESTAMP, "dateadd(", ",", ")" ) );
 		registerFunction( "datediff", new VarArgsSQLFunction( StandardSpiBasicTypes.INTEGER, "datediff(", ",", ")" ) );
 		registerFunction( "datename", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "datename(", ",", ")" ) );
 		registerFunction( "datepart", new VarArgsSQLFunction( StandardSpiBasicTypes.INTEGER, "datepart(", ",", ")" ) );
 		registerFunction( "day", new NamedSqmFunctionTemplate( "day", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayname", new NamedJDBCEscapeFunction( "dayname", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "dayofmonth", new NamedJDBCEscapeFunction( "dayofmonth", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayofweek", new NamedJDBCEscapeFunction( "dayofweek", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new NamedJDBCEscapeFunction( "dayofyear", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "dayname", new JdbcFunctionEscapeWrapperTemplate( "dayname", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "dayofmonth", new JdbcFunctionEscapeWrapperTemplate( "dayofmonth", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "dayofweek", new JdbcFunctionEscapeWrapperTemplate( "dayofweek", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "dayofyear", new JdbcFunctionEscapeWrapperTemplate( "dayofyear", StandardSpiBasicTypes.INTEGER ) );
 		// is it necessary to register %exact since it can only appear in a where clause?
 		registerFunction( "%exact", new NamedSqmFunctionTemplate( "%exact", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "exp", new NamedJDBCEscapeFunction( "exp", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "exp", new JdbcFunctionEscapeWrapperTemplate( "exp", StandardSpiBasicTypes.DOUBLE ) );
 		registerFunction( "%external", new NamedSqmFunctionTemplate( "%external", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "$extract", new VarArgsSQLFunction( StandardSpiBasicTypes.INTEGER, "$extract(", ",", ")" ) );
 		registerFunction( "$find", new VarArgsSQLFunction( StandardSpiBasicTypes.INTEGER, "$find(", ",", ")" ) );
 		registerFunction( "floor", new NamedSqmFunctionTemplate( "floor", StandardSpiBasicTypes.INTEGER ) );
 		registerFunction( "getdate", new NamedSqmFunctionTemplate( "getdate", StandardSpiBasicTypes.TIMESTAMP ) );
-		registerFunction( "hour", new NamedJDBCEscapeFunction( "hour", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "hour", new JdbcFunctionEscapeWrapperTemplate( "hour", StandardSpiBasicTypes.INTEGER ) );
 		registerFunction( "ifnull", new VarArgsSQLFunction( "ifnull(", ",", ")" ) );
 		registerFunction( "%internal", new NamedSqmFunctionTemplate( "%internal" ) );
 		registerFunction( "isnull", new VarArgsSQLFunction( "isnull(", ",", ")" ) );
 		registerFunction( "isnumeric", new NamedSqmFunctionTemplate( "isnumeric", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "lcase", new NamedJDBCEscapeFunction( "lcase", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "left", new NamedJDBCEscapeFunction( "left", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "lcase", new JdbcFunctionEscapeWrapperTemplate( "lcase", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "left", new JdbcFunctionEscapeWrapperTemplate( "left", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "len", new NamedSqmFunctionTemplate( "len", StandardSpiBasicTypes.INTEGER ) );
 		registerFunction( "$length", new VarArgsSQLFunction( "$length(", ",", ")" ) );
 		registerFunction( "$list", new VarArgsSQLFunction( "$list(", ",", ")" ) );
@@ -302,37 +342,37 @@ public class Cache71Dialect extends Dialect {
 		registerFunction( "$listget", new VarArgsSQLFunction( "$listget(", ",", ")" ) );
 		registerFunction( "$listlength", new NamedSqmFunctionTemplate( "$listlength", StandardSpiBasicTypes.INTEGER ) );
 		registerFunction( "locate", new NamedSqmFunctionTemplate( "$FIND", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "log", new NamedJDBCEscapeFunction( "log", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new NamedJDBCEscapeFunction( "log", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "log", new JdbcFunctionEscapeWrapperTemplate( "log", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "log10", new JdbcFunctionEscapeWrapperTemplate( "log", StandardSpiBasicTypes.DOUBLE ) );
 		registerFunction( "lower", new NamedSqmFunctionTemplate( "lower" ) );
 		registerFunction( "ltrim", new NamedSqmFunctionTemplate( "ltrim" ) );
-		registerFunction( "minute", new NamedJDBCEscapeFunction( "minute", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "mod", new NamedJDBCEscapeFunction( "mod", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "month", new NamedJDBCEscapeFunction( "month", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "monthname", new NamedJDBCEscapeFunction( "monthname", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "now", new NamedJDBCEscapeFunction( "monthname", StandardSpiBasicTypes.TIMESTAMP ) );
+		registerFunction( "minute", new JdbcFunctionEscapeWrapperTemplate( "minute", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "mod", new JdbcFunctionEscapeWrapperTemplate( "mod", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "month", new JdbcFunctionEscapeWrapperTemplate( "month", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "monthname", new JdbcFunctionEscapeWrapperTemplate( "monthname", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "now", new JdbcFunctionEscapeWrapperTemplate( "monthname", StandardSpiBasicTypes.TIMESTAMP ) );
 		registerFunction( "nullif", new VarArgsSQLFunction( "nullif(", ",", ")" ) );
-		registerFunction( "nvl", new NvlFunction() );
+		registerFunction( "nvl", new NvlFunctionTemplate() );
 		registerFunction( "%odbcin", new NamedSqmFunctionTemplate( "%odbcin" ) );
 		registerFunction( "%odbcout", new NamedSqmFunctionTemplate( "%odbcin" ) );
 		registerFunction( "%pattern", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "", "%pattern", "" ) );
-		registerFunction( "pi", new NamedJDBCEscapeFunction( "pi", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "pi", new JdbcFunctionEscapeWrapperTemplate( "pi", StandardSpiBasicTypes.DOUBLE ) );
 		registerFunction( "$piece", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "$piece(", ",", ")" ) );
 		registerFunction( "position", new VarArgsSQLFunction( StandardSpiBasicTypes.INTEGER, "position(", " in ", ")" ) );
 		registerFunction( "power", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "power(", ",", ")" ) );
-		registerFunction( "quarter", new NamedJDBCEscapeFunction( "quarter", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "quarter", new JdbcFunctionEscapeWrapperTemplate( "quarter", StandardSpiBasicTypes.INTEGER ) );
 		registerFunction( "repeat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "repeat(", ",", ")" ) );
 		registerFunction( "replicate", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "replicate(", ",", ")" ) );
-		registerFunction( "right", new NamedJDBCEscapeFunction( "right", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "right", new JdbcFunctionEscapeWrapperTemplate( "right", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "round", new VarArgsSQLFunction( StandardSpiBasicTypes.FLOAT, "round(", ",", ")" ) );
 		registerFunction( "rtrim", new NamedSqmFunctionTemplate( "rtrim", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "second", new NamedJDBCEscapeFunction( "second", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "second", new JdbcFunctionEscapeWrapperTemplate( "second", StandardSpiBasicTypes.INTEGER ) );
 		registerFunction( "sign", new NamedSqmFunctionTemplate( "sign", StandardSpiBasicTypes.INTEGER ) );
-		registerFunction( "sin", new NamedJDBCEscapeFunction( "sin", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "sin", new JdbcFunctionEscapeWrapperTemplate( "sin", StandardSpiBasicTypes.DOUBLE ) );
 		registerFunction( "space", new NamedSqmFunctionTemplate( "space", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "%sqlstring", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "%sqlstring(", ",", ")" ) );
 		registerFunction( "%sqlupper", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "%sqlupper(", ",", ")" ) );
-		registerFunction( "sqrt", new NamedJDBCEscapeFunction( "SQRT", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "sqrt", new JdbcFunctionEscapeWrapperTemplate( "SQRT", StandardSpiBasicTypes.DOUBLE ) );
 		registerFunction( "%startswith", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "", "%startswith", "" ) );
 		// below is for Cache' that don't have str in 2007.1 there is str and we register str directly
 		registerFunction( "str", new SQLFunctionTemplate( StandardSpiBasicTypes.STRING, "cast(?1 as char varying)" ) );
@@ -342,9 +382,9 @@ public class Cache71Dialect extends Dialect {
 		registerFunction( "substr", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "substr(", ",", ")" ) );
 		registerFunction( "substring", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "substring(", ",", ")" ) );
 		registerFunction( "sysdate", new NoArgsSqmFunctionTemplate( "sysdate", false, StandardSpiBasicTypes.TIMESTAMP ) );
-		registerFunction( "tan", new NamedJDBCEscapeFunction( "tan", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "timestampadd", new NamedJDBCEscapeFunction( "timestampadd", StandardSpiBasicTypes.DOUBLE ) );
-		registerFunction( "timestampdiff", new NamedJDBCEscapeFunction( "timestampdiff", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "tan", new JdbcFunctionEscapeWrapperTemplate( "tan", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "timestampadd", new JdbcFunctionEscapeWrapperTemplate( "timestampadd", StandardSpiBasicTypes.DOUBLE ) );
+		registerFunction( "timestampdiff", new JdbcFunctionEscapeWrapperTemplate( "timestampdiff", StandardSpiBasicTypes.DOUBLE ) );
 		registerFunction( "tochar", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "tochar(", ",", ")" ) );
 		registerFunction( "to_char", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "to_char(", ",", ")" ) );
 		registerFunction( "todate", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "todate(", ",", ")" ) );
@@ -354,17 +394,21 @@ public class Cache71Dialect extends Dialect {
 		// TRIM(end_keyword string-expression-1 FROM string-expression-2)
 		// use Hibernate implementation "From" is one of the parameters they pass in position ?3
 		//registerFunction( "trim", new SQLFunctionTemplate(StandardBasicTypes.STRING, "trim(?1 ?2 from ?3)") );
-		registerFunction( "truncate", new NamedJDBCEscapeFunction( "truncate", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "ucase", new NamedJDBCEscapeFunction( "ucase", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "truncate", new JdbcFunctionEscapeWrapperTemplate( "truncate", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "ucase", new JdbcFunctionEscapeWrapperTemplate( "ucase", StandardSpiBasicTypes.STRING ) );
 		registerFunction( "upper", new NamedSqmFunctionTemplate( "upper" ) );
 		// %upper is deprecated
 		registerFunction( "%upper", new NamedSqmFunctionTemplate( "%upper" ) );
-		registerFunction( "user", new NamedJDBCEscapeFunction( "user", StandardSpiBasicTypes.STRING ) );
-		registerFunction( "week", new NamedJDBCEscapeFunction( "user", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "user", new JdbcFunctionEscapeWrapperTemplate( "user", StandardSpiBasicTypes.STRING ) );
+		registerFunction( "week", new JdbcFunctionEscapeWrapperTemplate( "user", StandardSpiBasicTypes.INTEGER ) );
 		registerFunction( "xmlconcat", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "xmlconcat(", ",", ")" ) );
 		registerFunction( "xmlelement", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "xmlelement(", ",", ")" ) );
 		// xmlforest requires a new kind of function constructor
-		registerFunction( "year", new NamedJDBCEscapeFunction( "year", StandardSpiBasicTypes.INTEGER ) );
+		registerFunction( "year", new JdbcFunctionEscapeWrapperTemplate( "year", StandardSpiBasicTypes.INTEGER ) );
+	}
+
+	protected void register71Functions(SqmFunctionRegistry registry) {
+		registry.register( "str", new VarArgsSQLFunction( StandardSpiBasicTypes.STRING, "str(", ",", ")" ) );
 	}
 
 

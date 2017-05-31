@@ -93,8 +93,8 @@ public final class Versioning {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
 					"Incrementing: %s to %s",
-					versionType.toLoggableString( version, session.getFactory() ),
-					versionType.toLoggableString( next, session.getFactory() )
+					versionType.toLoggableString( version ),
+					versionType.toLoggableString( next )
 			);
 		}
 		return next;

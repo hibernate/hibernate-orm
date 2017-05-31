@@ -21,6 +21,7 @@ import org.hibernate.id.insert.IdentifierGeneratingInsert;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * A generator that selects the just inserted row to determine the identifier
@@ -35,7 +36,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 	private String uniqueKeyPropertyName;
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		uniqueKeyPropertyName = params.getProperty( "key" );
 	}
 

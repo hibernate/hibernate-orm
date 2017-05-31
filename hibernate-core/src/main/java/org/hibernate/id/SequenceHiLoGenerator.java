@@ -15,7 +15,7 @@ import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.LegacyHiLoAlgorithmOptimizer;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * <b>seqhilo</b><br>
@@ -39,16 +39,13 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 	private LegacyHiLoAlgorithmOptimizer hiloOptimizer;
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		super.configure( type, params, serviceRegistry );
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+		super.configure( javaTypeDescriptor, params, serviceRegistry );
 
 		maxLo = ConfigurationHelper.getInt( MAX_LO, params, 9 );
 
 		if ( maxLo >= 1 ) {
-			hiloOptimizer = new LegacyHiLoAlgorithmOptimizer(
-					getIdentifierType().getJavaTypeDescriptor().getJavaType(),
-					maxLo
-			);
+			hiloOptimizer = new LegacyHiLoAlgorithmOptimizer( getIdentifierType().getJavaType(), maxLo );
 		}
 	}
 

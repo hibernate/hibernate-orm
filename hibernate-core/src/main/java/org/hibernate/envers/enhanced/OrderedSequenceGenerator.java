@@ -8,11 +8,11 @@ package org.hibernate.envers.enhanced;
 
 import java.util.Properties;
 
-import org.hibernate.naming.spi.QualifiedName;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.enhanced.DatabaseStructure;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.type.Type;
+import org.hibernate.naming.spi.QualifiedName;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Revision number generator has to produce values in ascending order (gaps may occur).
@@ -26,12 +26,12 @@ import org.hibernate.type.Type;
 public class OrderedSequenceGenerator extends SequenceStyleGenerator {
 	@Override
 	protected DatabaseStructure buildSequenceStructure(
-			Type type,
+			JavaTypeDescriptor javaTypeDescriptor,
 			Properties params,
 			JdbcEnvironment jdbcEnvironment,
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
-		return new OrderedSequenceStructure( jdbcEnvironment, sequenceName, initialValue, incrementSize, type.getJavaType() );
+		return new OrderedSequenceStructure( jdbcEnvironment, sequenceName, initialValue, incrementSize, javaTypeDescriptor.getJavaType() );
 	}
 }

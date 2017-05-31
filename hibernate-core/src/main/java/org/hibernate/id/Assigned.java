@@ -13,7 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * <b>assigned</b><br>
@@ -39,7 +39,7 @@ public class Assigned implements IdentifierGenerator, Configurable {
 	}
 
 	@Override
-	public void configure(Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		entityName = params.getProperty( ENTITY_NAME );
 		if ( entityName == null ) {
 			throw new MappingException("no entity name");

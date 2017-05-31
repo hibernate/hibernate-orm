@@ -94,7 +94,7 @@ public final class MessageHelper {
 			}
 			else {
 				if ( factory != null ) {
-					s.append( idType.toLoggableString( id, factory ) );
+					s.append( idType.toLoggableString( id ) );
 				}
 				else {
 					s.append( "<not loggable>" );
@@ -135,7 +135,7 @@ public final class MessageHelper {
 			s.append( "<null>" );
 		}
 		else {
-			s.append( identifierType.toLoggableString( id, factory ) );
+			s.append( identifierType.toLoggableString( id ) );
 		}
 		s.append( ']' );
 
@@ -163,7 +163,7 @@ public final class MessageHelper {
 			s.append( persister.getEntityName() );
 			s.append( "#<" );
 			for ( int i=0; i<ids.length; i++ ) {
-				s.append( persister.getIdentifierType().toLoggableString( ids[i], factory ) );
+				s.append( persister.getIdentifierType().toLoggableString( ids[i] ) );
 				if ( i < ids.length-1 ) {
 					s.append( ", " );
 				}
@@ -264,8 +264,7 @@ public final class MessageHelper {
 				ownerKey = session.getPersistenceContext()
 						.getEntry( collection.getOwner() ).getId();
 			}
-			s.append( ownerIdentifierType.toLoggableString( 
-					ownerKey, session.getFactory() ) );
+			s.append( ownerIdentifierType.toLoggableString( ownerKey ) );
 		}
 		s.append( ']' );
 
@@ -355,7 +354,7 @@ public final class MessageHelper {
 				.getIdentifierType();
 		if ( id.getClass().isAssignableFrom( 
 				ownerIdentifierType.getJavaTypeDescriptor().getJavaType() ) ) {
-			s.append( ownerIdentifierType.toLoggableString( id, factory ) );
+			s.append( ownerIdentifierType.toLoggableString( id ) );
 		}
 		else {
 			// TODO: This is a crappy backup if a property-ref is used.

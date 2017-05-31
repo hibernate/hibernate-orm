@@ -45,8 +45,8 @@ import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
@@ -216,7 +216,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	public static final String OPT_PARAM = "optimizer";
 
 
-	private Type identifierType;
+	private JavaTypeDescriptor identifierType;
 
 	private QualifiedName qualifiedTableName;
 	private String renderedTableName;
@@ -246,7 +246,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 *
 	 * @return The identifier type mapping.
 	 */
-	public final Type getIdentifierType() {
+	public final JavaTypeDescriptor getIdentifierType() {
 		return identifierType;
 	}
 
@@ -343,8 +343,8 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		identifierType = type;
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+		identifierType = javaTypeDescriptor;
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 
@@ -365,7 +365,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		);
 		optimizer = OptimizerFactory.buildOptimizer(
 				optimizationStrategy,
-				identifierType.getJavaTypeDescriptor().getJavaType(),
+				identifierType.getJavaType(),
 				incrementSize,
 				ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 )
 		);
@@ -512,7 +512,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	private IntegralDataTypeHolder makeValue() {
-		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getJavaTypeDescriptor().getJavaType() );
+		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getJavaType() );
 	}
 
 	@Override

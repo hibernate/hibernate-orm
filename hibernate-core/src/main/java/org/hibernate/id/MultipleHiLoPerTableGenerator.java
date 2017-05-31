@@ -41,8 +41,8 @@ import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.MappedPrimaryKey;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.StandardSpiBasicTypes;
-import org.hibernate.type.Type;
 
 /**
  * A hilo <tt>IdentifierGenerator</tt> that returns a <tt>Long</tt>, constructed using
@@ -253,8 +253,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	}
 
 	@SuppressWarnings({"StatementWithEmptyBody", "deprecation"})
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		returnClass = type.getJavaTypeDescriptor().getJavaType();
+	public void configure(JavaTypeDescriptor javaTypeDescriptor, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+		returnClass = javaTypeDescriptor.getJavaType();
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 
